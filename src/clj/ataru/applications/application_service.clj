@@ -104,6 +104,7 @@
                                 (let [flat-form-fields (util/flatten-form-fields (:content form))
                                       field-by-id (util/group-by-first :id flat-form-fields)]
                                   (->> flat-form-fields
+                                       (filter util/answerable?)
                                        (filter #(visible? % field-by-id answers hakutoiveet
                                                           (-> tarjonta-info :tarjonta :hakukohteet)))
                                        (map remove-irrelevant-changes))))
@@ -196,15 +197,16 @@
    rajaus-hakukohteella]
   (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
                                       ryhman-hakukohteet)]
-    (merge {:haku      haku-oid
-            :hakukohde (map :oid ryhman-hakukohteet)}
-           (when ensisijaisesti
-             (if (some? rajaus-hakukohteella)
-               {:hakukohde                    [rajaus-hakukohteella]
-                :ensisijainen-hakukohde       [rajaus-hakukohteella]
-                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
-               {:ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
-                :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)})))))
+    (if ensisijaisesti
+      (if (some? rajaus-hakukohteella)
+        {:haku                         haku-oid
+         :ensisijainen-hakukohde       [rajaus-hakukohteella]
+         :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)}
+        {:haku                         haku-oid
+         :ensisijainen-hakukohde       (map :oid kayttajan-hakukohteet)
+         :ensisijaisesti-hakukohteissa (map :oid ryhman-hakukohteet)})
+      {:haku      haku-oid
+       :hakukohde (map :oid ryhman-hakukohteet)})))
 
 (defn ->haku-query
   [haku-oid]
@@ -237,6 +239,13 @@
 (defn ->application-oids-query
   [application-oids]
   {:application-oids application-oids})
+
+(defn ->attachment-review-states-query
+  [attachment-review-states-query]
+  (when-let [[attachment-field-id states] (first attachment-review-states-query)]
+    {:attachment-review-states
+     [(name attachment-field-id)
+      (keep #(when (second %) (name (first %))) states)]}))
 
 (defn ->empty-query
   []
@@ -614,6 +623,7 @@
                 name
                 person-oid
                 application-oid
+                attachment-review-states
                 sort
                 states-and-filters]} params
         ensisijaisesti               (boolean ensisijaisesti)
@@ -656,7 +666,8 @@
                             (some? person-oid)
                             (->person-oid-query person-oid)
                             (some? application-oid)
-                            (->application-oid-query application-oid)))]
+                            (->application-oid-query application-oid))
+                      (->attachment-review-states-query attachment-review-states))]
       (get-application-list-by-query
        person-service
        tarjonta-service

@@ -248,7 +248,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
            (should= (map :id (filter cannot-view? fields))
@@ -258,7 +258,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -270,7 +270,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -282,7 +282,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -294,7 +294,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-within-grace-period]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -306,7 +306,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:hakija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city"])
           (should= (map :id (filter cannot-edit? fields))
@@ -318,7 +318,7 @@
     (with-redefs [hakuaika/get-hakuaika-info hakuaika-ended-grace-period-passed-hakukierros-ongoing]
       (with-haku-form-response "1.2.246.562.29.65950024186" [:virkailija :with-henkilo] resp
         (should= 200 (:status resp))
-        (let [fields (-> resp :body :content util/flatten-form-fields)]
+        (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
                    ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
@@ -431,10 +431,10 @@
                                                            :last-modified (DateTime/now)}])]
         (with-get-response "12345" resp
           (should= 200 (:status resp))
-          (should-not (->> (get-in resp [:body :form :content])
-                           util/flatten-form-fields
-                           (some #(when (= "b0839467-a6e8-4294-b5cc-830756bbda8a" (:id %)) %))
-                           :cannot-edit)))))
+          (should-not (-> (get-in resp [:body :form])
+                          util/form-fields-by-id
+                          (get-in [:b0839467-a6e8-4294-b5cc-830756bbda8a
+                                   :cannot-edit]))))))
 
     (it "should get application with hakuaika ended and field deadline passed"
       (with-redefs [hakuaika/get-hakuaika-info         hakuaika-ended-grace-period-passed-hakukierros-ongoing
@@ -444,10 +444,10 @@
                                                            :last-modified (DateTime/now)}])]
         (with-get-response "12345" resp
           (should= 200 (:status resp))
-          (should (->> (get-in resp [:body :form :content])
-                       util/flatten-form-fields
-                       (some #(when (= "b0839467-a6e8-4294-b5cc-830756bbda8a" (:id %)) %))
-                       :cannot-edit))))))
+          (should (-> (get-in resp [:body :form])
+                      util/form-fields-by-id
+                      (get-in [:b0839467-a6e8-4294-b5cc-830756bbda8a
+                               :cannot-edit])))))))
 
   (describe "PUT application"
     (around [spec]

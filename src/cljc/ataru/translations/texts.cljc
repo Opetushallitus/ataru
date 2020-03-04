@@ -795,6 +795,9 @@
    :attachments                                     {:fi "Liitepyynnöt"
                                                      :sv "Begäran om bilagor"
                                                      :en "Attachments"}
+   :name-of-attachment                              {:fi "Liitepyynnön nimi"
+                                                     :sv "SV: Liitepyynnön nimi"
+                                                     :en "EN: Liitepyynnön nimi"}
    :base-education                                  {:fi "Pohjakoulutus"
                                                      :sv "Grundutbildning"
                                                      :en "Education background"}
@@ -984,6 +987,9 @@
    :filter-applications                             {:fi "Rajaa hakemuksia"
                                                      :sv "Avgränsa ansökningar"
                                                      :en "Filter the applications"}
+   :filter-by-state                                 {:fi "Rajaa tilan mukaan"
+                                                     :sv "SV: Rajaa tilan mukaan"
+                                                     :en "EN: Rajaa tilan mukaan"}
    :filters-apply-button                            {:fi "Ota käyttöön"
                                                      :sv "Använd"
                                                      :en "Apply"}
@@ -1200,6 +1206,9 @@
    :new-form                                        {:fi "Uusi lomake"
                                                      :sv "Ny blankett"
                                                      :en "New form"}
+   :no-search-hits                                  {:fi "Ei hakutuloksia"
+                                                     :sv "SV: Ei hakutuloksia"
+                                                     :en "EN: Ei hakutuloksia"}
    :no-organization                                 {:fi "Ei organisaatiota"
                                                      :sv "Ingen organisation"
                                                      :en "No organization"}
@@ -1380,6 +1389,12 @@
    :set-haku-to-form                                {:fi "Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."
                                                      :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                      :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
+   :state                                           {:fi "Tila"
+                                                     :sv "SV: Tila"
+                                                     :en "EN: Tila"}
+   :states-selected                                 {:fi "tilaa valittu"
+                                                     :sv "SV: tilaa valittu"
+                                                     :en "EN: tilaa valittu"}
    :liitepyynto-deadline                            {:fi "Hakijakohtainen aikaraja"
                                                      :sv "SV: Hakijakohtainen aikaraja"
                                                      :en "EN: Hakijakohtainen aikaraja"}

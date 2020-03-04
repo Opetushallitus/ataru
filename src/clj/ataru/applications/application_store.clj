@@ -207,7 +207,7 @@
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content   (-> form :content util/flatten-form-fields)
         fields-by-id        (util/form-fields-by-id form)
-        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children flat-form-content
+        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children (:content form)
                                                                                      higher-completed-base-education-id
                                                                                      attachment-always-visible?)
         answers-by-key      (-> application :content :answers util/answers-by-key)
@@ -424,7 +424,14 @@
                       (update :ensisijaisesti-hakukohteissa
                               #(some->> (seq %)
                                         to-array
-                                        (.createArrayOf (:connection connection) "varchar"))))
+                                        (.createArrayOf (:connection connection) "varchar")))
+                      (contains? query :attachment-review-states)
+                      (update :attachment-review-states
+                              (fn [[attachment-field-id states]]
+                                [attachment-field-id
+                                 (some->> (seq states)
+                                          to-array
+                                          (.createArrayOf (:connection connection) "varchar"))])))
         comp  (if (= "asc" (:order sort)) ">" "<")
         order (if (= "asc" (:order sort)) "ASC" "DESC")]
     (cons
@@ -439,51 +446,62 @@
        a.hakukohde,
        a.ssn,
        to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
-       hcbe.value                       AS \"base-education\",
-       ar.state                         AS state,
-       ar.score                         AS score,
+       (SELECT value->'value' AS value
+        FROM jsonb_array_elements(a.content->'answers')
+        WHERE value->>'key' = 'higher-completed-base-education'
+        LIMIT 1)                        AS \"base-education\",
+       (SELECT state
+        FROM application_reviews
+        WHERE application_key = a.key)  AS state,
+       (SELECT score
+        FROM application_reviews
+        WHERE application_key = a.key)  AS score,
        a.form_id                        AS form,
-       ae.eligibility_set_automatically AS \"eligibility-set-automatically\",
-       ae.new_modifications_count       AS \"new-application-modifications\",
+       (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.event_type = 'eligibility-state-automatically-changed'), '{}')
+        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, event_type
+              FROM application_events
+              WHERE application_key = a.key AND
+                    review_key = 'eligibility-state'
+              ORDER BY hakukohde, id DESC) AS ae) AS \"eligibility-set-automatically\",
+       (SELECT count(*) FILTER (WHERE ae.new_review_state = 'information-request' AND
+                                      ae.time < a.created_time)
+        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, time, new_review_state
+              FROM application_events
+              WHERE application_key = a.key AND
+                    review_key = 'processing-state'
+              ORDER BY hakukohde, id DESC) AS ae) AS \"new-application-modifications\",
        a.submitted,
-       lf.organization_oid              AS \"organization-oid\",
+       (SELECT organization_oid
+        FROM forms
+        WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
+        ORDER BY id DESC
+        LIMIT 1)                        AS \"organization-oid\",
        (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
                                             'state', state,
                                             'hakukohde', hakukohde))
         FROM application_hakukohde_reviews ahr
         WHERE ahr.application_key = a.key) AS \"application-hakukohde-reviews\",
-       (SELECT jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
-                                            'state', state,
-                                            'hakukohde', hakukohde))
-        FROM application_hakukohde_attachment_reviews aar
-        WHERE aar.application_key = a.key) AS \"application-attachment-reviews\"
+       ahar.agg                            AS \"application-attachment-reviews\"
 FROM applications AS a
-LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
-JOIN application_reviews AS ar ON a.key = ar.application_key
-JOIN forms AS f ON f.id = a.form_id
-JOIN LATERAL (SELECT organization_oid
-              FROM forms
-              WHERE key = f.key
-              ORDER BY id DESC
-              LIMIT 1) AS lf ON true
-LEFT JOIN LATERAL (SELECT value->'value' AS value
-                   FROM jsonb_array_elements(a.content->'answers')
-                   WHERE value->>'key' = 'higher-completed-base-education'
-                   LIMIT 1) AS hcbe ON true
-JOIN LATERAL (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.review_key = 'eligibility-state' AND
-                                                                    ae.event_type = 'eligibility-state-automatically-changed'), '{}')
-                       AS eligibility_set_automatically,
-                     count(*) FILTER (WHERE ae.review_key = 'processing-state' AND
-                                            ae.new_review_state = 'information-request' AND
-                                            ae.time < a.created_time)
-                       AS new_modifications_count
-              FROM (SELECT DISTINCT ON (hakukohde, review_key) hakukohde, review_key, event_type, new_review_state, time
-                    FROM application_events
-                    WHERE application_key = a.key
-                    ORDER BY hakukohde, review_key, id DESC) AS ae) AS ae ON true
-WHERE la.key IS NULL\n"
+LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
+          (str "JOIN LATERAL (SELECT "
+               (if-let [[_ states] (:attachment-review-states query)]
+                 (str "count(*) FILTER (WHERE attachment_key = ?"
+                      (when (some? states)
+                        "\n                                        AND state = ANY(?)")
+                      (when (or (contains? query :hakukohde)
+                                (contains? query :ensisijainen-hakukohde))
+                        "\n                                        AND hakukohde = ANY(?)")
+                      ") > 0 AS found,")
+                 "true AS found,")
+               "\n                     jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
+                                                  'state', state,
+                                                  'hakukohde', hakukohde)) AS agg
+              FROM application_hakukohde_attachment_reviews
+              WHERE application_key = a.key) AS ahar ON ahar.found\n")
+          "WHERE la.key IS NULL\n"
           (when (contains? query :form)
-            "      AND (f.key = ? AND a.haku IS NULL)\n")
+            "      AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = ?\n")
           (when (contains? query :application-oid)
             "      AND a.key = ?\n")
           (when (contains? query :person-oid)
@@ -534,7 +552,14 @@ WHERE la.key IS NULL\n"
                  "         a.preferred_name COLLATE \"fi_FI\" " order ",\n"
                  "         a.key " order "\n"))
           "LIMIT 1000;")
-     (concat (keep #(get query %) [:form
+     (concat (when-let [[attachment-field-id states] (:attachment-review-states query)]
+               (cond-> [attachment-field-id]
+                       (some? states)
+                       (conj states)
+                       (or (contains? query :hakukohde)
+                           (contains? query :ensisijainen-hakukohde))
+                       (conj (or (:ensisijainen-hakukohde query) (:hakukohde query)))))
+             (keep #(get query %) [:form
                                    :application-oid
                                    :person-oid
                                    :name

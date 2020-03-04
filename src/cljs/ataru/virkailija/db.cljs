@@ -2,6 +2,12 @@
   (:require
    [ataru.application.review-states :as review-states]))
 
+(def default-attachment-review-states
+  (into
+   {}
+   (map (fn [[state _]] [state false])
+        review-states/attachment-hakukohde-review-types)))
+
 (def default-filters {:language-requirement          {:unreviewed  true
                                                       :fulfilled   true
                                                       :unfulfilled true}
@@ -57,6 +63,7 @@
                                 :attachment-state-filter    (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :processing-state-filter    (set (mapv first review-states/application-hakukohde-processing-states))
                                 :selection-state-filter     (set (mapv first review-states/application-hakukohde-selection-states))
+                                :attachment-review-states   {}
                                 :fetching-applications?     false
                                 :sort                       {:order-by "applicant-name"
                                                              :order    "asc"}
