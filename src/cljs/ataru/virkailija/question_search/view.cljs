@@ -7,7 +7,9 @@
 (defn search-input
   [form-key id placeholder disabled? filter-predicate]
   (let [search-input @(re-frame/subscribe [:question-search/search-input form-key id])]
-    [:div.question-search-search-input
+    [(if disabled?
+       :div.question-search-search-input.question-search-search-input--disabled
+       :div.question-search-search-input)
      [:input.question-search-search-input__input
       {:type        "text"
        :value       search-input
