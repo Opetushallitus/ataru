@@ -118,7 +118,8 @@
         (translations/get-hakija-translation :preview-answers lang)]])))
 
 (defn- new-time-left [hakuaika-end time-diff]
-  (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000))
+  (when (and (some? hakuaika-end) (some? time-diff))
+    (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000)))
 
 (defn- round [value step]
   (let [inv (/ 1.0 step)]
@@ -129,6 +130,7 @@
         minutes   (Math/floor (/ (rem seconds-left 3600) 60))
         text-code (cond
                     (< 23 hours)                        nil
+                    (nil? seconds-left)                 nil
                     (< seconds-left 0)                  :application-period-expired
                     (and (zero? hours) (> 15 minutes))  :application-period-less-than-15-min-left
                     (and (zero? hours) (> 30 minutes))  :application-period-less-than-30-min-left

@@ -22,5 +22,6 @@
   (invoke-and-verify 1 00 "Hakuaikaa jäljellä alle vuorokausi")
   (invoke-and-verify 23 59 "Hakuaikaa jäljellä alle vuorokausi")
   (invoke-and-verify 0 -1 "Hakuaika on päättynyt")
+  (is (nil? (hakuaika-left-text nil :fi)))
   (is (nil? (hakuaika-left-text (* 24 60 60) :fi))))
 
