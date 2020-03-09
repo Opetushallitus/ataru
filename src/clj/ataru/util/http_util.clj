@@ -1,28 +1,32 @@
 (ns ataru.util.http-util
-  (:require [org.httpkit.client :as http]
+  (:require [clj-http.client :as http-client]
+            [clj-http.cookies :as cookies]
             [taoensso.timbre :as log]))
-
-
-(defn add-cookie [cookie-to-add opts]
-  (let [existing-cookies (get (get opts :headers) "Cookie")
-        cookies  (if existing-cookies (str existing-cookies "; " cookie-to-add) cookie-to-add)]
-    (update opts :headers merge {"Cookie" cookies})))
 
 (def csrf-value "ataru")
 
+(defn csrf-cookie []
+  (cookies/to-basic-client-cookie
+    ["CSRF"
+     {:value csrf-value
+      :path  "/"}]))
+
 ;todo maybe only add csrf cookie to PUT POST DELETE?
 (defn enrich-with-mandatory-headers [opts]
-  (add-cookie (str "CSRF="csrf-value)
-              (update opts :headers merge
-                      {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
-                      {"CSRF" csrf-value})))
+  (let [cs (cookies/cookie-store)]
+    (cookies/add-cookie cs (csrf-cookie))
+    (-> opts
+        (update :headers merge
+                {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
+                {"CSRF" csrf-value})
+        (merge {:cookie-store cs}))))
 
 (defn do-request
   [{:keys [url method as] :as opts}]
   (let [method-name (clojure.string/upper-case (name method))
         opts        (enrich-with-mandatory-headers opts)
         start       (System/currentTimeMillis)
-        response    @(http/request opts)
+        response    (http-client/request opts)
         time        (- (System/currentTimeMillis) start)
         status      (:status response 500)]
     (when (or (<= 400 status) (< 1000 time))
