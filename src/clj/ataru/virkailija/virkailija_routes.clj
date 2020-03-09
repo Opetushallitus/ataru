@@ -1266,7 +1266,7 @@
         response @(http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
     (assoc
      response
-     ;; http-kit returns header names as keywords, but Ring requires strings :(
+     ;; turn keywords into strings, Ring requires strings :(
      :headers (map-kv
                (fn [header-kw header-value] [(name header-kw) header-value])
                (:headers request)))))

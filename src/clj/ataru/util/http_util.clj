@@ -5,21 +5,13 @@
 
 (def csrf-value "ataru")
 
-(defn csrf-cookie []
-  (cookies/to-basic-client-cookie
-    ["CSRF"
-     {:value csrf-value
-      :path  "/"}]))
-
 ;todo maybe only add csrf cookie to PUT POST DELETE?
 (defn enrich-with-mandatory-headers [opts]
-  (let [cs (cookies/cookie-store)]
-    (cookies/add-cookie cs (csrf-cookie))
-    (-> opts
-        (update :headers merge
-                {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
-                {"CSRF" csrf-value})
-        (merge {:cookie-store cs}))))
+  (-> opts
+      (update :headers merge
+              {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
+              {"CSRF" csrf-value})
+      (merge {:cookies {"CSRF" {:value csrf-value :path  "/"}}})))
 
 (defn do-request
   [{:keys [url method as] :as opts}]

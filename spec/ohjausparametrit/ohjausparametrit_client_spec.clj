@@ -1,7 +1,7 @@
 (ns ohjausparametrit.ohjausparametrit-client-spec
   (:require [ataru.ohjausparametrit.ohjausparametrit-client :as oc]
             [ring.util.http-response :as resp]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
             [speclj.core :refer :all]
             [cheshire.core :as json]))
 
@@ -29,7 +29,7 @@
   (around-all [specs]
     (with-redefs [http/request (fn [{:keys [url]}]
                                  (should= url "https://virkailija.untuvaopintopolku.fi/ohjausparametrit-service/api/v1/rest/parametri/1.2.246.562.29.75477542726")
-                                 (-> ohjausparametrit-resp json/generate-string resp/ok future))]
+                                 (-> ohjausparametrit-resp json/generate-string resp/ok))]
       (specs)))
 
   (it "should get ohjausparametri from ohjausparametrit-service"

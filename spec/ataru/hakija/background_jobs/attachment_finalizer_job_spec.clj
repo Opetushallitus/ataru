@@ -2,7 +2,7 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as job]
             [cheshire.core :as json]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
             [ring.util.http-response :as response]
             [speclj.core :refer :all]))
 
@@ -16,7 +16,7 @@
                                                         (should= {:keys ["attachment-key-1"
                                                                          "attachment-key-2"
                                                                          "attachment-key-3"]} body))
-                                                      (future (response/ok)))
+                                                      (response/ok))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)
                                                       {:answers [{:fieldType "attachment"

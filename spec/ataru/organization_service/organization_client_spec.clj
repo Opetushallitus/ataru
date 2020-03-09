@@ -5,7 +5,7 @@
    [speclj.core :refer [describe it should= tags around]]
    [ataru.organization-service.organization-client :as org-client]
    [clojure.java.io :as io]
-   [org.httpkit.client :as http]))
+   [clj-http.client :as http]))
 
 (def organization-hierarchy-data (slurp (io/resource "organisaatio_service/organization-hierarchy1.json")))
 (def expected-flat-organizations '({:name {:fi "Telajärven seudun koulutuskuntayhtymä"},
@@ -36,11 +36,11 @@
 (def oph-oid "1.2.246.562.10.00000000001")
 
 (defn fake-no-organization [_]
-  (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))}))
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response2.json"))})
 (defn fake-organization [_]
-  (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))}))
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response1.json"))})
 (defn fake-groups [_]
-  (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))}))
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-response-groups.json"))})
 
 (describe "organization client"
   (tags :unit :organization)
