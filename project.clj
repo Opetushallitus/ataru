@@ -257,7 +257,15 @@
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
              :uberjar        {:aot            :all
-                              :resource-paths ["resources"]}}
+                              :resource-paths ["resources"]}
+
+             :opintopolku-local {:local-repo "/m2-home/.m2"}
+             :opintopolku-local-virkailija {:figwheel {:server-ip "ataru-figwheel-virkailija.kehittajan-oma-kone.testiopintopolku.fi"
+                                                       :server-port 3449
+                                                       :repl false}}
+             :opintopolku-local-hakija {:figwheel {:server-ip "ataru-figwheel-hakija.kehittajan-oma-kone.testiopintopolku.fi"
+                                                   :server-port 3450
+                                                   :repl false}}}
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
