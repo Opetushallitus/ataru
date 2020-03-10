@@ -31,16 +31,52 @@
       nil)))
 
 (defn- suoritusvuosi-one-of
-  [application-key answers ids]
-  (if-let [values (some #(let [v (get-in answers [% :value])]
-                           (cond (string? v)
-                                 [v]
-                                 (some? v)
-                                 (map first v)))
-                        ids)]
-    (mapv (partial parse-year application-key) values)
-    (do (log/warn (str "No answers to questions " (clojure.string/join ", " ids)) "in hakemus" application-key)
-        [nil])))
+  ([application-key answers ids]
+   (suoritusvuosi-one-of application-key answers ids false))
+  ([application-key answers ids mute-logging]
+    (if-let [values (some #(let [v (get-in answers [% :value])]
+                            (cond (string? v)
+                              [v]
+                              (some? v)
+                              (map first v)))
+                          ids)]
+      (mapv (partial parse-year application-key) values)
+      (do (when-not mute-logging
+            (log/warn (str "No answers to questions " (clojure.string/join ", " ids)) "in hakemus" application-key))
+        [nil]))))
+
+(defn- kaksoistutkinto-suoritusvuosi
+  "Double degree (secondary level) completion year resolving. General idea as follows:
+
+   - If completion year is in future, it is unknown if it matches both matriculation and vocational completions or just
+     either - it's an estimation, not a hard fact. So in case the completion is some time in future, pick just that
+     directly.
+   - Otherwise we can assume completion year is in past, in which case we compare the completion years of both
+     matriculation and vocational parts of the degree and pick later as that matches the final completion year in
+     secondary level double degree. If only one of these is present, `nil` is returned to indicate the degree is not
+     fully complete yet."
+  [application-key answers]
+  (let [expected-completion-years [; 1. yhteishaun tunnisteet
+                                   :0a6ba6b1-616c-492b-a501-8b6656900ebd    ; 2017-nyt
+                                   :22df6790-588f-4c45-8238-3ecfccdf6d93_1  ; nyt
+                                   ; 2. yhteishaun tunnisteet
+                                   :86c7cc27-e1b3-4b3a-863c-1719b424370f    ; 2017-nyt
+                                   :dfeb9d56-4d53-4087-9473-1b2d9437e47f_1] ; nyt
+        upcoming-completion-year (suoritusvuosi-one-of application-key answers expected-completion-years true)]
+    (if-not (empty? (remove nil? upcoming-completion-year))
+      upcoming-completion-year
+      (mapv #(when (and (some? %1) (some? %2))
+              (max %1 %2))
+            (suoritusvuosi-one-of
+             application-key
+             answers
+             [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion
+              :487bea81-a6bc-43a2-8802-d6d57bbbe8cb])
+            (suoritusvuosi-one-of
+             application-key
+             answers
+             [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
+              :60ce79f9-b37a-4b7e-a7e0-f25ba430f055])))))
 
 (defn- kk-pohjakoulutus-suoritusvuosi
   [haku answers pohjakoulutus application-key]
@@ -73,21 +109,16 @@
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
                                                    :6e2ad9bf-5f3a-41de-aada-a939aeda3e87
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
-    "pohjakoulutus_yo_ammatillinen"            (mapv #(when (and (some? %1) (some? %2))
-                                                        (max %1 %2))
-                                                     (suoritusvuosi-one-of
-                                                      application-key
-                                                      answers
-                                                      [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion])
-                                                     (suoritusvuosi-one-of
-                                                      application-key
-                                                      answers
-                                                      [:pohjakoulutus_yo_ammatillinen--vocational-completion-year]))
+    "pohjakoulutus_yo_ammatillinen"            (kaksoistutkinto-suoritusvuosi application-key answers)
     "pohjakoulutus_am"                         (suoritusvuosi-one-of
                                                 application-key
                                                 answers
                                                 [:pohjakoulutus_am--year-of-completion
-                                                 :f3a87aa7-b782-4947-a4a0-0f126147f7b5])
+                                                 :f3a87aa7-b782-4947-a4a0-0f126147f7b5
+                                                 :5e5a0f04-f04d-478c-b093-3f47d33ba1a4
+                                                 :f9340e89-4a1e-4626-9246-2a77a32b22ed_1
+                                                 :75d3d13c-5865-4924-8a69-d22b8a8aea65
+                                                 :b6fa0257-c1fd-4107-b151-380e02c56fa9_1])
     "pohjakoulutus_amt"                        (suoritusvuosi-one-of
                                                 application-key
                                                 answers
