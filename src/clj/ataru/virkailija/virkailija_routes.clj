@@ -60,7 +60,7 @@
             [environ.core :refer [env]]
             [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [medley.core :refer [map-kv]]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -1263,7 +1263,7 @@
 (defn- proxy-request [service-path request]
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
-        response @(http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
+        response (http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
     (assoc
      response
      ;; turn keywords into strings, Ring requires strings :(
