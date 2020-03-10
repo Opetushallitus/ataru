@@ -1,6 +1,5 @@
 (ns ataru.util.http-util
   (:require [clj-http.client :as http-client]
-            [clj-http.cookies :as cookies]
             [taoensso.timbre :as log]))
 
 (def csrf-value "ataru")
@@ -23,10 +22,13 @@
         status      (:status response 500)]
     (when (or (<= 400 status) (< 1000 time))
       (log/warn "HTTP" method-name url status (str time "ms")))
+    (println "petar response=")
+    (clojure.pprint/pprint (dissoc response :body))
     response))
 
 (defn do-get
   [url]
+  (println "petar evo radim do-get url=" url)
   (do-request {:url url :method :get}))
 
 (defn do-get-stream
