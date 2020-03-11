@@ -1790,7 +1790,7 @@
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
-        [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
+        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]
    :sv [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
@@ -1807,15 +1807,16 @@
          [:strong email]
          " säkert är korrekt."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
-         söker till."]]
+             söker till."]]
    :en [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
         [:p "we noticed that "
          [:strong "you have already submitted an application"]
-         " to this admission. Therefore, you cannot submit another
-          application to the same admission."]
+         " to this admission and therefore cannot submit another
+          application. If you submit several applications, only the latest one
+          will be taken into consideration and all others will be discarded."]
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
@@ -1825,7 +1826,7 @@
          [:strong email]
          " you have given is correct."]
         [:p "If you have any problems, please contact the educational
-         institution."]]})
+             institution you are applying to."]]})
 
 (defn email-applied-error-when-modifying
   [email preferred-name]
