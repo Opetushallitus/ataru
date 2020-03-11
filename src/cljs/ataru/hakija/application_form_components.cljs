@@ -862,10 +862,10 @@
       [attachment-filename component-id question-group-idx attachment-idx true]]
      [:div.application__form-attachment-list-item-sub-container.application__form-attachment-error-container
       (doall
-       (map-indexed (fn [i [error]]
+       (map-indexed (fn [i [error params]]
                       ^{:key (str "attachment-error-" i)}
                       [:span.application__form-attachment-error
-                       (tu/get-hakija-translation error lang)])
+                       (tu/get-hakija-translation error lang params)])
                     (:errors attachment)))]
      [:div.application__form-attachment-list-item-sub-container
       [attachment-remove-button field-descriptor question-group-idx attachment-idx]]]))
