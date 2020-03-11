@@ -8,8 +8,11 @@
 
 (def vocational-identifier {:higher-completed-base-education {:value ["pohjakoulutus_am"]}})
 
-(defn select-year-for [answers]
-  (#'ataru.odw.odw-service/get-kk-pohjakoulutus nil answers application-key))
+(defn select-year-for
+  ([answers]
+   (select-year-for nil answers))
+  ([haku answers]
+   (#'ataru.odw.odw-service/get-kk-pohjakoulutus haku answers application-key)))
 
 (describe "vocational degree / pohjakoulutus_am completion year selection when"
   (tags :unit :odw :OY-342)
@@ -29,10 +32,14 @@
   (it "vocational degree is completed during 2020 (ODW special hardcoding)"
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_am" :suoritusvuosi 2020}]
-               (select-year-for (merge vocational-identifier {:f9340e89-4a1e-4626-9246-2a77a32b22ed_1 {:value "2020"}})))
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge vocational-identifier {:f9340e89-4a1e-4626-9246-2a77a32b22ed {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_am" :suoritusvuosi 2020}]
-               (select-year-for (merge vocational-identifier {:b6fa0257-c1fd-4107-b151-380e02c56fa9_1 {:value "2020"}})))))
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge vocational-identifier {:b6fa0257-c1fd-4107-b151-380e02c56fa9 {:value "1"}})))))
 
 (def double-degree-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ammatillinen"]}})
 (def double-degree-matriculation-completed {:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion {:value "2008"}})
@@ -75,12 +82,16 @@
              (select-year-for (merge double-degree-identifier {:0a6ba6b1-616c-492b-a501-8b6656900ebd {:value "2099"}})))
     ; 1. yhteishaku, nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2098}]
-             (select-year-for (merge double-degree-identifier {:22df6790-588f-4c45-8238-3ecfccdf6d93_1 {:value "2098"}})))
+             (select-year-for
+              {:hakukausiVuosi 2098}
+              (merge double-degree-identifier {:22df6790-588f-4c45-8238-3ecfccdf6d93 {:value "1"}})))
     ; 2. yhteishaku, 2017-nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2097}]
              (select-year-for (merge double-degree-identifier {:86c7cc27-e1b3-4b3a-863c-1719b424370f {:value "2097"}})))
     ; 2. yhteishaku, nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2096}]
-             (select-year-for (merge double-degree-identifier {:dfeb9d56-4d53-4087-9473-1b2d9437e47f_1 {:value "2096"}})))))
+             (select-year-for
+              {:hakukausiVuosi 2096}
+              (merge double-degree-identifier {:dfeb9d56-4d53-4087-9473-1b2d9437e47f {:value "1"}})))))
 
 (run-specs)

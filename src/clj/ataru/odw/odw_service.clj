@@ -45,24 +45,29 @@
             (log/warn (str "No answers to questions " (clojure.string/join ", " ids)) "in hakemus" application-key))
         [nil]))))
 
+(defn any-answers-match?
+  [answers value ids]
+  (some
+   #(= value (get-in answers [% :value]))
+   ids))
+
 (defn- kaksoistutkinto-suoritusvuosi
   "Double degree (secondary level) completion year resolving. General idea as follows:
 
    - If completion year is in future, it is unknown if it matches both matriculation and vocational completions or just
-     either - it's an estimation, not a hard fact. So in case the completion is some time in future, pick just that
-     directly.
+     either - it's an estimation, not a hard fact. So in case the completion is some time in future, the application
+     term year is picked directly as value
    - Otherwise we can assume completion year is in past, in which case we compare the completion years of both
      matriculation and vocational parts of the degree and pick later as that matches the final completion year in
      secondary level double degree. If only one of these is present, `nil` is returned to indicate the degree is not
      fully complete yet."
-  [application-key answers]
-  (let [expected-completion-years [; 1. yhteishaun tunnisteet
-                                   :0a6ba6b1-616c-492b-a501-8b6656900ebd    ; 2017-nyt
-                                   :22df6790-588f-4c45-8238-3ecfccdf6d93_1  ; nyt
-                                   ; 2. yhteishaun tunnisteet
-                                   :86c7cc27-e1b3-4b3a-863c-1719b424370f    ; 2017-nyt
-                                   :dfeb9d56-4d53-4087-9473-1b2d9437e47f_1] ; nyt
-        upcoming-completion-year (suoritusvuosi-one-of application-key answers expected-completion-years true)]
+  [haku answers application-key]
+  (if (any-answers-match? answers "1" [:22df6790-588f-4c45-8238-3ecfccdf6d93    ; 1. yhteishaun tunniste, nyt
+                                       :dfeb9d56-4d53-4087-9473-1b2d9437e47f])  ; 2. yhteishaun tunniste, nyt
+    [(:hakukausiVuosi haku)]
+    (let [expected-completion-years [:0a6ba6b1-616c-492b-a501-8b6656900ebd   ; 1. yhteishaun tunniste, 2017-nyt
+                                     :86c7cc27-e1b3-4b3a-863c-1719b424370f]  ; 2. yhteishaun tunniste, 2017-nyt
+          upcoming-completion-year (suoritusvuosi-one-of application-key answers expected-completion-years true)]
     (if-not (empty? (remove nil? upcoming-completion-year))
       upcoming-completion-year
       (mapv #(when (and (some? %1) (some? %2))
@@ -76,7 +81,7 @@
              application-key
              answers
              [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
-              :60ce79f9-b37a-4b7e-a7e0-f25ba430f055])))))
+              :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]))))))
 
 (defn- kk-pohjakoulutus-suoritusvuosi
   [haku answers pohjakoulutus application-key]
@@ -91,14 +96,16 @@
                                                 answers
                                                 [:pohjakoulutus_lk--year-of-completion
                                                  :c157cbde-3904-46b7-95e1-641fb8314a11])
-    "pohjakoulutus_yo_kansainvalinen_suomessa" (if (some #(= "0" (get-in answers [% :value]))
-                                                         [:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year
-                                                          :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year
-                                                          :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year
-                                                          :32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73
-                                                          :64d561e2-20f7-4143-9ad8-b6fa9a8f6fed
-                                                          :6b7119c9-42ec-467d-909c-6d1cc555b823])
-                                                 [(:hakukausi-vuosi haku)]
+    "pohjakoulutus_yo_kansainvalinen_suomessa" (if (any-answers-match?
+                                                    answers
+                                                    "0"
+                                                    [:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year
+                                                     :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year
+                                                     :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year
+                                                     :32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73
+                                                     :64d561e2-20f7-4143-9ad8-b6fa9a8f6fed
+                                                     :6b7119c9-42ec-467d-909c-6d1cc555b823])
+                                                 [(:hakukausiVuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -109,16 +116,20 @@
                                                    :a2bdac0a-e994-4fda-aa59-4ab4af2384a2
                                                    :6e2ad9bf-5f3a-41de-aada-a939aeda3e87
                                                    :c643447c-b667-42ab-9fd6-66b40a722a3c]))
-    "pohjakoulutus_yo_ammatillinen"            (kaksoistutkinto-suoritusvuosi application-key answers)
-    "pohjakoulutus_am"                         (suoritusvuosi-one-of
-                                                application-key
-                                                answers
-                                                [:pohjakoulutus_am--year-of-completion
-                                                 :f3a87aa7-b782-4947-a4a0-0f126147f7b5
-                                                 :5e5a0f04-f04d-478c-b093-3f47d33ba1a4
-                                                 :f9340e89-4a1e-4626-9246-2a77a32b22ed_1
-                                                 :75d3d13c-5865-4924-8a69-d22b8a8aea65
-                                                 :b6fa0257-c1fd-4107-b151-380e02c56fa9_1])
+    "pohjakoulutus_yo_ammatillinen"            (kaksoistutkinto-suoritusvuosi haku answers application-key)
+    "pohjakoulutus_am"                         (if (any-answers-match?
+                                                    answers
+                                                    "1"
+                                                    [:f9340e89-4a1e-4626-9246-2a77a32b22ed
+                                                     :b6fa0257-c1fd-4107-b151-380e02c56fa9])
+                                                 [(:hakukausiVuosi haku)]
+                                                 (suoritusvuosi-one-of
+                                                  application-key
+                                                  answers
+                                                  [:pohjakoulutus_am--year-of-completion
+                                                   :f3a87aa7-b782-4947-a4a0-0f126147f7b5
+                                                   :5e5a0f04-f04d-478c-b093-3f47d33ba1a4
+                                                   :75d3d13c-5865-4924-8a69-d22b8a8aea65]))
     "pohjakoulutus_amt"                        (suoritusvuosi-one-of
                                                 application-key
                                                 answers
@@ -129,14 +140,16 @@
                                                 answers
                                                 [:pohjakoulutus_kk--completion-date
                                                  :124a0215-e358-47e1-ab02-f1cc7c831e0e])
-    "pohjakoulutus_yo_ulkomainen"              (if (some #(= "0" (get-in answers [% :value]))
-                                                         [:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year
-                                                          :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year
-                                                          :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year
-                                                          :d037fa56-6354-44fc-87d6-8b774b95dcdf
-                                                          :6e980e4d-257a-49ba-a5e6-5424220e6f08
-                                                          :220c3b47-1ca6-47e7-8af2-2f6ff823e07b])
-                                                 [(:hakukausi-vuosi haku)]
+    "pohjakoulutus_yo_ulkomainen"              (if (any-answers-match?
+                                                    answers
+                                                    "0"
+                                                    [:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year
+                                                     :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year
+                                                     :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year
+                                                     :d037fa56-6354-44fc-87d6-8b774b95dcdf
+                                                     :6e980e4d-257a-49ba-a5e6-5424220e6f08
+                                                     :220c3b47-1ca6-47e7-8af2-2f6ff823e07b])
+                                                 [(:hakukausiVuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
