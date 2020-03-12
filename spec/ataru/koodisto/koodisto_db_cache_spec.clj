@@ -3,7 +3,6 @@
             [ataru.koodisto.koodisto-codes :as koodisto-codes]
             [ataru.koodisto.koodisto-db-cache :as koodisto-db]
             [clojure.java.io :as io]
-            [org.httpkit.client :as http]
             [speclj.core :refer :all])
   (:import java.net.URI
            java.time.ZonedDateTime))
