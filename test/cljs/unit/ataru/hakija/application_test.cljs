@@ -184,24 +184,41 @@
 
 (deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil)]
-    (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""} :order-idx 0}
-            :G__14 {:valid true, :label {:fi "kenttä2", :sv ""} :order-idx 1}
-            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""} :order-idx 2}}
+    (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""}}
+            :G__14 {:valid true, :label {:fi "kenttä2", :sv ""}}
+            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""}}}
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
-  (let [result (answers->valid-status {:one {:valid false :label {:fi "invaliidi"}}, :two {:valid true}, :three {:valid true}} nil nil)]
-    (is (= {:invalid-fields '({:key :one :label {:fi "invaliidi"} :order-idx nil})} result))))
+  (is (= {:invalid-fields '({:key :one :label {:fi "invaliidi"}})}
+         (answers->valid-status {:one   {:valid false :label {:fi "invaliidi"}}
+                                 :two   {:valid true}
+                                 :three {:valid true}}
+                                nil
+                                [{:id "one"}
+                                 {:id "two"}
+                                 {:id "three"}]))))
 
 (deftest answers->valid-status-gives-true-for-all-valid
-  (let [result (answers->valid-status {:one {:valid true}, :two {:valid true}, :three {:valid true}} nil nil)]
-    (is (= {:invalid-fields '()} result))))
+  (is (= {:invalid-fields '()}
+         (answers->valid-status {:one   {:valid true}
+                                 :two   {:valid true}
+                                 :three {:valid true}}
+                                nil
+                                [{:id "one"}
+                                 {:id "two"}
+                                 {:id "three"}]))))
 
 (deftest answers->valid-status-gives-true-for-all-valid-and-some-extra-questions
-  (let [answers      {:one {:valid true} :two {:valid true} :three {:valid true} :four {:valid false}}
-        form-content [{:id "one"} {:id "two"} {:id "three"}]
-        result       (answers->valid-status answers nil form-content)]
-    (is (= {:invalid-fields '()} result))))
+  (is (= {:invalid-fields '()}
+         (answers->valid-status {:one   {:valid true}
+                                 :two   {:valid true}
+                                 :three {:valid true}
+                                 :four  {:valid false}}
+                                nil
+                                [{:id "one"}
+                                 {:id "two"}
+                                 {:id "three"}]))))
 
 (def application-data-to-submit {:answers
                                  (sorted-map
