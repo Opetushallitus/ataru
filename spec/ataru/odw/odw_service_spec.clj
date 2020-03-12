@@ -94,4 +94,49 @@
               {:hakukausiVuosi 2096}
               (merge double-degree-identifier {:dfeb9d56-4d53-4087-9473-1b2d9437e47f {:value "1"}})))))
 
+(def international-matriculation-fi-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_kansainvalinen_suomessa"]}})
+
+(describe "international matriculation examination in Finland / pohjakoulutus_yo_kansainvalinen_suomessa completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "applicant will complete degree this year"
+    ; This is a regression: All these were "0" before 2020 but somewhere along the line the form answers were reordered
+    ; causing the values to change
+    (let [completion-year-output [{:pohjakoulutuskklomake "pohjakoulutus_yo_kansainvalinen_suomessa" :suoritusvuosi 2020}]
+          application-form       {:hakukausiVuosi 2020}
+          degrees                {:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year "1"
+                                  :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year "1"
+                                  :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year "1"
+                                  :32b5f6a9-1ccb-4227-8c68-3c0a82fb0a73                                       "0"
+                                  :64d561e2-20f7-4143-9ad8-b6fa9a8f6fed                                       "0"
+                                  :6b7119c9-42ec-467d-909c-6d1cc555b823                                       "0"}]
+      (doall (map (fn [[degree value]]
+                    (should= completion-year-output
+                             (select-year-for
+                              application-form
+                              (merge international-matriculation-fi-identifier {degree {:value value}}))))
+                  degrees)))))
+
+(def international-matriculation-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ulkomainen"]}})
+
+(describe "international matriculation examination / pohjakoulutus_yo_kansainvalinen completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "applicant will complete degree this year"
+    ; Same as above, this is also a regression for the exact same reason.
+    (let [completion-year-output [{:pohjakoulutuskklomake "pohjakoulutus_yo_ulkomainen" :suoritusvuosi 2020}]
+          application-form       {:hakukausiVuosi 2020}
+          degrees                {:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year "1"
+                                  :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year "1"
+                                  :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year "1"
+                                  :d037fa56-6354-44fc-87d6-8b774b95dcdf                          "0"
+                                  :6e980e4d-257a-49ba-a5e6-5424220e6f08                          "0"
+                                  :220c3b47-1ca6-47e7-8af2-2f6ff823e07b                          "0"}]
+      (doall (map (fn [[degree value]]
+                    (should= completion-year-output
+                             (select-year-for
+                              application-form
+                              (merge international-matriculation-identifier {degree {:value value}}))))
+                  degrees)))))
+
 (run-specs)
