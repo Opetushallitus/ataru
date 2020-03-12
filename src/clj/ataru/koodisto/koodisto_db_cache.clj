@@ -90,7 +90,8 @@
                :version version}))
        (add-within "oppilaitosnumero")
        (mapcat :within)
-       (map #(assoc % :label (:nimi (organization-client/get-organization-by-oid-or-number (:value %)))))))
+       (map #(assoc % :label (or (-> (:value %) (organization-client/get-organization-by-oid-or-number) :nimi)
+                                 (:label %))))))
 
 (s/defn ^:always-validate get-koodi-options :- [schema/Koodi]
   [koodisto-uri :- s/Str]
