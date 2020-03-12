@@ -54,11 +54,11 @@
     (:answers application)))
 
 (re-frame/reg-sub
-  :application/higher-base-education-module-attachment-ids
+  :application/excluded-attachment-ids-when-yo-and-jyemp
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
   (fn [application _]
-    (:higher-base-education-module-attachment-ids application)))
+    (:excluded-attachment-ids-when-yo-and-jyemp application)))
 
 (re-frame/reg-sub
   :application/person
@@ -252,7 +252,7 @@
     [(re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid])
      (re-frame/subscribe [:application/selected-hakukohteet])
      (re-frame/subscribe [:application/ylioppilastutkinto?])
-     (re-frame/subscribe [:application/higher-base-education-module-attachment-ids])])
+     (re-frame/subscribe [:application/excluded-attachment-ids-when-yo-and-jyemp])])
   (fn [[hakukohteet selected-hakukohteet ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp] [_ field]]
     (when-let [ids (some-> (concat (get field :belongs-to-hakukohderyhma)
                                    (get field :belongs-to-hakukohteet))

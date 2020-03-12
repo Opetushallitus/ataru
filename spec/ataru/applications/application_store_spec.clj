@@ -1,6 +1,6 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
-            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
+            [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [clojure.java.jdbc :as jdbc]
@@ -287,16 +287,13 @@
           (tags :unit :attachments)
 
   (it "should be possible to extract attachment ids from base education module"
-    (let [content                         (:content form-fixtures/base-education-attachment-test-form)
-          attachments-from-base-education (util/attachment-ids-from-children content
-                                                                             higher-completed-base-education-id
-                                                                             attachment-always-visible?)]
-      (should== #{"pohjakoulutus_kk_ulk--attachement"
-                  "pohjakoulutus_lk--attachment"
-                  "pohjakoulutus_avoin--attachment"
-                  "pohjakoulutus_am--attachment"
-                  "pohjakoulutus_amt--attachment"
-                  "pohjakoulutus_ulk--attachment"
-                  "pohjakoulutus_kk--attachment"
-                  "pohjakoulutus_muu--attachment"}
-                attachments-from-base-education))))
+    (should== #{"pohjakoulutus_kk_ulk--attachement"
+                "pohjakoulutus_lk--attachment"
+                "pohjakoulutus_avoin--attachment"
+                "pohjakoulutus_am--attachment"
+                "pohjakoulutus_amt--attachment"
+                "pohjakoulutus_ulk--attachment"
+                "pohjakoulutus_kk--attachment"
+                "pohjakoulutus_muu--attachment"}
+              (hebem/non-yo-attachment-ids
+               form-fixtures/base-education-attachment-test-form))))

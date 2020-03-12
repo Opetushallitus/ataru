@@ -1020,7 +1020,17 @@
        (map (comp name :id))
        set))
 
-(defn attachment-always-visible?
-  [attachment-id]
-  (or (starts-with? attachment-id "pohjakoulutus_yo")
-      (starts-with? attachment-id "pohjakoulutus-yo")))
+(defn non-yo-attachment-ids
+  [form]
+  (->> (util/find-field (:content form) higher-completed-base-education-id)
+       :options
+       (remove #(contains? #{"pohjakoulutus_yo"
+                             "pohjakoulutus_yo_ammatillinen"
+                             "pohjakoulutus_yo_kansainvalinen_suomessa"
+                             "pohjakoulutus_yo_ulkomainen"}
+                           (:value %)))
+       (mapcat :followups)
+       util/flatten-form-fields
+       (filter #(= "attachment" (:fieldType %)))
+       (map :id)
+       set))

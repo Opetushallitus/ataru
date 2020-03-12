@@ -64,14 +64,6 @@
                              (mapcat :followups (:options (first fields)))))
                id)))
 
-(defn attachment-ids-from-children [fields parent-id skip?]
-  (some->> (find-field fields parent-id)
-           flatten-form-field
-           (filter #(= "attachment" (:fieldType %)))
-           (map :id)
-           (remove skip?)
-           set))
-
 (declare map-form-fields)
 
 (defn map-form-field [f field]
