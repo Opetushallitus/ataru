@@ -2,7 +2,7 @@
   (:require [ataru.application.application-states :as application-states]
             [cheshire.core :as json]
             [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
-            [ataru.component-data.higher-education-base-education-module :refer [higher-completed-base-education-id attachment-always-visible?]]
+            [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
@@ -207,9 +207,7 @@
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content   (-> form :content util/flatten-form-fields)
         fields-by-id        (util/form-fields-by-id form)
-        excluded-attachment-ids-when-yo-and-jyemp (util/attachment-ids-from-children (:content form)
-                                                                                     higher-completed-base-education-id
-                                                                                     attachment-always-visible?)
+        excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
         answers-by-key      (-> application :content :answers util/answers-by-key)
         visible-attachments (filter-visible-attachments answers-by-key flat-form-content)
         reviews             (create-application-attachment-reviews
