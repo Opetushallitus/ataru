@@ -191,9 +191,7 @@
 (re-frame/reg-sub
   :application/valid-status
   (fn [db]
-    (-> db
-        (get-in [:application :answers-validity])
-        (update :invalid-fields (partial sort-by :order-idx)))))
+    (get-in db [:application :answers-validity])))
 
 (re-frame/reg-sub
   :application/can-apply?
