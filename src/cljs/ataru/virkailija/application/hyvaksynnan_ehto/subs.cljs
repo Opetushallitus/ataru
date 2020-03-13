@@ -76,19 +76,19 @@
   (fn [db _]
     (let [haku-oid       (get-in db [:application :selected-application-and-form :application :haku])
           hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])
-          hakukohde-oid  (first hakukohde-oids)
           rights         (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
                               (map second)
                               (apply clojure.set/union))]
-      (and (some? hakukohde-oid)
-           (empty? (rest hakukohde-oids))
+      (and (seq hakukohde-oids)
            (clojure.string/starts-with?
             (get-in db [:haut haku-oid :kohdejoukko-uri] "")
             "haunkohdejoukko_12#")
            (or (contains? rights :view-applications)
                (contains? rights :edit-applications))
            (or (get-in db [:haut haku-oid :sijoittelu])
-               (true? (get-in db [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta])))))))
+               (->> hakukohde-oids
+                    (map #(get-in db [:application :valintalaskentakoostepalvelu % :valintalaskenta]))
+                    (some true?)))))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled?
