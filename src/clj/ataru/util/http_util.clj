@@ -10,7 +10,7 @@
       (update :headers merge
               {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
               {"CSRF" csrf-value})
-      (merge {:cookies {"CSRF" {:value csrf-value :path  "/"}}})))
+      (update :cookies merge {"CSRF" {:value csrf-value :path "/"}})))
 
 (defn do-request
   [{:keys [url method as] :as opts}]
@@ -22,7 +22,6 @@
         status      (:status response 500)]
     (when (or (<= 400 status) (< 1000 time))
       (log/warn "HTTP" method-name url status (str time "ms")))
-    (clojure.pprint/pprint (dissoc response :body))
     response))
 
 (defn do-get
