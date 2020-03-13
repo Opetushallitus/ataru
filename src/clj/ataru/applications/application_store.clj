@@ -309,7 +309,6 @@
 
 (defn add-application [new-application applied-hakukohteet form session]
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-      (info (str "Inserting new application"))
       (let [selection-id   (:selection-id new-application)
             virkailija-oid (when-let [secret (:virkailija-secret new-application)]
                              (get-virkailija-oid-for-create-secret conn secret))
