@@ -581,6 +581,7 @@
                                                          (util/flatten-form-fields (:content form)))]
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers application-meta-fields lang)
+                          (clojure.pprint/pprint applications)
                           (->> applications
                                (sort-by :created-time)
                                (reverse)

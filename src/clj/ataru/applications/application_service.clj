@@ -362,7 +362,7 @@
         applications))
 
 (defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde selected-hakukohderyhma user-wants-to-skip-answers? included-ids session
+  [application-keys selected-hakukohde selected-hakukohderyhma included-ids session
    organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service valinta-tulos-service]
   (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
     (let [applications                     (application-store/get-applications-by-keys application-keys)
@@ -388,15 +388,14 @@
           skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                              (<= 200000 (count applications))
                                              (<= 4500 (count applications)))
-          skip-answers?                    (or user-wants-to-skip-answers?
-                                               skip-answers-to-preserve-memory?)
           lang                             (keyword (or (-> session :identity :lang) :fi))]
+      (log/warn "Answers will be skipped to preserve memory")
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews
                                                         application-review-notes
                                                         selected-hakukohde
                                                         selected-hakukohderyhma
-                                                        skip-answers?
+                                                        skip-answers-to-preserve-memory?
                                                         included-ids
                                                         lang
                                                         hakukohteiden-ehdolliset

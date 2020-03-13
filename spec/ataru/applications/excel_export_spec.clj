@@ -68,7 +68,7 @@
          (.delete ~(first bindings))))))
 
 (describe "excel export"
-  (tags :unit :excel)
+  (tags :unit :excel :petar)
 
   (around [spec]
     (with-redefs [form-store/fetch-by-id (fn [id]

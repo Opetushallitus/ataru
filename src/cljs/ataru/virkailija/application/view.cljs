@@ -95,9 +95,6 @@
                      :name  "filename"
                      :value filename}]
             [:input {:type  "hidden"
-                     :name  "skip-answers"
-                     :value "false"}]
-            [:input {:type  "hidden"
                      :name  "included-ids"
                      :value (or @included-ids "")}]
             (when-let [csrf-token (cljs-util/csrf-token)]

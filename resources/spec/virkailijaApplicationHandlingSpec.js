@@ -84,6 +84,10 @@
     )
   }
 
+  const excelRequestPopup = () => {
+    return testFrame().find('.application-handling__excel-request-popup')
+  }
+
   const applicationHakukohdeStates = () => {
     return _.map(
       testFrame().find('.application-handling__hakukohde-state'),
@@ -127,6 +131,12 @@
 
   const navigateToApplicationHandlingForForm = () => {
     loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
+  }
+
+  const navigateToApplicationHandlingForHakukohde = () => {
+    loadInFrame(
+      'http://localhost:8350/lomake-editori/applications/haku/1.2.246.562.29.93102260101/hakukohderyhma/1.2.246.562.28.27899885282?ensisijaisesti=true&rajaus-hakukohteella=1.2.246.562.20.45589845242'
+    )
   }
 
   const includedHakukohdeProcessingStateFilters = () => {
@@ -978,6 +988,24 @@
             )
           })
         })
+      })
+    })
+
+    xdescribe('Excel export', () => {
+      describe('navigate to hakukohde', () => {
+        before(
+          navigateToApplicationHandlingForHakukohde,
+          clickElement(() => {
+            return testFrame().find(
+              '.application-handling__excel-download-link'
+            )
+          }),
+          wait.until(() => {
+            return excelRequestPopup().is(':visible')
+          })
+        )
+
+        it('has expected default data', () => {})
       })
     })
   })

@@ -181,6 +181,11 @@ test-browser: compile-test-code
 test-clojure: nuke-test-db init-test-db
 	APP=virkailija lein with-profile test spec -t ~ui
 
+test-petar: nuke-test-db init-test-db
+	APP=virkailija lein with-profile test spec -t petar
+
+
+
 test: start-docker test-clojurescript test-clojure test-browser
 
 # ----------------
