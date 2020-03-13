@@ -294,14 +294,26 @@
        first
        :virkailija_oid))
 
+(defn- remove-null-bytes-from-value
+  [value]
+  (cond (string? value)
+        (clojure.string/replace value "\u0000" "")
+        (sequential? value)
+        (mapv remove-null-bytes-from-value value)
+        :else
+        value))
+
+(defn- remove-null-bytes-from-answer
+  [answer]
+  (update answer :value remove-null-bytes-from-value))
+
 (defn add-application [new-application applied-hakukohteet form session]
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-      (info (str "Inserting new application"))
       (let [selection-id   (:selection-id new-application)
             virkailija-oid (when-let [secret (:virkailija-secret new-application)]
                              (get-virkailija-oid-for-create-secret conn secret))
-
-            {:keys [id key] :as new-application} (add-new-application-version new-application
+            {:keys [id key] :as new-application} (add-new-application-version
+                                                   (update new-application :answers (partial mapv remove-null-bytes-from-answer))
                                                    true
                                                    applied-hakukohteet
                                                    nil
