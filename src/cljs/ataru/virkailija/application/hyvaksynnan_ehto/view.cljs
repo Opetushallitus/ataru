@@ -37,9 +37,7 @@
         koodit (re-frame/subscribe [:hyvaksynnan-ehto/ehto-koodit])]
     (fn [application-key hakukohde-oid]
       (let [disabled?            @(re-frame/subscribe
-                                   [:hyvaksynnan-ehto/ehto-text-disabled?
-                                    application-key
-                                    hakukohde-oid])
+                                   [:hyvaksynnan-ehto/ehto-text-disabled? application-key])
             selected-koodi       @(re-frame/subscribe
                                    [:hyvaksynnan-ehto/selected-ehto-koodi
                                     application-key
@@ -147,9 +145,7 @@
             (reset! previous-states [current-state (first @previous-states)]))))
       :reagent-render
       (fn [application-key hakukohde-oid selected-lang]
-        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled?
-                                              application-key
-                                              hakukohde-oid])]
+        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])]
           (reset! enabled? (not disabled?))
           [:textarea.hyvaksynnan-ehto-texts__textarea
            {:id              (str "hyvaksynnan-ehto-texts__text-language-"
@@ -235,11 +231,10 @@
                              hakukohde-oid])
      [[ehto-valintatapajonoissa application-key hakukohde-oid]]
      [[:div.hyvaksynnan-ehto-error
-       (when-let [error @(re-frame/subscribe [:hyvaksynnan-ehto/error
-                                              application-key
-                                              hakukohde-oid])]
-         [:span.hyvaksynnan-ehto-error__text
-          @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])])]
+       (let [errors @(re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])]
+         (when (seq errors)
+           [:span.hyvaksynnan-ehto-error__text
+            @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])]))]
       (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi?
                                   application-key
                                   hakukohde-oid])
