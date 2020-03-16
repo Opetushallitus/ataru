@@ -40,8 +40,11 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/valintatapajonoissa
-  (fn [db [_ application-key hakukohde-oid]]
-    (some->> (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :valintatapajonoissa])
+  (fn [db [_ application-key]]
+    (some->> (get-in db [:hyvaksynnan-ehto application-key])
+             vals
+             (map :valintatapajonoissa)
+             (mapcat identity)
              (sort-by (fn [[oid _]]
                         (get-in db [:valintatapajono oid :priority] 0)))
              (mapv (fn [[oid ehto]]
@@ -118,18 +121,16 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled?
-  (fn [[_ application-key hakukohde-oid] _]
+  (fn [[_ application-key] _]
     [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
      (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])
-     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                          application-key
-                          hakukohde-oid])])
+     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])])
   (fn [[rights requests-in-flight? error valintatapajonoissa] _]
     (or (not (contains? rights :edit-applications))
         requests-in-flight?
         (seq error)
-        (some? valintatapajonoissa))))
+        (seq valintatapajonoissa))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-koodi?
@@ -137,12 +138,10 @@
     [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
                           application-key
                           hakukohde-oid])
-     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                          application-key
-                          hakukohde-oid])])
+     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])])
   (fn [[ehdollisesti-hyvaksyttavissa? valintatapajonoissa] _]
     (and ehdollisesti-hyvaksyttavissa?
-         (nil? valintatapajonoissa))))
+         (-> valintatapajonoissa seq nil?))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-texts?
@@ -150,15 +149,13 @@
     [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
                           application-key
                           hakukohde-oid])
-     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                          application-key
-                          hakukohde-oid])
+     (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi
                           application-key
                           hakukohde-oid])])
   (fn [[ehdollisesti-hyvaksyttavissa? valintatapajonoissa selected-ehto-koodi] _]
     (and ehdollisesti-hyvaksyttavissa?
-         (nil? valintatapajonoissa)
+         (-> valintatapajonoissa seq nil?)
          (= "muu" selected-ehto-koodi))))
 
 (re-frame/reg-sub
@@ -174,19 +171,15 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-valintatapajonoissa?
-  (fn [[_ application-key hakukohde-oid] _]
-    (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                         application-key
-                         hakukohde-oid]))
+  (fn [[_ application-key] _]
+    (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key]))
   (fn [valintatapajonoissa _]
-    (some? valintatapajonoissa)))
+    (seq valintatapajonoissa)))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-single-ehto-valintatapajonoissa?
-  (fn [[_ application-key hakukohde-oid] _]
-    (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                         application-key
-                         hakukohde-oid]))
+  (fn [[_ application-key] _]
+    (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key]))
   (fn [valintatapajonoissa _]
     (if-let [ehdot (seq (map second valintatapajonoissa))]
       (apply = ehdot)

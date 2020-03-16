@@ -6,9 +6,7 @@
 
 (defn ehdollisesti-hyvaksyttavissa
   [application-key hakukohde-oid]
-  (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled?
-                                        application-key
-                                        hakukohde-oid])
+  (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled? application-key])
         checked?  @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
                                         application-key
                                         hakukohde-oid])]
@@ -201,14 +199,10 @@
          [ehto-text application-key hakukohde-oid selected-lang]]))))
 
 (defn- ehto-valintatapajonoissa
-  [application-key hakukohde-oid]
+  [application-key]
   (let [lang  @(re-frame/subscribe [:editor/virkailija-lang])
-        ehdot @(re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
-                                    application-key
-                                    hakukohde-oid])]
-    (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-single-ehto-valintatapajonoissa?
-                              application-key
-                              hakukohde-oid])
+        ehdot @(re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])]
+    (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-single-ehto-valintatapajonoissa? application-key])
       [:div.hyvaksynnan-ehto-valintatapajonoissa
        [:p.hyvaksynnan-ehto-valintatapajonoissa__ehto-text
         (util/non-blank-val (second (first ehdot)) [lang :fi :sv :en])]]
@@ -226,10 +220,8 @@
   (into
    [:div.hyvaksynnan-ehto
     [ehdollisesti-hyvaksyttavissa application-key hakukohde-oid]]
-   (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-valintatapajonoissa?
-                             application-key
-                             hakukohde-oid])
-     [[ehto-valintatapajonoissa application-key hakukohde-oid]]
+   (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-valintatapajonoissa? application-key])
+     [[ehto-valintatapajonoissa application-key]]
      [[:div.hyvaksynnan-ehto-error
        (let [errors @(re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])]
          (when (seq errors)
