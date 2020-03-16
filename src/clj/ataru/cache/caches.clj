@@ -245,7 +245,7 @@
       {:name          "koodisto"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout  [30 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
                                                    koodisto-cache/koodisto-checker)})
      [:redis])]
