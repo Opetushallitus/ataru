@@ -1263,12 +1263,9 @@
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
         response (http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
-    (assoc
-     response
-     ;; turn keywords into strings, Ring requires strings :(
-     :headers (map-kv
-               (fn [header-kw header-value] [(name header-kw) header-value])
-               (:headers request)))))
+    {:status  (:status response)
+     :body    (:body response)
+     :headers (:headers response)}))
 
 ;; All these paths are required to be proxied by raamit when running locally
 ;; in your dev-environment. They will get proxied to the correct test environment
