@@ -179,9 +179,7 @@
   [application-key hakukohde-oid selected-lang]
   [:div.hyvaksynnan-ehto-texts__textarea-container
    [ehto-text-textarea application-key hakukohde-oid selected-lang]
-   (when @(re-frame/subscribe [:hyvaksynnan-ehto/request-in-flight?
-                               application-key
-                               hakukohde-oid])
+   (when @(re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      [:div.hyvaksynnan-ehto-texts__spinner-overlay
       [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])])
 

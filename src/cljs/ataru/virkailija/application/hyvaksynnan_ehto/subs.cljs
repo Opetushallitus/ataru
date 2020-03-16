@@ -2,10 +2,26 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]))
 
+(defn- filter-hyvaksynnan-ehdot-for-correct-hakukohde [hakukohde-oids]
+  (filter (fn [[hakukohde-oid]]
+            (some #{hakukohde-oid} hakukohde-oids))))
+
+(defn- hyvaksynnan-ehto-has-request-in-flight? [[_ hyvaksynnan-ehto]]
+  (-> hyvaksynnan-ehto :request-in-flight? true?))
+
 (re-frame/reg-sub
-  :hyvaksynnan-ehto/request-in-flight?
-  (fn [db [_ application-key hakukohde-oid]]
-    (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :request-in-flight?] false)))
+  :hyvaksynnan-ehto/requests-in-flight?
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
+  (fn [[hyvaksynnan-ehdot hakukohde-oids]]
+    (->> hyvaksynnan-ehdot
+         (into []
+               (comp (filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+                     (filter hyvaksynnan-ehto-has-request-in-flight?)))
+         seq
+         nil?
+         not)))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/error
@@ -94,18 +110,16 @@
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled?
   (fn [[_ application-key hakukohde-oid] _]
     [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
-     (re-frame/subscribe [:hyvaksynnan-ehto/request-in-flight?
-                          application-key
-                          hakukohde-oid])
+     (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/error
                           application-key
                           hakukohde-oid])
      (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa
                           application-key
                           hakukohde-oid])])
-  (fn [[rights request-in-flight? error valintatapajonoissa] _]
+  (fn [[rights requests-in-flight? error valintatapajonoissa] _]
     (or (not (contains? rights :edit-applications))
-        request-in-flight?
+        requests-in-flight?
         (some? error)
         (some? valintatapajonoissa))))
 
@@ -126,15 +140,13 @@
   :hyvaksynnan-ehto/ehto-koodi-disabled?
   (fn [[_ application-key hakukohde-oid] _]
     [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
-     (re-frame/subscribe [:hyvaksynnan-ehto/request-in-flight?
-                          application-key
-                          hakukohde-oid])
+     (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/error
                           application-key
                           hakukohde-oid])])
-  (fn [[rights request-in-flight? error] _]
+  (fn [[rights requests-in-flight? error] _]
     (or (not (contains? rights :edit-applications))
-        request-in-flight?
+        requests-in-flight?
         (some? error))))
 
 (re-frame/reg-sub
@@ -158,15 +170,13 @@
   :hyvaksynnan-ehto/ehto-text-disabled?
   (fn [[_ application-key hakukohde-oid] _]
     [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
-     (re-frame/subscribe [:hyvaksynnan-ehto/request-in-flight?
-                          application-key
-                          hakukohde-oid])
+     (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/error
                           application-key
                           hakukohde-oid])])
-  (fn [[rights request-in-flight? error] _]
+  (fn [[rights requests-in-flight? error] _]
     (or (not (contains? rights :edit-applications))
-        request-in-flight?
+        requests-in-flight?
         (some? error))))
 
 (re-frame/reg-sub
