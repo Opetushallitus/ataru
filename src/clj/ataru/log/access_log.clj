@@ -15,6 +15,9 @@
     :virkailija "ataru-editori"
     :hakija     "ataru-hakija"))
 
+(defonce environment-name
+  (-> config :public-config :environment-name))
+
 (defonce access-log-config
   (letfn [(get-log-path
            []
@@ -53,15 +56,6 @@
      :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
                       :timezone (TimeZone/getTimeZone "Europe/Helsinki")})))
 
-(defn info [str]
-  (timbre/log* access-log-config :info str))
-
-(defn warn [str]
-  (timbre/log* access-log-config :warn str))
-
-(defn error [str]
-  (timbre/log* access-log-config :error str))
-
 (defn- extract-header
   [http-entity header-name]
   (get-in http-entity [:headers header-name] "-"))
@@ -72,28 +66,35 @@
         ring-session (or (some #(when (s/starts-with? % "ring-session") %) cookies) "-")]
     (last (s/split ring-session #"="))))
 
-(defn log
-  [{:keys [info]}
-   {:keys [request-method uri remote-addr query-string] :as req}
-   {:keys [status] :as resp}
-   totaltime]
-  (let [method      (-> request-method name s/upper-case)
-        request     (str method " " uri (when query-string (str "?" query-string)))
-        log-map     {:timestamp           (.toString (t/to-time-zone (t/now) (t/time-zone-for-id "Europe/Helsinki")))
-                     :responseCode        status
-                     :request             request
-                     :responseTime        totaltime
-                     :requestMethod       method
-                     :service             service-name
-                     :environment         (-> config :public-config :environment-name)
-                     :user-agent          (extract-header req "user-agent")
-                     :caller-id           (extract-header req "caller-id")
-                     :clientSubsystemCode (extract-header req "clientsubsystemcode")
-                     :x-forwarded-for     (extract-header req "x-forwarded-for")
-                     :x-real-ip           (extract-header req "x-real-ip")
-                     :remote-ip           remote-addr
-                     :session             (extract-session req)
-                     :response-size       (extract-header resp "Content-Length")
-                     :referer             (extract-header req "referer")}
-        log-message (cheshire.core/generate-string log-map)]
-    (info log-message)))
+(defn wrap-with-access-logging
+  [handler]
+  (fn [request]
+    (let [start    (t/now)
+          response (handler request)
+          end      (t/now)]
+      (try
+        (timbre/log*
+         access-log-config
+         :info
+         (cheshire.core/generate-string
+          {:timestamp       (.toString (t/to-time-zone end (t/time-zone-for-id "Europe/Helsinki")))
+           :responseCode    (:status response)
+           :request         (str (s/upper-case (:request-method request)) " "
+                                 (:uri request)
+                                 (when (:query-string request)
+                                   (str "?" (:query-string request))))
+           :responseTime    (t/in-millis (t/interval start end))
+           :requestMethod   (s/upper-case (:request-method request))
+           :service         service-name
+           :environment     environment-name
+           :user-agent      (extract-header request "user-agent")
+           :caller-id       (extract-header request "caller-id")
+           :x-forwarded-for (extract-header request "x-forwarded-for")
+           :x-real-ip       (extract-header request "x-real-ip")
+           :remote-ip       (:remote-addr request)
+           :session         (extract-session request)
+           :response-size   (extract-header response "Content-Length")
+           :referer         (extract-header request "referer")}))
+        (catch Exception e
+          (timbre/error e "Failed to access log")))
+      response)))

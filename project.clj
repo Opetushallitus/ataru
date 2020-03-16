@@ -72,8 +72,6 @@
                  [selmer "1.12.17"]
                  [metosin/ring-http-response "0.9.1"]
                  [fi.vm.sade/scala-cas_2.12 "1.2.0-SNAPSHOT"]
-                 [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
-                 [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.apache.poi/poi-ooxml "4.1.0"]
                  [org.clojure/core.cache "0.8.2"]

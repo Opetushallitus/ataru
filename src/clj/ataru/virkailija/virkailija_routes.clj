@@ -64,7 +64,6 @@
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.middleware.session :as ring-session]
             [ring.util.io :as ring-io]
             [ring.swagger.json-schema :as json-schema]
@@ -1383,20 +1382,8 @@
                                                (assoc :session nil)
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)))
-                            (wrap-with-logger
-                              :debug identity
-                              :info (fn [x] (access-log/info x))
-                              :warn (fn [x] (access-log/warn x))
-                              :error (fn [x] (access-log/error x))
-                              :pre-logger (fn [_ _] nil)
-                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
-                                             (when (or
-                                                     (>= status 400)
-                                                     (clojure.string/starts-with? uri "/lomake-editori/api/")
-                                                     (clojure.string/starts-with? uri "/lomake-editori/auth/"))
-                                               (access-log/log options request response totaltime))))
+                            (access-log/wrap-with-access-logging)
                             (wrap-gzip)
-
                             (cache-control/wrap-cache-control))))
 
   (stop [this]
