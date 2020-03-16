@@ -15,7 +15,7 @@
       (update :cookies merge {"CSRF" {:value csrf-value :path "/"}})))
 
 (defn do-request
-  [{:keys [url method as] :as opts}]
+  [{:keys [url method] :as opts}]
   (let [method-name (clojure.string/upper-case (name method))
         opts        (enrich-with-mandatory-headers opts)
         start       (System/currentTimeMillis)

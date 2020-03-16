@@ -29,10 +29,9 @@
       (assoc :body (json/generate-string body))))
 
 (defn- create-params [session-cookie-name cas-session-id body]
-  (cond-> {:headers          {"Cookie" (str session-cookie-name "=" @cas-session-id)}
+  (cond-> {:cookies          {session-cookie-name  {:value @cas-session-id :path "/"}}
            :follow-redirects false}
-          (some? body)
-          (request-with-json-body body)))
+          (some? body) (request-with-json-body body)))
 
 (defn- cas-http [client method url & [body]]
   (let [cas-client          (:client client)
