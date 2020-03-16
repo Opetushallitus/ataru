@@ -16,25 +16,42 @@
     :hakija     "ataru-hakija"))
 
 (defonce access-log-config
-  (assoc timbre/example-config
-         :appenders {:file-appender
-                     (assoc (rolling-appender {:path    (str (case (app-utils/get-app-id)
-                                                               :virkailija (-> config :log :virkailija-base-path)
-                                                               :hakija     (-> config :log :hakija-base-path))
-                                                             "/access_" service-name
-                                                             ;; Hostname will differentiate files in actual environments
-                                                             (when (:hostname env) (str "_" (:hostname env))))
-                                               :pattern :daily})
-                            :output-fn (fn [{:keys [msg_]}] (force msg_)))
-                     :stdout-appender (assoc (println-appender
-                                              {:stream :std-out})
-                                             :output-fn (fn [data]
-                                                          (json/generate-string
-                                                           {:eventType "access"
-                                                            :timestamp (force (:timestamp_ data))
-                                                            :event     (dissoc (json/parse-string (force (:msg_ data))) :timestamp)})))}
-         :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-                          :timezone (TimeZone/getTimeZone "Europe/Helsinki")}))
+  (letfn [(get-log-path
+           []
+           (str (case (app-utils/get-app-id)
+                  :virkailija (-> config :log :virkailija-base-path)
+                  :hakija     (-> config :log :hakija-base-path))
+                "/access_" service-name
+                ;; Hostname will differentiate files in actual environments
+                (when (:hostname env) (str "_" (:hostname env)))))
+
+          (file-logger
+           [{:keys [msg_]}]
+           (force msg_))
+
+          (stdout-logger
+           [data]
+           (let [timestamp (force (:timestamp_ data))
+                 message   (force (:msg_ data))
+                 event     (dissoc (try
+                                     (json/parse-string message)
+                                     (catch Exception e
+                                       (throw (ex-info (str "Failed to deserialize access log event to JSON. Malformed input? Message:\n" message)
+                                                       {:data data} e))))
+                                   :timestamp)]
+             (json/generate-string
+              {:eventType "access"
+               :timestamp timestamp
+               :event     event}))
+           )]
+    (assoc timbre/example-config
+     :appenders {:file-appender   (assoc (rolling-appender {:path    (get-log-path)
+                                                            :pattern :daily})
+                                         :output-fn file-logger)
+                 :stdout-appender (assoc (println-appender {:stream :std-out})
+                                         :output-fn stdout-logger)}
+     :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+                      :timezone (TimeZone/getTimeZone "Europe/Helsinki")})))
 
 (defn info [str]
   (timbre/log* access-log-config :info str))
