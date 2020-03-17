@@ -1,10 +1,7 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.subs
   (:require [re-frame.core :as re-frame]
-            [ataru.util :as util]))
-
-(defn- filter-hyvaksynnan-ehdot-for-correct-hakukohde [hakukohde-oids]
-  (filter (fn [[hakukohde-oid]]
-            (some #{hakukohde-oid} hakukohde-oids))))
+            [ataru.util :as util]
+            [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]))
 
 (defn- hyvaksynnan-ehto-has-request-in-flight? [[_ hyvaksynnan-ehto]]
   (-> hyvaksynnan-ehto :request-in-flight? true?))
@@ -20,7 +17,7 @@
   (fn [[hyvaksynnan-ehdot hakukohde-oids]]
     (->> hyvaksynnan-ehdot
          (into []
-               (comp (filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+               (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
                      (filter hyvaksynnan-ehto-has-request-in-flight?)))
          seq
          nil?
@@ -33,7 +30,7 @@
      (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
   (fn [[hyvaksynnan-ehdot hakukohde-oids]]
     (into []
-          (comp (filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+          (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
                 (map hyvaksynnan-ehto-error)
                 (filter (comp not nil?)))
           hyvaksynnan-ehdot)))
@@ -60,8 +57,33 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
-  (fn [db [_ application-key hakukohde-oid]]
-    (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :ehdollisesti-hyvaksyttavissa?] false)))
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
+  (fn [[hyvaksynnan-ehdot hakukohde-oids]]
+    (let [hakukohteet-ehdollisesti-hyvaksyttavissa? (->> hyvaksynnan-ehdot
+                                                         (into []
+                                                               (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+                                                                     (map second)
+                                                                     (map (fn [{ehdollisesti-hyvaksyttavissa? :ehdollisesti-hyvaksyttavissa?
+                                                                                {:keys [koodi ehto-text]}     :hakukohteessa}]
+                                                                            {:ehdollisesti-hyvaksyttavissa? ehdollisesti-hyvaksyttavissa?
+                                                                             :koodi                         koodi
+                                                                             :ehto-text                     ehto-text}))
+                                                                     (dedupe))))
+          total-values                              (count hakukohteet-ehdollisesti-hyvaksyttavissa?)
+          hakukohde-ehdollisesti-hyvaksyttavissa?   (-> hakukohteet-ehdollisesti-hyvaksyttavissa?
+                                                        first
+                                                        :ehdollisesti-hyvaksyttavissa?)]
+      (cond (> total-values 1)
+            :hyvaksynnan-ehto/monta-arvoa
+
+            (and (= total-values 1)
+                 hakukohde-ehdollisesti-hyvaksyttavissa?)
+            :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa
+
+            :else
+            :hyvaksynnan-ehto/ei-ehdollisesti-hyvaksyttavissa))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/hyvaksynnan-ehto-koodit
@@ -134,27 +156,23 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-koodi?
-  (fn [[_ application-key hakukohde-oid] _]
-    [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
-                          application-key
-                          hakukohde-oid])
+  (fn [[_ application-key] _]
+    [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])])
   (fn [[ehdollisesti-hyvaksyttavissa? valintatapajonoissa] _]
-    (and ehdollisesti-hyvaksyttavissa?
+    (and (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)
          (-> valintatapajonoissa seq nil?))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-texts?
   (fn [[_ application-key hakukohde-oid] _]
-    [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
-                          application-key
-                          hakukohde-oid])
+    [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi
                           application-key
                           hakukohde-oid])])
   (fn [[ehdollisesti-hyvaksyttavissa? valintatapajonoissa selected-ehto-koodi] _]
-    (and ehdollisesti-hyvaksyttavissa?
+    (and (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)
          (-> valintatapajonoissa seq nil?)
          (= "muu" selected-ehto-koodi))))
 
