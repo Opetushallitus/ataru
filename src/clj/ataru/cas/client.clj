@@ -30,7 +30,7 @@
 
 (defn- create-params [session-cookie-name cas-session-id body]
   (cond-> {:cookies          {session-cookie-name  {:value @cas-session-id :path "/"}}
-           :follow-redirects false}
+           :redirect-strategy :none}
           (some? body) (request-with-json-body body)))
 
 (defn- cas-http [client method url & [body]]
