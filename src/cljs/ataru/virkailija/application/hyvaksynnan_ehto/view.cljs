@@ -8,8 +8,7 @@
   [application-key hakukohde-oids]
   (let [ehdollisesti-hyvaksyttavissa? @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
         disabled?                     @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled? application-key])
-        checked?                      (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)
-        hakukohde-oid                 (first hakukohde-oids)]
+        checked?                      (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)]
     [:div.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa
      [:input.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa__checkbox
       {:id        (str "hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa-" application-key)
@@ -19,7 +18,7 @@
        :on-change (fn [_]
                     (re-frame/dispatch [:hyvaksynnan-ehto/set-ehdollisesti-hyvaksyttavissa
                                         application-key
-                                        hakukohde-oid
+                                        hakukohde-oids
                                         (not checked?)])
                     (when checked?
                       (re-frame/dispatch [:hyvaksynnan-ehto/delete-ehto-hakukohteissa
@@ -33,17 +32,14 @@
   [_ _]
   (let [open?  (r/atom false)
         koodit (re-frame/subscribe [:hyvaksynnan-ehto/ehto-koodit])]
-    (fn [application-key hakukohde-oid]
+    (fn [application-key hakukohde-oids]
       (let [disabled?            @(re-frame/subscribe
                                    [:hyvaksynnan-ehto/ehto-text-disabled? application-key])
             selected-koodi       @(re-frame/subscribe
-                                   [:hyvaksynnan-ehto/selected-ehto-koodi
-                                    application-key
-                                    hakukohde-oid])
+                                   [:hyvaksynnan-ehto/selected-ehto-koodi application-key])
+            hakukohde-oid        (first hakukohde-oids)
             selected-koodi-label @(re-frame/subscribe
-                                   [:hyvaksynnan-ehto/selected-ehto-koodi-label
-                                    application-key
-                                    hakukohde-oid])]
+                                   [:hyvaksynnan-ehto/selected-ehto-koodi-label application-key])]
         [:div.hyvaksynnan-ehto-ehto-koodi-dropdown
          (if (and (not disabled?)
                   (or @open? (nil? selected-koodi)))
@@ -242,8 +238,6 @@
               [:span.hyvaksynnan-ehto-error__text
                @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])]))]
          (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi? application-key])
-           [ehto-koodi application-key hakukohde-oid])
-         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-texts?
-                                     application-key
-                                     hakukohde-oid])
+           [ehto-koodi application-key hakukohde-oids])
+         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-texts? application-key])
            [ehto-texts application-key hakukohde-oid])]))))

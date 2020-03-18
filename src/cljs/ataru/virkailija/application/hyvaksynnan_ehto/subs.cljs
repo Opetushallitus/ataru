@@ -103,19 +103,30 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/selected-ehto-koodi
-  (fn [db [_ application-key hakukohde-oid]]
-    (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :hakukohteessa :koodi])))
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
+  (fn [[hyvaksynnan-ehdot hakukohde-oids]]
+    (let [selected-ehto-koodit (->> hyvaksynnan-ehdot
+                                    (into []
+                                          (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+                                                (map second)
+                                                (map :hakukohteessa)
+                                                (map :koodi)
+                                                (filter (comp not nil?))
+                                                (dedupe))))]
+      (when (= (count selected-ehto-koodit) 1)
+        (first selected-ehto-koodit)))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/selected-ehto-koodi-label
-  (fn [[_ application-key hakukohde-oid] _]
+  (fn [[_ application-key] _]
     [(re-frame/subscribe [:editor/virkailija-lang])
      (re-frame/subscribe [:hyvaksynnan-ehto/hyvaksynnan-ehto-koodit])
-     (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi
-                          application-key
-                          hakukohde-oid])])
+     (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi application-key])])
   (fn [[lang koodit selected-koodi] _]
-    (util/non-blank-val (get koodit selected-koodi) [lang :fi :sv :en])))
+    (when selected-koodi
+      (util/non-blank-val (get koodit selected-koodi) [lang :fi :sv :en]))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehto-text
@@ -165,12 +176,10 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show-ehto-texts?
-  (fn [[_ application-key hakukohde-oid] _]
+  (fn [[_ application-key] _]
     [(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])
-     (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi
-                          application-key
-                          hakukohde-oid])])
+     (re-frame/subscribe [:hyvaksynnan-ehto/selected-ehto-koodi application-key])])
   (fn [[ehdollisesti-hyvaksyttavissa? valintatapajonoissa selected-ehto-koodi] _]
     (and (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)
          (-> valintatapajonoissa seq nil?)

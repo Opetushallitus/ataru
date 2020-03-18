@@ -6,10 +6,31 @@
             [ataru.application-common.fx :refer [http]]
             [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]))
 
+(defn- update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+  [db update-fn application-key hakukohde-oids]
+  (update-in db
+             [:hyvaksynnan-ehto application-key]
+             (partial reduce-kv
+                      (fn [acc k v]
+                        (assoc acc
+                          k
+                          (cond-> v
+                                  (some #{k} hakukohde-oids)
+                                  update-fn)))
+                      {})))
+
+(defn- update-ehdollisesti-hyvaksyttavissa [state]
+  (fn set-state-to-hyvaksynnan-ehto [hyvaksynnan-ehto]
+    (assoc hyvaksynnan-ehto :ehdollisesti-hyvaksyttavissa? state)))
+
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehdollisesti-hyvaksyttavissa
-  (fn [db [_ application-key hakukohde-oid state]]
-    (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :ehdollisesti-hyvaksyttavissa?] state)))
+  (fn [db [_ application-key hakukohde-oids state]]
+    (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+      db
+      (update-ehdollisesti-hyvaksyttavissa state)
+      application-key
+      hakukohde-oids)))
 
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehto-koodi
@@ -99,6 +120,9 @@
                                                   :hakukohde-oid   hakukohde-oid
                                                   :last-modified   last-modified}}))
 
+(defn- set-request-in-flight [hyvaksynnan-ehto]
+  (assoc hyvaksynnan-ehto :request-in-flight? true))
+
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/delete-ehto-hakukohteissa
   (fn [{db :db} [_ application-key hakukohde-oids]]
@@ -110,16 +134,11 @@
                                                        (map (fn [[hakukohde-oid {last-modified :last-modified}]]
                                                               {:hakukohde-oid hakukohde-oid
                                                                :last-modified last-modified})))))]
-      {:db (update-in db
-                      [:hyvaksynnan-ehto application-key]
-                      (partial reduce-kv
-                               (fn [acc k v]
-                                 (assoc acc
-                                   k
-                                   (cond-> v
-                                           (some #{k} hakukohde-oids)
-                                           (assoc :request-in-flight? true))))
-                               {}))
+      {:db (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+             db
+             set-request-in-flight
+             application-key
+             hakukohde-oids)
        :dispatch-n (map (fn [{hakukohde-oid :hakukohde-oid
                               last-modified :last-modified}]
                           [:hyvaksynnan-ehto/delete-ehto-hakukohteessa
