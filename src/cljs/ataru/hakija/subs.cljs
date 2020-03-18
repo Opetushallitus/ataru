@@ -306,6 +306,22 @@
         row-amount))))
 
 (re-frame/reg-sub
+  :application/question-group-row-count
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui-of _]
+    (:count ui-of 1)))
+
+(re-frame/reg-sub
+  :application/attachment-count
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id question-group-idx]]
+    (if (some? question-group-idx)
+      (count (get-in answers [(keyword id) :values question-group-idx]))
+      (count (get-in answers [(keyword id) :values])))))
+
+(re-frame/reg-sub
   :application/multiple-choice-option-checked?
   (fn [db [_ parent-id option-value question-group-idx]]
     (let [option-path (cond-> [:application :answers parent-id :options]
@@ -460,6 +476,11 @@
     (if-let [limited (get db :selection-limited)]
       (and (limited (name id))
            (some #(get-in db [:application :validators-processing (keyword %)]) limited)))))
+
+(re-frame/reg-sub
+  :application/selection-over-network-uncertain?
+  (fn [db _]
+    (get-in db [:application :selection-over-network-uncertain?])))
 
 (re-frame/reg-sub
   :application/limit-reached?

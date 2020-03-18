@@ -1,6 +1,5 @@
 (ns ataru.hakija.application-form-components
   (:require [re-frame.core :refer [subscribe dispatch]]
-            [reagent.ratom :refer-macros [reaction]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common
              :refer
@@ -28,8 +27,8 @@
 (declare render-field)
 
 (defn- visible? [ui field-descriptor]
-  (and (not (get-in @ui [(keyword (:id field-descriptor)) :params :hidden] false))
-       (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
+  (and (not (get-in ui [(keyword (:id field-descriptor)) :params :hidden] false))
+       (get-in ui [(keyword (:id field-descriptor)) :visible?] true)
        (or (empty? (:children field-descriptor))
            (some (partial visible? ui) (:children field-descriptor)))))
 
@@ -85,17 +84,6 @@
          [:span (str label (required-hint field-descriptor))]
          [scroll-to-anchor field-descriptor]]))))
 
-(defn- show-text-field-error-class?
-  [field-descriptor validators-processing value valid?]
-  (and
-    (false? valid?)
-    (or (is-required-field? field-descriptor)
-        (-> field-descriptor :params :numeric))
-    (if (string? value)
-      (not (string/blank? value))
-      (seq value))
-    (not (contains? validators-processing (keyword (:id field-descriptor))))))
-
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
@@ -119,76 +107,71 @@
        [hakukohde-names-component/question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
-(defn email-field [field-descriptor _]
-  (let [id                    (keyword (:id field-descriptor))
-        languages             (subscribe [:application/default-languages])
-        size                  (get-in field-descriptor [:params :size])
-        size-class            (text-field-size->class size)
-        validators-processing (subscribe [:state-query [:application :validators-processing]])]
-    (fn [field-descriptor idx]
-      (let [answer      @(subscribe [:application/answer id idx nil])
-            on-change   #(if idx
-                           (multi-value-field-change field-descriptor 0 idx %)
-                           (textual-field-change field-descriptor %))
-            show-error? (show-text-field-error-class? field-descriptor
-                                                      @validators-processing
-                                                      (:value answer)
-                                                      (:valid answer))
-            value       (:value answer)
-            lang        @(subscribe [:application/form-language])]
-        [:div.application__form-field
-         [label field-descriptor]
-         [:div.application__form-info-element
-          [markdown-paragraph (tu/get-hakija-translation :email-info-text lang) false nil]]
-         [:input.application__form-text-input
-          (merge {:id            id
-                  :type          "text"
-                  :placeholder   (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                   (util/non-blank-val input-hint @languages))
-                  :class         (str size-class
-                                      (if show-error?
-                                        " application__form-field-error"
-                                        " application__form-text-input--normal"))
-                  :on-blur       (fn [_] (textual-field-blur field-descriptor idx value))
-                  :on-change     on-change
-                  :required      (is-required-field? field-descriptor)
-                  :aria-invalid  (not (:valid answer))
-                  :autoComplete  autocomplete-off
-                  :value         value
-                  :default-value (if @(subscribe [:application/cannot-view? id])
-                                   "***********"
-                                   (:value answer))
-                  :on-paste      (fn [event]
-                                   (.preventDefault event))}
-                 (when @(subscribe [:application/cannot-edit? id])
-                   {:disabled true}))]
-         [validation-error (:errors answer)]
-         (let [id           :verify-email
-               verify-label (tu/get-hakija-translation :verify-email lang)]
-           [:div
-            [:label.application__form-field-label.label.application__form-field-label--verify-email
-             {:id  "application-form-field-label-verify-email"
-              :for id}
-             [:span (str verify-label (required-hint field-descriptor))]]
-            [:input.application__form-text-input
-             {:id           id
-              :type         "text"
-              :required     true
-              :value        (if @(subscribe [:application/cannot-view? id])
-                              "***********"
-                              (:verify answer))
-              :on-blur      #(email-verify-field-change field-descriptor (:value answer)
-                                                        (string/trim (or (-> % .-target .-value) "")))
-              :on-paste     (fn [event]
-                              (.preventDefault event))
-              :on-change    #(email-verify-field-change field-descriptor (:value answer) (-> % .-target .-value))
-              :class        (str size-class
-                                 (if show-error?
-                                   " application__form-field-error"
-                                   " application__form-text-input--normal"))
-              :aria-invalid (not (:valid answer))
-              :autoComplete autocomplete-off}]])]))))
-
+(defn email-field [field-descriptor idx]
+  (let [id          (keyword (:id field-descriptor))
+        size        (get-in field-descriptor [:params :size])
+        size-class  (text-field-size->class size)
+        answer      @(subscribe [:application/answer id idx nil])
+        on-change   #(if idx
+                       (multi-value-field-change field-descriptor 0 idx %)
+                       (textual-field-change field-descriptor %))
+        show-error? @(subscribe [:application/show-validation-error-class? id idx nil])
+        value       (:value answer)
+        languages   @(subscribe [:application/default-languages])
+        lang        @(subscribe [:application/form-language])]
+    [:div.application__form-field
+     [label-component/label field-descriptor]
+     [:div.application__form-info-element
+      [markdown-paragraph (tu/get-hakija-translation :email-info-text lang) false nil]]
+     [:input.application__form-text-input
+      (merge {:id            id
+              :type          "text"
+              :placeholder   (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                               (util/non-blank-val input-hint languages))
+              :class         (str size-class
+                                  (if show-error?
+                                    " application__form-field-error"
+                                    " application__form-text-input--normal"))
+              :on-blur       (fn [_] (textual-field-blur field-descriptor idx value))
+              :on-change     on-change
+              :required      (is-required-field? field-descriptor)
+              :aria-invalid  (not (:valid answer))
+              :autoComplete  autocomplete-off
+              :value         value
+              :default-value (if @(subscribe [:application/cannot-view? id])
+                               "***********"
+                               (:value answer))
+              :on-paste      (fn [event]
+                               (.preventDefault event))}
+             (when @(subscribe [:application/cannot-edit? id])
+               {:disabled true}))]
+     [validation-error (:errors answer)]
+     (let [id           :verify-email
+           verify-label (tu/get-hakija-translation :verify-email lang)]
+       [:div
+        [:label.application__form-field-label.label.application__form-field-label--verify-email
+         {:id  "application-form-field-label-verify-email"
+          :for id}
+         [:span (str verify-label (required-hint field-descriptor))]]
+        [:input.application__form-text-input
+         {:id           id
+          :type         "text"
+          :required     true
+          :value        (if @(subscribe [:application/cannot-view? id])
+                          "***********"
+                          (:verify answer))
+          :on-blur      #(email-verify-field-change field-descriptor (:value answer)
+                                                    (clojure.string/trim (or (-> % .-target .-value) "")))
+          :on-paste     (fn [event]
+                          (.preventDefault event))
+          :on-change    #(email-verify-field-change field-descriptor (:value answer) (-> % .-target .-value))
+          :class        (str size-class
+                             (if show-error?
+                               " application__form-field-error"
+                               " application__form-text-input--normal"))
+          :aria-invalid (not (:valid answer))
+          :autoComplete autocomplete-off
+          }]])]))
 
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
@@ -445,7 +428,7 @@
 (defn question-group [field-descriptor _]
   (let [languages     (subscribe [:application/default-languages])
         label         (util/non-blank-val (:label field-descriptor) @languages)
-        row-count     (subscribe [:state-query [:application :ui (-> field-descriptor :id keyword) :count]])
+        row-count     @(subscribe [:application/question-group-row-count (:id field-descriptor)])
         cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
                            (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
@@ -455,12 +438,12 @@
      [scroll-to-anchor field-descriptor]
      [:div
       (doall
-        (for [idx (range (or @row-count 1))]
-          ^{:key (str "question-group-row-" idx)}
-          [question-group-row
-           field-descriptor
-           idx
-           (and (< 1 @row-count) (not (some deref cannot-edits?)))]))]
+       (for [idx (range (or row-count 1))]
+         ^{:key (str "question-group-row-" idx)}
+         [question-group-row
+          field-descriptor
+          idx
+          (and (< 1 row-count) (not (some deref cannot-edits?)))]))]
      (when (not (some deref cannot-edits?))
        [:div.application__add-question-group-row
         [:a {:href     "#"
@@ -495,7 +478,7 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            ui        (subscribe [:state-query [:application :ui]])]
+            ui        @(subscribe [:application/ui])]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -542,7 +525,7 @@
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages _ _]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
         label          (util/non-blank-val (:label option) @languages)
-        uncertain?     (subscribe [:state-query [:application :selection-over-network-uncertain?]])
+        uncertain?     (subscribe [:application/selection-over-network-uncertain?])
         option-value   (:value option)
         option-id      (util/component-id)
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
@@ -553,7 +536,8 @@
                            (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))
         lang           (subscribe [:application/form-language])]
     (fn [option _ field-descriptor _ _ use-multi-choice-style? verifying?]
-      (let [unselectable?        (and (or (not @checked?)
+      (let [ui                   @(subscribe [:application/ui])
+            unselectable?        (and (or (not @checked?)
                                           (not @valid?))
                                       @limit-reached?)
             disabled?            (or @verifying? @cannot-edit? unselectable?)
@@ -583,7 +567,7 @@
             (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
          (when (and (and @checked? @valid?)
                     (not-empty (:followups option))
-                    (some (partial visible? (subscribe [:state-query [:application :ui]])) (:followups option)))
+                    (some (partial visible? ui) (:followups option)))
            (if use-multi-choice-style?
              (multi-choice-followups (:followups option))
              [:div.application__form-single-choice-followups-indicator]))]))))
@@ -601,7 +585,8 @@
         verifying?              (subscribe [:application/fetching-selection-limits? button-id])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor idx]
-      (let [answer    @(subscribe [:application/answer button-id idx nil])
+      (let [ui        @(subscribe [:application/ui])
+            answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
             followups (->> options
                            (filter (comp (partial = (:value answer)) :value))
@@ -626,7 +611,7 @@
          (when (and (not idx)
                     (not use-multi-choice-style?)
                     (seq followups)
-                    (some (partial visible? (subscribe [:state-query [:application :ui]])) followups))
+                    (some (partial visible? ui) followups))
            [:div.application__form-multi-choice-followups-container.animated.fadeIn
             (for [followup followups]
               ^{:key (:id followup)}
@@ -805,30 +790,29 @@
         :deleting attachment-deleting-file)
       field-descriptor component-id question-group-idx attachment-idx]]))
 
-(defn attachment [field-descriptor & _]
-  (let [languages              (subscribe [:application/default-languages])
-        application-identifier (subscribe [:application/application-identifier])
-        text                   (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
-    (fn [{:keys [id] :as field-descriptor} question-group-idx]
-      (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
-        [:div.application__form-field
-         [label-component/label field-descriptor]
-         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-           [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
-         (when-not (string/blank? @text)
-           [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse) @application-identifier])
-         (when (> @attachment-count 0)
-           [:ol.application__attachment-filename-list
-            (->> (range @attachment-count)
-                 (map (fn [attachment-idx]
-                        ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
-                        [attachment-row field-descriptor id attachment-idx question-group-idx])))])
-         (if (get-in field-descriptor [:params :mail-attachment?])
-           (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
-             [:div.application__mail-attachment--deadline
-              [deadline-info deadline]])
-           (when-not @(subscribe [:application/cannot-edit? (keyword id)])
-             [attachment-upload field-descriptor id @attachment-count question-group-idx]))]))))
+(defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
+  (let [languages              @(subscribe [:application/default-languages])
+        text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
+        attachment-count       @(subscribe [:application/attachment-count id question-group-idx])
+        application-identifier @(subscribe [:application/application-identifier])]
+    [:div.application__form-field
+     [label-component/label field-descriptor]
+     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+       [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
+     (when-not (clojure.string/blank? text)
+       [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) application-identifier])
+     (when (> attachment-count 0)
+       [:ol.application__attachment-filename-list
+        (->> (range attachment-count)
+             (map (fn [attachment-idx]
+                    ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
+                    [attachment-row field-descriptor id attachment-idx question-group-idx])))])
+     (if (get-in field-descriptor [:params :mail-attachment?])
+       (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+         [:div.application__mail-attachment--deadline
+          [deadline-info deadline]])
+       (when-not @(subscribe [:application/cannot-edit? (keyword id)])
+         [attachment-upload field-descriptor id attachment-count question-group-idx]))]))
 
 (defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
   (let [id          (keyword (:id field-descriptor))
@@ -925,9 +909,9 @@
 
 (defn render-field
   [_ _]
-  (let [ui (subscribe [:state-query [:application :ui]])]
+  (let [ui (subscribe [:application/ui])]
     (fn [field-descriptor idx]
-      (if (visible? ui field-descriptor)
+      (if (visible? @ui field-descriptor)
         (match field-descriptor
                {:id         "email"
                 :fieldClass "formField"
@@ -939,7 +923,7 @@
                {:fieldClass "wrapperElement"
                 :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
                {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
-               {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor idx]
+               {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
                {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
                {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
                {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
