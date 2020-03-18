@@ -55,7 +55,7 @@
                                   (when (not (= selected-koodi koodi))
                                     (re-frame/dispatch [:hyvaksynnan-ehto/set-ehto-koodi
                                                         application-key
-                                                        hakukohde-oid
+                                                        hakukohde-oids
                                                         koodi])
                                     (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteessa
                                                         application-key

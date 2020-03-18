@@ -32,10 +32,20 @@
       application-key
       hakukohde-oids)))
 
+(defn- update-hyvaksynnan-ehto-koodi [koodi]
+  (fn [hyvaksynnan-ehto]
+    (assoc-in hyvaksynnan-ehto
+              [:hakukohteessa :koodi]
+              koodi)))
+
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehto-koodi
-  (fn [db [_ application-key hakukohde-oid koodi]]
-    (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :hakukohteessa :koodi] koodi)))
+  (fn [db [_ application-key hakukohde-oids koodi]]
+    (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+      db
+      (update-hyvaksynnan-ehto-koodi koodi)
+      application-key
+      hakukohde-oids)))
 
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehto-text
