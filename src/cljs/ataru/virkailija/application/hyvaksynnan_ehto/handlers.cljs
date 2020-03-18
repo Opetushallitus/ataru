@@ -23,6 +23,9 @@
   (fn set-state-to-hyvaksynnan-ehto [hyvaksynnan-ehto]
     (assoc hyvaksynnan-ehto :ehdollisesti-hyvaksyttavissa? state)))
 
+(defn- set-request-in-flight [hyvaksynnan-ehto]
+  (assoc hyvaksynnan-ehto :request-in-flight? true))
+
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehdollisesti-hyvaksyttavissa
   (fn [db [_ application-key hakukohde-oids state]]
@@ -93,35 +96,51 @@
           :hakukohde-oid   hakukohde-oid}}))))
 
 (re-frame/reg-event-fx
-  :hyvaksynnan-ehto/debounced-save-ehto-hakukohteessa
-  (fn [_ [_ application-key hakukohde-oid]]
-    {:dispatch-debounced
-     {:timeout  2000
-      :id       [:hyvaksynnan-ehto/save-ehto-hakukohteessa
-                 application-key
-                 hakukohde-oid]
-      :dispatch [:hyvaksynnan-ehto/save-ehto-hakukohteessa
-                 application-key
-                 hakukohde-oid]}}))
+  :hyvaksynnan-ehto/debounced-save-ehto-hakukohteissa
+  (fn [_ [_ application-key hakukohde-oids]]
+    {:dispatch-debounced {:timeout  2000
+                          :id       [:hyvaksynnan-ehto/save-ehto-hakukohteissa application-key hakukohde-oids]
+                          :dispatch [:hyvaksynnan-ehto/save-ehto-hakukohteissa application-key hakukohde-oids]}}))
+
+(re-frame/reg-event-fx
+  :hyvaksynnan-ehto/save-ehto-hakukohteissa
+  (fn [{db :db} [_ application-key hakukohde-oids]]
+    (let [hyvaksynnan-ehdot-to-save (->> (get-in db [:hyvaksynnan-ehto application-key])
+                                         (into []
+                                               (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+                                                     (hx/filter-hyvaksynnan-ehdot-for-hakukohteet)
+                                                     (hx/map->hyvaksynnan-ehto-with-hakukohde-oid
+                                                       #(select-keys % [:hakukohteessa :last-modified])))))]
+      {:db         (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+                     db
+                     set-request-in-flight
+                     application-key
+                     hakukohde-oids)
+       :dispatch-n (map (fn [{:keys [hakukohde-oid
+                                     hakukohteessa
+                                     last-modified]}]
+                          [:hyvaksynnan-ehto/save-ehto-hakukohteessa
+                           application-key
+                           hakukohde-oid
+                           hakukohteessa
+                           last-modified])
+                        hyvaksynnan-ehdot-to-save)})))
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/save-ehto-hakukohteessa
-  (fn [{db :db} [_ application-key hakukohde-oid]]
-    (when-let [hakukohteessa (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :hakukohteessa])]
-      (let [last-modified (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :last-modified])]
-        {:db
-         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :request-in-flight?] true)
-         :hyvaksynnan-ehto/save-ehto-hakukohteessa
-         {:application-key application-key
-          :hakukohde-oid   hakukohde-oid
-          :ehto            (if (= "muu" (:koodi hakukohteessa))
-                             {:koodi "muu"
-                              :fi    (get-in hakukohteessa [:ehto-text :fi] "")
-                              :sv    (get-in hakukohteessa [:ehto-text :sv] "")
-                              :en    (get-in hakukohteessa [:ehto-text :en] "")}
-                             (assoc (get-in db [:hyvaksynnan-ehto-koodit (:koodi hakukohteessa)])
-                                    :koodi (:koodi hakukohteessa)))
-          :last-modified   last-modified}}))))
+  (fn [{db :db} [_ application-key hakukohde-oid hakukohteessa last-modified]]
+    (let [ehto (if (= "muu" (:koodi hakukohteessa))
+                 {:koodi "muu"
+                  :fi    (get-in hakukohteessa [:ehto-text :fi] "")
+                  :sv    (get-in hakukohteessa [:ehto-text :sv] "")
+                  :en    (get-in hakukohteessa [:ehto-text :en] "")}
+                 (assoc (get-in db [:hyvaksynnan-ehto-koodit (:koodi hakukohteessa)])
+                        :koodi (:koodi hakukohteessa)))]
+      {:hyvaksynnan-ehto/save-ehto-hakukohteessa
+       {:application-key application-key
+        :hakukohde-oid   hakukohde-oid
+        :ehto            ehto
+        :last-modified   last-modified}})))
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/delete-ehto-hakukohteessa
@@ -130,20 +149,15 @@
                                                   :hakukohde-oid   hakukohde-oid
                                                   :last-modified   last-modified}}))
 
-(defn- set-request-in-flight [hyvaksynnan-ehto]
-  (assoc hyvaksynnan-ehto :request-in-flight? true))
-
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/delete-ehto-hakukohteissa
   (fn [{db :db} [_ application-key hakukohde-oids]]
     (let [hyvaksynnan-ehdot-to-delete (->> (get-in db [:hyvaksynnan-ehto application-key])
                                            (into []
                                                  (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
-                                                       (filter (fn [[_ hyvaksynnan-ehto]]
-                                                                 (-> hyvaksynnan-ehto :hakukohteessa not-empty)))
-                                                       (map (fn [[hakukohde-oid {last-modified :last-modified}]]
-                                                              {:hakukohde-oid hakukohde-oid
-                                                               :last-modified last-modified})))))]
+                                                       (hx/filter-hyvaksynnan-ehdot-for-hakukohteet)
+                                                       (hx/map->hyvaksynnan-ehto-with-hakukohde-oid
+                                                         #(select-keys % [:last-modified])))))]
       {:db (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
              db
              set-request-in-flight

@@ -130,8 +130,20 @@
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehto-text
-  (fn [db [_ application-key hakukohde-oid lang]]
-    (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :hakukohteessa :ehto-text lang] "")))
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
+     (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
+  (fn [[hyvaksynnan-ehdot hakukohde-oids] [_ _ lang]]
+    (let [ehto-texts (->> hyvaksynnan-ehdot
+                          (into []
+                                (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+                                      (map second)
+                                      (map :hakukohteessa)
+                                      (map :ehto-text)
+                                      (map #(get % lang ""))
+                                      (dedupe))))]
+      (when (= (count ehto-texts) 1)
+        (first ehto-texts)))))
 
 (re-frame/reg-sub
   :hyvaksynnan-ehto/show?

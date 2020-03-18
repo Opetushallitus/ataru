@@ -37,7 +37,6 @@
                                    [:hyvaksynnan-ehto/ehto-text-disabled? application-key])
             selected-koodi       @(re-frame/subscribe
                                    [:hyvaksynnan-ehto/selected-ehto-koodi application-key])
-            hakukohde-oid        (first hakukohde-oids)
             selected-koodi-label @(re-frame/subscribe
                                    [:hyvaksynnan-ehto/selected-ehto-koodi-label application-key])]
         [:div.hyvaksynnan-ehto-ehto-koodi-dropdown
@@ -57,9 +56,9 @@
                                                         application-key
                                                         hakukohde-oids
                                                         koodi])
-                                    (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteessa
+                                    (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteissa
                                                         application-key
-                                                        hakukohde-oid])))}
+                                                        hakukohde-oids])))}
                      [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
                       (if (= selected-koodi koodi)
                         [:i.zmdi.zmdi-check.zmdi-hc-stack-1x]
@@ -90,7 +89,7 @@
     (lang-to (lang-right langs) lang)))
 
 (defn- text-language
-  [_ _ _ selected? _ _ _]
+  [_ _ selected? _ _ _]
   (let [focus? (r/atom selected?)]
     (r/create-class
      {:component-did-update
@@ -98,17 +97,17 @@
         (when @focus?
           (.focus (r/dom-node component))))
       :reagent-render
-      (fn [application-key hakukohde-oid lang selected? lang-to lang-left lang-right]
+      (fn [application-key lang selected? lang-to lang-left lang-right]
         (reset! focus? selected?)
         [:button.hyvaksynnan-ehto-texts__text-language
          {:id            (str "hyvaksynnan-ehto-texts__text-language-"
-                              application-key "-" hakukohde-oid
+                              application-key
                               "-language-" (name lang))
           :class         (when selected?
                            " hyvaksynnan-ehto-texts__text-language--selected")
           :role          "tab"
           :aria-controls (str "hyvaksynnan-ehto-texts__text-language-"
-                              application-key "-" hakukohde-oid
+                              application-key
                               "-text-" (name lang))
           :aria-selected selected?
           :tabIndex      (if selected? 0 -1)
@@ -138,22 +137,22 @@
                 (reset! previous-states [[true true] (first @previous-states)]))
             (reset! previous-states [current-state (first @previous-states)]))))
       :reagent-render
-      (fn [application-key hakukohde-oid selected-lang]
-        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])]
+      (fn [application-key hakukohde-oids selected-lang]
+        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])
+              hakukohde-oid (first hakukohde-oids)]
           (reset! enabled? (not disabled?))
           [:textarea.hyvaksynnan-ehto-texts__textarea
            {:id              (str "hyvaksynnan-ehto-texts__text-language-"
-                                  application-key "-" hakukohde-oid
+                                  application-key
                                   "-text-" (name selected-lang))
             :role            "tabpanel"
             :aria-labelledby (str "hyvaksynnan-ehto-texts__text-language-"
-                                  application-key "-" hakukohde-oid
+                                  application-key
                                   "-language-" (name selected-lang))
             :disabled        disabled?
             :rows            3
             :value           @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text
                                                    application-key
-                                                   hakukohde-oid
                                                    selected-lang])
             :on-change       (fn [e]
                                (re-frame/dispatch [:hyvaksynnan-ehto/set-ehto-text
@@ -161,14 +160,14 @@
                                                    hakukohde-oid
                                                    selected-lang
                                                    (.-value (.-target e))])
-                               (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteessa
+                               (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteissa
                                                    application-key
-                                                   hakukohde-oid]))}]))})))
+                                                   hakukohde-oids]))}]))})))
 
 (defn- ehto-text
-  [application-key hakukohde-oid selected-lang]
+  [application-key hakukohde-oids selected-lang]
   [:div.hyvaksynnan-ehto-texts__textarea-container
-   [ehto-text-textarea application-key hakukohde-oid selected-lang]
+   [ehto-text-textarea application-key hakukohde-oids selected-lang]
    (when @(re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      [:div.hyvaksynnan-ehto-texts__spinner-overlay
       [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])])
@@ -176,7 +175,7 @@
 (defn ehto-texts
   [_ _]
   (let [langs (r/atom [:fi :sv :en])]
-    (fn [application-key hakukohde-oid]
+    (fn [application-key hakukohde-oids]
       (let [selected-lang (first @langs)]
         [:div.hyvaksynnan-ehto-texts
          (into
@@ -185,14 +184,13 @@
           (mapv (fn [lang]
                   [text-language
                    application-key
-                   hakukohde-oid
                    lang
                    (= lang selected-lang)
                    #(swap! langs lang-to lang)
                    #(swap! langs lang-left)
                    #(swap! langs lang-right)])
                 [:fi :sv :en]))
-         [ehto-text application-key hakukohde-oid selected-lang]]))))
+         [ehto-text application-key hakukohde-oids selected-lang]]))))
 
 (defn- ehto-valintatapajonoissa
   [application-key]
@@ -221,8 +219,7 @@
 (defn hyvaksynnan-ehto
   [application-key hakukohde-oids]
   (let [ehdollisesti-hyvaksyttavissa? @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
-        multiple-values?              (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/monta-arvoa)
-        hakukohde-oid                 (first hakukohde-oids)]
+        multiple-values?              (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/monta-arvoa)]
     (into
       [:div.hyvaksynnan-ehto
        {:class (when multiple-values?
@@ -240,4 +237,4 @@
          (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi? application-key])
            [ehto-koodi application-key hakukohde-oids])
          (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-texts? application-key])
-           [ehto-texts application-key hakukohde-oid])]))))
+           [ehto-texts application-key hakukohde-oids])]))))
