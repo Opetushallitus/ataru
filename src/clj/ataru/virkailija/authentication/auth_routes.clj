@@ -17,8 +17,6 @@
     url-from-session
     (string/replace url-from-session #"^http://" "https://")))
 
-
-
 (defn- fake-login-provider [ticket]
   (fn []
       (let [username      (if (= ticket "USER-WITH-HAKUKOHDE-ORGANIZATION")

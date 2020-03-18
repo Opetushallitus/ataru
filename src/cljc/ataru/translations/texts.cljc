@@ -1605,7 +1605,11 @@
                                                      :en "Selection"}
    :julkaisu                                        {:fi "Julkaisu"}
    :vastaanotto                                     {:fi "Vastaanotto"}
-   :ilmoittautuminen                                {:fi "Ilmoittautuminen"}})
+   :ilmoittautuminen                                {:fi "Ilmoittautuminen"}
+   :odottamaton-virhe-otsikko                       {:fi "Tapahtui odottamaton virhe"
+                                                     :sv "Ett oväntat fel uppstod"}
+   :odottamaton-virhe-aputeksti                     {:fi "Yritä uudelleen tai ota yhteyttä ylläpitoon."
+                                                     :sv "Försök igen, om problemet kvarstår, kontakta registratorn."}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

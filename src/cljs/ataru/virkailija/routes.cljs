@@ -125,4 +125,10 @@
     (dispatch [:application/set-filters-from-query])
     (dispatch [:application/select-form key]))
 
+  (defroute #"^/lomake-editori/virhe?"
+    []
+    (common-actions)
+    (dispatch [:set-active-panel :error])
+    (dispatch [:application/stop-loading-applications]))
+
   (accountant/dispatch-current!))
