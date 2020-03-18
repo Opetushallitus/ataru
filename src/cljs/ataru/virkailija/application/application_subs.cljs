@@ -936,3 +936,8 @@
   :application/filter-attachment-states
   (fn [db [_ field-id]]
     (get-in db [:application :attachment-review-states-value field-id])))
+
+(re-frame/reg-sub
+  :application/can-inactivate-application
+  (fn [_]
+    true))
