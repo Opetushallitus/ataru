@@ -3,7 +3,7 @@
             [ataru.util :as util]
             [re-frame.core :as re-frame]))
 
-(defn info-text []
+(defn info-text [_]
   (let [languages              (re-frame/subscribe [:application/default-languages])
         application-identifier (re-frame/subscribe [:application/application-identifier])]
     (fn [field-descriptor]
