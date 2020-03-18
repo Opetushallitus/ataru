@@ -1275,7 +1275,7 @@
         application-key @(subscribe [:state-query [:application :selected-key]])]
     [:div.application-handling__hyvaksynnan-ehto-container
      [:div.application-handling__hyvaksynnan-ehto-container__right-column
-      [hyvaksynnan-ehto/hyvaksynnan-ehto application-key (first hakukohde-oids)]]]))
+      [hyvaksynnan-ehto/hyvaksynnan-ehto application-key hakukohde-oids]]]))
 
 (defn- application-hakukohde-review-inputs
   [review-types]
