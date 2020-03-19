@@ -938,6 +938,40 @@
     (get-in db [:application :attachment-review-states-value field-id])))
 
 (re-frame/reg-sub
+  :application/valitun-hakemuksen-application-key
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :application :key])))
+
+(re-frame/reg-sub
+  :application/valitun-hakemuksen-hakukohteet
+  (fn [db _]
+    (get-in db [:application :selected-application-and-form :application :hakukohde])))
+
+(re-frame/reg-sub
+  :application/valinnan-tulos
+  (fn [db _]
+    (get db :valinta-tulos-service)))
+
+(re-frame/reg-sub
+  :application/valinnan-tulokset-hakemuksen-hakukohteille
+  (fn [_]
+    [(re-frame/subscribe [:application/valitun-hakemuksen-application-key])
+     (re-frame/subscribe [:application/valinnan-tulos])])
+  (fn [[application-key valinnan-tulos]]
+    (get valinnan-tulos application-key)))
+
+(re-frame/reg-sub
+  :application/onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos
+  (fn [_]
+    [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
+     (re-frame/subscribe [:application/valinnan-tulokset-hakemuksen-hakukohteille])])
+  (fn [[hakukohteet valinnan-tulokset-hakukohteille]]
+    (let [on-valinnan-tulos? (set (keys valinnan-tulokset-hakukohteille))]
+      (some? (some on-valinnan-tulos? hakukohteet)))))
+
+(re-frame/reg-sub
   :application/can-inactivate-application
   (fn [_]
-    true))
+    [(re-frame/subscribe [:application/onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos])])
+  (fn [onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos]
+    (not onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos)))
