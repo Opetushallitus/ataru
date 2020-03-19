@@ -138,8 +138,7 @@
             (reset! previous-states [current-state (first @previous-states)]))))
       :reagent-render
       (fn [application-key hakukohde-oids selected-lang]
-        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])
-              hakukohde-oid (first hakukohde-oids)]
+        (let [disabled? @(re-frame/subscribe [:hyvaksynnan-ehto/ehto-text-disabled? application-key])]
           (reset! enabled? (not disabled?))
           [:textarea.hyvaksynnan-ehto-texts__textarea
            {:id              (str "hyvaksynnan-ehto-texts__text-language-"
@@ -157,7 +156,7 @@
             :on-change       (fn [e]
                                (re-frame/dispatch [:hyvaksynnan-ehto/set-ehto-text
                                                    application-key
-                                                   hakukohde-oid
+                                                   hakukohde-oids
                                                    selected-lang
                                                    (.-value (.-target e))])
                                (re-frame/dispatch [:hyvaksynnan-ehto/debounced-save-ehto-hakukohteissa

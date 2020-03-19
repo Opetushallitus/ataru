@@ -50,10 +50,18 @@
       application-key
       hakukohde-oids)))
 
+(defn- update-hyvaksynnan-ehto-text [text lang]
+  (fn [hyvaksynnan-ehto]
+    (assoc-in hyvaksynnan-ehto [:hakukohteessa :ehto-text lang] text)))
+
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehto-text
-  (fn [db [_ application-key hakukohde-oid lang value]]
-    (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :hakukohteessa :ehto-text lang] value)))
+  (fn [db [_ application-key hakukohde-oids lang value]]
+    (update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
+      db
+      (update-hyvaksynnan-ehto-text value lang)
+      application-key
+      hakukohde-oids)))
 
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/remove-error
