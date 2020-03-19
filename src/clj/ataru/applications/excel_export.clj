@@ -366,8 +366,8 @@
                     (not (util/answerable? %))
                     (and (not (included-ids (:id %)))
                          (or (and skip-answers?
-                                  (not (answer-to-always-include? (:id %))))
-                             (belongs-to-other-hakukohde? selected-oids %)))))
+                                  (not (answer-to-always-include? (:id %))))))
+                    (belongs-to-other-hakukohde? selected-oids %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- headers-from-applications
@@ -581,7 +581,6 @@
                                                          (util/flatten-form-fields (:content form)))]
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers application-meta-fields lang)
-                          (clojure.pprint/pprint applications)
                           (->> applications
                                (sort-by :created-time)
                                (reverse)
