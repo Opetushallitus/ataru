@@ -186,7 +186,8 @@
                 (store/create-application-attachment-reviews
                  (:key application)
                  (store/filter-visible-attachments answers-by-key
-                                                   flat-form-content)
+                                                   flat-form-content
+                                                   fields-by-id)
                  answers-by-key
                  nil
                  []
@@ -222,10 +223,47 @@
                 (store/create-application-attachment-reviews
                  (:key application)
                  (store/filter-visible-attachments answers-by-key
-                                                   flat-form-content)
+                                                   flat-form-content
+                                                   fields-by-id)
                  answers-by-key
                  nil
                  [{:oid "hakukohde1"} {:oid "hakukohde2"}]
+                 false
+                 fields-by-id
+                 #{}))))
+
+  (it "should create attachment reviews only for visible attachments"
+    (let [flat-form-content (util/flatten-form-fields (:content form-fixtures/visible-attachment-test-form))
+          fields-by-id      (util/form-fields-by-id form-fixtures/visible-attachment-test-form)]
+      (should== [{:application_key "application-oid"
+                  :attachment_key  "attachment_1"
+                  :state           "attachment-missing"
+                  :updated?        false
+                  :hakukohde       "hakukohde1"}]
+                (store/create-application-attachment-reviews
+                 "application-oid"
+                 (store/filter-visible-attachments {:choice_1 {:value "0"}}
+                                                   flat-form-content
+                                                   fields-by-id)
+                 {:choice_1 {:value "0"}}
+                 nil
+                 [{:oid "hakukohde1"}]
+                 false
+                 fields-by-id
+                 #{}))
+      (should== [{:application_key "application-oid"
+                  :attachment_key  "attachment_3"
+                  :state           "attachment-missing"
+                  :updated?        false
+                  :hakukohde       "hakukohde1"}]
+                (store/create-application-attachment-reviews
+                 "application-oid"
+                 (store/filter-visible-attachments {:choice_1 {:value "2"}}
+                                                   flat-form-content
+                                                   fields-by-id)
+                 {:choice_1 {:value "2"}}
+                 nil
+                 [{:oid "hakukohde1"}]
                  false
                  fields-by-id
                  #{}))))
@@ -248,7 +286,8 @@
                 (store/create-application-attachment-reviews
                  (:key application)
                  (store/filter-visible-attachments answers-by-key
-                                                   flat-form-content)
+                                                   flat-form-content
+                                                   fields-by-id)
                  answers-by-key
                  {:att__1 {:value ["liite-id"]}
                   :att__2 {:value ["32131"]}}
@@ -265,7 +304,8 @@
             reviews           (store/create-application-attachment-reviews
                                 (:key application)
                                 (store/filter-visible-attachments answers-by-key
-                                  flat-form-content)
+                                                                  flat-form-content
+                                                                  fields-by-id)
                                 answers-by-key
                                 {:att__1 {:value ["liite-id"]}
                                  :att__2 {:value ["32131"]}}
