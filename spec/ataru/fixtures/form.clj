@@ -203,6 +203,28 @@
                  :fieldType  "attachment"
                  :label      {:fi "Liite ilman vastausta"}}]})
 
+(def visible-attachment-test-form
+  {:name       {:fi "Visible attachment test form"}
+   :created-by "1.2.246.562.11.11111111111"
+   :locked     nil
+   :locked-by  nil
+   :content    [(component/hakukohteet)
+                (assoc (component/single-choice-button metadata)
+                       :id "choice_1"
+                       :options [{:value     "0"
+                                  :followups [(assoc (component/question-group metadata)
+                                                     :id "group_1"
+                                                     :children [(assoc (component/attachment metadata)
+                                                                       :id "attachment_1")])]}
+                                 {:value     "1"
+                                  :followups [(assoc (component/question-group metadata)
+                                                     :id "group_2"
+                                                     :children [(assoc (component/attachment metadata)
+                                                                       :id "attachment_2")])]}
+                                 {:value     "2"
+                                  :followups [(assoc (component/attachment metadata)
+                                                     :id "attachment_3")]}])]})
+
 (def base-education-attachment-test-form
   {:name       {:fi "Attachment and Base Education test form"}
    :created-by "1.2.246.562.11.11111111111"

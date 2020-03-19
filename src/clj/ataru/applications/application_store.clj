@@ -153,12 +153,17 @@
     (contains? answers (:option-value field))))
 
 (defn filter-visible-attachments
-  [answers fields]
+  [answers fields fields-by-id]
   (filter (fn [field]
             (and (= "attachment" (:fieldType field))
                  (-> field :params :hidden not)
-                 (or (not (contains? field :followup-of))
-                     (followup-option-selected? field answers))))
+                 (loop [followup field]
+                   (cond (:children-of followup)
+                         (recur (get fields-by-id (keyword (:children-of followup))))
+                         (:followup-of followup)
+                         (followup-option-selected? followup answers)
+                         :else
+                         true))))
           fields))
 
 (defn- ylioppilastutkinto? [answers-by-key]
@@ -209,7 +214,7 @@
         fields-by-id        (util/form-fields-by-id form)
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
         answers-by-key      (-> application :content :answers util/answers-by-key)
-        visible-attachments (filter-visible-attachments answers-by-key flat-form-content)
+        visible-attachments (filter-visible-attachments answers-by-key flat-form-content fields-by-id)
         reviews             (create-application-attachment-reviews
                              (:key application)
                              visible-attachments
