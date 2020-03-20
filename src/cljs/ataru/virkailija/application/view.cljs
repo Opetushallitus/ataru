@@ -415,6 +415,7 @@
   []
   (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
         show-excel-link?       (subscribe [:application/show-excel-link?])
+        rajaus-hakukohteella   (subscribe [:application/rajaus-hakukohteella-value])
         applications-count     (subscribe [:application/loaded-applications-count])
         header                 (subscribe [:application/list-heading])
         haku-header            (subscribe [:application/list-heading-data-for-haku])]
@@ -426,7 +427,9 @@
       (when @show-mass-update-link?
         [mass-update-applications-link])
       (when @show-excel-link?
-        [excel-download-link (second @haku-header) (nth @haku-header 2) @header])]]))
+        (let [selected-hakukohde      (or @rajaus-hakukohteella (second @haku-header))
+              selected-hakukohderyhma (when (nil? selected-hakukohde) (nth @haku-header 2))]
+          [excel-download-link selected-hakukohde selected-hakukohderyhma @header]))]]))
 
 (defn- select-application
   ([application-key selected-hakukohde-oid]

@@ -161,9 +161,8 @@
      (re-frame/subscribe [:application/selected-haku-oid])
      (re-frame/subscribe [:application/haut])
      (re-frame/subscribe [:application/hakukohteet])
-     (re-frame/subscribe [:application/hakukohderyhmat])
-     (re-frame/subscribe [:application/rajaus-hakukohteella-value])])
-  (fn [[selected-hakukohde-oid selected-hakukohderyhma selected-haku-oid haut hakukohteet hakukohderyhmat rajaus-hakukohteella] _]
+     (re-frame/subscribe [:application/hakukohderyhmat])])
+  (fn [[selected-hakukohde-oid selected-hakukohderyhma selected-haku-oid haut hakukohteet hakukohderyhmat] _]
     (let [haun-hakukohteet     (keep hakukohteet (get-in haut [selected-haku-oid :hakukohteet]))
           haun-hakukohderyhmat (->> haun-hakukohteet
                                     (mapcat :ryhmaliitokset)
@@ -171,7 +170,7 @@
                                     (keep hakukohderyhmat))]
       (when selected-haku-oid
         [selected-haku-oid
-         (or rajaus-hakukohteella selected-hakukohde-oid)
+         selected-hakukohde-oid
          (second selected-hakukohderyhma)
          haun-hakukohteet
          haun-hakukohderyhmat]))))
