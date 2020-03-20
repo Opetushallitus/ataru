@@ -5,7 +5,8 @@
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
-                                               set-validator-processing]]))
+                                               set-validator-processing
+                                               check-schema-interceptor]]))
 
 (defn- hakukohteet-field [db]
   (->> (:flat-form-content db)
@@ -26,10 +27,12 @@
 
 (reg-event-db
   :application/hakukohde-search-toggle
+  [check-schema-interceptor]
   (fn [db _] (toggle-hakukohde-search db)))
 
 (reg-event-db
   :application/hakukohde-query-process
+  [check-schema-interceptor]
   (fn hakukohde-query-process [db [_ hakukohde-query-atom]]
     (let [hakukohde-query               @hakukohde-query-atom
           lang                          (-> db :form :selected-language)
@@ -64,6 +67,7 @@
 
 (reg-event-fx
   :application/hakukohde-query-change
+  [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-query-atom]]
     {:dispatch-debounced {:timeout  500
                           :id       :hakukohde-query
@@ -71,6 +75,7 @@
 
 (reg-event-db
   :application/show-more-hakukohdes
+  [check-schema-interceptor]
   (fn [db _]
     (let [remaining-results (-> db :application :remaining-hakukohde-search-results)
           [more-hits rest-results] (split-at 15 remaining-results)]
@@ -80,6 +85,7 @@
 
 (reg-event-fx
   :application/set-hakukohde-valid
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ valid?]]
     {:db         (assoc-in db [:application :answers :hakukohteet :valid] valid?)
      :dispatch-n [[:application/update-answers-validity]
@@ -87,6 +93,7 @@
 
 (reg-event-fx
   :application/validate-hakukohteet
+  [check-schema-interceptor]
   (fn [{db :db} _]
     {:db                 (set-validator-processing db :hakukohteet)
      :validate-debounced {:value                        (get-in db [:application :answers :hakukohteet :values])
@@ -103,6 +110,7 @@
 
 (reg-event-fx
   :application/hakukohde-add-selection
+  [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid]]
     (let [field-descriptor     (hakukohteet-field db)
           selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
@@ -129,6 +137,7 @@
 
 (reg-event-fx
   :application/hakukohde-remove
+  [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid]]
     (let [field-descriptor     (hakukohteet-field db)
           selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
@@ -144,6 +153,7 @@
 
 (reg-event-fx
   :application/hakukohde-remove-selection
+  [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid]]
     {:db             (update-in db [:application :ui :hakukohteet :deleting] (comp set conj) hakukohde-oid)
      :dispatch-later [{:ms       500
@@ -151,6 +161,7 @@
 
 (reg-event-fx
   :application/change-hakukohde-priority
+  [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid index-change]]
     (let [hakukohteet     (-> db :application :answers :hakukohteet :values vec)
           current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))

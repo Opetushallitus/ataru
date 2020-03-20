@@ -20,7 +20,7 @@
                                [{:value (:value (first options))
                                  :valid true}]
                                (some? preselected-hakukohteet)
-                               (map (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
+                               (mapv (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
                                :else
                                [])]
               [:hakukohteet {:valid  (not (empty? values))
@@ -42,7 +42,8 @@
               [(keyword id) (cond-> {:valid (or (some? value) (not required?))
                                      :label label}
                                     (some? value)
-                                    (assoc :values [[{:value value :valid true}]] :value [[value]]))])
+                                    (assoc :values [[{:value value :valid true}]]
+                                           :value [[value]]))])
             [{:id         id
               :fieldClass "formField"
               :fieldType  "dropdown"
