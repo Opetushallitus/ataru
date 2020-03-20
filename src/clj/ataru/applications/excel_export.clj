@@ -377,8 +377,8 @@
        (remove #(or (:exclude-from-answers %)
                     (not (util/answerable? %))
                     (and (not (included-ids (:id %)))
-                         (or (and skip-answers?
-                                  (not (answer-to-always-include? (:id %))))))
+                         skip-answers?
+                         (not (answer-to-always-include? (:id %))))
                     (belongs-to-other-hakukohde? selected-oids form-fields-by-id %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 

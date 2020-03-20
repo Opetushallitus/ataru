@@ -50,19 +50,34 @@
                                          :fieldClass "wrapperElement"
                                          :children [{:id         "form_field_1_0"
                                                      :label      {:fi "Kysymys 4"}
-                                                     :belongs-to-hakukohteet ["other-hakukohde.oid"]
+                                                     :belongs-to-hakukohteet ["other.hakukohde.oid"]
                                                      :fieldType  "textField"
                                                      :fieldClass "formField"
                                                      :children [{:id         "form_field_1_0_0"
                                                                  :label      {:fi "Question is not visible because its parent is from other hakukohde"}
-                                                                 :belongs-to-hakukohteet ["hakukohde.oid"]
                                                                  :fieldType  "textField"
-                                                                 :fieldClass "formField"}]}
+                                                                 :fieldClass "formField"
+                                                                 :children [{:id         "form_field_1_0_0_0"
+                                                                             :label      {:fi "Question is not visible because its grand-parent is from other hakukohde"}
+                                                                             :belongs-to-hakukohteet ["hakukohde.oid"]
+                                                                             :fieldType  "textField"
+                                                                             :fieldClass "formField"}
+                                                                            ]}]}
                                                     {:id                   "should_not_be_shown"
                                                      :label                {:fi "You should not see this because of exclude-from-answers"}
                                                      :fieldType            "textField"
                                                      :exclude-from-answers true
-                                                     :fieldClass           "formField"}]}]})
+                                                     :belongs-to-hakukohteet ["hakukohde.oid"]
+                                                     :fieldClass           "formField"}]}
+                                        {:id         "form_field_2"
+                                         :label      {:fi "Visible from form"}
+                                         :belongs-to-hakukohteet ["hakukohde.oid"]
+                                         :fieldType  "textField"
+                                         :fieldClass "formField"}
+                                        {:id         "form_field_3"
+                                         :label      {:fi "Should be visible because belongs-to-hakukohde is not specified"}
+                                         :fieldType  "textField"
+                                         :fieldClass "formField"}]})
 
 (def form-with-special-questions {:id           321
                                   :key          "form_321_key"
