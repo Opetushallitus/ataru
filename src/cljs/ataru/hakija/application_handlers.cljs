@@ -1,5 +1,8 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe after]]
+            [schema.core :as s]
+            [ataru.feature-config :as fc]
+            [ataru.hakija.schema :as schema]
             [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
@@ -20,10 +23,18 @@
             [cljs-time.format :as f]
             [cljs-time.coerce :refer [from-long to-long]]))
 
+(def db-validator (s/validator schema/Db))
+
+(def check-schema-interceptor
+  (after (fn [db _]
+           (when (fc/feature-enabled? :schema-validation)
+             (db-validator db)))))
+
 (defn initialize-db [_ _]
   {:form        nil
    :application {:attachments-id (random-uuid)
-                 :answers        {}}})
+                 :answers        {}
+                 :editing?       false}})
 
 (defn- required? [field-descriptor]
   (some (partial = "required")
@@ -31,11 +42,13 @@
 
 (reg-event-db
   :application/set-secret-delivery-status
+  [check-schema-interceptor]
   (fn [db [_ status]]
     (assoc-in db [:application :secret-delivery-status] status)))
 
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ old-secret response]]
     (if (and (= (:status response) 401)
              (= "secret-expired" (get-in response [:body :code])))
@@ -48,11 +61,13 @@
 
 (reg-event-db
   :application/handle-send-new-secret
+  [check-schema-interceptor]
   (fn [db _]
     (assoc-in db [:application :secret-delivery-status] :completed)))
 
 (reg-event-fx
   :application/send-new-secret
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [old-secret (get-in db [:application :old-secret])]
       {:db       db
@@ -72,6 +87,7 @@
 
 (reg-event-fx
   :application/get-application-by-hakija-secret
+  [check-schema-interceptor]
   get-application-by-hakija-secret)
 
 (defn- get-application-by-virkailija-secret
@@ -83,10 +99,12 @@
 
 (reg-event-fx
   :application/get-application-by-virkailija-secret
+  [check-schema-interceptor]
   get-application-by-virkailija-secret)
 
 (reg-event-fx
   :application/get-latest-form-by-key
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ form-key virkailija-secret]]
     {:db   (cond-> db
                    (some? virkailija-secret)
@@ -101,6 +119,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
     {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] [hakukohde-oid])
                    (some? virkailija-secret)
@@ -115,6 +134,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ haku-oid hakukohde-oids virkailija-secret]]
     {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] hakukohde-oids)
                    (some? virkailija-secret)
@@ -141,6 +161,7 @@
 
 (reg-event-db
   :application/handle-submit-response
+  [check-schema-interceptor]
   handle-submit)
 
 (defn response->error-message [db response]
@@ -150,17 +171,20 @@
 
 (reg-event-fx
   :application/handle-submit-error
+  [check-schema-interceptor]
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (response->error-message response))}))
 
 (reg-event-fx
   :application/submit
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (send-application db :post)))
 
 (reg-event-fx
   :application/edit
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (send-application db :put)))
 
@@ -565,6 +589,7 @@
 
 (reg-event-fx
   :application/handle-update-selection-limits
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
     {:db (cond (false? valid?)
                (-> db
@@ -580,11 +605,13 @@
 
 (reg-event-db
   :application/handle-selection-limit
+  [check-schema-interceptor]
   (fn [db [_ response]]
     (set-limit-reached db (:body response))))
 
 (reg-event-fx
   :application/post-handle-form-dispatches
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (let [selection-limited (selection-limits db)]
       (merge
@@ -621,21 +648,25 @@
 
 (reg-event-fx
   :application/handle-get-application
+  [check-schema-interceptor]
   handle-get-application)
 
 (reg-event-db
   :flasher
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
 (reg-event-fx
   :application/handle-form
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
   :application/network-online
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (if (= :network-offline (get-in db [:error :code]))
       (dissoc db :error)
@@ -643,6 +674,7 @@
 
 (reg-event-db
   :application/handle-selection-over-network-uncertain
+  [check-schema-interceptor]
   (fn [db [_ uncertain?]]
     (if uncertain?
       (assoc-in db [:application :selection-over-network-uncertain?] true)
@@ -650,6 +682,7 @@
 
 (reg-event-db
   :application/network-offline
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (if (get db :error)
       db
@@ -657,10 +690,12 @@
 
 (reg-event-db
   :application/initialize-db
+  [check-schema-interceptor]
   initialize-db)
 
 (reg-event-fx
   :application/textual-field-blur
+  [check-schema-interceptor]
   (fn [{db :db} [_ field value idx]]
     (let [id          (keyword (:id field))
           answer      (get-in db [:application :answers id])
@@ -687,11 +722,13 @@
 
 (reg-event-db
   :application/update-answers-validity
+  [check-schema-interceptor]
   (fn [db _]
     (assoc-in db [:application :answers-validity] (db->valid-status db))))
 
 (reg-event-fx
   :application/set-validator-processed
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ id]]
     {:db       (update-in db [:application :validators-processing] disj id)
      :dispatch [:application/update-answers-validity]}))
@@ -704,6 +741,7 @@
 
 (reg-event-fx
   :application/set-email-verify-field
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor value verify-value]]
     (let [id     (keyword (:id field-descriptor))
           new-db (-> db
@@ -715,6 +753,7 @@
 
 (reg-event-fx
   :application/set-application-field
+  [check-schema-interceptor]
   (fn [{db :db} [_ field value]]
     (let [value  (transform-value value field)
           id     (keyword (:id field))
@@ -784,6 +823,7 @@
 
 (reg-event-fx
   :application/set-application-field-valid
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor valid? errors]]
     (let [id (keyword (:id field-descriptor))
           rules (:rules field-descriptor)]
@@ -797,6 +837,7 @@
 
 (reg-event-fx
   :application/set-repeatable-application-field-valid
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor group-idx data-idx required? valid?]]
     (let [id    (keyword (:id field-descriptor))
           rules (:rules field-descriptor)]
@@ -810,6 +851,7 @@
 
 (reg-event-fx
   :application/set-repeatable-application-field
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor value data-idx question-group-idx]]
     (let [id     (keyword (:id field-descriptor))
           new-db (-> db
@@ -859,6 +901,7 @@
 
 (reg-event-db
   :application/remove-repeatable-application-field-value
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor data-idx question-group-idx]]
     (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
 
@@ -867,6 +910,7 @@
 
 (reg-event-db
   :application/run-rules
+  [check-schema-interceptor]
   (fn [db [_ rule]]
     (if (#{:submitting :submitted} (-> db :application :submit-status))
       db
@@ -874,24 +918,29 @@
 
 (reg-event-db
   :application/default-handle-error
+  [check-schema-interceptor]
   default-error-handler)
 
 (reg-event-db
- :application/default-http-ok-handler
- (fn [db _] db))
+  :application/default-http-ok-handler
+  [check-schema-interceptor]
+  (fn [db _] db))
 
 (reg-event-db
   :application/default-http-progress-handler
+  [check-schema-interceptor]
   (fn [db _] db))
 
 (reg-event-db
   :state-update
+  [check-schema-interceptor]
   (fn [db [_ f]]
     (or (f db)
         db)))
 
 (reg-event-fx
   :application/handle-postal-code-input
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     {:db       (update-in db [:application :answers :postal-office]
                           merge {:value (autil/non-blank-val (:body response) [(-> db :form :selected-language) :fi])
@@ -900,6 +949,7 @@
 
 (reg-event-fx
   :application/handle-postal-code-error
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     {:db       (-> db
                    (update-in [:application :answers :postal-code]
@@ -910,6 +960,7 @@
 
 (reg-event-fx
   :application/set-multiple-choice-valid
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor valid?]]
     (let [rules (:rules field-descriptor)
           id    (keyword (:id field-descriptor))]
@@ -920,6 +971,7 @@
 
 (reg-event-fx
   :application/toggle-multiple-choice-option
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor option question-group-idx]]
     (let [id (keyword (:id field-descriptor))
           db (-> db
@@ -956,6 +1008,7 @@
 
 (reg-event-fx
   :application/select-single-choice-button
+  [check-schema-interceptor]
   (fn [{db :db} [_ value field-descriptor question-group-idx]]
     (let [id                 (keyword (:id field-descriptor))
           form-key           (get-in db [:form :key])
@@ -1002,6 +1055,7 @@
 
 (reg-event-fx
   :application/add-adjacent-fields
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx]]
     {:dispatch-n
      (reduce (fn [dispatch child]
@@ -1016,6 +1070,7 @@
 
 (reg-event-fx
   :application/remove-adjacent-field
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor row-idx question-group-idx]]
     {:db       (reduce #(remove-repeatable-field-value %1 %2 row-idx question-group-idx)
                        db
@@ -1027,6 +1082,7 @@
 
 (reg-event-fx
   :application/start-attachment-upload
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
@@ -1041,6 +1097,7 @@
 
 (reg-event-fx
   :application/add-single-attachment-resumable
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (let [id       (keyword (:id field-descriptor))
           filename (:filename @(subscribe [:application/answer
@@ -1052,6 +1109,7 @@
 
 (reg-event-fx
   :application/add-attachments
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor question-group-idx files]]
     (let [id                   (keyword (:id field-descriptor))
           path                 (cond-> [:application :answers id :values]
@@ -1111,6 +1169,7 @@
 
 (reg-event-fx
   :application/set-attachment-valid
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ id required? valid?]]
     (let [answer                 (get-in db [:application :answers id])
           question-group-answer? (and (vector? (:values answer))
@@ -1130,6 +1189,7 @@
 
 (reg-event-fx
   :application/handle-attachment-upload
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
     (let [id       (keyword (:id field-descriptor))
           path     (if question-group-idx
@@ -1164,6 +1224,7 @@
 
 (reg-event-db
   :application/handle-attachment-upload-started
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
     (let [id (keyword (:id field-descriptor))]
       (-> db
@@ -1176,6 +1237,7 @@
 
 (reg-event-fx
   :application/handle-attachment-upload-error
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx response-status]]
     (let [id            (keyword (:id field-descriptor))
           current-error (case response-status
@@ -1210,6 +1272,7 @@
 
 (reg-event-fx
   :application/handle-attachment-delete
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx attachment-key _]]
     (let [id (keyword (:id field-descriptor))]
       {:db       (-> db
@@ -1230,6 +1293,7 @@
 
 (reg-event-fx
   :application/remove-attachment
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx]]
     (let [id   (keyword (:id field-descriptor))
           path (cond-> [:application :answers id :values]
@@ -1258,6 +1322,7 @@
 
 (reg-event-fx
   :application/cancel-attachment-upload
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx]]
     {:http-abort (get-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
                                     (some? question-group-idx)
@@ -1267,6 +1332,7 @@
 
 (reg-event-fx
   :application/remove-attachment-error
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor component-id attachment-idx question-group-idx]]
     (let [id (keyword component-id)]
       {:db (update-in db (cond-> [:application :answers id :values]
@@ -1280,11 +1346,13 @@
 
 (reg-event-db
   :application/rating-hover
+  [check-schema-interceptor]
   (fn [db [_ star-number]]
     (assoc-in db [:application :feedback :star-hovered] star-number)))
 
 (reg-event-db
   :application/rating-submit
+  [check-schema-interceptor]
   (fn [db [_ star-number]]
     (-> db
         (assoc-in [:application :feedback :stars] star-number)
@@ -1292,15 +1360,18 @@
 
 (reg-event-db
   :application/rating-update-feedback
+  [check-schema-interceptor]
   (fn [db [_ feedback-text]]
     (assoc-in db [:application :feedback :text] feedback-text)))
 
 (reg-event-db
   :application/handle-feedback-submit
+  [check-schema-interceptor]
   (fn [db _] db))
 
 (reg-event-fx
   :application/rating-feedback-submit
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [lang-kw   (keyword (-> db :form :selected-language))
           new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
@@ -1322,11 +1393,13 @@
 
 (reg-event-db
   :application/rating-form-toggle
+  [check-schema-interceptor]
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
 
 (reg-event-fx
   :application/set-page-title
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [lang-kw       (keyword (-> db :form :selected-language))
           title-prefix  (translations/get-hakija-translation :page-title lang-kw)
@@ -1370,6 +1443,7 @@
 
 (reg-event-fx
   :application/add-question-group-row
+  [check-schema-interceptor]
   (fn add-question-group-row [{db :db} [_ field-descriptor]]
     (let [id           (keyword (:id field-descriptor))
           repeat-count (get-in db [:application :ui id :count] 1)]
@@ -1381,6 +1455,7 @@
 
 (reg-event-fx
   :application/remove-question-group-row
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor idx]]
     (let [id                     (keyword (:id field-descriptor))
           with-decremented-count (-> db
@@ -1417,6 +1492,7 @@
 
 (reg-event-fx
   :application/dropdown-change
+  [check-schema-interceptor]
   (fn [_ [_ field-descriptor value group-idx]]
     {:dispatch (if (some? group-idx)
                  [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
@@ -1424,15 +1500,18 @@
 
 (reg-event-db
   :application/remove-question-group-mouse-over
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] true)))
 
 (reg-event-db
   :application/remove-question-group-mouse-out
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))
 
 (reg-event-fx
   :application/setup-window-unload
+  [check-schema-interceptor]
   (fn [_ _]
     {:set-window-close-callback nil}))
