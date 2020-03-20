@@ -323,11 +323,14 @@
 
 (re-frame/reg-sub
   :application/multiple-choice-option-checked?
-  (fn [db [_ parent-id option-value question-group-idx]]
-    (let [option-path (cond-> [:application :answers parent-id :options]
-                        question-group-idx (conj question-group-idx))
-          options     (get-in db option-path)]
-      (true? (get options option-value)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id option-value question-group-idx]]
+    (boolean
+     (some #(= option-value %)
+           (if (some? question-group-idx)
+             (get-in answers [(keyword id) :value question-group-idx])
+             (get-in answers [(keyword id) :value]))))))
 
 (re-frame/reg-sub
   :application/single-choice-option-checked?

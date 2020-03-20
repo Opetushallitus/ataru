@@ -55,6 +55,14 @@
                                      :label label}
                                     (some? value)
                                     (assoc :value value))])
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "multipleChoice"
+              :label      label}]
+            [(keyword id) {:valid (not (some #(contains? required-validators %)
+                                             (:validators field)))
+                           :value []
+                           :label label}]
             [{:id    id
               :label label}]
             [(keyword id) {:valid (not (some #(contains? required-validators %)
