@@ -230,8 +230,10 @@
 
 (defn- set-multi-choice-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
-    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat #(get options (:value %)))))
+  (let [values (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
+    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat (fn [option]
+                                                                                                        (let [value (:value option)]
+                                                                                                          (some #(= value %) values))))))
 
 
 (defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
@@ -307,40 +309,20 @@
                                                         (conj values id)))))))
 
 (defn- toggle-multiple-choice-option [answer option-value question-group-idx]
-  (let [option-path            (if question-group-idx
-                                 [:options question-group-idx option-value]
-                                 [:options option-value])
-        answer                 (cond-> answer
-                                 question-group-idx (update :options (util/vector-of-length (inc question-group-idx)))
-                                 true (update-in option-path not))
-        parse-option-values    (fn [options]
-                                 (->> options
-                                      (filter (comp true? second))
-                                      (mapv first)))
-        value                  (if question-group-idx
-                                 (mapv parse-option-values (:options answer))
-                                 (parse-option-values (:options answer)))]
-    (assoc answer :value value)))
-
-(defn- toggle-values
-  [answer options]
-  (reduce (fn [answer [idx option]]
-            (if (vector? option)
-              (reduce #(toggle-multiple-choice-option %1 %2 idx)
-                      (-> answer
-                          (update :options (fnil identity []))
-                          (update-in [:options idx] (fnil identity {}))
-                          (update :value (fnil identity []))
-                          (update-in [:value idx] (fnil identity [])))
-                      option)
-              (toggle-multiple-choice-option answer option nil)))
-          answer
-          (map-indexed vector options)))
+  (let [toggle (fn [value]
+                 (let [[before after] (split-with #(not= option-value %) value)]
+                   (vec
+                    (if (empty? after)
+                      (cons option-value before)
+                      (concat before (rest after))))))]
+    (if (some? question-group-idx)
+      (update-in answer [:value question-group-idx] toggle)
+      (update answer :value toggle))))
 
 (defn- merge-multiple-choice-option-values [value answer]
   (if (string? value)
-    (toggle-values answer (clojure.string/split value #"\s*,\s*"))
-    (toggle-values answer value)))
+    (assoc answer :value (clojure.string/split value #"\s*,\s*"))
+    (assoc answer :value value)))
 
 (defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
 
