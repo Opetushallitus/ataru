@@ -39,6 +39,31 @@
                                                      :exclude-from-answers true
                                                      :fieldClass           "formField"}]}]})
 
+(def form-for-multiple-hakukohde {:id           321
+                         :key          "form_321_key"
+                         :name         {:fi "Form name"}
+                         :created-by   "IRMELI KUIKELOINEN"
+                         :created-time (c/date-time 2016 6 14 12 34 56)
+                         :content      [{:id       "form_field_1"
+                                         :label    {:fi "Lomakeosio"}
+                                         :fieldType "fieldset"
+                                         :fieldClass "wrapperElement"
+                                         :children [{:id         "form_field_1_0"
+                                                     :label      {:fi "Kysymys 4"}
+                                                     :belongs-to-hakukohteet ["other-hakukohde.oid"]
+                                                     :fieldType  "textField"
+                                                     :fieldClass "formField"
+                                                     :children [{:id         "form_field_1_0_0"
+                                                                 :label      {:fi "Question is not visible because its parent is from other hakukohde"}
+                                                                 :belongs-to-hakukohteet ["hakukohde.oid"]
+                                                                 :fieldType  "textField"
+                                                                 :fieldClass "formField"}]}
+                                                    {:id                   "should_not_be_shown"
+                                                     :label                {:fi "You should not see this because of exclude-from-answers"}
+                                                     :fieldType            "textField"
+                                                     :exclude-from-answers true
+                                                     :fieldClass           "formField"}]}]})
+
 (def form-with-special-questions {:id           321
                                   :key          "form_321_key"
                                   :name         {:fi "Form name"}
@@ -139,12 +164,8 @@
                                                                         :fieldType "textfield"}
                                                                        {:key       "random_0"
                                                                         :label     {:fi "Kysymys 5"}
-                                                                        :value     "Vastaus 5"
+                                                                        :value     "Vastaus 5 will be included only when skip-answers? == false"
                                                                         :fieldType "textfield"}
-                                                                       {:key       "should_not_be_shown"
-                                                                        :label     {:fi "You should not see this"}
-                                                                        :value     "Really, no"
-                                                                        :fieldType "textField"}
                                                                        {:key       "valintatuloksen-julkaisulupa"
                                                                         :label     (:label (component/valintatuloksen-julkaisulupa {}))
                                                                         :value     "Ei"

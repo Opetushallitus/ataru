@@ -352,12 +352,24 @@
        (util/non-blank-val (:label form-field) [:fi :sv :en])))
 
 (defn- belongs-to-other-hakukohde?
-  [selected-oids form-field]
+  [selected-oids form-fields-by-id form-field]
+  (defn field-belongs-to-other-hakukohde?
+    [field]
+    (let [belongs-to (set (concat (:belongs-to-hakukohderyhma field)
+                                  (:belongs-to-hakukohteet field)))]
+      (and (not-empty belongs-to)
+           (empty? (clojure.set/intersection selected-oids belongs-to)))))
+  (defn some-parent-belongs-to-other-hakukohde?
+    [field-with-parent]
+    (when-let [parent (some->> field-with-parent
+                               :children-of
+                               (get form-fields-by-id))]
+      (or (field-belongs-to-other-hakukohde? parent)
+          (some-parent-belongs-to-other-hakukohde? parent))))
   (and (not-empty selected-oids)
-       (let [belongs-to (set (concat (:belongs-to-hakukohderyhma form-field)
-                                     (:belongs-to-hakukohteet form-field)))]
-         (and (not-empty belongs-to)
-              (empty? (clojure.set/intersection selected-oids belongs-to))))))
+       (or (field-belongs-to-other-hakukohde? form-field)
+           (some-parent-belongs-to-other-hakukohde? form-field))
+))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
@@ -367,7 +379,7 @@
                     (and (not (included-ids (:id %)))
                          (or (and skip-answers?
                                   (not (answer-to-always-include? (:id %))))))
-                    (belongs-to-other-hakukohde? selected-oids %)))
+                    (belongs-to-other-hakukohde? selected-oids form-fields-by-id %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- headers-from-applications
