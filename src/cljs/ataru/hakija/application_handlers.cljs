@@ -783,7 +783,6 @@
               (not (empty? rules))
               (update :dispatch-n conj [:application/run-rules rules])))))
 
-
 (reg-event-fx
   :application/set-repeatable-application-field
   (fn [{db :db} [_ field-descriptor value data-idx question-group-idx]]
@@ -808,7 +807,6 @@
                                                                        data-idx
                                                                        (required? field-descriptor)
                                                                        valid?]))}})))
-
 
 (defn- remove-repeatable-field-value
   [db field-descriptor data-idx question-group-idx]
@@ -987,30 +985,6 @@
                                                                        valid?]))}})))
 
 (reg-event-fx
-  :application/set-adjacent-field-answer
-  (fn [{db :db} [_ field-descriptor idx value question-group-idx]]
-    (let [new-db (-> db
-                     (set-validator-processing (keyword (:id field-descriptor)))
-                     (set-repeatable-field-values field-descriptor value idx question-group-idx)
-                     (set-repeatable-field-value field-descriptor question-group-idx))]
-      {:db                 new-db
-       :validate-debounced {:value                        value
-                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in new-db [:application :answers])
-                            :field-descriptor             field-descriptor
-                            :editing?                     (get-in new-db [:application :editing?])
-                            :field-idx                    (or idx 0)
-                            :group-idx                    (or question-group-idx 0)
-                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-repeatable-application-field-valid
-                                                                       field-descriptor
-                                                                       question-group-idx
-                                                                       idx
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
-
-(reg-event-fx
   :application/add-adjacent-fields
   (fn [{db :db} [_ field-descriptor question-group-idx]]
     {:dispatch-n
@@ -1019,8 +993,8 @@
                      new-idx (count (if question-group-idx
                                       (get-in db [:application :answers id :values question-group-idx])
                                       (get-in db [:application :answers id :values])))]
-                 (conj dispatch [:application/set-adjacent-field-answer
-                                 child new-idx "" question-group-idx])))
+                 (conj dispatch [:application/set-repeatable-application-field
+                                 child "" new-idx question-group-idx])))
              []
              (:children field-descriptor))}))
 
@@ -1365,7 +1339,7 @@
         [d d])
       {:fieldType "adjacentfieldset"}
       (mapv (fn [child]
-              [:application/set-adjacent-field-answer child 0 "" group-idx])
+              [:application/set-repeatable-application-field child "" 0 group-idx])
             (:children field-descriptor))
       {:fieldType "attachment"}
            ; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
