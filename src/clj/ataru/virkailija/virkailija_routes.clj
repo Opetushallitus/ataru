@@ -142,9 +142,10 @@
 
 (api/defroutes app-routes
   (api/undocumented
-    (api/GET "/" [] (render-virkailija-page))
-    (api/GET client-routes [] (render-virkailija-page))
-    (api/GET client-sub-routes [] (render-virkailija-page))))
+   (api/GET "/" [] (render-virkailija-page))
+   (api/GET client-routes [] (render-virkailija-page))
+    (api/GET client-sub-routes [] (render-virkailija-page))
+    (api/GET "/virhe" [] (render-virkailija-page))))
 
 (defn- render-file-in-dev
   [filename js-config]

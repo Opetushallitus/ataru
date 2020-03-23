@@ -1,6 +1,5 @@
 (ns ataru.virkailija.authentication.auth
-  (:require [ataru.config.core :refer [config]]
-            [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.db.db :as db]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.log.audit-log :as audit-log]
@@ -9,8 +8,6 @@
             [ataru.user-rights :as rights]
             [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.cas-ticketstore :as cas-store]
-            [ataru.util :as util]
-            [environ.core :refer [env]]
             [medley.core :refer [map-kv]]
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
@@ -18,8 +15,8 @@
             [yesql.core :as sql])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
-(defn- redirect-to-logged-out-page []
-  (resp/redirect (resolve-url :cas.login)))
+(defn- redirect-to-login-failed-page []
+  (resp/redirect (resolve-url :cas.failure)))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
@@ -30,8 +27,8 @@
        ticket])))
 
 (defn- user-right-organizations->organization-rights
-  [user-right-organizations]
   "Takes map keyed by right with list of organizations as values, outputs map keyed by organization oid with list of rights as values"
+  [user-right-organizations]
   (reduce
     (fn [acc [right organizations]]
       (reduce
@@ -86,10 +83,10 @@
                                           :user-right-organizations user-right-organizations
                                           :superuser                oph-organization-member?
                                           :organizations            organizations-with-rights}}))))
-      (redirect-to-logged-out-page))
+      (redirect-to-login-failed-page))
     (catch Exception e
       (error e "Error in login ticket handling")
-      (redirect-to-logged-out-page))))
+      (redirect-to-login-failed-page))))
 
 (defn logout [session]
   (info "username" (-> session :identity :username) "logged out")
