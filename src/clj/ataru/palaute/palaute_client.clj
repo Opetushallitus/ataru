@@ -20,13 +20,9 @@
 
 (defn send-application-feedback
   [amazon-sqs feedback]
-  (try
-    (log/info "Sending feedback to Palautepalvelu" feedback)
-    (sqs/send-message amazon-sqs
-                      (-> config :aws :feedback-queue :queue-url)
-                      (-> feedback
-                          (build-palaute-request)
-                          (json/generate-string)))
-    (catch Exception e
-      (log/warn e "Feedback didn't go through"))))
-
+  (log/info "Sending feedback to Palautepalvelu" feedback)
+  (sqs/send-message amazon-sqs
+    (-> config :aws :feedback-queue :queue-url)
+    (-> feedback
+        (build-palaute-request)
+        (json/generate-string))))

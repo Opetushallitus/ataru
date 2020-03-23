@@ -31,10 +31,13 @@
 (defn send-application-feedback
   [feedback]
   (when-let [token (-> config :feedback :application-feedback-flow-token)]
-    (log/info "Sending feedback to Flowdock" feedback)
-    (http-util/do-post "https://api.flowdock.com/messages"
-                       {:headers {"content-type" "application/json"}
-                        :body    (-> feedback
-                                     (build-flowdock-request token)
-                                     (json/generate-string))})))
+    (try
+      (log/info "Sending feedback to Flowdock" feedback)
+      (http-util/do-post "https://api.flowdock.com/messages"
+        {:headers {"content-type" "application/json"}
+         :body    (-> feedback
+                      (build-flowdock-request token)
+                      (json/generate-string))})
+      (catch Exception e
+        (log/warn e "Feedback didn't go through")))))
 
