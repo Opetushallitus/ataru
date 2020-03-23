@@ -74,6 +74,20 @@
                                          :belongs-to-hakukohteet ["hakukohde.oid"]
                                          :fieldType  "textField"
                                          :fieldClass "formField"}
+                                        {:id         "form_field_2a"
+                                         :label      {:fi "Visible from form 2"}
+                                         :belongs-to-hakukohteet ["hakukohde-in-ryhma.oid"]
+                                         :fieldType  "textField"
+                                         :fieldClass "formField"}
+                                        {:id         "form_field_X"
+                                         :label      {:fi "Visible only if belongs to hakukohderyhmä1"}
+                                         :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
+                                         :fieldType  "textField"
+                                         :fieldClass "formField"
+                                         :children [{:id         "form_field_X_0"
+                                                     :label      {:fi "Visible because of parent's hakukohderyhmä"}
+                                                     :fieldType  "textField"
+                                                     :fieldClass "formField"}]}
                                         {:id         "form_field_3"
                                          :label      {:fi "Should be visible because belongs-to-hakukohde is not specified"}
                                          :fieldType  "textField"
@@ -185,6 +199,13 @@
                                                                         :label     (:label (component/valintatuloksen-julkaisulupa {}))
                                                                         :value     "Ei"
                                                                         :fieldType "singleChoice"}]})
+
+(def application-with-special-answers-2 (merge application-with-special-answers
+                                               {:hakukohde ["hakukohde-in-ryhma.oid"]
+                                                :haku "haku-2.oid"
+                                                :application-hakukohde-reviews
+                                                           [{:requirement "selection-state" :state "selected" :hakukohde "hakukohde-in-ryhma.oid"}
+                                                            {:requirement "processing-state" :state "processing" :hakukohde "hakukohde-in-ryhma.oid"}]}))
 
 (def application-review {:id              1
                          :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"

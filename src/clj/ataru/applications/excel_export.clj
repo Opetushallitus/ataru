@@ -352,34 +352,26 @@
        (util/non-blank-val (:label form-field) [:fi :sv :en])))
 
 (defn- belongs-to-other-hakukohde?
-  [selected-oids form-fields-by-id form-field]
-  (defn field-belongs-to-other-hakukohde?
-    [field]
-    (let [belongs-to (set (concat (:belongs-to-hakukohderyhma field)
-                                  (:belongs-to-hakukohteet field)))]
-      (and (not-empty belongs-to)
-           (empty? (clojure.set/intersection selected-oids belongs-to)))))
+  [form-field-belongs-to form-fields-by-id form-field]
   (defn some-parent-belongs-to-other-hakukohde?
     [field-with-parent]
     (when-let [parent (some->> field-with-parent
                                :children-of
                                (get form-fields-by-id))]
-      (or (field-belongs-to-other-hakukohde? parent)
+      (or (not (form-field-belongs-to parent))
           (some-parent-belongs-to-other-hakukohde? parent))))
-  (and (not-empty selected-oids)
-       (or (field-belongs-to-other-hakukohde? form-field)
-           (some-parent-belongs-to-other-hakukohde? form-field))
-))
+  (or (not (form-field-belongs-to form-field))
+      (some-parent-belongs-to-other-hakukohde? form-field)))
 
 (defn- headers-from-form
-  [form-fields form-fields-by-id skip-answers? included-ids selected-oids]
+  [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
   (->> form-fields
        (remove #(or (:exclude-from-answers %)
                     (not (util/answerable? %))
                     (and (not (included-ids (:id %)))
                          skip-answers?
                          (not (answer-to-always-include? (:id %))))
-                    (belongs-to-other-hakukohde? selected-oids form-fields-by-id %)))
+                    (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id %)))
        (map #(vector (:id %) (pick-header form-fields-by-id %)))))
 
 (defn- headers-from-applications
@@ -392,7 +384,7 @@
        (map #(vector (:key %) (util/non-blank-val (:label %) [:fi :sv :en])))))
 
 (defn- extract-headers
-  [applications form selected-oids skip-answers? included-ids]
+  [applications form form-field-belongs-to skip-answers? included-ids]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -403,7 +395,7 @@
                                             form-fields-by-id
                                             skip-answers?
                                             included-ids
-                                            selected-oids)
+                                            form-field-belongs-to)
                          (headers-from-applications form-fields-by-id
                                                     skip-answers?
                                                     applications)))))
@@ -563,10 +555,29 @@
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
-        selected-hakukohderyhma-oids (or (some-> selected-hakukohderyhma vector)
-                                         (and selected-hakukohde
-                                              (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)))
-        selected-oids                (clojure.set/union (set selected-hakukohde-oids) (set selected-hakukohderyhma-oids))]
+        form-field-belongs-to        (let [belongs-not-specified? (fn [form-field]
+                                                                    (and (nil? (:belongs-to-hakukohderyhma form-field))
+                                                                         (nil? (:belongs-to-hakukohteet form-field))))]
+                                        (cond
+                                          (some? selected-hakukohde) (fn [form-field]
+                                                                        (or
+                                                                          (belongs-not-specified? form-field)
+                                                                          (contains?
+                                                                            (set (:belongs-to-hakukohteet form-field))
+                                                                            selected-hakukohde)
+                                                                          (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
+                                                                            (-> (clojure.set/intersection
+                                                                                  (set (:belongs-to-hakukohderyhma form-field))
+                                                                                  (set hakukohderyhmas))
+                                                                                empty?
+                                                                                not))))
+                                          (some? selected-hakukohderyhma) (fn [form-field]
+                                                                             (or
+                                                                               (belongs-not-specified? form-field)
+                                                                               (contains?
+                                                                                 (set (:belongs-to-hakukohderyhma form-field))
+                                                                                 selected-hakukohderyhma)))
+                                       :else (fn [_] true)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
@@ -585,7 +596,7 @@
          (map second)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form selected-oids skip-answers? included-ids)
+                              headers            (extract-headers applications form form-field-belongs-to skip-answers? included-ids)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)

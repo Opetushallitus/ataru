@@ -101,6 +101,11 @@
                                  {:oid "haku.oid"
                                   :hakukohdeOids ["hakukohde.oid"]
                                   :usePriority true})
+   :haku-2.oid                 (merge
+                                 base-haku
+                                 {:oid "haku-2.oid"
+                                  :hakukohdeOids ["hakukohde-in-ryhma.oid"]
+                                  :usePriority true})
    :1.2.246.562.29.65950024186 (merge
                                  base-haku
                                  {:oid              "1.2.246.562.29.65950024186"
@@ -167,10 +172,17 @@
 
 (def hakukohde
   {:1.2.246.562.20.49028196522 base-hakukohde
+
    :hakukohde.oid              (merge base-hakukohde
                                       {:oid "hakukohde.oid"
                                        :hakuOid "haku.oid"})
+
    :hakukohde_oid              base-hakukohde
+
+   :hakukohde-in-ryhma.oid     (merge base-hakukohde
+                                      {:oid "hakukohde-in-ryhma.oid"
+                                       :ryhmaliitokset [{:ryhmaOid "1.2.246.562.28.00000000001"}]
+                                       :hakuOid "haku.oid"})
    :1.2.246.562.20.49028196523 (merge
                                  base-hakukohde
                                  {:ataruLomakeAvain "41101b4f-1762-49af-9db0-e3603adae3ae"
@@ -313,7 +325,7 @@
     (keep #(.get-hakukohde this %) hakukohde-oids))
 
   (get-hakukohde-name [this hakukohde-oid]
-    (if (= hakukohde-oid "hakukohde.oid")
+    (if (contains? #{"hakukohde.oid" "hakukohde-in-ryhma.oid"} hakukohde-oid)
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
       {:fi "Testihakukohde"}))
 

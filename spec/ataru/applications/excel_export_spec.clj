@@ -53,7 +53,7 @@
                                                 applications#)
                                         fixtures/application-review-notes
                                         (~input-params :selected-hakukohde)
-                                        nil
+                                        (~input-params :selected-hakukohderyhma)
                                         (~input-params :skip-answers?)
                                         (format-included-ids (or (~input-params :included-ids) ""))
                                         :fi
@@ -141,15 +141,44 @@
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                     form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
         (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde.oid"} [file [fixtures/application-with-special-answers]]
-                    (let [workbook          (WorkbookFactory/create file)
-                          metadata-sheet    (.getSheetAt workbook 0)
-                          application-sheet (.getSheetAt workbook 1)]
-                      (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-                      (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-                      (verify-row metadata-sheet 2 nil)
-                      (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Visible from form" "Should be visible because belongs-to-hakukohde is not specified"])
-                      (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil])
-                      (verify-row application-sheet 2 nil)))))
+          (let [workbook          (WorkbookFactory/create file)
+                metadata-sheet    (.getSheetAt workbook 0)
+                application-sheet (.getSheetAt workbook 1)]
+            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+            (verify-row metadata-sheet 2 nil)
+            (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Visible from form" "Should be visible because belongs-to-hakukohde is not specified"])
+            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil])
+            (verify-row application-sheet 2 nil)))))
+
+  (it "should include questions when hakukohde belongs to hakukohderyhma"
+      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde-in-ryhma.oid"} [file [fixtures/application-with-special-answers-2]]
+          (let [workbook          (WorkbookFactory/create file)
+                metadata-sheet    (.getSheetAt workbook 0)
+                application-sheet (.getSheetAt workbook 1)]
+            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+            (verify-row metadata-sheet 2 nil)
+            (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Visible from form 2" "Should be visible because belongs-to-hakukohde is not specified" "Visible only if belongs to hakukohderyhmä1" "Visible because of parent's hakukohderyhmä"])
+            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde-in-ryhma.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil nil nil nil])
+            (verify-row application-sheet 2 nil)))))
+
+  (it "should not include questions for different hakukohderyhma"
+      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
+                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
+        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohderyhma "unknown-hakukohderyhma"} [file [fixtures/application-with-special-answers]]
+          (let [workbook          (WorkbookFactory/create file)
+                metadata-sheet    (.getSheetAt workbook 0)
+                application-sheet (.getSheetAt workbook 1)]
+            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+            (verify-row metadata-sheet 2 nil)
+            (verify-row application-sheet 0 ["Id" "Lähetysaika" "Hakemuksen tila" "Hakukohteen käsittelyn tila" "Kielitaitovaatimus" "Tutkinnon kelpoisuus" "Hakukelpoisuus" "Hakukelpoisuus asetettu automaattisesti" "Hylkäyksen syy" "Maksuvelvollisuus" "Valinnan tila" "Ehdollinen" "Pisteet" "Hakijan henkilö-OID" "Turvakielto" "Muistiinpanot" "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan." "Etunimi" "Hakukohteet" "Kysymys 5" "Should be visible because belongs-to-hakukohde is not specified"])
+            (verify-row application-sheet 1 ["application_3424_key" "2016-06-15 15:34:56" "Aktiivinen" "Käsittelyssä" "Tarkastamatta" "Tarkastamatta" "Tarkastamatta" nil nil "Tarkastamatta" "Hyväksytty" "ei" "12" "1.123.345456567123" "kyllä" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari" "Ei" "Person-etunimi" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)" "Vastaus 5 will be included only when skip-answers? == false" nil])
+            (verify-row application-sheet 2 nil)))))
+
 
   (it "should not include Kysymys 4 when not including everything"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
