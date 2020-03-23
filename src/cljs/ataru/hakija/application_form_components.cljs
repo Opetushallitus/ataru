@@ -820,29 +820,30 @@
     (r/create-class
       {:component-did-mount #(let [value     @(subscribe [:application/answer id question-group-idx row-idx])
                                    required? (is-required-field? field-descriptor)]
-                               (when (and (not value) (not required?)) (dispatch [:application/set-adjacent-field-answer
-                                                                                  field-descriptor
-                                                                                  row-idx
-                                                                                  ""
-                                                                                  question-group-idx])))
+                               (when (and (not value) (not required?))
+                                 (dispatch [:application/set-repeatable-application-field
+                                            field-descriptor
+                                            ""
+                                            row-idx
+                                            question-group-idx])))
        :reagent-render      (fn [field-descriptor row-idx question-group-idx]
                               (let [{:keys [value
                                             valid]} @(subscribe [:application/answer id question-group-idx row-idx])
-                                    cannot-edit? @(subscribe [:application/cannot-edit? id])
-                                    show-error?  @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
-                                    on-blur      (fn [_]
-                                                   (swap! local-state assoc
-                                                          :focused? false))
-                                    on-change    (fn [evt]
-                                                   (let [value (-> evt .-target .-value)]
-                                                     (swap! local-state assoc
-                                                            :focused? true
-                                                            :value value)
-                                                     (dispatch [:application/set-adjacent-field-answer
-                                                                field-descriptor
-                                                                row-idx
-                                                                value
-                                                                question-group-idx])))]
+                                    cannot-edit?    @(subscribe [:application/cannot-edit? id])
+                                    show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
+                                    on-blur         (fn [_]
+                                                      (swap! local-state assoc
+                                                             :focused? false))
+                                    on-change       (fn [evt]
+                                                      (let [value (-> evt .-target .-value)]
+                                                        (swap! local-state assoc
+                                                               :focused? true
+                                                               :value value)
+                                                        (dispatch [:application/set-repeatable-application-field
+                                                                   field-descriptor
+                                                                   value
+                                                                   row-idx
+                                                                   question-group-idx])))]
                                 [:input.application__form-text-input
                                  {:class        (if show-error?
                                                   " application__form-field-error"
