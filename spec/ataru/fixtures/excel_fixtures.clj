@@ -84,10 +84,14 @@
                                          :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
                                          :fieldType  "textField"
                                          :fieldClass "formField"
-                                         :children [{:id         "form_field_X_0"
-                                                     :label      {:fi "Visible because of parent's hakukohderyhmä"}
-                                                     :fieldType  "textField"
-                                                     :fieldClass "formField"}]}
+                                         :options [{:belongs-to-hakukohderyhma []
+                                                    :fieldClass "formField"
+                                                    :label {:fi "Minulla on seuraava dokumentti:"}
+                                                    :id "3e73258f-ef94-46b4-a3da-00bf92efb1e8"
+                                                    :followups [{:id        "form_field_X_0"
+                                                                :label     {:fi "Visible because of parent's hakukohderyhmä"}
+                                                                :fieldType  "textField"
+                                                                :fieldClass "formField"}]}]}
                                         {:id         "form_field_3"
                                          :label      {:fi "Should be visible because belongs-to-hakukohde is not specified"}
                                          :fieldType  "textField"

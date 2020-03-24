@@ -355,9 +355,12 @@
   [form-field-belongs-to form-fields-by-id form-field]
   (defn some-parent-belongs-to-other-hakukohde?
     [field-with-parent]
-    (when-let [parent (some->> field-with-parent
-                               :children-of
-                               (get form-fields-by-id))]
+    (when-let [parent (or (some->> field-with-parent
+                                   :children-of
+                                   (get form-fields-by-id))
+                          (some->> field-with-parent
+                                   :followup-of
+                                   (get form-fields-by-id)))]
       (or (not (form-field-belongs-to parent))
           (some-parent-belongs-to-other-hakukohde? parent))))
   (or (not (form-field-belongs-to form-field))
