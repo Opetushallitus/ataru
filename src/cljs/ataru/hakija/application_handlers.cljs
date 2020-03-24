@@ -335,13 +335,16 @@
     (rules/run-all-rules db (:flat-form-content db))))
 
 (defn- set-have-finnish-ssn
-  [db]
-  (let [ssn (get-in db [:application :answers :ssn])]
+  [db flat-form-content]
+  (let [cannot-view? (some #(and (= "ssn" (:id %)) (:cannot-view %))
+                           flat-form-content)
+        ssn-value    (get-in db [:application :answers :ssn :value])]
     (update-in db [:application :answers :have-finnish-ssn]
                merge {:valid true
-                      :value (str (or (and (clojure.string/blank? (:value ssn))
-                                           (:cannot-view ssn))
-                                      (not (clojure.string/blank? (:value ssn)))))})))
+                      :value (if (or (and cannot-view? (nil? ssn-value))
+                                     (not (clojure.string/blank? ssn-value)))
+                               "true"
+                               "false")})))
 
 (defn- populate-hakukohde-answers-if-necessary
   "Populate hakukohde answers for legacy applications where only top-level hakukohde array exists"
@@ -395,11 +398,11 @@
           (merge {:values (mapv (partial mapv (fn [value] {:valid true :value value}))
                                 value)})))
 
-(defn- merge-submitted-answers [db submitted-answers]
+(defn- merge-submitted-answers [db submitted-answers flat-form-content]
   (-> db
       (update-in [:application :answers]
                  (fn [answers]
-                   (reduce (fn [answers {:keys [key value cannot-view] :as answer}]
+                   (reduce (fn [answers {:keys [key value] :as answer}]
                              (let [answer-key (keyword key)
                                    value      (cond-> value
                                                 (and (vector? value)
@@ -446,12 +449,12 @@
 
                                                      :else
                                                      (update answers answer-key merge {:valid true :value value}))]
-                                   (assoc-in answer [answer-key :cannot-view] cannot-view))
+                                   answer)
                                  answers)))
                            answers
                            submitted-answers)))
       (populate-hakukohde-answers-if-necessary)
-      (set-have-finnish-ssn)
+      (set-have-finnish-ssn flat-form-content)
       (application-run-rules [])
       (set-question-group-row-amounts)))
 
@@ -525,7 +528,7 @@
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc-in [:application :validators-processing] #{})
         (assoc :wrapper-sections (extract-wrapper-sections form))
-        (merge-submitted-answers answers)
+        (merge-submitted-answers answers flat-form-content)
         (original-values->answers)
         (set-field-visibilities))))
 

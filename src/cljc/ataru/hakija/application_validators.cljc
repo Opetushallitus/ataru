@@ -52,8 +52,8 @@
       (cond (not (ssn/ssn? value))
             [false []]
             (and (not multiple?)
-                 (not (get-in answers-by-key [:ssn :cannot-view]))
-                 (not (get-in answers-by-key [:ssn :cannot-modify]))
+                 (not (:cannot-view field-descriptor))
+                 (not (:cannot-edit field-descriptor))
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
             [false [(texts/ssn-applied-error (when (:valid preferred-name)

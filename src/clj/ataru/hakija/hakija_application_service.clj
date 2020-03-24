@@ -56,7 +56,7 @@
             (partial map (fn [answer]
                            (cond-> answer
                                    (:cannot-view (fields-by-key (:key answer)))
-                                   (assoc :value nil :cannot-view true)))))))
+                                   (assoc :value nil)))))))
 
 (defn- merge-unviewable-answers-from-previous
   [new-application
