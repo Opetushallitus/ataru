@@ -353,18 +353,15 @@
 
 (defn- belongs-to-other-hakukohde?
   [form-field-belongs-to form-fields-by-id form-field]
-  (defn some-parent-belongs-to-other-hakukohde?
-    [field-with-parent]
-    (when-let [parent (or (some->> field-with-parent
+  (if (not (form-field-belongs-to form-field))
+    true
+    (when-let [parent (or (some->> form-field
                                    :children-of
                                    (get form-fields-by-id))
-                          (some->> field-with-parent
+                          (some->> form-field
                                    :followup-of
                                    (get form-fields-by-id)))]
-      (or (not (form-field-belongs-to parent))
-          (some-parent-belongs-to-other-hakukohde? parent))))
-  (or (not (form-field-belongs-to form-field))
-      (some-parent-belongs-to-other-hakukohde? form-field)))
+      (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id parent))))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
@@ -559,8 +556,8 @@
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
         form-field-belongs-to        (let [belongs-not-specified? (fn [form-field]
-                                                                    (and (nil? (:belongs-to-hakukohderyhma form-field))
-                                                                         (nil? (:belongs-to-hakukohteet form-field))))]
+                                                                    (and (empty? (:belongs-to-hakukohderyhma form-field))
+                                                                         (empty? (:belongs-to-hakukohteet form-field))))]
                                         (cond
                                           (some? selected-hakukohde) (fn [form-field]
                                                                         (or
@@ -575,12 +572,18 @@
                                                                                 empty?
                                                                                 not))))
                                           (some? selected-hakukohderyhma) (fn [form-field]
-                                                                             (or
-                                                                               (belongs-not-specified? form-field)
-                                                                               (contains?
-                                                                                 (set (:belongs-to-hakukohderyhma form-field))
-                                                                                 selected-hakukohderyhma)))
-                                       :else (fn [_] true)))]
+                                                                            (or
+                                                                              (belongs-not-specified? form-field)
+                                                                              (contains?
+                                                                                (set (:belongs-to-hakukohderyhma form-field))
+                                                                                selected-hakukohderyhma)
+                                                                              (let [hakukohderyhmas (->>
+                                                                                                      (:belongs-to-hakukohteet form-field)
+                                                                                                      (map #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %))
+                                                                                                      set
+                                                                                                      (reduce concat))]
+                                                                                 (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
+                                          :else (fn [_] true)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
