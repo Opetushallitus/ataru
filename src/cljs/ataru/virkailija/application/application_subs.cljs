@@ -938,14 +938,11 @@
     (get-in db [:application :attachment-review-states-value field-id])))
 
 (re-frame/reg-sub
-  :application/valitun-hakemuksen-application-key
-  (fn [db _]
-    (get-in db [:application :selected-application-and-form :application :key])))
-
-(re-frame/reg-sub
   :application/valitun-hakemuksen-hakukohteet
-  (fn [db _]
-    (get-in db [:application :selected-application-and-form :application :hakukohde])))
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-application])])
+  (fn [[selected-application]]
+    (get selected-application :hakukohde)))
 
 (re-frame/reg-sub
   :application/valinnan-tulos
@@ -953,25 +950,25 @@
     (get db :valinta-tulos-service)))
 
 (re-frame/reg-sub
-  :application/valinnan-tulokset-hakemuksen-hakukohteille
+  :application/valinnan-tulokset-valitun-hakemuksen-hakukohteille
   (fn [_]
-    [(re-frame/subscribe [:application/valitun-hakemuksen-application-key])
+    [(re-frame/subscribe [:application/selected-application-key])
      (re-frame/subscribe [:application/valinnan-tulos])])
   (fn [[application-key valinnan-tulos]]
     (get valinnan-tulos application-key)))
 
 (re-frame/reg-sub
-  :application/onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos
+  :application/hakemuksen-jollakin-hakukohteella-on-valinnan-tulos
   (fn [_]
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
-     (re-frame/subscribe [:application/valinnan-tulokset-hakemuksen-hakukohteille])])
-  (fn [[hakukohteet valinnan-tulokset-hakukohteille]]
-    (let [on-valinnan-tulos? (set (keys valinnan-tulokset-hakukohteille))]
-      (some? (some on-valinnan-tulos? hakukohteet)))))
+     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
+  (fn [[hakukohteet hakukohteen-valinnan-tulos]]
+    (let [hakukohteella-on-valinnan-tulos? (set (keys hakukohteen-valinnan-tulos))]
+      (some? (some hakukohteella-on-valinnan-tulos? hakukohteet)))))
 
 (re-frame/reg-sub
   :application/can-inactivate-application
   (fn [_]
-    [(re-frame/subscribe [:application/onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos])])
-  (fn [onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos]
-    (not onko-jollakin-hakemuksen-hakukohteella-valinnan-tulos)))
+    [(re-frame/subscribe [:application/hakemuksen-jollakin-hakukohteella-on-valinnan-tulos])])
+  (fn [[hakemuksen-jollakin-hakukohteella-on-valinnan-tulos]]
+    (not hakemuksen-jollakin-hakukohteella-on-valinnan-tulos)))
