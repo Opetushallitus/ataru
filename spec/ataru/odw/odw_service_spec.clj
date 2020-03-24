@@ -139,4 +139,72 @@
                               (merge international-matriculation-identifier {degree {:value value}}))))
                   degrees)))))
 
+(def higher-education-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_kk"]}})
+
+(describe "Higher education qualification completed in Finland / pohjakoulutus_kk completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "vocational degree is completed after application period ends (ODW special hardcoding)"
+      ; 1. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge higher-education-qualification-identifier {:64d82dce-14e6-4261-84b1-d868a265cd54 {:value "1"}})))
+      ; 2. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge higher-education-qualification-identifier {:cc4fcbbb-6943-43b4-af9a-0b961bae6bb3 {:value "1"}})))))
+
+(def other-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_ulk"]}})
+
+(describe "Other qualification completed outside Finland / pohjakoulutus_ulk completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "vocational degree is completed after application period ends (ODW special hardcoding)"
+      ; 1. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_ulk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge other-qualification-outside-finland-identifier {:beab461b-b743-44ba-b9f0-1a56daa3eece {:value "1"}})))
+      ; 2. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_ulk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge other-qualification-outside-finland-identifier {:3fe6e8e1-6622-4fee-950a-7e602b3cccce {:value "1"}})))))
+
+(def higher-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_kk_ulk"]}})
+
+(describe "Higher education qualification completed outside Finland / pohjakoulutus_kk_ulk completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "vocational degree is completed after application period ends (ODW special hardcoding)"
+      ; 1. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge higher-qualification-outside-finland-identifier {:f2b4db5e-7090-4859-b404-4a6334686afe {:value "1"}})))
+      ; 2. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge higher-qualification-outside-finland-identifier {:a722150f-d2b5-43eb-bdb6-b2d3ca3a428b {:value "1"}})))))
+
+(def further-vocational-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_amt"]}})
+
+(describe "Further vocational qualification completed in Finland / pohjakoulutus_kk_ulk completion year selection when"
+  (tags :unit :odw :OY-342)
+
+  (it "vocational degree is completed after application period ends (ODW special hardcoding)"
+      ; 1. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_amt" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge further-vocational-qualification-identifier {:718d7f0b-4075-4960-8456-1ec49e147551 {:value "1"}})))
+      ; 2. yhteishaku
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_amt" :suoritusvuosi 2020}]
+               (select-year-for
+                {:hakukausiVuosi 2020}
+                (merge further-vocational-qualification-identifier {:1a9c3205-0500-439e-84b9-4bb7b90dabe8 {:value "2"}})))))
+
 (run-specs)

@@ -133,16 +133,25 @@
                                                    :f3a87aa7-b782-4947-a4a0-0f126147f7b5
                                                    :5e5a0f04-f04d-478c-b093-3f47d33ba1a4
                                                    :75d3d13c-5865-4924-8a69-d22b8a8aea65]))
-    "pohjakoulutus_amt"                        (suoritusvuosi-one-of
-                                                application-key
-                                                answers
-                                                [:pohjakoulutus_amt--year-of-completion
-                                                 :c8d351ad-cd95-4f40-a128-530585fa0c0d])
-    "pohjakoulutus_kk"                         (suoritusvuosi-one-of
-                                                application-key
-                                                answers
-                                                [:pohjakoulutus_kk--completion-date
-                                                 :124a0215-e358-47e1-ab02-f1cc7c831e0e])
+    "pohjakoulutus_amt"                        (if (or (any-answers-match? answers "1" [:718d7f0b-4075-4960-8456-1ec49e147551])
+                                                       (any-answers-match? answers "2" [:1a9c3205-0500-439e-84b9-4bb7b90dabe8]))
+                                                 [(:hakukausiVuosi haku)]
+                                                 (suoritusvuosi-one-of
+                                                  application-key
+                                                  answers
+                                                  [:pohjakoulutus_amt--year-of-completion
+                                                   :c8d351ad-cd95-4f40-a128-530585fa0c0d]))
+    "pohjakoulutus_kk"                         (if (any-answers-match?
+                                                    answers
+                                                    "1"
+                                                    [:64d82dce-14e6-4261-84b1-d868a265cd54
+                                                     :cc4fcbbb-6943-43b4-af9a-0b961bae6bb3])
+                                                 [(:hakukausiVuosi haku)]
+                                                 (suoritusvuosi-one-of
+                                                  application-key
+                                                  answers
+                                                  [:pohjakoulutus_kk--completion-date
+                                                   :124a0215-e358-47e1-ab02-f1cc7c831e0e]))
     "pohjakoulutus_yo_ulkomainen"              (if (or (any-answers-match?
                                                         answers
                                                         "0"
@@ -166,14 +175,26 @@
                                                    :77ea3ff1-6c04-4b3f-87d2-72bbe7db12e2
                                                    :2c85ef9c-d6c2-448d-ac56-f8da4ca5c1fc
                                                    :e70041ff-e6f4-4dc5-a87f-3267543cced4]))
-    "pohjakoulutus_kk_ulk"                     (suoritusvuosi-one-of
-                                                application-key
-                                                answers
-                                                [:pohjakoulutus_kk_ulk--year-of-completion])
-    "pohjakoulutus_ulk"                        (suoritusvuosi-one-of
-                                                application-key
-                                                answers
-                                                [:pohjakoulutus_ulk--year-of-completion])
+    "pohjakoulutus_kk_ulk"                     (if (any-answers-match?
+                                                    answers
+                                                    "1"
+                                                    [:f2b4db5e-7090-4859-b404-4a6334686afe
+                                                     :a722150f-d2b5-43eb-bdb6-b2d3ca3a428b])
+                                                 [(:hakukausiVuosi haku)]
+                                                 (suoritusvuosi-one-of
+                                                  application-key
+                                                  answers
+                                                  [:pohjakoulutus_kk_ulk--year-of-completion]))
+    "pohjakoulutus_ulk"                        (if (any-answers-match?
+                                                    answers
+                                                    "1"
+                                                    [:beab461b-b743-44ba-b9f0-1a56daa3eece
+                                                     :3fe6e8e1-6622-4fee-950a-7e602b3cccce])
+                                                 [(:hakukausiVuosi haku)]
+                                                 (suoritusvuosi-one-of
+                                                  application-key
+                                                  answers
+                                                  [:pohjakoulutus_ulk--year-of-completion]))
     "pohjakoulutus_muu"                        (suoritusvuosi-one-of
                                                 application-key
                                                 answers
