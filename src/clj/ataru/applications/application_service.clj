@@ -389,7 +389,7 @@
                                              (<= 200000 (count applications))
                                              (<= 4500 (count applications)))
           lang                             (keyword (or (-> session :identity :lang) :fi))]
-      (log/warn "Answers will be skipped to preserve memory")
+      (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
       (ByteArrayInputStream. (excel/export-applications applications-with-persons
                                                         application-reviews
                                                         application-review-notes
