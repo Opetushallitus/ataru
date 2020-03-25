@@ -38,33 +38,15 @@
 
 (defn- textual-field-change [field-descriptor evt]
   (let [value (-> evt .-target .-value)]
-    (dispatch [:application/set-application-field field-descriptor value])))
-
-(def ->textual-field-change
-  (memoize (fn [field-descriptor]
-             (fn [evt]
-               (let [value (-> evt .-target .-value)]
-                 (dispatch [:application/set-application-field
-                            field-descriptor
-                            value]))))))
+    (dispatch [:application/set-repeatable-application-field field-descriptor nil nil value])))
 
 (defn textual-field-blur
-  [field-descriptor idx value]
-  (dispatch [:application/textual-field-blur field-descriptor value idx]))
+  [field-descriptor]
+  (dispatch [:application/run-rules (:blur-rules field-descriptor)]))
 
-(defn- multi-value-field-change [field-descriptor data-idx question-group-idx event]
+(defn- multi-value-field-change [field-descriptor question-group-idx event]
   (let [value (some-> event .-target .-value)]
-    (dispatch [:application/set-repeatable-application-field field-descriptor value data-idx question-group-idx])))
-
-(def ->multi-value-field-change
-  (memoize (fn [field-descriptor data-idx question-group-idx]
-             (fn [evt]
-               (let [value (some-> evt .-target .-value)]
-                 (dispatch [:application/set-repeatable-application-field
-                            field-descriptor
-                            value
-                            data-idx
-                            question-group-idx]))))))
+    (dispatch [:application/set-repeatable-application-field field-descriptor question-group-idx nil value])))
 
 (defn- label [field-descriptor]
   (let [languages  (subscribe [:application/default-languages])
@@ -107,7 +89,7 @@
         size-class  (text-field-size->class size)
         answer      @(subscribe [:application/answer id idx nil])
         on-change   #(if idx
-                       (multi-value-field-change field-descriptor 0 idx %)
+                       (multi-value-field-change field-descriptor idx %)
                        (textual-field-change field-descriptor %))
         show-error? @(subscribe [:application/show-validation-error-class? id idx nil])
         value       (:value answer)
@@ -126,7 +108,7 @@
                                   (if show-error?
                                     " application__form-field-error"
                                     " application__form-text-input--normal"))
-              :on-blur       (fn [_] (textual-field-blur field-descriptor idx value))
+              :on-blur       (fn [_] (textual-field-blur field-descriptor))
               :on-change     on-change
               :required      (is-required-field? field-descriptor)
               :aria-invalid  (not (:valid answer))
@@ -177,18 +159,18 @@
         cannot-edit? (subscribe [:application/cannot-edit? id])
         local-state  (r/atom {:focused? false :value nil})]
     (fn [field-descriptor idx]
-      (let [languages    @languages
-            disabled?    @disabled?
+      (let [languages        @languages
+            disabled?        @disabled?
             {:keys [value
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
-            cannot-view? @cannot-view?
-            cannot-edit? @cannot-edit?
-            show-error?  @(subscribe [:application/show-validation-error-class? id idx nil])
-            on-change    (if idx
-                           (->multi-value-field-change field-descriptor 0 idx)
-                           (->textual-field-change field-descriptor))
-            on-blur      (fn [_] (textual-field-blur field-descriptor idx value))]
+            cannot-view?     @cannot-view?
+            cannot-edit?     @cannot-edit?
+            show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
+            on-change        (if idx
+                               (partial multi-value-field-change field-descriptor idx)
+                               (partial textual-field-change field-descriptor))
+            on-blur          (fn [_] (textual-field-blur field-descriptor))]
         [:div.application__form-field
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -244,8 +226,8 @@
                                                   :focused? false)
                                            (dispatch [:application/remove-repeatable-application-field-value
                                                       field-descriptor
-                                                      repeatable-idx
-                                                      question-group-idx]))
+                                                      question-group-idx
+                                                      repeatable-idx]))
             on-blur                      (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
@@ -253,8 +235,8 @@
                                              (when (and (empty? value) (not last?))
                                                (dispatch [:application/remove-repeatable-application-field-value
                                                           field-descriptor
-                                                          repeatable-idx
-                                                          question-group-idx]))))
+                                                          question-group-idx
+                                                          repeatable-idx]))))
             on-change                    (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
@@ -262,9 +244,9 @@
                                                     :value value)
                                              (dispatch [:application/set-repeatable-application-field
                                                         field-descriptor
-                                                        value
+                                                        question-group-idx
                                                         repeatable-idx
-                                                        question-group-idx])))
+                                                        value])))
             lang                         @(subscribe [:application/form-language])]
         [:div.application__form-repeatable-text-wrap
          {:class (when padded? "application__form-repeatable-text-wrap--padded")}
@@ -338,10 +320,10 @@
     (fn [field-descriptor idx]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id idx nil])
-            cannot-edit? @cannot-edit?
-            on-change    (if idx
-                           (->multi-value-field-change field-descriptor 0 idx)
-                           (->textual-field-change field-descriptor))]
+            cannot-edit?    @cannot-edit?
+            on-change       (if idx
+                              (partial multi-value-field-change field-descriptor idx)
+                              (partial textual-field-change field-descriptor))]
         [:div.application__form-field
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -473,7 +455,7 @@
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
     (fn [field-descriptor option parent-id question-group-idx]
       (let [on-change (fn [_]
-                        (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
+                        (dispatch [:application/toggle-multiple-choice-option field-descriptor question-group-idx option]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
             followups (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
                               (:followups option))]
@@ -547,10 +529,11 @@
                   :value     option-value
                   :on-change (fn [event]
                                (let [value (.. event -target -value)]
-                                 (dispatch [:application/select-single-choice-button
-                                            (when-not checked? value)
+                                 (dispatch [:application/set-repeatable-application-field
                                             field-descriptor
-                                            question-group-idx])))
+                                            question-group-idx
+                                            nil
+                                            (when-not checked? value)])))
                   :role      "radio"
                   :class     (if use-multi-choice-style?
                                "application__form-checkbox"
@@ -810,50 +793,41 @@
        (when-not @(subscribe [:application/cannot-edit? (keyword id)])
          [attachment-upload field-descriptor id attachment-count question-group-idx]))]))
 
-(defn- adjacent-field-input [field-descriptor row-idx question-group-idx]
+(defn- adjacent-field-input [field-descriptor _ _]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (r/create-class
-      {:component-did-mount #(let [value     @(subscribe [:application/answer id question-group-idx row-idx])
-                                   required? (is-required-field? field-descriptor)]
-                               (when (and (not value) (not required?))
-                                 (dispatch [:application/set-repeatable-application-field
-                                            field-descriptor
-                                            ""
-                                            row-idx
-                                            question-group-idx])))
-       :reagent-render      (fn [field-descriptor row-idx question-group-idx]
-                              (let [{:keys [value
-                                            valid]} @(subscribe [:application/answer id question-group-idx row-idx])
-                                    cannot-edit?    @(subscribe [:application/cannot-edit? id])
-                                    show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
-                                    on-blur         (fn [_]
-                                                      (swap! local-state assoc
-                                                             :focused? false))
-                                    on-change       (fn [evt]
-                                                      (let [value (-> evt .-target .-value)]
-                                                        (swap! local-state assoc
-                                                               :focused? true
-                                                               :value value)
-                                                        (dispatch [:application/set-repeatable-application-field
-                                                                   field-descriptor
-                                                                   value
-                                                                   row-idx
-                                                                   question-group-idx])))]
-                                [:input.application__form-text-input
-                                 {:class        (if show-error?
-                                                  " application__form-field-error"
-                                                  " application__form-text-input--normal")
-                                  :id           (str id "-" row-idx)
-                                  :type         "text"
-                                  :value        (if (:focused? @local-state)
-                                                  (:value @local-state)
-                                                  value)
-                                  :on-blur      on-blur
-                                  :on-change    on-change
-                                  :disabled     cannot-edit?
-                                  :aria-invalid (not valid)
-                                  :autoComplete autocomplete-off}]))})))
+    (fn [field-descriptor row-idx question-group-idx]
+      (let [{:keys [value
+                    valid]} @(subscribe [:application/answer id question-group-idx row-idx])
+            cannot-edit?    @(subscribe [:application/cannot-edit? id])
+            show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
+            on-blur         (fn [_]
+                              (swap! local-state assoc
+                                     :focused? false))
+            on-change       (fn [evt]
+                              (let [value (-> evt .-target .-value)]
+                                (swap! local-state assoc
+                                       :focused? true
+                                       :value value)
+                                (dispatch [:application/set-repeatable-application-field
+                                           field-descriptor
+                                           question-group-idx
+                                           row-idx
+                                           value])))]
+        [:input.application__form-text-input
+         {:class        (if show-error?
+                          " application__form-field-error"
+                          " application__form-text-input--normal")
+          :id           (str id "-" row-idx)
+          :type         "text"
+          :value        (if (:focused? @local-state)
+                          (:value @local-state)
+                          value)
+          :on-blur      on-blur
+          :on-change    on-change
+          :disabled     cannot-edit?
+          :aria-invalid (not valid)
+          :autoComplete autocomplete-off}]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
@@ -865,8 +839,8 @@
                                 (.preventDefault event)
                                 (dispatch [:application/remove-adjacent-field
                                            field-descriptor
-                                           row-idx
-                                           question-group-idx])))
+                                           question-group-idx
+                                           row-idx])))
             add-on-click    (fn add-adjacent-text-field [event]
                               (.preventDefault event)
                               (dispatch [:application/add-adjacent-fields

@@ -7,12 +7,12 @@
    (s/optional-key :en) s/Str})
 
 (s/defschema Value
-  (s/conditional string?
-                 s/Str
-                 #(and (vector? %) (vector? (first %)))
-                 (s/constrained [(s/constrained [s/Str] vector?)] vector?)
+  (s/conditional #(and (vector? %) (vector? (first %)))
+                 (s/constrained [(s/constrained [(s/maybe s/Str)] vector?)] vector?)
+                 vector?
+                 (s/constrained [(s/maybe s/Str)] vector?)
                  :else
-                 (s/constrained [s/Str] vector?)))
+                 s/Str))
 
 (s/defschema ValuesValue
   {:value                          (s/maybe s/Str)
@@ -28,13 +28,16 @@
    (s/optional-key :request)       s/Any})
 
 (s/defschema Values
-  (s/if #(and (vector? %) (vector? (first %)))
-    (s/constrained [(s/constrained [ValuesValue] vector?)] vector?)
-    (s/constrained [ValuesValue] vector?)))
+  (s/conditional #(and (vector? %) (vector? (first %)))
+                 (s/constrained [(s/constrained [ValuesValue] vector?)] vector?)
+                 vector?
+                 (s/constrained [ValuesValue] vector?)
+                 :else
+                 ValuesValue))
 
 (s/defschema Answer
-  {(s/optional-key :value)          (s/maybe Value)
-   (s/optional-key :values)         Values
+  {:value                           (s/maybe Value)
+   :values                          (s/maybe Values)
    :valid                           s/Bool
    :label                           Label
    (s/optional-key :errors)         [{:fi s/Any
