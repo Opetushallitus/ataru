@@ -3,7 +3,7 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
+            [clojure.java.jdbc :refer [with-db-transaction]]
             [ataru.db.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log])
