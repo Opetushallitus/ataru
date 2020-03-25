@@ -350,11 +350,11 @@
   "Populate hakukohde answers for legacy applications where only top-level hakukohde array exists"
   [db]
   (let [hakukohteet (-> db :application :hakukohde)
-        hakukohde-answers (-> db :application :answers :hakukohteet :value)]
+        hakukohde-answers (-> db :application :answers :hakukohteet :values)]
     (if (and (not-empty hakukohteet)
              (empty? hakukohde-answers))
       (-> db
-          (assoc-in [:application :answers :hakukohteet :values] (map (fn [oid] {:valid true :value oid}) hakukohteet))
+          (assoc-in [:application :answers :hakukohteet :values] (mapv (fn [oid] {:valid true :value oid}) hakukohteet))
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
