@@ -365,14 +365,21 @@
 
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
-  (->> form-fields
-       (remove #(or (:exclude-from-answers %)
-                    (not (util/answerable? %))
-                    (and (not (included-ids (:id %)))
-                         skip-answers?
-                         (not (answer-to-always-include? (:id %))))
-                    (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id %)))
-       (map #(vector (:id %) (pick-header form-fields-by-id %)))))
+  (let [should-include? (fn [field]
+                          (let [candidate? (and (not (:exclude-from-answers field))
+                                                (util/answerable? field))
+                                always?    (answer-to-always-include? (:id field))
+                                hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))
+                                id-match?  (included-ids (:id field))]
+                            (when candidate?
+                                  (or always?
+                                      (and (not always?)
+                                           (not skip-answers?)
+                                           hakukohde?
+                                           id-match?)))))]
+    (->> form-fields
+         (remove #(not (should-include? %)))
+         (map #(vector (:id %) (pick-header form-fields-by-id %))))))
 
 (defn- headers-from-applications
   [form-fields-by-id skip-answers? applications]

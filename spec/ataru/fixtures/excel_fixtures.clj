@@ -79,7 +79,7 @@
                                          :belongs-to-hakukohteet ["hakukohde-in-ryhma.oid"]
                                          :fieldType  "textField"
                                          :fieldClass "formField"}
-                                        {:id         "form_field_X"
+                                        {:id         "my-id"
                                          :label      {:fi "Visible only if belongs to hakukohderyhmä1"}
                                          :belongs-to-hakukohderyhma ["1.2.246.562.28.00000000001"]
                                          :fieldType  "textField"
