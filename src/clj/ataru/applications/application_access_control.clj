@@ -3,7 +3,6 @@
    [ataru.log.audit-log :as audit-log]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.user-rights :as user-rights]
-   [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [ataru.odw.odw-service :as odw-service]
