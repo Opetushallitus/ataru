@@ -942,12 +942,12 @@
   (fn [_]
     [(re-frame/subscribe [:application/selected-application])])
   (fn [[selected-application]]
-    (get selected-application :hakukohde)))
+    (get selected-application :hakukohde [])))
 
 (re-frame/reg-sub
   :application/valinnan-tulos
   (fn [db _]
-    (get db :valinta-tulos-service)))
+    (get db :valinta-tulos-service {})))
 
 (re-frame/reg-sub
   :application/valinnan-tulokset-valitun-hakemuksen-hakukohteille
@@ -955,7 +955,7 @@
     [(re-frame/subscribe [:application/selected-application-key])
      (re-frame/subscribe [:application/valinnan-tulos])])
   (fn [[application-key valinnan-tulos]]
-    (get valinnan-tulos application-key)))
+    (get valinnan-tulos application-key {})))
 
 (re-frame/reg-sub
   :application/hakemuksen-jollakin-hakukohteella-on-valinnan-tulos
