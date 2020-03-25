@@ -40,6 +40,8 @@
    (apply
     component/system-map
 
+    :audit-logger (ataru.log.audit-log/new-audit-logger)
+
     :organization-service (component/using
                            (organization-service/new-organization-service)
                            [:all-organization-groups-cache])
@@ -159,7 +161,8 @@
                             :job-runner
                             :ohjausparametrit-service
                             :person-service
-                            :kayttooikeus-service]
+                            :kayttooikeus-service
+                            :audit-logger]
                            (map first caches))))
 
     :server-setup {:port      http-port

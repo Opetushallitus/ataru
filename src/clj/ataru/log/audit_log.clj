@@ -8,7 +8,8 @@
             Changes$Builder
             Target$Builder
             ApplicationType
-            User]
+            User
+            Audit]
            java.net.InetAddress
            org.ietf.jgss.Oid))
 
@@ -22,7 +23,7 @@
 (def operation-delete (create-operation "poisto"))
 (def operation-login (create-operation "kirjautuminen"))
 
-(def ^:private logger
+(def ^:private static-logger
   (let [service-name     (case (app-utils/get-app-id)
                            :virkailija "ataru-editori"
                            :hakija "ataru-hakija"
@@ -35,6 +36,11 @@
                            :hakija ApplicationType/OPPIJA
                            ApplicationType/BACKEND)]
     (cta-audit-log/create-audit-logger service-name base-path application-type)))
+
+(defrecord AtaruAuditLogger [auditlog])
+
+(defn new-audit-logger []
+  map->AtaruAuditLogger {:auditlog static-logger})
 
 (defn- map-or-vec? [x]
   (or (map? x)
@@ -73,7 +79,7 @@
      (into {} (for [kw updated-kw]
                 [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-(defn- do-log [{:keys [new old id operation session]}]
+(defn- do-log [^Audit audit-logger {:keys [new old id operation session]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
@@ -106,7 +112,7 @@
                         (.removed % path (str val))))
                     (#(doseq [[path [n o]] updated]
                         (.updated % (str path) (str o) (str n)))))]
-    (.log logger user operation
+    (.log audit-logger user operation
           (let [tb (Target$Builder.)]
             (doseq [[field value] id
                     :when (some? value)]
@@ -122,8 +128,9 @@
    either a vector or a map.
 
    If only :new value is provided, it can also be a String."
-  [params]
-  (try
-    (do-log params)
-    (catch Throwable t
-      (throw (new RuntimeException "Failed to create an audit log entry" t)))))
+  ([audit-logger params]
+    (try
+      (do-log (:auditlog audit-logger) params)
+      (catch Throwable t
+        (throw (new RuntimeException "Failed to create an audit log entry" t)))))
+  ([params] (log {:auditlog static-logger} params)))

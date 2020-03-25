@@ -198,7 +198,8 @@
                           statistics-day-cache
                           koodisto-cache
                           person-service
-                          get-haut-cache]
+                          get-haut-cache
+                          audit-logger]
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -388,6 +389,7 @@
                               tarjonta-service
                               ohjausparametrit-service
                               person-service
+                              audit-logger
                               newest-form)]
           (response/ok application)
           (response/unauthorized {:error (str "Hakemuksen "
@@ -441,7 +443,8 @@
                                 organization-service
                                 ohjausparametrit-service
                                 tarjonta-service
-                                job-runner)]
+                                job-runner
+                                audit-logger)]
           (response/ok resend-event)
           (response/bad-request)))
 
