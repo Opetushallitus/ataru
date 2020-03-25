@@ -50,6 +50,7 @@
                  [com.stuartsierra/component "0.4.0"]
                  [metosin/compojure-api "1.1.12"]
                  [aleph "0.4.6"]
+                 [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT"]
                  [fi.vm.sade/auditlogger "8.3.1-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.10.0"]
