@@ -1,9 +1,6 @@
 (ns ataru.log.audit-log
   (:require [ataru.util.app-utils :as app-utils]
             [ataru.config.core :refer [config]]
-            [clj-time.core :as c]
-            [clj-time.format :as f]
-            [clojure.core.match :as m]
             [cheshire.core :as json]
             [taoensso.timbre :as timbre]
             [environ.core :refer [env]]
@@ -14,8 +11,6 @@
             Operation
             Changes$Builder
             Target$Builder
-            Target
-            Changes
             Logger
             Audit
             ApplicationType
@@ -68,12 +63,6 @@
     (new Audit logger service-name application-type)))
 
 (def ^:private logger (create-audit-logger))
-
-(def ^:private date-time-formatter (f/formatter :date-time))
-
-(defn- timestamp []
-  (->> (c/now)
-       (f/unparse date-time-formatter)))
 
 (defn- map-or-vec? [x]
   (or (map? x)
