@@ -127,10 +127,11 @@
 (defn get-application-with-human-readable-koodis
   "Get application that has human-readable koodisto values populated
    onto raw koodi values."
-  [koodisto-cache application-key session organization-service tarjonta-service ohjausparametrit-service person-client with-newest-form?]
+  [koodisto-cache application-key session organization-service tarjonta-service ohjausparametrit-service person-client audit-logger with-newest-form?]
   (when-let [application (aac/get-latest-application-by-key
                            organization-service
                            tarjonta-service
+                           audit-logger
                            session
                            application-key)]
     (let [tarjonta-info         (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -459,10 +460,11 @@
      to-state)))
 
 (defn send-modify-application-link-email
-  [koodisto-cache application-key session organization-service ohjausparametrit-service tarjonta-service job-runner]
+  [koodisto-cache application-key session organization-service ohjausparametrit-service tarjonta-service job-runner audit-logger]
   (when-let [application-id (:id (aac/get-latest-application-by-key
                                   organization-service
                                   tarjonta-service
+                                  audit-logger
                                   session
                                   application-key))]
     (application-store/add-new-secret-to-application application-key)
