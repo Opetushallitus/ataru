@@ -84,10 +84,8 @@
       (if (or (= :submitted @submit-status)
               @preview-enabled?)
         [readonly-fields form]
-        (do
-          (dispatch [:application/run-rules])                ; wtf
-          (when form
-            [editable-fields form submit-status]))))))
+        (when form
+          [editable-fields form submit-status])))))
 
 (defn application-contents []
   (let [form                   (subscribe [:state-query [:form]])

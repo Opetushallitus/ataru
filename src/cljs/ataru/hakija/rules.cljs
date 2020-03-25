@@ -3,14 +3,15 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
-            [ataru.hakija.application :refer [db->valid-status]]
             clojure.string))
 
 (defn- set-empty-validity
   [a cannot-view? valid?]
   (if (and (clojure.string/blank? (:value a))
            (not cannot-view?))
-    (assoc a :valid valid?)
+    (-> a
+        (assoc :valid valid?)
+        (assoc-in [:values :valid] valid?))
     a))
 
 (defn- hide-field
@@ -20,7 +21,10 @@
    (if-let [_ (some #(when (= id (keyword (:id %))) %)
                     (:flat-form-content db))]
      (-> db
-         (update-in [:application :answers id] merge {:valid true :value value})
+         (update-in [:application :answers id] merge {:valid true
+                                                      :value value})
+         (update-in [:application :answers id :values] merge {:valid true
+                                                              :value value})
          (assoc-in [:application :ui id :visible?] false))
      db)))
 
@@ -46,7 +50,11 @@
           (update-in [:application :answers :have-finnish-ssn]
                      (fn [a]
                        (if (= "" (:value a))
-                         (merge a {:valid true :value "true"})
+                         (-> a
+                             (merge {:valid true
+                                     :value "true"})
+                             (update :values merge {:valid true
+                                                    :value "true"}))
                          a)))
           (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
       (hide-field db :have-finnish-ssn "true"))))
@@ -206,7 +214,11 @@
                   :error-handler [:application/handle-postal-code-error]}))
     (-> db
         (update-in [:application :answers :postal-office]
-                   merge {:valid (not is-finland?) :value ""})
+                   merge {:valid (not is-finland?)
+                          :value ""})
+        (update-in [:application :answers :postal-office :values]
+                   merge {:valid (not is-finland?)
+                          :value ""})
         (assoc-in [:application :ui :postal-office :visible?] is-finland?)
         (assoc-in [:application :ui :postal-office :disabled?] auto-input?))))
 
@@ -235,10 +247,20 @@
         preferred-name (-> answers :preferred-name :value)]
     (cond
       (and first-name (clojure.string/blank? preferred-name))
-      (update-in db [:application :answers :preferred-name] merge {:value first-name :valid true})
+      (-> db
+          (update-in [:application :answers :preferred-name] merge
+                     {:value first-name
+                      :valid true})
+          (update-in [:application :answers :preferred-name :values] merge
+                     {:valid true
+                      :value first-name}))
 
       (and first-name (not (clojure.string/blank? preferred-name)))
-      (update-in db [:application :answers :preferred-name] merge {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})})
+      (-> db
+          (update-in [:application :answers :preferred-name] merge
+                     {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})})
+          (update-in [:application :answers :preferred-name :values] merge
+                     {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})}))
 
       :else db)))
 
@@ -277,13 +299,12 @@
   ([db rules]
    (run-rules db rules hakija-rule-to-fn))
   ([db rules rule-to-fn]
-   {:pre  [(map? db) (map? rules)]
+   {:pre  [(map? db) (or (empty? rules) (map? rules))]
     :post [map?]}
-   (let [db-after-rules (reduce-kv (fn [db rule arg]
-                                     (or ((rule-to-fn rule) db arg) db))
-                                   db
-                                   rules)]
-     (assoc-in db-after-rules [:application :answers-validity] (db->valid-status db-after-rules)))))
+   (reduce-kv (fn [db rule arg]
+                (or ((rule-to-fn rule) db arg) db))
+              db
+              rules)))
 
 (defn run-all-rules
   [db flat-form-content]

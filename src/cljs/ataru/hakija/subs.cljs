@@ -3,6 +3,7 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
+            [ataru.hakija.application :as autil]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [cemerick.url :as url]))
@@ -198,8 +199,12 @@
 
 (re-frame/reg-sub
   :application/valid-status
-  (fn [db]
-    (get-in db [:application :answers-validity])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/answers])
+     (re-frame/subscribe [:application/ui])
+     (re-frame/subscribe [:application/flat-form-content])])
+  (fn [[answers ui flat-form-content] _]
+    (autil/answers->valid-status answers ui flat-form-content)))
 
 (re-frame/reg-sub
   :application/invalid-fields?

@@ -87,16 +87,15 @@
   :application/set-hakukohde-valid
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ valid?]]
-    {:db         (assoc-in db [:application :answers :hakukohteet :valid] valid?)
-     :dispatch-n [[:application/update-answers-validity]
-                  [:application/set-validator-processed :hakukohteet]]}))
+    {:db       (assoc-in db [:application :answers :hakukohteet :valid] valid?)
+     :dispatch [:application/set-validator-processed :hakukohteet]}))
 
 (reg-event-fx
   :application/validate-hakukohteet
   [check-schema-interceptor]
   (fn [{db :db} _]
     {:db                 (set-validator-processing db :hakukohteet)
-     :validate-debounced {:value                        (get-in db [:application :answers :hakukohteet :values])
+     :validate-debounced {:value                        (get-in db [:application :answers :hakukohteet :value])
                           :tarjonta-hakukohteet         (get-in db [:form :tarjonta :hakukohteet])
                           :rajaavat-hakukohderyhmat     (get-in db [:form :rajaavat-hakukohderyhmat])
                           :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
@@ -122,7 +121,9 @@
           max-hakukohteet      (get-in field-descriptor [:params :max-hakukohteet] nil)
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
-                                     new-hakukohde-values)
+                                             new-hakukohde-values)
+                                   (assoc-in [:application :answers :hakukohteet :value]
+                                             (mapv :value new-hakukohde-values))
                                    set-values-changed
                                    set-field-visibilities)]
       {:db                 (cond-> db
@@ -144,7 +145,9 @@
           new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]
-                                     new-hakukohde-values)
+                                             new-hakukohde-values)
+                                   (assoc-in [:application :answers :hakukohteet :value]
+                                             (mapv :value new-hakukohde-values))
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                                    set-values-changed
                                    set-field-visibilities)]
@@ -173,6 +176,7 @@
                             new-index (nth hakukohteet current-index))
           db              (-> db
                               (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+                              (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet))
                               set-values-changed)]
       {:db                 db
        :dispatch [:application/validate-hakukohteet]})))

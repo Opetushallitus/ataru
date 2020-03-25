@@ -184,9 +184,21 @@
 
 (deftest correct-initial-validity-for-nested-form
   (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil)]
-    (is (= {:G__2 {:valid false, :label {:fi "kenttä1", :sv ""}}
-            :G__14 {:valid true, :label {:fi "kenttä2", :sv ""}}
-            :G__25 {:valid true, :label {:fi "ulkokenttä", :sv ""}}}
+    (is (= {:G__2  {:value  ""
+                    :values {:value ""
+                             :valid false}
+                    :valid  false
+                    :label  {:fi "kenttä1", :sv ""}}
+            :G__14 {:value  ""
+                    :values {:value ""
+                             :valid true}
+                    :valid  true
+                    :label  {:fi "kenttä2", :sv ""}}
+            :G__25 {:value  ""
+                    :values {:value ""
+                             :valid true}
+                    :valid  true
+                    :label  {:fi "ulkokenttä", :sv ""}}}
            initial-answers))))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid

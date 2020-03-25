@@ -12,10 +12,11 @@
         disabled? @(re-frame/subscribe [:application/cannot-edit? id])
         answer    @(re-frame/subscribe [:application/answer id idx nil])
         on-change (fn [e]
-                    (re-frame/dispatch [:application/dropdown-change
+                    (re-frame/dispatch [:application/set-repeatable-application-field
                                         field-descriptor
-                                        (.-value (.-target e))
-                                        idx]))
+                                        idx
+                                        nil
+                                        (.-value (.-target e))]))
         options   @(re-frame/subscribe [:application/visible-options field-descriptor])
         followups (->> options
                        (filter #(= (:value answer) (:value %)))

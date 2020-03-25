@@ -172,14 +172,6 @@
     true
     (not (clojure.string/blank? value))))
 
-(defn- parse-value
-  "Values in answers are a flat string collection when submitted, but a
-  collection of maps beforehand (in front-end db) :("
-  [value]
-  (cond
-    (every? string? value) value
-    (every? map? value) (map :value value)))
-
 (defn- partition-above-and-below
   [match? coll]
   (let [[above below] (split-with (complement match?) coll)]
@@ -220,8 +212,8 @@
   [{:keys [value field-descriptor tarjonta-hakukohteet priorisoivat-hakukohderyhmat rajaavat-hakukohderyhmat]}]
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
-        selected                   (parse-value value)
-        selected-set               (set (parse-value value))
+        selected                   value
+        selected-set               (set value)
         answers-subset-of-options? (clojure.set/subset? selected-set (set (map :value hakukohde-options)))
         limitting?                 (not-empty (limitting-hakukohderyhmat (->> tarjonta-hakukohteet
                                                                     (filter (fn [{:keys [oid]}] (contains? selected-set oid))))
