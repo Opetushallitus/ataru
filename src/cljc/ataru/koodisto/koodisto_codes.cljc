@@ -10,4 +10,5 @@
                              "29"   ; SOTILASALAN_OPPILAITOS
                              "61"   ; LIIKUNNAN_KOULUTUSKEKUS
                              "62"   ; MUSIIKKIOPPILAITOS
-                             "63"]) ; KANSANOPISTO
+                             "63"   ; KANSANOPISTO
+                             "XX"]) ; EI_TIEDOSSA
