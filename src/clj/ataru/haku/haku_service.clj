@@ -126,7 +126,6 @@
      :direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
      :haut             (->> (keys tarjonta-haut)
                             (keep #(tarjonta/get-haku tarjonta-service %))
-                            (map tarjonta-service/parse-haku)
                             (util/group-by-first :oid))
      :hakukohteet      (->> (keys tarjonta-haut)
                             (mapcat #(tarjonta/hakukohde-search

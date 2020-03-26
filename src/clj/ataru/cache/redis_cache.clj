@@ -141,9 +141,14 @@
   (.execute
    (:executor cache)
    (fn []
-     (when-let [keys (or (seq (pop-keys cache (->high-priority-queue (:name cache))))
-                         (seq (pop-keys cache (->low-priority-queue (:name cache)))))]
-       (update-keys cache keys)
+     (when (try
+             (when-let [keys (or (seq (pop-keys cache (->high-priority-queue (:name cache))))
+                                 (seq (pop-keys cache (->low-priority-queue (:name cache)))))]
+               (update-keys cache keys)
+               true)
+             (catch Exception e
+               (log/error e "Failed to update" (:name cache) "keys")
+               true))
        (recur)))))
 
 (defn- fetch-as-high-priority
@@ -154,7 +159,7 @@
                     (fn [[_ _ notify-key value]]
                       (when-let [key (notify-key->key (:name cache) notify-key)]
                         (when-let [p (get promises key)]
-                          (deliver p value))))}
+                          (deliver p [value]))))}
                    (car/psubscribe (->notify-pattern (:name cache))))]
     (try
       (doseq [key keys]
@@ -163,9 +168,13 @@
       (enqueue-update-execution cache)
 
       (reduce (fn [values [key promise]]
-                (if-let [value (deref promise (:lock-timeout-ms cache) nil)]
-                  (assoc values key value)
-                  values))
+                (if-let [[value] (deref promise (:lock-timeout-ms cache) nil)]
+                  (if (some? value)
+                    (assoc values key value)
+                    values)
+                  (throw
+                   (new RuntimeException
+                        (str "Failed to fetch " (:name cache) " " key)))))
               {}
               promises)
       (finally

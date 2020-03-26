@@ -273,6 +273,7 @@
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
    :name                                                                         LocalizedStringOptional
+   :can-be-applied-to?                                                           s/Bool
    :kohdejoukko-korkeakoulu?                                                     s/Bool
    :tarjoaja-name                                                                LocalizedStringOptional
    (s/optional-key :form-key)                                                    (s/maybe s/Str)
@@ -294,16 +295,23 @@
    :yhteishaku                         (s/maybe s/Bool)})
 
 (s/defschema Haku
-  {:oid                             s/Str
-   :name                            LocalizedStringOptional
-   :yhteishaku                      s/Bool
-   :kohdejoukko-uri                 s/Str
-   :prioritize-hakukohteet          s/Bool
-   :hakuajat                        [{:start                java.time.ZonedDateTime
-                                      (s/optional-key :end) java.time.ZonedDateTime}]
-   :hakukohteet                     [s/Str]
-   :sijoittelu                      s/Bool
-   (s/optional-key :ataru-form-key) s/Str})
+  {:oid                                        s/Str
+   :name                                       LocalizedStringOptional
+   :hakukohteet                                [s/Str]
+   :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
+   :kohdejoukko-uri                            s/Str
+   :hakutapa-uri                               s/Str
+   :yhteishaku                                 s/Bool
+   :prioritize-hakukohteet                     s/Bool
+   :can-submit-multiple-applications           s/Bool
+   :sijoittelu                                 s/Bool
+   :hakuajat                                   [{:hakuaika-id          s/Str
+                                                 :start                org.joda.time.DateTime
+                                                 (s/optional-key :end) org.joda.time.DateTime}]
+   :haun-tiedot-url                            s/Str
+   (s/optional-key :hakukausi-vuosi)           s/Int
+   (s/optional-key :ataru-form-key)            s/Str
+   (s/optional-key :max-hakukohteet)           s/Int})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
@@ -313,17 +321,17 @@
 
 (s/defschema Hakukohde
   {:oid                                                                          s/Str
-   :tila                                                                         s/Keyword
+   :hakukohteen-tiedot-url                                                       s/Str
+   :can-be-applied-to?                                                           s/Bool
    :haku-oid                                                                     s/Str
    :koulutus-oids                                                                [s/Str]
    :name                                                                         LocalizedStringOptional
    :tarjoaja-name                                                                LocalizedStringOptional
    :tarjoaja-oids                                                                [s/Str]
    :ryhmaliitokset                                                               [s/Str]
-   :kaytetaan-hakukohdekohtaista-hakuaikaa?                                      s/Bool
    (s/optional-key :hakuaika-id)                                                 s/Str
-   (s/optional-key :hakuaika-alku)                                               s/Int
-   (s/optional-key :hakuaika-loppu)                                              s/Int
+   (s/optional-key :hakuajat)                                                    [{:start                org.joda.time.DateTime
+                                                                                   (s/optional-key :end) org.joda.time.DateTime}]
    :hakukelpoisuusvaatimus-uris                                                  [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp

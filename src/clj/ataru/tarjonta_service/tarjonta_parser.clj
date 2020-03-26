@@ -2,22 +2,10 @@
   (:require [clj-time.core :as t]
             [taoensso.timbre :as log]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.tarjonta-service.tarjonta-service :refer [yhteishaku?]]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]))
-
-(def ^:private lang-key-renames {:kieli_fi :fi :kieli_en :en :kieli_sv :sv})
-
-(defn- localized-names
-  ([names]
-   (localized-names names identity))
-  ([names key-fn]
-  (into {}
-        (for [lang [:fi :sv :en]
-              :when (contains? names lang)]
-          [lang (-> names lang key-fn)]))))
 
 (defn- parse-hakukohde
   [tarjonta-service
@@ -31,16 +19,17 @@
   (when (:oid hakukohde)
     {:oid                                                         (:oid hakukohde)
      :name                                                        (:name hakukohde)
+     :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
-     :kohdejoukko-korkeakoulu?                                    (true? (some-> haku
-                                                                                 :kohdejoukkoUri
-                                                                                 (clojure.string/starts-with? "haunkohdejoukko_12#")))
+     :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
+                                                                   (:kohdejoukko-uri haku)
+                                                                   "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
-     :form-key                                                    (:ataruLomakeAvain haku)
+     :form-key                                                    (:ataru-form-key haku)
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
                                                                              (throw (new RuntimeException (str "Koulutus " % " not found"))))
                                                                         (:koulutus-oids hakukohde))
-     :hakuaika                                                    (hakuaika/get-hakuaika-info now haku ohjausparametrit hakukohde)
+     :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))}))
 
@@ -89,20 +78,17 @@
                                                                     ohjausparametrit
                                                                     pohjakoulutukset-by-vaatimus
                                                                     %)
-                                                  tarjonta-hakukohteet)
-           max-hakukohteet                   (:maxHakukohdes haku)]
+                                                  tarjonta-hakukohteet)]
        (when (not-empty hakukohteet)
          {:tarjonta
           {:hakukohteet                      hakukohteet
            :haku-oid                         haku-oid
-           :haku-name                        (-> haku :nimi (clojure.set/rename-keys lang-key-renames) localized-names)
-           :prioritize-hakukohteet           (:usePriority haku)
-           :max-hakukohteet                  (when (and max-hakukohteet (pos? max-hakukohteet))
-                                               max-hakukohteet)
-           :hakuaika                         (or (hakuaika/select-hakuaika now (hakuaika/haun-hakuajat now haku ohjausparametrit))
-                                                 (hakuaika/select-hakuaika now (map :hakuaika hakukohteet)))
-           :can-submit-multiple-applications (:canSubmitMultipleApplications haku)
-           :yhteishaku                       (yhteishaku? haku)}}))))
+           :haku-name                        (:name haku)
+           :prioritize-hakukohteet           (:prioritize-hakukohteet haku)
+           :max-hakukohteet                  (:max-hakukohteet haku)
+           :hakuaika                         (hakuaika/haun-hakuaika now haku ohjausparametrit)
+           :can-submit-multiple-applications (:can-submit-multiple-applications haku)
+           :yhteishaku                       (:yhteishaku haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid
      (parse-tarjonta-info-by-haku koodisto-cache
@@ -111,6 +97,6 @@
                                   ohjausparametrit-service
                                   haku-oid
                                   (or (->> haku-oid
-                                           (.get-haku tarjonta-service)
-                                           :hakukohdeOids)
+                                           (tarjonta-protocol/get-haku tarjonta-service)
+                                           :hakukohteet)
                                       [])))))

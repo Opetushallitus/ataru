@@ -7,17 +7,20 @@
   (load-many-size [this])
   (check-schema [this value]))
 
+(defn default-load-many [this keys]
+  (into {} (keep #(when-let [v (load this %)] [% v]) keys)))
+
 (defn ->FunctionCacheLoader
   ([f]
    (reify CacheLoader
      (load [_ key] (f key))
-     (load-many [_ keys] (into {} (keep #(when-let [v (f %)] [% v]) keys)))
+     (load-many [this keys] (default-load-many this keys))
      (load-many-size [_] 1)
      (check-schema [_ _] nil)))
   ([f checker]
    (reify CacheLoader
      (load [_ key] (f key))
-     (load-many [_ keys] (into {} (keep #(when-let [v (f %)] [% v]) keys)))
+     (load-many [this keys] (default-load-many this keys))
      (load-many-size [_] 1)
      (check-schema [_ value] (checker value)))))
 

@@ -6,10 +6,13 @@
    [cheshire.core :as json]
    [clojure.string :as string]
    [schema.core :as s]
-   [taoensso.timbre :refer [warn info]]))
+   [taoensso.timbre :refer [warn info]])
+  (:import [org.joda.time DateTime DateTimeZone]))
 
 (def koulutus-checker (s/checker schema/Koulutus))
 (def hakukohde-checker (s/checker schema/Hakukohde))
+(def haku-checker (s/checker schema/Haku))
+(def hakukohde-search-checker (s/checker [s/Str]))
 
 (defn- localized-names
   ([names]
@@ -54,16 +57,16 @@
           (not (clojure.string/blank? (:tarkenne response)))
           (assoc :tarkenne (:tarkenne response))))
 
-(defn- parse-hakukohde-tila
+(defn- parse-can-be-applied-to?
   [hakukohde]
   (case (:tila hakukohde)
-    "POISTETTU"     :poistettu
-    "LUONNOS"       :luonnos
-    "VALMIS"        :valmis
-    "JULKAISTU"     :julkaistu
-    "PERUTTU"       :peruttu
-    "KOPIOITU"      :kopioitu
-    "PUUTTEELLINEN" :puutteellinen
+    "POISTETTU"     false
+    "LUONNOS"       false
+    "VALMIS"        true
+    "JULKAISTU"     true
+    "PERUTTU"       false
+    "KOPIOITU"      false
+    "PUUTTEELLINEN" false
     (throw
      (new RuntimeException
           (str "Unknown hakukohteen tila " (:tila hakukohde)
@@ -71,26 +74,69 @@
 
 (defn parse-hakukohde
   [hakukohde]
-  (let [kaytetaan-hakukohdekohtaista-hakuaikaa? (boolean (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde))]
-    (merge {:oid                                                         (:oid hakukohde)
-            :tila                                                        (parse-hakukohde-tila hakukohde)
-            :haku-oid                                                    (:hakuOid hakukohde)
-            :koulutus-oids                                               (map :oid (:koulutukset hakukohde))
-            :name                                                        (localized-names (:hakukohteenNimet hakukohde))
-            :tarjoaja-name                                               (localized-names (:tarjoajaNimet hakukohde))
-            :tarjoaja-oids                                               (:tarjoajaOids hakukohde)
-            :ryhmaliitokset                                              (some->> (:ryhmaliitokset hakukohde)
-                                                                                  (map :ryhmaOid)
-                                                                                  (distinct))
-            :kaytetaan-hakukohdekohtaista-hakuaikaa?                     kaytetaan-hakukohdekohtaista-hakuaikaa?
-            :hakukelpoisuusvaatimus-uris                                 (:hakukelpoisuusvaatimusUris hakukohde)
-            :ylioppilastutkinto-antaa-hakukelpoisuuden?                  (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))
-            :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))}
-           (if kaytetaan-hakukohdekohtaista-hakuaikaa?
-             (merge {:hakuaika-alku (:hakuaikaAlkuPvm hakukohde)}
-                    (when (some? (:hakuaikaLoppuPvm hakukohde))
-                      {:hakuaika-loppu (:hakuaikaLoppuPvm hakukohde)}))
-             {:hakuaika-id (:hakuaikaId hakukohde)}))))
+  (merge {:oid                                                         (:oid hakukohde)
+          :hakukohteen-tiedot-url                                      (resolve-url :tarjonta-app.hakukohde (:oid hakukohde))
+          :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
+          :haku-oid                                                    (:hakuOid hakukohde)
+          :koulutus-oids                                               (map :oid (:koulutukset hakukohde))
+          :name                                                        (localized-names (:hakukohteenNimet hakukohde))
+          :tarjoaja-name                                               (localized-names (:tarjoajaNimet hakukohde))
+          :tarjoaja-oids                                               (:tarjoajaOids hakukohde)
+          :ryhmaliitokset                                              (some->> (:ryhmaliitokset hakukohde)
+                                                                                (map :ryhmaOid)
+                                                                                (distinct))
+          :hakukelpoisuusvaatimus-uris                                 (:hakukelpoisuusvaatimusUris hakukohde)
+          :ylioppilastutkinto-antaa-hakukelpoisuuden?                  (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden hakukohde))
+          :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:josYoEiMuitaLiitepyyntoja hakukohde))}
+         (if (:kaytetaanHakukohdekohtaistaHakuaikaa hakukohde)
+           {:hakuajat [(merge {:start (new DateTime
+                                           (:hakuaikaAlkuPvm hakukohde)
+                                           (DateTimeZone/forID "Europe/Helsinki"))}
+                              (when (some? (:hakuaikaLoppuPvm hakukohde))
+                                {:end (new DateTime
+                                           (:hakuaikaLoppuPvm hakukohde)
+                                           (DateTimeZone/forID "Europe/Helsinki"))}))]}
+           {:hakuaika-id (:hakuaikaId hakukohde)})))
+
+(defn- parse-hakuaika
+  [hakuaika]
+  (cond-> {:hakuaika-id (:hakuaikaId hakuaika)
+           :start       (new DateTime
+                             (:alkuPvm hakuaika)
+                             (DateTimeZone/forID "Europe/Helsinki"))}
+          (contains? hakuaika :loppuPvm)
+          (assoc :end (new DateTime
+                           (:loppuPvm hakuaika)
+                           (DateTimeZone/forID "Europe/Helsinki")))))
+
+(defn parse-haku
+  [haku]
+  (merge
+   {:oid                                        (:oid haku)
+    :name                                       (localized-names (:nimi haku))
+    :hakukohteet                                (:hakukohdeOids haku)
+    :ylioppilastutkinto-antaa-hakukelpoisuuden? (boolean (:ylioppilastutkintoAntaaHakukelpoisuuden haku))
+    :kohdejoukko-uri                            (:kohdejoukkoUri haku)
+    :hakutapa-uri                               (:hakutapaUri haku)
+    :hakukausi-vuosi                            (:hakukausiVuosi haku)
+    :yhteishaku                                 (= (:hakutapaUri haku) "hakutapa_01#1")
+    :prioritize-hakukohteet                     (boolean (:usePriority haku))
+    :can-submit-multiple-applications           (boolean (:canSubmitMultipleApplications haku))
+    :sijoittelu                                 (boolean (:sijoittelu haku))
+    :hakuajat                                   (mapv parse-hakuaika (:hakuaikas haku))
+    :haun-tiedot-url                            (resolve-url :tarjonta-app.haku (:oid haku))}
+   (when (some? (:ataruLomakeAvain haku))
+     {:ataru-form-key (:ataruLomakeAvain haku)})
+   (when (and (some? (:maxHakukohdes haku))
+              (pos? (:maxHakukohdes haku)))
+     {:max-hakukohteet (:maxHakukohdes haku)})))
+
+(defn- parse-search-result
+  [search-result]
+  (->> (:tulokset search-result)
+       (mapcat :tulokset)
+       (map :oid)
+       seq))
 
 (defn- get-result
   [url]
@@ -114,20 +160,22 @@
           get-result
           parse-hakukohde))
 
-(defn hakukohde-search
-  [haku-oid organization-oid]
+(s/defn ^:always-validate hakukohde-search :- (s/maybe [s/Str])
+  [haku-oid :- s/Str
+   organization-oid :- (s/maybe s/Str)]
   (-> :tarjonta-service.hakukohde.search
-      (resolve-url (cond-> {"hakuOid"         haku-oid
-                            "defaultTarjoaja" organization-oid}
-                           (some? organization-oid)
-                           (assoc "organisationOid" organization-oid)))
-      get-result))
+      (resolve-url (merge {"hakuOid" haku-oid}
+                          (when (some? organization-oid)
+                            {"organisationOid" organization-oid})))
+      get-result
+      parse-search-result))
 
-(defn get-haku
-  [haku-oid]
-  (-> :tarjonta-service.haku
-      (resolve-url haku-oid)
-      get-result))
+(s/defn ^:always-validate get-haku :- (s/maybe schema/Haku)
+  [haku-oid :- s/Str]
+  (some-> :tarjonta-service.haku
+          (resolve-url haku-oid)
+          get-result
+          parse-haku))
 
 (s/defn ^:always-validate get-koulutus :- (s/maybe schema/Koulutus)
   [koulutus-oid :- s/Str]

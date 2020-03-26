@@ -478,6 +478,12 @@
     (hakukohde-name hakukohteet fetching-hakukohteet hakukohde-oid lang)))
 
 (re-frame/reg-sub
+  :application/hakukohteen-tiedot-url
+  (fn [_ _] (re-frame/subscribe [:application/hakukohteet]))
+  (fn [hakukohteet [_ hakukohde-oid]]
+    (get-in hakukohteet [hakukohde-oid :hakukohteen-tiedot-url])))
+
+(re-frame/reg-sub
   :application/hakutoive-nro
   (fn [_ _]
     [(re-frame/subscribe [:application/selected-application])])
@@ -531,6 +537,12 @@
     (haku-name haut fetching-haut haku-oid lang)))
 
 (re-frame/reg-sub
+  :application/haun-tiedot-url
+  (fn [_ _] (re-frame/subscribe [:application/haut]))
+  (fn [haut [_ haku-oid]]
+    (get-in haut [haku-oid :haun-tiedot-url])))
+
+(re-frame/reg-sub
   :application/hakukohteet-header
   (fn [_ _]
     [(re-frame/subscribe [:application/hakukohteet-field])
@@ -563,17 +575,6 @@
                 :answers
                 :hakukohteet
                 :value])))
-
-(re-frame/reg-sub
-  :application/selected-application-haku-name
-  (fn [_ _]
-    [(re-frame/subscribe [:application/selected-application])
-     (re-frame/subscribe [:application/haut])
-     (re-frame/subscribe [:application/fetching-haut])
-     (re-frame/subscribe [:editor/virkailija-lang])])
-  (fn [[application haut fetching-haut lang] _]
-    (when-let [haku-oid (:haku application)]
-      (haku-name haut fetching-haut haku-oid lang))))
 
 (re-frame/reg-sub
   :application/information-request-submit-enabled?

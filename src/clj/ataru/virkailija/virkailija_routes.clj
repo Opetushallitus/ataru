@@ -193,7 +193,6 @@
                           valinta-tulos-service
                           job-runner
                           ohjausparametrit-service
-                          virkailija-tarjonta-service
                           localizations-cache
                           statistics-month-cache
                           statistics-week-cache
@@ -218,12 +217,8 @@
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
       :return {:forms [ataru-schema/Form]}
-      (ok (access-controlled-form/get-forms-for-editor session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service)))
 
-    (api/GET "/forms-in-use" {session :session}
-      :summary "Return a map of form->hakus-currently-in-use-in-tarjonta-service"
-      :return {s/Str {s/Str {:haku-oid s/Str :haku-name ataru-schema/LocalizedStringOptional}}}
-      (ok (tarjonta/get-forms-in-use virkailija-tarjonta-service session)))
 
     (api/GET "/forms/latest/:key" []
       :path-params [key :- s/Str]
@@ -241,7 +236,7 @@
       :summary "Edit form content"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
-      (access-controlled-form/edit-form-with-operations id operations session virkailija-tarjonta-service organization-service)
+      (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -250,17 +245,17 @@
       :return {:locked    (s/maybe DateTime)
                :id        Long}
       :summary "Toggle form locked state"
-      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service)))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
-      (ok (access-controlled-form/delete-form id session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/delete-form id session tarjonta-service organization-service)))
 
     (api/POST "/forms" {session :session}
       :summary "Persist changed form."
       :body [form ataru-schema/FormWithContent]
-      (ok (access-controlled-form/post-form form session virkailija-tarjonta-service organization-service)))
+      (ok (access-controlled-form/post-form form session tarjonta-service organization-service)))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
@@ -709,9 +704,7 @@
         (if (some? haku-oid)
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
-               :haut             {haku-oid (tarjonta-service/parse-haku
-                                            (tarjonta/get-haku tarjonta-service
-                                                               haku-oid))}
+               :haut             {haku-oid (tarjonta/get-haku tarjonta-service haku-oid)}
                :hakukohteet      (util/group-by-first :oid
                                                       (tarjonta/hakukohde-search
                                                         tarjonta-service
@@ -794,28 +787,29 @@
 
     (api/context "/tarjonta" []
       :tags ["tarjonta-api"]
+      (api/GET "/haku" []
+        :query-params [form-key :- (api/describe s/Str "Form key")]
+        :return [ataru-schema/Haku]
+        (-> (tarjonta/hakus-by-form-key tarjonta-service form-key)
+            response/ok
+            (header "Cache-Control" "public, max-age=300")))
       (api/GET "/haku/:oid" []
         :path-params [oid :- (api/describe s/Str "Haku OID")]
         :return ataru-schema/Haku
-        (if-let [haku (tarjonta/get-haku
-                        tarjonta-service
-                        oid)]
-          (-> (tarjonta-service/parse-haku haku)
-              ok
+        (if-let [haku (tarjonta/get-haku tarjonta-service oid)]
+          (-> (response/ok haku)
               (header "Cache-Control" "public, max-age=300"))
           (internal-server-error {:error "Internal server error"})))
       (api/GET "/hakukohde" []
         :query-params [organizationOid :- (api/describe s/Str "Organization OID")
                        hakuOid :- (api/describe s/Str "Haku OID")]
         :return [ataru-schema/HakukohdeSearchResult]
-        (if-let [hakukohteet (tarjonta/hakukohde-search
-                               tarjonta-service
-                               hakuOid
-                               organizationOid)]
-          (-> hakukohteet
-              ok
-              (header "Cache-Control" "public, max-age=300"))
-          (internal-server-error {:error "Internal server error"}))))
+        (-> (tarjonta/hakukohde-search
+             tarjonta-service
+             hakuOid
+             organizationOid)
+            ok
+            (header "Cache-Control" "public, max-age=300"))))
 
     (api/context "/files" []
       :tags ["files-api"]

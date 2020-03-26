@@ -79,7 +79,7 @@
   [application-id haku]
   (db/exec :db yesql-add-haku-to-application! {:application_id application-id
                                                :haku           (:oid haku)
-                                               :haku_name      (-> haku :nimi :kieli_fi)}))
+                                               :haku_name      (-> haku :name :fi)}))
 
 (defn update-application-content [application-id content]
   (db/exec :db yesql-update-application-content! {:id      application-id

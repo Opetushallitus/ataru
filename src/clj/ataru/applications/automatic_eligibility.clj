@@ -34,17 +34,14 @@
 (defn- get-ohjausparametrit
   [ohjausparametrit-service application]
   (when-let [haku-oid (:haku-oid application)]
-    (if-let [ohjausparametrit (ohjausparametrit-service/get-parametri
-                               ohjausparametrit-service
-                               haku-oid)]
-      ohjausparametrit
-      (throw (new RuntimeException (str "Ohjausparametrit for haku " haku-oid
-                                        " not found"))))))
+    (ohjausparametrit-service/get-parametri
+     ohjausparametrit-service
+     haku-oid)))
 
 (defn- automatic-eligibility-if-ylioppilas-in-use?
   [haku ohjausparametrit now]
   (and (some? haku)
-       (:ylioppilastutkintoAntaaHakukelpoisuuden haku)
+       (:ylioppilastutkinto-antaa-hakukelpoisuuden? haku)
        (if-let [automatic-eligibility-ends
                 (some-> (get-in ohjausparametrit [:PH_AHP :date])
                         coerce/from-long)]

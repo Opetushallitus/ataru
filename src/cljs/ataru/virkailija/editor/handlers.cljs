@@ -391,16 +391,16 @@
   :editor/refresh-used-by-haut
   (fn [{db :db} _]
     (when-let [form-key (get-in db [:editor :selected-form-key])]
-      (let [haku-oids (map (comp :haku-oid second) (get-in db [:editor :forms-in-use (keyword form-key)]))
-            organization-oids (map :oid (get-in db [:editor :user-info :organizations] []))
+      (let [haku-oids               (map :oid (get-in db [:editor :form-used-in-hakus form-key]))
+            organization-oids       (map :oid (get-in db [:editor :user-info :organizations] []))
             hakukohderyhmat-promise (async/promise-chan)
-            hakukohteet-promise (async/promise-chan)]
+            hakukohteet-promise     (async/promise-chan)]
         (on-haku-data-fetched hakukohteet-promise hakukohderyhmat-promise)
-        {:db (-> db
-               (assoc-in [:editor :used-by-haut :fetching?] true)
-               (assoc-in [:editor :used-by-haut :error?] false))
+        {:db                          (-> db
+                                          (assoc-in [:editor :used-by-haut :fetching?] true)
+                                          (assoc-in [:editor :used-by-haut :error?] false))
          :fetch-haut-with-hakukohteet [hakukohteet-promise organization-oids haku-oids]
-         :fetch-hakukohde-groups [hakukohderyhmat-promise]}))))
+         :fetch-hakukohde-groups      [hakukohderyhmat-promise]}))))
 
 (reg-event-db
   :editor/handle-user-info
@@ -522,7 +522,6 @@
       (-> db
           (update :editor dissoc :ui)
           (assoc-in [:editor :forms key] new-form)
-          (assoc-in [:editor :selected-form-key] key)
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave] (create-autosave-loop new-form))
@@ -536,6 +535,21 @@
           :handler-or-dispatch :editor/handle-fetch-form}})
 
 (reg-event-fx
+  :editor/handle-refresh-form-used-in-hakus
+  (fn [{db :db} [_ response args]]
+    {:db       (assoc-in db [:editor :form-used-in-hakus (:form-key args)] response)
+     :dispatch [:editor/refresh-used-by-haut]}))
+
+(reg-event-fx
+  :editor/refresh-form-used-in-hakus
+  (fn [_ [_ form-key]]
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/tarjonta/haku?form-key=" form-key)
+            :handler-or-dispatch :editor/handle-refresh-form-used-in-hakus
+            :handler-args        {:form-key form-key}
+            :skip-parse-times?   true}}))
+
+(reg-event-fx
   :editor/select-form
   (fn [{db :db} [_ form-key]]
     (with-form-key [db previous-form-key]
@@ -545,12 +559,12 @@
                      (update-in [:editor :forms previous-form-key] assoc :content [])
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
-       {:dispatch [:editor/refresh-used-by-haut]}
-       (when (and (some? previous-form-key)
-                  (not= previous-form-key form-key))
-         {:stop-autosave (get-in db [:editor :autosave])})
-       (when-let [id (get-in db [:editor :forms form-key :id])]
-         (fetch-form-content-fx id))))))
+        {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
+        (when (and (some? previous-form-key)
+                   (not= previous-form-key form-key))
+          {:stop-autosave (get-in db [:editor :autosave])})
+        (when-let [id (get-in db [:editor :forms form-key :id])]
+          (fetch-form-content-fx id))))))
 
 (def save-chan (async/chan (async/sliding-buffer 1)))
 
@@ -679,20 +693,6 @@
   :editor/start-remove-form
   (fn [{db :db} _]
     {:db (assoc-in db [:editor :ui :remove-form-button-state] :confirm)}))
-
-(reg-event-fx
-  :editor/refresh-forms-in-use
-  (fn [_ _]
-    {:http {:method              :get
-            :path                "/lomake-editori/api/forms-in-use"
-            :handler-or-dispatch :editor/update-forms-in-use
-            :skip-parse-times?   true}}))
-
-(reg-event-fx
-  :editor/update-forms-in-use
-  (fn [{db :db} [_ result]]
-    {:db (assoc-in db [:editor :forms-in-use] result)
-     :dispatch [:editor/refresh-used-by-haut]}))
 
 (reg-event-db
   :editor/change-form-name
