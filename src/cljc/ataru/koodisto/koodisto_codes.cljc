@@ -11,4 +11,4 @@
                              "61"   ; LIIKUNNAN_KOULUTUSKEKUS
                              "62"   ; MUSIIKKIOPPILAITOS
                              "63"   ; KANSANOPISTO
-                             "XX"]) ; EI_TIEDOSSA
+                             "xx"]) ; EI_TIEDOSSA
