@@ -211,42 +211,19 @@
                      {:key   key
                       :label (:label answer)})})
 
-(defn- value-from-values [field-map value]
-  (let [t (if (= (:fieldType field-map) "attachment")
-            #(:value %)
-            #(or (:value %) ""))]
-    (if (vector? value)
-      (map t value)
-      (t value))))
-
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (util/form-fields-by-id form)]
-    (for [[ans-key {:keys [value values]}] answers
+    (for [[ans-key {:keys [value]}] answers
           :let
-          [field-descriptor (get flat-form-map ans-key)
-           field-type       (:fieldType field-descriptor)]
+          [field-descriptor (get flat-form-map ans-key)]
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
                    (get-in ui [ans-key :visible?] true))
-               (not (:exclude-from-answers field-descriptor))
-               (or (not-empty value)
-                   values
-                   (:cannot-edit field-descriptor)
-                   (:cannot-view field-descriptor)
-                   ;; permit empty value, because server side validation expects to match form fields to answers
-                   (and (empty? value)
-                        (or (= "dropdown" field-type)
-                            (= "singleChoice" field-type)))))]
-      {:key       (name ans-key)
-       :value     (cond (or (= "dropdown" field-type)
-                            (= "singleChoice" field-type))
-                        value
-                        (some? value)
-                        value
-                        :else
-                        (map (partial value-from-values field-descriptor) values))
-       :fieldType field-type
+               (not (:exclude-from-answers field-descriptor)))]
+      {:key       (:id field-descriptor)
+       :value     value
+       :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 
 (defn create-application-to-submit [application form lang]
