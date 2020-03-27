@@ -18,7 +18,7 @@
 (defn get-field-deadlines
   ([application-key]
    (db/exec :db yesql-get-field-deadlines {:application_key application-key}))
-  ([organization-service tarjonta-service session application-key]
+  ([organization-service tarjonta-service audit-logger session application-key]
    (if (aac/applications-access-authorized?
         organization-service
         tarjonta-service
@@ -26,7 +26,8 @@
         [application-key]
         [:view-applications :edit-applications])
      (let [r (vec (get-field-deadlines application-key))]
-       (audit-log/log {:new       r
+       (audit-log/log audit-logger
+                      {:new       r
                        :id        {:applicationOid application-key}
                        :session   session
                        :operation audit-log/operation-read})
@@ -34,7 +35,7 @@
      :unauthorized)))
 
 (defn get-field-deadline
-  [organization-service tarjonta-service session application-key field-id]
+  [organization-service tarjonta-service audit-logger session application-key field-id]
   (if (aac/applications-access-authorized?
        organization-service
        tarjonta-service
@@ -43,7 +44,8 @@
        [:view-applications :edit-applications])
     (when-let [r (first (db/exec :db yesql-get-field-deadline {:application_key application-key
                                                                :field_id        field-id}))]
-      (audit-log/log {:new       r
+      (audit-log/log audit-logger
+                     {:new       r
                       :id        {:applicationOid application-key
                                   :fieldId        field-id}
                       :session   session
@@ -67,7 +69,7 @@
      {:connection connection})))
 
 (defn put-field-deadline
-  [organization-service tarjonta-service session application-key field-id deadline if-unmodified-since]
+  [organization-service tarjonta-service audit-logger session application-key field-id deadline if-unmodified-since]
   (if (aac/applications-access-authorized?
        organization-service
        tarjonta-service
@@ -99,7 +101,8 @@
                      (if (= unique-violation (.getSQLState e))
                        nil
                        (throw e))))]
-      (audit-log/log {:new       r
+      (audit-log/log audit-logger
+                     {:new       r
                       :id        {:applicationOid application-key
                                   :fieldId        field-id}
                       :session   session
@@ -110,7 +113,7 @@
     :unauthorized))
 
 (defn delete-field-deadline
-  [organization-service tarjonta-service session application-key field-id if-unmodified-since]
+  [organization-service tarjonta-service audit-logger session application-key field-id if-unmodified-since]
   (if (aac/applications-access-authorized?
        organization-service
        tarjonta-service
@@ -130,7 +133,8 @@
                                  application-key
                                  field-id
                                  nil))))]
-      (audit-log/log {:old       r
+      (audit-log/log audit-logger
+                     {:old       r
                       :id        {:applicationOid application-key
                                   :fieldId        field-id}
                       :session   session
