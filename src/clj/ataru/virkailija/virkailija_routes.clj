@@ -445,6 +445,7 @@
         (let [response (field-deadline/get-field-deadlines
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key)]
           (case response
@@ -466,6 +467,7 @@
         (let [response (field-deadline/get-field-deadline
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key
                         field-id)]
@@ -489,6 +491,7 @@
               response            (field-deadline/put-field-deadline
                                    organization-service
                                    tarjonta-service
+                                   audit-logger
                                    session
                                    application-key
                                    field-id
@@ -512,6 +515,7 @@
         (let [response (field-deadline/delete-field-deadline
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key
                         field-id
