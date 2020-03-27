@@ -67,6 +67,7 @@
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
+        audit-logger                         (ataru.log.audit-log/new-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
@@ -92,6 +93,7 @@
                                              (remove-from [this key])
                                              (clear-all [this])))
         (assoc :koodisto-cache koodisto-cache)
+        (assoc :audit-logger audit-logger)
         .start
         :routes)))
 

@@ -144,7 +144,8 @@
                           form-by-id-cache
                           form-by-haku-oid-str-cache
                           temp-file-store
-                          amazon-sqs]}]
+                          amazon-sqs
+                          audit-logger]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -196,6 +197,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              audit-logger
               application
               session)
              {:passed? false :failures failures :code code}
@@ -213,6 +215,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              audit-logger
               application
               session)
              {:passed? false :failures failures :code code}

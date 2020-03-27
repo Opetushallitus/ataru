@@ -119,7 +119,8 @@
                       :person-service
                       :temp-file-store
                       :amazon-sqs
-                      :application-service]
+                      :application-service
+                      :audit-logger]
                      (map first caches)))
 
     :server-setup {:port      http-port
