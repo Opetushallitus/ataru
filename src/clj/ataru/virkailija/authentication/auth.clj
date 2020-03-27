@@ -44,6 +44,7 @@
              kayttooikeus-service
              person-service
              organization-service
+             audit-logger
              redirect-url
              session]
   (try
@@ -67,7 +68,8 @@
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                                   :first_name (:kutsumanimi henkilo)
                                                   :last_name  (:sukunimi henkilo)})
-          (audit-log/log {:new       {:ticket ticket}
+          (audit-log/log audit-logger
+                         {:new       {:ticket ticket}
                           :id        {:henkiloOid (:oidHenkilo henkilo)}
                           :session   session
                           :operation audit-log/operation-login})
