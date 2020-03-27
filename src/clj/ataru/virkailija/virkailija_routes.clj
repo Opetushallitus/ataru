@@ -1353,7 +1353,8 @@
                                   (auth-routes (:login-cas-client this)
                                                (:kayttooikeus-service this)
                                                (:person-service this)
-                                               (:organization-service this))))
+                                               (:organization-service this)
+                                               (:audit-logger this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

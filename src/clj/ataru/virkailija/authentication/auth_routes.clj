@@ -25,7 +25,8 @@
 (defn auth-routes [cas-client
                    kayttooikeus-service
                    person-service
-                   organization-service]
+                   organization-service
+                   audit-logger]
   (api/context "/auth" []
     (api/middleware [session-client/wrap-session-client-headers]
     (api/undocumented
@@ -40,6 +41,7 @@
                         kayttooikeus-service
                         person-service
                         organization-service
+                        audit-logger
                         redirect-url
                         (:session request))))
       (api/POST "/cas" [logoutRequest]

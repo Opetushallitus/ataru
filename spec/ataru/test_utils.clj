@@ -12,6 +12,7 @@
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.application-service :as application-service]
+            [ataru.log.audit-log :as audit-log]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
@@ -22,6 +23,7 @@
                         (assoc :person-service (person-service/->FakePersonService))
                         (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
                         (assoc :application-service (application-service/new-application-service))
+                        (assoc :audit-logger (audit-log/new-audit-logger))
                         .start
                         :routes))
 
