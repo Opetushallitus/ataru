@@ -1232,7 +1232,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                 {:person_oids person-oids})))
 
 (defn mass-update-application-states
-  [session application-keys hakukohde-oid from-state to-state]
+  [session application-keys hakukohde-oid from-state to-state audit-logger]
   (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection {:connection conn}]
@@ -1240,7 +1240,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                                (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
                                application-keys)))]
     (doseq [audit-log-entry (filter some? audit-log-entries)]
-      (audit-log/log audit-log-entry))
+      (audit-log/log audit-logger audit-log-entry))
     true))
 
 (defn add-application-event [event session]

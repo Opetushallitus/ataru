@@ -614,7 +614,8 @@
        application-keys
        hakukohde-oid
        from-state
-       to-state)))
+       to-state
+       audit-logger)))
 
   (send-modify-application-link-email
     [_ application-key session]
