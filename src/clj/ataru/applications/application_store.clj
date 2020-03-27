@@ -407,7 +407,8 @@
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form {:connection conn})
 
-      (audit-log/log {:new       (application->loggable-form new-application)
+      (audit-log/log audit-logger
+                     {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
                       :session   session
@@ -758,8 +759,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                 %))))
 
 (defn- auditlog-review-modify
-  [review old-value session]
-  (audit-log/log {:new       review
+  [review old-value session audit-logger]
+  (audit-log/log audit-logger
+                 {:new       review
                   :old       old-value
                   :id        {:applicationOid (:application_key review)
                               :hakukohdeOid   (:hakukohde review)
@@ -772,7 +774,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
        (map :oid)
        (json/generate-string)))
 
-(defn save-application-review [review session]
+(defn save-application-review [review session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
           app-key         (:application-key review)
@@ -785,7 +787,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                            :score           (:score review)}]
       (when (not= old-review review-to-store)
         (yesql-save-application-review! review-to-store connection)
-        (auditlog-review-modify review-to-store old-review session))
+        (auditlog-review-modify review-to-store old-review session audit-logger))
       (when (not= (:state old-review) (:state review-to-store))
         (let [event {:application_key          app-key
                      :event_type               "review-state-change"
@@ -797,7 +799,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
           (:id (yesql-add-application-event<! event connection)))))))
 
 (defn save-application-hakukohde-review
-  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session]
+  [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection                  {:connection conn}
                                   review-to-store             {:application_key application-key
@@ -807,7 +809,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                                   existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
                                   existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)]
                               (when (empty? existing-duplicate-review)
-                                (auditlog-review-modify review-to-store (first existing-requirement-review) session)
+                                (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
                                 (yesql-upsert-application-hakukohde-review! review-to-store connection)
                                 (let [event {:application_key          application-key
                                              :event_type               "hakukohde-review-state-change"
@@ -848,7 +850,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
           (yesql-add-application-event<! event connection))))))
 
 (defn save-attachment-hakukohde-review
-  [application-key hakukohde-oid attachment-key hakukohde-review-state session]
+  [application-key hakukohde-oid attachment-key hakukohde-review-state session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
           review-to-store {:application_key application-key
@@ -857,7 +859,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                            :hakukohde       hakukohde-oid}]
       (if-let [existing-attachment-review (first (yesql-get-existing-attachment-review review-to-store connection))]
         (when-not (= hakukohde-review-state (:state existing-attachment-review))
-          (auditlog-review-modify review-to-store existing-attachment-review session)
+          (auditlog-review-modify review-to-store existing-attachment-review session audit-logger)
           (yesql-update-attachment-hakukohde-review! review-to-store connection)
           (let [event {:application_key          application-key
                        :event_type               "attachment-review-state-change"

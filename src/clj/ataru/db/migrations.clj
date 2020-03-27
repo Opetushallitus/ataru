@@ -28,7 +28,7 @@
             [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.log.audit-log :as audit-log]
             [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
@@ -212,7 +212,7 @@
                     :organizations [{:oid "1.2.246.562.10.00000000001"}]}})
 
 (defn- create-new-review-state
-  [application]
+  [application audit-logger]
   (let [application-key (:key application)
         old-review      (application-store/get-application-review application-key)
         old-state       (:state old-review)
@@ -236,7 +236,7 @@
     (log/info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
       (log/info "Updating application state:" old-state "->" application-state)
-      (application-store/save-application-review (merge old-review {:state application-state}) fake-session))
+      (application-store/save-application-review (merge old-review {:state application-state}) fake-session audit-logger))
     (when (= 1 (count hakukohteet))
       (log/info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
@@ -244,12 +244,13 @@
         (first hakukohteet)
         "selection-state"
         selection-state
-        fake-session))))
+        fake-session
+        audit-logger))))
 
 (defn- application-reviews->new-model
   []
   (doseq [application (migration-app-store/get-all-applications)]
-    (create-new-review-state application)))
+    (create-new-review-state application audit-log/new-audit-logger)))
 
 (defn- dob->dd-mm-yyyy-format [connection]
   (letfn [(invalid-dob-format? [[day month _]]
@@ -333,7 +334,8 @@
               hakukohde-oid-or-form
               "processing-state"
               state
-              fake-session)))
+              fake-session
+              audit-log/new-audit-logger)))
         (let [new-application-state (if (= state "inactivated")
                                       "inactivated"
                                       "active")]

@@ -256,7 +256,7 @@
          applications)))
 
 (defn- save-application-hakukohde-reviews
-  [application-key hakukohde-reviews session]
+  [application-key hakukohde-reviews session audit-logger]
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
@@ -264,10 +264,11 @@
         (name hakukohde)
         (name review-requirement)
         (name review-state)
-        session))))
+        session
+        audit-logger))))
 
 (defn- save-attachment-hakukohde-reviews
-  [application-key attachment-reviews session]
+  [application-key attachment-reviews session audit-logger]
   (doseq [[hakukohde review] attachment-reviews
           [attachment-key review-state] review]
     (application-store/save-attachment-hakukohde-review
@@ -275,7 +276,8 @@
       (name hakukohde)
       (name attachment-key)
       review-state
-      session)))
+      session
+      audit-logger)))
 
 (defn- add-selected-hakukohteet
   [states-and-filters
@@ -591,12 +593,12 @@
              session
              [application-key]
              [:edit-applications])
-        (when-let [event-id (application-store/save-application-review review session)]
+        (when-let [event-id (application-store/save-application-review review session audit-logger)]
           (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
            job-runner
            event-id))
-        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
-        (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
+        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
+        (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)
         {:events (get-application-events organization-service application-key)})))
 
   (mass-update-application-states
