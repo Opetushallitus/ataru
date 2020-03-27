@@ -40,7 +40,7 @@
 (defrecord AtaruAuditLogger [auditlog])
 
 (defn new-audit-logger []
-  map->AtaruAuditLogger {:auditlog static-logger})
+  map->AtaruAuditLogger static-logger)
 
 (defn- map-or-vec? [x]
   (or (map? x)
@@ -130,7 +130,7 @@
    If only :new value is provided, it can also be a String."
   ([audit-logger params]
     (try
-      (do-log (:auditlog audit-logger) params)
+      (do-log audit-logger params)
       (catch Throwable t
         (throw (new RuntimeException "Failed to create an audit log entry" t)))))
-  ([params] (log {:auditlog static-logger} params)))
+  ([params] (log static-logger params)))
