@@ -38,9 +38,7 @@
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
 (defn- format-included-ids [id-string]
-  (or (not-empty (set (remove clojure.string/blank? (clojure.string/split id-string #"\s+"))))
-                 (constantly true))
-  )
+  (set (remove clojure.string/blank? (clojure.string/split id-string #"\s+"))))
 
 (defmacro with-excel [input-params bindings & body]
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")
