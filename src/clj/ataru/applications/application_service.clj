@@ -31,13 +31,15 @@
     [ataru.schema.form-schema :as ataru-schema]
     [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
-    [ataru.dob :as dob])
+    [ataru.dob :as dob]
+    [com.stuartsierra.component :as component])
   (:import
-   java.io.ByteArrayInputStream
-   java.security.SecureRandom
-   java.util.Base64
-   [javax.crypto AEADBadTagException Cipher]
-   [javax.crypto.spec GCMParameterSpec SecretKeySpec]))
+    java.io.ByteArrayInputStream
+    java.security.SecureRandom
+    java.util.Base64
+    [javax.crypto AEADBadTagException Cipher]
+    [javax.crypto.spec GCMParameterSpec SecretKeySpec]
+    (org.apache.commons.collections4 Get)))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
@@ -74,12 +76,6 @@
      (assoc-in acc [hakukohde attachment-key] state))
    {}
    (application-store/get-application-attachment-reviews application-key)))
-
-(defn get-person
-  [application person-client]
-  (let [person-from-onr (some->> (:person-oid application)
-                                 (person-service/get-person person-client))]
-    (person-service/parse-person application person-from-onr)))
 
 (defn- populate-form-fields
   [form koodisto-cache tarjonta-info]
@@ -124,70 +120,9 @@
   (map (partial enrich-virkailija-organizations organization-service)
        (application-store/get-application-events application-key)))
 
-(defn get-application-with-human-readable-koodis
-  "Get application that has human-readable koodisto values populated
-   onto raw koodi values."
-  [koodisto-cache application-key session organization-service tarjonta-service ohjausparametrit-service person-client audit-logger with-newest-form?]
-  (when-let [application (aac/get-latest-application-by-key
-                           organization-service
-                           tarjonta-service
-                           audit-logger
-                           session
-                           application-key)]
-    (let [tarjonta-info         (tarjonta-parser/parse-tarjonta-info-by-haku
-                                 koodisto-cache
-                                 tarjonta-service
-                                 organization-service
-                                 ohjausparametrit-service
-                                 (:haku application)
-                                 (:hakukohde application))
-          form-in-application   (form-store/fetch-by-id (:form application))
-          newest-form           (form-store/fetch-by-key (:key form-in-application))
-          form                  (populate-form-fields (if with-newest-form?
-                                                        newest-form
-                                                        form-in-application) koodisto-cache tarjonta-info)
-          forms-differ?         (and (not with-newest-form?)
-                                     (forms-differ? application tarjonta-info form
-                                                    (populate-form-fields newest-form koodisto-cache tarjonta-info)))
-          alternative-form      (some-> (when forms-differ?
-                                          newest-form)
-                                        (assoc :content [])
-                                        (dissoc :organization-oid))
-          hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
-          attachment-reviews    (future (parse-application-attachment-reviews application-key))
-          events                (future (get-application-events organization-service application-key))
-          review                (future (application-store/get-application-review application-key))
-          review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
-                                             (application-store/get-application-review-notes application-key)))
-          information-requests  (future (information-request-store/get-information-requests application-key))
-          selection-state-used? (future (if-let [haku-oid (:haku application)]
-                                          (application-store/selection-state-used? haku-oid)
-                                          true))]
-      (util/remove-nil-values {:application           (-> application
-                                                          (dissoc :person-oid)
-                                                          (assoc :person (get-person application person-client))
-                                                          (merge tarjonta-info))
-                               :form                  form
-                               :latest-form           alternative-form
-                               :hakukohde-reviews     @hakukohde-reviews
-                               :attachment-reviews    @attachment-reviews
-                               :events                @events
-                               :review                @review
-                               :review-notes          @review-notes
-                               :information-requests  @information-requests
-                               :selection-state-used? @selection-state-used?}))))
-
 (defn ->form-query
   [key]
   {:form key})
-
-(defn ->hakukohde-query
-  [tarjonta-service hakukohde-oid ensisijaisesti]
-  (let [hakukohde (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)]
-    (merge {:haku (:haku-oid hakukohde)}
-           (if ensisijaisesti
-             {:ensisijainen-hakukohde [hakukohde-oid]}
-             {:hakukohde [hakukohde-oid]}))))
 
 (defn ->hakukohderyhma-query
   [ryhman-hakukohteet
@@ -320,91 +255,6 @@
                  (dissoc :ssn :dob :person-oid :preferred-name :last-name))))
          applications)))
 
-(defn get-application-list-by-query
-  [person-service
-   tarjonta-service
-   authorized-organization-oids
-   query
-   sort
-   states-and-filters]
-  (let [applications            (application-store/get-application-heading-list query sort)
-        authorized-applications (aac/filter-authorized
-                                 tarjonta-service
-                                 (some-fn (partial aac/authorized-by-form? authorized-organization-oids)
-                                          (partial aac/authorized-by-tarjoajat? authorized-organization-oids))
-                                 applications)]
-    {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
-                     (application-filtering/filter-applications
-                      (populate-applications-with-person-data person-service authorized-applications)
-                      states-and-filters)
-                     (populate-applications-with-person-data
-                      person-service
-                      (application-filtering/filter-applications authorized-applications states-and-filters)))
-     :sort         (merge {:order-by (:order-by sort)
-                           :order    (:order sort)}
-                          (when-let [a (first (drop 999 applications))]
-                            {:offset (case (:order-by sort)
-                                       "applicant-name" {:key            (:key a)
-                                                         :last-name      (:last-name a)
-                                                         :preferred-name (:preferred-name a)}
-                                       "submitted"      {:key       (:key a)
-                                                         :submitted (:submitted a)}
-                                       "created-time"   {:key          (:key a)
-                                                         :created-time (:created-time a)})}))}))
-
-(defn- hakukohteiden-ehdolliset
-  [valinta-tulos-service applications]
-  (into {}
-        (comp (mapcat :hakukohde)
-              (distinct)
-              (map #(vector % (valinta-tulos-service/hakukohteen-ehdolliset
-                               valinta-tulos-service
-                               %))))
-        applications))
-
-(defn get-excel-report-of-applications-by-key
-  [application-keys selected-hakukohde selected-hakukohderyhma included-ids session
-   organization-service tarjonta-service koodisto-cache ohjausparametrit-service person-service valinta-tulos-service]
-  (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
-    (let [applications                     (application-store/get-applications-by-keys application-keys)
-          application-reviews              (->> applications
-                                                (map :key)
-                                                application-store/get-application-reviews-by-keys
-                                                (reduce #(assoc %1 (:application-key %2) %2) {}))
-          application-review-notes         (->> applications
-                                                (map :key)
-                                                application-store/get-application-review-notes-by-keys
-                                                (group-by :application-key))
-          onr-persons                      (->> (map :person-oid applications)
-                                                distinct
-                                                (filter some?)
-                                                (person-service/get-persons person-service))
-          applications-with-persons        (map (fn [application]
-                                                    (assoc application
-                                                           :person (->> (:person-oid application)
-                                                                        (get onr-persons)
-                                                                        (person-service/parse-person application))))
-                                                applications)
-          hakukohteiden-ehdolliset         (hakukohteiden-ehdolliset valinta-tulos-service applications)
-          skip-answers-to-preserve-memory? (if (not-empty included-ids)
-                                             (<= 200000 (count applications))
-                                             (<= 4500 (count applications)))
-          lang                             (keyword (or (-> session :identity :lang) :fi))]
-      (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
-      (ByteArrayInputStream. (excel/export-applications applications-with-persons
-                                                        application-reviews
-                                                        application-review-notes
-                                                        selected-hakukohde
-                                                        selected-hakukohderyhma
-                                                        skip-answers-to-preserve-memory?
-                                                        included-ids
-                                                        lang
-                                                        hakukohteiden-ehdolliset
-                                                        tarjonta-service
-                                                        koodisto-cache
-                                                        organization-service
-                                                        ohjausparametrit-service)))))
-
 (defn- save-application-hakukohde-reviews
   [application-key hakukohde-reviews session]
   (doseq [[hakukohde review] hakukohde-reviews]
@@ -427,116 +277,23 @@
       review-state
       session)))
 
-(defn save-application-review
-  [job-runner organization-service tarjonta-service session review]
-  (let [application-key (:application-key review)]
-    (when (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [application-key]
-           [:edit-applications])
-      (when-let [event-id (application-store/save-application-review review session)]
-        (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
-         job-runner
-         event-id))
-      (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
-      (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
-      {:events (get-application-events organization-service application-key)})))
-
-(defn mass-update-application-states
-  [organization-service tarjonta-service session application-keys hakukohde-oid from-state to-state]
-  (when (aac/applications-access-authorized?
-         organization-service
-         tarjonta-service
-         session
-         application-keys
-         [:edit-applications])
-    (application-store/mass-update-application-states
-     session
-     application-keys
-     hakukohde-oid
-     from-state
-     to-state)))
-
-(defn send-modify-application-link-email
-  [koodisto-cache application-key session organization-service ohjausparametrit-service tarjonta-service job-runner audit-logger]
-  (when-let [application-id (:id (aac/get-latest-application-by-key
-                                  organization-service
-                                  tarjonta-service
-                                  audit-logger
-                                  session
-                                  application-key))]
-    (application-store/add-new-secret-to-application application-key)
-    (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
-    (enrich-virkailija-organizations
-     organization-service
-     (application-store/add-application-event {:application-key application-key
-                                               :event-type      "modification-link-sent"}
-                                              session))))
-
-(defn add-review-note [organization-service tarjonta-service session note]
-  (when (aac/applications-access-authorized?
-         organization-service
-         tarjonta-service
-         session
-         [(:application-key note)]
-         [:view-applications :edit-applications])
-    (enrich-virkailija-organizations
-     organization-service
-     (application-store/add-review-note note session))))
-
-(defn remove-review-note [note-id]
-  (application-store/remove-review-note note-id))
-
-(defn get-application-version-changes
-  [koodisto-cache organization-service tarjonta-service session application-key]
-  (when (aac/applications-access-authorized?
-         organization-service
-         tarjonta-service
-         session
-         [application-key]
-         [:view-applications :edit-applications])
-    (application-store/get-application-version-changes koodisto-cache
-                                                       application-key)))
-
-(defn omatsivut-applications
-  [organization-service person-service session person-oid]
-  (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
-       :linked-oids
-       (mapcat #(aac/omatsivut-applications organization-service session %))))
-
-(defn add-asiointikieli [henkilot application]
-  (let [asiointikieli (or (get {"1" "fi"
-                                "2" "sv"
-                                "3" "en"}
-                            ((:keyValues application) "asiointikieli"))
-                          (get-in (get henkilot (:personOid application))
-                            [:asiointiKieli :kieliKoodi])
-                          (:asiointikieli application))]
-    (assoc application :asiointikieli asiointikieli)))
-
-(defn get-applications-for-valintalaskenta
-  [organization-service person-service session hakukohde-oid application-keys]
-  (if-let [applications (aac/get-applications-for-valintalaskenta
-                         organization-service
-                         session
-                         hakukohde-oid
-                         application-keys)]
-    (let [henkilot        (->> applications
-                               (map :personOid)
-                               distinct
-                               (person-service/get-persons person-service))
-          yksiloimattomat (->> henkilot
-                               vals
-                               (remove #(or (:yksiloity %)
-                                            (:yksiloityVTJ %)))
-                               (map :oidHenkilo)
-                               distinct
-                               seq)]
-      {:yksiloimattomat yksiloimattomat
-       :applications    (map (partial add-asiointikieli henkilot) applications)})
-    {:unauthorized nil}))
+(defn- add-selected-hakukohteet
+  [states-and-filters
+   haku-oid
+   hakukohde-oid
+   hakukohderyhma-oid
+   rajaus-hakukohteella
+   ryhman-hakukohteet]
+  (cond (some? hakukohde-oid)
+        (assoc states-and-filters :selected-hakukohteet #{hakukohde-oid})
+        (some? rajaus-hakukohteella)
+        (assoc states-and-filters :selected-hakukohteet #{rajaus-hakukohteella})
+        (and (some? haku-oid) (some? hakukohderyhma-oid))
+        (->> (map :oid ryhman-hakukohteet)
+             set
+             (assoc states-and-filters :selected-hakukohteet))
+        :else
+        states-and-filters))
 
 (defn- add-henkilo
   [henkilot application]
@@ -565,128 +322,395 @@
                                                          :kieliTyyppi]))
         (dissoc :personOid :lang))))
 
-(defn siirto-applications
-  [tarjonta-service organization-service person-service session hakukohde-oid application-keys]
-  (if-let [applications (aac/siirto-applications
-                         tarjonta-service
-                         organization-service
-                         session
-                         hakukohde-oid
-                         application-keys)]
-    (let [henkilot        (->> applications
-                               (map :personOid)
-                               distinct
-                               (person-service/get-persons person-service))
-          yksiloimattomat (->> henkilot
-                               (keep (fn [[oid h]]
-                                       (when-not (or (:yksiloity h)
-                                                     (:yksiloityVTJ h))
-                                         oid)))
-                               distinct
-                               seq)]
-      {:yksiloimattomat yksiloimattomat
-       :applications    (map (partial add-henkilo henkilot) applications)})
-    {:unauthorized nil}))
+(defn- add-asiointikieli [henkilot application]
+  (let [asiointikieli (or (get {"1" "fi"
+                                "2" "sv"
+                                "3" "en"}
+                            ((:keyValues application) "asiointikieli"))
+                          (get-in (get henkilot (:personOid application))
+                            [:asiointiKieli :kieliKoodi])
+                          (:asiointikieli application))]
+    (assoc application :asiointikieli asiointikieli)))
 
-(defn- add-selected-hakukohteet
-  [states-and-filters
-   haku-oid
-   hakukohde-oid
-   hakukohderyhma-oid
-   rajaus-hakukohteella
-   ryhman-hakukohteet]
-  (cond (some? hakukohde-oid)
-        (assoc states-and-filters :selected-hakukohteet #{hakukohde-oid})
-        (some? rajaus-hakukohteella)
-        (assoc states-and-filters :selected-hakukohteet #{rajaus-hakukohteella})
-        (and (some? haku-oid) (some? hakukohderyhma-oid))
-        (->> (map :oid ryhman-hakukohteet)
-             set
-             (assoc states-and-filters :selected-hakukohteet))
-        :else
-        states-and-filters))
+(defn- get-application-list-by-query
+    [person-service
+     tarjonta-service
+     authorized-organization-oids
+     query
+     sort
+     states-and-filters]
+    (let [applications            (application-store/get-application-heading-list query sort)
+          authorized-applications (aac/filter-authorized
+                                   tarjonta-service
+                                   (some-fn (partial aac/authorized-by-form? authorized-organization-oids)
+                                            (partial aac/authorized-by-tarjoajat? authorized-organization-oids))
+                                   applications)]
+      {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
+                       (application-filtering/filter-applications
+                        (populate-applications-with-person-data person-service authorized-applications)
+                        states-and-filters)
+                       (populate-applications-with-person-data
+                        person-service
+                        (application-filtering/filter-applications authorized-applications states-and-filters)))
+       :sort         (merge {:order-by (:order-by sort)
+                             :order    (:order sort)}
+                            (when-let [a (first (drop 999 applications))]
+                              {:offset (case (:order-by sort)
+                                         "applicant-name" {:key            (:key a)
+                                                           :last-name      (:last-name a)
+                                                           :preferred-name (:preferred-name a)}
+                                         "submitted"      {:key       (:key a)
+                                                           :submitted (:submitted a)}
+                                         "created-time"   {:key          (:key a)
+                                                           :created-time (:created-time a)})}))}))
+
+(defn- hakukohteiden-ehdolliset
+  [valinta-tulos-service applications]
+  (into {}
+        (comp (mapcat :hakukohde)
+              (distinct)
+              (map #(vector % (valinta-tulos-service/hakukohteen-ehdolliset
+                               valinta-tulos-service
+                               %))))
+        applications))
+
+(defn ->hakukohde-query
+    [tarjonta-service hakukohde-oid ensisijaisesti]
+    (let [hakukohde (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)]
+      (merge {:haku (:haku-oid hakukohde)}
+             (if ensisijaisesti
+               {:ensisijainen-hakukohde [hakukohde-oid]}
+               {:hakukohde [hakukohde-oid]}))))
 
 (s/defn ^:always-validate query-applications-paged
-  [organization-service
-   person-service
-   tarjonta-service
-   session
-   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
-  (let [{:keys [form-key
-                hakukohde-oid
-                hakukohderyhma-oid
-                haku-oid
-                ensisijaisesti
-                rajaus-hakukohteella
-                ssn
-                dob
-                email
-                name
-                person-oid
-                application-oid
-                attachment-review-states
-                sort
-                states-and-filters]} params
-        ensisijaisesti               (boolean ensisijaisesti)
-        authorized-organization-oids (session-orgs/run-org-authorized
-                                      session
-                                      organization-service
-                                      [:view-applications :edit-applications]
-                                      (fn [] (constantly false))
-                                      (fn [oids] #(contains? oids %))
-                                      (fn [] (constantly true)))
-        ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
-                                       (filter (fn [hakukohde]
-                                                 (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
-                                               (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
-    (when-let [query (->and-query
-                      (cond (some? form-key)
-                            (->form-query form-key)
-                            (and (some? haku-oid) (some? hakukohderyhma-oid))
-                            (->hakukohderyhma-query
-                             ryhman-hakukohteet
-                             authorized-organization-oids
-                             haku-oid
-                             hakukohderyhma-oid
-                             ensisijaisesti
-                             rajaus-hakukohteella)
-                            (some? hakukohde-oid)
-                            (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
-                            (some? haku-oid)
-                            (->haku-query haku-oid)
-                            :else
-                            (->empty-query))
-                      (cond (some? ssn)
-                            (->ssn-query ssn)
-                            (and (some? dob) (dob/dob? dob))
-                            (->dob-query dob)
-                            (some? email)
-                            (->email-query email)
-                            (some? name)
-                            (->name-query name)
-                            (some? person-oid)
-                            (->person-oid-query person-oid)
-                            (some? application-oid)
-                            (->application-oid-query application-oid))
-                      (->attachment-review-states-query attachment-review-states))]
-      (get-application-list-by-query
-       person-service
-       tarjonta-service
-       authorized-organization-oids
-       query
-       sort
-       (add-selected-hakukohteet states-and-filters
-                                 haku-oid
-                                 hakukohde-oid
-                                 hakukohderyhma-oid
-                                 rajaus-hakukohteella
-                                 ryhman-hakukohteet)))))
+    [organization-service
+     person-service
+     tarjonta-service
+     session
+     params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
+    (let [{:keys [form-key
+                  hakukohde-oid
+                  hakukohderyhma-oid
+                  haku-oid
+                  ensisijaisesti
+                  rajaus-hakukohteella
+                  ssn
+                  dob
+                  email
+                  name
+                  person-oid
+                  application-oid
+                  attachment-review-states
+                  sort
+                  states-and-filters]} params
+          ensisijaisesti               (boolean ensisijaisesti)
+          authorized-organization-oids (session-orgs/run-org-authorized
+                                        session
+                                        organization-service
+                                        [:view-applications :edit-applications]
+                                        (fn [] (constantly false))
+                                        (fn [oids] #(contains? oids %))
+                                        (fn [] (constantly true)))
+          ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
+                                         (filter (fn [hakukohde]
+                                                   (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
+                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
+      (when-let [query (->and-query
+                        (cond (some? form-key)
+                              (->form-query form-key)
+                              (and (some? haku-oid) (some? hakukohderyhma-oid))
+                              (->hakukohderyhma-query
+                               ryhman-hakukohteet
+                               authorized-organization-oids
+                               haku-oid
+                               hakukohderyhma-oid
+                               ensisijaisesti
+                               rajaus-hakukohteella)
+                              (some? hakukohde-oid)
+                              (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
+                              (some? haku-oid)
+                              (->haku-query haku-oid)
+                              :else
+                              (->empty-query))
+                        (cond (some? ssn)
+                              (->ssn-query ssn)
+                              (and (some? dob) (dob/dob? dob))
+                              (->dob-query dob)
+                              (some? email)
+                              (->email-query email)
+                              (some? name)
+                              (->name-query name)
+                              (some? person-oid)
+                              (->person-oid-query person-oid)
+                              (some? application-oid)
+                              (->application-oid-query application-oid))
+                        (->attachment-review-states-query attachment-review-states))]
+        (get-application-list-by-query
+         person-service
+         tarjonta-service
+         authorized-organization-oids
+         query
+         sort
+         (add-selected-hakukohteet states-and-filters
+                                   haku-oid
+                                   hakukohde-oid
+                                   hakukohderyhma-oid
+                                   rajaus-hakukohteella
+                                   ryhman-hakukohteet)))))
 
-(defn suoritusrekisteri-applications
-  [person-service haku-oid hakukohde-oids person-oids modified-after offset]
-  (let [person-oids (when (seq person-oids)
-                      (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-    (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+(defprotocol ApplicationService
+  (get-person [this application])
+  (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
+  (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
+  (save-application-review [this session review])
+  (mass-update-application-states [this session application-keys hakukohde-oid from-state to-state])
+  (send-modify-application-link-email [this application-key session])
+  (add-review-note [this session note])
+  (get-application-version-changes [this koodisto-cache session application-key])
+  (omatsivut-applications [this session person-oid])
+  (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys])
+  (siirto-applications [this session hakukohde-oid application-keys])
+  (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset]))
+
+(defrecord CommonApplicationService [organization-service
+                                     tarjonta-service
+                                     ohjausparametrit-service
+                                     audit-logger
+                                     person-service
+                                     valinta-tulos-service
+                                     koodisto-cache
+                                     job-runner]
+  ApplicationService
+  (get-person
+    [_ application]
+    (let [person-from-onr (some->> (:person-oid application)
+                                   (person-service/get-person person-service))]
+      (person-service/parse-person application person-from-onr)))
+
+  ;; Get application that has human-readable koodisto values populated
+   ;; onto raw koodi values."
+  (get-application-with-human-readable-koodis
+    [this application-key session with-newest-form?]
+    (when-let [application (aac/get-latest-application-by-key
+                             organization-service
+                             tarjonta-service
+                             audit-logger
+                             session
+                             application-key)]
+      (let [tarjonta-info         (tarjonta-parser/parse-tarjonta-info-by-haku
+                                    koodisto-cache
+                                    tarjonta-service
+                                    organization-service
+                                    ohjausparametrit-service
+                                    (:haku application)
+                                    (:hakukohde application))
+            form-in-application   (form-store/fetch-by-id (:form application))
+            newest-form           (form-store/fetch-by-key (:key form-in-application))
+            form                  (populate-form-fields (if with-newest-form?
+                                                          newest-form
+                                                          form-in-application) koodisto-cache tarjonta-info)
+            forms-differ?         (and (not with-newest-form?)
+                                       (forms-differ? application tarjonta-info form
+                                                      (populate-form-fields newest-form koodisto-cache tarjonta-info)))
+            alternative-form      (some-> (when forms-differ?
+                                            newest-form)
+                                          (assoc :content [])
+                                          (dissoc :organization-oid))
+            hakukohde-reviews     (future (parse-application-hakukohde-reviews application-key))
+            attachment-reviews    (future (parse-application-attachment-reviews application-key))
+            events                (future (get-application-events organization-service application-key))
+            review                (future (application-store/get-application-review application-key))
+            review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
+                                               (application-store/get-application-review-notes application-key)))
+            information-requests  (future (information-request-store/get-information-requests application-key))
+            selection-state-used? (future (if-let [haku-oid (:haku application)]
+                                            (application-store/selection-state-used? haku-oid)
+                                            true))]
+        (util/remove-nil-values {:application           (-> application
+                                                            (dissoc :person-oid)
+                                                            (assoc :person (get-person this application))
+                                                            (merge tarjonta-info))
+                                 :form                  form
+                                 :latest-form           alternative-form
+                                 :hakukohde-reviews     @hakukohde-reviews
+                                 :attachment-reviews    @attachment-reviews
+                                 :events                @events
+                                 :review                @review
+                                 :review-notes          @review-notes
+                                 :information-requests  @information-requests
+                                 :selection-state-used? @selection-state-used?}))))
+
+  (get-excel-report-of-applications-by-key
+    [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]
+    (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
+      (let [applications                     (application-store/get-applications-by-keys application-keys)
+            application-reviews              (->> applications
+                                                  (map :key)
+                                                  application-store/get-application-reviews-by-keys
+                                                  (reduce #(assoc %1 (:application-key %2) %2) {}))
+            application-review-notes         (->> applications
+                                                  (map :key)
+                                                  application-store/get-application-review-notes-by-keys
+                                                  (group-by :application-key))
+            onr-persons                      (->> (map :person-oid applications)
+                                                  distinct
+                                                  (filter some?)
+                                                  (person-service/get-persons person-service))
+            applications-with-persons        (map (fn [application]
+                                                      (assoc application
+                                                             :person (->> (:person-oid application)
+                                                                          (get onr-persons)
+                                                                          (person-service/parse-person application))))
+                                                  applications)
+            hakukohteiden-ehdolliset         (hakukohteiden-ehdolliset valinta-tulos-service applications)
+            skip-answers-to-preserve-memory? (if (not-empty included-ids)
+                                               (<= 200000 (count applications))
+                                               (<= 4500 (count applications)))
+            lang                             (keyword (or (-> session :identity :lang) :fi))]
+        (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
+        (ByteArrayInputStream. (excel/export-applications applications-with-persons
+                                                          application-reviews
+                                                          application-review-notes
+                                                          selected-hakukohde
+                                                          selected-hakukohderyhma
+                                                          skip-answers-to-preserve-memory?
+                                                          included-ids
+                                                          lang
+                                                          hakukohteiden-ehdolliset
+                                                          tarjonta-service
+                                                          koodisto-cache
+                                                          organization-service
+                                                          ohjausparametrit-service)))))
+
+  (save-application-review
+    [_ session review]
+    (let [application-key (:application-key review)]
+      (when (aac/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             [application-key]
+             [:edit-applications])
+        (when-let [event-id (application-store/save-application-review review session)]
+          (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
+           job-runner
+           event-id))
+        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session)
+        (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session)
+        {:events (get-application-events organization-service application-key)})))
+
+  (mass-update-application-states
+    [_ session application-keys hakukohde-oid from-state to-state]
+    (when (aac/applications-access-authorized?
+           organization-service
+           tarjonta-service
+           session
+           application-keys
+           [:edit-applications])
+      (application-store/mass-update-application-states
+       session
+       application-keys
+       hakukohde-oid
+       from-state
+       to-state)))
+
+  (send-modify-application-link-email
+    [_ application-key session]
+    (when-let [application-id (:id (aac/get-latest-application-by-key
+                                    organization-service
+                                    tarjonta-service
+                                    audit-logger
+                                    session
+                                    application-key))]
+      (application-store/add-new-secret-to-application application-key)
+      (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
+      (enrich-virkailija-organizations
+       organization-service
+       (application-store/add-application-event {:application-key application-key
+                                                 :event-type      "modification-link-sent"}
+                                                session))))
+
+  (add-review-note [_ session note]
+    (when (aac/applications-access-authorized?
+           organization-service
+           tarjonta-service
+           session
+           [(:application-key note)]
+           [:view-applications :edit-applications])
+      (enrich-virkailija-organizations
+       organization-service
+       (application-store/add-review-note note session))))
+
+  (get-application-version-changes
+    [_ koodisto-cache session application-key]
+    (when (aac/applications-access-authorized?
+           organization-service
+           tarjonta-service
+           session
+           [application-key]
+           [:view-applications :edit-applications])
+      (application-store/get-application-version-changes koodisto-cache
+                                                         application-key)))
+
+  (omatsivut-applications
+    [_ session person-oid]
+    (->> (get (person-service/linked-oids person-service [person-oid]) person-oid)
+         :linked-oids
+         (mapcat #(aac/omatsivut-applications organization-service session %))))
+
+  (get-applications-for-valintalaskenta
+    [_ session hakukohde-oid application-keys]
+    (if-let [applications (aac/get-applications-for-valintalaskenta
+                            organization-service
+                            session
+                            hakukohde-oid
+                            application-keys)]
+      (let [henkilot        (->> applications
+                                 (map :personOid)
+                                 distinct
+                                 (person-service/get-persons person-service))
+            yksiloimattomat (->> henkilot
+                                 vals
+                                 (remove #(or (:yksiloity %)
+                                              (:yksiloityVTJ %)))
+                                 (map :oidHenkilo)
+                                 distinct
+                                 seq)]
+        {:yksiloimattomat yksiloimattomat
+         :applications    (map (partial add-asiointikieli henkilot) applications)})
+      {:unauthorized nil}))
+
+  (siirto-applications
+    [_ session hakukohde-oid application-keys]
+    (if-let [applications (aac/siirto-applications
+                           tarjonta-service
+                           organization-service
+                           session
+                           hakukohde-oid
+                           application-keys)]
+      (let [henkilot        (->> applications
+                                 (map :personOid)
+                                 distinct
+                                 (person-service/get-persons person-service))
+            yksiloimattomat (->> henkilot
+                                 (keep (fn [[oid h]]
+                                         (when-not (or (:yksiloity h)
+                                                       (:yksiloityVTJ h))
+                                           oid)))
+                                 distinct
+                                 seq)]
+        {:yksiloimattomat yksiloimattomat
+         :applications    (map (partial add-henkilo henkilot) applications)})
+      {:unauthorized nil}))
+
+  (suoritusrekisteri-applications
+    [_ haku-oid hakukohde-oids person-oids modified-after offset]
+    (let [person-oids (when (seq person-oids)
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
+      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset))))
+
+(defn remove-review-note [note-id]
+  (application-store/remove-review-note note-id))
 
 (defn- init-cipher
   [nonce mode]
@@ -721,3 +745,5 @@
     (catch Exception e
       (log/error e "Failed to unmask" string)
       nil)))
+
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil))

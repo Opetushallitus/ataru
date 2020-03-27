@@ -27,7 +27,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.suoritus.suoritus-service :as suoritus-service]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.applications.application-service :as application-service])
   (:import java.time.Duration
            [java.util.concurrent TimeUnit]))
 
@@ -150,6 +151,17 @@
 
     :login-cas-client (cas/new-cas-client)
 
+    :application-service (component/using
+                           (application-service/new-application-service)
+                           [:organization-service
+                            :tarjonta-service
+                            :ohjausparametrit-service
+                            :audit-logger
+                            :person-service
+                            :valinta-tulos-service
+                            :koodisto-cache
+                            :job-runner])
+
     :handler (component/using
               (virkailija-routes/new-handler)
               (vec (concat [:login-cas-client
@@ -162,7 +174,8 @@
                             :ohjausparametrit-service
                             :person-service
                             :kayttooikeus-service
-                            :audit-logger]
+                            :audit-logger
+                            :application-service]
                            (map first caches))))
 
     :server-setup {:port      http-port

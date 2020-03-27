@@ -19,6 +19,7 @@
             [ataru.cache.redis-cache :as redis-cache]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
+            [ataru.applications.application-service :as common-application-service]
             [ataru.config.core :refer [config]]
             [ataru.util.random :as crypto]
             [clj-time.core :as t]
@@ -65,6 +66,7 @@
         tarjonta-service                     (tarjonta-service/new-tarjonta-service)
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
+        application-service                  (common-application-service/new-application-service)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
@@ -81,7 +83,7 @@
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)
         (assoc :ohjausparametrit-service ohjausparametrit-service)
-        (assoc :person-service (person-service/new-person-service))
+        (assoc :application-service application-service)
         (assoc :form-by-id-cache form-by-id-cache)
         (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
                                              (get-from [this key]

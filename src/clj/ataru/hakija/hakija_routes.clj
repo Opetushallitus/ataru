@@ -46,7 +46,7 @@
    koodisto-cache
    ohjausparametrit-service
    organization-service
-   person-client
+   application-service
    tarjonta-service
    session
    secret]
@@ -55,7 +55,7 @@
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
-                                                                     person-client
+                                                                     application-service
                                                                      tarjonta-service
                                                                      secret)]
     (cond inactivated?
@@ -139,7 +139,7 @@
                           job-runner
                           organization-service
                           ohjausparametrit-service
-                          person-service
+                          application-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
@@ -230,7 +230,7 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             person-service
+                             application-service
                              tarjonta-service
                              session
                              {:hakija secret})
@@ -240,7 +240,7 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             person-service
+                             application-service
                              tarjonta-service
                              session
                              {:virkailija virkailija-secret})
