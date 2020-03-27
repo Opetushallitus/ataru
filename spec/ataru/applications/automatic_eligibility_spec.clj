@@ -2,6 +2,7 @@
   (:require [ataru.applications.automatic-eligibility :as ae]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
+            [ataru.log.audit-log :as audit-log]
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
@@ -49,6 +50,8 @@
                                         hakukohde-oids
                                         yah?))
      :suoritus?        gen/boolean)))
+
+(def audit-logger (audit-log/new-audit-logger))
 
 (defn- call-ae
   [inputs]
@@ -196,6 +199,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "unreviewed"
         :to          "eligible"
         :application {:key *application-key*}
@@ -224,6 +228,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "unreviewed"
         :to          "eligible"
         :application {:key *application-key*}
@@ -244,6 +249,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "unreviewed"
         :to          "eligible"
         :application {:key *application-key*}
@@ -251,6 +257,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "eligible"
         :to          "unreviewed"
         :application {:key *application-key*}
@@ -283,6 +290,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "unreviewed"
         :to          "eligible"
         :application {:key *application-key*}
@@ -299,6 +307,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "eligible"
         :to          "unreviewed"
         :application {:key *application-key*}
@@ -320,6 +329,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "eligible"
         :to          "unreviewed"
         :application {:key *application-key*}
@@ -336,6 +346,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "unreviewed"
         :to          "eligible"
         :application {:key *application-key*}
@@ -360,6 +371,7 @@
     (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
       (ae/update-application-hakukohde-review
        connection
+       audit-logger
        {:from        "eligible"
         :to          "unreviewed"
         :application {:key *application-key*}
