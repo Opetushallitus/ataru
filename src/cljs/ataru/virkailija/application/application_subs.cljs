@@ -957,18 +957,14 @@
   (fn [[application-key valinnan-tulos]]
     (get valinnan-tulos application-key {})))
 
-(re-frame/reg-sub
-  :application/hakemuksen-jollakin-hakukohteella-on-valinnan-tulos
-  (fn [_]
-    [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
-     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
-  (fn [[hakukohteet hakukohteen-valinnan-tulos]]
-    (let [hakukohteella-on-valinnan-tulos? (set (keys hakukohteen-valinnan-tulos))]
-      (some? (some hakukohteella-on-valinnan-tulos? hakukohteet)))))
+(defn- jollakin-hakukohteella-on-valinnan-tulos [hakukohteet hakukohteen-valinnan-tulos]
+  (let [hakukohteella-on-valinnan-tulos? (set (keys hakukohteen-valinnan-tulos))]
+    (some? (some hakukohteella-on-valinnan-tulos? hakukohteet))))
 
 (re-frame/reg-sub
   :application/can-inactivate-application
   (fn [_]
-    [(re-frame/subscribe [:application/hakemuksen-jollakin-hakukohteella-on-valinnan-tulos])])
-  (fn [[hakemuksen-jollakin-hakukohteella-on-valinnan-tulos]]
-    (not hakemuksen-jollakin-hakukohteella-on-valinnan-tulos)))
+    [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
+     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
+  (fn [[hakukohteet hakukohteen-valinnan-tulos]]
+    (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakukohteen-valinnan-tulos))))
