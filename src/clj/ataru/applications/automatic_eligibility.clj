@@ -82,8 +82,9 @@
                      " and hakukohde " (:oid hakukohde))))))
 
 (defn- audit-log
-  [application hakukohde new-state old-state]
-  (audit-log/log {:new       {:application_key (:key application)
+  [audit-logger application hakukohde new-state old-state]
+  (audit-log/log audit-logger
+                 {:new       {:application_key (:key application)
                               :requirement     "eligibility-state"
                               :state           new-state
                               :hakukohde       (:oid hakukohde)}
@@ -126,14 +127,14 @@
                      " and hakukohde " (:oid hakukohde))))))
 
 (defn update-application-hakukohde-review
-  [connection {:keys [application hakukohde from to]}]
+  [connection audit-logger {:keys [application hakukohde from to]}]
   (when (case to
           "eligible"
           (set-eligible connection application hakukohde)
           "unreviewed"
           (set-unreviewed connection application hakukohde))
         (insert-application-event connection application hakukohde to)
-        (audit-log application hakukohde from to)))
+        (audit-log audit-logger application hakukohde from to)))
 
 (defn automatic-eligibility-if-ylioppilas
   [application
@@ -168,7 +169,8 @@
   [{:keys [application-id]}
    {:keys [ohjausparametrit-service
            tarjonta-service
-           suoritus-service]}]
+           suoritus-service
+           audit-logger]}]
   (if-let [application (get-application application-id)]
     (let [haku                         (get-haku tarjonta-service application)
           ohjausparametrit             (get-ohjausparametrit ohjausparametrit-service
@@ -185,7 +187,7 @@
                         now
                         hakukohteet
                         ylioppilas-tai-ammatillinen?)]
-          (update-application-hakukohde-review connection update)))
+          (update-application-hakukohde-review connection audit-logger update)))
       {:transition {:id :final}})
     {:transition {:id :retry}}))
 

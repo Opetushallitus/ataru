@@ -138,7 +138,8 @@
                   :koodisto-cache
                   :person-service
                   :tarjonta-service
-                  :suoritus-service])
+                  :suoritus-service
+                  :audit-logger])
 
     :redis (redis/map->Redis {})
 
