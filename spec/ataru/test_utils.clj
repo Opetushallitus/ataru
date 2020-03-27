@@ -11,6 +11,7 @@
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [ataru.applications.application-service :as application-service]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
@@ -20,6 +21,7 @@
                         (assoc :organization-service (org-service/->FakeOrganizationService))
                         (assoc :person-service (person-service/->FakePersonService))
                         (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
+                        (assoc :application-service (application-service/new-application-service))
                         .start
                         :routes))
 

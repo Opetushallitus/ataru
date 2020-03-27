@@ -423,7 +423,7 @@
    koodisto-cache
    ohjausparametrit-service
    organization-service
-   person-client
+   application-service
    tarjonta-service
    secret]
   (let [[actor-role secret] (match [secret]
@@ -480,10 +480,9 @@
                                                                       application-in-processing?
                                                                       field-deadlines))
         person                     (if (= actor-role :virkailija)
-                                     (application-service/get-person application person-client)
-                                     (some-> application
-                                             (application-service/get-person person-client)
-                                             (dissoc :ssn :birth-date)))
+                                     (application-service/get-person application-service application)
+                                     (if application
+                                       (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
                                                   attachments-metadata->answers
