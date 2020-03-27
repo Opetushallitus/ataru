@@ -312,7 +312,7 @@
   [answer]
   (update answer :value remove-null-bytes-from-value))
 
-(defn add-application [new-application applied-hakukohteet form session]
+(defn add-application [new-application applied-hakukohteet form session audit-logger]
     (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
       (let [selection-id   (:selection-id new-application)
             virkailija-oid (when-let [secret (:virkailija-secret new-application)]
@@ -326,7 +326,8 @@
                                                    false
                                                    conn)
             connection     {:connection conn}]
-        (audit-log/log {:new       new-application
+        (audit-log/log audit-logger
+                       {:new       new-application
                         :operation audit-log/operation-new
                         :session   session
                         :id        {:email (util/extract-email new-application)}})
@@ -363,7 +364,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session]
+(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]

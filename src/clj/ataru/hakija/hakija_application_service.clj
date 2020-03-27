@@ -27,10 +27,10 @@
     [clojure.java.jdbc :as jdbc]
     [clj-time.format :as f]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        application-id (store-fn application applied-hakukohteet form session)]
+        application-id (store-fn application applied-hakukohteet form session audit-logger)]
     (log/info "Stored application with id: " application-id)
     {:passed?        true
      :id application-id
@@ -149,6 +149,7 @@
                            tarjonta-service
                            organization-service
                            ohjausparametrit-service
+                           audit-logger
                            application
                            is-modify?
                            session]
@@ -266,7 +267,7 @@
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
-        (store-and-log final-application applied-hakukohteet form is-modify? session)))))
+        (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)))))
 
 (defn- start-person-creation-job [job-runner application-id]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -328,6 +329,7 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   audit-logger
    application
    session]
   (log/info "Application submitted:" application)
@@ -338,6 +340,7 @@
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
+                            audit-logger
                             application
                             false
                             session)
@@ -362,6 +365,7 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   audit-logger
    input-application
    session]
   (log/info "Application edited:" input-application)
@@ -372,6 +376,7 @@
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
+                            audit-logger
                             input-application
                             true
                             session)
