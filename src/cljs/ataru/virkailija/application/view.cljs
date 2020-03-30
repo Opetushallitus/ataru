@@ -1034,10 +1034,10 @@
   []
   (let [state           (subscribe [:state-query [:application :review :state]])
         can-edit?       (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
-        can-inactivate? (subscribe [:application/can-inactivate-application])]
+        can-deactivate? (subscribe [:application/can-deactivate-application])]
     (fn []
       (let [active?     (= "active" @state)
-            can-change? (and @can-edit? @can-inactivate?)]
+            can-change? (and @can-edit? @can-deactivate?)]
         [:div.application-handling__review-deactivate-row
          [:span.application-handling__review-deactivate-label @(subscribe [:editor/virkailija-translation :application-state])]
          [:div.application-handling__review-deactivate-toggle
@@ -1047,7 +1047,7 @@
                               (not active?) (str " application-handling__review-deactivate-toggle-slider-left")
                               (not can-change?) (str " application-handling__review-deactivate-toggle-slider--disabled"))
             :title    (when (and @can-edit?
-                                 (not @can-inactivate?))
+                                 (not @can-deactivate?))
                         @(subscribe [:editor/virkailija-translation :cannot-inactivate-info]))
             :on-click #(when can-change?
                          (dispatch [:application/set-application-activeness (not active?)]))}

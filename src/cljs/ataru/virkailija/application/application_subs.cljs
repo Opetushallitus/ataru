@@ -961,7 +961,7 @@
   (some? (some hakemuksen-valinnan-tulokset hakukohteet)))
 
 (re-frame/reg-sub
-  :application/can-inactivate-application
+  :application/can-deactivate-application
   (fn [_]
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
      (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
