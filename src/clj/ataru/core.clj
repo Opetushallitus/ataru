@@ -18,7 +18,6 @@
 
 (def ^:private app-systems {:virkailija virkailija-system/init-new-system
                             :hakija hakija-system/init-new-system})
-
 (def system (atom {:system nil
                    :system-fn nil}))
 
