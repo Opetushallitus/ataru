@@ -33,15 +33,16 @@
            [java.util.concurrent TimeUnit]))
 
 (defn new-system
-  ([]
+  ([audit-logger]
    (new-system
+     audit-logger
     (Integer/parseInt (get env :ataru-http-port "8350"))
     (Integer/parseInt (get env :ataru-repl-port "3333"))))
-  ([http-port repl-port]
+  ([audit-logger http-port repl-port]
    (apply
     component/system-map
 
-    :audit-logger (ataru.log.audit-log/new-audit-logger)
+    :audit-logger audit-logger
 
     :organization-service (component/using
                            (organization-service/new-organization-service)
@@ -223,3 +224,7 @@
     :redis (redis/map->Redis {})
 
     (mapcat identity caches))))
+
+(defn init-new-system [audit-logger]
+  (fn []
+    (new-system audit-logger)))

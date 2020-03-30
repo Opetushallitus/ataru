@@ -9,14 +9,16 @@
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.forms.form-store :as form-store]
-            [ataru.email.application-email-confirmation :as application-email])
+            [ataru.email.application-email-confirmation :as application-email]
+            [ataru.log.audit-log :as audit-log])
   (:import (java.util.concurrent TimeUnit)))
 
 (defn- run-specs-with-virkailija-and-hakija-systems [specs]
   (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                 application-email/start-email-edit-confirmation-job   (constantly nil)]
-    (let [virkailija-system (atom (virkailija-system/new-system))
-          hakija-system     (atom (hakija-system/new-system))]
+    (let [dummy-audit-logger (audit-log/new-dummy-audit-logger)
+          virkailija-system  (atom (virkailija-system/new-system dummy-audit-logger))
+          hakija-system      (atom (hakija-system/new-system dummy-audit-logger))]
       (try
         (ataru.fixtures.db.browser-test-db/reset-test-db true)
         (reset! virkailija-system (component/start-system @virkailija-system))
