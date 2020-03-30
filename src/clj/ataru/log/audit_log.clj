@@ -136,5 +136,4 @@
     (try
       (do-log audit-logger params)
       (catch Throwable t
-        (throw (new RuntimeException "Failed to create an audit log entry" t)))))
-  ([params] (log static-logger params)))
+        (throw (new RuntimeException "Failed to create an audit log entry" t))))))

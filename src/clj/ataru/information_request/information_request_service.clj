@@ -62,7 +62,8 @@
                              (-> session :identity :oid)
                              connection)]
     (start-email-job job-runner connection information-request)
-    (audit-log/log {:new       information-request
+    (audit-log/log (:audit-logger job-runner)
+                   {:new       information-request
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})

@@ -48,6 +48,7 @@
    organization-service
    application-service
    tarjonta-service
+   audit-logger
    session
    secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
@@ -63,7 +64,8 @@
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
-            (audit-log/log {:new       application
+            (audit-log/log audit-logger
+                           {:new       application
                             :operation audit-log/operation-read
                             :session   session
                             :id        {:applicationOid (:key application)}})
@@ -235,6 +237,7 @@
                              organization-service
                              application-service
                              tarjonta-service
+                             audit-logger
                              session
                              {:hakija secret})
 
@@ -245,6 +248,7 @@
                              organization-service
                              application-service
                              tarjonta-service
+                             audit-logger
                              session
                              {:virkailija virkailija-secret})
 
