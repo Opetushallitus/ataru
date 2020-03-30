@@ -16,9 +16,8 @@
   []
   @(promise))
 
-(defn- app-systems []
-  {:virkailija virkailija-system/init-new-system
-   :hakija     hakija-system/init-new-system})
+(def ^:private app-systems {:virkailija virkailija-system/init-new-system
+                            :hakija hakija-system/init-new-system})
 
 (def system (atom {:system nil
                    :system-fn nil}))
@@ -48,10 +47,10 @@
 
 (defn -main [& args]
   (let [app-id         (app-utils/get-app-id args)
-        system-fn      (get app-systems app-id)]
+        init-system-fn      (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
-    (when-not system-fn
+    (when-not init-system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
                (apply str (interpose ", " (map name (keys app-systems)))))
       (System/exit 1))
@@ -59,6 +58,6 @@
       (let [audit-logger (audit-log/new-audit-logger)]
         (reset! system {:app-id       app-id
                         :audit-logger audit-logger
-                        :system-fn    (system-fn audit-logger)})
+                        :system-fn    (init-system-fn audit-logger)})
         (start)
         (wait-forever)))))

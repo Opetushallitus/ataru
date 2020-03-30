@@ -24,7 +24,7 @@
 (def operation-delete (create-operation "poisto"))
 (def operation-login (create-operation "kirjautuminen"))
 
-(def ^:private static-logger
+(defn- create-audit-logger []
   (let [service-name     (case (app-utils/get-app-id)
                            :virkailija "ataru-editori"
                            :hakija "ataru-hakija"
@@ -40,8 +40,9 @@
 
 (defrecord AtaruAuditLogger [auditlog])
 
+;; Huom: tätä funktiota tulee kutsua tuotantosovelluksessa vain kerran, jotta ei synny useampia Audit-instansseja.
 (defn new-audit-logger []
-  map->AtaruAuditLogger static-logger)
+  map->AtaruAuditLogger (create-audit-logger))
 
 (defn new-dummy-audit-logger []
   map->AtaruAuditLogger (new DummyAuditLog))
