@@ -36,6 +36,8 @@
 
 (def default-fetch-size 50)
 
+(def audit-logger (atom nil))
+
 (defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
   (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
     (doseq [[index value] (map vector (iterate inc 1) params)]
@@ -59,7 +61,7 @@
         :else expr))
     form))
 
-(defn- update-birth-date-place-holder [audit-logger]
+(defn- update-birth-date-place-holder []
   (doseq [form (->> (migration-form-store/get-all-forms)
                     (map #(store/fetch-by-id (:id %)))
                     (sort-by :created-time))]
@@ -75,9 +77,9 @@
           :else expr))
       form)
       migration-session
-      audit-logger)))
+      @audit-logger)))
 
-(defn refresh-person-info-modules [audit-logger]
+(defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)]
     (doseq [form (->> (migration-form-store/get-all-forms)
                       (map #(store/fetch-by-id (:id %)))
@@ -85,7 +87,7 @@
       (store/create-form-or-increment-version!
        (update-person-info-module new-person-module form)
         migration-session
-        audit-logger))))
+        @audit-logger))))
 
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
@@ -183,12 +185,12 @@
       wrapped-form)))
 
 (defn followups-to-vectored-followups
-  [audit-logger]
+  []
   (let [existing-forms (try
                          (map #(store/fetch-by-id (:id %)) (migration-form-store/get-all-forms))
                          (catch Exception _ []))
         wrap (fn [w]
-                 (store/create-form-or-increment-version! w migration-session audit-logger))]
+                 (store/create-form-or-increment-version! w migration-session @audit-logger))]
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
@@ -214,7 +216,7 @@
                     :organizations [{:oid "1.2.246.562.10.00000000001"}]}})
 
 (defn- create-new-review-state
-  [application audit-logger]
+  [application]
   (let [application-key (:key application)
         old-review      (application-store/get-application-review application-key)
         old-state       (:state old-review)
@@ -238,7 +240,7 @@
     (log/info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
       (log/info "Updating application state:" old-state "->" application-state)
-      (application-store/save-application-review (merge old-review {:state application-state}) fake-session audit-logger))
+      (application-store/save-application-review (merge old-review {:state application-state}) fake-session @audit-logger))
     (when (= 1 (count hakukohteet))
       (log/info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
@@ -247,12 +249,12 @@
         "selection-state"
         selection-state
         fake-session
-        audit-logger))))
+        @audit-logger))))
 
 (defn- application-reviews->new-model
   []
   (doseq [application (migration-app-store/get-all-applications)]
-    (create-new-review-state application audit-log/new-audit-logger)))
+    (create-new-review-state application)))
 
 (defn- dob->dd-mm-yyyy-format [connection]
   (letfn [(invalid-dob-format? [[day month _]]
@@ -337,7 +339,7 @@
               "processing-state"
               state
               fake-session
-              audit-log/new-audit-logger)))
+              @audit-logger)))
         (let [new-application-state (if (= state "inactivated")
                                       "inactivated"
                                       "active")]
@@ -554,12 +556,12 @@
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules audit-log/new-audit-logger))
+  (refresh-person-info-modules))
 
 (migrations/defmigration
   migrate-person-info-module "1.22"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules audit-log/new-audit-logger))
+  (refresh-person-info-modules))
 
 (migrations/defmigration
   migrate-application-versioning "1.25"
@@ -579,7 +581,7 @@
 (migrations/defmigration
   migrate-followups-to-vectored-followups "1.38"
   "Wrap all existing followups with vector"
-  (followups-to-vectored-followups audit-log/new-audit-logger))
+  (followups-to-vectored-followups))
 
 (migrations/defmigration
   migrate-followups-to-vectored-followups "1.39"
@@ -594,7 +596,7 @@
 (migrations/defmigration
   migrate-birth-date-placeholders "1.70"
   "Add multi lang placeholder texts to birth date question"
-  (update-birth-date-place-holder audit-log/new-audit-logger))
+  (update-birth-date-place-holder))
 
 (migrations/defmigration
   migrate-dob-into-dd-mm-yyyy-format "1.71"
@@ -610,12 +612,12 @@
 (migrations/defmigration
   migrate-person-info-module "1.74"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules audit-log/new-audit-logger))
+  (refresh-person-info-modules))
 
 (migrations/defmigration
   migrate-person-info-module "1.75"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules audit-log/new-audit-logger))
+  (refresh-person-info-modules))
 
 (migrations/defmigration
   migrate-application-review-notes-to-own-table "1.77"
@@ -669,5 +671,8 @@
     (migrate-nationality-to-question-group conn)))
 
 (defn migrate
-  []
- (migrations/migrate :db "db.migration" "ataru.db.migrations"))
+  [audit-logger-to-use]
+  (if (= "use dummy-audit-logger!" audit-logger-to-use)
+    (reset! audit-logger audit-log/new-dummy-audit-logger)
+    (reset! audit-logger audit-logger-to-use))
+  (migrations/migrate :db "db.migration" "ataru.db.migrations"))

@@ -328,7 +328,7 @@
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
-  (migrations/migrate)
+  (migrations/migrate audit-logger)
   (when insert-initial-fixtures? (init-db-fixture)))
 
 (defn insert-test-form [form-name]
