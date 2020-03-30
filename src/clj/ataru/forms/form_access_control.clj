@@ -94,7 +94,7 @@
       (throw (Exception. (str "Duplicate element id in form: " (pr-str (keep #(when (< 1 (second %)) (first %))
                                                                              (frequencies @form-element-ids)))))))))
 
-(defn post-form [form session tarjonta-service organization-service]
+(defn post-form [form session tarjonta-service organization-service audit-logger]
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
@@ -109,18 +109,19 @@
         (assoc
          form-with-org
          :created-by (-> session :identity :username))
-        session)))))
+        session
+        audit-logger)))))
 
 (defn edit-form-with-operations
-  [id operations session tarjonta-service organization-service]
+  [id operations session tarjonta-service organization-service audit-logger]
   (let [latest-version (form-store/fetch-form id)]
     (if (:locked latest-version)
       (throw (user-feedback-exception "Lomakkeen muokkaus on estetty."))
       (let [coerced-form (form-schema/form-coercer latest-version)
             updated-form (form-diff/apply-operations coerced-form operations)]
-        (post-form updated-form session tarjonta-service organization-service)))))
+        (post-form updated-form session tarjonta-service organization-service audit-logger)))))
 
-(defn delete-form [form-id session tarjonta-service organization-service]
+(defn delete-form [form-id session tarjonta-service organization-service audit-logger]
   (let [form (form-store/fetch-latest-version form-id)]
     (check-edit-authorization
      form
@@ -130,7 +131,8 @@
      (fn []
        (form-store/create-form-or-increment-version!
         (assoc form :deleted true)
-        session)))))
+        session
+        audit-logger)))))
 
 (defn- get-forms-as-ordinary-user
   [tarjonta-service session authorized-organization-oids]
@@ -152,7 +154,7 @@
              (map #(dissoc % :organization-oid)
                   (form-store/get-all-forms))))})
 
-(defn update-form-lock [form-id operation session tarjonta-service organization-service]
+(defn update-form-lock [form-id operation session tarjonta-service organization-service audit-logger]
   (let [latest-version  (form-store/fetch-form form-id)
         previous-locked (:locked latest-version)
         lock?           (= "close" operation)
@@ -164,5 +166,5 @@
     (if (or (and lock? (some? previous-locked))
             (and (not lock?) (nil? previous-locked)))
       (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
-      (select-keys (post-form updated-form session tarjonta-service organization-service)
+      (select-keys (post-form updated-form session tarjonta-service organization-service audit-logger)
                    [:locked :id]))))

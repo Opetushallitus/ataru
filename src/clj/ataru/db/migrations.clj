@@ -59,7 +59,7 @@
         :else expr))
     form))
 
-(defn- update-birth-date-place-holder []
+(defn- update-birth-date-place-holder [audit-logger]
   (doseq [form (->> (migration-form-store/get-all-forms)
                     (map #(store/fetch-by-id (:id %)))
                     (sort-by :created-time))]
@@ -74,16 +74,18 @@
                      :en "dd.mm.yyyy"})
           :else expr))
       form)
-      migration-session)))
+      migration-session
+      audit-logger)))
 
-(defn refresh-person-info-modules []
+(defn refresh-person-info-modules [audit-logger]
   (let [new-person-module (person-info-module/person-info-module)]
     (doseq [form (->> (migration-form-store/get-all-forms)
                       (map #(store/fetch-by-id (:id %)))
                       (sort-by :created-time))]
       (store/create-form-or-increment-version!
        (update-person-info-module new-person-module form)
-        migration-session))))
+        migration-session
+        audit-logger))))
 
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
@@ -181,12 +183,12 @@
       wrapped-form)))
 
 (defn followups-to-vectored-followups
-  []
+  [audit-logger]
   (let [existing-forms (try
                          (map #(store/fetch-by-id (:id %)) (migration-form-store/get-all-forms))
                          (catch Exception _ []))
         wrap (fn [w]
-                 (store/create-form-or-increment-version! w migration-session))]
+                 (store/create-form-or-increment-version! w migration-session audit-logger))]
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
@@ -552,12 +554,12 @@
 (migrations/defmigration
   migrate-person-info-module "1.13"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules))
+  (refresh-person-info-modules audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-person-info-module "1.22"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules))
+  (refresh-person-info-modules audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-application-versioning "1.25"
@@ -577,7 +579,7 @@
 (migrations/defmigration
   migrate-followups-to-vectored-followups "1.38"
   "Wrap all existing followups with vector"
-  (followups-to-vectored-followups))
+  (followups-to-vectored-followups audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-followups-to-vectored-followups "1.39"
@@ -592,7 +594,7 @@
 (migrations/defmigration
   migrate-birth-date-placeholders "1.70"
   "Add multi lang placeholder texts to birth date question"
-  (update-birth-date-place-holder))
+  (update-birth-date-place-holder audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-dob-into-dd-mm-yyyy-format "1.71"
@@ -608,12 +610,12 @@
 (migrations/defmigration
   migrate-person-info-module "1.74"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules))
+  (refresh-person-info-modules audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-person-info-module "1.75"
   "Update person info module structure in existing forms"
-  (refresh-person-info-modules))
+  (refresh-person-info-modules audit-log/new-audit-logger))
 
 (migrations/defmigration
   migrate-application-review-notes-to-own-table "1.77"
