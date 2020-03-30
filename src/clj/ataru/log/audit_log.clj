@@ -9,7 +9,8 @@
             Target$Builder
             ApplicationType
             User
-            Audit]
+            Audit
+            DummyAuditLog]
            java.net.InetAddress
            org.ietf.jgss.Oid))
 
@@ -41,6 +42,9 @@
 
 (defn new-audit-logger []
   map->AtaruAuditLogger static-logger)
+
+(defn new-dummy-audit-logger []
+  map->AtaruAuditLogger (new DummyAuditLog))
 
 (defn- map-or-vec? [x]
   (or (map? x)
