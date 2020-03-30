@@ -136,8 +136,9 @@
 (def ^:private modified-time-format
   (f/formatter "dd.MM.yyyy HH:mm:ss" tz))
 
-(defn- log-late-submitted-application [application submitted-at session]
-  (audit-log/log {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
+(defn- log-late-submitted-application [application submitted-at session audit-logger]
+  (audit-log/log audit-logger
+                 {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
                                                      (f/unparse modified-time-format submitted-at)
                                                      (cheshire.core/generate-string application))}
                   :operation audit-log/operation-failed
@@ -250,7 +251,7 @@
            (nil? virkailija-secret)
            (some #(not (:on (:hakuaika %))) applied-hakukohteet))
       (do
-        (log-late-submitted-application application now session)
+        (log-late-submitted-application application now session audit-logger)
         {:passed? false
          :failures ["Application period is not open."]
          :code :application-period-closed})
@@ -351,7 +352,8 @@
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
         (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
-        (audit-log/log {:new       application
+        (audit-log/log audit-logger
+                       {:new       application
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:email (util/extract-email application)}})
@@ -389,7 +391,8 @@
           application)
         (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
       (do
-        (audit-log/log {:new       input-application
+        (audit-log/log audit-logger
+                       {:new       input-application
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:applicationOid (:key application)}})
