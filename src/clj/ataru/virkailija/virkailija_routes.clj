@@ -616,7 +616,6 @@
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
                       {included-ids :- s/Str ""}
-                      {skip-answers :- s/Bool false}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [size-limit 40000
@@ -630,7 +629,6 @@
                                 application-keys
                                 selected-hakukohde
                                 selected-hakukohderyhma
-                                skip-answers
                                 included-ids
                                 session
                                 organization-service

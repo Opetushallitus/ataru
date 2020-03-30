@@ -78,6 +78,11 @@
     (get db :fetching-haut)))
 
 (re-frame/reg-sub
+  :application/rajaus-hakukohteella-value
+  (fn [db _]
+    (get-in db [:application :rajaus-hakukohteella-value])))
+
+(re-frame/reg-sub
   :application/hakukohteet
   (fn [db _]
     (get db :hakukohteet)))
