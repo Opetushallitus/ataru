@@ -199,7 +199,8 @@
                   :koodisto-cache
                   :person-service
                   :tarjonta-service
-                  :suoritus-service])
+                  :suoritus-service
+                  :audit-logger])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
