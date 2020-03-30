@@ -1,5 +1,5 @@
 (ns ataru.odw.odw-service-spec
-  (:require [ataru.odw.odw-service :as odw-service]
+  (:require [ataru.applications.answer-util :as answer-util]
             [speclj.core :refer [describe it run-specs should= tags]]))
 
 ; required by APIs and some logging, irrelevant for functionality (for now)
@@ -12,7 +12,7 @@
   ([answers]
    (select-year-for nil answers))
   ([haku answers]
-   (#'ataru.odw.odw-service/get-kk-pohjakoulutus haku answers application-key)))
+   (#'answer-util/get-kk-pohjakoulutus haku answers application-key)))
 
 (describe "vocational degree / pohjakoulutus_am completion year selection when"
   (tags :unit :odw :OY-342)

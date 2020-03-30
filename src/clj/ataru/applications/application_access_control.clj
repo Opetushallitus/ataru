@@ -1,13 +1,14 @@
 (ns ataru.applications.application-access-control
   (:require
-    [ataru.log.audit-log :as audit-log]
-    [ataru.organization-service.session-organizations :as session-orgs]
-    [ataru.user-rights :as user-rights]
-    [ataru.applications.application-store :as application-store]
-    [ataru.odw.odw-service :as odw-service]
-    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-    [ataru.util :as util]
-    [clojure.set :as set]))
+   [ataru.log.audit-log :as audit-log]
+   [ataru.organization-service.session-organizations :as session-orgs]
+   [ataru.user-rights :as user-rights]
+   [ataru.applications.application-store :as application-store]
+   [ataru.odw.odw-service :as odw-service]
+   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+   [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
+   [ataru.util :as util]
+   [clojure.set :as set]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
@@ -197,14 +198,14 @@
     (constantly nil)
     #(odw-service/get-applications-for-odw person-service tarjonta-service from-date limit offset)))
 
-(defn get-applications-for-tilastokeskus [organization-service session haku-oid hakukohde-oid]
+(defn get-applications-for-tilastokeskus [organization-service session tarjonta-service haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)))
+    #(tilastokeskus-service/get-application-info-for-tilastokeskus tarjonta-service haku-oid hakukohde-oid)))
 
 (defn get-applications-for-valintalaskenta [organization-service session hakukohde-oid application-keys]
   (session-orgs/run-org-authorized
