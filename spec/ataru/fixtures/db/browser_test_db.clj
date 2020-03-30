@@ -298,7 +298,7 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
-(def audit-logger (audit-log/new-audit-logger))
+(def audit-logger (audit-log/new-dummy-audit-logger))
 
 (defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
   (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"

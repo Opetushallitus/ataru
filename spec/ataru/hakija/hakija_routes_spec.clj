@@ -67,7 +67,7 @@
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
-        audit-logger                         (ataru.log.audit-log/new-audit-logger)
+        audit-logger                         (ataru.log.audit-log/new-dummy-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])

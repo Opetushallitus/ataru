@@ -23,7 +23,7 @@
                         (assoc :person-service (person-service/->FakePersonService))
                         (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
                         (assoc :application-service (application-service/new-application-service))
-                        (assoc :audit-logger (audit-log/new-audit-logger))
+                        (assoc :audit-logger (audit-log/new-dummy-audit-logger))
                         .start
                         :routes))
 

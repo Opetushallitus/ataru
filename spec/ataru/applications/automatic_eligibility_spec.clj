@@ -51,7 +51,7 @@
                                         yah?))
      :suoritus?        gen/boolean)))
 
-(def audit-logger (audit-log/new-audit-logger))
+(def audit-logger (audit-log/new-dummy-audit-logger))
 
 (defn- call-ae
   [inputs]
