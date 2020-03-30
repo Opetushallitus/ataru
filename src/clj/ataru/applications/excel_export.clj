@@ -372,14 +372,14 @@
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))
                                 id-match?  (or (included-ids (:id field))
                                                (empty? included-ids))]
-                            (when candidate?
-                                  (or always?
-                                      (and (not always?)
-                                           (not skip-answers?)
-                                           hakukohde?
-                                           id-match?)))))]
+                            (and candidate?
+                                 (or always?
+                                     (and (not always?)
+                                          (not skip-answers?)
+                                          hakukohde?
+                                          id-match?)))))]
     (->> form-fields
-         (remove #(not (should-include? %)))
+         (filter should-include?)
          (map #(vector (:id %) (pick-header form-fields-by-id %))))))
 
 (defn- headers-from-applications
@@ -587,9 +587,7 @@
                                                                                 selected-hakukohderyhma)
                                                                               (let [hakukohderyhmas (->>
                                                                                                       (:belongs-to-hakukohteet form-field)
-                                                                                                      (map #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %))
-                                                                                                      set
-                                                                                                      (reduce concat))]
+                                                                                                      (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
                                                                                  (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
                                           :else (fn [_] true)))]
     (->> applications
