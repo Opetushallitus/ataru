@@ -1580,7 +1580,8 @@
            [:input.application-handling__review-checkbox
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
-             :value     @only-selected-hakukohteet
+             :value     "only-selected"
+             :checked   @only-selected-hakukohteet
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
