@@ -1,7 +1,6 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.log.access-log :as access-log]
             [ataru.log.audit-log :as audit-log]
-            [ataru.util :as util]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-client :as session-client]
             [ataru.applications.application-store :as application-store]
@@ -32,9 +31,7 @@
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
-            [taoensso.timbre :as log])
-  (:import [ring.swagger.upload Upload]
-           [java.io InputStream]))
+            [taoensso.timbre :as log]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 

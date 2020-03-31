@@ -12,7 +12,6 @@
             [ataru.db.migrations.form-migration-store :as migration-form-store]
             [ataru.forms.form-store :as store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]

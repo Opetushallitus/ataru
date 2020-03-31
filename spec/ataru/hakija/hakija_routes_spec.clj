@@ -15,8 +15,6 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
-            [ataru.cache.in-memory-cache :as in-memory]
-            [ataru.cache.redis-cache :as redis-cache]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.applications.application-service :as common-application-service]
@@ -29,10 +27,8 @@
             [speclj.core :refer :all]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.person-service.person-service :as person-service])
-  (:import java.util.concurrent.TimeUnit
-           org.joda.time.DateTime))
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+  (:import org.joda.time.DateTime))
 
 (sql/defqueries "sql/application-queries.sql")
 
