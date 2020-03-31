@@ -18,7 +18,7 @@
       before(
         wait.until(function() {
           return formSections().length == 3
-        }, 10000)
+        }, 30000)
       )
       it('with complete form and the only hakukohde selected', function() {
         expect(formFields().length).to.equal(15)
