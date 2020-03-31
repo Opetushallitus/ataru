@@ -1,4 +1,4 @@
-(ns ataru.odw.odw-service-spec
+(ns ataru.applications.answer-util-spec
   (:require [ataru.applications.answer-util :as answer-util]
             [speclj.core :refer [describe it run-specs should= tags]]))
 
@@ -15,7 +15,7 @@
    (#'answer-util/get-kk-pohjakoulutus haku answers application-key)))
 
 (describe "vocational degree / pohjakoulutus_am completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "vocational degree has been completed"
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_am" :suoritusvuosi 2016}]
@@ -48,7 +48,7 @@
 (def double-degree-vocational-completed-odw {:60ce79f9-b37a-4b7e-a7e0-f25ba430f055 {:value "2010"}})
 
 (describe "secondary level double degree (kaksoistutkinto) / pohjakoulutus_yo_ammatillinen completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "both matriculation and vocational parts have been completed"
     (let [answers (merge double-degree-identifier
@@ -97,7 +97,7 @@
 (def international-matriculation-fi-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_kansainvalinen_suomessa"]}})
 
 (describe "international matriculation examination in Finland / pohjakoulutus_yo_kansainvalinen_suomessa completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "applicant will complete degree this year"
     ; This is a regression: All these were "0" before 2020 but somewhere along the line the form answers were reordered
@@ -120,7 +120,7 @@
 (def international-matriculation-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ulkomainen"]}})
 
 (describe "international matriculation examination / pohjakoulutus_yo_kansainvalinen completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "applicant will complete degree this year"
     ; Same as above, this is also a regression for the exact same reason.
@@ -142,7 +142,7 @@
 (def higher-education-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_kk"]}})
 
 (describe "Higher education qualification completed in Finland / pohjakoulutus_kk completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "vocational degree is completed after application period ends (ODW special hardcoding)"
       ; 1. yhteishaku
@@ -159,7 +159,7 @@
 (def other-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_ulk"]}})
 
 (describe "Other qualification completed outside Finland / pohjakoulutus_ulk completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "vocational degree is completed after application period ends (ODW special hardcoding)"
       ; 1. yhteishaku
@@ -176,7 +176,7 @@
 (def higher-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_kk_ulk"]}})
 
 (describe "Higher education qualification completed outside Finland / pohjakoulutus_kk_ulk completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "vocational degree is completed after application period ends (ODW special hardcoding)"
       ; 1. yhteishaku
@@ -193,7 +193,7 @@
 (def further-vocational-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_amt"]}})
 
 (describe "Further vocational qualification completed in Finland / pohjakoulutus_kk_ulk completion year selection when"
-  (tags :unit :odw :OY-342)
+  (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
   (it "vocational degree is completed after application period ends (ODW special hardcoding)"
       ; 1. yhteishaku
