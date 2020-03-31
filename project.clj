@@ -100,12 +100,10 @@
   :repositories [["releases" {:url           "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"
                               :sign-releases false
                               :snapshots     false}]
-                              ;                             :creds :gpg
-
-                 ["snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"}]
-                               ;                                   :creds :gpg
-
-                 ["ext-snapshots" {:url "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"}]]
+                 ["snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"
+                               :releases {:update :never}}]
+                 ["ext-snapshots" {:url      "https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local"
+                                   :releases {:update :never}}]]
 
   :source-paths ["src/clj" "src/cljc"]
   :test-paths ["spec"]
