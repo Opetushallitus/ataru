@@ -27,8 +27,10 @@
   :virkailija-kevyt-valinta/fetch-valinnan-tulos
   [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
                                                   :target-key :valinta-tulos-service-url})]
-  (fn [{valinta-tulos-service-url :valinta-tulos-service-url} [_ application-key]]
-    {:http {:method              :get
+  (fn [{db                        :db
+        valinta-tulos-service-url :valinta-tulos-service-url} [_ application-key]]
+    {:db   (update db :valinta-tulos-service dissoc application-key)
+     :http {:method              :get
             :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
             :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
             :handler-args        {:application-key application-key}}}))
@@ -36,17 +38,19 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
   (fn [{db :db} [_ response {application-key :application-key}]]
-    (let [db           (update db
-                               :valinta-tulos-service
-                               (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                                 (->> response
-                                      (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
-                                                (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                                  (assoc-in acc
-                                                            [hakemus-oid hakukohde-oid]
-                                                            valinnan-tulos)))
-                                              valinta-tulos-service-db))))
+    (let [db           (-> db
+                           (assoc-in [:valinta-tulos-service application-key] {})
+                           (update
+                             :valinta-tulos-service
+                             (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                               (->> response
+                                    (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                              (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                                    hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                (assoc-in acc
+                                                          [hakemus-oid hakukohde-oid]
+                                                          valinnan-tulos)))
+                                            valinta-tulos-service-db)))))
           dispatch-vec (->> response
                             (filter (fn [valinnan-tulos]
                                       (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]

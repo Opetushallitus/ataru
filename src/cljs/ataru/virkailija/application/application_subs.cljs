@@ -955,7 +955,7 @@
     [(re-frame/subscribe [:application/selected-application-key])
      (re-frame/subscribe [:application/valinnan-tulos])])
   (fn [[application-key valinnan-tulos]]
-    (get valinnan-tulos application-key {})))
+    (get valinnan-tulos application-key)))
 
 (defn- jollakin-hakukohteella-on-valinnan-tulos [hakukohteet hakemuksen-valinnan-tulokset]
   (some? (some hakemuksen-valinnan-tulokset hakukohteet)))
@@ -966,4 +966,5 @@
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
      (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
   (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
-    (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset))))
+    (and (some? hakemuksen-valinnan-tulokset)
+         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
