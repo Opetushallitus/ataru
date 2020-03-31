@@ -57,31 +57,31 @@
         (run-karma-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
 
   (describe "applying using a form /"
-    (xit "is possible to apply using a plain form"
+    (it "is possible to apply using a plain form"
       (run-karma-test "hakija-form"))
-    (xit "is possible to apply using a form for haku with single hakukohde"
+    (it "is possible to apply using a form for haku with single hakukohde"
       (run-karma-test "hakija-haku"))
-    (xit "is possible to apply using a form for hakukohde"
+    (it "is possible to apply using a form for hakukohde"
       (run-karma-test "hakija-hakukohde"))
-    (xit "is possible to apply using a form successfully with non-finnish ssn"
+    (it "is possible to apply using a form successfully with non-finnish ssn"
       (run-karma-test "hakija-ssn"))
-    (xit "is possible to apply using a form with a question group"
+    (it "is possible to apply using a form with a question group"
       (run-karma-test "hakija-question-group-form"))
-    (xit "is possible to apply with selection limit"
+    (it "is possible to apply with selection limit"
         (run-karma-test "hakija-selection-limit"))
-    (xit "is possible to apply as virkailija"
+    (it "is possible to apply as virkailija"
       (run-karma-test "virkailija-haku")))
 
   (describe "editing a submitted application /"
-    (xit "is possible to edit a plain application successfully"
+    (it "is possible to edit a plain application successfully"
       (run-karma-test "hakija-edit"))
-    (xit "is possible to edit an application successfully as virkailija"
+    (it "is possible to edit an application successfully as virkailija"
       (run-karma-test "virkailija-hakemus-edit"))
-    (xit "is taking hakuaika into account"
+    (it "is taking hakuaika into account"
       (run-karma-test "hakija-hakukohteen-hakuaika")))
 
   (describe "application handling /"
-    (xit "is possible to handle application with a question group"
+    (it "is possible to handle application with a question group"
       (run-karma-test "virkailija-question-group-application-handling" (last (split (utils/login) #"="))))))
 
 (run-specs)
