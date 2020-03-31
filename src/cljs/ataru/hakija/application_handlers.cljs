@@ -323,16 +323,6 @@
    (reduce set-field-visibility db (get-in db [:form :content]))
    (:flat-form-content db)))
 
-(defn- set-multi-value-changed [db id value-key]
-  (let [answer (-> db :application :answers id)
-        [new-diff original-diff _] (d/diff (get answer value-key) (:original-value answer))]
-    (update-in db [:application :values-changed?] (fn [values]
-                                                    (let [values (or values #{})]
-                                                      (if (and (empty? new-diff)
-                                                               (empty? original-diff))
-                                                        (disj values id)
-                                                        (conj values id)))))))
-
 (defn- set-have-finnish-ssn
   [db flat-form-content]
   (let [cannot-view?   (some #(and (= "ssn" (:id %)) (:cannot-view %))
@@ -399,14 +389,11 @@
                                 :valid true})}))
 
 (defn- original-values->answers [db]
-  (cond-> db
-          (or (-> db :application :secret)
-              (-> db :application :virkailija-secret))
-          (update-in [:application :answers]
-                     (partial reduce-kv
-                              (fn [answers answer-key answer]
-                                (assoc answers answer-key (assoc answer :original-value (:value answer))))
-                              {}))))
+  (update-in db [:application :answers]
+             (partial reduce-kv
+                      (fn [answers answer-key answer]
+                        (assoc answers answer-key (assoc answer :original-value (:value answer))))
+                      {})))
 
 (defn- merge-submitted-answers [db submitted-answers flat-form-content]
   (let [form-fields-by-id (autil/group-by-first (comp keyword :id) flat-form-content)]
@@ -719,15 +706,13 @@
 (defn- set-repeatable-field-value
   [db id]
   (let [values (get-in db [:application :answers id :values])]
-    (-> db
-        (assoc-in [:application :answers id :value]
-                  (cond (and (vector? values) (vector? (first values)))
-                        (mapv #(mapv :value %) values)
-                        (vector? values)
-                        (mapv :value values)
-                        :else
-                        (:value values)))
-        (set-multi-value-changed id :value))))
+    (assoc-in db [:application :answers id :value]
+              (cond (and (vector? values) (vector? (first values)))
+                    (mapv #(mapv :value %) values)
+                    (vector? values)
+                    (mapv :value values)
+                    :else
+                    (:value values)))))
 
 (defn- set-repeatable-application-repeated-field-valid
   [db id group-idx data-idx valid?]

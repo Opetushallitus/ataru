@@ -115,11 +115,11 @@
 
 (defn- confirm-window-close!
   [event]
-  (let [lang            @(re-frame/subscribe [:application/form-language])
-        warning-label   (tu/get-hakija-translation :window-close-warning lang)
-        values-changed? @(re-frame/subscribe [:state-query [:application :values-changed?]])
-        submit-status   @(re-frame/subscribe [:state-query [:application :submit-status]])]
-    (when (and (some? values-changed?)
+  (let [lang          @(re-frame/subscribe [:application/form-language])
+        warning-label (tu/get-hakija-translation :window-close-warning lang)
+        edits?        @(re-frame/subscribe [:application/edits?])
+        submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
+    (when (and edits?
                (nil? submit-status))
       (set! (.-returnValue event) warning-label)
       warning-label)))

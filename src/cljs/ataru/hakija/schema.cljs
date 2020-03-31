@@ -36,16 +36,25 @@
                  ValuesValue))
 
 (s/defschema Answer
-  {:value                           (s/maybe Value)
-   :values                          (s/maybe Values)
-   :valid                           s/Bool
-   :label                           Label
-   (s/optional-key :errors)         [{:fi s/Any
+  (s/constrained
+   {:value                          (s/maybe Value)
+    :values                         (s/maybe Values)
+    :valid                          s/Bool
+    :label                          Label
+    (s/optional-key :errors)        [{:fi s/Any
                                       :sv s/Any
                                       :en s/Any}]
-   (s/optional-key :verify)         s/Str
-   (s/optional-key :limit-reached)  (s/maybe #{s/Str})
-   (s/optional-key :original-value) s/Any})
+    (s/optional-key :verify)        s/Str
+    (s/optional-key :limit-reached) (s/maybe #{s/Str})
+    :original-value                 (s/maybe Value)}
+   (fn [answer]
+     (= (:value answer)
+        (cond (and (vector? (:values answer)) (vector? (first (:values answer))))
+              (mapv #(mapv :value %) (:values answer))
+              (vector? (:values answer))
+              (mapv :value (:values answer))
+              :else
+              (:value (:values answer)))))))
 
 (s/defschema Db
   {:application {:answers  {s/Keyword Answer}

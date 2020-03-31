@@ -79,7 +79,7 @@
         virkailija-secret     @(subscribe [:state-query [:application :virkailija-secret]])
         transmitting?         @(subscribe [:application/attachments-uploading?])
         editing               @(subscribe [:state-query [:application :editing?]])
-        values-changed?       @(subscribe [:state-query [:application :values-changed?]])
+        edits?                @(subscribe [:application/edits?])
         validators-processing @(subscribe [:state-query [:application :validators-processing]])
         secret-expired?       @(subscribe [:state-query [:application :secret-expired?]])
         lang                  @(subscribe [:application/form-language])
@@ -97,7 +97,7 @@
              {:disabled (or transmitting?
                             invalid-fields?
                             (= :submitting submit-status)
-                            (and editing (empty? values-changed?))
+                            (and editing (not edits?))
                             secret-expired?
                             (not (empty? validators-processing)))
               :on-click #(if editing
