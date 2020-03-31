@@ -613,3 +613,10 @@
                   (assoc-in [:query "virkailija-secret"] virkailija-secret))
           (assoc-in [:query "lang"] (name language))
           str))))
+
+(re-frame/reg-sub
+  :application/edits?
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers _]
+    (some? (some #(not= (:original-value %) (:value %)) (vals answers)))))

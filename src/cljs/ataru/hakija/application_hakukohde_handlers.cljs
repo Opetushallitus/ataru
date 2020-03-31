@@ -13,14 +13,6 @@
        (filter #(= "hakukohteet" (:id %)))
        first))
 
-(defn- set-values-changed
-  [db]
-  (let [values          (map :value (get-in db [:application :answers :hakukohteet :values] []))
-        original-values (get-in db [:application :answers :hakukohteet :original-value] [])]
-    (update-in db [:application :values-changed?]
-               (fnil (if (= original-values values) disj conj) #{})
-               :hakukohteet)))
-
 (defn- toggle-hakukohde-search
   [db]
   (update-in db [:application :show-hakukohde-search] not))
@@ -124,7 +116,6 @@
                                              new-hakukohde-values)
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
-                                   set-values-changed
                                    set-field-visibilities)]
       {:db                 (cond-> db
                                    (and (some? max-hakukohteet)
@@ -149,7 +140,6 @@
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
-                                   set-values-changed
                                    set-field-visibilities)]
       {:db                 db
        :dispatch [:application/validate-hakukohteet]})))
@@ -176,7 +166,6 @@
                             new-index (nth hakukohteet current-index))
           db              (-> db
                               (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
-                              (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet))
-                              set-values-changed)]
+                              (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet)))]
       {:db                 db
        :dispatch [:application/validate-hakukohteet]})))
