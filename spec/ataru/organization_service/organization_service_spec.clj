@@ -6,7 +6,7 @@
             [ataru.organization-service.organization-client-spec :refer [expected-flat-organizations]]
             [ataru.organization-service.organization-service :as org-service]
             [clojure.java.io :as io]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
             [speclj.core :refer [describe it should= tags around]])
   (:import java.util.concurrent.TimeUnit))
 
@@ -14,7 +14,7 @@
 
 (defn fake-organization-hierarchy [call-count _]
   (swap! call-count inc)
-  (atom {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))}))
+  {:status 200 :body (slurp (io/resource "organisaatio_service/organization-hierarchy1.json"))})
 
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 

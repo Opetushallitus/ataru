@@ -42,7 +42,7 @@
 
 (defn get-file [key]
   (let [url  (resolve-url :liiteri.file key)
-        resp (http-util/do-get url)]
+        resp (http-util/do-get-stream url)]
     (when (= (:status resp) 200)
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))

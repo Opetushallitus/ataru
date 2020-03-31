@@ -60,11 +60,10 @@
             [environ.core :refer [env]]
             [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [medley.core :refer [map-kv]]
-            [org.httpkit.client :as http]
+            [clj-http.client :as http]
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.middleware.session :as ring-session]
             [ring.util.io :as ring-io]
             [ring.swagger.json-schema :as json-schema]
@@ -1263,13 +1262,10 @@
 (defn- proxy-request [service-path request]
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
-        response @(http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
-    (assoc
-     response
-     ;; http-kit returns header names as keywords, but Ring requires strings :(
-     :headers (map-kv
-               (fn [header-kw header-value] [(name header-kw) header-value])
-               (:headers request)))))
+        response (http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
+    {:status  (:status response)
+     :body    (:body response)
+     :headers (:headers response)}))
 
 ;; All these paths are required to be proxied by raamit when running locally
 ;; in your dev-environment. They will get proxied to the correct test environment
@@ -1383,20 +1379,8 @@
                                                (assoc :session nil)
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)))
-                            (wrap-with-logger
-                              :debug identity
-                              :info (fn [x] (access-log/info x))
-                              :warn (fn [x] (access-log/warn x))
-                              :error (fn [x] (access-log/error x))
-                              :pre-logger (fn [_ _] nil)
-                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
-                                             (when (or
-                                                     (>= status 400)
-                                                     (clojure.string/starts-with? uri "/lomake-editori/api/")
-                                                     (clojure.string/starts-with? uri "/lomake-editori/auth/"))
-                                               (access-log/log options request response totaltime))))
+                            (access-log/wrap-with-access-logging)
                             (wrap-gzip)
-
                             (cache-control/wrap-cache-control))))
 
   (stop [this]

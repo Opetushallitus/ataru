@@ -52,7 +52,7 @@
                  [aleph "0.4.6"]
                  [fi.vm.sade/auditlogger "8.3.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
-                 [http-kit "2.4.0-alpha4"]
+                 [clj-http "3.10.0"]
                  [ring "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-json "0.5.0"]
@@ -72,8 +72,6 @@
                  [selmer "1.12.17"]
                  [metosin/ring-http-response "0.9.1"]
                  [fi.vm.sade/scala-cas_2.12 "1.2.0-SNAPSHOT"]
-                 [ring.middleware.logger "0.5.0" :exclusions [onelog]] ; Remove :exclusions and onelog dependency below when updating if included onelog works with clojure 1.9.0
-                 [onelog "0.5.0"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.apache.poi/poi-ooxml "4.1.0"]
                  [org.clojure/core.cache "0.8.2"]

@@ -23,7 +23,6 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
-            [ring.middleware.logger :refer [wrap-with-logger] :as middleware-logger]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -408,17 +407,7 @@
                                       :query-params [{lang :- s/Str nil}]
                                       (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>"))))
-                            (wrap-with-logger
-                              :debug identity
-                              :info (fn [x] (access-log/info x))
-                              :warn (fn [x] (access-log/warn x))
-                              :error (fn [x] (access-log/error x))
-                              :pre-logger (fn [_ _] nil)
-                              :post-logger (fn [options {:keys [uri] :as request} {:keys [status] :as response} totaltime]
-                                             (when (or
-                                                     (>= status 400)
-                                                     (clojure.string/starts-with? uri "/hakemus/api/"))
-                                               (access-log/log options request response totaltime))))
+                            (access-log/wrap-with-access-logging)
                             (wrap-gzip)
                             (wrap-referrer-policy "same-origin")
                             (cache-control/wrap-cache-control))))
