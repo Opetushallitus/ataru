@@ -111,7 +111,8 @@
         (response/not-found "Not found")))
     (api/GET "/alter-application-to-hakuaikaloppu-for-secret/:secret" [secret]
       (if (is-dev-env?)
-        (alter-application-to-hakuaikaloppu-for-secret secret)
+        (do (alter-application-to-hakuaikaloppu-for-secret secret)
+            (response/ok {}))
         (response/not-found "Not found")))
     (api/GET "/virkailija-hakemus-edit-test.html" []
       (if (is-dev-env?)

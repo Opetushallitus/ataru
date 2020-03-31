@@ -95,11 +95,14 @@
       (application-store/get-latest-application-secret))
 
 (defn alter-application-to-hakuaikaloppu-for-secret [secret]
-      (let [app (application-store/get-latest-application-by-secret secret)
-            hakukohteet (:hakukohde app)
-            switched-hakukohteet (concat ["1.2.246.562.20.49028100001"] (rest hakukohteet))]
-           (application-store/alter-application-hakukohteet-with-secret secret switched-hakukohteet)
-           (str switched-hakukohteet)))
+  (let [application (application-store/get-latest-version-of-application-for-edit false {:secret secret})
+        hakukohde   (vec (cons "1.2.246.562.20.49028100001" (rest (:hakukohde application))))
+        answers     (mapv (fn [answer]
+                            (if (= "hakukohteet" (:key answer))
+                              (assoc answer :value hakukohde)
+                              answer))
+                          (:answers application))]
+    (application-store/alter-application-hakukohteet-with-secret secret hakukohde answers)))
 
 (defn get-latest-application-by-form-name [form-name]
   (if-let [latest-application-id (get-latest-application-id-for-form form-name)]
