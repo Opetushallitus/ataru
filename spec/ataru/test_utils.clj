@@ -7,7 +7,6 @@
             [ring.mock.request :as mock]
             [speclj.core :refer :all]
             [ataru.db.db :as db]
-            [ataru.db.migrations :as migrations]
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]

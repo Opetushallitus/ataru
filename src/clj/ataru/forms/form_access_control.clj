@@ -1,11 +1,9 @@
 (ns ataru.forms.form-access-control
   (:require
-   [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
    [ataru.schema.form-schema :as form-schema]
    [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]))

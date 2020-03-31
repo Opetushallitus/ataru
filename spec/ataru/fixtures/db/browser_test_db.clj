@@ -1,7 +1,6 @@
 (ns ataru.fixtures.db.browser-test-db
   "Database fixture, insert test-data to DB"
   (:require [yesql.core :refer [defqueries]]
-            [clojure.java.jdbc :as jdbc]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
