@@ -1004,9 +1004,11 @@ LIMIT 1;
 
 --name: yesql-set-application-hakukohteet-by-secret!
 UPDATE applications
-SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) []
+SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) [],
+    content = :content
 FROM application_secrets
-WHERE application_secrets.secret = :secret AND application_secrets.application_key = applications.key;
+WHERE application_secrets.secret = :secret AND
+      application_secrets.application_key = applications.key;
 
 --name: yesql-get-application-versions
 SELECT content, form_id

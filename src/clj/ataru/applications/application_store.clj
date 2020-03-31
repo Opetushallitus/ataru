@@ -727,9 +727,11 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
 
 (defn alter-application-hakukohteet-with-secret
-  [secret new-hakukohteet]
-  (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
-    secret))
+  [secret hakukohde answers]
+  (exec-db :db yesql-set-application-hakukohteet-by-secret!
+           {:secret    secret
+            :hakukohde hakukohde
+            :content   {:answers answers}}))
 
 (defn add-new-secret-to-application
   [application-key]
