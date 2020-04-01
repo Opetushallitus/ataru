@@ -64,7 +64,7 @@
   :hyvaksynnan-ehto/debounced-save-ehto-hakukohteessa
   (fn [_ [_ application-key hakukohde-oid]]
     {:dispatch-debounced
-     {:timeout  500
+     {:timeout  2000
       :id       [:hyvaksynnan-ehto/save-ehto-hakukohteessa
                  application-key
                  hakukohde-oid]
