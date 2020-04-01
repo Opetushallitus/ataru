@@ -1048,7 +1048,7 @@
                               (not can-change?) (str " application-handling__review-deactivate-toggle-slider--disabled"))
             :title    (when (and @can-edit?
                                  (not @can-deactivate?))
-                        @(subscribe [:editor/virkailija-translation :cannot-inactivate-info]))
+                        @(subscribe [:editor/virkailija-translation :cannot-deactivate-info]))
             :on-click #(when can-change?
                          (dispatch [:application/set-application-activeness (not active?)]))}
            [:div.application-handling__review-deactivate-toggle-label-left
