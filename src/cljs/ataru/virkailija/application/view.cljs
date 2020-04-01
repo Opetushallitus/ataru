@@ -464,6 +464,9 @@
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
+    (println "petar selected-hakukohde-oids:")
+    (println @selected-hakukohde-oids)
+    (println application)
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -475,7 +478,7 @@
                                          (< 0 (:new-application-modifications application))
                                          (= "information-request" processing-state))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
-            [:div.application-handling__list-row-hakukohde
+            [:div.application-handling__list-row-hakukohde  ; petar ovde se vidi sta je selektovano, samo da se prenese u single hakija view
              {:class (when (and (not direct-form-application?)
                                 (some? @selected-hakukohde-oids)
                                 (not (contains? @selected-hakukohde-oids hakukohde-oid)))

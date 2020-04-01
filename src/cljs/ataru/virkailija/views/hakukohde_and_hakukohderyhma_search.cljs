@@ -77,7 +77,7 @@
           did-search?  (some util/should-search? search-terms)]
       (-> db
           (assoc-in [:hakukohde-and-hakukohderyhma id :search-input] search-input)
-          (assoc-in [:hakukohde-and-hakukohderyhma id :hakukohderyhma-hits]
+          (assoc-in [:hakukohde-and-hakukohderyhma id :hakukohderyhma-hits] ; petar ovde se puni ta lista iz koje se selektuje
                     (->> hakukohderyhmat
                          (map (partial hakukohderyhma->hakukohderyhma-hit
                                        lang
@@ -96,7 +96,7 @@
                             {}
                             haut))))))
 
-(defn- list-item
+(defn- list-item                                            ; petar ovo je ono sto selektuje
   [selected? on-select on-unselect {:keys [id label-parts]}]
   ^{:key (str "list-item-" id)}
   [:li.hakukohde-and-hakukohderyhma-category-list-item
@@ -180,6 +180,7 @@
                             [:hakukohde-and-hakukohderyhma/hakukohderyhma-hits
                              id
                              hakukohderyhmat]))]
+       (println "petar prvo mesto odakle poziva listu")
        [category-listing
         @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
         hits

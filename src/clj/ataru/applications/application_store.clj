@@ -599,7 +599,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (jdbc/query connection (query->db-query connection query sort))))
+    (let [upit (query->db-query connection query sort)]
+      (println "petar upit=" upit)
+      (jdbc/query connection upit))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]

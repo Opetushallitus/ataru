@@ -118,6 +118,12 @@
     loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
   }
 
+  const navigateToApplicationHandlingForHaku = () => {
+    loadInFrame(
+      'http://localhost:8350/lomake-editori/applications/haku/1.2.246.562.29.65950024186'
+    )
+  }
+
   const includedHakukohdeProcessingStateFilters = () => {
     return testFrame().find(
       '.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row'
@@ -967,6 +973,12 @@
             )
           })
         })
+      })
+    })
+    describe('petar when selected hakukohderyhmä', () => {
+      before(navigateToApplicationHandlingForHaku)
+      it('chooses the default from selected hakukohderyhmä', () => {
+        expect(true).to.eql(true)
       })
     })
   })

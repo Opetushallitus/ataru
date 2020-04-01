@@ -195,6 +195,28 @@
                                                    :locked           nil
                                                    :locked-by        nil})
 
+(def multiple-hakukohteen-form {:id 8
+                                :key "multiple-hakukohteen-form"
+                                :name {:fi "Selaintestilomake-multiple-hakukohde"}
+                                :created-by "1.2.246.562.11.11111111111"
+                                :organization-oid "1.2.246.562.10.0439845"
+                                :languages ["fi" "en"]
+                                :content [(component/hakukohteet)
+                                          (person-info-module/person-info-module)
+                                          {:fieldClass "wrapperElement"
+                                           :metadata   metadata
+                                           :id         "not-important"
+                                           :fieldType  "fieldset"
+                                           :children   [{:label      {:fi "Pään ympärys" :sv ""}
+                                                         :fieldClass "formField"
+                                                         :metadata   metadata
+                                                         :id         "non-relevant"
+                                                         :params     {}
+                                                         :fieldType  "textField"}]
+                                           :label      {:fi "Pää" :sv "Avsnitt namn"}}]
+                                :locked nil
+                                :locked-by nil})
+
 (def application1 {:form       1
                    :lang       "fi"
                    :person-oid "1.1.1"
@@ -297,6 +319,37 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
+(def application4 {:form       8
+                   :lang       "fi"
+                   :person-oid "1.2.3.4.5.8"
+                   :answers    [{:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Johanna Irmeli"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Tyrni"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "030303A0303"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "johanna.tyrni@gmail.com"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     (clojure.string/join ["Johanna Irmeli" \u0000])} ;This nullbyte char should be filtered before it reaches postgres
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "2"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     [["246"]]}
+                                {:fieldType "dropdown"
+                                 :key       "language"
+                                 :value     "fi"}]})
+
 (def audit-logger (audit-log/new-dummy-audit-logger))
 
 (defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
@@ -321,9 +374,13 @@
                                (:key belongs-to-hakukohteet-test-form))
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                (:key hakija-hakukohteen-hakuaika-test-form))
+  (form-store/create-new-form! multiple-hakukohteen-form (:key multiple-hakukohteen-form))
   (application-store/add-application application1 [] form1 {} audit-logger)
   (application-store/add-application application2 [] form1 {} audit-logger)
-  (application-store/add-application application3 [] form1 {} audit-logger))
+  (application-store/add-application application3 [] form1 {} audit-logger)
+  (application-store/add-application application4
+                                     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                     form3 {} audit-logger))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
