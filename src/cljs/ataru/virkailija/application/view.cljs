@@ -463,10 +463,7 @@
         application-hakukohde-reviews (group-by #(vector (:hakukohde %) (:requirement %))
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
-        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
-    (println "petar selected-hakukohde-oids:")
-    (println @selected-hakukohde-oids)
-    (println application)
+        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])] ; petar da li odavde treba da se uzima?
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -478,7 +475,7 @@
                                          (< 0 (:new-application-modifications application))
                                          (= "information-request" processing-state))
                 hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
-            [:div.application-handling__list-row-hakukohde  ; petar ovde se vidi sta je selektovano, samo da se prenese u single hakija view
+            [:div.application-handling__list-row-hakukohde
              {:class (when (and (not direct-form-application?)
                                 (some? @selected-hakukohde-oids)
                                 (not (contains? @selected-hakukohde-oids hakukohde-oid)))
@@ -490,6 +487,7 @@
                  :on-click (fn [evt]
                              (.preventDefault evt)
                              (.stopPropagation evt)
+                             (println "petar evo odavde=" filtered-hakukohde)
                              (select-application (:key application) (or filtered-hakukohde
                                                                         hakukohde-oid)))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
@@ -549,11 +547,11 @@
         date-time               (->> day-date-time (rest) (clojure.string/join " "))
         applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings         (subscribe [:state-query [:application :review-settings :config]])
-        filtered-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])
+        filtered-hakukohde      (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
         attachment-states       (application-attachment-states application)
         form-attachment-states  (:form attachment-states)]
     [:div.application-handling__list-row
-     {:on-click #(select-application (:key application) nil false)
+     {:on-click #(select-application (:key application) @filtered-hakukohde false)
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))

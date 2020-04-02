@@ -209,6 +209,87 @@
     return testFrame().find('.application-handling__review-note-submit-button')
   }
 
+  const hakukohdeRajausToggleButton = () => {
+    return testFrame().find(
+      '.application-handling__hakukohde-rajaus-toggle-button'
+    )
+  }
+
+  const hakukohdeRajausPopup = () => {
+    return testFrame().find('.hakukohde-and-hakukohderyhma-search-popup')
+  }
+
+  const clickRajausHakukohdeFromList = (hakukohde) => {
+    return clickElement(() =>
+      testFrame()
+        .find(
+          '.hakukohde-and-hakukohderyhma-list-item-label:contains(' +
+            hakukohde +
+            ')'
+        )
+        .closest('.hakukohde-and-hakukohderyhma-category-list-item')
+    )
+  }
+
+  const clickApplicationPersonNameFromList = (name) => {
+    return clickElement(() =>
+      testFrame()
+        .find(
+          '.application-handling__list-row--applicant-name:contains(' +
+            name +
+            ')'
+        )
+        .closest('.application-handling__list-row-person-info')
+    )
+  }
+
+  const clickNavigateToNextApplicationDetails = () => {
+    return clickElement(() =>
+      testFrame().find(
+        '.application-handling__navigation-link:contains(Seuraava)'
+      )
+    )
+  }
+
+  const clickNavigateToPreviousApplicationDetails = () => {
+    return clickElement(() =>
+      testFrame().find(
+        '.application-handling__navigation-link:contains(Edellinen)'
+      )
+    )
+  }
+
+  const applicationDetailsVisible = (name) => {
+    return testFrame()
+      .find(
+        '.application-handling__review-area-main-heading:contains(' + name + ')'
+      )
+      .is(':visible')
+  }
+
+  const toggleApplicationDetailsHakukohdeSelected = (hakukohde) => {
+    return clickElement(() =>
+      testFrame()
+        .find(
+          '.application-handling__review-area-hakukohde-heading:contains(' +
+            hakukohde +
+            ')'
+        )
+        .closest('.application-handling__hakukohde--selectable')
+    )
+  }
+
+  const isApplicationDetailsHakukohdeSelected = (hakukohde) => {
+    return testFrame()
+      .find('.application-handling__hakukohde--selected')
+      .find(
+        '.application-handling__review-area-hakukohde-heading:contains(' +
+          hakukohde +
+          ')'
+      )
+      .is(':visible')
+  }
+
   const score = () => {
     return testFrame().find('.application-handling__score-input')
   }
@@ -975,10 +1056,67 @@
         })
       })
     })
-    describe('petar when selected hakukohderyhmä', () => {
-      before(navigateToApplicationHandlingForHaku)
-      it('chooses the default from selected hakukohderyhmä', () => {
-        expect(true).to.eql(true)
+    describe('Application list filtering', () => {
+      describe('open hakukohde details by pressing candidate name', () => {
+        before(
+          navigateToApplicationHandlingForHaku,
+          clickElement(hakukohdeRajausToggleButton),
+          wait.until(() => {
+            return hakukohdeRajausPopup().is(':visible')
+          }),
+          clickRajausHakukohdeFromList('Testihakukohde 2'),
+          wait.until(() => {
+            return hakukohdeRajausPopup().not(':visible')
+          }),
+          clickApplicationPersonNameFromList('Maynard'),
+          wait.until(() => {
+            return applicationDetailsVisible('Maynard')
+          })
+        )
+        it('by default selects the hakukohde according to current filter', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
+        })
+      })
+      describe('move to the next application details', () => {
+        before(
+          clickNavigateToNextApplicationDetails(),
+          wait.until(() => {
+            return applicationDetailsVisible('Johanna')
+          })
+        )
+        it('also by default selects the hakukohde according to current filter', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
+        })
+      })
+      describe('modify and move to the previous application details', () => {
+        before(
+          toggleApplicationDetailsHakukohdeSelected('Testihakukohde 1'),
+          wait.until(() => {
+            return isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          }),
+          clickNavigateToPreviousApplicationDetails(),
+          wait.until(() => {
+            return applicationDetailsVisible('Maynard')
+          })
+        )
+        it('selects the default hakukohde according to current filter, regardless of modifications in previous', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
+        })
       })
     })
   })

@@ -342,7 +342,7 @@
                                               (clojure.string/join ", " (:application-keys body))
                                               " käsittely ei ole sallittu")})))
 
-      (api/POST "/list" {session :session}                  ; petar ovde dobija listu svih aplikacija
+      (api/POST "/list" {session :session}
         :body [body ataru-schema/ApplicationQuery]
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse

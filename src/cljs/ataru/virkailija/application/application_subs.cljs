@@ -213,6 +213,7 @@
 (defn- selected-hakukohde-oid-set
   [db]
   (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
+    (println "petar evo ovo je kobajagi selektovano =" hakukohde-oids-from-hakukohde-or-ryhma)
     (cond
       (some? hakukohde-oids-from-hakukohde-or-ryhma)
       hakukohde-oids-from-hakukohde-or-ryhma

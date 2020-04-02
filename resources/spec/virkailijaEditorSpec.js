@@ -196,7 +196,7 @@
     describe('with fixture forms', () => {
       before(wait.until(editorPageIsLoaded))
       it('has 8 fixture forms', () => {
-        expect(formListItems()).to.have.length(9)
+        expect(formListItems()).to.have.length(8)
       })
     })
 
