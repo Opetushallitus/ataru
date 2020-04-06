@@ -142,267 +142,191 @@
 
   (it "passes validation"
     (should (:passed? (validator/valid-application? koodisto-cache has-never-applied a f #{} false)))
-    (should=
-      {:address                              {:passed? true}
-       :email                                {:passed? true}
-       :preferred-name                       {:passed? true}
-       :last-name                            {:passed? true}
-       :phone                                {:passed? true}
-       :nationality                          {:passed? true}
-       :first-name                           {:passed? true}
-       :postal-code                          {:passed? true}
-       :language                             {:passed? true}
-       :gender                               {:passed? true}
-       :postal-office                        {:passed? true}
-       :home-town                            {:passed? true}
-       ; ssn+birthdate container
-       :a3199cdf-fba3-4be1-8ab1-760f75f16d54 {:passed? true}
-       ; repeatable text field
-       :047da62c-9afe-4e28-bfe8-5b50b21b4277 {:passed? true}
-       ; multipleChoice
-       :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 {:passed? true}
-       ; dropdown "Pohjakoulutus"
-       :b05a6057-2c65-40a8-9312-c837429f44bb {:passed? true}}
-      (validator/build-results koodisto-cache has-never-applied
-                               answers-by-key
-                               []
-                               []
-                               (:content f)
-                               #{}
-                               false)))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      answers-by-key
+                                      f
+                                      (:content f)
+                                      #{}
+                                      false)))
 
   (it "passes validation on hidden"
-      (should=
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (update
-                                     answers-by-key
-                                     :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-                                     assoc
-                                     :value "")
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
-                                         (-> form
-                                             (assoc :validators ["required"])
-                                             (assoc-in [:params :hidden] true))
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-            :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0)
-        {:passed? true}))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (dissoc answers-by-key :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0)
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                                           (-> form
+                                               (assoc :validators ["required"])
+                                               (assoc-in [:params :hidden] true))
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "fail validation on hidden with answer"
-      (should=
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (update
-                                     answers-by-key
-                                     :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-                                     assoc
-                                     :value "hidden with answer")
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
-                                         (-> form
-                                             (assoc :validators ["required"])
-                                             (assoc-in [:params :hidden] true))
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-           :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0)
-       {:passed? false}))
+    (should= {:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+              (assoc (:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 answers-by-key)
+                     :value ["Ensimmäinen vaihtoehto"])}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 :value] ["Ensimmäinen vaihtoehto"])
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                                           (-> form
+                                               (assoc :validators ["required"])
+                                               (assoc-in [:params :hidden] true))
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "passes validation on multipleChoice answer being empty"
-    (should
-     (-> (validator/build-results koodisto-cache has-never-applied
-                                  (update
-                                   answers-by-key
-                                   :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-                                   assoc
-                                   :value "")
-                                  []
-                                  []
-                                  (:content f)
-                                  #{}
-                                  false)
-          :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-          :passed?)))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 :value] [])
+                                      f
+                                      (:content f)
+                                      #{}
+                                      false)))
 
   (it "passes validation on dropdown answer being empty"
-      (should
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (update
-                                     answers-by-key
-                                     :gender
-                                     assoc
-                                     :value "")
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "gender"}
-                                         (dissoc form :validators)
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-            :gender
-            :passed?)))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:gender :value] "")
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "gender"}
+                                           (dissoc form :validators)
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "fails validation on multipleChoice answer being empty and required set to true"
-    (should-not
-     (-> (validator/build-results koodisto-cache has-never-applied
-                                  (update
-                                   answers-by-key
-                                   :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-                                   assoc
-                                   :value "")
-                                  []
-                                  []
-                                  (clojure.walk/postwalk
-                                   (fn [form]
-                                     (match form
-                                       {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
-                                       (assoc form :validators ["required"])
-                                       :else form))
-                                   (:content f))
-                                  #{}
-                                  false)
-          :c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
-          :passed?)))
+    (should= {:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0
+              (assoc (:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 answers-by-key) :value [])}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0 :value] [])
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "c8558a1f-86e9-4d76-83eb-a0d7e1fd44b0"}
+                                           (assoc form :validators ["required"])
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "fails validation on dropdown answer being empty and required set to true"
-      (should-not
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (update
-                                     answers-by-key
-                                     :gender
-                                     assoc
-                                     :value "")
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "gender"}
-                                         (assoc form :validators ["required"])
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-          :gender
-          :passed?)))
+    (should= {:gender
+              (assoc (:gender answers-by-key) :value "")}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:gender :value] "")
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "gender"}
+                                           (assoc form :validators ["required"])
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "passes validation on repeatable answer being empty"
-    (should
-     (-> (validator/build-results koodisto-cache has-never-applied
-                                  (update
-                                   answers-by-key
-                                   :047da62c-9afe-4e28-bfe8-5b50b21b4277
-                                   assoc
-                                   :value [""])
-                                  []
-                                  []
-                                  (:content f)
-                                  #{}
-                                  false)
-          :047da62c-9afe-4e28-bfe8-5b50b21b4277
-          :passed?)))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:047da62c-9afe-4e28-bfe8-5b50b21b4277 :value] [""])
+                                      f
+                                      (:content f)
+                                      #{}
+                                      false)))
 
   (it "fails validation on repeatable answer being empty and required set to true"
-      (should-not
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (update
-                                     answers-by-key
-                                     :047da62c-9afe-4e28-bfe8-5b50b21b4277
-                                     assoc
-                                     :value [""])
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "047da62c-9afe-4e28-bfe8-5b50b21b4277"}
-                                         (assoc form :validators ["required"])
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-          :047da62c-9afe-4e28-bfe8-5b50b21b4277
-          :passed?)))
+    (should= {:047da62c-9afe-4e28-bfe8-5b50b21b4277
+              (assoc (:047da62c-9afe-4e28-bfe8-5b50b21b4277 answers-by-key) :value [""])}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:047da62c-9afe-4e28-bfe8-5b50b21b4277 :value] [""])
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "047da62c-9afe-4e28-bfe8-5b50b21b4277"}
+                                           (assoc form :validators ["required"])
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "fails validation when followup field is set required and no answer"
-      (should-not
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    answers-by-key
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
-                                         (assoc form :validators ["required"])
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-            :fbe3522d-6f1d-4e05-85e3-4e716146c686
-            :passed?)))
+    (should= {:fbe3522d-6f1d-4e05-85e3-4e716146c686
+              (:fbe3522d-6f1d-4e05-85e3-4e716146c686 answers-by-key)}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:b05a6057-2c65-40a8-9312-c837429f44bb :value] "Ammatillinen peruskoulu")
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
+                                           (assoc form :validators ["required"])
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "passes validation when followup field is set required and answer is provided"
-      (should
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (->
-                                     (update a :answers conj {:key "fbe3522d-6f1d-4e05-85e3-4e716146c686" :value "perustelu"})
-                                     :answers
-                                     util/answers-by-key
-                                     (assoc :b05a6057-2c65-40a8-9312-c837429f44bb {:key "b05a6057-2c65-40a8-9312-c837429f44bb", :fieldType "dropdown", :value "Ammatillinen peruskoulu"}))
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form]
-                                       (match form
-                                         {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
-                                         (assoc form :validators ["required"])
-                                         :else form))
-                                     (:content f))
-                                    #{}
-                                    false)
-          :fbe3522d-6f1d-4e05-85e3-4e716146c686
-          :passed?)))
+    (should= {}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (-> answers-by-key
+                                          (assoc-in [:fbe3522d-6f1d-4e05-85e3-4e716146c686 :value] "perustelu")
+                                          (assoc-in [:b05a6057-2c65-40a8-9312-c837429f44bb :value] "Ammatillinen peruskoulu"))
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form]
+                                         (match form
+                                           {:id "fbe3522d-6f1d-4e05-85e3-4e716146c686"}
+                                           (assoc form :validators ["required"])
+                                           :else form))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "fails validation when incorrect birth-date data is used with :birthdate-and-gender-component validation"
-      (should-not
-       (-> (validator/build-results koodisto-cache has-never-applied
-                                    (->
-                                     a
-                                     :answers
-                                     util/answers-by-key
-                                     (assoc :birth-date {:key       "birth-date",
-                                                         :value     "02.02.2022",
-                                                         :fieldType "textField",
-                                                         :label     {:fi "Syntymäaika", :sv "Födelsetid"}}))
-                                    []
-                                    []
-                                    (clojure.walk/postwalk
-                                     (fn [form-field]
-                                       (match form-field
-                                         {:id "a3199cdf-fba3-4be1-8ab1-760f75f16d54"}
-                                         (assoc form-field :child-validator "birthdate-and-gender-component")
-                                         :else form-field))
-                                     (:content f))
-                                    #{}
-                                    false)
-            :a3199cdf-fba3-4be1-8ab1-760f75f16d54
-            :passed?)))
+    (should= {:ssn        (:ssn answers-by-key)
+              :birth-date (assoc (:birth-date answers-by-key) :value "02.02.2022")}
+             (validator/build-results koodisto-cache
+                                      has-never-applied
+                                      (assoc-in answers-by-key [:birth-date :value] "02.02.2022")
+                                      f
+                                      (clojure.walk/postwalk
+                                       (fn [form-field]
+                                         (match form-field
+                                           {:id "a3199cdf-fba3-4be1-8ab1-760f75f16d54"}
+                                           (assoc form-field :child-validator "birthdate-and-gender-component")
+                                           :else form-field))
+                                       (:content f))
+                                      #{}
+                                      false)))
 
   (it "passes validation when no hakukohde is selected, a question belongs to a hakukohde a but has no value"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
