@@ -1,6 +1,4 @@
-(ns ataru.middleware.session-client
-  (:require [ataru.config.core :refer [config]]
-            [ring.util.http-response :as response]))
+(ns ataru.middleware.session-client)
 
 (defn wrap-session-client-headers [handler]
   [handler]
