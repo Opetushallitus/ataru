@@ -149,23 +149,14 @@
 (defn build-results
   [koodisto-cache has-applied answers-by-key results form [{:keys [id] :as field} & rest-form-fields] hakukohderyhmat virkailija?]
   (let [id          (keyword id)
-        hidden?     (get-in field [:params :hidden] false)
         answers     (wrap-coll (:value (get answers-by-key id)))
         hakukohteet (-> answers-by-key :hakukohteet :value set)]
     (into {}
-          (if hidden?
-            (match field
-
-                   {:children children}
-                   (concat results {id {:passed? (answers-nil? answers-by-key children)}})
-
-                   {:options options}
-                   (concat results {id {:passed? (let [non-empty-answers (get-non-empty-answers field answers)
-                                                       followups         (get-followup-questions options non-empty-answers)]
-                                                   (all-answers-nil? non-empty-answers answers-by-key followups))}})
-
-                   :else
-                   (concat results {id {:passed? (every? nil? answers)}}))
+          (if (get-in field [:params :hidden] false)
+            (->> (util/flatten-form-fields [field])
+                 (map (fn [field]
+                        {id {:passed? (not (contains? answers-by-key (keyword (:id field))))}}))
+                 (concat results))
             (if-let [ret (match (merge {:validators []
                                         :params     []}
                                        field)
