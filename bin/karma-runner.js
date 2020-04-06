@@ -38,7 +38,7 @@ const onConsoleMessage = (message, page) => {
 
 const stopWhenFinished = () => {
     if (new Date().getTime() > startTime + timeoutMs) {
-        console.log('Tests timed out after', timeoutMs);
+        console.log('Tests timed out after', timeoutMs, 'milliseconds');
         process.exit(1)
     } else if (typeof testsSuccessful === 'undefined') {
         setTimeout(stopWhenFinished, 1000);
