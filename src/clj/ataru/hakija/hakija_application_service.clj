@@ -165,7 +165,7 @@
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
-        applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
+        applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
         [rewrite? virkailija-secret] (if is-modify?
                                        (if-let [rewrite-secret (valid-virkailija-rewrite-secret application)]
                                          [true rewrite-secret]
