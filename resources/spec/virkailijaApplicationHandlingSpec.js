@@ -1056,10 +1056,13 @@
         })
       })
     })
-    describe('Application list filtering', () => {
-      describe('open hakukohde details by pressing candidate name', () => {
+    describe('petar Application list filtering', () => {
+      describe('filter by hakukohde and open hakukohde details by pressing candidate name', () => {
         before(
           navigateToApplicationHandlingForHaku,
+          wait.until(() => {
+            return hakukohdeRajausToggleButton().is(':visible')
+          }),
           clickElement(hakukohdeRajausToggleButton),
           wait.until(() => {
             return hakukohdeRajausPopup().is(':visible')
