@@ -2,7 +2,7 @@
   (:require [ataru.log.access-log :as access-log]
             [ataru.log.audit-log :as audit-log]
             [ataru.middleware.cache-control :as cache-control]
-            [ataru.middleware.session-client :as session-client]
+            [clj-ring-db-session.session.session-client :as session-client]
             [ataru.applications.application-store :as application-store]
             [ataru.hakija.hakija-form-service :as form-service]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
