@@ -1,10 +1,13 @@
 (ns ataru.virkailija.authentication.auth-routes
-  (:require [ataru.virkailija.authentication.auth :refer [login cas-login logout cas-initiated-logout]]
-            [ataru.middleware.session-client :as session-client]
+  (:require [ataru.virkailija.authentication.auth :refer [login cas-login cas-initiated-logout]]
+            [ataru.config.url-helper :refer [resolve-url]]
+            [clj-ring-db-session.session.session-client :as session-client]
             [ataru.config.core :refer [config]]
+            [clj-ring-db-session.authentication.login :as crdsa-login]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [ataru.db.db :as db]))
 
 (defn- rewrite-url-for-environment
   "Ensure that https is used when available (due to https termination on
@@ -47,4 +50,4 @@
       (api/POST "/cas" [logoutRequest]
                 (cas-initiated-logout logoutRequest))
       (api/GET "/logout" {session :session}
-                (logout session))))))
+        (crdsa-login/logout session (resolve-url :cas.logout) (db/get-datasource :db)))))))
