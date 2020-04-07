@@ -53,6 +53,7 @@
                  [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT"]
                  [fi.vm.sade/auditlogger "9.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
+                 [oph/clj-ring-db-cas-session "0.1.0-SNAPSHOT"]
                  [clj-http "3.10.0"]
                  [ring "1.7.1"]
                  [ring/ring-defaults "0.3.2"]

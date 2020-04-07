@@ -25,9 +25,9 @@
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.middleware.cache-control :as cache-control]
-            [ataru.middleware.session-store :refer [create-store]]
+            [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ataru.middleware.session-timeout :as session-timeout]
-            [ataru.middleware.session-client :as session-client]
+            [clj-ring-db-session.session.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.schema.form-schema :as ataru-schema]
@@ -36,7 +36,6 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.util.client-error :as client-error]
-            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -47,6 +46,7 @@
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [ataru.valintaperusteet.service :as valintaperusteet]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
+            [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clojure.core.match :refer [match]]
@@ -58,7 +58,7 @@
             [compojure.response :refer [Renderable]]
             [compojure.route :as route]
             [environ.core :refer [env]]
-            [manifold.deferred] ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
+            [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
             [medley.core :refer [map-kv]]
             [clj-http.client :as http]
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
@@ -73,7 +73,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [ataru.user-rights :as user-rights]
-            [ataru.util :as util])
+            [ataru.util :as util]
+            [ataru.db.db :as db])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -156,7 +157,7 @@
   (ring-session/wrap-session handler
                              {:root "/lomake-editori"
                               :cookie-attrs {:secure (not (:dev? env))}
-                              :store (create-store)}))
+                              :store (create-session-store (db/get-datasource :db))}))
 
 (api/defroutes test-routes
   (api/undocumented
@@ -1349,7 +1350,7 @@
                                 (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
-                                                 auth-middleware/with-authentication]
+                                                 #(crdsa-auth-middleware/with-authentication % (auth-utils/cas-auth-url) (db/get-datasource :db))]
                                   (api/middleware [session-client/wrap-session-client-headers
                                                    session-timeout/wrap-idle-session-timeout]
                                     app-routes
