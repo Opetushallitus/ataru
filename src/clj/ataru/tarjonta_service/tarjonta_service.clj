@@ -70,7 +70,7 @@
   (hakus-by-form-key [this form-key]
     (->> (concat
           (some #(when (= form-key (:avain %))
-                   (map :oid (:haut %)))
+                  (map :oid (:haut %)))
                 (cache/get-from forms-in-use-cache oph-organization))
           (cache/get-from kouta-hakus-by-form-key-cache form-key))
          (cache/get-many-from haku-cache)
