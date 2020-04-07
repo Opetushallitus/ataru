@@ -17,10 +17,9 @@
   [haku application]
   (let [answers (-> application :content :answers util/answers-by-key)]
     (merge application
-           {:kk_pohjakoulutus (answer-util/get-kk-pohjakoulutus haku answers (:key application))
-            :ulkomailla_suoritetun_toisen_asteen_tutkinnon_suoritusmaa (get-in answers [:faae7ba9-5e3c-48bf-903f-363404c659a4 :value])
-            :hakutoiveet      (hakutoiveet (:hakukohde application))}
-           )))
+           {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:key application))
+            :pohjakoulutus_kk_ulk_country (get-in answers [:faae7ba9-5e3c-48bf-903f-363404c659a4 :value])
+            :hakutoiveet                  (hakutoiveet (:hakukohde application))})))
 
 (defn get-application-info-for-tilastokeskus
   [tarjonta-service haku-oid hakukohde-oid]
