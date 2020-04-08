@@ -432,13 +432,19 @@
     (.autoSizeColumn sheet (short y))))
 
 (defn- update-hakukohteet-for-legacy-applications [application]
-  (let [hakukohteet (-> application :answers :hakukohteet)
+  (let [hakukohteet (->> (:answers application)
+                         (filter #(= "hakukohteet" (:key %)))
+                         first)
         hakukohde   (:hakukohde application)]
-    (if (or hakukohteet
-            (and (not hakukohteet) (not hakukohde)))
+    (if (or (not-empty hakukohteet) (empty? hakukohde))
       application
       (update application :answers conj
-        {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label {:fi "Hakukohteet"}}))))
+              {:key       "hakukohteet"
+               :fieldType "hakukohteet"
+               :value     hakukohde
+               :label     {:fi "Hakukohteet"
+                           :sv "Ansökningsmål"
+                           :en "Application options"}}))))
 
 (defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
