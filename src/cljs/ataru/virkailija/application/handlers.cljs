@@ -102,7 +102,6 @@
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
-    (println "petar select-application=" application-key " selected-hakukohde-oid=" selected-hakukohde-oid)
     (let [different-application?     (not= application-key (get-in db [:application :selected-key]))
           selected-hakukohde-oid-set (cond (set? selected-hakukohde-oid) selected-hakukohde-oid
                                            (some? selected-hakukohde-oid) #{selected-hakukohde-oid}
@@ -592,7 +591,6 @@
       (assoc-in [:application :selection-state-used?] selection-state-used?)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
-          (println "petar ovde ga skracuje current-hakukohde-oid=" current-hakukohde-oids " application->hakukohde=" (:hakukohde application))
           (let
             [review-hakukohde-oids-to-keep                 (clojure.set/intersection (set (:hakukohde application))
                                                                                      (set current-hakukohde-oids))]
@@ -600,7 +598,7 @@
               (and (not-empty (:hakukohde application))
                   (not-empty current-hakukohde-oids)
                   (not-empty review-hakukohde-oids-to-keep))
-              
+
               review-hakukohde-oids-to-keep
 
               (and (not-empty (:hakukohde application))
@@ -1250,7 +1248,6 @@
             next-application-key (-> applications (nth next-idx) :key)
             next-not-visible?    (= next-idx (-> db :application :applications-to-render))]
         (when next-application-key
-          (println "petar filtered hakukohde=" @filtered-hakukohde)
           {:update-url-query-params {:application-key next-application-key}
            :dispatch-n              [[:application/select-application next-application-key @filtered-hakukohde false]
                                      (when next-not-visible?

@@ -1056,7 +1056,7 @@
         })
       })
     })
-    describe('petar Application list filtering', () => {
+    describe('Application list filtering', () => {
       describe('filter by hakukohde and open hakukohde details by pressing candidate name', () => {
         before(
           navigateToApplicationHandlingForHaku,

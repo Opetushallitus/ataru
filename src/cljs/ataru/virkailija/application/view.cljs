@@ -463,7 +463,7 @@
         application-hakukohde-reviews (group-by #(vector (:hakukohde %) (:requirement %))
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
-        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])] ; petar da li odavde treba da se uzima?
+        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -487,7 +487,6 @@
                  :on-click (fn [evt]
                              (.preventDefault evt)
                              (.stopPropagation evt)
-                             (println "petar evo odavde=" filtered-hakukohde)
                              (select-application (:key application) (or filtered-hakukohde
                                                                         hakukohde-oid)))}
                 [hakukohde-and-tarjoaja-name hakukohde-oid]])
