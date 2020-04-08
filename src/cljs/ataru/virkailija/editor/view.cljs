@@ -8,8 +8,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [reagent.core :as r]))
 
 (defn form-row [key selected?]
   [:a.editor-form__row

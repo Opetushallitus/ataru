@@ -1,5 +1,5 @@
 (ns ataru.applications.permission-check
-  (:require [taoensso.timbre :refer [error]]
+  (:require [taoensso.timbre :as log]
             [ataru.applications.application-access-control :as aac]
             [ataru.applications.application-store :as application-store]))
 
@@ -16,6 +16,6 @@
             boolean)})
     (catch Exception e
       (let [msg "Error while checking permission"]
-        (error e msg)
+        (log/error e msg)
         {:accessAllowed false
          :errorMessage  msg}))))

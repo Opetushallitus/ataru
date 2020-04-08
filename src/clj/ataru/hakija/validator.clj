@@ -6,7 +6,7 @@
             [clojure.set :refer [difference]]
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
-            [taoensso.timbre :refer [spy debug warn info]]
+            [taoensso.timbre :as log]
             [ataru.koodisto.koodisto :as koodisto]))
 
 (defn allowed-values [options]
@@ -230,7 +230,7 @@
                                                               (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))
                                                         (passes-all? has-applied form validators answers answers-by-key field virkailija?)
                                                         (every? nil? answers))}})
-                                :else (when (some? field) (warn "Invalid field clause, not validated:" field)))]
+                                :else (when (some? field) (log/warn "Invalid field clause, not validated:" field)))]
               (build-results koodisto-cache has-applied answers-by-key ret form rest-form-fields hakukohderyhmat virkailija?)
               results)))))
 
@@ -267,11 +267,11 @@
                              (build-failed-results answers-by-key))
         failed-meta-fields (validate-meta-fields application)]
     (when (not (empty? extra-answers))
-      (warn "Extra answers in application" (apply str extra-answers)))
+      (log/warn "Extra answers in application" (apply str extra-answers)))
     (when (not (empty? failed-results))
-      (warn "Validation failed in application fields" failed-results))
+      (log/warn "Validation failed in application fields" failed-results))
     (when (not (empty? failed-meta-fields))
-      (warn "Validation failed in application meta fields " (str failed-meta-fields)))
+      (log/warn "Validation failed in application meta fields " (str failed-meta-fields)))
     {:passed?
      (and
        (empty? extra-answers)

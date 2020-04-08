@@ -2,7 +2,6 @@
   "Pure functions handling application data"
   (:require [ataru.util :as util]
             [medley.core :refer [remove-vals filter-vals remove-keys]]
-            [taoensso.timbre :refer-macros [spy debug]]
             [ataru.application-common.application-field-common :refer [required-validators]]
             [clojure.core.match :refer [match]]
             [cljs-time.core :as time]

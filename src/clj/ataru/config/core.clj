@@ -13,7 +13,7 @@
   (try
     (slurp path)
     (catch Exception e
-      (log/warn (str "Could not read configuration from '" path "'"))
+      (log/warn e (str "Could not read configuration from '" path "'"))
       "{}")))
 
 (defonce secrets

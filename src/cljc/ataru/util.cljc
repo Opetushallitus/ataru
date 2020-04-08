@@ -2,8 +2,6 @@
   (:require #?(:cljs [ataru.cljs-util :as util])
             #?(:clj  [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])
-            #?(:clj  [taoensso.timbre :refer [spy debug]]
-               :cljs [taoensso.timbre :refer-macros [spy debug]])
             #?(:cljs [goog.string :as gstring])
             #?(:clj  [clj-time.core :as time]
                :cljs [cljs-time.core :as time])

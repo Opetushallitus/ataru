@@ -71,7 +71,7 @@
             [ring.util.response :refer [redirect header] :as ring-util]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [spy debug error warn info]]
+            [taoensso.timbre :as log]
             [ataru.user-rights :as user-rights]
             [ataru.util :as util])
   (:import java.util.Locale
@@ -619,7 +619,7 @@
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [size-limit 40000
               application-keys (json/parse-string application-keys)]
-          (info "Yritetään" (count application-keys) "hakemuksen excelin luontia")
+          (log/info "Yritetään" (count application-keys) "hakemuksen excelin luontia")
           (if (< size-limit (count application-keys))
             (response/request-entity-too-large
              {:error (str "Cannot create excel for more than " size-limit " applications")})
@@ -1201,7 +1201,7 @@
             {:yksiloimattomat yksiloimattomat
              :applications    applications}
             (if (get-in config [:yksiloimattomat :allow] false)
-              (do (warn "Yksilöimättömiä hakijoita")
+              (do (log/warn "Yksilöimättömiä hakijoita")
                   (response/ok applications))
               (response/conflict
                {:error      "Yksilöimättömiä hakijoita"
@@ -1230,7 +1230,7 @@
             {:yksiloimattomat yksiloimattomat
              :applications    applications}
             (if (get-in config [:yksiloimattomat :allow] false)
-              (do (warn "Yksilöimättömiä hakijoita")
+              (do (log/warn "Yksilöimättömiä hakijoita")
                   (response/ok applications))
               (response/conflict
                {:error      "Yksilöimättömiä hakijoita"

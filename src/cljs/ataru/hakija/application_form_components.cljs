@@ -16,7 +16,6 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [clojure.string :as string]
             [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]

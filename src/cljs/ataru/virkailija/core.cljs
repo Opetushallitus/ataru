@@ -12,7 +12,6 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.views :as views]
             [ataru.virkailija.editor.handlers]
-            [taoensso.timbre :refer-macros [spy info]]
             [ataru.application-common.fx :refer [http]] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.virkailija.views.banner :as banner]
             [ataru.virkailija.application.view :as app-handling-view]))

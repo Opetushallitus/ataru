@@ -15,10 +15,8 @@
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
             [clojure.java.io :refer [input-stream]]
-            [taoensso.timbre :refer [spy debug]]
             [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]
-            [taoensso.timbre :as log]))
+            [ataru.application.application-states :as application-states]))
 
 
 (def max-value-length 5000)

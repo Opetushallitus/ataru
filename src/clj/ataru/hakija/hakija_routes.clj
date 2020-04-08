@@ -26,7 +26,6 @@
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
-            [taoensso.timbre :refer [info warn error]]
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.flowdock.flowdock-client :as flowdock-client]

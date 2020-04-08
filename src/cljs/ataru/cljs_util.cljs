@@ -6,7 +6,6 @@
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]

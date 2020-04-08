@@ -18,8 +18,7 @@
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        question-group-answer?
-                                                                       answers->read-only-format]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+                                                                       answers->read-only-format]]))
 
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))

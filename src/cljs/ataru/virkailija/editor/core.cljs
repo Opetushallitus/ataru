@@ -11,7 +11,7 @@
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
             [cljs-uuid-utils.core :as uuid]
-            [taoensso.timbre :refer-macros [spy debug error]]))
+            [taoensso.timbre :as log]))
 
 (defn soresu->reagent [content path & args]
   (fn [content path & args]
@@ -86,7 +86,7 @@
                    [ec/hakukohteet-module content path]
 
                    :else (do
-                           (error content)
+                           (log/error content)
                            (throw (new js/Error (str "Unknown component type " content)))))]
         [:div
          [dnd/drag-n-drop-spacer path]

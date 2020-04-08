@@ -19,7 +19,6 @@
             [ataru.util :as util :refer [collect-ids assoc?]]
             [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
-            [taoensso.timbre :refer-macros [spy debug]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [cljs-time.core :as t])

@@ -25,7 +25,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-            [taoensso.timbre :refer [spy debug info error]]
+            [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -97,7 +97,7 @@
 
 (defn migrate-legacy-form-content-to-contain-hakukohteet-module [connection]
   (let [update (fn [form conn]
-                   (info "Updating followups of form-id:" (:id form))
+                   (log/info "Updating followups of form-id:" (:id form))
                    (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
     (doseq [form (->> (migration-form-store/get-all-forms)
                       (map #(migration-app-store/fetch-by-id (:id %) connection)))]
@@ -149,7 +149,7 @@
 
 (defn- get-haku-for-hakukohde
   [hakukohde-oid]
-  (info "Loading hakukohde" hakukohde-oid)
+  (log/info "Loading hakukohde" hakukohde-oid)
   (when-let [haku-oid (:haku-oid (tarjonta-client/get-hakukohde hakukohde-oid))]
     (tarjonta-client/get-haku haku-oid)))
 
@@ -161,8 +161,8 @@
     (if-let [haku (memo-get-haku-for-hakukohde hakukohde)]
       (do
         (migration-app-store/update-application-add-haku id haku)
-        (info "Updated haku details for application" id))
-      (error "Could not update haku for application" id "with hakukohde" hakukohde))))
+        (log/info "Updated haku details for application" id))
+      (log/error "Could not update haku for application" id "with hakukohde" hakukohde))))
 
 (defn- wrap-followups [form]
   (let [fw           (atom nil)
@@ -195,7 +195,7 @@
 (defn followups-to-vectored-followups-like-all-of-them
   []
   (let [update (fn [form conn]
-                 (info "Updating followups of form-id:" (:id form))
+                 (log/info "Updating followups of form-id:" (:id form))
                  (jdbc/execute! conn ["update forms set content = ? where id = ?" (:content form) (:id form)]))]
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (with-query-results-cursor conn ["select id, content from forms"]
@@ -233,12 +233,12 @@
                                               :applicant-has-accepted ["processed" "selected"]
                                               :rejected ["processed" "rejected"]
                                               :canceled ["inactivated" "incomplete"])]
-    (info "Creating new review state for application" application-key "in state" old-state)
+    (log/info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
-      (info "Updating application state:" old-state "->" application-state)
+      (log/info "Updating application state:" old-state "->" application-state)
       (application-store/save-application-review (merge old-review {:state application-state}) fake-session))
     (when (= 1 (count hakukohteet))
-      (info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
+      (log/info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
         (:key application)
         (first hakukohteet)
@@ -290,10 +290,10 @@
                             (reduce ->applications {}))]
       (doseq [[application-key applications] applications]
         (doseq [application applications]
-          (info (str "Updating date of birth answer of application " (:id application)))
+          (log/info (str "Updating date of birth answer of application " (:id application)))
           (migration-app-store/update-application-content (:id application) (:content application)))
         (when-let [application-id (latest-application-id applications)]
-          (info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
+          (log/info (str "Starting new person service job for application " application-id " (key: " application-key ")"))
           (job-store/store-new connection
                                (:type person-integration/job-definition)
                                {:application-id application-id}))))))
@@ -303,7 +303,7 @@
     (let [camel-cased-content (transform-keys ->camelCaseKeyword
                                                 (:content application))]
       (when (not= camel-cased-content (:content application))
-        (info "Camel casing keywords of application" (:id application))
+        (log/info "Camel casing keywords of application" (:id application))
         (migration-app-store/update-application-content
          (:id application)
          camel-cased-content)))))
@@ -312,7 +312,7 @@
   (doseq [review-note (->> (migration-app-store/get-all-application-reviews)
                            (filter (comp not clojure.string/blank? :notes)))]
     (let [application-key (:application-key review-note)]
-      (info (str "Migrating review notes of application " application-key))
+      (log/info (str "Migrating review notes of application " application-key))
       (migration-app-store/create-application-review-note review-note))))
 
 (defn- application-states-to-hakukohteet
@@ -389,15 +389,15 @@
     (doseq [form (migration-app-store/get-1.86-forms connection)
             :let [new-form (update-home-town new-home-town form)]]
       (if (= (:content new-form) (:content form))
-        (info "Not updating form" (:key form))
+        (log/info "Not updating form" (:key form))
         (let [{:keys [id key]} (migration-app-store/insert-1.86-form connection new-form)]
-          (info "Updating form" (:key form))
+          (log/info "Updating form" (:key form))
           (doseq [application (migration-app-store/get-1.86-applications connection key)
                   :let [new-application (update-kotikunta-answer kunnat application)]]
             (if (or (= (:content new-application) (:content application))
                     (not= (:form_id application) (:id form)))
-              (info "Not updating application" (:key application))
-              (do (info "Updating application" (:key application))
+              (log/info "Not updating application" (:key application))
+              (do (log/info "Updating application" (:key application))
                   (migration-app-store/insert-1.86-application
                    connection
                    (assoc new-application :form_id id))))))))))
@@ -533,16 +533,16 @@
               :let [form     (migration-app-store/get-1.100-form connection form-id)
                     new-form (update-person-info-module new-person-info-module form)]]
         (if (= (:content new-form) (:content form))
-          (info "1.100: Not updating form" (:key form) form-id)
+          (log/info "1.100: Not updating form" (:key form) form-id)
           (let [{:keys [id key]} (migration-app-store/insert-1.100-form connection new-form)]
-            (info "1.100: Updating form" (:key form) form-id)
+            (log/info "1.100: Updating form" (:key form) form-id)
             (doseq [application (migration-app-store/get-1.100-applications connection form-id)
                     :let [new-application (nationality-answer->question-group application)]]
               (if (or (not new-application)
                       (= (:content new-application) (:content application))
                       (not= (:form_id application) (:id form)))
-                (info "1.100: Not updating application" (:key application) (:id application))
-                (do (info "1.100: Updating application" (:key application) (:id application))
+                (log/info "1.100: Not updating application" (:key application) (:id application))
+                (do (log/info "1.100: Updating application" (:key application) (:id application))
                     (migration-app-store/insert-1.100-application
                       connection
                       (assoc new-application :form_id id)))))))))))

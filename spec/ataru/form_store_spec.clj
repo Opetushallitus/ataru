@@ -2,8 +2,7 @@
   (:require [speclj.core :refer :all]
             [clj-time.core :as t]
             [ataru.fixtures.person-info-form :refer [form]]
-            [ataru.forms.form-store :as store]
-            [taoensso.timbre :refer [spy debug]])
+            [ataru.forms.form-store :as store])
   (:import
    (clojure.lang ExceptionInfo)))
 

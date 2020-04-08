@@ -9,7 +9,6 @@
    [re-frame.core :refer [subscribe dispatch reg-sub reg-event-db reg-fx reg-event-fx]]
    [reagent.core :as r]
    [reagent.ratom :refer-macros [reaction]]
-   [taoensso.timbre :refer-macros [spy debug]]
    [ataru.virkailija.temporal :as temporal]))
 
 (reg-event-db

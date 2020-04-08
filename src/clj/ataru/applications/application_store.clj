@@ -23,7 +23,7 @@
             [clj-time.format :as f]
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
-            [taoensso.timbre :refer [info warn]]
+            [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]]
             [ataru.config.core :refer [config]])
   (:import [java.time
@@ -94,7 +94,7 @@
                            true
                            (throw e))))]
       (if collision?
-        (do (warn "Application secret collision")
+        (do (log/warn "Application secret collision")
             (recur))
         secret))))
 
@@ -390,9 +390,9 @@
                                                  form
                                                  true
                                                  conn)]
-      (info (str "Updating application with key "
-                 (:key old-application)
-                 " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
+      (log/info (str "Updating application with key "
+                     (:key old-application)
+                     " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
       (yesql-add-application-event<! {:application_key          key
                                       :event_type               (if updated-by-applicant?
                                                                   "updated-by-applicant"
@@ -608,7 +608,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
           {:connection conn})
          ->kebab-case-kw
          (mapv #(if (nil? (:secret %))
-                  (do (info "Refreshing secret for application" (:key %))
+                  (do (log/info "Refreshing secret for application" (:key %))
                       (assoc % :secret (add-new-secret-to-application-in-tx conn (:key %))))
                   %)))))
 
@@ -1230,7 +1230,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state]
-  (info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
+  (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
   (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
                             (let [connection {:connection conn}]
                               (mapv

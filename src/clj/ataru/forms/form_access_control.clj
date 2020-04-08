@@ -8,8 +8,7 @@
    [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.organization-service.organization-client :refer [oph-organization]]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [taoensso.timbre :refer [warn]]))
+   [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
 
 (defn- form-allowed-by-id?
   [authorized-organization-oids form-id]

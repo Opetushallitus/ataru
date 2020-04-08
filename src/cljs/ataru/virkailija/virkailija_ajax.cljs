@@ -3,8 +3,7 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
-            [ajax.core :refer [GET POST PUT DELETE PATCH] :as ajax]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [ajax.core :refer [GET POST PUT DELETE PATCH] :as ajax]))
 
 (defn dispatch-flasher-error-msg
   [method response]

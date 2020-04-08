@@ -14,7 +14,6 @@
                                               create-application-to-submit
                                               extract-wrapper-sections
                                               db->valid-status]]
-            [taoensso.timbre :refer-macros [spy debug]]
             [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]

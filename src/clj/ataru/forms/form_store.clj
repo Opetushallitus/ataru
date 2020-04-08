@@ -6,7 +6,7 @@
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
             [ataru.db.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
-            [taoensso.timbre :refer [warn]])
+            [taoensso.timbre :as log])
   (:import [java.util UUID]))
 
 (defqueries "sql/form-queries.sql")
@@ -115,12 +115,12 @@
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]
         (if (not (latest-version-same? form latest-version))
           (do
-            (warn (str "Form with id "
-                       (:id latest-version)
-                       " created-time "
-                       (:created-time latest-version)
-                       " already exists. Supplied form id was "
-                       (:id form)
+            (log/warn (str "Form with id "
+                           (:id latest-version)
+                           " created-time "
+                           (:created-time latest-version)
+                           " already exists. Supplied form id was "
+                           (:id form)
                        " created-time "
                        (:created-time form)))
             (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen.")))

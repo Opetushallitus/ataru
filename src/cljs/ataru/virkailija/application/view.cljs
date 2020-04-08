@@ -34,8 +34,7 @@
             [medley.core :refer [find-first]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [reagent.core :as r]
-            [reagent.ratom :refer-macros [reaction]]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [reagent.ratom :refer-macros [reaction]]))
 
 (defn- icon-check []
   [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg

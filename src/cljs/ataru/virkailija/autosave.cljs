@@ -4,7 +4,7 @@
             [ataru.cljs-util :refer [debounce]]
             [cljs.core.match :refer-macros [match]]
             [cljs.core.async :as a :refer [chan <! >! close! alts! timeout sliding-buffer]]
-            [taoensso.timbre :refer-macros [spy info debug]]))
+            [taoensso.timbre :as log]))
 
 (defn stop-autosave! [stop-fn]
   (when stop-fn
@@ -46,7 +46,7 @@
         (if (and @value-to-watch
                  (not @stop?))
           (recur)
-          (info "Stopping autosave at" subscribe-path)))
+          (log/info "Stopping autosave at" subscribe-path)))
 
       (go-loop []
         (when-let [[prev current] (<! change)]
