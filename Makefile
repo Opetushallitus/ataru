@@ -90,7 +90,7 @@ stop-watch:
 	$(PM2) $(STOP_ONLY) $(CSS_COMPILER)
 
 stop-docker:
-	$(DOCKER_COMPOSE) down
+	$(DOCKER_COMPOSE) kill
 
 stop-hakija:
 	$(PM2) $(STOP_ONLY) $(HAKIJA_BACKEND)
