@@ -595,9 +595,7 @@
             [review-hakukohde-oids-to-keep                 (clojure.set/intersection (set (:hakukohde application))
                                                                                      (set current-hakukohde-oids))]
             (cond
-              (and (not-empty (:hakukohde application))
-                  (not-empty current-hakukohde-oids)
-                  (not-empty review-hakukohde-oids-to-keep))
+              (not-empty review-hakukohde-oids-to-keep)
 
               review-hakukohde-oids-to-keep
 
