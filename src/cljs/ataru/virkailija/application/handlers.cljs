@@ -592,19 +592,23 @@
       (assoc-in [:application :selection-state-used?] selection-state-used?)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
-          (cond
-           (and (not-empty (:hakukohde application))
-                (not-empty current-hakukohde-oids)
-                (clojure.set/superset? (set (:hakukohde application))
-                                       (set current-hakukohde-oids)))
-           current-hakukohde-oids
+          (println "petar ovde ga skracuje current-hakukohde-oid=" current-hakukohde-oids " application->hakukohde=" (:hakukohde application))
+          (let
+            [review-hakukohde-oids-to-keep                 (clojure.set/intersection (set (:hakukohde application))
+                                                                                     (set current-hakukohde-oids))]
+            (cond
+              (and (not-empty (:hakukohde application))
+                  (not-empty current-hakukohde-oids)
+                  (not-empty review-hakukohde-oids-to-keep))
+              
+              review-hakukohde-oids-to-keep
 
-           (and (not-empty (:hakukohde application))
-                (:selected-hakukohde application))
-           [(:selected-hakukohde application)]
+              (and (not-empty (:hakukohde application))
+                  (:selected-hakukohde application))
+              [(:selected-hakukohde application)]
 
-           :else
-           [(or (first (:hakukohde application)) "form")])))))
+              :else
+              [(or (first (:hakukohde application)) "form")]))))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
