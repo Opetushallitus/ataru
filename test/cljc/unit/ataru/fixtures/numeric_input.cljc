@@ -29,14 +29,7 @@
    "10."                                     false          ; No decimal part
    ".1201"                                   false          ; No integer part
    "1,231231239"                             false          ; Too many (9) decimals
-   [["111.0"]]                               true
-   [["abc"]]                                 false
-   [["1.0"] ["2"]]                           true
-   [["1" "2.000"] ["3" "4.45"]]              true
-   [["1"] ["1.2"]]                           true
-   [["x"] ["1"]]                             false
-   [["1" "x"] ["3" "4"]]                     false
-   [["1" "2"] ["3" "4.4534342342342342334"]] false})
+   })
 
 
 (def integers
@@ -66,16 +59,7 @@
    "0,121,0"                false
    "10."                    false
    ".1201"                  false
-   "1,231231239"            false
-   [["23423"]]              true
-   [["111.0"]]              false
-   [["abc"]]                false
-   [["1"] ["2"]]            true
-   [["1" "2"] ["3" "4"]]    true
-   [["1"] ["1.2"]]          false
-   [["x"] ["1"]]            false
-   [["1" "x"] ["3" "4"]]    false
-   [["1" "2"] ["3" "4.45"]] false})
+   "1,231231239"            false})
 
 (def value-between
   {"1"    {true  [[nil "2"]
