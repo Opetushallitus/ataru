@@ -11,7 +11,7 @@
             [medley.core :refer [map-kv]]
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
-            [taoensso.timbre :refer [info spy error]]
+            [taoensso.timbre :as log]
             [yesql.core :as sql])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
@@ -63,7 +63,7 @@
                                              (map-kv (fn [right organizations]
                                                        [right (organization-service/get-all-organizations organization-service organizations)]))
                                              (user-right-organizations->organization-rights))]
-          (info "user" username "logged in")
+          (log/info "user" username "logged in")
           (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
                                                   :first_name (:kutsumanimi henkilo)
                                                   :last_name  (:sukunimi henkilo)})
@@ -85,21 +85,21 @@
                                           :organizations            organizations-with-rights}}))))
       (redirect-to-login-failed-page))
     (catch Exception e
-      (error e "Error in login ticket handling")
+      (log/error e "Error in login ticket handling")
       (redirect-to-login-failed-page))))
 
 (defn logout [session]
-  (info "username" (-> session :identity :username) "logged out")
+  (log/info "username" (-> session :identity :username) "logged out")
   (cas-store/logout (-> session :identity :ticket))
   (-> (resp/redirect (resolve-url :cas.logout))
       (assoc :session {:identity nil})))
 
 (defn cas-initiated-logout [logout-request]
-  (info "cas-initiated logout")
+  (log/info "cas-initiated logout")
   (let [ticket (CasLogout/parseTicketFromLogoutRequest logout-request)]
-    (info "logging out ticket" ticket)
+    (log/info "logging out ticket" ticket)
     (if (.isEmpty ticket)
-      (error "Could not parse ticket from CAS request" logout-request)
+      (log/error "Could not parse ticket from CAS request" logout-request)
       (cas-store/logout (.get ticket)))
     (ok)))
 

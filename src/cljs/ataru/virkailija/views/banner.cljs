@@ -8,8 +8,7 @@
             [clojure.string :as string]
             [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
-            [reagent.core :as reagent]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [reagent.core :as reagent]))
 
 (def panels
   {:editor      {:text :forms-panel :href "/lomake-editori/editor/"}

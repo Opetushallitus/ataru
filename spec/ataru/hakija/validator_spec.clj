@@ -6,8 +6,7 @@
             [speclj.core :refer :all]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
-            [ataru.fixtures.person-info-form :refer [form]]
-            [taoensso.timbre :refer [spy debug]]))
+            [ataru.fixtures.person-info-form :refer [form]]))
 
 (def f form)
 (def a answer)

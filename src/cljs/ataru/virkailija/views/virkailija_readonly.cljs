@@ -24,7 +24,6 @@
             [clojure.string :refer [trim]]
             [goog.string :as s]
             [re-frame.core :refer [subscribe]]
-            [taoensso.timbre :refer-macros [spy debug]]
             [reagent.core :as r]))
 
 (def exclude-always-included #(not (answer-to-always-include? %)))

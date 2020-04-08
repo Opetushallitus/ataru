@@ -4,8 +4,7 @@
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
             [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
-            [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [reagent.core :as r]))
 
 (def ^:private toolbar-elements
   [[:form-section component/form-section]

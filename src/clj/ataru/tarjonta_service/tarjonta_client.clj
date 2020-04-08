@@ -5,8 +5,7 @@
    [ataru.util.http-util :as http-util]
    [cheshire.core :as json]
    [clojure.string :as string]
-   [schema.core :as s]
-   [taoensso.timbre :refer [warn info]])
+   [schema.core :as s])
   (:import [org.joda.time DateTime DateTimeZone]))
 
 (def koulutus-checker (s/checker schema/Koulutus))

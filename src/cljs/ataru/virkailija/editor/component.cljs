@@ -19,8 +19,7 @@
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
-   [reagent.ratom :refer-macros [reaction]]
-   [taoensso.timbre :refer-macros [spy debug]]))
+   [reagent.ratom :refer-macros [reaction]]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))

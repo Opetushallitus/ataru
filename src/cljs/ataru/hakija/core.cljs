@@ -2,7 +2,6 @@
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
             [re-frisk.core :as re-frisk]
-            [taoensso.timbre :refer-macros [spy info]]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-view :refer [form-view]]

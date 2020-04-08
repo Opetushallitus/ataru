@@ -1,8 +1,7 @@
 (ns ataru.hakija.rules-test
   (:require [cljs.test :refer-macros [deftest are is]]
             [ataru.util :as util]
-            [ataru.hakija.rules :as rules]
-            [taoensso.timbre :refer-macros [spy debug]]))
+            [ataru.hakija.rules :as rules]))
 
 
 (deftest rule-runner

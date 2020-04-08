@@ -2,8 +2,7 @@
     (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
               [ataru.virkailija.autosave :as autosave]
               [ataru.virkailija.editor.handlers :refer [clear-copy-component]]
-              [ataru.virkailija.db :as db]
-              [taoensso.timbre :refer-macros [spy debug]]))
+              [ataru.virkailija.db :as db]))
 
 (reg-event-db
  :initialize-db

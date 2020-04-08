@@ -3,7 +3,6 @@
   (:require [ataru.util :as util :refer [collect-ids]]
             [re-frame.core :as re-frame]
             [ataru.cljs-util :as cu]
-            [taoensso.timbre :refer-macros [spy debug]]
             [markdown.core :as md]
             [ataru.translations.translation-util :as translations]))
 

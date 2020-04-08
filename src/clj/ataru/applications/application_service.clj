@@ -25,7 +25,7 @@
     [ataru.virkailija.editor.form-utils :refer [visible?]]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [medley.core :refer [find-first filter-vals]]
-    [taoensso.timbre :refer [spy debug] :as log]
+    [taoensso.timbre :as log]
     [ataru.application.review-states :as review-states]
     [ataru.application.application-states :as application-states]
     [ataru.schema.form-schema :as ataru-schema]

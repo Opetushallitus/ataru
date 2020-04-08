@@ -5,8 +5,7 @@
             [clojure.walk :refer [postwalk]]
             [cljs-time.core :refer [to-default-time-zone now after?]]
             [cljs-time.format :refer [unparse unparse-local formatter]]
-            [cljs-time.coerce :refer [from-long]]
-            [taoensso.timbre :refer-macros [spy warn]]))
+            [cljs-time.coerce :refer [from-long]]))
 
 (def ^:private time-formatter-leading-zeros (f/formatter "dd.MM.yyyy HH:mm" "Europe/Helsinki"))
 

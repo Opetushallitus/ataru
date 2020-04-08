@@ -1,12 +1,9 @@
 (ns ataru.virkailija.authentication.auth-routes
   (:require [ataru.virkailija.authentication.auth :refer [login cas-login logout cas-initiated-logout]]
-            [ataru.config.url-helper :refer [resolve-url]]
             [ataru.middleware.session-client :as session-client]
             [ataru.config.core :refer [config]]
             [compojure.api.sweet :as api]
             [environ.core :refer [env]]
-            [taoensso.timbre :refer [spy debug info]]
-            [clojure.core.match :refer [match]]
             [clojure.string :as string]))
 
 (defn- rewrite-url-for-environment

@@ -5,8 +5,7 @@
             [ataru.fixtures.form :as fixtures]
             [speclj.core :refer :all]
             [cheshire.core :as json]
-            [ataru.virkailija.editor.form-diff :as form-diff]
-            [taoensso.timbre :refer [spy debug]]))
+            [ataru.virkailija.editor.form-diff :as form-diff]))
 
 (defmacro with-static-resource
   [name path]

@@ -9,7 +9,6 @@
             [ataru.cljs-util :as cljs-util]
             [ataru.virkailija.temporal :as temporal]
             [reagent.core :as r]
-            [taoensso.timbre :refer-macros [spy debug]]
             [ataru.feature-config :as fc]
             [ataru.url :as url]
             [camel-snake-kebab.core :as c]
