@@ -9,6 +9,7 @@
   (-> opts
       (update :connection-timeout (fnil identity 60000))
       (update :socket-timeout (fnil identity 60000))
+      (assoc  :throw-exceptions false)
       (update :headers merge
               {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
               {"CSRF" csrf-value})
