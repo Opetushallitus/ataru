@@ -125,7 +125,7 @@
 
   describe('Editor when user associated by hakukohteen organization', () => {
     before(
-      wait.until(editorPageIsLoaded, 10000),
+      wait.until(editorPageIsLoaded),
       clickElement(() => formListItems(0)),
       wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
       clickComponentMenuItem('Tekstikenttä'),

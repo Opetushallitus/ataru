@@ -96,7 +96,7 @@
   describe('Selection Limit', () => {
     describe('form creation', () => {
       before(
-        wait.until(editorPageIsLoaded, 10000),
+        wait.until(editorPageIsLoaded),
         clickElement(addNewFormLink),
         wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
         setTextFieldValue(formTitleField, 'Selection Limit'),
