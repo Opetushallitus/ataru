@@ -31,7 +31,8 @@
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.middleware.filename-normalizer-middleware :as normalizer]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -268,6 +269,7 @@
                        file-size :- s/Int
                        file-id :- s/Str
                        file-name :- s/Str]
+        :middleware [normalizer/wrap-query-params-filename-normalizer]
         (let [[exists? next-is-last?] (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)]
           (if exists?
             (response/ok {:next-is-last next-is-last?})
@@ -278,7 +280,7 @@
                            file-part-number :- s/Int
                            file-size :- s/Int
                            file-id :- s/Str]
-        :middleware [upload/wrap-multipart-params]
+        :middleware [upload/wrap-multipart-params normalizer/wrap-multipart-filename-normalizer]
         :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
           (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
