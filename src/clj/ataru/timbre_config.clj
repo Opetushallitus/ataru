@@ -3,6 +3,7 @@
             [taoensso.timbre :as timbre]
             [taoensso.timbre.appenders.core :refer [println-appender]]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]
+            [timbre-ns-pattern-level]
             [environ.core :refer [env]]
             [ataru.config.core :refer [config]])
   (:import [java.util TimeZone]))
@@ -27,6 +28,12 @@
                                            (when (:hostname env) (str "_" (:hostname env))))
                              :pattern :daily})
                           system-defaults)}
+       :middleware     [(timbre-ns-pattern-level/middleware {"com.amazonaws.*"                :info
+                                                             "com.zaxxer.hikari.HikariConfig" :debug
+                                                             "com.zaxxer.hikari.*"            :info
+                                                             "io.netty.*"                     :info
+                                                             "org.apache.http.*"              :info
+                                                             "org.flywaydb.*"                 :info})]
        :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
                         :timezone (TimeZone/getTimeZone "Europe/Helsinki")}
        :output-fn      (partial timbre/default-output-fn {:stacktrace-fonts {}})})))
