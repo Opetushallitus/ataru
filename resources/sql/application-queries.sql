@@ -146,7 +146,7 @@ WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.re
 ORDER BY rn.created_time DESC;
 
 -- name: yesql-selection-state-used
-SELECT COUNT(*) > 1
+SELECT COUNT(*) > 1 AS exists
                FROM applications AS a
                LEFT JOIN applications AS la
                  ON la.key = a.key AND
