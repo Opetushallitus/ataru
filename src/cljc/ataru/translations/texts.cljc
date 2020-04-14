@@ -945,6 +945,9 @@
    :editable-content-title                          {:fi "Muokattava osuus (otsikko)"
                                                      :sv "Del som ska bearbetas (rubrik)"
                                                      :en "EN: Muokattava osuus (otsikko)"}
+   :ehdollisuus                                     {:fi "Ehdollisuus"
+                                                     :sv "SV: Ehdollisuus"
+                                                     :en "EN: Ehdollisuus"}
    :ehdollisesti-hyvaksyttavissa                    {:fi "Ehdollinen"
                                                      :sv "SV: Ehdollinen"
                                                      :en "EN: Ehdollinen"}
