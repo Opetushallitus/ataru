@@ -17,7 +17,7 @@
 (defn start-repl! [repl-port]
   (when (and (:dev? env) (compare-and-set! repl-started false true))
     (do
-      (nrepl/start-server :port repl-port)
+      (nrepl/start-server :port repl-port :bind "0.0.0.0")
       (log/report "nREPL started on port" repl-port))))
 
 (defrecord Server []
