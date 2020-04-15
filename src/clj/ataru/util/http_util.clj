@@ -5,10 +5,11 @@
 (def csrf-value "ataru")
 
 ;todo maybe only add csrf cookie to PUT POST DELETE?
-(defn enrich-with-mandatory-headers [opts]
+(defn enrich-with-mandatory-headers-and-common-settings [opts]
   (-> opts
       (update :connection-timeout (fnil identity 60000))
       (update :socket-timeout (fnil identity 60000))
+      (assoc  :throw-exceptions false)
       (update :headers merge
               {"Caller-Id" "1.2.246.562.10.00000000001.ataru.backend"}
               {"CSRF" csrf-value})
@@ -17,7 +18,7 @@
 (defn do-request
   [{:keys [url method] :as opts}]
   (let [method-name (clojure.string/upper-case (name method))
-        opts        (enrich-with-mandatory-headers opts)
+        opts        (enrich-with-mandatory-headers-and-common-settings opts)
         start       (System/currentTimeMillis)
         response    (http-client/request opts)
         time        (- (System/currentTimeMillis) start)
