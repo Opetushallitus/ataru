@@ -23,7 +23,9 @@
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
         blurField(() => {
-          return formFields().eq(0).find('input')
+          return formFields()
+            .eq(0)
+            .find('input')
         }),
         setNthFieldInputValue(2, 'Sukunimi'),
         setNthFieldInputValue(4, '020202A0202'),
@@ -34,7 +36,12 @@
         setNthFieldInputValue(9, '40100'),
         setNthFieldOption(11, '179'),
         wait.until(() => {
-          return formFields().eq(10).find('input').val() !== ''
+          return (
+            formFields()
+              .eq(10)
+              .find('input')
+              .val() !== ''
+          )
         })
       )
       it('is filled with valid answers', () => {
@@ -157,10 +164,16 @@
         )
         it('shows the single-answer text field as answered', () => {
           expect(
-            formFields().eq(17).find('.application__form-text-input').val()
+            formFields()
+              .eq(17)
+              .find('.application__form-text-input')
+              .val()
           ).to.equal('Tekstikenttä, yksi vastaus: A')
           expect(
-            formFields().eq(25).find('.application__form-text-input').val()
+            formFields()
+              .eq(25)
+              .find('.application__form-text-input')
+              .val()
           ).to.equal('Tekstikenttä, yksi vastaus: B')
         })
       })
@@ -213,10 +226,16 @@
         )
         it('shows the text area inside a question group as answered', () => {
           expect(
-            formFields().eq(19).find('.application__form-text-input').val()
+            formFields()
+              .eq(19)
+              .find('.application__form-text-input')
+              .val()
           ).to.equal('Tekstialue: AAAAA')
           expect(
-            formFields().eq(27).find('.application__form-text-input').val()
+            formFields()
+              .eq(27)
+              .find('.application__form-text-input')
+              .val()
           ).to.equal('Tekstialue: BBBBB')
         })
       })

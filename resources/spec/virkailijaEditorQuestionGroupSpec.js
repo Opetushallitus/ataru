@@ -15,9 +15,11 @@
     return elementExists(formList().find('a'))
   }
 
-  const formListItems = (n) => {
+  const formListItems = n => {
     if ($.isNumeric(n)) {
-      return formList().find('a').eq(n)
+      return formList()
+        .find('a')
+        .eq(n)
     } else {
       return formList().find('a')
     }
@@ -49,7 +51,7 @@
     )
   }
 
-  const menuItem = (title) => {
+  const menuItem = title => {
     triggerEvent(
       testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
       'mouseover'
@@ -71,7 +73,7 @@
     )
   }
 
-  const clickComponentMenuItem = (title) => {
+  const clickComponentMenuItem = title => {
     return clickElement(() => menuItem(title))
   }
 
@@ -96,8 +98,9 @@
         setTextFieldValue(formTitleField, 'Kysymysryhmä: testilomake'),
         wait.until(
           () =>
-            formListItems(0).find('span:eq(0)').text() ===
-            'Kysymysryhmä: testilomake'
+            formListItems(0)
+              .find('span:eq(0)')
+              .text() === 'Kysymysryhmä: testilomake'
         )
       )
       it('creates blank form', () => {
@@ -132,7 +135,9 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(1)
           expect(
-            formComponents().find('.editor-form__text-field:eq(0)').val()
+            formComponents()
+              .find('.editor-form__text-field:eq(0)')
+              .val()
           ).to.equal('Päätaso: pudotusvalikko')
           expect(
             formComponents()
@@ -140,10 +145,14 @@
               .prop('checked')
           ).to.equal(true)
           expect(
-            formComponents().find('.editor-form__text-field:eq(1)').val()
+            formComponents()
+              .find('.editor-form__text-field:eq(1)')
+              .val()
           ).to.equal('Päätaso: A')
           expect(
-            formComponents().find('.editor-form__text-field:eq(2)').val()
+            formComponents()
+              .find('.editor-form__text-field:eq(2)')
+              .val()
           ).to.equal('Päätaso: B')
         })
       })
@@ -173,7 +182,7 @@
               formComponents().find(
                 '.editor-form__followup-question-overlay .form__add-component-toolbar--list-item a'
               ),
-              (e) => $(e).text()
+              e => $(e).text()
             )
           ).to.eql([
             'Painikkeet, yksi valittavissa',
@@ -234,7 +243,7 @@
               formComponents().find(
                 '.editor-form__followup-question-overlay .editor-form__component-wrapper .form__add-component-toolbar--list-item a'
               ),
-              (e) => $(e).text()
+              e => $(e).text()
             )
           ).to.eql([
             'Painikkeet, yksi valittavissa',
@@ -913,9 +922,11 @@
           }, 5000)
         )
         it('notification shows success', () => {
-          expect(testFrame().find('.top-banner .flasher span').text()).to.equal(
-            'Kaikki muutokset tallennettu'
-          )
+          expect(
+            testFrame()
+              .find('.top-banner .flasher span')
+              .text()
+          ).to.equal('Kaikki muutokset tallennettu')
         })
       })
     })

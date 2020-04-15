@@ -1,5 +1,5 @@
 ;(() => {
-  const answer = (index) => {
+  const answer = index => {
     return testFrame()
       .find('.application__text-field-paragraph:eq(' + index + ')')
       .text()
@@ -180,7 +180,7 @@
         )
       )
     )
-    it('shows the information request form to the user', (done) => {
+    it('shows the information request form to the user', done => {
       expect(submitInformationRequestButtonIsDisabled()).to.equal(true)
       setTextFieldValue(informationRequestSubject, 'Täydennyspyyntö: otsikko')()
         .then(wait.until(submitInformationRequestButtonIsDisabled))

@@ -34,7 +34,7 @@
       it('shows submitted form', () => {
         const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          (e) => $(e).text()
+          e => $(e).text()
         )
         console.log('values')
         console.log(displayedValues)
@@ -72,7 +72,7 @@
 
         const tabularValues = _.map(
           testFrame().find('.application__form-field table td'),
-          (e) => $(e).text()
+          e => $(e).text()
         )
         const expectedTabularValues = [
           'A1',
@@ -106,7 +106,9 @@
 
       it('shows error', () => {
         expect(
-          testFrame().find('.application__message-display').text()
+          testFrame()
+            .find('.application__message-display')
+            .text()
         ).to.include('vanhentunut')
       })
     })

@@ -28,7 +28,7 @@
     describe('person info module', () => {
       describe('structure', () => {
         it('has the correct fields', () => {
-          const labels = _.map(personInfoModule().find('label'), (e) => {
+          const labels = _.map(personInfoModule().find('label'), e => {
             return $(e).text()
           })
           const expectedLabels = [
@@ -49,7 +49,9 @@
           ]
 
           expect(
-            personInfoModule().find('.application__wrapper-heading h2').text()
+            personInfoModule()
+              .find('.application__wrapper-heading h2')
+              .text()
           ).to.equal('Henkilötiedot')
 
           expectedLabels.every((e, i) => {
@@ -62,7 +64,9 @@
         before(
           setNthFieldInputValue(0, 'Etunimi Tokanimi'),
           blurField(() => {
-            return formFields().eq(0).find('input')
+            return formFields()
+              .eq(0)
+              .find('input')
           }),
           setNthFieldInputValue(2, 'Sukunimi'),
           setNthFieldInputValue(4, '020202A0202'),
@@ -73,16 +77,41 @@
           setNthFieldInputValue(9, '40100'),
           setNthFieldOption(11, '179'),
           wait.until(() => {
-            return formFields().eq(10).find('input').val() !== ''
+            return (
+              formFields()
+                .eq(10)
+                .find('input')
+                .val() !== ''
+            )
           }),
           wait.forMilliseconds(600),
           clickElement(invalidFieldsStatus)
         )
         it('works and validates correctly', () => {
-          expect(formFields().eq(1).find('input').val()).to.equal('Etunimi')
-          expect(formFields().eq(3).find('select').val()).to.equal('246')
-          expect(formFields().eq(10).find('input').val()).to.equal('JYVÄSKYLÄ')
-          expect(formFields().eq(12).find('select').val()).to.equal('FI')
+          expect(
+            formFields()
+              .eq(1)
+              .find('input')
+              .val()
+          ).to.equal('Etunimi')
+          expect(
+            formFields()
+              .eq(3)
+              .find('select')
+              .val()
+          ).to.equal('246')
+          expect(
+            formFields()
+              .eq(10)
+              .find('input')
+              .val()
+          ).to.equal('JYVÄSKYLÄ')
+          expect(
+            formFields()
+              .eq(12)
+              .find('select')
+              .val()
+          ).to.equal('FI')
           expect(invalidFieldNames().join(';')).to.equal(
             'Toinen kysymys;Osiokysymys;Lyhyen listan kysymys'
           )
@@ -112,7 +141,9 @@
         setNthFieldSubInputValue(21, 0, 'A1'),
         setNthFieldSubInputValue(21, 1, 'B1'),
         clickElement(() => {
-          return formFields().eq(21).find('.application__form-add-new-row')
+          return formFields()
+            .eq(21)
+            .find('.application__form-add-new-row')
         }),
         setNthFieldSubInputValue(21, 2, 'C1'),
         setNthFieldSubInputValue(21, 3, 'A2'),
@@ -130,7 +161,9 @@
         setNthFieldSubInputValue(28, 1, 'B1'),
         setNthFieldSubInputValue(28, 2, 'C1'),
         clickElement(() => {
-          return formFields().eq(28).find('.application__form-add-new-row')
+          return formFields()
+            .eq(28)
+            .find('.application__form-add-new-row')
         }),
         setNthFieldSubInputValue(28, 3, 'A2'),
         setNthFieldSubInputValue(28, 5, 'C2'),
@@ -141,7 +174,9 @@
         setNthFieldSubInputValue(31, 1, 'B1'),
         setNthFieldSubInputValue(31, 2, 'C1'),
         clickElement(() => {
-          return formFields().eq(31).find('.application__form-add-new-row')
+          return formFields()
+            .eq(31)
+            .find('.application__form-add-new-row')
         }),
         setNthFieldSubInputValue(31, 3, 'A2'),
         setNthFieldSubInputValue(31, 5, 'C2'),
@@ -173,7 +208,7 @@
       it('shows submitted form', () => {
         const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          (e) => {
+          e => {
             return $(e).text()
           }
         )
@@ -215,7 +250,7 @@
 
         const tabularValues = _.map(
           testFrame().find('.application__form-field table td'),
-          (e) => {
+          e => {
             return $(e).text()
           }
         )

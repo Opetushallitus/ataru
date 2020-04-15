@@ -2,7 +2,7 @@ const testFormApplicationSecret = '{{test-form-application-secret}}'
 const virkailijaSecret = '{{virkailija-secret}}'
 const virkailijaCreateSecret = '{{virkailija-create-secret}}'
 
-const newForm = (formName) => {
+const newForm = formName => {
   const testFormKey = '{{test-form-key}}'
   const testQuestionGroupFormKey = '{{test-question-group-form-key}}'
   const testSelectionLimitFormKey = '{{test-selection-limit-form-key}}'
@@ -55,7 +55,7 @@ const invalidFieldsStatus = () =>
   testFrame().find('.application__invalid-field-status-title')
 
 const invalidFieldNames = () =>
-  _.map(testFrame().find('.application__invalid-fields > a > div'), (e) =>
+  _.map(testFrame().find('.application__invalid-fields > a > div'), e =>
     $(e).text()
   )
 
@@ -69,27 +69,59 @@ const hakukohdeSearchInput = () =>
 
 const personInfoModule = () => formSections().eq(0)
 
-const selectedHakukohdeName = (hakukohdeRow) =>
-  $(hakukohdeRow).find('.application__hakukohde-header').first().text()
+const selectedHakukohdeName = hakukohdeRow =>
+  $(hakukohdeRow)
+    .find('.application__hakukohde-header')
+    .first()
+    .text()
 
-const hasFormField = (fieldId) =>
+const hasFormField = fieldId =>
   testFrame().find('#scroll-to-' + fieldId).length === 1
 
 const setFieldInputValue = (id, value) =>
-  setTextFieldValue(() => testFrame().find(id).focus(), value)
+  setTextFieldValue(
+    () =>
+      testFrame()
+        .find(id)
+        .focus(),
+    value
+  )
 
 const setNthFieldInputValue = (n, value) =>
-  setTextFieldValue(() => formFields().eq(n).find('input').focus(), value)
+  setTextFieldValue(
+    () =>
+      formFields()
+        .eq(n)
+        .find('input')
+        .focus(),
+    value
+  )
 
-const selectNthField = (n) =>
-  clickElement(() => formFields().eq(n).find('input').focus())
+const selectNthField = n =>
+  clickElement(() =>
+    formFields()
+      .eq(n)
+      .find('input')
+      .focus()
+  )
 
 const setNthFieldValue = (n, selector, value) =>
-  setTextFieldValue(() => formFields().eq(n).find(selector), value)
+  setTextFieldValue(
+    () =>
+      formFields()
+        .eq(n)
+        .find(selector),
+    value
+  )
 
 const setNthFieldSubInputValue = (n, sub, value) =>
   setTextFieldValue(
-    () => formFields().eq(n).find('input').eq(sub).focus(),
+    () =>
+      formFields()
+        .eq(n)
+        .find('input')
+        .eq(sub)
+        .focus(),
     value
   )
 
@@ -98,7 +130,9 @@ const setNthFieldOption = (n, value) =>
     const $option = formFields()
       .eq(n)
       .find('option[value="' + value + '"]')
-    const $select = formFields().eq(n).find('select')
+    const $select = formFields()
+      .eq(n)
+      .find('select')
     if (elementExists($option) && elementExists($select)) {
       $option.prop('selected', true)
       triggerEvent($select, 'change')
@@ -119,26 +153,32 @@ const addHakukohdeLink = () =>
 const hakukohdeSearchHits = () =>
   testFrame().find('.application__search-hit-hakukohde-row')
 
-const nthHakukohdeSearchResultButton = (n) =>
-  hakukohdeSearchHits().eq(n).find('button')
+const nthHakukohdeSearchResultButton = n =>
+  hakukohdeSearchHits()
+    .eq(n)
+    .find('button')
 
-const nthHakukohdePriorityUp = (n) =>
+const nthHakukohdePriorityUp = n =>
   testFrame()
     .find('.application__selected-hakukohde-row')
     .eq(n)
     .find('.application__selected-hakukohde-row--priority-increase')
 
-const nthHakukohdePriorityDown = (n) =>
+const nthHakukohdePriorityDown = n =>
   testFrame()
     .find('.application__selected-hakukohde-row')
     .eq(n)
     .find('.application__selected-hakukohde-row--priority-decrease')
 
 const selectedHakukohdeTexts = () =>
-  testFrame().find('.application__selected-hakukohde-row--content').text()
+  testFrame()
+    .find('.application__selected-hakukohde-row--content')
+    .text()
 
 const searchHakukohdeTexts = () =>
-  testFrame().find('.application__search-hit-hakukohde-row--content').text()
+  testFrame()
+    .find('.application__search-hit-hakukohde-row--content')
+    .text()
 
 const assertOnlyFinnishSsn = () => {
   expect(hasFormField('ssn')).to.equal(true)
@@ -173,7 +213,7 @@ const assertNonFinnishSsnFields = () => {
   expect(hasFormField('birthplace')).to.equal(true)
 }
 
-const assertInvalidFieldCount = (count) => {
+const assertInvalidFieldCount = count => {
   if (count === 0) {
     return () => {
       expect(invalidFieldsStatus().length).to.equal(0)
@@ -187,16 +227,19 @@ const assertInvalidFieldCount = (count) => {
   }
 }
 
-const focusInput = (index) => () => {
-  formFields().eq(index).find('input').focus()
+const focusInput = index => () => {
+  formFields()
+    .eq(index)
+    .find('input')
+    .focus()
 }
 
-const readonlyAnswer = (index) =>
+const readonlyAnswer = index =>
   testFrame()
     .find('.application__text-field-paragraph:eq(' + index + ')')
     .text()
 
-const adjacentReadonlyAnswer = (index) =>
+const adjacentReadonlyAnswer = index =>
   testFrame()
     .find('.application__readonly-adjacent-cell:eq(' + index + ')')
     .text()

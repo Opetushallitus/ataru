@@ -1,13 +1,13 @@
 const runner = mocha.run()
 let failed = 0
 
-$(document).keyup((e) => {
+$(document).keyup(e => {
   if (e.keyCode == 27) {
     runner._abort = true
   }
 })
 
-const parseTitle = (test) => {
+const parseTitle = test => {
   const titleArr = []
   let thisTest = test
   while (thisTest && thisTest.title) {
@@ -17,7 +17,7 @@ const parseTitle = (test) => {
   return titleArr.join(' / ')
 }
 
-runner.on('test end', (t) => {
+runner.on('test end', t => {
   console.log('Completed:', parseTitle(t))
 })
 

@@ -98,23 +98,37 @@
       before(
         setNthFieldInputValue(0, 'Etunimi Tokanimi'),
         blurField(() => {
-          return formFields().eq(0).find('input')
+          return formFields()
+            .eq(0)
+            .find('input')
         }),
         focusInput(2),
         wait.until(() => {
-          return formFields().eq(1).find('input').val() !== ''
+          return (
+            formFields()
+              .eq(1)
+              .find('input')
+              .val() !== ''
+          )
         }),
         setNthFieldInputValue(2, 'Sukunimi'),
         setNthFieldOption(3, '740'),
         wait.until(() => {
           return (
-            formFields().eq(4).find('label').text() ===
-            'Onko sinulla suomalainen henkilötunnus?.'
+            formFields()
+              .eq(4)
+              .find('label')
+              .text() === 'Onko sinulla suomalainen henkilötunnus?.'
           )
         }),
         setNthFieldOption(4, 'false'),
         wait.until(() => {
-          return formFields().eq(5).find('label').text() === 'Syntymäaika *.'
+          return (
+            formFields()
+              .eq(5)
+              .find('label')
+              .text() === 'Syntymäaika *.'
+          )
         }),
         setNthFieldInputValue(5, '1.1.1990'),
         setNthFieldOption(6, '1'),
@@ -127,7 +141,12 @@
         setNthFieldInputValue(13, 'Katutie 12 B'),
         setNthFieldInputValue(14, '40100'),
         wait.until(() => {
-          return formFields().eq(15).find('input').val() !== ''
+          return (
+            formFields()
+              .eq(15)
+              .find('input')
+              .val() !== ''
+          )
         }),
         setNthFieldOption(16, '179'),
         wait.until(submitButtonEnabled)
@@ -153,7 +172,7 @@
       it('has submitted the form', () => {
         const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          (e) => {
+          e => {
             return $(e).text()
           }
         )

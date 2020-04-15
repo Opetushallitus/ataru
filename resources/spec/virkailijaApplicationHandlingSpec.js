@@ -10,7 +10,10 @@
   }
 
   const massInformationRequestText = () => {
-    return massInformationRequestPopup().find('p').first().text()
+    return massInformationRequestPopup()
+      .find('p')
+      .first()
+      .text()
   }
 
   const massInformationRequestSubject = () => {
@@ -42,7 +45,9 @@
   }
 
   const massUpdateFromState = () => {
-    return massUpdatePopup().children('div').eq(1)
+    return massUpdatePopup()
+      .children('div')
+      .eq(1)
   }
 
   const massUpdateFromStateSelectionOpened = () => {
@@ -51,11 +56,15 @@
 
   const massUpdateFromStateSelectionClosed = () => {
     const sel = '.application-handling__review-state-row--mass-update'
-    return massUpdateFromState().find(sel).addBack(sel)
+    return massUpdateFromState()
+      .find(sel)
+      .addBack(sel)
   }
 
   const massUpdateToState = () => {
-    return massUpdatePopup().children('div').eq(2)
+    return massUpdatePopup()
+      .children('div')
+      .eq(2)
   }
 
   const massUpdateToStateSelectionOpened = () => {
@@ -64,7 +73,9 @@
 
   const massUpdateToStateSelectionClosed = () => {
     const sel = '.application-handling__review-state-row--mass-update'
-    return massUpdateToState().find(sel).addBack(sel)
+    return massUpdateToState()
+      .find(sel)
+      .addBack(sel)
   }
 
   const massUpdatePopup = () => {
@@ -76,7 +87,7 @@
   const applicationHakukohdeStates = () => {
     return _.map(
       testFrame().find('.application-handling__hakukohde-state'),
-      (o) => $(o).text()
+      o => $(o).text()
     )
   }
 
@@ -130,7 +141,7 @@
     ).length
   }
 
-  const applicationHeadingIs = (expected) => {
+  const applicationHeadingIs = expected => {
     return () => {
       return (
         testFrame()
@@ -141,11 +152,15 @@
   }
 
   const hakukohdeProcessingFilterLink = () => {
-    return testFrame().find('.application-handling__filter-state a').eq(1)
+    return testFrame()
+      .find('.application-handling__filter-state a')
+      .eq(1)
   }
 
   const selectionStateFilterLink = () => {
-    return testFrame().find('.application-handling__filter-state a').eq(2)
+    return testFrame()
+      .find('.application-handling__filter-state a')
+      .eq(2)
   }
 
   const applicationRow = () => {
@@ -225,7 +240,7 @@
     return testFrame().find('.application-handling__excel-download-link')
   }
 
-  const expectApplicants = (expected) => {
+  const expectApplicants = expected => {
     expect(applicantNames()).to.eql(expected)
   }
 
@@ -233,7 +248,7 @@
     return applicantNames()[0]
   }
 
-  const firstApplicantNameIs = (expected) => {
+  const firstApplicantNameIs = expected => {
     return () => {
       return firstApplicantName() === expected
     }
@@ -250,8 +265,8 @@
       '.application-handling__list-row--applicant-name'
     )
     return _(scoreColumnObjects)
-      .map((obj) => $(obj).text())
-      .filter((val) => val !== 'Hakija')
+      .map(obj => $(obj).text())
+      .filter(val => val !== 'Hakija')
       .value()
   }
 
@@ -279,7 +294,7 @@
     return testFrame().find('.application__search-control-search-term-input')
   }
 
-  const ssnSearchFieldHasValue = (value) => {
+  const ssnSearchFieldHasValue = value => {
     return () => {
       return ssnSearchField().val() === value
     }
@@ -323,14 +338,14 @@
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa Excel')
       })
-      it('stores an event for review state change', function () {
+      it('stores an event for review state change', function() {
         const firstEventNow = testFrame()
           .find('.application-handling__event-row-header > span')
           .first()
           .text()
         expect(firstEventNow).to.equal('Käsittelyvaihe: Käsittelyssä (TI)')
       })
-      it('Successfully stores notes and score for an application', (done) => {
+      it('Successfully stores notes and score for an application', done => {
         const scoreForVatanen = Math.floor(Math.random() * 50 + 1)
         const scoreForKuikeloinen = scoreForVatanen + 5
         const scoreForTyrni = scoreForKuikeloinen - 10
@@ -383,7 +398,7 @@
           .fail(done)
       })
 
-      it('shows yksilointitieto for application', (done) => {
+      it('shows yksilointitieto for application', done => {
         clickElement(firstApplication)()
           .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
           .then(() => {
@@ -518,7 +533,7 @@
 
     describe('application filtering on hakukohde processing state', () => {
       before(clickElement(hakukohdeProcessingFilterLink))
-      it('reduces application list', (done) => {
+      it('reduces application list', done => {
         expect(includedHakukohdeProcessingStateFilters()).to.equal(8)
         expect(filteredApplicationsCount()).to.equal(3)
 
@@ -552,9 +567,7 @@
           .fail(done)
       })
 
-      const filterOutBasedOnFirstApplicationState = (
-        stateOfFirstApplication
-      ) => {
+      const filterOutBasedOnFirstApplicationState = stateOfFirstApplication => {
         testFrame()
           .find(
             '.application-handling__list-row--state .application-handling__filter-state-selected-row span:contains(' +
@@ -564,9 +577,7 @@
           .click()
       }
 
-      const filterInBasedOnFirstApplicationState = (
-        stateOfFirstApplication
-      ) => {
+      const filterInBasedOnFirstApplicationState = stateOfFirstApplication => {
         testFrame()
           .find(
             '.application-handling__list-row--state .application-handling__filter-state-selection-row span:contains(' +
@@ -652,7 +663,7 @@
     describe('finding all applications belonging to a given ssn', () => {
       before(clickElement(multipleApplicationsApplicant))
 
-      it('shows link to all applications belonging to a given ssn', (done) => {
+      it('shows link to all applications belonging to a given ssn', done => {
         wait
           .until(() => {
             return searchApplicationsBySsnLink()

@@ -26,5 +26,6 @@ config/ui-test.edn
 /logs
 .oracle_jre_usage
 npm-debug.log*
+package-lock.json
 *.pid
 .gradle
