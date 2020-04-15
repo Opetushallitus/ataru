@@ -261,7 +261,7 @@
          excluded-attachment-ids-when-yo-and-jyemp (-> db :application :excluded-attachment-ids-when-yo-and-jyemp)
          jyemp?                 (and ylioppilastutkinto?
                                      (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
-         visible?               (and (not (get-in field-descriptor [:params :hidden] false))
+         visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
                                      (or (not jyemp?) (not-empty selected-ei-jyemp-hakukohteet-and-ryhmat))
                                      (or (empty? belongs-to)
@@ -278,10 +278,16 @@
          option-visibility      (fn [db]
                                   (reduce #(set-option-visibility %1 %2 visible? id selected-hakukohteet-and-ryhmat)
                                           db
-                                          (map-indexed vector (:options field-descriptor))))]
-     (cond-> (-> (assoc-in db [:application :ui id :visible?] visible?)
-                 (child-visibility)
-                 (option-visibility))
+                                          (map-indexed vector (:options field-descriptor))))
+         field-visibility       (fn [db]
+                                  (assoc-in db [:application :ui id :visible?]
+                                            (and visible? (or (empty? (:children field-descriptor))
+                                                              (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
+                                                                    (:children field-descriptor))))))]
+     (cond-> (-> db
+                 child-visibility
+                 option-visibility
+                 field-visibility)
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
              (set-single-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
