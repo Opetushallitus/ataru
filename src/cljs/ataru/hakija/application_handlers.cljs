@@ -164,11 +164,6 @@
   (fn [{:keys [db]} _]
     (send-application db :put)))
 
-(reg-event-db
-  :application/hide-hakukohteet-if-no-tarjonta
-  (fn [db _]
-    (assoc-in db [:application :ui :hakukohteet :visible?] (boolean (-> db :form :tarjonta)))))
-
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
                       :lang
@@ -274,7 +269,8 @@
                                                      belongs-to
                                                      (if jyemp?
                                                        selected-ei-jyemp-hakukohteet-and-ryhmat
-                                                       selected-hakukohteet-and-ryhmat)))))
+                                                       selected-hakukohteet-and-ryhmat))))
+                                     (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta]))))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
                                           db
@@ -587,8 +583,7 @@
     (let [selection-limited (selection-limits db)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
-         :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                      [:application/hakukohde-query-change (atom "")]
+         :dispatch-n [[:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
                       [:application/update-answers-validity]
                       [:application/validate-hakukohteet]]}
