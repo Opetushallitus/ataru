@@ -15,11 +15,9 @@
     return elementExists(formList().find('a'))
   }
 
-  const formListItems = n => {
+  const formListItems = (n) => {
     if ($.isNumeric(n)) {
-      return formList()
-        .find('a')
-        .eq(n)
+      return formList().find('a').eq(n)
     } else {
       return formList().find('a')
     }
@@ -74,11 +72,11 @@
     return clickElement(menuItem)
   }
 
-  const clickRepeatingAnswers = question => {
+  const clickRepeatingAnswers = (question) => {
     return () =>
       testFrame()
         .find('input.editor-form__text-field')
-        .filter(function() {
+        .filter(function () {
           return this.value === question
         })
         .parent()
@@ -89,11 +87,11 @@
         .click()
   }
 
-  const clickNumericAnswer = question => {
+  const clickNumericAnswer = (question) => {
     return () =>
       testFrame()
         .find('input.editor-form__text-field')
-        .filter(function() {
+        .filter(function () {
           return this.value === question
         })
         .parent()
@@ -106,11 +104,9 @@
         .click()
   }
 
-  const clickInfoTextCheckbox = selector => {
+  const clickInfoTextCheckbox = (selector) => {
     return () =>
-      selector()
-        .find('.editor-form__info-addon-checkbox > input')
-        .click()
+      selector().find('.editor-form__info-addon-checkbox > input').click()
   }
 
   before(() => {
@@ -130,16 +126,11 @@
       wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
       clickComponentMenuItem('Tekstikenttä'),
       setTextFieldValue(
-        () =>
-          formComponents()
-            .eq(0)
-            .find('.editor-form__text-field'),
+        () => formComponents().eq(0).find('.editor-form__text-field'),
         'Ensimmäinen kysymys'
       ),
       clickElement(() =>
-        formComponents()
-          .eq(0)
-          .find('.editor-form__info-addon-checkbox label')
+        formComponents().eq(0).find('.editor-form__info-addon-checkbox label')
       ),
       setTextFieldValue(
         () =>
