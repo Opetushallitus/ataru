@@ -25,14 +25,15 @@
   (let [show-details        (r/atom false)
         toggle-show-details #(do (reset! show-details (not @show-details)) nil)
         languages           (subscribe [:application/default-languages])
-        lang                (subscribe [:application/form-language])]
-    (fn [valid-status]
-      (when (seq (:invalid-fields valid-status))
+        lang                (subscribe [:application/form-language])
+        valid-status        (subscribe [:application/valid-status])]
+    (fn []
+      (when (seq (:invalid-fields @valid-status))
         [:div.application__invalid-field-status
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
           (first (translations/get-hakija-translation :check-answers @lang))
-          [:b (count (:invalid-fields valid-status))]
+          [:b (count (:invalid-fields @valid-status))]
           (last (translations/get-hakija-translation :check-answers @lang))]
          (when @show-details
            [:div
@@ -46,13 +47,14 @@
                            [:a {:href (str "#scroll-to-" (name (:key field)))} [:div (if (empty? label)
                                                                                        (translations/get-hakija-translation :missing-input @lang)
                                                                                        label)]]))
-                       (:invalid-fields valid-status)))])]))))
+                       (:invalid-fields @valid-status)))])]))))
 
-(defn sent-indicator [submit-status]
-  (let [virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
+(defn sent-indicator []
+  (let [submit-status     (subscribe [:state-query [:application :submit-status]])
+        virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
         lang              (subscribe [:application/form-language])]
-    (fn [submit-status]
-      (match [submit-status @virkailija-secret]
+    (fn []
+      (match [@submit-status @virkailija-secret]
              [:submitting _] [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
              [:submitted (_ :guard #(nil? %))]
              [:div.application__sent-indicator.animated.fadeIn (translations/get-hakija-translation :application-confirmation @lang)]
@@ -71,41 +73,44 @@
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
 
-(defn send-button-or-placeholder [valid-status submit-status]
-  (let [secret                (subscribe [:state-query [:application :secret]])
-        virkailija-secret     (subscribe [:state-query [:application :virkailija-secret]])
-        transmitting?         (subscribe [:application/attachments-uploading?])
-        editing               (subscribe [:state-query [:application :editing?]])
-        values-changed?       (subscribe [:state-query [:application :values-changed?]])
-        validators-processing (subscribe [:state-query [:application :validators-processing]])
-        secret-expired?       (subscribe [:state-query [:application :secret-expired?]])
-        lang                  (subscribe [:application/form-language])]
-    (fn [valid-status submit-status]
-      (match submit-status
-             :submitted [:div.application__sent-placeholder.animated.fadeIn
-                         [:i.zmdi.zmdi-check]
-                         [:span.application__sent-placeholder-text
-                          (translations/get-hakija-translation
-                            (if (and @editing @virkailija-secret)
-                              :modifications-saved
-                              :application-sent)
-                            @lang)]]
-             :else [:button.application__send-application-button
-                    {:disabled (or @transmitting?
-                                   (not-empty (:invalid-fields valid-status))
-                                   (contains? #{:submitting :submitted} submit-status)
-                                   (and @editing (empty? @values-changed?))
-                                   @secret-expired?
-                                   (not (empty? @validators-processing)))
-                     :on-click #(if @editing
-                                  (dispatch [:application/edit])
-                                  (dispatch [:application/submit]))}
-                    (edit-text @editing @secret @virkailija-secret @lang)]))))
+(defn send-button-or-placeholder []
+  (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
+        secret                @(subscribe [:state-query [:application :secret]])
+        virkailija-secret     @(subscribe [:state-query [:application :virkailija-secret]])
+        transmitting?         @(subscribe [:application/attachments-uploading?])
+        editing               @(subscribe [:state-query [:application :editing?]])
+        values-changed?       @(subscribe [:state-query [:application :values-changed?]])
+        validators-processing @(subscribe [:state-query [:application :validators-processing]])
+        secret-expired?       @(subscribe [:state-query [:application :secret-expired?]])
+        lang                  @(subscribe [:application/form-language])
+        invalid-fields?       @(subscribe [:application/invalid-fields?])]
+    (match submit-status
+      :submitted [:div.application__sent-placeholder.animated.fadeIn
+                  [:i.zmdi.zmdi-check]
+                  [:span.application__sent-placeholder-text
+                   (translations/get-hakija-translation
+                    (if (and editing virkailija-secret)
+                      :modifications-saved
+                      :application-sent)
+                    lang)]]
+      :else [:button.application__send-application-button
+             {:disabled (or transmitting?
+                            invalid-fields?
+                            (= :submitting submit-status)
+                            (and editing (empty? values-changed?))
+                            secret-expired?
+                            (not (empty? validators-processing)))
+              :on-click #(if editing
+                           (dispatch [:application/edit])
+                           (dispatch [:application/submit]))}
+             (edit-text editing secret virkailija-secret lang)])))
 
 (defn- preview-toggle
-  [submit-status enabled?]
-  (let [toggle-fn (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
-        lang      @(subscribe [:application/form-language])]
+  []
+  (let [toggle-fn     (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
+        submit-status @(subscribe [:state-query [:application :submit-status]])
+        enabled?      @(subscribe [:state-query [:application :preview-enabled]])
+        lang          @(subscribe [:application/form-language])]
     (when (not submit-status)
       [:div.application__preview-toggle-container
        [:a.application__preview-link
@@ -156,17 +161,16 @@
     (fn []
       (hakuaika-left-text @seconds-left lang))))
 
-(defn status-controls [submit-status]
-  (let [valid-status (subscribe [:application/valid-status])
-        can-apply?   (subscribe [:application/can-apply?])
-        editing?     (subscribe [:state-query [:application :editing?]])]
+(defn status-controls []
+  (let [can-apply? (subscribe [:application/can-apply?])
+        editing?   (subscribe [:state-query [:application :editing?]])]
     (fn []
       (when (or @can-apply? @editing?)
         [:div.application__status-controls-container
          [:div.application__status-controls
-          [send-button-or-placeholder @valid-status @submit-status]
-          [invalid-field-status @valid-status]
-          [sent-indicator @submit-status]]]))))
+          [send-button-or-placeholder]
+          [invalid-field-status]
+          [sent-indicator]]]))))
 
 (defn virkailija-fill-ribbon
   []
@@ -176,15 +180,12 @@
      "Testihakemus / Virkailijatäyttö"]))
 
 (defn banner []
-  (let [submit-status    (subscribe [:state-query [:application :submit-status]])
-        preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
-    (fn []
-      [:div.application__banner-container
-       [virkailija-fill-ribbon]
-       [:div.application__top-banner-container
-        [:div.application-top-banner
-         [logo]
-         [hakuaika-left]
-         [:div.application__preview-control
-          [preview-toggle @submit-status @preview-enabled?]]
-         [status-controls submit-status]]]])))
+  [:div.application__banner-container
+   [virkailija-fill-ribbon]
+   [:div.application__top-banner-container
+    [:div.application-top-banner
+     [logo]
+     [hakuaika-left]
+     [:div.application__preview-control
+      [preview-toggle]]
+     [status-controls]]]])
