@@ -44,13 +44,7 @@
         setNthFieldInputValue(10, '00100'),
         setNthFieldOption(12, '091'),
         setNthFieldInputValue(14, '55cm'),
-        wait.until(
-          () =>
-            formFields()
-              .eq(11)
-              .find('input')
-              .val() !== ''
-        ),
+        wait.until(() => formFields().eq(11).find('input').val() !== ''),
         wait.until(() => !submitButton().prop('disabled'))
       )
       it('validates and shows form correctly', () => {
@@ -86,7 +80,7 @@
 
         const otherValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          e => $(e).text()
+          (e) => $(e).text()
         )
         const expectedOtherValues = [
           'Virkailijan',
