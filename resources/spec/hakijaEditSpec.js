@@ -26,7 +26,7 @@
       it('with correct existing answers', () => {
         const textInputValues = _.map(
           testFrame().find('.application__form-text-input'),
-          e => {
+          (e) => {
             return $(e).val()
           }
         )
@@ -75,7 +75,7 @@
 
         const dropdownInputValues = _.map(
           testFrame().find('select.application__form-select option:selected'),
-          e => {
+          (e) => {
             return $(e).text()
           }
         )
@@ -98,7 +98,7 @@
             testFrame().find(
               'input.application__form-checkbox:checked + label'
             ),
-            e => {
+            (e) => {
               return $(e).text()
             }
           )
@@ -149,7 +149,7 @@
       it('shows submitted form', () => {
         const displayedValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          e => {
+          (e) => {
             return $(e).text()
           }
         )
@@ -189,7 +189,7 @@
 
         const tabularValues = _.map(
           testFrame().find('.application__form-field table td'),
-          e => {
+          (e) => {
             return $(e).text()
           }
         )

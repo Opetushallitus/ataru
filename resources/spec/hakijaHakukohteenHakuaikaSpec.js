@@ -30,12 +30,7 @@
         setNthFieldOption(13, 'FI'),
         setNthFieldInputValue(14, 'Jee'),
         wait.until(() => {
-          return (
-            formFields()
-              .eq(11)
-              .find('input')
-              .val() !== ''
-          )
+          return formFields().eq(11).find('input').val() !== ''
         }),
         wait.until(submitButtonEnabled),
         clickElement(() => {
@@ -48,15 +43,17 @@
         })
       )
       const reloadEditPage = () => {
-        return httpGet('/hakemus/latest-application-secret').then(newSecret => {
-          console.log('Updated secret is ' + newSecret)
-          return httpGet(
-            '/hakemus/alter-application-to-hakuaikaloppu-for-secret/' +
-              newSecret
-          ).then(response => {
-            loadInFrame('/hakemus?modify=' + newSecret)
-          })
-        })
+        return httpGet('/hakemus/latest-application-secret').then(
+          (newSecret) => {
+            console.log('Updated secret is ' + newSecret)
+            return httpGet(
+              '/hakemus/alter-application-to-hakuaikaloppu-for-secret/' +
+                newSecret
+            ).then((response) => {
+              loadInFrame('/hakemus?modify=' + newSecret)
+            })
+          }
+        )
       }
       before(
         reloadEditPage,
@@ -76,20 +73,14 @@
           ).length
         ).to.equal(1)
 
+        expect(testFrame().find('#hakuajat-ohi').prop('disabled')).to.equal(
+          true
+        )
         expect(
-          testFrame()
-            .find('#hakuajat-ohi')
-            .prop('disabled')
-        ).to.equal(true)
-        expect(
-          testFrame()
-            .find('#osa-hakuajoista-ohi')
-            .prop('disabled')
+          testFrame().find('#osa-hakuajoista-ohi').prop('disabled')
         ).to.equal(false)
         expect(
-          testFrame()
-            .find('#kaikki-hakuajat-voimassa')
-            .prop('disabled')
+          testFrame().find('#kaikki-hakuajat-voimassa').prop('disabled')
         ).to.equal(false)
         expect(
           testFrame()
@@ -97,7 +88,7 @@
             .prop('disabled')
         ).to.equal(false)
 
-        const kysymysKoskeeHakukohteitaFinder = id => {
+        const kysymysKoskeeHakukohteitaFinder = (id) => {
           return testFrame()
             .find(id)
             .parent()

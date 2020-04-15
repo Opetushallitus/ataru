@@ -15,11 +15,9 @@
     return elementExists(formList().find('a'))
   }
 
-  const formListItems = n => {
+  const formListItems = (n) => {
     if ($.isNumeric(n)) {
-      return formList()
-        .find('a')
-        .eq(n)
+      return formList().find('a').eq(n)
     } else {
       return formList().find('a')
     }
@@ -78,9 +76,7 @@
 
   function clickCloseDetailsButton() {
     return () => {
-      testFrame()
-        .find('.close-details-button')
-        .click()
+      testFrame().find('.close-details-button').click()
     }
   }
 
@@ -99,11 +95,7 @@
           const b = testFrame().find(selector).length !== 0
           return b
         })()
-        .then(() =>
-          testFrame()
-            .find(selector)
-            .click()
-        )
+        .then(() => testFrame().find(selector).click())
     }
   }
 
@@ -135,11 +127,11 @@
     return clickElement(menuItem)
   }
 
-  const clickRepeatingAnswers = question => {
+  const clickRepeatingAnswers = (question) => {
     return () =>
       testFrame()
         .find('input.editor-form__text-field')
-        .filter(function() {
+        .filter(function () {
           return this.value === question
         })
         .parent()
@@ -150,11 +142,11 @@
         .click()
   }
 
-  const clickNumericAnswer = question => {
+  const clickNumericAnswer = (question) => {
     return () =>
       testFrame()
         .find('input.editor-form__text-field')
-        .filter(function() {
+        .filter(function () {
           return this.value === question
         })
         .parent()
@@ -167,25 +159,23 @@
         .click()
   }
 
-  const clickInfoTextCheckbox = selector => {
+  const clickInfoTextCheckbox = (selector) => {
     return () =>
-      selector()
-        .find('.editor-form__info-addon-checkbox > input')
-        .click()
+      selector().find('.editor-form__info-addon-checkbox > input').click()
   }
 
   const clickLockForm = () => {
     return clickElement(() => testFrame().find('#lock-form'))
   }
 
-  const getInputs = pseudoClass => {
+  const getInputs = (pseudoClass) => {
     return testFrame().find(
       'div.editor-form__panel-container input:not(#editor-form__copy-question-id-container)' +
         pseudoClass
     )
   }
 
-  const getRemoveElementButtons = pseudoClass => {
+  const getRemoveElementButtons = (pseudoClass) => {
     return testFrame().find(
       'div.editor-form__panel-container .editor-form__component-button:contains("Poista")' +
         pseudoClass
@@ -217,10 +207,7 @@
         setTextFieldValue(formTitleField, 'Testilomake'),
         wait.until(() => formTitleField().val() === 'Testilomake'),
         wait.until(
-          () =>
-            formListItems(0)
-              .find('span:eq(0)')
-              .text() === 'Testilomake'
+          () => formListItems(0).find('span:eq(0)').text() === 'Testilomake'
         )
       )
       it('creates blank form', () => {
@@ -236,10 +223,7 @@
         before(
           clickComponentMenuItem('Tekstikenttä'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(0)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(0).find('.editor-form__text-field'),
             'Ensimmäinen kysymys'
           ),
           clickElement(() =>
@@ -258,10 +242,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(1)
           expect(
-            formComponents()
-              .eq(0)
-              .find('.editor-form__text-field')
-              .val()
+            formComponents().eq(0).find('.editor-form__text-field').val()
           ).to.equal('Ensimmäinen kysymys')
           expect(
             formComponents()
@@ -294,10 +275,7 @@
         before(
           clickComponentMenuItem('Tekstikenttä'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(1)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(1).find('.editor-form__text-field'),
             'Ensimmäinen kysymys, toistuvilla arvoilla'
           ),
           clickRepeatingAnswers('Ensimmäinen kysymys, toistuvilla arvoilla')
@@ -305,10 +283,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(2)
           expect(
-            formComponents()
-              .eq(1)
-              .find('.editor-form__text-field')
-              .val()
+            formComponents().eq(1).find('.editor-form__text-field').val()
           ).to.equal('Ensimmäinen kysymys, toistuvilla arvoilla')
           expect(
             formComponents()
@@ -335,9 +310,7 @@
               .find('.editor-form__button-group div:eq(2) label')
           ),
           clickElement(() =>
-            formComponents()
-              .eq(2)
-              .find('.editor-form__checkbox-wrapper label')
+            formComponents().eq(2).find('.editor-form__checkbox-wrapper label')
           ),
           setTextFieldValue(
             () =>
@@ -347,10 +320,7 @@
             '2000'
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(2)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(2).find('.editor-form__text-field'),
             'Toinen kysymys'
           ),
           clickElement(() =>
@@ -369,10 +339,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(3)
           expect(
-            formComponents()
-              .eq(2)
-              .find('.editor-form__text-field')
-              .val()
+            formComponents().eq(2).find('.editor-form__text-field').val()
           ).to.equal('Toinen kysymys')
           expect(
             formComponents()
@@ -411,18 +378,11 @@
         before(
           clickComponentMenuItem('Pudotusvalikko'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(3)
-                .find('.editor-form__text-field')
-                .eq(0),
+            () => formComponents().eq(3).find('.editor-form__text-field').eq(0),
             'Kolmas kysymys'
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(3)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(3).find('.editor-form__text-field:last'),
             'Ensimmäinen vaihtoehto'
           ),
           clickElement(() =>
@@ -431,28 +391,18 @@
               .find('.editor-form__multi-options-arrow--up:last')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(3)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(3).find('.editor-form__text-field:last'),
             'Toinen vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(3)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(3).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(3)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(3).find('.editor-form__text-field:last'),
             'Kolmas vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(3)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(3).find('.editor-form__add-dropdown-item a')
           ),
           clickElement(() =>
             formComponents()
@@ -489,10 +439,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(4)
           expect(
-            formComponents()
-              .eq(3)
-              .find('.editor-form__text-field:first')
-              .val()
+            formComponents().eq(3).find('.editor-form__text-field:first').val()
           ).to.equal('Kolmas kysymys')
           expect(
             formComponents()
@@ -511,7 +458,7 @@
               .eq(3)
               .find('.editor-form__multi-options-container input')
               .not('.editor-form__followup-question-overlay input'),
-            inputField => $(inputField).val()
+            (inputField) => $(inputField).val()
           )
           expect(options).to.eql([
             'Ensimmäinen vaihtoehto',
@@ -546,10 +493,7 @@
         before(
           clickComponentMenuItem('Pudotusvalikko, koodisto'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(4)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(4).find('.editor-form__text-field'),
             'Neljäs kysymys'
           ),
           () => {
@@ -576,53 +520,32 @@
         before(
           clickComponentMenuItem('Lista, monta valittavissa'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(5)
-                .find('.editor-form__text-field')
-                .eq(0),
+            () => formComponents().eq(5).find('.editor-form__text-field').eq(0),
             'Viides kysymys'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(5)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(5).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(5)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(5).find('.editor-form__text-field:last'),
             'Ensimmäinen vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(5)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(5).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(5)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(5).find('.editor-form__text-field:last'),
             'Toinen vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(5)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(5).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(5)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(5).find('.editor-form__text-field:last'),
             'Kolmas vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(5)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(5).find('.editor-form__add-dropdown-item a')
           ),
           clickElement(() =>
             formComponents()
@@ -773,10 +696,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(6)
           expect(
-            formComponents()
-              .eq(5)
-              .find('.editor-form__text-field:first')
-              .val()
+            formComponents().eq(5).find('.editor-form__text-field:first').val()
           ).to.equal('Viides kysymys')
           expect(
             formComponents()
@@ -795,7 +715,7 @@
               .eq(5)
               .find('.editor-form__multi-option-wrapper input')
               .not('.editor-form__followup-question-overlay input'),
-            inputField => $(inputField).val()
+            (inputField) => $(inputField).val()
           )
           expect(options).to.eql([
             'Ensimmäinen vaihtoehto',
@@ -846,10 +766,7 @@
         before(
           clickComponentMenuItem('Lista, monta valittavissa, koodisto'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(6)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(6).find('.editor-form__text-field'),
             'Kuudes kysymys'
           ),
           () => {
@@ -876,25 +793,15 @@
         before(
           clickComponentMenuItem('Lomakeosio'),
           setTextFieldValue(
-            () =>
-              formSections()
-                .eq(0)
-                .find('.editor-form__text-field')
-                .eq(0),
+            () => formSections().eq(0).find('.editor-form__text-field').eq(0),
             'Testiosio'
           ),
           clickSubComponentMenuItem('Tekstialue', () => formSections().eq(0)),
           clickElement(() =>
-            formSections()
-              .eq(0)
-              .find('.editor-form__checkbox-wrapper label')
+            formSections().eq(0).find('.editor-form__checkbox-wrapper label')
           ),
           setTextFieldValue(
-            () =>
-              formSections()
-                .eq(0)
-                .find('.editor-form__text-field')
-                .eq(1),
+            () => formSections().eq(0).find('.editor-form__text-field').eq(1),
             'Osiokysymys'
           ),
           clickElement(() =>
@@ -906,18 +813,10 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(9)
           expect(
-            formSections()
-              .eq(0)
-              .find('.editor-form__text-field')
-              .eq(0)
-              .val()
+            formSections().eq(0).find('.editor-form__text-field').eq(0).val()
           ).to.equal('Testiosio')
           expect(
-            formSections()
-              .eq(0)
-              .find('.editor-form__text-field')
-              .eq(1)
-              .val()
+            formSections().eq(0).find('.editor-form__text-field').eq(1).val()
           ).to.equal('Osiokysymys')
           expect(
             formSections()
@@ -939,10 +838,7 @@
           clickComponentMenuItem('Tekstikenttä'),
           clickInfoTextCheckbox(() => formComponents().eq(9)),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(9)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(9).find('.editor-form__text-field'),
             'Infoteksti'
           ),
           setTextFieldValue(
@@ -982,10 +878,7 @@
         before(
           clickComponentMenuItem('Pudotusvalikko, koodisto'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(10)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(10).find('.editor-form__text-field'),
             'Viimeinen kysymys'
           ),
           () => {
@@ -1012,10 +905,7 @@
         before(
           clickComponentMenuItem('Painikkeet, yksi valittavissa'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(11)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(11).find('.editor-form__text-field'),
             'Lyhyen listan kysymys'
           ),
           clickElement(() =>
@@ -1024,27 +914,17 @@
               .find('.editor-form__checkbox-wrapper label:first')
           ),
           clickElement(() =>
-            formComponents()
-              .eq(11)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(11).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(11)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(11).find('.editor-form__text-field:last'),
             'Ensimmäinen vaihtoehto'
           ),
           clickElement(() =>
-            formComponents()
-              .eq(11)
-              .find('.editor-form__add-dropdown-item a')
+            formComponents().eq(11).find('.editor-form__add-dropdown-item a')
           ),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(11)
-                .find('.editor-form__text-field:last'),
+            () => formComponents().eq(11).find('.editor-form__text-field:last'),
             'Toinen vaihtoehto'
           ),
           clickElement(() =>
@@ -1190,10 +1070,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(12)
           expect(
-            formComponents()
-              .eq(11)
-              .find('.editor-form__text-field:first')
-              .val()
+            formComponents().eq(11).find('.editor-form__text-field:first').val()
           ).to.equal('Lyhyen listan kysymys')
           expect(
             formComponents()
@@ -1262,10 +1139,7 @@
         before(
           clickComponentMenuItem('Vierekkäiset tekstikentät'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(12)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(12).find('.editor-form__text-field'),
             'Vierekkäinen tekstikenttä'
           ),
           clickSubComponentMenuItem('Tekstikenttä', () =>
@@ -1302,10 +1176,7 @@
           clickComponentMenuItem('Pudotusvalikko'),
           setTextFieldValue(
             () =>
-              formComponents()
-                .eq(15)
-                .find('.editor-form__text-field')
-                .eq(0),
+              formComponents().eq(15).find('.editor-form__text-field').eq(0),
             'Päätason pudotusvalikko'
           ),
           setTextFieldValue(
@@ -1419,10 +1290,7 @@
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(16)
           expect(
-            formComponents()
-              .eq(15)
-              .find('.editor-form__text-field:first')
-              .val()
+            formComponents().eq(15).find('.editor-form__text-field:first').val()
           ).to.equal('Päätason pudotusvalikko')
           expect(
             formComponents()
@@ -1485,34 +1353,19 @@
         before(
           clickComponentMenuItem('Tekstikenttä'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(16)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(16).find('.editor-form__text-field'),
             'Tekstikenttä numeerisilla arvoilla'
           ),
           clickNumericAnswer('Tekstikenttä numeerisilla arvoilla'),
           () => {
-            formComponents()
-              .eq(16)
-              .find('option')
-              .eq(4)
-              .prop('selected', true)
-            triggerEvent(
-              formComponents()
-                .eq(16)
-                .find('select'),
-              'change'
-            )
+            formComponents().eq(16).find('option').eq(4).prop('selected', true)
+            triggerEvent(formComponents().eq(16).find('select'), 'change')
           }
         )
         it('has expected contents', () => {
           expect(formComponents()).to.have.length(17)
           expect(
-            formComponents()
-              .eq(16)
-              .find('.editor-form__text-field')
-              .val()
+            formComponents().eq(16).find('.editor-form__text-field').val()
           ).to.equal('Tekstikenttä numeerisilla arvoilla')
           expect(
             formComponents()
@@ -1522,9 +1375,7 @@
               .prop('checked')
           ).to.equal(true)
           expect(
-            formComponents()
-              .eq(16)
-              .find('select')[0].selectedIndex
+            formComponents().eq(16).find('select')[0].selectedIndex
           ).to.equal(4)
         })
       })
@@ -1533,10 +1384,7 @@
         before(
           clickComponentMenuItem('Pudotusvalikko, koodisto'),
           setTextFieldValue(
-            () =>
-              formComponents()
-                .eq(17)
-                .find('.editor-form__text-field'),
+            () => formComponents().eq(17).find('.editor-form__text-field'),
             'Alasvetovalikko, koodisto, päättyneet'
           ),
           () => {
@@ -1555,9 +1403,7 @@
               )
           ),
           clickElement(() =>
-            formComponents()
-              .eq(17)
-              .find('.editor-form__show-koodisto-values a')
+            formComponents().eq(17).find('.editor-form__show-koodisto-values a')
           ),
           wait.until(() =>
             elementExists(
@@ -1659,11 +1505,9 @@
           }, 10000)
         )
         it('notification shows success', () => {
-          expect(
-            testFrame()
-              .find('.top-banner .flasher span')
-              .text()
-          ).to.equal('Kaikki muutokset tallennettu')
+          expect(testFrame().find('.top-banner .flasher span').text()).to.equal(
+            'Kaikki muutokset tallennettu'
+          )
         })
       })
     })
@@ -1683,11 +1527,7 @@
       )
       it('creates the copy in another form', () => {
         expect(
-          formSections()
-            .eq(0)
-            .find('.editor-form__text-field')
-            .eq(0)
-            .val()
+          formSections().eq(0).find('.editor-form__text-field').eq(0).val()
         ).to.equal('Testiosio')
       })
     })

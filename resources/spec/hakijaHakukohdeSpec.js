@@ -37,7 +37,7 @@
         })
       )
       it('returns correct results', () => {
-        const results = _.map(hakukohdeSearchHits(), e => {
+        const results = _.map(hakukohdeSearchHits(), (e) => {
           return $(e)
             .find('.application__search-hit-hakukohde-row--content')
             .text()

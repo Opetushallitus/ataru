@@ -7,18 +7,18 @@ mocha.timeout(30000)
 const expect = chai.expect
 chai.should()
 
-const loadInFrame = src => {
+const loadInFrame = (src) => {
   $('#test')
     .attr('src', src)
     .attr('width', 1400)
     .attr('height', 900)
-    .on('error', err => {
+    .on('error', (err) => {
       console.error(err)
       window.uiError = err
     })
 }
 
-const httpGet = url => {
+const httpGet = (url) => {
   return $.get(url).promise()
 }
 
@@ -26,7 +26,7 @@ const testFrame = () => {
   return $('#test').contents()
 }
 
-const elementExists = $e => {
+const elementExists = ($e) => {
   return $e && $e.length > 0
 }
 
@@ -36,7 +36,7 @@ const triggerEvent = ($e, type) => {
   $e.get(0).dispatchEvent(evt)
 }
 
-const isRadioButton = $e => {
+const isRadioButton = ($e) => {
   return $e.attr('for') && $e.parent().find('#' + $e.attr('for')) !== null
 }
 
@@ -48,7 +48,7 @@ const wait = {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault
       const deferred = Q.defer()
       const count = Math.floor(maxWaitMs / wait.waitIntervalMs)
-      const waitLoop = remaining => {
+      const waitLoop = (remaining) => {
         if (condition()) {
           deferred.resolve()
         } else if (remaining === 0) {
@@ -71,12 +71,12 @@ const wait = {
       return deferred.promise
     }
   },
-  untilFalse: condition => {
+  untilFalse: (condition) => {
     return wait.until(() => {
       return !condition()
     })
   },
-  forMilliseconds: ms => {
+  forMilliseconds: (ms) => {
     return () => {
       const deferred = Q.defer()
       setTimeout(() => {
@@ -85,14 +85,14 @@ const wait = {
       return deferred.promise
     }
   },
-  forElement: elementQueryFn => {
+  forElement: (elementQueryFn) => {
     return wait.until(() => {
       return elementExists(elementQueryFn())
     })
   },
 }
 
-const blurField = selectFn => {
+const blurField = (selectFn) => {
   return wait.until(() => {
     $e = selectFn()
     if (elementExists($e)) {
@@ -148,8 +148,8 @@ const setTextFieldValue = (selectFn, contents) => {
 
 ;(() => {
   const origBefore = before
-  before = function() {
-    Array.prototype.slice.call(arguments).forEach(function(arg) {
+  before = function () {
+    Array.prototype.slice.call(arguments).forEach(function (arg) {
       if (typeof arg !== 'function') {
         throw 'not a function: ' + arg
       }

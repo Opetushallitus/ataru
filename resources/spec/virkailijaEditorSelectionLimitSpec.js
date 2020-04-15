@@ -19,11 +19,9 @@
     return elementExists(formList().find('a'))
   }
 
-  const formListItems = n => {
+  const formListItems = (n) => {
     if ($.isNumeric(n)) {
-      return formList()
-        .find('a')
-        .eq(n)
+      return formList().find('a').eq(n)
     } else {
       return formList().find('a')
     }
@@ -55,7 +53,7 @@
     )
   }
 
-  const menuItem = title => {
+  const menuItem = (title) => {
     triggerEvent(
       testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
       'mouseover'
@@ -77,7 +75,7 @@
     )
   }
 
-  const clickComponentMenuItem = title => {
+  const clickComponentMenuItem = (title) => {
     return clickElement(() => menuItem(title))
   }
 
@@ -101,10 +99,7 @@
         wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
         setTextFieldValue(formTitleField, 'Selection Limit'),
         wait.until(
-          () =>
-            formListItems(0)
-              .find('span:eq(0)')
-              .text() === 'Selection Limit'
+          () => formListItems(0).find('span:eq(0)').text() === 'Selection Limit'
         )
       )
       it('creates blank form', () => {
@@ -181,11 +176,9 @@
         }, 5000)
       )
       it('notification shows success', () => {
-        expect(
-          testFrame()
-            .find('.top-banner .flasher span')
-            .text()
-        ).to.equal('Kaikki muutokset tallennettu')
+        expect(testFrame().find('.top-banner .flasher span').text()).to.equal(
+          'Kaikki muutokset tallennettu'
+        )
       })
     })
   })
