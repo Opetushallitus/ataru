@@ -2,6 +2,7 @@
   (:require [speclj.core :refer :all]
             [clj-time.core :as t]
             [ataru.fixtures.person-info-form :refer [form]]
+            [ataru.log.audit-log :as audit-log]
             [ataru.forms.form-store :as store])
   (:import
    (clojure.lang ExceptionInfo)))
@@ -10,6 +11,8 @@
 
 (def org-id  "1.2.246.562.10.2.45")
 (def id-less (-> form (dissoc :id) (assoc :organization_oid org-id)))
+
+(def audit-logger (audit-log/new-dummy-audit-logger))
 
 (describe "form versioning"
   (tags :unit :form-versioning)
@@ -20,20 +23,20 @@
         (should key)))
 
   (it "should version subsequent forms"
-      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session)
-            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session)]
+      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session audit-logger)
+            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session audit-logger)]
         (should= key (:key version-two))
         (should-not= id (:id version-two))
         (should (t/after? (:created-time version-two) created-time))))
 
   (it "should retrieve latest version with old version"
-      (let [version-one (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session)
-            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session)]
+      (let [version-one (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session audit-logger)
+            version-two (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session audit-logger)]
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-one))))
         (should= (:id version-two) (:id (store/fetch-latest-version (:id version-two))))))
 
   (it "should throw when later version already exists"
-      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session)
-            version-two                                   (store/create-form-or-increment-version! (assoc  version-one :organization-oid org-id) spec-session)]
+      (let [{:keys [id key created-time] :as version-one} (store/create-form-or-increment-version! (assoc id-less :organization-oid org-id) spec-session audit-logger)
+            version-two                                   (store/create-form-or-increment-version! (assoc  version-one :organization-oid org-id) spec-session audit-logger)]
         (should-throw ExceptionInfo "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."
-                      (keys (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session))))))
+                      (keys (store/create-form-or-increment-version! (assoc version-one :organization-oid org-id) spec-session audit-logger))))))

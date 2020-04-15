@@ -124,7 +124,7 @@ clean-lein:
 # Database initialization
 # ----------------
 init-test-db:
-	APP=virkailija lein with-profile test run -m ataru.db.migrations/migrate
+	APP=virkailija lein with-profile test run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
 
 nuke-test-db:
 	APP=virkailija lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database

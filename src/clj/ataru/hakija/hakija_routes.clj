@@ -1,7 +1,6 @@
 (ns ataru.hakija.hakija-routes
   (:require [ataru.log.access-log :as access-log]
             [ataru.log.audit-log :as audit-log]
-            [ataru.util :as util]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-client :as session-client]
             [ataru.applications.application-store :as application-store]
@@ -32,9 +31,7 @@
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
-            [taoensso.timbre :as log])
-  (:import [ring.swagger.upload Upload]
-           [java.io InputStream]))
+            [taoensso.timbre :as log]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -46,8 +43,9 @@
    koodisto-cache
    ohjausparametrit-service
    organization-service
-   person-client
+   application-service
    tarjonta-service
+   audit-logger
    session
    secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
@@ -55,7 +53,7 @@
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
-                                                                     person-client
+                                                                     application-service
                                                                      tarjonta-service
                                                                      secret)]
     (cond inactivated?
@@ -63,7 +61,8 @@
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
-            (audit-log/log {:new       application
+            (audit-log/log audit-logger
+                           {:new       application
                             :operation audit-log/operation-read
                             :session   session
                             :id        {:applicationOid (:key application)}})
@@ -139,12 +138,13 @@
                           job-runner
                           organization-service
                           ohjausparametrit-service
-                          person-service
+                          application-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
                           temp-file-store
-                          amazon-sqs]}]
+                          amazon-sqs
+                          audit-logger]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -196,6 +196,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              audit-logger
               application
               session)
              {:passed? false :failures failures :code code}
@@ -213,6 +214,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              audit-logger
               application
               session)
              {:passed? false :failures failures :code code}
@@ -230,8 +232,9 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             person-service
+                             application-service
                              tarjonta-service
+                             audit-logger
                              session
                              {:hakija secret})
 
@@ -240,8 +243,9 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             person-service
+                             application-service
                              tarjonta-service
+                             audit-logger
                              session
                              {:virkailija virkailija-secret})
 

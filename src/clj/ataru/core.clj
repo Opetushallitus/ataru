@@ -2,9 +2,9 @@
   (:require [com.stuartsierra.component :as component]
             [clj-time.jdbc] ; for java.sql.Timestamp / org.joda.time.DateTime coercion
             [clojure.tools.namespace.repl :refer [refresh]]
-            [ataru.log.audit-log :as audit-log]
             [ataru.util.app-utils :as app-utils]
             [ataru.timbre-config :as timbre-config]
+            [ataru.log.audit-log :as audit-log]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
             [ataru.db.migrations :as migrations]
@@ -16,21 +16,21 @@
   []
   @(promise))
 
-(def ^:private app-systems {:virkailija virkailija-system/new-system
-                            :hakija hakija-system/new-system})
+(def ^:private app-systems {:virkailija virkailija-system/init-new-system
+                            :hakija hakija-system/init-new-system})
 
 (def system (atom {:system nil
                    :system-fn nil}))
 
 (defn start []
-  (swap! system (fn [{:keys [app-id system system-fn] :as old-system}]
+  (swap! system (fn [{:keys [app-id system system-fn audit-logger] :as old-system}]
                   (if system
                     (do
                       (info "System already started")
                       old-system)
                     (do
                       (info "Running migrations")
-                      (migrations/migrate)
+                      (migrations/migrate audit-logger)
                       (info "Starting system" app-id)
                       (assoc old-system :system (component/start (system-fn))))))))
 
@@ -47,15 +47,17 @@
 
 (defn -main [& args]
   (let [app-id         (app-utils/get-app-id args)
-        system-fn      (get app-systems app-id)]
+        init-system-fn      (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
-    (when-not system-fn
+    (when-not init-system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
                (apply str (interpose ", " (map name (keys app-systems)))))
       (System/exit 1))
     (do
-      (reset! system {:app-id app-id
-                      :system-fn system-fn})
-      (start)
-      (wait-forever))))
+      (let [audit-logger (audit-log/new-audit-logger)]
+        (reset! system {:app-id       app-id
+                        :audit-logger audit-logger
+                        :system-fn    (init-system-fn audit-logger)})
+        (start)
+        (wait-forever)))))

@@ -20,16 +20,21 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.temp-file-storage.s3-client :as s3-client]
             [ataru.temp-file-storage.filesystem-temp-file-store :as filesystem-temp-file-store]
-            [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]))
+            [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]
+            [ataru.valinta-tulos-service.service :as valinta-tulos-service]
+            [ataru.applications.application-service :as application-service]))
 
 (defn new-system
-  ([]
+  ([audit-logger]
    (new-system
+     audit-logger
     (Integer/parseInt (get env :ataru-http-port "8351"))
     (Integer/parseInt (get env :ataru-repl-port "3335"))))
-  ([http-port repl-port]
+  ([audit-logger http-port repl-port]
    (apply
     component/system-map
+
+    :audit-logger audit-logger
 
     :organization-service (component/using
                            (organization-service/new-organization-service)
@@ -89,6 +94,23 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login" "session")
+
+    :valinta-tulos-service (component/using
+                            (valinta-tulos-service/map->RemoteValintaTulosService {})
+                            {:cas-client :valinta-tulos-service-cas-client})
+
+    :application-service (component/using
+                           (application-service/new-application-service)
+                           [:organization-service
+                            :tarjonta-service
+                            :ohjausparametrit-service
+                            :audit-logger
+                            :person-service
+                            :valinta-tulos-service
+                            :koodisto-cache
+                            :job-runner])
+
     :handler (component/using
                (handler/new-handler)
                (into [:tarjonta-service
@@ -97,7 +119,9 @@
                       :ohjausparametrit-service
                       :person-service
                       :temp-file-store
-                      :amazon-sqs]
+                      :amazon-sqs
+                      :application-service
+                      :audit-logger]
                      (map first caches)))
 
     :server-setup {:port      http-port
@@ -115,8 +139,13 @@
                   :koodisto-cache
                   :person-service
                   :tarjonta-service
-                  :suoritus-service])
+                  :suoritus-service
+                  :audit-logger])
 
     :redis (redis/map->Redis {})
 
     (mapcat identity caches))))
+
+(defn init-new-system [audit-logger]
+  (fn []
+    (new-system audit-logger)))

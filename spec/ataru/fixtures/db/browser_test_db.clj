@@ -1,7 +1,6 @@
 (ns ataru.fixtures.db.browser-test-db
   "Database fixture, insert test-data to DB"
   (:require [yesql.core :refer [defqueries]]
-            [clojure.java.jdbc :as jdbc]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
@@ -10,7 +9,8 @@
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
             [ataru.config.core :refer [config]]
-            [ataru.db.migrations :as migrations]))
+            [ataru.db.migrations :as migrations]
+            [ataru.log.audit-log :as audit-log]))
 
 (defqueries "sql/form-queries.sql")
 
@@ -297,6 +297,8 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
+(def audit-logger (audit-log/new-dummy-audit-logger))
+
 (defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
   (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
                                                       :prioriteetit [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
@@ -319,13 +321,13 @@
                                (:key belongs-to-hakukohteet-test-form))
   (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                (:key hakija-hakukohteen-hakuaika-test-form))
-  (application-store/add-application application1 [] form1 {})
-  (application-store/add-application application2 [] form1 {})
-  (application-store/add-application application3 [] form1 {}))
+  (application-store/add-application application1 [] form1 {} audit-logger)
+  (application-store/add-application application2 [] form1 {} audit-logger)
+  (application-store/add-application application3 [] form1 {} audit-logger))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
-  (migrations/migrate)
+  (migrations/migrate audit-logger)
   (when insert-initial-fixtures? (init-db-fixture)))
 
 (defn insert-test-form [form-name]

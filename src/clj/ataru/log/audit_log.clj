@@ -1,26 +1,16 @@
 (ns ataru.log.audit-log
   (:require [ataru.util.app-utils :as app-utils]
             [ataru.config.core :refer [config]]
-            [clj-time.core :as c]
-            [clj-time.format :as f]
-            [clojure.core.match :as m]
-            [cheshire.core :as json]
-            [taoensso.timbre :as timbre]
-            [environ.core :refer [env]]
             [clojure.data :refer [diff]]
-            [taoensso.timbre.appenders.core :refer [println-appender]]
-            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
+            [clj-timbre-auditlog.audit-log :as cta-audit-log])
   (:import [fi.vm.sade.auditlog
             Operation
             Changes$Builder
             Target$Builder
-            Target
-            Changes
-            Logger
-            Audit
             ApplicationType
-            User]
-           java.util.TimeZone
+            User
+            Audit
+            DummyAuditLog]
            java.net.InetAddress
            org.ietf.jgss.Oid))
 
@@ -37,43 +27,25 @@
 (defn- create-audit-logger []
   (let [service-name     (case (app-utils/get-app-id)
                            :virkailija "ataru-editori"
-                           :hakija     "ataru-hakija"
+                           :hakija "ataru-hakija"
                            nil)
         base-path        (case (app-utils/get-app-id)
                            :virkailija (-> config :log :virkailija-base-path)
-                           :hakija     (-> config :log :hakija-base-path))
-        audit-log-config (assoc timbre/example-config
-                                :appenders {:file-appender   (assoc (rolling-appender
-                                                                     {:path    (str base-path
-                                                                                    "/audit_" service-name
-                                                                                    ;; Hostname will differentiate files in actual environments
-                                                                                    (when (:hostname env) (str "_" (:hostname env))))
-                                                                      :pattern :daily})
-                                                                    :output-fn (fn [data] (force (:msg_ data))))
-                                            :stdout-appender (assoc (println-appender
-                                                                     {:stream :std-out})
-                                                                    :output-fn (fn [data]
-                                                                                 (json/generate-string
-                                                                                  {:eventType "audit"
-                                                                                   :timestamp (force (:timestamp_ data))
-                                                                                   :event     (json/parse-string (force (:msg_ data)))})))}
-                                :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
-                                                 :timezone (TimeZone/getTimeZone "Europe/Helsinki")})
-        logger           (proxy [Logger] [] (log [str]
-                                              (timbre/log* audit-log-config :info str)))
+                           :hakija (-> config :log :hakija-base-path))
         application-type (case (app-utils/get-app-id)
                            :virkailija ApplicationType/VIRKAILIJA
-                           :hakija     ApplicationType/OPPIJA
+                           :hakija ApplicationType/OPPIJA
                            ApplicationType/BACKEND)]
-    (new Audit logger service-name application-type)))
+    (cta-audit-log/create-audit-logger service-name base-path application-type)))
 
-(def ^:private logger (create-audit-logger))
+(defrecord AtaruAuditLogger [auditlog])
 
-(def ^:private date-time-formatter (f/formatter :date-time))
+;; Huom: tätä funktiota tulee kutsua tuotantosovelluksessa vain kerran, jotta ei synny useampia Audit-instansseja.
+(defn new-audit-logger []
+  map->AtaruAuditLogger (create-audit-logger))
 
-(defn- timestamp []
-  (->> (c/now)
-       (f/unparse date-time-formatter)))
+(defn new-dummy-audit-logger []
+  map->AtaruAuditLogger (new DummyAuditLog))
 
 (defn- map-or-vec? [x]
   (or (map? x)
@@ -112,7 +84,7 @@
      (into {} (for [kw updated-kw]
                 [kw [(get new-diff kw) (get old-diff kw)]]))]))
 
-(defn- do-log [{:keys [new old id operation session]}]
+(defn- do-log [^Audit audit-logger {:keys [new old id operation session]}]
   {:pre [(or (and (or (string? new)
                       (map-or-vec? new))
                   (nil? old))
@@ -145,7 +117,7 @@
                         (.removed % path (str val))))
                     (#(doseq [[path [n o]] updated]
                         (.updated % (str path) (str o) (str n)))))]
-    (.log logger user operation
+    (.log audit-logger user operation
           (let [tb (Target$Builder.)]
             (doseq [[field value] id
                     :when (some? value)]
@@ -161,8 +133,8 @@
    either a vector or a map.
 
    If only :new value is provided, it can also be a String."
-  [params]
-  (try
-    (do-log params)
-    (catch Throwable t
-      (throw (new RuntimeException "Failed to create an audit log entry" t)))))
+  ([audit-logger params]
+    (try
+      (do-log audit-logger params)
+      (catch Throwable t
+        (throw (new RuntimeException "Failed to create an audit log entry" t))))))

@@ -12,7 +12,6 @@
             [ataru.db.migrations.form-migration-store :as migration-form-store]
             [ataru.forms.form-store :as store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
@@ -28,13 +27,15 @@
             [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.log.audit-log :as audit-log]
             [medley.core :refer [find-first]])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (defonce migration-session {:user-agent "migration"})
 
 (def default-fetch-size 50)
+
+(def audit-logger (atom nil))
 
 (defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
   (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
@@ -74,7 +75,8 @@
                      :en "dd.mm.yyyy"})
           :else expr))
       form)
-      migration-session)))
+      migration-session
+      @audit-logger)))
 
 (defn refresh-person-info-modules []
   (let [new-person-module (person-info-module/person-info-module)]
@@ -83,7 +85,8 @@
                       (sort-by :created-time))]
       (store/create-form-or-increment-version!
        (update-person-info-module new-person-module form)
-        migration-session))))
+        migration-session
+        @audit-logger))))
 
 (defn inject-hakukohde-component-if-missing
   "Add hakukohde component to legacy forms (new ones have one added on creation)"
@@ -186,7 +189,7 @@
                          (map #(store/fetch-by-id (:id %)) (migration-form-store/get-all-forms))
                          (catch Exception _ []))
         wrap (fn [w]
-                 (store/create-form-or-increment-version! w migration-session))]
+                 (store/create-form-or-increment-version! w migration-session @audit-logger))]
     (doseq [form existing-forms]
       (some-> form
               wrap-followups
@@ -236,7 +239,7 @@
     (log/info "Creating new review state for application" application-key "in state" old-state)
     (when (not= old-state application-state)
       (log/info "Updating application state:" old-state "->" application-state)
-      (application-store/save-application-review (merge old-review {:state application-state}) fake-session))
+      (application-store/save-application-review (merge old-review {:state application-state}) fake-session @audit-logger))
     (when (= 1 (count hakukohteet))
       (log/info "Updating hakukohde" (first hakukohteet) "to state" selection-state)
       (application-store/save-application-hakukohde-review
@@ -244,7 +247,8 @@
         (first hakukohteet)
         "selection-state"
         selection-state
-        fake-session))))
+        fake-session
+        @audit-logger))))
 
 (defn- application-reviews->new-model
   []
@@ -333,7 +337,8 @@
               hakukohde-oid-or-form
               "processing-state"
               state
-              fake-session)))
+              fake-session
+              @audit-logger)))
         (let [new-application-state (if (= state "inactivated")
                                       "inactivated"
                                       "active")]
@@ -665,5 +670,8 @@
     (migrate-nationality-to-question-group conn)))
 
 (defn migrate
-  []
- (migrations/migrate :db "db.migration" "ataru.db.migrations"))
+  [audit-logger-to-use]
+  (if (= "use dummy-audit-logger!" audit-logger-to-use)
+    (reset! audit-logger audit-log/new-dummy-audit-logger)
+    (reset! audit-logger audit-logger-to-use))
+  (migrations/migrate :db "db.migration" "ataru.db.migrations"))

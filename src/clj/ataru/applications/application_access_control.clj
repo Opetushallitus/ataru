@@ -3,7 +3,6 @@
    [ataru.log.audit-log :as audit-log]
    [ataru.organization-service.session-organizations :as session-orgs]
    [ataru.user-rights :as user-rights]
-   [ataru.forms.form-access-control :as form-access-control]
    [ataru.applications.application-store :as application-store]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
    [ataru.odw.odw-service :as odw-service]
@@ -95,7 +94,7 @@
        (true?)))
 
 (defn get-latest-application-by-key
-  [organization-service tarjonta-service session application-key]
+  [organization-service tarjonta-service audit-logger session application-key]
   (let [application         (application-store/get-latest-application-by-key application-key)
         rights-by-hakukohde (some->> application
                                      vector
@@ -107,7 +106,8 @@
                    #{:view-applications :edit-applications}
                    (val %)))
                 rights-by-hakukohde)
-      (audit-log/log {:new       (dissoc application :answers)
+      (audit-log/log audit-logger
+                     {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}
                       :session   session
                       :operation audit-log/operation-read})

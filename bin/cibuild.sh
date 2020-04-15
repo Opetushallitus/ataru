@@ -58,7 +58,7 @@ test-browser() {
 
 run-migrations() {
     echo "Running migrations"
-    time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate
+    time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
 }
 
 nuke-test-db() {

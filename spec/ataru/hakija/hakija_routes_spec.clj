@@ -15,10 +15,9 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
-            [ataru.cache.in-memory-cache :as in-memory]
-            [ataru.cache.redis-cache :as redis-cache]
             [ataru.hakija.hakija-routes :as routes]
             [ataru.hakija.hakija-application-service :as application-service]
+            [ataru.applications.application-service :as common-application-service]
             [ataru.config.core :refer [config]]
             [ataru.util.random :as crypto]
             [clj-time.core :as t]
@@ -28,10 +27,8 @@
             [speclj.core :refer :all]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.person-service.person-service :as person-service])
-  (:import java.util.concurrent.TimeUnit
-           org.joda.time.DateTime))
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+  (:import org.joda.time.DateTime))
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -65,6 +62,8 @@
         tarjonta-service                     (tarjonta-service/new-tarjonta-service)
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
+        application-service                  (common-application-service/new-application-service)
+        audit-logger                         (ataru.log.audit-log/new-dummy-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
@@ -81,7 +80,7 @@
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)
         (assoc :ohjausparametrit-service ohjausparametrit-service)
-        (assoc :person-service (person-service/new-person-service))
+        (assoc :application-service application-service)
         (assoc :form-by-id-cache form-by-id-cache)
         (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
                                              (get-from [this key]
@@ -90,6 +89,7 @@
                                              (remove-from [this key])
                                              (clear-all [this])))
         (assoc :koodisto-cache koodisto-cache)
+        (assoc :audit-logger audit-logger)
         .start
         :routes)))
 

@@ -198,7 +198,9 @@
                           statistics-day-cache
                           koodisto-cache
                           person-service
-                          get-haut-cache]
+                          get-haut-cache
+                          audit-logger
+                          application-service]
                    :as dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -235,7 +237,7 @@
       :summary "Edit form content"
       :path-params [id :- Long]
       :body [operations [ataru-schema/Operation]]
-      (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service)
+      (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service audit-logger)
       (ok {}))
 
     (api/PUT "/forms/:id/lock/:operation" {session :session}
@@ -244,17 +246,17 @@
       :return {:locked    (s/maybe DateTime)
                :id        Long}
       :summary "Toggle form locked state"
-      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service)))
+      (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service audit-logger)))
 
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"
-      (ok (access-controlled-form/delete-form id session tarjonta-service organization-service)))
+      (ok (access-controlled-form/delete-form id session tarjonta-service organization-service audit-logger)))
 
     (api/POST "/forms" {session :session}
       :summary "Persist changed form."
       :body [form ataru-schema/FormWithContent]
-      (ok (access-controlled-form/post-form form session tarjonta-service organization-service)))
+      (ok (access-controlled-form/post-form form session tarjonta-service organization-service audit-logger)))
 
     (api/POST "/client-error" []
       :summary "Log client-side errors to server log"
@@ -329,8 +331,7 @@
                      :to-state         (apply s/enum (map first review-states/application-hakukohde-processing-states))}]
         :summary "Update list of application-hakukohde with given state to new state"
         (if (application-service/mass-update-application-states
-             organization-service
-             tarjonta-service
+             application-service
              session
              (:application-keys body)
              (:hakukohde-oid body)
@@ -381,13 +382,9 @@
                  :information-requests         [ataru-schema/InformationRequest]
                  :selection-state-used?        s/Bool}
         (if-let [application (application-service/get-application-with-human-readable-koodis
-                              koodisto-cache
+                              application-service
                               application-key
                               session
-                              organization-service
-                              tarjonta-service
-                              ohjausparametrit-service
-                              person-service
                               newest-form)]
           (response/ok application)
           (response/unauthorized {:error (str "Hakemuksen "
@@ -436,12 +433,9 @@
         :summary "Send the modify application link to the applicant via email"
         :return ataru-schema/Event
         (if-let [resend-event (application-service/send-modify-application-link-email
-                                koodisto-cache application-key
-                                session
-                                organization-service
-                                ohjausparametrit-service
-                                tarjonta-service
-                                job-runner)]
+                                application-service
+                                application-key
+                                session)]
           (response/ok resend-event)
           (response/bad-request)))
 
@@ -451,6 +445,7 @@
         (let [response (field-deadline/get-field-deadlines
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key)]
           (case response
@@ -472,6 +467,7 @@
         (let [response (field-deadline/get-field-deadline
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key
                         field-id)]
@@ -495,6 +491,7 @@
               response            (field-deadline/put-field-deadline
                                    organization-service
                                    tarjonta-service
+                                   audit-logger
                                    session
                                    application-key
                                    field-id
@@ -518,6 +515,7 @@
         (let [response (field-deadline/delete-field-deadline
                         organization-service
                         tarjonta-service
+                        audit-logger
                         session
                         application-key
                         field-id
@@ -535,8 +533,7 @@
                      (s/optional-key :hakukohde)  s/Str
                      (s/optional-key :state-name) ataru-schema/HakukohdeReviewTypeNames}]
         (if-let [note (application-service/add-review-note
-                       organization-service
-                       tarjonta-service
+                       application-service
                        session
                        note)]
           (response/ok note)
@@ -557,9 +554,7 @@
         :body [review ataru-schema/Review]
         :return {:events [ataru-schema/Event]}
         (if-let [result (application-service/save-application-review
-                         job-runner
-                         organization-service
-                         tarjonta-service
+                         application-service
                          session
                          review)]
           (response/ok result)
@@ -625,17 +620,12 @@
              {:error (str "Cannot create excel for more than " size-limit " applications")})
             (let [included-ids (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+")))
                   xls          (application-service/get-excel-report-of-applications-by-key
+                                application-service
                                 application-keys
                                 selected-hakukohde
                                 selected-hakukohderyhma
                                 included-ids
-                                session
-                                organization-service
-                                tarjonta-service
-                                koodisto-cache
-                                ohjausparametrit-service
-                                person-service
-                                valinta-tulos-service)]
+                                session)]
               (if xls
                 {:status  200
                  :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -648,9 +638,8 @@
         :path-params [application-key :- s/Str]
         :return [s/Any]
         (if-let [result (application-service/get-application-version-changes
+                         application-service
                          koodisto-cache
-                         organization-service
-                         tarjonta-service
                          session
                          application-key)]
           (response/ok result)
@@ -994,8 +983,7 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/OmatsivutApplication]
         (if-let [applications (application-service/omatsivut-applications
-                               organization-service
-                               person-service
+                               application-service
                                session
                                person-oid)]
           (response/ok applications)
@@ -1004,7 +992,7 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/OnrApplication]
         (if-let [applications (access-controlled-application/onr-applications
-                                organization-service
+                                application-service
                                 session
                                 person-oid)]
           (response/ok applications)
@@ -1049,7 +1037,7 @@
               :else
               (response/ok
                (application-service/suoritusrekisteri-applications
-                person-service
+                application-service
                 hakuOid
                 hakukohdeOids
                 hakijaOids
@@ -1190,8 +1178,7 @@
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/get-applications-for-valintalaskenta
-                  organization-service
-                  person-service
+                  application-service
                   session
                   hakukohdeOid
                   (not-empty applicationOids))
@@ -1218,9 +1205,7 @@
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/siirto-applications
-                  tarjonta-service
-                  organization-service
-                  person-service
+                  application-service
                   session
                   hakukohdeOid
                   (not-empty applicationOids))
@@ -1372,7 +1357,8 @@
                                   (auth-routes (:login-cas-client this)
                                                (:kayttooikeus-service this)
                                                (:person-service this)
-                                               (:organization-service this))))
+                                               (:organization-service this)
+                                               (:audit-logger this))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

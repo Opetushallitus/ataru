@@ -27,18 +27,22 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.suoritus.suoritus-service :as suoritus-service]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.applications.application-service :as application-service])
   (:import java.time.Duration
            [java.util.concurrent TimeUnit]))
 
 (defn new-system
-  ([]
+  ([audit-logger]
    (new-system
+     audit-logger
     (Integer/parseInt (get env :ataru-http-port "8350"))
     (Integer/parseInt (get env :ataru-repl-port "3333"))))
-  ([http-port repl-port]
+  ([audit-logger http-port repl-port]
    (apply
     component/system-map
+
+    :audit-logger audit-logger
 
     :organization-service (component/using
                            (organization-service/new-organization-service)
@@ -148,6 +152,17 @@
 
     :login-cas-client (cas/new-cas-client)
 
+    :application-service (component/using
+                           (application-service/new-application-service)
+                           [:organization-service
+                            :tarjonta-service
+                            :ohjausparametrit-service
+                            :audit-logger
+                            :person-service
+                            :valinta-tulos-service
+                            :koodisto-cache
+                            :job-runner])
+
     :handler (component/using
               (virkailija-routes/new-handler)
               (vec (concat [:login-cas-client
@@ -159,7 +174,9 @@
                             :job-runner
                             :ohjausparametrit-service
                             :person-service
-                            :kayttooikeus-service]
+                            :kayttooikeus-service
+                            :audit-logger
+                            :application-service]
                            (map first caches))))
 
     :server-setup {:port      http-port
@@ -183,7 +200,8 @@
                   :koodisto-cache
                   :person-service
                   :tarjonta-service
-                  :suoritus-service])
+                  :suoritus-service
+                  :audit-logger])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -206,3 +224,7 @@
     :redis (redis/map->Redis {})
 
     (mapcat identity caches))))
+
+(defn init-new-system [audit-logger]
+  (fn []
+    (new-system audit-logger)))
