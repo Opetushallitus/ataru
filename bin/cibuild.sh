@@ -29,7 +29,17 @@ npm-dependencies() {
 
 eslint() {
     echo "Running ESLint"
-    npx eslint .
+    npm run lint:js
+}
+
+clj_kondo() {
+    echo "Running clj-kondo"
+    #npm run lint:clj
+}
+
+lint() {
+    eslint
+    clj_kondo
 }
 
 process-resources() {
@@ -102,7 +112,7 @@ run-tests() {
     echo "Starting test run"
     clean
     npm-dependencies
-    eslint
+    lint
     test-clojurescript
     nuke-test-db
     run-migrations
@@ -140,6 +150,9 @@ case "$command" in
         ;;
     "eslint" )
         eslint
+        ;;
+    "lint" )
+        lint
         ;;
     "process-resources" )
         process-resources
@@ -195,6 +208,7 @@ case "$command" in
 * compile-less
 * npm-dependencies
 * eslint
+* lint
 * process-resources
 * build-clojurescript
 * test-clojure
