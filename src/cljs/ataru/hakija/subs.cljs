@@ -78,12 +78,20 @@
 
 (re-frame/reg-sub
   :application/visible-options
-  (fn [db [_ field-description]]
-    (let [visibility (get-in db [:application :ui (keyword (:id field-description))])]
-      (keep-indexed (fn [index option]
-                      (when (get-in visibility [index :visible?] true)
-                        option))
-                    (:options field-description)))))
+  (fn [[_ field-description] _]
+    (re-frame/subscribe [:application/ui-of (keyword (:id field-description))]))
+  (fn [ui-of [_ field-description]]
+    (keep-indexed (fn [index option]
+                    (when (get-in ui-of [index :visible?] true)
+                      option))
+                  (:options field-description))))
+
+(re-frame/reg-sub
+  :application/visible?
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui _]
+    (:visible? ui true)))
 
 (re-frame/reg-sub
   :application/answer

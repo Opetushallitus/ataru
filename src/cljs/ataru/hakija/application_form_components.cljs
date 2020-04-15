@@ -26,12 +26,6 @@
 
 (declare render-field)
 
-(defn- visible? [ui field-descriptor]
-  (and (not (get-in ui [(keyword (:id field-descriptor)) :params :hidden] false))
-       (get-in ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some (partial visible? ui) (:children field-descriptor)))))
-
 (defn- text-field-size->class [size]
   (match size
          "S" "application__form-text-input__size-small"
@@ -384,7 +378,9 @@
       [:h2 label]
       [scroll-to-anchor field-descriptor]]
      (into [:div.application__wrapper-contents]
-           (for [child (:children field-descriptor)]
+           (for [child (:children field-descriptor)
+                 :when @(subscribe [:application/visible? (keyword (:id child))])]
+             ^{:key (:id child)}
              [render-field child nil]))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
@@ -418,10 +414,11 @@
     [(if @mouse-over?
        :div.application__question-group-row.application__question-group-row-mouse-over
        :div.application__question-group-row)
-     [:div.application__question-group-row-content
-      (for [child (:children field-descriptor)]
-        ^{:key (str (:id child) "-" idx)}
-        [render-field child idx])]
+     (into [:div.application__question-group-row-content]
+           (for [child (:children field-descriptor)
+                 :when @(subscribe [:application/visible? (keyword (:id child))])]
+             ^{:key (str (:id child) "-" idx)}
+             [render-field child idx]))
      (when can-remove?
        [remove-question-group-button field-descriptor idx])]))
 
@@ -454,19 +451,19 @@
          (tu/get-hakija-translation :add lang)]])]))
 
 (defn row-wrapper [field-descriptor _]
-  [:div.application__row-field-wrapper
-   (for [child (:children field-descriptor)]
-     ^{:key (:id child)}
-     [render-field child nil])])
+  (into [:div.application__row-field-wrapper]
+        (for [child (:children field-descriptor)
+              :when @(subscribe [:application/visible? (keyword (:id child))])]
+          ^{:key (:id child)}
+          [render-field child nil])))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
    [:div.application__form-multi-choice-followups-indicator]
-   [:div.application__form-multi-choice-followups-container.animated.fadeIn
-    (map (fn [followup]
+   (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+         (for [followup followups]
            ^{:key (:id followup)}
-           [render-field followup nil])
-         followups)]])
+           [render-field followup nil]))])
 
 (defn- multiple-choice-option [field-descriptor option _ _]
   (let [languages    (subscribe [:application/default-languages])
@@ -478,7 +475,8 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor option question-group-idx]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            ui        @(subscribe [:application/ui])]
+            followups (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                              (:followups option))]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -493,10 +491,9 @@
                  (when @cannot-edit? {:class "disabled"}))
           label]
          (when (and @checked?
-                    (not-empty (:followups option))
-                    (some (partial visible? ui) (:followups option))
+                    (not-empty followups)
                     (not question-group-idx))
-           [multi-choice-followups (:followups option)])]))))
+           (multi-choice-followups followups))]))))
 
 (defn multiple-choice
   [field-descriptor & _]
@@ -532,8 +529,9 @@
         valid?         (subscribe [:application/single-choice-option-valid? parent-id question-group-idx])
         lang           (subscribe [:application/form-language])]
     (fn [option parent-id field-descriptor question-group-idx _ use-multi-choice-style? verifying?]
-      (let [ui                   @(subscribe [:application/ui])
-            checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+      (let [checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+            followups            (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                                         (:followups option))
             unselectable?        (and (or (not checked?)
                                           (not @valid?))
                                       @limit-reached?)
@@ -567,11 +565,9 @@
           label
           (when (and (not @verifying?) unselectable?)
             (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
-         (when (and (and checked? @valid?)
-                    (not-empty (:followups option))
-                    (some (partial visible? ui) (:followups option)))
+         (when (and @valid? checked? (not-empty followups))
            (if use-multi-choice-style?
-             (multi-choice-followups (:followups option))
+             (multi-choice-followups followups)
              [:div.application__form-single-choice-followups-indicator]))]))))
 
 (defn- use-multi-choice-style? [single-choice-field langs]
@@ -587,13 +583,13 @@
         verifying?              (subscribe [:application/fetching-selection-limits? button-id])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
     (fn [field-descriptor idx]
-      (let [ui        @(subscribe [:application/ui])
-            answer    @(subscribe [:application/answer button-id idx nil])
+      (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
             followups (->> options
-                           (filter (comp (partial = (:value answer)) :value))
-                           (map :followups)
-                           (first))]
+                           (filter #(= (:value answer) (:value %)))
+                           first
+                           :followups
+                           (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
         [:div.application__form-field.application__form-single-choice-button-container
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -612,12 +608,11 @@
                  options))]
          (when (and (not idx)
                     (not use-multi-choice-style?)
-                    (seq followups)
-                    (some (partial visible? ui) followups))
-           [:div.application__form-multi-choice-followups-container.animated.fadeIn
-            (for [followup followups]
-              ^{:key (:id followup)}
-              [render-field followup nil])])]))))
+                    (not-empty followups))
+           (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+                 (for [followup followups]
+                   ^{:key (:id followup)}
+                   [render-field followup nil])))]))))
 
 (defonce max-attachment-size-bytes
          (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
@@ -910,38 +905,35 @@
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
 (defn render-field
-  [_ _]
-  (let [ui (subscribe [:application/ui])]
-    (fn [field-descriptor idx]
-      (if (visible? @ui field-descriptor)
-        (match field-descriptor
-               {:id         "email"
-                :fieldClass "formField"
-                :fieldType  "textField"} [email-field field-descriptor idx]
-               {:fieldClass "wrapperElement"
-                :fieldType  "fieldset"} [wrapper-field field-descriptor]
-               {:fieldClass "questionGroup"
-                :fieldType  "fieldset"} [question-group field-descriptor idx]
-               {:fieldClass "wrapperElement"
-                :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
-               {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
-               {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
-               {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
-               {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
-               {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
-               {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
-               {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
-               {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
-               {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
-               {:fieldClass "infoElement"} [info-element field-descriptor idx]
-               {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx])
-        [:div]))))
+  [field-descriptor idx]
+  (match field-descriptor
+    {:id         "email"
+     :fieldClass "formField"
+     :fieldType  "textField"} [email-field field-descriptor idx]
+    {:fieldClass "wrapperElement"
+     :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
+    {:fieldClass "questionGroup"
+     :fieldType  "fieldset"} [question-group field-descriptor idx]
+    {:fieldClass "wrapperElement"
+     :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+    {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
+    {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
+    {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
+    {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
+    {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
+    {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
+    {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
+    {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
+    {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
+    {:fieldClass "infoElement"} [info-element field-descriptor idx]
+    {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn editable-fields [_]
   (r/create-class
-    {:component-did-mount #(dispatch [:application/setup-window-unload])
-     :reagent-render      (fn [form-data]
-                            (into
-                              [:div.application__editable-content.animated.fadeIn]
-                              (for [content (:content form-data)]
-                                [render-field content nil])))}))
+   {:component-did-mount #(dispatch [:application/setup-window-unload])
+    :reagent-render      (fn [form-data]
+                           (into [:div.application__editable-content.animated.fadeIn]
+                                 (for [field (:content form-data)
+                                       :when @(subscribe [:application/visible? (keyword (:id field))])]
+                                   ^{:key (:id field)}
+                                   [render-field field nil])))}))
