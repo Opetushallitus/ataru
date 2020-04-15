@@ -163,11 +163,11 @@
      (re-frame/subscribe [:application/hakukohteet])
      (re-frame/subscribe [:application/hakukohderyhmat])])
   (fn [[selected-hakukohde-oid selected-hakukohderyhma selected-haku-oid haut hakukohteet hakukohderyhmat] _]
-    (let [haun-hakukohteet     (keep hakukohteet (get-in haut [selected-haku-oid :hakukohteet]))
+    (let [haun-hakukohteet     (keep (or hakukohteet {}) (get-in haut [selected-haku-oid :hakukohteet]))
           haun-hakukohderyhmat (->> haun-hakukohteet
                                     (mapcat :ryhmaliitokset)
                                     distinct
-                                    (keep hakukohderyhmat))]
+                                    (keep (or hakukohderyhmat {})))]
       (when selected-haku-oid
         [selected-haku-oid
          selected-hakukohde-oid

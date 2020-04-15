@@ -32,7 +32,7 @@
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [taoensso.timbre :as log]
-            [ataru.middleware.filename-normalizer-middleware :as normalizer]))
+            [string-normalizer.filename-normalizer-middleware :as normalizer]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 

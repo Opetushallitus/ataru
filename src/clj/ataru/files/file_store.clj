@@ -1,20 +1,20 @@
 (ns ataru.files.file-store
   (:require [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
-            [ataru.string-normalizer :as normalizer]
             [ataru.url :as url]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [string-normalizer.filename-normalizer :as normalizer])
   (:import [java.util.zip ZipOutputStream ZipEntry]))
 
 (defn upload-file [{:keys [tempfile filename]}]
   (let [url  (resolve-url :liiteri.files)
         resp (http-util/do-post url {:multipart [{:name     "file"
                                                   :content  tempfile
-                                                  :filename (normalizer/normalize-string filename)}]})]
+                                                  :filename (normalizer/normalize-filename filename)}]})]
     (when (= (:status resp) 200)
       (-> (:body resp)
           (json/parse-string true)

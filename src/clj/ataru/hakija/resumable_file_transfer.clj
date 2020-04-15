@@ -8,14 +8,14 @@
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [clojure.core.match :refer [match]]
             [taoensso.timbre :as log]
-            [ataru.string-normalizer :as normalizer])
+            [string-normalizer.filename-normalizer :as normalizer])
   (:import (java.io File FileInputStream)))
 
 (def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
 
 (defn- file-name-prefix
   [file-id file-name parts-count]
-  (str file-id "_" parts-count "_" (normalizer/normalize-string file-name)))
+  (str file-id "_" parts-count "_" (normalizer/normalize-filename file-name)))
 
 (defn- build-file-name
   [file-id file-name parts-count part-number]
@@ -98,7 +98,7 @@
                                                            :cookie-policy    :standard
                                                            :multipart        [{:part-name "file"
                                                                                :content   (FileInputStream. file)
-                                                                               :name      (normalizer/normalize-string file-name)}]})]
+                                                                               :name      (normalizer/normalize-filename file-name)}]})]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
