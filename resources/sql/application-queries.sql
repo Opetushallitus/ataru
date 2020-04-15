@@ -146,7 +146,7 @@ WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.re
 ORDER BY rn.created_time DESC;
 
 -- name: yesql-selection-state-used
-SELECT EXISTS (SELECT 1
+SELECT COUNT(*) > 1 AS exists
                FROM applications AS a
                LEFT JOIN applications AS la
                  ON la.key = a.key AND
@@ -155,7 +155,7 @@ SELECT EXISTS (SELECT 1
                  ON ahr.application_key = a.key AND
                     ahr.requirement = 'selection-state'
                WHERE a.haku = :haku_oid AND
-                     la.id IS NULL);
+                     la.id IS NULL;
 
 
 -- name: yesql-get-applications-by-keys
