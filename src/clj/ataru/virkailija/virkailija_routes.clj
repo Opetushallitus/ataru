@@ -992,7 +992,7 @@
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/OnrApplication]
         (if-let [applications (access-controlled-application/onr-applications
-                                application-service
+                                organization-service
                                 session
                                 person-oid)]
           (response/ok applications)
