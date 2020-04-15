@@ -16,7 +16,7 @@
     "karma-cljs-test": "0.1.0",
     "karma-mocha": "2.0.0",
     "mocha": "7.1.1",
-    "pm2": "^3.5.1",
+    "pm2": "4.2.3",
     "prettier": "^1.18.2",
     "puppeteer": "^1.6.1"
   }
