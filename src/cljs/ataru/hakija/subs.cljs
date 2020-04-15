@@ -194,6 +194,13 @@
     (get-in db [:application :answers-validity])))
 
 (re-frame/reg-sub
+  :application/invalid-fields?
+  (fn [_ _]
+    (re-frame/subscribe [:application/valid-status]))
+  (fn [valid-status _]
+    (not (empty? (:invalid-fields valid-status)))))
+
+(re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
