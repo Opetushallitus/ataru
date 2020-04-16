@@ -3,6 +3,7 @@
                                            (clojure.java.jdbc/with-db-transaction)
                                            (clojure.java.jdbc/with-db-connection)
                                            (clojure.core.match/match)
+                                           (cljs.core.match/match)
                                            (ataru.db.flyway-migration/defmigration)]}
            :unused-namespace    {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map

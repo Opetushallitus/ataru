@@ -1,10 +1,7 @@
 (ns ataru.hakija.application-form-components
-  (:require [clojure.string :refer [trim]]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+  (:require [re-frame.core :refer [subscribe dispatch]]
             [reagent.ratom :refer-macros [reaction]]
-            [markdown.core :refer [md->html]]
             [cljs.core.match :refer-macros [match]]
-            [cljs-time.core :as time]
             [ataru.application-common.application-field-common
              :refer
              [answer-key
@@ -16,11 +13,8 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
             [reagent.core :as r]
-            [ataru.feature-config :as fc]
             [clojure.string :as string]
-            [ataru.hakija.person-info-fields :refer [editing-forbidden-person-info-field-ids]]
             [ataru.translations.translation-util :as tu]))
-
 
 (defonce autocomplete-off "new-password")
 
@@ -72,9 +66,6 @@
                             data-idx
                             question-group-idx]))))))
 
-(defn- field-id [field-descriptor]
-  (str "field-" (:id field-descriptor)))
-
 (def field-types-supporting-label-for
   "These field types can use the <label for=..> syntax, others will use aria-labelled-by"
   #{"textField" "textArea" "dropdown"})
@@ -103,11 +94,11 @@
     (or (is-required-field? field-descriptor)
         (-> field-descriptor :params :numeric))
     (if (string? value)
-      (not (clojure.string/blank? value))
-      (not (empty? value)))
+      (not (string/blank? value))
+      (seq value))
     (not (contains? validators-processing (keyword (:id field-descriptor))))))
 
-(defn info-text [field-descriptor]
+(defn info-text []
   (let [languages              (subscribe [:application/default-languages])
         application-identifier (subscribe [:application/application-identifier])]
     (fn [field-descriptor]
@@ -116,10 +107,10 @@
 
 (defn question-hakukohde-names
   ([field-descriptor]
-   (question-hakukohde-names field-descriptor :question-for-hakukohde))
-  ([field-descriptor translation-key]
+   [question-hakukohde-names field-descriptor :question-for-hakukohde])
+  ([_ _]
    (let [show-hakukohde-list? (r/atom false)]
-     (fn [field-descriptor]
+     (fn [field-descriptor translation-key]
        (let [lang                           @(subscribe [:application/form-language])
              selected-hakukohteet-for-field @(subscribe [:application/selected-hakukohteet-for-field field-descriptor])]
          [:div.application__question_hakukohde_names_container
@@ -167,7 +158,7 @@
        [question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
-(defn email-field [field-descriptor idx]
+(defn email-field [field-descriptor _]
   (let [id                    (keyword (:id field-descriptor))
         languages             (subscribe [:application/default-languages])
         size                  (get-in field-descriptor [:params :size])
@@ -226,7 +217,7 @@
                               "***********"
                               (:verify answer))
               :on-blur      #(email-verify-field-change field-descriptor (:value answer)
-                               (clojure.string/trim (or (-> % .-target .-value) "")))
+                               (string/trim (or (-> % .-target .-value) "")))
               :on-paste     (fn [event]
                               (.preventDefault event))
               :on-change    #(email-verify-field-change field-descriptor (:value answer) (-> % .-target .-value))
@@ -238,7 +229,7 @@
               :autoComplete autocomplete-off
               }]])]))))
 
-(defn text-field [field-descriptor idx]
+(defn text-field [field-descriptor _]
   (let [id                     (keyword (:id field-descriptor))
         size                   (get-in field-descriptor [:params :size])
         size-class             (text-field-size->class size)
@@ -298,7 +289,7 @@
          [validation-error errors]]))))
 
 (defn- repeatable-text-field-row
-  [field-descriptor question-group-idx repeatable-idx last?]
+  [field-descriptor _ _ _]
   (let [id           (keyword (:id field-descriptor))
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         cannot-edit? (subscribe [:application/cannot-edit? id])
@@ -399,7 +390,7 @@
     (when-not (or (empty? max-length) (= "0" max-length))
       max-length)))
 
-(defn text-area [field-descriptor idx]
+(defn text-area [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
         size         (-> field-descriptor :params :size)
         size-class   (text-area-size->class size)
@@ -442,7 +433,7 @@
            [:span.application__form-textarea-max-length (str (count value) " / " max-length)])]))))
 
 (defn wrapper-field
-  [field-descriptor idx]
+  [field-descriptor]
   (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
@@ -498,7 +489,7 @@
                            (util/flatten-form-fields (:children field-descriptor)))
         lang          @(subscribe [:application/form-language])]
     [:div.application__question-group
-     (when-not (clojure.string/blank? label)
+     (when-not (string/blank? label)
        [:h3.application__question-group-heading label])
      [scroll-to-anchor field-descriptor]
      [:div
@@ -537,8 +528,7 @@
   (util/non-blank-val (:label option) langs))
 
 (defn dropdown [field-descriptor idx]
-  (let [application (subscribe [:state-query [:application]])
-        languages   (subscribe [:application/default-languages])
+  (let [languages   (subscribe [:application/default-languages])
         id          (answer-key field-descriptor)
         disabled?   @(subscribe [:application/cannot-edit? id])
         answer      @(subscribe [:application/answer id idx nil])
@@ -596,7 +586,7 @@
            [render-field followup nil])
          followups)]])
 
-(defn- multiple-choice-option [field-descriptor option parent-id question-group-idx]
+(defn- multiple-choice-option [field-descriptor option _ _]
   (let [languages    (subscribe [:application/default-languages])
         label        (non-blank-option-label option @languages)
         value        (:value option)
@@ -650,7 +640,7 @@
                               (not (:koodisto-ordered-by-user field-descriptor)))
                          (sort-by #(non-blank-option-label % @languages)))))]])))
 
-(defn- single-choice-option [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
+(defn- single-choice-option [option parent-id field-descriptor question-group-idx languages _ _]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
         label          (util/non-blank-val (:label option) @languages)
         uncertain?     (subscribe [:state-query [:application :selection-over-network-uncertain?]])
@@ -663,7 +653,7 @@
                          (let [value (.. event -target -value)]
                            (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))
         lang           (subscribe [:application/form-language])]
-    (fn [option parent-id field-descriptor question-group-idx languages use-multi-choice-style? verifying?]
+    (fn [option _ field-descriptor _ _ use-multi-choice-style? verifying?]
       (let [unselectable?        (and (or (not @checked?)
                                           (not @valid?))
                                       @limit-reached?)
@@ -708,7 +698,6 @@
 
 (defn single-choice-button [field-descriptor & _]
   (let [button-id               (answer-key field-descriptor)
-        validators              (:validators field-descriptor)
         languages               (subscribe [:application/default-languages])
         verifying?              (subscribe [:application/fetching-selection-limits? button-id])
         use-multi-choice-style? (use-multi-choice-style? field-descriptor @languages)]
@@ -802,7 +791,7 @@
        [:span (str " (" (util/size-bytes->str (:size file)) ")")])]))
 
 (defn- attachment-remove-button
-  [field-descriptor question-group-idx attachment-idx]
+  [field-descriptor _ _]
   (let [id       (keyword (:id field-descriptor))
         confirm? (r/atom false)]
     (fn [field-descriptor question-group-idx attachment-idx]
@@ -817,7 +806,7 @@
               (tu/get-hakija-translation :remove lang))])
          (when @confirm?
            [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
-            {:on-click (fn [event]
+            {:on-click (fn [_]
                          (reset! confirm? false)
                          (dispatch [:application/remove-attachment
                                     field-descriptor
@@ -826,7 +815,7 @@
             (tu/get-hakija-translation :confirm-remove lang)])]))))
 
 (defn- cancel-attachment-upload-button
-  [field-descriptor question-group-idx attachment-idx]
+  [_ _ _]
   (let [confirm? (r/atom false)
         lang     (subscribe [:application/form-language])]
     (fn [field-descriptor question-group-idx attachment-idx]
@@ -838,7 +827,7 @@
           (tu/get-hakija-translation :cancel-upload @lang))]
        (when @confirm?
          [:button.application__form-attachment-remove-button.application__form-attachment-remove-button__confirm
-          {:on-click (fn [event]
+          {:on-click (fn [_]
                        (reset! confirm? false)
                        (dispatch [:application/cancel-attachment-upload
                                   field-descriptor
@@ -916,7 +905,7 @@
         :deleting  attachment-deleting-file)
       field-descriptor component-id question-group-idx attachment-idx]]))
 
-(defn attachment [{:keys [id] :as field-descriptor} & _]
+(defn attachment [field-descriptor & _]
   (let [languages              (subscribe [:application/default-languages])
         application-identifier (subscribe [:application/application-identifier])
         text                   (reaction (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) @languages))]
@@ -926,7 +915,7 @@
          [label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
-         (when-not (clojure.string/blank? @text)
+         (when-not (string/blank? @text)
            [markdown-paragraph @text (-> field-descriptor :params :info-text-collapse) @application-identifier])
          (when (> @attachment-count 0)
            [:ol.application__attachment-filename-list
@@ -947,7 +936,7 @@
     (r/create-class
       {:component-did-mount #(let [value @(subscribe [:application/answer id question-group-idx row-idx])
                                    required?        (is-required-field? field-descriptor)]
-                                  (if (and (not value) (not required?)) (dispatch [:application/set-adjacent-field-answer
+                                  (when (and (not value) (not required?)) (dispatch [:application/set-adjacent-field-answer
                                                               field-descriptor
                                                               row-idx
                                                               ""
@@ -1044,7 +1033,7 @@
            :fieldClass "formField"
            :fieldType  "textField"} [email-field field-descriptor idx]
           {:fieldClass "wrapperElement"
-           :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
+           :fieldType  "fieldset"} [wrapper-field field-descriptor]
           {:fieldClass "questionGroup"
            :fieldType  "fieldset"} [question-group field-descriptor idx]
           {:fieldClass "wrapperElement"
@@ -1062,7 +1051,7 @@
           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx])
         [:div]))))
 
-(defn editable-fields [form-data]
+(defn editable-fields [_]
   (r/create-class
    {:component-did-mount #(dispatch [:application/setup-window-unload])
     :reagent-render      (fn [form-data]
