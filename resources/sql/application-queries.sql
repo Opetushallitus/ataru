@@ -146,17 +146,14 @@ WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.re
 ORDER BY rn.created_time DESC;
 
 -- name: yesql-selection-state-used
-SELECT COUNT(*) > 0 AS exists
-               FROM applications AS a
-               LEFT JOIN applications AS la
-                 ON la.key = a.key AND
-                    la.id > a.id
-               JOIN application_hakukohde_reviews AS ahr
-                 ON ahr.application_key = a.key AND
-                    ahr.requirement = 'selection-state'
-               WHERE a.haku = :haku_oid AND
-                     la.id IS NULL;
-
+SELECT EXISTS(SELECT true
+              FROM applications AS a
+              JOIN LATERAL (SELECT true
+                            FROM application_hakukohde_reviews AS ahr
+                            WHERE ahr.application_key = a.key AND
+                                  ahr.requirement = 'selection-state'
+                            LIMIT 1) AS t ON true
+              WHERE a.haku = :haku_oid) AS "exists";
 
 -- name: yesql-get-applications-by-keys
 -- Get list of applications by their keys
