@@ -23,12 +23,7 @@
                                                  :hakija "ataru-hakija")
                                        (when (:hostname env) (str "_" (:hostname env))))
                          :pattern :daily})}
-     :middleware     [(timbre-ns-pattern-level/middleware {"com.amazonaws.*"                :info
-                                                           "com.zaxxer.hikari.HikariConfig" :debug
-                                                           "com.zaxxer.hikari.*"            :info
-                                                           "io.netty.*"                     :info
-                                                           "org.apache.http.*"              :info
-                                                           "org.flywaydb.*"                 :info
+     :middleware     [(timbre-ns-pattern-level/middleware {"com.zaxxer.hikari.HikariConfig" :debug
                                                            :all                             :info})]
      :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
                       :timezone (TimeZone/getTimeZone "Europe/Helsinki")}
