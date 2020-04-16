@@ -38,6 +38,7 @@
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.12"]
                  [com.taoensso/timbre "4.10.0"]
+                 [timbre-ns-pattern-level "0.1.2"]
                  [org.clojure/core.match "0.3.0"]
                  [metosin/schema-tools "0.12.0"]
                  [medley "1.2.0"]
