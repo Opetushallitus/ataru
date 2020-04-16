@@ -5,12 +5,10 @@
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-confirmation :as email]
-    [ataru.forms.form-access-control :as form-access-control]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
-    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
     [ataru.person-service.person-service :as person-service]
@@ -23,23 +21,17 @@
     [ataru.applications.filtering :as application-filtering]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
-    [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-    [medley.core :refer [find-first filter-vals]]
     [taoensso.timbre :as log]
-    [ataru.application.review-states :as review-states]
-    [ataru.application.application-states :as application-states]
     [ataru.schema.form-schema :as ataru-schema]
     [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
-    [ataru.dob :as dob]
-    [com.stuartsierra.component :as component])
+    [ataru.dob :as dob])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
     java.util.Base64
-    [javax.crypto AEADBadTagException Cipher]
-    [javax.crypto.spec GCMParameterSpec SecretKeySpec]
-    (org.apache.commons.collections4 Get)))
+    [javax.crypto Cipher]
+    [javax.crypto.spec GCMParameterSpec SecretKeySpec]))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
@@ -83,7 +75,7 @@
       (populate-hakukohde-answer-options tarjonta-info)
       (hakija-form-service/populate-can-submit-multiple-applications tarjonta-info)))
 
-(defn fields-equal? [[new-in-left new-in-right shared]]
+(defn fields-equal? [[new-in-left new-in-right]]
   (and (nil? new-in-left)
        (nil? new-in-right)))
 
@@ -128,7 +120,6 @@
   [ryhman-hakukohteet
    authorized-organization-oids
    haku-oid
-   hakukohderyhma-oid
    ensisijaisesti
    rajaus-hakukohteella]
   (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
@@ -188,43 +179,6 @@
   {})
 
 (defn ->and-query [& queries] (apply merge queries))
-
-(defn- processing-state-counts-for-application
-  [{:keys [application-hakukohde-reviews]} included-hakukohde-oid-set]
-  (->> (or
-         (->> application-hakukohde-reviews
-              (filter (fn [review]
-                        (and
-                          (= "processing-state" (:requirement review))
-                          (or (nil? included-hakukohde-oid-set)
-                              (contains? included-hakukohde-oid-set (:hakukohde review))))))
-              (not-empty))
-         [{:requirement "processing-state" :state review-states/initial-application-hakukohde-processing-state}])
-       (map :state)
-       (frequencies)))
-
-(defn review-state-counts
-  [applications included-hakukohde-oid-set]
-  (reduce
-    (fn [acc application]
-      (merge-with + acc (processing-state-counts-for-application application included-hakukohde-oid-set)))
-    {}
-    applications))
-
-(defn- map-vals-to-zero [m]
-  (into {} (for [[k v] m] [k 0])))
-
-(defn attachment-state-counts
-  [applications included-hakukohde-oid-set]
-  (reduce
-    (fn [acc application]
-      (merge-with (fn [prev new] (+ prev (if (not-empty new) 1 0)))
-                  acc
-                  (group-by :state (cond->> (application-states/attachment-reviews-with-no-requirements application)
-                                            (some? included-hakukohde-oid-set)
-                                            (filter #(contains? included-hakukohde-oid-set (:hakukohde %)))))))
-    (map-vals-to-zero review-states/attachment-hakukohde-review-types-with-no-requirements)
-    applications))
 
 (defn- populate-applications-with-person-data
   [person-service applications]
@@ -425,7 +379,6 @@
                                ryhman-hakukohteet
                                authorized-organization-oids
                                haku-oid
-                               hakukohderyhma-oid
                                ensisijaisesti
                                rajaus-hakukohteella)
                               (some? hakukohde-oid)

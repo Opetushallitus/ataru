@@ -1,13 +1,13 @@
 (ns ataru.applications.application-access-control
   (:require
-   [ataru.log.audit-log :as audit-log]
-   [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.user-rights :as user-rights]
-   [ataru.applications.application-store :as application-store]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-   [ataru.odw.odw-service :as odw-service]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.util :as util]))
+    [ataru.log.audit-log :as audit-log]
+    [ataru.organization-service.session-organizations :as session-orgs]
+    [ataru.user-rights :as user-rights]
+    [ataru.applications.application-store :as application-store]
+    [ataru.odw.odw-service :as odw-service]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.util :as util]
+    [clojure.set :as set]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
@@ -102,7 +102,7 @@
                                      first
                                      (rights-by-hakukohde organization-service session))]
     (when (some #(not-empty
-                  (clojure.set/intersection
+                  (set/intersection
                    #{:view-applications :edit-applications}
                    (val %)))
                 rights-by-hakukohde)

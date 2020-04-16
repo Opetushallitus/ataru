@@ -1,0 +1,19 @@
+{:linters {:unresolved-symbol   {:exclude [(compojure.api.sweet/context)
+                                           (compojure.api.sweet/defroutes)
+                                           (clojure.java.jdbc/with-db-transaction)
+                                           (clojure.java.jdbc/with-db-connection)
+                                           (clojure.core.match/match)
+                                           (ataru.db.flyway-migration/defmigration)]}
+           :unused-namespace    {:exclude [cljs.repl]}
+           :unused-referred-var {:exclude {cljs.repl [Error->map
+                                                      apropos
+                                                      dir
+                                                      doc
+                                                      error->str
+                                                      ex-str
+                                                      ex-triage
+                                                      find-doc
+                                                      print-doc
+                                                      pst
+                                                      source]}}
+           :invalid-arity {:skip-args [clojure.core.match/match]}}}
