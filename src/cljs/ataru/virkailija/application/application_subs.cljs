@@ -936,3 +936,35 @@
   :application/filter-attachment-states
   (fn [db [_ field-id]]
     (get-in db [:application :attachment-review-states-value field-id])))
+
+(re-frame/reg-sub
+  :application/valitun-hakemuksen-hakukohteet
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-application])])
+  (fn [[selected-application]]
+    (get selected-application :hakukohde [])))
+
+(re-frame/reg-sub
+  :application/valinnan-tulos
+  (fn [db _]
+    (get db :valinta-tulos-service {})))
+
+(re-frame/reg-sub
+  :application/valinnan-tulokset-valitun-hakemuksen-hakukohteille
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-application-key])
+     (re-frame/subscribe [:application/valinnan-tulos])])
+  (fn [[application-key valinnan-tulos]]
+    (get valinnan-tulos application-key)))
+
+(defn- jollakin-hakukohteella-on-valinnan-tulos [hakukohteet hakemuksen-valinnan-tulokset]
+  (some? (some hakemuksen-valinnan-tulokset hakukohteet)))
+
+(re-frame/reg-sub
+  :application/can-deactivate-application
+  (fn [_]
+    [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
+     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
+  (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
+    (and (some? hakemuksen-valinnan-tulokset)
+         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))

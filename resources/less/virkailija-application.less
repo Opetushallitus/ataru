@@ -3012,6 +3012,11 @@ th.application__readonly-adjacent--header {
 
 .application-handling__review-deactivate-toggle-slider--disabled {
   background-color: @disabled-list-item-color;
+  cursor: not-allowed;
+
+  &:hover {
+    background-color: @disabled-list-item-color;
+  }
 }
 
 .application-handling__review-deactivate-toggle-hidden-input {
@@ -3022,13 +3027,11 @@ th.application__readonly-adjacent--header {
   margin-left: 37px;
   min-width: 67px;
   color: white;
-  cursor: pointer;
 }
 
 .application-handling__review-deactivate-toggle-label-right {
   min-width: 76px;
   color: @sg-color-gray;
-  cursor: pointer;
 }
 
 .application-handling__review-deactivate-toggle-divider {
@@ -3038,7 +3041,6 @@ th.application__readonly-adjacent--header {
   background-color: white;
   margin-left: 12px;
   margin-right: 12px;
-  cursor: pointer;
 }
 
 .application-handling__review-deactivate-row {
