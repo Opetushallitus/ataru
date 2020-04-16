@@ -215,32 +215,22 @@
     )
   }
 
-  const hakukohdeRajausPopup = () => {
-    return testFrame().find('.hakukohde-and-hakukohderyhma-search-popup')
+  const rajausHakukohdeFromList = (hakukohde) => {
+    return testFrame()
+      .find(
+        '.hakukohde-and-hakukohderyhma-list-item-label:contains(' +
+          hakukohde +
+          ')'
+      )
+      .closest('.hakukohde-and-hakukohderyhma-category-list-item')
   }
 
-  const clickRajausHakukohdeFromList = (hakukohde) => {
-    return clickElement(() =>
-      testFrame()
-        .find(
-          '.hakukohde-and-hakukohderyhma-list-item-label:contains(' +
-            hakukohde +
-            ')'
-        )
-        .closest('.hakukohde-and-hakukohderyhma-category-list-item')
-    )
-  }
-
-  const clickApplicationPersonNameFromList = (name) => {
-    return clickElement(() =>
-      testFrame()
-        .find(
-          '.application-handling__list-row--applicant-name:contains(' +
-            name +
-            ')'
-        )
-        .closest('.application-handling__list-row-person-info')
-    )
+  const applicationPersonNameFromList = (name) => {
+    return testFrame()
+      .find(
+        '.application-handling__list-row--applicant-name:contains(' + name + ')'
+      )
+      .closest('.application-handling__list-row-person-info')
   }
 
   const clickNavigateToNextApplicationDetails = () => {
@@ -264,6 +254,8 @@
       .find(
         '.application-handling__review-area-main-heading:contains(' + name + ')'
       )
+      .closest('.application-handling__detail-container')
+      .find('.application-handling__hakukohde--selectable')
       .is(':visible')
   }
 
@@ -1057,7 +1049,7 @@
       })
     })
     describe('Application list filtering', () => {
-      describe('filter by hakukohde and open hakukohde details by pressing candidate name', () => {
+      describe('filter by hakukohde and then open hakukohde details by pressing candidate name', () => {
         before(
           navigateToApplicationHandlingForHaku,
           wait.until(() => {
@@ -1065,13 +1057,13 @@
           }),
           clickElement(hakukohdeRajausToggleButton),
           wait.until(() => {
-            return hakukohdeRajausPopup().is(':visible')
+            return rajausHakukohdeFromList('Testihakukohde 2').is(':visible')
           }),
-          clickRajausHakukohdeFromList('Testihakukohde 2'),
+          clickElement(() => rajausHakukohdeFromList('Testihakukohde 2')),
           wait.until(() => {
-            return hakukohdeRajausPopup().not(':visible')
+            return applicationPersonNameFromList('Maynard').is(':visible')
           }),
-          clickApplicationPersonNameFromList('Maynard'),
+          clickElement(() => applicationPersonNameFromList('Maynard')),
           wait.until(() => {
             return applicationDetailsVisible('Maynard')
           })
