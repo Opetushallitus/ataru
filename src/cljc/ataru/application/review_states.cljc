@@ -16,6 +16,7 @@
    ["invited-to-interview" (:invited-to-interview state-translations)]
    ["invited-to-exam" (:invited-to-exam state-translations)]
    ["evaluating" (:evaluating state-translations)]
+   ["valintaesitys" (:valintaesitys state-translations)]
    ["processed" (:processed state-translations)]
    ["information-request" (:information-request state-translations)]])
 

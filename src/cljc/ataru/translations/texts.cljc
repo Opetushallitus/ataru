@@ -1639,6 +1639,9 @@
    :evaluating             {:fi "Arvioinnissa"
                             :sv "Under bedömning"
                             :en "Under evaluation"}
+   :valintaesitys          {:fi "Valintaesitys"
+                            :sv "SV: Valintaesitys"
+                            :en "EN: Valintaesitys"}
    :processed              {:fi "Käsitelty"
                             :sv "Behandlad"
                             :en "Processed"}
