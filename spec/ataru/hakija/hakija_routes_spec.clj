@@ -237,7 +237,7 @@
 
   (around [spec]
     (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
-                  koodisto/all-koodisto-values                          (constantly nil)]
+                  koodisto/all-koodisto-values                          (constantly #{})]
       (spec)))
 
   (before
@@ -333,7 +333,16 @@
             (around [spec]
               (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                             hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
-                            koodisto/all-koodisto-values                          (constantly nil)]
+                            koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                                    (case uri
+                                                                                      "maatjavaltiot2"
+                                                                                      #{"246"}
+                                                                                      "kunta"
+                                                                                      #{"273"}
+                                                                                      "sukupuoli"
+                                                                                      #{"1" "2"}
+                                                                                      "kieli"
+                                                                                      #{"FI" "SV" "EN"}))]
                 (spec)))
 
     (before
@@ -382,17 +391,26 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
-                    koodisto/all-koodisto-values                          (constantly nil)
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                                    (case uri
+                                                                                      "maatjavaltiot2"
+                                                                                      #{"246"}
+                                                                                      "kunta"
+                                                                                      #{"273"}
+                                                                                      "sukupuoli"
+                                                                                      #{"1" "2"}
+                                                                                      "kieli"
+                                                                                      #{"FI" "SV" "EN"}))
                     file-store/get-metadata                               (fn [keys]
-                                                                            (map #(hash-map
-                                                                                   :key %
-                                                                                   :content-type "plain/text"
-                                                                                   :filename "tiedosto.txt"
-                                                                                   :size 1
-                                                                                   :virus-scan-status "done"
-                                                                                   :final true
-                                                                                   :uploaded (t/now))
-                                                                                 keys))]
+                                                                            (mapv #(hash-map
+                                                                                    :key %
+                                                                                    :content-type "plain/text"
+                                                                                    :filename "tiedosto.txt"
+                                                                                    :size 1
+                                                                                    :virus-scan-status "done"
+                                                                                    :final true
+                                                                                    :uploaded (t/now))
+                                                                                  keys))]
         (spec)))
 
     (before-all
@@ -455,7 +473,16 @@
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
-                    koodisto/all-koodisto-values                          (constantly nil)]
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                            (case uri
+                                                                              "maatjavaltiot2"
+                                                                              #{"246"}
+                                                                              "kunta"
+                                                                              #{"273"}
+                                                                              "sukupuoli"
+                                                                              #{"1" "2"}
+                                                                              "kieli"
+                                                                              #{"FI" "SV" "EN"}))]
         (spec)))
 
     (before-all
@@ -513,7 +540,16 @@
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    koodisto/all-koodisto-values                          (constantly nil)]
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                            (case uri
+                                                                              "maatjavaltiot2"
+                                                                              #{"246"}
+                                                                              "kunta"
+                                                                              #{"273"}
+                                                                              "sukupuoli"
+                                                                              #{"1" "2"}
+                                                                              "kieli"
+                                                                              #{"FI" "SV" "EN"}))]
         (spec)))
 
     (before-all
@@ -586,7 +622,16 @@
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
-                    koodisto/all-koodisto-values                          (constantly nil)]
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                            (case uri
+                                                                              "maatjavaltiot2"
+                                                                              #{"246"}
+                                                                              "kunta"
+                                                                              #{"273"}
+                                                                              "sukupuoli"
+                                                                              #{"1" "2"}
+                                                                              "kieli"
+                                                                              #{"FI" "SV" "EN"}))]
         (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing
                       crypto/url-part (constantly "0000000023")]
           (with-response :post resp application-fixtures/person-info-form-application-with-empty-answers
@@ -602,7 +647,16 @@
                     application-email/start-email-edit-confirmation-job   (constantly nil)
                     application-service/remove-orphan-attachments         (fn [_ _])
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
-                    koodisto/all-koodisto-values                          (constantly nil)]
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                            (case uri
+                                                                              "maatjavaltiot2"
+                                                                              #{"246"}
+                                                                              "kunta"
+                                                                              #{"273"}
+                                                                              "sukupuoli"
+                                                                              #{"1" "2"}
+                                                                              "kieli"
+                                                                              #{"FI" "SV" "EN"}))]
         (spec)))
 
     (before-all
@@ -611,9 +665,10 @@
     (it "should not create"
       (with-response :post resp application-fixtures/person-info-form-application
         (should= 400 (:status resp))
-        (should= {:failures {:adjacent-answer-1            {:passed? false}
-                             :repeatable-required          {:passed? false}
-                             :more-questions-attachment-id {:passed? false}}
+        (should= {:failures {:adjacent-answer-1            nil
+                             :repeatable-required          nil
+                             :more-answers-dropdown-id     nil
+                             :more-questions-attachment-id nil}
                   :code "application-validation-failed-error"}
                  (:body resp))))
 
@@ -625,28 +680,28 @@
 
     (it "should update answers"
       (with-redefs [crypto/url-part (constantly "0000000031")]
-        (with-response :put resp (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000030"})
+        (with-response :put resp (merge application-fixtures/person-info-form-application-with-modified-answers {:secret "0000000030"})
           (should= 200 (:status resp))
           (let [id          (-> resp :body :id)
                 application (get-application-by-id id)]
             (should= "Toistuva pakollinen 4" (last (get-answer application "repeatable-required")))
-            (should= "modified-attachment-id" (get-answer application "more-questions-attachment-id"))
+            (should= ["modified-attachment-id"] (get-answer application "more-questions-attachment-id"))
             (should= "Vierekkäinen vastaus 2" (get-answer application "adjacent-answer-2"))
             (should= "toka vaihtoehto" (get-answer application "more-answers-dropdown-id"))))))
 
     (it "should not update dropdown answer when required followups are not answered"
-      (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-modified-answers {:secret "0000000031"})
-                                   (assoc-in [:answers 20 :value] "eka vaihtoehto"))
+      (with-response :put resp (-> application-fixtures/person-info-form-application-with-modified-answers
+                                   (assoc-in [:answers 18 :value] "eka vaihtoehto")
+                                   (merge {:secret "0000000031"}))
         (should= 400 (:status resp))
-        (should= {:failures {:dropdown-followup-2 {:passed? false}}
+        (should= {:failures {:dropdown-followup-2 nil}
                   :code "application-validation-failed-error"} (:body resp))))
 
     (it "should update dropdown answer"
-      (with-response :put resp (-> (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000031"})
-                                   (assoc-in [:answers 20 :value] "eka vaihtoehto"))
+      (with-response :put resp (merge application-fixtures/person-info-form-application-with-more-modified-answers {:secret "0000000031"})
         (should= 200 (:status resp))
         (let [id          (-> resp :body :id)
               application (get-application-by-id id)]
           (should= "eka vaihtoehto" (get-answer application "more-answers-dropdown-id"))
-          (should= "followup-attachment" (get-answer application "dropdown-followup-1"))
+          (should= ["followup-attachment"] (get-answer application "dropdown-followup-1"))
           (should= "toka" (get-answer application "dropdown-followup-2")))))))
