@@ -527,17 +527,14 @@
         label          (util/non-blank-val (:label option) @languages)
         uncertain?     (subscribe [:application/selection-over-network-uncertain?])
         option-value   (:value option)
-        option-id      (util/component-id)
+        option-id      (str (:id field-descriptor) "-" question-group-idx "-" option-value)
         limit-reached? (subscribe [:application/limit-reached? parent-id option-value])
-        checked?       (subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
         valid?         (subscribe [:application/single-choice-option-valid? parent-id question-group-idx])
-        on-change      (fn [event]
-                         (let [value (.. event -target -value)]
-                           (dispatch [:application/select-single-choice-button value field-descriptor question-group-idx])))
         lang           (subscribe [:application/form-language])]
-    (fn [option _ field-descriptor _ _ use-multi-choice-style? verifying?]
+    (fn [option parent-id field-descriptor question-group-idx _ use-multi-choice-style? verifying?]
       (let [ui                   @(subscribe [:application/ui])
-            unselectable?        (and (or (not @checked?)
+            checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
+            unselectable?        (and (or (not checked?)
                                           (not @valid?))
                                       @limit-reached?)
             disabled?            (or @verifying? @cannot-edit? unselectable?)
@@ -548,9 +545,14 @@
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
-                  :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? @checked?)
+                  :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
-                  :on-change on-change
+                  :on-change (fn [event]
+                               (let [value (.. event -target -value)]
+                                 (dispatch [:application/select-single-choice-button
+                                            (when-not checked? value)
+                                            field-descriptor
+                                            question-group-idx])))
                   :role      "radio"
                   :class     (if use-multi-choice-style?
                                "application__form-checkbox"
@@ -559,13 +561,13 @@
          [:label
           (merge {:for option-id}
                  (when disabled? {:class "disabled"}))
-          (when (and @verifying? @checked?)
+          (when (and @verifying? checked?)
             [:span.application__form-single-choice-button--verifying
              [:i.zmdi.zmdi-spinner.spin]])
           label
           (when (and (not @verifying?) unselectable?)
             (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
-         (when (and (and @checked? @valid?)
+         (when (and (and checked? @valid?)
                     (not-empty (:followups option))
                     (some (partial visible? ui) (:followups option)))
            (if use-multi-choice-style?
