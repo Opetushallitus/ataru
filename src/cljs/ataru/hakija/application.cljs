@@ -51,10 +51,9 @@
             (let [value     (some #(when (:default-value %) (:value %)) options)
                   required? (some #(contains? required-validators %)
                                   (:validators field))]
-              [(keyword id) (cond-> {:valid (or (some? value) (not required?))
-                                     :label label}
-                                    (some? value)
-                                    (assoc :value value))])
+              [(keyword id) {:valid (or (some? value) (not required?))
+                             :label label
+                             :value (or value "")}])
             [{:id         id
               :fieldClass "formField"
               :fieldType  "multipleChoice"

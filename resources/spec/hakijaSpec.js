@@ -205,6 +205,7 @@
           'En',
           'Arkkitehti',
           'Toisen pakollisen tekstialueen vastaus',
+          '',
           'Ensimmäinen vaihtoehto',
           'Jatkokysymys A',
           'Jatkokysymys B',
