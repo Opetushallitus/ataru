@@ -1302,9 +1302,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
          (into {}))))
 
 (defn- indexed-by-question-group [index-fn key values]
-  (apply concat (map-indexed (fn [i values]
-                               (index-fn (format "%s_group%d" key i) values))
-                             values)))
+  (apply concat (keep-indexed (fn [i values]
+                                (when (some? values)
+                                  (index-fn (format "%s_group%d" key i) values)))
+                              values)))
 
 (defn- indexed-by-values [key values]
   (map (fn [value]
@@ -1331,16 +1332,14 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (and (sequential? value)
-                            (every? sequential? value))
+       (into acc (cond (util/is-question-group-answer? value)
                        (indexed-by-question-group index-fn key value)
-                       (and (sequential? value)
-                            (or (= "attachment" fieldType)
-                                (= "multipleChoice" fieldType)
-                                (= "textField" fieldType)))
+                       (vector? value)
                        (index-fn key value)
-                       (not (sequential? value))
+                       (string? value)
                        [[key value]]
+                       (nil? value)
+                       [[key ""]]
                        :else
                        (throw (new RuntimeException
                                    (str "Unknown answer form " answer)))))))

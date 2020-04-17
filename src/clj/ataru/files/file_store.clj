@@ -1,7 +1,5 @@
 (ns ataru.files.file-store
-  (:require [ataru.config.core :refer [config]]
-            [ataru.config.url-helper :refer [resolve-url]]
-            [ataru.url :as url]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
             [clojure.java.io :as io]
@@ -32,13 +30,13 @@
                                   {:headers {"Content-Type" "application/json"}
                                    :body    (json/generate-string {:keys file-keys})})]
       (if (= (:status resp) 200)
-        (json/parse-string (:body resp) true)
+        (vec (json/parse-string (:body resp) true))
         (throw (new RuntimeException
                     (str "Could not get metadata for keys "
                          (clojure.string/join ", " file-keys)
                          ". Got status " (:status resp)
                          ", body " (:body resp))))))
-    []))
+    file-keys))
 
 (defn get-file [key]
   (let [url  (resolve-url :liiteri.file key)

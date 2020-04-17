@@ -97,6 +97,28 @@
                        :options                []
                        :fieldType              "attachment"}]})
 
+(def form-with-followup-inside-a-question-group
+  {:id               2147483646
+   :key              "41101b4f-1762-49af-9db0-e3603adae3af"
+   :name             {:fi "Uusi lomake"}
+   :created-by       "1.2.246.562.11.11111111111"
+   :organization-oid "1.2.246.562.10.2.45"
+   :created-time     "2016-07-28T09:58:34.217+03:00"
+   :locked           nil
+   :locked-by        nil
+   :content          [(component/hakukohteet)
+                      (ataru.component-data.person-info-module/person-info-module)
+                      (assoc (component/question-group metadata)
+                             :children [(assoc (component/single-choice-button metadata)
+                                               :id "choice"
+                                               :options [{:value     "0"
+                                                          :label     {:fi "A"}
+                                                          :followups [(assoc (component/text-field metadata)
+                                                                             :id "text")]}
+                                                         {:value     "1"
+                                                          :label     {:fi "B"}
+                                                          :followups []}])])]})
+
 (def form-hidden-attachment [{:label                  {:fi "Toka liite"
                                                       :sv ""}
                              :fieldClass             "formField"

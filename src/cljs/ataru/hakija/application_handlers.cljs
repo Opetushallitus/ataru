@@ -232,27 +232,21 @@
 (declare set-field-visibility)
 
 (defn- set-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat option-selected?]
-  (reduce (fn [db option]
-            (let [selected? (option-selected? option)]
-              (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
-                      db
-                      (:followups option))))
-          db
-          (:options field-descriptor)))
-
-(defn- set-single-choice-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
-    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat  #(= value (:value %)))))
-
-(defn- set-multi-choice-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [values (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
-    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat (fn [option]
-                                                                                                        (let [value (:value option)]
-                                                                                                          (some #(= value %) values))))))
-
+  (let [value  (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
+        values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+                     (set (mapcat identity value))
+                     (vector? value)
+                     (set value)
+                     :else
+                     #{value})]
+    (reduce (fn [db option]
+              (let [selected? (contains? values (:value option))]
+                (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
+                        db
+                        (:followups option))))
+            db
+            (:options field-descriptor))))
 
 (defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
   (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
@@ -313,9 +307,9 @@
                  field-visibility)
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
-             (set-single-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
+             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
              (= "multipleChoice" (:fieldType field-descriptor))
-             (set-multi-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
+             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
 
 (defn set-field-visibilities
   [db]
@@ -378,9 +372,9 @@
 (defn- merge-value [answer value]
   (merge answer {:valid  true
                  :value  value
-                 :values (cond (and (vector? value)
-                                    (vector? (first value)))
-                               (mapv #(mapv (fn [value] {:valid true :value value}) %)
+                 :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+                               (mapv #(when (vector? %)
+                                        (mapv (fn [value] {:valid true :value value}) %))
                                      value)
                                (vector? value)
                                (mapv (fn [value] {:valid true :value value}) value)
@@ -409,18 +403,24 @@
 
                                         (= "attachment" (:fieldType field-descriptor))
                                         (let [values (mapv (fn self [value]
-                                                             (if (vector? value)
-                                                               (mapv self value)
-                                                               {:value    (:key value)
-                                                                :filename (:filename value)
-                                                                :size     (:size value)
-                                                                :status   :ready
-                                                                :valid    true}))
+                                                             (cond (vector? value)
+                                                                   (mapv self value)
+                                                                   (nil? value)
+                                                                   nil
+                                                                   :else
+                                                                   {:value    (:key value)
+                                                                    :filename (:filename value)
+                                                                    :size     (:size value)
+                                                                    :status   :ready
+                                                                    :valid    true}))
                                                            (:value answer))]
                                           (merge % {:value  (mapv (fn self [value]
-                                                                   (if (vector? value)
-                                                                     (mapv self value)
-                                                                     (:value value)))
+                                                                    (cond (vector? value)
+                                                                          (mapv self value)
+                                                                          (nil? value)
+                                                                          nil
+                                                                          :else
+                                                                          (:value value)))
                                                                  values)
                                                     :values values
                                                     :valid  true}))
@@ -707,8 +707,9 @@
   [db id]
   (let [values (get-in db [:application :answers id :values])]
     (assoc-in db [:application :answers id :value]
-              (cond (and (vector? values) (vector? (first values)))
-                    (mapv #(mapv :value %) values)
+              (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+                    (mapv #(when (vector? %)
+                             (mapv :value %)) values)
                     (vector? values)
                     (mapv :value values)
                     :else
@@ -720,8 +721,10 @@
         (let [data-idx (or data-idx 0)]
           (-> db
               (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
-              (update-in [:application :answers id :values group-idx] (util/vector-of-length (inc data-idx)))
-              (assoc-in [:application :answers id :values group-idx data-idx :valid] valid?)))
+              (update-in [:application :answers id :values group-idx] #(when (vector? %)
+                                                                         (-> %
+                                                                             ((util/vector-of-length (inc data-idx)))
+                                                                             (assoc-in [data-idx :valid] valid?))))))
         (some? data-idx)
         (-> db
             (update-in [:application :answers id :values] (util/vector-of-length (inc data-idx)))
@@ -732,11 +735,12 @@
 (defn- set-multiple-choice-option-valid
   [db id group-idx option-value valid?]
   (let [set-valid (fn [values]
-                    (mapv (fn [value]
-                            (if (= option-value (:value value))
-                              (assoc value :valid valid?)
-                              value))
-                          values))]
+                    (when (vector? values)
+                      (mapv (fn [value]
+                              (if (= option-value (:value value))
+                                (assoc value :valid valid?)
+                                value))
+                            values)))]
     (if (some? group-idx)
       (-> db
           (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
@@ -748,12 +752,76 @@
   (let [values (get-in db [:application :answers id :values])]
     (assoc-in db [:application :answers id :valid]
               (and valid?
-                   (cond (and (vector? values) (vector? (first values)))
-                         (every? #(every? :valid %) values)
+                   (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+                         (every? #(or (nil? %) (every? :valid %)) values)
                          (vector? values)
                          (every? :valid values)
                          :else
                          (:valid values))))))
+
+(reg-event-db
+  :application/unset-field-value
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor group-idx]]
+    (let [id (keyword (:id field-descriptor))]
+      (-> (if (some? group-idx)
+            (-> db
+                (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+                (assoc-in [:application :answers id :values group-idx] nil))
+            (assoc-in db [:application :answers id :values] nil))
+          (set-repeatable-field-value id)
+          (set-repeatable-application-field-top-level-valid id true)))))
+
+(defn- set-empty-value-dispatch
+  [group-idx field-descriptor]
+  (let [id (keyword (:id field-descriptor))]
+    (match field-descriptor
+      {:fieldType (:or "dropdown" "textField" "textArea")}
+      [[:application/set-repeatable-application-field
+        field-descriptor
+        group-idx
+        nil
+        ""]]
+      {:fieldType "singleChoice"}
+      [[:application/set-repeatable-application-field
+        field-descriptor
+        group-idx
+        nil
+        nil]]
+      {:fieldType "multipleChoice"}
+      (let [d [:application/toggle-multiple-choice-option
+               field-descriptor
+               group-idx
+               (first (:options field-descriptor))]]
+        [d d])
+      {:fieldType "adjacentfieldset"}
+      (mapv (fn [child]
+              [:application/set-repeatable-application-field child group-idx 0 ""])
+            (:children field-descriptor))
+      {:fieldType "attachment"}
+      ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
+      ;; Hacky solution but others would require much rework on the codebase.
+      [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
+      :else
+      nil)))
+
+(reg-event-fx
+  :application/set-followup-values
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor]]
+    (let [id    (keyword (:id field-descriptor))
+          value (get-in db [:application :answers id :value])]
+      (when (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+        {:dispatch-n (->> (for [option             (:options field-descriptor)
+                                child              (autil/flatten-form-fields (:followups option))
+                                :when              (autil/answerable? child)
+                                [group-idx values] (map-indexed vector value)]
+                            (if (contains? (set values) (:value option))
+                              (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
+                                (set-empty-value-dispatch group-idx child))
+                              [[:application/unset-field-value child group-idx]]))
+                          (mapcat identity)
+                          vec)}))))
 
 (reg-event-fx
   :application/set-repeatable-application-field-valid
@@ -782,6 +850,7 @@
                                  (set-field-visibility field-descriptor)
                                  (set-validator-processing id))]
       {:db                 db
+       :dispatch           [:application/set-followup-values field-descriptor]
        :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
@@ -904,6 +973,7 @@
                  (set-field-visibility field-descriptor)
                  (set-validator-processing id))]
       {:db                 db
+       :dispatch           [:application/set-followup-values field-descriptor]
        :validate-debounced {:value                        (if (some? question-group-idx)
                                                             (get-in db [:application :answers id :value question-group-idx])
                                                             (get-in db [:application :answers id :value]))
@@ -1256,39 +1326,6 @@
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
 
-(defn- set-empty-value-dispatch
-  [group-idx field-descriptor]
-  (let [id (keyword (:id field-descriptor))]
-    (match field-descriptor
-      {:fieldType (:or "dropdown" "textField" "textArea")}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        ""]]
-      {:fieldType "singleChoice"}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        nil]]
-      {:fieldType "multipleChoice"}
-      (let [d [:application/toggle-multiple-choice-option
-               field-descriptor
-               group-idx
-               (first (:options field-descriptor))]]
-        [d d])
-      {:fieldType "adjacentfieldset"}
-      (mapv (fn [child]
-              [:application/set-repeatable-application-field child group-idx 0 ""])
-            (:children field-descriptor))
-      {:fieldType "attachment"}
-           ; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
-           ; Hacky solution but others would require much rework on the codebase.
-      [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
-      {:fieldClass "infoElement"}
-      [])))
-
 (reg-event-fx
   :application/add-question-group-row
   [check-schema-interceptor]
@@ -1298,10 +1335,8 @@
       {:db         (-> db
                        (assoc-in [:application :ui id :count] (inc repeat-count))
                        (update-in [:application :ui id] dissoc :mouse-over-remove-button))
-       :dispatch-n (->> (:children field-descriptor)
-                        autil/flatten-form-fields
-                        (filter autil/answerable?)
-                        (mapcat (partial set-empty-value-dispatch repeat-count)))})))
+       :dispatch-n (mapcat (partial set-empty-value-dispatch repeat-count)
+                           (:children field-descriptor))})))
 
 (reg-event-fx
   :application/remove-question-group-row
@@ -1313,17 +1348,17 @@
                                      (update-in [:application :ui id] dissoc :mouse-over-remove-button))
           descendants            (->> (:children field-descriptor)
                                       autil/flatten-form-fields
-                                      (filter autil/answerable?))]
-      {:db         (autil/reduce-form-fields
-                    (fn [db child]
-                      (let [id (keyword (:id child))]
-                        (-> db
-                            (update-in [:application :answers id :values] autil/remove-nth idx)
-                            (set-repeatable-field-value id)
-                            (set-repeatable-application-field-top-level-valid id true)
-                            (set-field-visibility child))))
-                    with-decremented-count
-                    descendants)
+                                      (filter autil/answerable?)
+                                      reverse)]
+      {:db         (reduce (fn [db child]
+                             (let [id (keyword (:id child))]
+                               (-> db
+                                   (update-in [:application :answers id :values] autil/remove-nth idx)
+                                   (set-repeatable-field-value id)
+                                   (set-repeatable-application-field-top-level-valid id true)
+                                   (set-field-visibility child))))
+                           with-decremented-count
+                           descendants)
        :dispatch-n (mapv (fn [descendant]
                            [:application/run-rules (:rules descendant)])
                          descendants)})))

@@ -9,6 +9,12 @@
                :cljs [cljs-time.coerce :refer [from-long]]))
   (:import #?(:clj [java.util UUID])))
 
+(defn is-question-group-answer? [value]
+  (and (vector? value)
+       (not-empty value)
+       (or (vector? (first value))
+           (nil? (first value)))))
+
 (defn gender-int-to-string [gender]
   (case gender
     "1" "mies"
@@ -104,18 +110,17 @@
     (let [koodisto (get-koodisto-options (-> field :koodisto-source :uri)
                                          (-> field :koodisto-source :version)
                                          (-> field :koodisto-source :allow-invalid?))]
-      (cond
-        (and (sequential? values)
-             (every? sequential? values))
-        (mapv (fn [value]
-               (mapv #(get-readable-koodi-value koodisto %) value))
-             values)
+      (cond (is-question-group-answer? values)
+            (mapv (fn [value]
+                    (when (some? value)
+                      (mapv #(get-readable-koodi-value koodisto %) value)))
+                  values)
 
-        (sequential? values)
-        (mapv #(get-readable-koodi-value koodisto %) values)
+            (vector? values)
+            (mapv #(get-readable-koodi-value koodisto %) values)
 
-        :else
-        (get-readable-koodi-value koodisto values)))
+            :else
+            (get-readable-koodi-value koodisto values)))
     values))
 
 (defn reduce-form-fields [f init [field & fs :as fields]]

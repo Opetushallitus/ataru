@@ -19,9 +19,9 @@
 
 (defn ^:private required?
   [{:keys [value]}]
-  (if (or (seq? value) (vector? value))
-    (not (empty? value))
-    (not (clojure.string/blank? value))))
+  (if (string? value)
+    (not (clojure.string/blank? value))
+    (not (empty? value))))
 
 (defn- required-hakija?
   [{:keys [virkailija?] :as params}]
@@ -228,39 +228,31 @@
                                         (and (pos? num-answers) answers-subset-of-options?))
      :else true)))
 
-(defn- numeric-value?
-  [field-descriptor value]
+(defn- numeric?
+  [{:keys [value field-descriptor]}]
   (if (clojure.string/blank? value)
     true
     (let [[_ _ integer-part _ _ decimal-part] (re-matches numeric-matcher value)
-          decimal-places (-> field-descriptor :params :decimals)
-          min-value      (-> field-descriptor :params :min-value)
-          max-value      (-> field-descriptor :params :max-value)]
-      (cond
+          decimal-places                      (-> field-descriptor :params :decimals)
+          min-value                           (-> field-descriptor :params :min-value)
+          max-value                           (-> field-descriptor :params :max-value)]
+      (cond (not integer-part)
+            false
 
-              (not integer-part)
-              false
+            (and decimal-part
+                 (not decimal-places))
+            false
 
-              (and decimal-part
-                   (not decimal-places))
-              false
+            (and decimal-part
+                 (> (count decimal-part)
+                    decimal-places))
+            false
 
-              (and decimal-part
-                   (> (count decimal-part)
-                     decimal-places))
-              false
-
-              :else
-              (and (or (nil? min-value)
-                       (gte value min-value))
-                   (or (nil? max-value)
-                       (lte value max-value)))))))
-
-(defn- numeric?
-  [{:keys [value field-descriptor]}]
-  (if (sequential? value)
-    (every? true? (map #(numeric? {:field-descriptor field-descriptor :value %}) value))
-    (numeric-value? field-descriptor value)))
+            :else
+            (and (or (nil? min-value)
+                     (gte value min-value))
+                 (or (nil? max-value)
+                     (lte value max-value)))))))
 
 (def pure-validators {:required        required?
                       :required-hakija required-hakija?
