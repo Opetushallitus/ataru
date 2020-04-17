@@ -106,7 +106,7 @@
 
 (defn- value-from-values [field-map value]
   (let [t (if (= (:fieldType field-map) "attachment")
-            #(-> % :value :key)
+            #(:value %)
             #(or (:value %) ""))]
     (if (vector? value)
       (map t value)

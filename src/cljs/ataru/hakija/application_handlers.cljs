@@ -418,16 +418,28 @@
                                                      {:fieldType "dropdown"}
                                                      (update answers answer-key (partial merge-dropdown-values value))
 
+                                                     {:fieldType "attachment"}
+                                                     (update answers answer-key merge
+                                                             {:values (mapv (fn self [value]
+                                                                              (if (vector? value)
+                                                                                (mapv self value)
+                                                                                {:value    (:key value)
+                                                                                 :filename (:filename value)
+                                                                                 :size     (:size value)
+                                                                                 :status   :ready
+                                                                                 :valid    true}))
+                                                                            (:value answer))
+                                                              :valid  true})
+
                                                      {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                                     (letfn [(parse-values [value-or-values]
-                                                               (if (vector? value-or-values)
-                                                                 (mapv parse-values value-or-values)
-                                                                 (cond-> {:valid true :value value-or-values}
-                                                                         (= field-type "attachment")
-                                                                         (assoc :status :ready))))]
-                                                       (update answers answer-key merge
-                                                               {:valid  true
-                                                                :values (parse-values (:value answer))}))
+                                                     (update answers answer-key merge
+                                                             {:values (mapv (fn self [value]
+                                                                              (if (vector? value)
+                                                                                (mapv self value)
+                                                                                {:value value
+                                                                                 :valid true}))
+                                                                            (:value answer))
+                                                              :valid  true})
 
                                                      {:key "email"}
                                                      (update answers answer-key merge {:valid true :value value :verify value})
@@ -1027,10 +1039,10 @@
   :application/add-single-attachment-resumable
   (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
     (let [id       (keyword (:id field-descriptor))
-          filename (:filename (:value @(subscribe [:application/answer
-                                                   id
-                                                   question-group-idx
-                                                   attachment-idx])))]
+          filename (:filename @(subscribe [:application/answer
+                                           id
+                                           question-group-idx
+                                           attachment-idx]))]
       {:db       (assoc-in db [:attachments-uploading id filename] :downloading)
        :dispatch [:application/start-attachment-upload field-descriptor attachment-idx file retries question-group-idx]})))
 
@@ -1043,35 +1055,37 @@
                                        (conj question-group-idx))
           existing-attachments (get-in db path)
           new-files            (remove (fn [file]
-                                         (some #(and (= (.-name file) (get-in % [:value :filename]))
-                                                     (= (.-size file) (get-in % [:value :size])))
+                                         (some #(and (= (.-name file) (:filename %))
+                                                     (= (.-size file) (:size %)))
                                                existing-attachments))
                                        files)
           new-attachments      (map (fn [file]
                                       (cond
                                         (< max-attachment-size-bytes (.-size file))
-                                        {:value  {:filename (.-name file)
-                                                  :size     (.-size file)}
-                                         :valid  false
-                                         :status :error
-                                         :errors [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
+                                        {:value    ""
+                                         :filename (.-name file)
+                                         :size     (.-size file)
+                                         :status   :error
+                                         :valid    false
+                                         :errors   [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
 
                                         (zero? (.-size file))
-                                        {:value  {:filename (.-name file)
-                                                  :size     (.-size file)}
-                                         :valid  false
-                                         :status :error
-                                         :errors [[:file-size-info-min]]}
+                                        {:value    ""
+                                         :filename (.-name file)
+                                         :size     (.-size file)
+                                         :status   :error
+                                         :valid    false
+                                         :errors   [[:file-size-info-min]]}
 
                                         :else
-                                        {:value         {:filename     (.-name file)
-                                                         :content-type (.-type file)
-                                                         :size         (.-size file)}
-                                         :valid         false
+                                        {:value         ""
+                                         :filename      (.-name file)
+                                         :size          (.-size file)
                                          :uploaded-size 0
                                          :last-progress (c/now)
                                          :speed         0
-                                         :status        :uploading}))
+                                         :status        :uploading
+                                         :valid         false}))
                                     new-files)]
       {:db         (-> db
                        (assoc-in [:application :answers id :valid] false)
@@ -1117,15 +1131,19 @@
           path     (if question-group-idx
                      [:application :answers id :values question-group-idx attachment-idx]
                      [:application :answers id :values attachment-idx])
-          filename (:filename (:value @(subscribe [:application/answer
-                                                   id
-                                                   question-group-idx
-                                                   attachment-idx])))]
+          filename (:filename @(subscribe [:application/answer
+                                           id
+                                           question-group-idx
+                                           attachment-idx]))]
       {:db                 (-> db
                                (update-in [:attachments-uploading id] dissoc filename)
                                (update-in path
                                           merge
-                                          {:value response :valid true :status :ready})
+                                          {:value    (:key response)
+                                           :filename (:filename response)
+                                           :size     (:size response)
+                                           :status   :ready
+                                           :valid    true})
                                (set-validator-processing id)
                                (set-multi-value-changed id :values))
        :validate-debounced {:value                        (get-in db path)
@@ -1170,12 +1188,10 @@
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
                             :timeout      (+ 2000 (rand-int 2000))}}
         {:db       (-> db
-                       (update-in [:attachments-uploading id] dissoc (-> @(subscribe [:application/answer
-                                                                                      id
-                                                                                      question-group-idx
-                                                                                      attachment-idx])
-                                                                         :value
-                                                                         :filename))
+                       (update-in [:attachments-uploading id] dissoc (:filename @(subscribe [:application/answer
+                                                                                             id
+                                                                                             question-group-idx
+                                                                                             attachment-idx])))
                        (update-in (if question-group-idx
                                     [:application :answers id :values question-group-idx attachment-idx]
                                     [:application :answers id :values attachment-idx])
@@ -1200,7 +1216,8 @@
                      (update-in (cond-> [:application :answers id :values]
                                         (some? question-group-idx)
                                         (conj question-group-idx))
-                                (comp vec (partial remove (comp (partial = attachment-key) :key :value))))
+                                (fn [values]
+                                  (vec (remove #(= attachment-key (:value %)) values))))
                      (set-multi-value-changed id :values))
        :dispatch [:application/set-attachment-valid
                   id
@@ -1216,7 +1233,7 @@
                        (conj question-group-idx)
                        true
                        (conj attachment-idx))
-          key  (get-in db (conj path :value :key))]
+          key  (get-in db (conj path :value))]
       (if (and (not (get-in db [:application :editing?]))
                (= :ready (get-in db (conj path :status))))
         {:db   (-> db

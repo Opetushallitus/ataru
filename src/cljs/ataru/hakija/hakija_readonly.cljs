@@ -64,8 +64,8 @@
 
 (defn- attachment-list [attachments]
   [:div
-   (map (fn [{:keys [value]}]
-          ^{:key (:key value)}
+   (map (fn [value]
+          ^{:key (str "attachment-" (:value value))}
           [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
         attachments)])
 

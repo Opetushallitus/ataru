@@ -661,11 +661,11 @@
 
 (defn- attachment-filename
   [id question-group-idx attachment-idx show-size?]
-  (let [file (:value @(subscribe [:application/answer
-                                  id
-                                  question-group-idx
-                                  attachment-idx]))
-        link @(subscribe [:application/attachment-download-link (:key file)])]
+  (let [file @(subscribe [:application/answer
+                          id
+                          question-group-idx
+                          attachment-idx])
+        link @(subscribe [:application/attachment-download-link (:value file)])]
     [:div
      (if (and (:final file)
               (fc/feature-enabled? :attachment-download-allowed))
@@ -758,7 +758,7 @@
 (defn attachment-uploading-file
   [field-descriptor component-id question-group-idx attachment-idx]
   (let [attachment       @(subscribe [:application/answer component-id question-group-idx attachment-idx])
-        size             (:size (:value attachment))
+        size             (:size attachment)
         uploaded-size    (:uploaded-size attachment)
         upload-complete? (<= size uploaded-size)
         percent          (int (* 100 (/ uploaded-size size)))
@@ -780,17 +780,16 @@
       [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 
 (defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
-  (let [{:keys [status]} @(subscribe [:application/answer
-                                      component-id
-                                      question-group-idx
-                                      attachment-idx])]
-    [:li.application__attachment-filename-list-item
-     [(case status
-        :ready attachment-view-file
-        :error attachment-view-file-error
-        :uploading attachment-uploading-file
-        :deleting attachment-deleting-file)
-      field-descriptor component-id question-group-idx attachment-idx]]))
+  [:li.application__attachment-filename-list-item
+   [(case (:status @(subscribe [:application/answer
+                                component-id
+                                question-group-idx
+                                attachment-idx]))
+      :ready     attachment-view-file
+      :error     attachment-view-file-error
+      :uploading attachment-uploading-file
+      :deleting  attachment-deleting-file)
+    field-descriptor component-id question-group-idx attachment-idx]])
 
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
   (let [languages              @(subscribe [:application/default-languages])
