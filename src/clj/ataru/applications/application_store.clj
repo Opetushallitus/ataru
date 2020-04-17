@@ -233,25 +233,23 @@
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application create-new-secret? applied-hakukohteet old-answers form update? conn]
-  (let [connection                  {:connection conn}
-        answers                     (->> application
-                                         :answers
-                                         (filter #(not-empty (:value %))))
-        application-to-store        {:form_id        (:form application)
-                                     :key            (:key application)
-                                     :lang           (:lang application)
-                                     :preferred_name (find-value-from-answers "preferred-name" answers)
-                                     :last_name      (find-value-from-answers "last-name" answers)
-                                     :ssn            (find-value-from-answers "ssn" answers)
-                                     :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
-                                     :email          (find-value-from-answers "email" answers)
-                                     :hakukohde      (or (:hakukohde application) [])
-                                     :haku           (:haku application)
-                                     :content        {:answers answers}
-                                     :person_oid     (:person-oid application)}
-        new-application             (if (contains? application :key)
-                                      (yesql-add-application-version<! application-to-store connection)
-                                      (yesql-add-application<! application-to-store connection))]
+  (let [connection           {:connection conn}
+        answers              (:answers application)
+        application-to-store {:form_id        (:form application)
+                              :key            (:key application)
+                              :lang           (:lang application)
+                              :preferred_name (find-value-from-answers "preferred-name" answers)
+                              :last_name      (find-value-from-answers "last-name" answers)
+                              :ssn            (find-value-from-answers "ssn" answers)
+                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                              :email          (find-value-from-answers "email" answers)
+                              :hakukohde      (or (:hakukohde application) [])
+                              :haku           (:haku application)
+                              :content        {:answers answers}
+                              :person_oid     (:person-oid application)}
+        new-application      (if (contains? application :key)
+                               (yesql-add-application-version<! application-to-store connection)
+                               (yesql-add-application<! application-to-store connection))]
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))

@@ -64,6 +64,7 @@
           'En',
           'Arkkitehti',
           'Muokattu vastaus',
+          '',
           'Toinen vaihtoehto',
           'Pudotusvalikon 1. kysymys',
           '1,323',
