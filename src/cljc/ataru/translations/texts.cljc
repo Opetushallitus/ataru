@@ -1640,7 +1640,7 @@
                             :sv "Under bedömning"
                             :en "Under evaluation"}
    :valintaesitys          {:fi "Valintaesitys"
-                            :sv "SV: Valintaesitys"
+                            :sv "Antagningsförslag"
                             :en "EN: Valintaesitys"}
    :processed              {:fi "Käsitelty"
                             :sv "Behandlad"
