@@ -719,13 +719,17 @@
                                                                        field valid? errors]))}})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor value data-idx question-group-idx]
-  (let [id         (keyword (:id field-descriptor))
-        value-path (cond-> [:application :answers id :values]
-                     question-group-idx (conj question-group-idx))]
+  [db id group-idx data-idx value]
+  (if (some? group-idx)
     (-> db
-        (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
-        (update-in value-path (fnil assoc []) data-idx {:value value}))))
+        (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+        (update-in [:application :answers id :values group-idx] (util/vector-of-length (inc data-idx)))
+        (assoc-in [:application :answers id :values group-idx data-idx :value] value)
+        (update-in [:application :answers id :values group-idx data-idx :valid] (fnil identity true)))
+    (-> db
+        (update-in [:application :answers id :values] (util/vector-of-length (inc data-idx)))
+        (assoc-in [:application :answers id :values data-idx :value] value)
+        (update-in [:application :answers id :values data-idx :valid] (fnil identity true)))))
 
 (defn- set-repeatable-field-value
   [db field-descriptor group-idx]
@@ -741,9 +745,14 @@
 
 (defn- set-repeatable-application-repeated-field-valid
   [db id group-idx data-idx valid?]
-  (let [path (cond-> [:application :answers id :values]
-               (some? group-idx) (conj group-idx))]
-    (assoc-in db (conj path data-idx :valid) valid?)))
+  (if (some? group-idx)
+    (-> db
+        (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+        (update-in [:application :answers id :values group-idx] (util/vector-of-length (inc data-idx)))
+        (assoc-in [:application :answers id :values group-idx data-idx :valid] valid?))
+    (-> db
+        (update-in [:application :answers id :values] (util/vector-of-length (inc data-idx)))
+        (assoc-in [:application :answers id :values data-idx :valid] valid?))))
 
 (defn- set-repeatable-application-field-top-level-valid
   [db id group-idx required? valid?]
@@ -789,7 +798,7 @@
     (let [id     (keyword (:id field-descriptor))
           new-db (-> db
                      (set-validator-processing id)
-                     (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
+                     (set-repeatable-field-values id question-group-idx data-idx value)
                      (set-repeatable-field-value field-descriptor question-group-idx))]
       {:db                 new-db
        :validate-debounced {:value                        value
@@ -933,40 +942,26 @@
   :application/select-single-choice-button
   (fn [{db :db} [_ value field-descriptor question-group-idx]]
     (let [id                 (keyword (:id field-descriptor))
-          button-path        [:application :answers id]
-          value-path         (cond-> button-path
-                                     (some? question-group-idx)
-                                     (conj :values question-group-idx 0)
-                                     true
-                                     (conj :value))
-          current-value      (get-in db value-path)
-          new-value          (when (not= value current-value) value)
           form-key           (get-in db [:form :key])
           selection-id       (get-in db [:application :selection-id])
-          selection-group-id (get-in field-descriptor [:params :selection-group-id])
-          db                 (if (some? question-group-idx)
-                               (-> db
-                                   (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
-                                   (update-in (conj button-path :values question-group-idx) (fnil identity []))
-                                   (assoc-in value-path new-value)
-                                   (update-in button-path (fn [answer]
-                                                            (assoc answer :value (mapv (partial mapv :value)
-                                                                                   (:values answer)))))
-                                   (set-multi-value-changed id :value))
-                               (-> db
-                                   (assoc-in value-path new-value)
-                                   (set-multi-value-changed id :value)
-                                   (set-field-visibility field-descriptor)))]
-      {:db                 (set-validator-processing db id)
-       :validate-debounced {:value                        new-value
+          selection-group-id (get-in field-descriptor [:params :selection-group-id])]
+      {:db                 (-> (if (some? question-group-idx)
+                                 (-> db
+                                     (set-repeatable-field-values id question-group-idx 0 value)
+                                     (set-repeatable-field-value field-descriptor question-group-idx))
+                                 (assoc-in db [:application :answers id :value] value))
+                               (set-multi-value-changed id :value)
+                               (set-field-visibility field-descriptor)
+                               (set-validator-processing id))
+       :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
                             :editing?                     (get-in db [:application :editing?])
                             :try-selection                (partial try-selection
-                                                            form-key
-                                                            selection-id
-                                                            selection-group-id)
+                                                                   form-key
+                                                                   selection-id
+                                                                   selection-group-id)
                             :group-idx                    question-group-idx
                             :field-idx                    0
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
@@ -976,13 +971,18 @@
                                                                          (and (not valid?) (not-empty errors))])
                                                               (when (-> (first selection-limit) :limit-reached)
                                                                 (dispatch [:application/handle-update-selection-limits
-                                                                           (first selection-limit) valid? id new-value])))
-                                                            (dispatch [:application/set-repeatable-application-field-valid
-                                                                       field-descriptor
-                                                                       question-group-idx
-                                                                       0
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
+                                                                           (first selection-limit) valid? id value])))
+                                                            (if (some? question-group-idx)
+                                                              (dispatch [:application/set-repeatable-application-field-valid
+                                                                         field-descriptor
+                                                                         question-group-idx
+                                                                         0
+                                                                         (required? field-descriptor)
+                                                                         valid?])
+                                                              (dispatch [:application/set-application-field-valid
+                                                                         field-descriptor
+                                                                         valid?
+                                                                         errors])))}})))
 
 (reg-event-fx
   :application/add-adjacent-fields
@@ -1326,11 +1326,10 @@
         0
         group-idx]]
       {:fieldType "singleChoice"}
-      (let [d [:application/select-single-choice-button
-               (:value (first (:options field-descriptor)))
-               field-descriptor
-               group-idx]]
-        [d d])
+      [[:application/select-single-choice-button
+        nil
+        field-descriptor
+        group-idx]]
       {:fieldType "multipleChoice"}
       (let [d [:application/toggle-multiple-choice-option
                field-descriptor
