@@ -9,9 +9,6 @@
             [taoensso.timbre :as log]
             [ataru.koodisto.koodisto :as koodisto]))
 
-(defn allowed-values [options]
-  (set (map :value options)))
-
 (defn- nationalities-value-contains-finland?
   [value]
   (some true? (map
@@ -63,65 +60,17 @@
                                                      :field-descriptor             field-descriptor}))))
           validators))
 
-(defn- wrap-coll [xs]
-  (if (coll? xs)
-    xs
-    [xs]))
-
-(def answers-to-validate-as-vector
-  "Do not validate these answers a collection of individual items, but pass the whole list instead"
-  #{:hakukohteet})
-
-(defn- passes-all?
-  [has-applied form validators answers answers-by-key field-descriptor virkailija?]
-  (every? true? (map
-                  #(passed? has-applied form % validators answers-by-key field-descriptor virkailija?)
-                  (or
-                    (when (empty? answers) [nil])
-                    (when (contains? answers-to-validate-as-vector (-> field-descriptor :id (keyword))) [answers])
-                    answers))))
-
-(defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
-  (or (not-empty (:belongs-to-hakukohteet field))
-      (not-empty (:belongs-to-hakukohderyhma field))))
-
-(defn- get-followup-questions [options answers]
-  (not-empty (eduction (comp
-                        (filter (fn [option]
-                                  (and (not-empty (:followups option))
-                                       (= (seq answers) (wrap-coll (:value option))))))
-                        (mapcat :followups))
-                       options)))
-
-(defn- is-question-group-answer?
-  [answer]
-  (letfn [(l? [answer] (or (vector? answer) (set? answer) (seq? answer)))]
-    (and (l? answer)
-         (not-empty answer)
-         (every? l? answer))))
-
-(defn- get-non-empty-answers [field answers]
-  (set
-    (if (is-question-group-answer? answers)
-      (->> answers
-           (map not-empty)
-           (filter not-empty))
-      (->> (if (= "multipleChoice" (:fieldType field))
-             (filter not-empty answers)
-             answers)
-           (filter (comp not clojure.string/blank?))))))
-
-(defn get-allowed-values [koodisto-cache koodisto-source options]
+(defn allowed-values [koodisto-cache koodisto-source options]
   (if koodisto-source
     (koodisto/all-koodisto-values koodisto-cache
                                   (:uri koodisto-source)
                                   (:version koodisto-source)
                                   (:allow-invalid? koodisto-source))
-    (allowed-values options)))
+    (set (map :value options))))
 
-(defn- all-answers-allowed? [all-answers allowed-values]
-  (or (nil? allowed-values)
-      (clojure.set/subset? all-answers allowed-values)))
+(defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
+  (or (not-empty (:belongs-to-hakukohteet field))
+      (not-empty (:belongs-to-hakukohderyhma field))))
 
 (defn- belongs-to-correct-hakukohde? [field hakukohteet]
   (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
@@ -133,33 +82,28 @@
   (or (belongs-to-correct-hakukohde? field hakukohteet)
       (belongs-to-correct-hakukohderyhma? field hakukohderyhmat)))
 
-(defn- every-followup-nil? [answers-by-key followups]
-  (every? clojure.string/blank? (map #(-> answers-by-key (keyword (:id %)) :value) followups)))
-
-(defn- all-answers-nil? [non-empty-answers answers-by-key followups]
-  (and (empty? non-empty-answers)
-       (every-followup-nil? answers-by-key followups)))
-
-(defn- answers-nil? [answers-by-key children]
-  (let [answer-keys (reduce collect-ids [] children)]
-    (every? (fn [id] (nil? (get answers-by-key (keyword id)))) answer-keys)))
-
 (defn build-results
   [koodisto-cache has-applied answers-by-key form fields hakukohderyhmat virkailija?]
   (let [hakukohteet (-> answers-by-key :hakukohteet :value set)]
-    (loop [fields  fields
+    (loop [fields  (map (fn [f] [nil false f]) fields)
            results {}]
-      (if-let [field (first fields)]
-        (let [id      (keyword (:id field))
-              answers (wrap-coll (:value (get answers-by-key id)))]
-          (cond (or (get-in field [:params :hidden] false)
+      (if-let [[idx hidden? field] (first fields)]
+        (let [id    (keyword (:id field))
+              value (if (some? idx)
+                      (get-in answers-by-key [id :value idx])
+                      (get-in answers-by-key [id :value]))]
+          (cond (or hidden?
+                    (get-in field [:params :hidden] false)
                     (and (field-belongs-to-hakukohde-or-hakukohderyhma? field)
                          (not (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))))
                 (recur (rest fields)
                        (->> (util/flatten-form-fields [field])
                             (keep (fn [field]
-                                    (let [id (keyword (:id field))]
-                                      (when-let [answer (get answers-by-key id)]
+                                    (let [id (keyword (:id field))
+                                          answer (get answers-by-key id)]
+                                      (when (if (some? idx)
+                                              (get-in answer [:value idx])
+                                              answer)
                                         [id answer]))))
                             (into results)))
 
@@ -172,42 +116,93 @@
 
                 (some? (:child-validator field))
                 (recur (rest fields)
-                       (if (->> (build-results koodisto-cache has-applied answers-by-key form (:children field) hakukohderyhmat virkailija?)
-                                ((validator-keyword->fn (:child-validator field)) answers-by-key (:children field)))
+                       (if ((validator-keyword->fn (:child-validator field))
+                            answers-by-key
+                            (build-results koodisto-cache has-applied answers-by-key form (:children field) hakukohderyhmat virkailija?)
+                            (:children field))
                          results
-                         (->>(:children field)
-                             (map (fn [child]
-                                    (let [id (keyword (:id field))]
-                                      [id (get answers-by-key id)])))
-                             (into results))))
+                         (->> (:children field)
+                              (map (fn [child]
+                                     (let [id (keyword (:id child))]
+                                       [id (get answers-by-key id)])))
+                              (into results))))
 
-                (or (= "wrapperElement" (:fieldClass field))
-                    (and (= "questionGroup" (:fieldClass field))
-                         (= "fieldset" (:fieldType field))))
-                (recur (concat (:children field) (rest fields))
+                (= "questionGroup" (:fieldClass field))
+                (let [descendants  (util/flatten-form-fields (:children field))
+                      child-counts (->> descendants
+                                        (keep #(get answers-by-key (keyword (:id %))))
+                                        (map #(count (:value %)))
+                                        distinct)]
+                  (cond (empty? descendants)
+                        (recur (rest fields) results)
+
+                        (empty? (rest child-counts))
+                        (recur (concat (for [idx   (range (or (first child-counts) 1))
+                                             field (:children field)]
+                                         [idx false field])
+                                       (rest fields))
+                               results)
+
+                        :else
+                        (recur (rest fields)
+                               (->> descendants
+                                    (map (fn [field]
+                                           (let [id (keyword (:id field))]
+                                             [id (get answers-by-key id)])))
+                                    (into results)))))
+
+                (= "wrapperElement" (:fieldClass field))
+                (recur (concat (map (fn [field] [idx false field])
+                                    (:children field))
+                               (rest fields))
                        results)
 
-                (and (= "dropdown" (:fieldType field))
-                     (= "singleChoice" (:fieldType field))
-                     (= "multipleChoice" (:fieldType field)))
-                (let [options           (:options field)
-                      validators        (:validators field)
-                      koodisto-source   (:koodisto-source field)
-                      allowed-values    (get-allowed-values koodisto-cache koodisto-source options)
-                      non-empty-answers (get-non-empty-answers field answers)
-                      followups         (get-followup-questions options non-empty-answers)]
-                  (recur (concat followups (rest fields))
-                         (if (if (is-question-group-answer? non-empty-answers)
-                               (and (every? true? (map #(all-answers-allowed? (set %) allowed-values) non-empty-answers))
-                                    (every? true? (map #(passes-all? has-applied form validators (set %) answers-by-key field virkailija?) non-empty-answers)))
-                               (and (all-answers-allowed? non-empty-answers allowed-values)
-                                    (passes-all? has-applied form validators non-empty-answers answers-by-key field virkailija?)))
+                (or (= "dropdown" (:fieldType field))
+                    (= "singleChoice" (:fieldType field)))
+                (let [value           (if (vector? value) (first value) value)
+                      options         (:options field)
+                      koodisto-source (:koodisto-source field)
+                      allowed-values  (cond-> (allowed-values koodisto-cache koodisto-source options)
+                                              (= "dropdown" (:fieldType field))
+                                              (conj "")
+                                              true
+                                              (conj nil))]
+                  (recur (concat (for [option   options
+                                       followup (:followups option)]
+                                   [idx (not (= value (:value option))) followup])
+                                 (rest fields))
+                         (if (and (contains? allowed-values value)
+                                  (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
                            results
                            (assoc results id (get answers-by-key id)))))
 
+                (= "multipleChoice" (:fieldType field))
+                (let [options         (:options field)
+                      koodisto-source (:koodisto-source field)
+                      allowed-values  (allowed-values koodisto-cache koodisto-source options)]
+                  (recur (concat (for [option   options
+                                       followup (:followups option)]
+                                   [idx (not (contains? (set value) (:value option))) followup])
+                                 (rest fields))
+                         (if (and (every? #(contains? allowed-values %) value)
+                                  (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                           results
+                           (assoc results id (get answers-by-key id)))))
+
+                (or (= :hakukohteet id)
+                    (= "attachment" (:fieldType field)))
+                (recur (rest fields)
+                       (if (passed? has-applied form value (:validators field) answers-by-key field virkailija?)
+                         results
+                         (assoc results id (get answers-by-key id))))
+
                 :else
                 (recur (rest fields)
-                       (if (passes-all? has-applied form (:validators field) answers answers-by-key field virkailija?)
+                       (if (if (vector? value)
+                             (and (not-empty value)
+                                  (every? #(passed? has-applied form % (:validators field) answers-by-key field virkailija?)
+                                          value))
+                             (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
                          results
                          (assoc results id (get answers-by-key id))))))
         results))))
