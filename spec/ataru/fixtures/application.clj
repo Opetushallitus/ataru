@@ -253,21 +253,22 @@
          :value     ["Toistuva pakollinen 1" "Toistuva pakollinen 2" "Toistuva pakollinen 3"]
          :fieldType "textField"
          :label     {:fi "Toistuva pakollinen" :sv ""}}
+        {:key       "more-answers-dropdown-id"
+         :value     ""
+         :fieldType "dropdown"}
         {:key       "more-questions-attachment-id"
-         :value     "attachment-id"
+         :value     ["attachment-id"]
          :fieldType "attachment"
          :label     {:fi "Eka liite" :sv ""}}])))
 
 (def person-info-form-application-with-modified-answers
   (-> person-info-form-application-with-more-answers
       (update-in [:answers 17 :value] conj "Toistuva pakollinen 4")
-      (assoc-in [:answers 18 :value] "modified-attachment-id")
+      (assoc-in [:answers 18 :value] "toka vaihtoehto")
+      (assoc-in [:answers 19 :value] ["modified-attachment-id"])
       (update :answers (comp vec concat) [{:key       "adjacent-answer-2"
                                            :value     "Vierekkäinen vastaus 2"
-                                           :fieldType "textField"}
-                                          {:key       "more-answers-dropdown-id"
-                                           :value     "toka vaihtoehto"
-                                           :fieldType "dropdown"}])))
+                                           :fieldType "textField"}])))
 
 (def person-info-form-application-with-empty-answers
   (-> person-info-form-application-with-more-answers
@@ -275,7 +276,7 @@
              :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"])
       (update :answers (comp vec concat)
               [{:key       "more-answers-dropdown-id"
-                :value     nil
+                :value     ""
                 :fieldType "dropdown"}
                {:key       "hakukohteet"
                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
@@ -284,7 +285,7 @@
 
 (def dropdown-followups
   [{:key       "dropdown-followup-1"
-    :value     "followup-attachment"
+    :value     ["followup-attachment"]
     :fieldType "attachment"
     :label     {:fi "Dropdown liite" :sv ""}}
    {:key       "dropdown-followup-2"
@@ -293,7 +294,9 @@
     :label     {:fi "Dropdown painikkeet required" :sv ""}}])
 
 (def person-info-form-application-with-more-modified-answers
-  (update person-info-form-application-with-modified-answers :answers (comp vec concat) dropdown-followups))
+  (-> person-info-form-application-with-modified-answers
+      (assoc-in [:answers 18 :value] "eka vaihtoehto")
+      (update :answers (comp vec concat) dropdown-followups)))
 
 (def person-info-form-application-for-hakukohde
   {:form      2147483647
