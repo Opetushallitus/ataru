@@ -667,7 +667,6 @@
         (should= 400 (:status resp))
         (should= {:failures {:adjacent-answer-1            nil
                              :repeatable-required          nil
-                             :more-answers-dropdown-id     nil
                              :more-questions-attachment-id nil}
                   :code "application-validation-failed-error"}
                  (:body resp))))
