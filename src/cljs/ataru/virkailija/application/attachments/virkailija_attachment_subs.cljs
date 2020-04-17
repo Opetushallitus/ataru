@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
-  (:require [re-frame.core :as re-frame]))
+  (:require [ataru.util :as util]
+            [re-frame.core :as re-frame]))
 
 (defn attachment-preview-pages-to-display []
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
@@ -20,9 +21,9 @@
                                   (= (:fieldType answer) "attachment")))
                         (map :values)
                         (mapcat (fn [values]
-                                  (cond-> values
-                                          (every? vector? values)
-                                          (flatten))))
+                                  (if (util/is-question-group-answer? values)
+                                    (mapcat identity values)
+                                    values)))
                         (filter (fn [attachment]
                                   (= (:key attachment) attachment-key))))
                   conj)
@@ -100,9 +101,9 @@
     (->> liitepyynnot-for-selected-hakukohteet
          (transduce (comp (mapcat (fn [liitepyynto]
                                     (let [values      (:values liitepyynto)
-                                          attachments (cond->> values
-                                                        (every? vector? values)
-                                                        (flatten))]
+                                          attachments (if (util/is-question-group-answer? values)
+                                                        (mapcat identity values)
+                                                        values)]
                                       (map (fn [attachment]
                                              {:liitepyynto (dissoc liitepyynto :values)
                                               :attachment  attachment})

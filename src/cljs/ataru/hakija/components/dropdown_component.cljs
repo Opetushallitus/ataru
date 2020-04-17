@@ -59,8 +59,8 @@
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(util/non-blank-option-label % @languages))))))]]
-     (when (and (not idx) (seq followups))
+     (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]
                ^{:key (:id followup)}
-               [render-field followup nil])))]))
+               [render-field followup idx])))]))

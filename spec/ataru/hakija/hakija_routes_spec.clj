@@ -703,4 +703,48 @@
               application (get-application-by-id id)]
           (should= "eka vaihtoehto" (get-answer application "more-answers-dropdown-id"))
           (should= ["followup-attachment"] (get-answer application "dropdown-followup-1"))
-          (should= "toka" (get-answer application "dropdown-followup-2")))))))
+          (should= "toka" (get-answer application "dropdown-followup-2"))))))
+
+  (describe "Form with followup questions inside a question group"
+    (around [spec]
+      (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                    application-email/start-email-edit-confirmation-job   (constantly nil)
+                    application-service/remove-orphan-attachments         (fn [_ _])
+                    hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
+                    koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                            (case uri
+                                                                              "maatjavaltiot2"
+                                                                              #{"246"}
+                                                                              "kunta"
+                                                                              #{"273"}
+                                                                              "sukupuoli"
+                                                                              #{"1" "2"}
+                                                                              "kieli"
+                                                                              #{"FI" "SV" "EN"}))]
+        (spec)))
+
+    (before-all
+     (reset! form (db/init-db-fixture form-fixtures/form-with-followup-inside-a-question-group)))
+
+    (it "should not validate if answer to a non-visible repeat of a question"
+      (with-response :post resp (update application-fixtures/form-with-followup-inside-a-question-group-application
+                                        :answers concat [{:key       "choice"
+                                                          :value     [["0"] ["1"]]
+                                                          :fieldType "singleChoice"}
+                                                         {:key       "text"
+                                                          :value     [[""] [""]]
+                                                          :fieldType "textField"}])
+        (should= 400 (:status resp))
+        (should= {:failures {:text {:key "text" :value [[""] [""]] :fieldType "textField" :original-value nil}}
+                  :code     "application-validation-failed-error"}
+                 (:body resp))))
+
+    (it "should validate if no answer to a non-visible repeat of a question"
+      (with-response :post resp (update application-fixtures/form-with-followup-inside-a-question-group-application
+                                        :answers concat [{:key       "choice"
+                                                          :value     [["0"] ["1"]]
+                                                          :fieldType "singleChoice"}
+                                                         {:key       "text"
+                                                          :value     [[""] nil]
+                                                          :fieldType "textField"}])
+        (should= 200 (:status resp))))))

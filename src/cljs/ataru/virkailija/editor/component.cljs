@@ -738,13 +738,11 @@
             {:placeholder @(subscribe [:editor/virkailija-translation :selection-limit-input])
              :class       "editor-form__text-field--selection-limit"
              :value-fn    (fn [v] (:selection-limit v))}]])
-        (when (not question-group-element?)
-          [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?])
+        [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?]
         [belongs-to-hakukohteet-option parent-key option-index option-path]
         (when editable?
           [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
-       (when (not question-group-element?)
-         [followup-question-overlay option-index followups path show-followups])])))
+       [followup-question-overlay option-index followups path show-followups]])))
 
 (defn- select-koodisto-dropdown
   [path]

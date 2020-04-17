@@ -1,18 +1,27 @@
 (ns ataru.hakija.schema
   (:require [schema.core :as s]))
 
+(defn- is-question-group-answer? [value]
+  (and (vector? value)
+       (not-empty value)
+       (or (vector? (first value))
+           (nil? (first value)))))
+
 (s/defschema Label
   {(s/optional-key :fi) s/Str
    (s/optional-key :sv) s/Str
    (s/optional-key :en) s/Str})
 
 (s/defschema Value
-  (s/conditional #(and (vector? %) (vector? (first %)))
-                 (s/constrained [(s/constrained [(s/maybe s/Str)] vector?)] vector?)
+  (s/conditional #(and (is-question-group-answer? %)
+                       (some (fn [values] (some nil? values)) %))
+                 [(s/maybe [(s/one (s/maybe s/Str) "single choice value")])]
+                 is-question-group-answer?
+                 [(s/maybe [s/Str])]
                  vector?
-                 (s/constrained [(s/maybe s/Str)] vector?)
+                 [s/Str]
                  :else
-                 s/Str))
+                 (s/maybe s/Str)))
 
 (s/defschema ValuesValue
   {:value                          (s/maybe s/Str)
@@ -28,16 +37,16 @@
    (s/optional-key :request)       s/Any})
 
 (s/defschema Values
-  (s/conditional #(and (vector? %) (vector? (first %)))
-                 (s/constrained [(s/constrained [ValuesValue] vector?)] vector?)
+  (s/conditional is-question-group-answer?
+                 [(s/maybe [ValuesValue])]
                  vector?
-                 (s/constrained [ValuesValue] vector?)
+                 [ValuesValue]
                  :else
                  ValuesValue))
 
 (s/defschema Answer
   (s/constrained
-   {:value                          (s/maybe Value)
+   {:value                          Value
     :values                         (s/maybe Values)
     :valid                          s/Bool
     :label                          Label
@@ -49,8 +58,10 @@
     :original-value                 (s/maybe Value)}
    (fn [answer]
      (= (:value answer)
-        (cond (and (vector? (:values answer)) (vector? (first (:values answer))))
-              (mapv #(mapv :value %) (:values answer))
+        (cond (is-question-group-answer? (:values answer))
+              (mapv #(when (vector? %)
+                       (mapv :value %))
+                    (:values answer))
               (vector? (:values answer))
               (mapv :value (:values answer))
               :else

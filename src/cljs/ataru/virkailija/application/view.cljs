@@ -2196,20 +2196,20 @@
     values)])
 
 (defn application-version-history-value [value-or-values]
-  (cond
-    (every? sequential? value-or-values)
-    [:ol.application-handling__version-history-question-group-value
-     (map-indexed
-      (fn [index values]
-        ^{:key index}
-        [:li.application-handling__version-history-question-group-value-item
-         (application-version-history-list-value values)])
-      value-or-values)]
+  (cond (util/is-question-group-answer? value-or-values)
+        [:ol.application-handling__version-history-question-group-value
+         (map-indexed
+          (fn [index values]
+            ^{:key index}
+            [:li.application-handling__version-history-question-group-value-item
+             (application-version-history-list-value values)])
+          value-or-values)]
 
-    (sequential? value-or-values)
-    (application-version-history-list-value value-or-values)
+        (vector? value-or-values)
+        (application-version-history-list-value value-or-values)
 
-    :else [:span (str value-or-values)]))
+        :else
+        [:span (str value-or-values)]))
 
 (defn- application-version-history-sub-row
   [left right]

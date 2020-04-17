@@ -277,30 +277,36 @@
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))
 
+(defn- is-question-group-answer? [value]
+  (and (vector? value)
+       (not-empty value)
+       (or (vector? (first value))
+           (nil? (first value)))))
+
 (s/defschema Value
-  (s/cond-pre s/Str
-              s/Int
-              [(s/cond-pre s/Str
-                           File
-                           [(s/cond-pre s/Str s/Int File)])]))
+  (s/conditional #(and (is-question-group-answer? %)
+                       (some (fn [values] (some nil? values)) %))
+                 [(s/maybe [(s/one (s/maybe s/Str) "single choice value")])]
+                 #(and (is-question-group-answer? %)
+                       (some (fn [values] (some map? values)) %))
+                 [(s/maybe [File])]
+                 is-question-group-answer?
+                 [(s/maybe [s/Str])]
+                 #(and (vector? %) (some map? %))
+                 [File]
+                 vector?
+                 [s/Str]
+                 :else
+                 (s/maybe s/Str)))
 
-(s/defschema SingleChoiceValue
-  (s/cond-pre s/Str
-              [[(s/maybe s/Str)]]))
-
-(s/defschema BaseAnswer
-  {:key                          s/Str,
+(s/defschema Answer
+  {:key                          s/Str
    :value                        Value
    :fieldType                    (apply s/enum form-fields)
    (s/optional-key :cannot-view) s/Bool
    (s/optional-key :label)       (s/maybe (s/cond-pre
                                            localized-schema/LocalizedString
                                            s/Str))})
-
-(s/defschema Answer
-  (s/if #(= "singleChoice" (:fieldType %))
-    (st/assoc BaseAnswer :value SingleChoiceValue)
-    BaseAnswer))
 
 (def review-requirement-values
   (->> review-states/hakukohde-review-types

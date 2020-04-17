@@ -439,13 +439,13 @@
           ^{:key (:id child)}
           [render-field child nil])))
 
-(defn- multi-choice-followups [followups]
+(defn- multi-choice-followups [followups question-group-idx]
   [:div.application__form-multi-choice-followups-outer-container
    [:div.application__form-multi-choice-followups-indicator]
    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
          (for [followup followups]
            ^{:key (:id followup)}
-           [render-field followup nil]))])
+           [render-field followup question-group-idx]))])
 
 (defn- multiple-choice-option [field-descriptor option _ _]
   (let [languages    (subscribe [:application/default-languages])
@@ -473,12 +473,11 @@
                  (when @cannot-edit? {:class "disabled"}))
           label]
          (when (and @checked?
-                    (not-empty followups)
-                    (not question-group-idx))
-           (multi-choice-followups followups))]))))
+                    (not-empty followups))
+           (multi-choice-followups followups question-group-idx))]))))
 
 (defn multiple-choice
-  [field-descriptor & _]
+  [field-descriptor _]
   (let [id        (answer-key field-descriptor)
         languages (subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
@@ -550,7 +549,7 @@
             (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
          (when (and @valid? checked? (not-empty followups))
            (if use-multi-choice-style?
-             (multi-choice-followups followups)
+             (multi-choice-followups followups question-group-idx)
              [:div.application__form-single-choice-followups-indicator]))]))))
 
 (defn- use-multi-choice-style? [single-choice-field langs]
@@ -560,7 +559,7 @@
                 (< 50 (count label))))
             (:options single-choice-field))))
 
-(defn single-choice-button [field-descriptor & _]
+(defn single-choice-button [field-descriptor _]
   (let [button-id               (answer-key field-descriptor)
         languages               (subscribe [:application/default-languages])
         verifying?              (subscribe [:application/fetching-selection-limits? button-id])
@@ -589,13 +588,12 @@
                    ^{:key (str "single-choice-" (when idx (str idx "-")) (:id field-descriptor) "-" (:value option))}
                    [single-choice-option option button-id field-descriptor idx languages use-multi-choice-style? verifying?])
                  options))]
-         (when (and (not idx)
-                    (not use-multi-choice-style?)
+         (when (and (not use-multi-choice-style?)
                     (not-empty followups))
            (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
                  (for [followup followups]
                    ^{:key (:id followup)}
-                   [render-field followup nil])))]))))
+                   [render-field followup idx])))]))))
 
 (defonce max-attachment-size-bytes
          (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))

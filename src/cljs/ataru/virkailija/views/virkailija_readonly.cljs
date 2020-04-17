@@ -12,9 +12,7 @@
                                                                        render-paragraphs
                                                                        replace-with-option-label
                                                                        scroll-to-anchor
-                                                                       copy-link
-                                                                       question-group-answer?
-                                                                       answers->read-only-format]]
+                                                                       copy-link]]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
@@ -134,33 +132,12 @@
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
-           [field child application lang]))])
+           [field child application lang nil false]))])
 
 (defn row-container [_ _ _ group-idx person-info-field?]
   (fn [application lang children]
     (into [:div] (for [child children]
                    [field child application lang group-idx person-info-field?]))))
-
-(defn- extract-values [children answers group-idx]
-  (let [child-answers  (->> (map answer-key children)
-                            (select-keys answers))
-        ; applicant side stores values as hashmaps
-        applicant-side (map (comp
-                              (fn [values]
-                                (map :value values))
-                              :values
-                              second))
-        ; editor side loads values as vectors of strings
-        editor-side    (map (comp :value second))]
-    (when-let [concatenated-answers (->>
-                                      (concat
-                                        (eduction applicant-side child-answers)
-                                        (eduction editor-side child-answers))
-                                      (filter not-empty)
-                                      not-empty)]
-      (if (question-group-answer? concatenated-answers)
-        (nth (answers->read-only-format concatenated-answers) group-idx)
-        (apply map vector concatenated-answers)))))
 
 (defn- fieldset-answer-table [answers]
   [:tbody
@@ -173,7 +150,11 @@
 
 
 (defn fieldset [field-descriptor application lang children group-idx]
-  (let [fieldset-answers (extract-values children (:answers application) group-idx)]
+  (let [fieldset-answers (->> children
+                              (map #(if (some? group-idx)
+                                      (get-in application [:answers (keyword (:id %)) :value group-idx])
+                                      (get-in application [:answers (keyword (:id %)) :value])))
+                              (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
@@ -181,27 +162,11 @@
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
-         (for [child children]
-           [:th.application__readonly-adjacent--header
-            (str (from-multi-lang (:label child) lang)
-                 (required-hint field-descriptor))]))]
-      (if (question-group-answer? fieldset-answers)
-        (map-indexed (fn [idx fieldset-answers]
-                       ^{:key (str (:id field-descriptor) "-" idx)}
-                       [fieldset-answer-table fieldset-answers])
-                     fieldset-answers)
-        [fieldset-answer-table fieldset-answers])]]))
-
-(defn- followup-has-answer?
-  [followup application]
-  (if (not-empty (:children followup))
-    (some #(followup-has-answer? % application) (:children followup))
-    (when-let [answer-value (:value ((answer-key followup) (:answers application)))]
-      (and
-        (boolean answer-value)
-        (if (sequential? answer-value)
-          (< 0 (count answer-value))
-          true)))))
+             (for [child children]
+               [:th.application__readonly-adjacent--header
+                (str (from-multi-lang (:label child) lang)
+                     (required-hint field-descriptor))]))]
+      [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
   [:div.application__form-field
@@ -233,7 +198,7 @@
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
-                [field followup application lang])])]))
+                [field followup application lang question-group-idx false])])]))
        (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}
@@ -324,7 +289,7 @@
      [:div.application__question-group-repeat
       (for [child children]
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
-        [field child application lang idx])])])
+        [field child application lang idx false])])])
 
 (defn- nationality-field [field-descriptor application lang children]
   (let [field            (first children)

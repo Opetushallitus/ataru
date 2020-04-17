@@ -409,8 +409,9 @@
           (= fieldType "attachment")
           (update :value (fn [value]
                            (if (and (vector? value)
-                                    (not (empty? value))
-                                    (every? vector? value))
+                                    (not-empty value)
+                                    (or (nil? (first value))
+                                        (vector? (first value))))
                              (mapv file-store/get-metadata value)
                              (file-store/get-metadata value))))))
 
