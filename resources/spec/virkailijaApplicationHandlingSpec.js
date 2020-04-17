@@ -215,6 +215,10 @@
     )
   }
 
+  const hakukohdeRajausToggleButtonExists = () => {
+    return elementExists(hakukohdeRajausToggleButton())
+  }
+
   const rajausHakukohdeFromList = (hakukohde) => {
     return testFrame()
       .find(
@@ -1052,6 +1056,7 @@
       describe('filter by hakukohde and then open hakukohde details by pressing candidate name', () => {
         before(
           navigateToApplicationHandlingForHaku,
+          wait.until(hakukohdeRajausToggleButtonExists()),
           wait.until(() => {
             return hakukohdeRajausToggleButton().is(':visible')
           }),
