@@ -141,7 +141,7 @@ stop: stop-pm2 stop-docker
 
 restart: stop-pm2 start-pm2
 
-clean: stop clean-lein clean-docker nuke-test-db
+clean: nuke-test-db stop clean-lein clean-docker
 	rm -rf node_modules
 	rm *.log
 
