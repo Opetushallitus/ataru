@@ -20,7 +20,7 @@ DOCKER_SUDO ?=
 DOCKER=$(if $(DOCKER_SUDO),sudo )docker
 DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
-NODE_MODULES=node_modules/pm2/bin/pm2
+NODE_MODULES=node_modules
 
 # ----------------
 # Check ataru-secrets existence and config files
@@ -57,8 +57,9 @@ build-docker-images: check-tools
 # ----------------
 # Npm installation
 # ----------------
-$(NODE_MODULES):
+$(NODE_MODULES): package.json package-lock.json
 	npm install
+	touch $(NODE_MODULES)
 
 # ----------------
 # Start apps
