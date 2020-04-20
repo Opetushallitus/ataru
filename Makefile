@@ -172,7 +172,7 @@ compile-test-code:
 	APP=virkailija lein with-profile test less once
 	APP=virkailija lein with-profile test cljsbuild once virkailija-min hakija-min
 
-test-clojurescript:
+test-clojurescript: $(NODE_MODULES)
 	APP=virkailija lein with-profile test doo chrome-headless test once
 
 test-browser: $(NODE_MODULES) compile-test-code
