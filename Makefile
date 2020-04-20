@@ -175,7 +175,7 @@ compile-test-code:
 test-clojurescript:
 	APP=virkailija lein with-profile test doo chrome-headless test once
 
-test-browser: compile-test-code
+test-browser: $(NODE_MODULES) compile-test-code
 	APP=virkailija lein with-profile test spec -t ui
 
 test-clojure: nuke-test-db init-test-db
