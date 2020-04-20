@@ -6,15 +6,15 @@
             [cheshire.core :as json]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [clojure.string :as str])
-  (:import [java.text Normalizer Normalizer$Form]
-           [java.util.zip ZipOutputStream ZipEntry]))
+            [clojure.string :as str]
+            [string-normalizer.filename-normalizer :as normalizer])
+  (:import [java.util.zip ZipOutputStream ZipEntry]))
 
 (defn upload-file [{:keys [tempfile filename]}]
   (let [url  (resolve-url :liiteri.files)
         resp (http-util/do-post url {:multipart [{:name     "file"
                                                   :content  tempfile
-                                                  :filename (Normalizer/normalize filename Normalizer$Form/NFD)}]})]
+                                                  :filename (normalizer/normalize-filename filename)}]})]
     (when (= (:status resp) 200)
       (-> (:body resp)
           (json/parse-string true)

@@ -7,15 +7,15 @@
             [pandect.algo.md5 :refer [md5]]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [clojure.core.match :refer [match]]
-            [taoensso.timbre :as log])
-  (:import (java.text Normalizer Normalizer$Form)
-           (java.io File FileInputStream)))
+            [taoensso.timbre :as log]
+            [string-normalizer.filename-normalizer :as normalizer])
+  (:import (java.io File FileInputStream)))
 
 (def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
 
 (defn- file-name-prefix
   [file-id file-name parts-count]
-  (str file-id "_" parts-count "_" (Normalizer/normalize file-name Normalizer$Form/NFD)))
+  (str file-id "_" parts-count "_" (normalizer/normalize-filename file-name)))
 
 (defn- build-file-name
   [file-id file-name parts-count part-number]
@@ -98,7 +98,7 @@
                                                            :cookie-policy    :standard
                                                            :multipart        [{:part-name "file"
                                                                                :content   (FileInputStream. file)
-                                                                               :name      (Normalizer/normalize file-name Normalizer$Form/NFD)}]})]
+                                                                               :name      (normalizer/normalize-filename file-name)}]})]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)

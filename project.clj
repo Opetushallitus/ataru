@@ -94,7 +94,9 @@
                  [com.jcraft/jsch "0.1.55"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.3.19"]
-                 [org.slf4j/log4j-over-slf4j "1.7.30"]]
+                 [org.slf4j/log4j-over-slf4j "1.7.30"]
+                 [com.jcraft/jsch "0.1.55"]
+                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT"]]
 
   :min-lein-version "2.5.3"
 

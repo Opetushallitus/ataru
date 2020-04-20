@@ -3,7 +3,8 @@
             [re-frame.core :refer [dispatch reg-event-fx reg-event-db]]
             [goog.crypt :as crypt]
             [goog.crypt.Md5 :as Md5]
-            [cljs-time.core :as c]))
+            [cljs-time.core :as c]
+            [string-normalizer.filename-normalizer :as normalizer]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 (def max-part-size
@@ -54,7 +55,7 @@
           params                 (merge json-params
                                         {:params        {:file-id          file-id
                                                          :file-size        (.-size file)
-                                                         :file-name        (.-name file)
+                                                         :file-name        (normalizer/normalize-filename (.-name file))
                                                          :file-part-number file-part-number}
                                          :handler       (fn [{:keys [next-is-last]}]
                                                           (if next-is-last
@@ -91,7 +92,7 @@
                                           :error-handler    response-handler
                                           :progress-handler #(dispatch (conj progress-handler % file-part-number))
                                           :body             (doto (js/FormData.)
-                                                              (.append "file-part" file-part (.-name file))
+                                                              (.append "file-part" file-part (normalizer/normalize-filename (.-name file)))
                                                               (.append "file-id" file-id)
                                                               (.append "file-size" (.-size file))
                                                               (.append "file-part-number" file-part-number))})
