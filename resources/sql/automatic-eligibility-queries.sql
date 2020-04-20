@@ -1,10 +1,15 @@
 -- name: yesql-get-application
-SELECT key AS key,
-       person_oid AS "person-oid",
-       haku AS "haku-oid",
-       hakukohde AS "hakukohde-oids"
-FROM applications
-WHERE id = (SELECT max(id) FROM applications WHERE id = :id);
+SELECT a.key AS key,
+       a.person_oid AS "person-oid",
+       a.haku AS "haku-oid",
+       a.hakukohde AS "hakukohde-oids",
+       a.form_id AS "form-id"
+FROM applications AS a
+LEFT JOIN applications AS la
+  ON la.key = a.key AND
+     la.id > a.id
+WHERE la.id IS NULL AND
+      a.key = (SELECT key FROM applications WHERE id = :id);
 
 -- name: yesql-from-unreviewed-to-eligible!
 INSERT INTO application_hakukohde_reviews
@@ -44,5 +49,8 @@ VALUES (:state,
 -- name: yesql-get-application-ids
 SELECT a.id
 FROM applications AS a
-WHERE a.id = (SELECT max(id) FROM applications WHERE key = a.key) AND
+LEFT JOIN applications AS la
+  ON la.key = a.key AND
+     la.id > a.id
+WHERE la.id IS NULL AND
       a.person_oid IN (:person_oids);
