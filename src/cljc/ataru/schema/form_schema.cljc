@@ -464,12 +464,17 @@
    :idTunnus     (s/maybe s/Str)})
 
 (s/defschema TilastokeskusApplication
-  {:hakemus_oid    s/Str
-   :haku_oid       s/Str
-   :henkilo_oid    s/Str
-   :hakukohde_oids [s/Str]
-   :kotikunta      (s/maybe s/Str)
-   :asuinmaa       (s/maybe s/Str)})
+  {:hakemus_oid                  s/Str
+   :haku_oid                     s/Str
+   :henkilo_oid                  s/Str
+   :hakukohde_oids               [s/Str]
+   :kotikunta                    (s/maybe s/Str)
+   :asuinmaa                     (s/maybe s/Str)
+   :pohjakoulutus_kk             [{:pohjakoulutuskklomake s/Str
+                                   :suoritusvuosi         s/Int}]
+   :pohjakoulutus_kk_ulk_country (s/maybe s/Str)
+   :hakutoiveet                  [{:hakukohde_oid (s/maybe s/Str)
+                                   :sija          s/Int}]})
 
 (s/defschema ValintaApplication
   {:hakemusOid          s/Str
