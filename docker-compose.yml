@@ -11,7 +11,7 @@ services:
   ataru-dev-redis:
     image: "redis:latest"
     ports:
-      - "6379:6379"
+      - "16379:6379"
   ataru-test-db:
     build: ./test-postgres
     environment:
