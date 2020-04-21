@@ -19,7 +19,7 @@
     (merge application
            {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:key application))
             :pohjakoulutus_kk_ulk_country (get-in answers [:faae7ba9-5e3c-48bf-903f-363404c659a4 :value])
-            :hakutoiveet                  (hakutoiveet (:hakukohde application))})))
+            :hakutoiveet                  (hakutoiveet (:hakukohde-oids application))})))
 
 (defn get-application-info-for-tilastokeskus
   [tarjonta-service haku-oid hakukohde-oid]
