@@ -306,7 +306,7 @@
           return selectedState().first()
         }),
         wait.until(() => {
-          return notSelectedStates().length === 6
+          return notSelectedStates().length === 7
         }),
         wait.until(() => {
           firstNotSelected = notSelectedStates().first()
@@ -519,7 +519,7 @@
     describe('application filtering on hakukohde processing state', () => {
       before(clickElement(hakukohdeProcessingFilterLink))
       it('reduces application list', (done) => {
-        expect(includedHakukohdeProcessingStateFilters()).to.equal(8)
+        expect(includedHakukohdeProcessingStateFilters()).to.equal(9)
         expect(filteredApplicationsCount()).to.equal(3)
 
         const stateOfFirstApplicationHakukohde = applicationHakukohdeProcessingStates()
@@ -712,7 +712,7 @@
         )
 
         it('has correct filters selected', () => {
-          expect(includedHakukohdeProcessingStateFilters()).to.equal(5)
+          expect(includedHakukohdeProcessingStateFilters()).to.equal(6)
         })
       })
     })
