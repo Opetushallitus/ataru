@@ -7,11 +7,14 @@
 
 (defn- hakutoiveet
   [hakukohteet]
-  (into []
-        (for [index (range 1 7)
-              :let  [hakukohde-oid (nth hakukohteet (dec index) nil)]]
-          {:hakukohde_oid             hakukohde-oid
-           :sija                      index})))
+  (mapv
+   (fn [i h]
+     {:hakukohde_oid h
+      :sija          i})
+   (range 1 7)
+   (concat
+    hakukohteet
+    (repeatedly (constantly nil)))))
 
 (defn- enrich-application-data
   [haku application]
@@ -19,7 +22,7 @@
     (merge application
            {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:key application))
             :pohjakoulutus_kk_ulk_country (get-in answers [:faae7ba9-5e3c-48bf-903f-363404c659a4 :value])
-            :hakutoiveet                  (hakutoiveet (:hakukohde-oids application))})))
+            :hakutoiveet                  (hakutoiveet (:hakukohde_oids application))})))
 
 (defn get-application-info-for-tilastokeskus
   [tarjonta-service haku-oid hakukohde-oid]
