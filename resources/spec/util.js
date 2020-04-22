@@ -59,8 +59,8 @@ const wait = {
             condition +
             '\ninfo: ' +
             infoText
-          console.error(new Error(errorStr))
-          deferred.reject(errorStr)
+          console.error(errorStr)
+          deferred.reject(new Error(errorStr))
         } else {
           setTimeout(() => {
             waitLoop(remaining - 1)
