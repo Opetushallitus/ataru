@@ -1,8 +1,6 @@
 (ns ataru.application.review-states
-  (:require [ataru.translations.texts :refer [state-translations
-                                              virkailija-texts]]
-            [ataru.util :as util]
-            [clojure.set :refer [difference]]))
+  (:require [ataru.translations.texts :refer [state-translations]]
+            [ataru.util :as util]))
 
 (def application-review-states
   [["active" (:active state-translations)]
