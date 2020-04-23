@@ -2,7 +2,7 @@ mocha.ui('bdd')
 mocha.reporter('html')
 mocha.useColors(false)
 mocha.bail(true)
-mocha.timeout(60000)
+mocha.timeout(120000)
 
 const expect = chai.expect
 chai.should()
