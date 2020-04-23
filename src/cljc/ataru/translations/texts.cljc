@@ -1,6 +1,5 @@
 (ns ataru.translations.texts
-  (:require [clojure.string :as string]
-            #?(:cljs [goog.string :refer [format]])))
+  (:require [clojure.string :as string]))
 
 (def translation-mapping
   {:add                                         {:fi "Lisää"
