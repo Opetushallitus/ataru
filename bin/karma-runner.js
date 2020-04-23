@@ -97,7 +97,10 @@ const getUrl = () => {
     }
 };
 
-puppeteer.launch().then(browser => {
+puppeteer.launch({
+    headless: true,
+    /* slowMo: 500 */
+}).then(browser => {
     browser.newPage()
         .then(page => {
             const url = getUrl();
