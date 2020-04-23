@@ -1650,7 +1650,7 @@
    :incomplete             {:fi "Kesken"
                             :sv "Inte färdig"
                             :en "Incomplete"}
-   :selection              {:fi "Valintaesitys"
+   :selection-proposal     {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
                             :en "Selected (pending)"}
    :reserve                {:fi "Varalla"

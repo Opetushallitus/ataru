@@ -22,7 +22,7 @@
 
 (def application-hakukohde-selection-states
   [["incomplete" (:incomplete state-translations)]
-   ["selection-proposal" (:selection state-translations)]
+   ["selection-proposal" (:selection-proposal state-translations)]
    ["reserve" (:reserve state-translations)]
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
