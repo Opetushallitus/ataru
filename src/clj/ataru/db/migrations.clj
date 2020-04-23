@@ -228,6 +228,7 @@
                                               :invited-to-interview ["invited-to-interview" "incomplete"]
                                               :invited-to-exam ["invited-to-exam" "incomplete"]
                                               :evaluating ["evaluating" "incomplete"]
+                                              :valintaesitys ["valintaesitys" "incomplete"]
                                               :processed ["processed" "incomplete"]
                                               :inactivated ["inactivated" "incomplete"]
                                               :not-selected ["processed" "reserve"]

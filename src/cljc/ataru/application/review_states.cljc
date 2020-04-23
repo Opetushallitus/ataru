@@ -1,8 +1,6 @@
 (ns ataru.application.review-states
-  (:require [ataru.translations.texts :refer [state-translations
-                                              virkailija-texts]]
-            [ataru.util :as util]
-            [clojure.set :refer [difference]]))
+  (:require [ataru.translations.texts :refer [state-translations]]
+            [ataru.util :as util]))
 
 (def application-review-states
   [["active" (:active state-translations)]
@@ -16,6 +14,7 @@
    ["invited-to-interview" (:invited-to-interview state-translations)]
    ["invited-to-exam" (:invited-to-exam state-translations)]
    ["evaluating" (:evaluating state-translations)]
+   ["valintaesitys" (:valintaesitys state-translations)]
    ["processed" (:processed state-translations)]
    ["information-request" (:information-request state-translations)]])
 
@@ -23,7 +22,7 @@
 
 (def application-hakukohde-selection-states
   [["incomplete" (:incomplete state-translations)]
-   ["selection-proposal" (:selection state-translations)]
+   ["selection-proposal" (:selection-proposal state-translations)]
    ["reserve" (:reserve state-translations)]
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])

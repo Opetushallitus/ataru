@@ -1,6 +1,5 @@
 (ns ataru.translations.texts
-  (:require [clojure.string :as string]
-            #?(:cljs [goog.string :refer [format]])))
+  (:require [clojure.string :as string]))
 
 (def translation-mapping
   {:add                                         {:fi "Lisää"
@@ -1639,6 +1638,9 @@
    :evaluating             {:fi "Arvioinnissa"
                             :sv "Under bedömning"
                             :en "Under evaluation"}
+   :valintaesitys          {:fi "Valintaesitys"
+                            :sv "Antagningsförslag"
+                            :en "EN: Valintaesitys"}
    :processed              {:fi "Käsitelty"
                             :sv "Behandlad"
                             :en "Processed"}
@@ -1648,7 +1650,7 @@
    :incomplete             {:fi "Kesken"
                             :sv "Inte färdig"
                             :en "Incomplete"}
-   :selection              {:fi "Valintaesitys"
+   :selection-proposal     {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
                             :en "Selected (pending)"}
    :reserve                {:fi "Varalla"
