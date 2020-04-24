@@ -20,7 +20,7 @@ DOCKER_SUDO ?=
 DOCKER=$(if $(DOCKER_SUDO),sudo )docker
 DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
-NODE_MODULES=node_modules/pm2/bin/pm2
+NODE_MODULES=node_modules
 
 # ----------------
 # Check ataru-secrets existence and config files
@@ -57,8 +57,9 @@ build-docker-images: check-tools
 # ----------------
 # Npm installation
 # ----------------
-$(NODE_MODULES):
+$(NODE_MODULES): package.json package-lock.json
 	npm install
+	touch $(NODE_MODULES)
 
 # ----------------
 # Start apps
@@ -141,7 +142,7 @@ stop: stop-pm2 stop-docker
 
 restart: stop-pm2 start-pm2
 
-clean: stop clean-lein clean-docker nuke-test-db
+clean: nuke-test-db stop clean-lein clean-docker
 	rm -rf node_modules
 	rm *.log
 
@@ -172,10 +173,10 @@ compile-test-code:
 	APP=virkailija lein with-profile test less once
 	APP=virkailija lein with-profile test cljsbuild once virkailija-min hakija-min
 
-test-clojurescript:
+test-clojurescript: $(NODE_MODULES)
 	APP=virkailija lein with-profile test doo chrome-headless test once
 
-test-browser: compile-test-code
+test-browser: $(NODE_MODULES) compile-test-code
 	APP=virkailija lein with-profile test spec -t ui
 
 test-clojure: nuke-test-db init-test-db

@@ -242,7 +242,8 @@
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"
-                                               :config "config/test.edn"}}
+                                               :config "config/test.edn"}
+                              :jvm-opts       ^:replace ["-Durl.valinta-tulos-service.baseUrl=http://localhost:8097"]}
 
              :virkailija-dev [:dev {:figwheel    {:nrepl-port  3334
                                                   :server-port 3449}
