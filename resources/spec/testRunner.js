@@ -22,8 +22,8 @@ runner.on('test end', (t) => {
 })
 
 runner.on('fail', (t, err) => {
-  console.log('Failed:', parseTitle(t))
-  console.log(err)
+  console.log('Failed: test:', parseTitle(t))
+  console.log('Failed: error stack:', err.stack)
   failed++
 })
 

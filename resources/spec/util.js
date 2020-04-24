@@ -2,7 +2,7 @@ mocha.ui('bdd')
 mocha.reporter('html')
 mocha.useColors(false)
 mocha.bail(true)
-mocha.timeout(30000)
+mocha.timeout(60000)
 
 const expect = chai.expect
 chai.should()
@@ -59,8 +59,8 @@ const wait = {
             condition +
             '\ninfo: ' +
             infoText
-          console.error(new Error(errorStr))
-          deferred.reject(errorStr)
+          console.error(errorStr)
+          deferred.reject(new Error(errorStr))
         } else {
           setTimeout(() => {
             waitLoop(remaining - 1)

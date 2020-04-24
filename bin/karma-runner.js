@@ -21,21 +21,17 @@ const takeScreenshot = page => {
 };
 
 const onConsoleMessage = (message, page) => {
-    if (!startsWith(message, 'JSHandle')) {
-        if (startsWith(message, 'Completed:')) console.log(message);
-        if (startsWith(message, resultPrefix)) {
-            if (startsWith(message, resultPrefix + successMsg)) {
-                console.log(message);
-                testsSuccessful = true;
-            } else if (startsWith(message, resultPrefix + failMsg)) {
-                console.log(message);
-                takeScreenshot(page).then(function() {
-                  testsSuccessful = false;
-                });
-            } else {
-                console.error("Unknown result:", message);
+    console.log(message);
+    if (startsWith(message, resultPrefix)) {
+        if (startsWith(message, resultPrefix + successMsg)) {
+            testsSuccessful = true;
+        } else if (startsWith(message, resultPrefix + failMsg)) {
+            takeScreenshot(page).then(function() {
                 testsSuccessful = false;
-            }
+            });
+        } else {
+            console.error("Unknown result:", message);
+            testsSuccessful = false;
         }
     }
 };
@@ -101,7 +97,11 @@ const getUrl = () => {
     }
 };
 
-puppeteer.launch().then(browser => {
+puppeteer.launch({
+    devtools: false,
+    headless: true,
+    /* slowMo: 500 */
+}).then(browser => {
     browser.newPage()
         .then(page => {
             const url = getUrl();
