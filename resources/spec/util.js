@@ -2,7 +2,7 @@ mocha.ui('bdd')
 mocha.reporter('html')
 mocha.useColors(false)
 mocha.bail(true)
-mocha.timeout(60000)
+mocha.timeout(120000)
 
 const expect = chai.expect
 chai.should()
@@ -42,7 +42,7 @@ const isRadioButton = ($e) => {
 
 const wait = {
   waitIntervalMs: 100,
-  testTimeoutDefault: 30000,
+  testTimeoutDefault: 60000,
   until: (condition, maxWaitMs, infoText) => {
     return () => {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault

@@ -5,7 +5,7 @@ const cookie = args[3];
 const resultPrefix = '*** TEST';
 const successMsg = ' SUCCESS';
 const failMsg = ' FAIL';
-const TIMEOUT_MINS = 2;
+const TIMEOUT_MINS = 5;
 const timeoutMs = TIMEOUT_MINS * 60 * 1000;
 const startTime = new Date().getTime();
 let testsSuccessful = undefined;
@@ -38,7 +38,7 @@ const onConsoleMessage = (message, page) => {
 
 const stopWhenFinished = () => {
     if (new Date().getTime() > startTime + timeoutMs) {
-        console.log('Tests timed out after', timeoutMs);
+        console.log('Tests timed out after', timeoutMs, 'milliseconds');
         process.exit(1)
     } else if (typeof testsSuccessful === 'undefined') {
         setTimeout(stopWhenFinished, 1000);

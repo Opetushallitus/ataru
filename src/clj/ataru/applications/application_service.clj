@@ -120,6 +120,7 @@
   [ryhman-hakukohteet
    authorized-organization-oids
    haku-oid
+   hakukohderyhma-oid
    ensisijaisesti
    rajaus-hakukohteella]
   (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
@@ -379,6 +380,7 @@
                                ryhman-hakukohteet
                                authorized-organization-oids
                                haku-oid
+                               hakukohderyhma-oid
                                ensisijaisesti
                                rajaus-hakukohteella)
                               (some? hakukohde-oid)

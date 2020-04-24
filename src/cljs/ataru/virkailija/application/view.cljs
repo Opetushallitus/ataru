@@ -546,11 +546,11 @@
         date-time               (->> day-date-time (rest) (clojure.string/join " "))
         applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings         (subscribe [:state-query [:application :review-settings :config]])
-        filtered-hakukohde      (subscribe [:state-query [:application :selected-hakukohde]])
+        filtered-hakukohde      (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
         attachment-states       (application-attachment-states application)
         form-attachment-states  (:form attachment-states)]
     [:div.application-handling__list-row
-     {:on-click #(select-application (:key application) nil false)
+     {:on-click #(select-application (:key application) @filtered-hakukohde false)
       :class    (clojure.string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))

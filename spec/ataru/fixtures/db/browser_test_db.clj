@@ -83,7 +83,10 @@
             :locked           nil
             :locked-by        nil})
 
-(def form4 {:id               42
+(def form3a (merge form3 {:id  4
+                          :key "41101b4f-1762-49af-9db0-e3603adae3ae"}))
+
+(def form4 {:id               5
             :key              "empty"
             :name             {:fi "Selaintestilomake4"}
             :created-by       "1.2.246.562.11.11111111111"
@@ -94,7 +97,7 @@
             :locked-by        nil})
 
 (def pohjakoulutus-form
-  {:id               43
+  {:id               6
    :key              "pohjakoulutus-test-form"
    :name             {:fi "Uusi lomake pohjakoulutus"}
    :created-by       "1.2.246.562.11.11111111111"
@@ -116,7 +119,7 @@
                        :options                []
                        :fieldType              "attachment"}]})
 
-(def ssn-testform {:id               4
+(def ssn-testform {:id               7
                    :key              "41101b4f-1762-49af-9db0-e3603adae656"
                    :name             {:fi "SSN_testilomake"}
                    :created-by       "1.2.246.562.11.11111111111"
@@ -127,7 +130,7 @@
                    :locked           nil
                    :locked-by        nil})
 
-(def belongs-to-hakukohteet-test-form {:id               5
+(def belongs-to-hakukohteet-test-form {:id               8
                                        :key              "belongs-to-hakukohteet-test-form"
                                        :name             {:fi "belongs-to-hakukohteet-test-form"}
                                        :created-by       "1.2.246.562.11.11111111111"
@@ -144,7 +147,7 @@
                                        :locked           nil
                                        :locked-by        nil})
 
-(def hakija-hakukohteen-hakuaika-test-form {:id               6
+(def hakija-hakukohteen-hakuaika-test-form {:id               9
                                             :key              "hakija-hakukohteen-hakuaika-test-form"
                                             :name             {:fi "hakija-hakukohteen-hakuaika-test-form"}
                                             :created-by       "1.2.246.562.11.11111111111"
@@ -183,15 +186,15 @@
                                             :locked           nil
                                             :locked-by        nil})
 
-(def assosiaatio-hakukohteen-organisaatiosta-form {:id 7
-                                                   :key "hakukohteen-organisaatiosta-form"
-                                                   :name {:fi "hakukohteen-organisaatiosta"}
-                                                   :created-by "1.2.246.562.11.11111111111"
+(def assosiaatio-hakukohteen-organisaatiosta-form {:id               10
+                                                   :key              "hakukohteen-organisaatiosta-form"
+                                                   :name             {:fi "hakukohteen-organisaatiosta"}
+                                                   :created-by       "1.2.246.562.11.11111111111"
                                                    :organization-oid "1.2.246.562.10.01010101"
-                                                   :languages ["fi"]
+                                                   :languages        ["fi"]
                                                    :content
-                                                   [(component/hakukohteet)
-                                                    (person-info-module/person-info-module)]
+                                                                     [(component/hakukohteet)
+                                                                      (person-info-module/person-info-module)]
                                                    :locked           nil
                                                    :locked-by        nil})
 
@@ -297,14 +300,88 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
+(def application4 {:form       4
+                   :lang       "fi"
+                   :person-oid "1.2.3.4.5.8"
+                   :haku       "1.2.246.562.29.65950024186"
+                   :hakukohde  ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                   :answers    [{:key       "hakukohteet"
+                                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                 :fieldType "hakukohteet"
+                                 :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}
+                                {:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Johanna Irmeli"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Tyrni"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "030303A0303"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "johanna.tyrni@gmail.com"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     (clojure.string/join ["Johanna Irmeli" \u0000])} ;This nullbyte char should be filtered before it reaches postgres
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "2"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     [["246"]]}
+                                {:fieldType "dropdown"
+                                 :key       "language"
+                                 :value     "fi"}]})
+
+(def application5 {:form       4
+                   :lang       "fi"
+                   :person-oid "1.2.3.4.5.9"
+                   :haku       "1.2.246.562.29.65950024186"
+                   :hakukohde  ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                   :answers    [{:key       "hakukohteet"
+                                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                 :fieldType "hakukohteet"
+                                 :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}
+                                {:fieldType "textField"
+                                 :key       "preferred-name"
+                                 :value     "Maynard"}
+                                {:fieldType "textField"
+                                 :key       "last-name"
+                                 :value     "Ferguson"}
+                                {:fieldType "textField"
+                                 :key       "ssn"
+                                 :value     "030201A0101"}
+                                {:fieldType "textField"
+                                 :key       "email"
+                                 :value     "maynard.ferguson@gmail.com"}
+                                {:fieldType "textField"
+                                 :key       "first-name"
+                                 :value     "Maynard"}
+                                {:fieldType "textField"
+                                 :key       "birth-date"
+                                 :value     "29.10.1984"}
+                                {:fieldType "dropdown"
+                                 :key       "gender"
+                                 :value     "2"}
+                                {:fieldType "dropdown"
+                                 :key       "nationality"
+                                 :value     [["246"]]}
+                                {:fieldType "dropdown"
+                                 :key       "language"
+                                 :value     "fi"}]})
+
 (def audit-logger (audit-log/new-dummy-audit-logger))
 
 (defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
-  (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
-                                                      :prioriteetit [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
+  (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid           "1.2.246.562.29.65950024187"
+                                                      :prioriteetit       [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
                                                       :hakukohderyhma-oid "1.2.246.562.28.00000000001"})
-  (hakukohderyhmat/insert-rajaava-hakukohderyhma {:haku-oid "1.2.246.562.29.65950024187"
-                                                  :raja 2
+  (hakukohderyhmat/insert-rajaava-hakukohderyhma {:haku-oid           "1.2.246.562.29.65950024187"
+                                                  :raja               2
                                                   :hakukohderyhma-oid "1.2.246.562.28.00000000001"}))
 
 (defn init-db-fixture []
@@ -312,7 +389,7 @@
   (form-store/create-new-form! form1 (:key form1))
   (form-store/create-new-form! form2 (:key form2))
   (form-store/create-new-form! form3 (:key form3))
-  (form-store/create-new-form! form3 "41101b4f-1762-49af-9db0-e3603adae3ae")
+  (form-store/create-new-form! form3a (:key form3a))
   (form-store/create-new-form! form4 (:key form4))
   (form-store/create-new-form! pohjakoulutus-form (:key pohjakoulutus-form))
   (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
@@ -323,7 +400,15 @@
                                (:key hakija-hakukohteen-hakuaika-test-form))
   (application-store/add-application application1 [] form1 {} audit-logger)
   (application-store/add-application application2 [] form1 {} audit-logger)
-  (application-store/add-application application3 [] form1 {} audit-logger))
+  (application-store/add-application application3 [] form1 {} audit-logger)
+  (application-store/add-application application4
+                                     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                     form3a {}
+                                     audit-logger)
+  (application-store/add-application application5
+                                     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                     form3a {}
+                                     audit-logger))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))

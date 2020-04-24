@@ -102,7 +102,10 @@
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
-    (let [different-application? (not= application-key (get-in db [:application :selected-key]))]
+    (let [different-application?     (not= application-key (get-in db [:application :selected-key]))
+          selected-hakukohde-oid-set (cond (set? selected-hakukohde-oid) selected-hakukohde-oid
+                                           (some? selected-hakukohde-oid) #{selected-hakukohde-oid}
+                                           :else #{})]
       (merge
         {:db (cond-> db
                      different-application?
@@ -113,7 +116,7 @@
                          (assoc-in [:application :information-request] nil))
 
                      selected-hakukohde-oid
-                     (assoc-in [:application :selected-review-hakukohde-oids] [selected-hakukohde-oid])
+                     (assoc-in [:application :selected-review-hakukohde-oids] (vec selected-hakukohde-oid-set))
 
                      with-newest-form?
                      (->
@@ -125,7 +128,7 @@
                               [:application/fetch-application application-key with-newest-form?]]
 
                              with-newest-form?
-                             [[:application/select-review-hakukohde selected-hakukohde-oid]
+                             [[:application/select-review-hakukohde (first selected-hakukohde-oid-set)]
                               [:application/fetch-application application-key true]])]
           {:dispatch-n dispatches})))))
 
@@ -588,19 +591,20 @@
       (assoc-in [:application :selection-state-used?] selection-state-used?)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
-          (cond
-           (and (not-empty (:hakukohde application))
-                (not-empty current-hakukohde-oids)
-                (clojure.set/superset? (set (:hakukohde application))
-                                       (set current-hakukohde-oids)))
-           current-hakukohde-oids
+          (let
+            [review-hakukohde-oids-to-keep                 (clojure.set/intersection (set (:hakukohde application))
+                                                                                     (set current-hakukohde-oids))]
+            (cond
+              (not-empty review-hakukohde-oids-to-keep)
 
-           (and (not-empty (:hakukohde application))
-                (:selected-hakukohde application))
-           [(:selected-hakukohde application)]
+              review-hakukohde-oids-to-keep
 
-           :else
-           [(or (first (:hakukohde application)) "form")])))))
+              (and (not-empty (:hakukohde application))
+                  (:selected-hakukohde application))
+              [(:selected-hakukohde application)]
+
+              :else
+              [(or (first (:hakukohde application)) "form")]))))))
 
 (defn review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
@@ -780,7 +784,7 @@
   (fn [{db :db} [_ [haku-oid hakukohderyhma-oid]]]
     {:db       (-> db
                    clear-selection
-                   (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid]))
+                   (assoc-in [:application :selected-hakukohderyhma] [haku-oid hakukohderyhma-oid])) ; ovde selektuje grupu
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
@@ -1237,12 +1241,13 @@
     (when-let [current-idx (util/first-index-of #(= (:key %) (-> db :application :selected-key))
                                                 (-> db :application :applications))]
       (let [applications         (-> db :application :applications)
+            filtered-hakukohde   (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
             next-idx             (mod (+ current-idx step) (count applications))
             next-application-key (-> applications (nth next-idx) :key)
             next-not-visible?    (= next-idx (-> db :application :applications-to-render))]
         (when next-application-key
           {:update-url-query-params {:application-key next-application-key}
-           :dispatch-n              [[:application/select-application next-application-key nil false]
+           :dispatch-n              [[:application/select-application next-application-key @filtered-hakukohde false]
                                      (when next-not-visible?
                                        [:application/show-more-applications])]})))))
 

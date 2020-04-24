@@ -118,6 +118,12 @@
     loadInFrame('http://localhost:8350/lomake-editori/applications/foobar1')
   }
 
+  const navigateToApplicationHandlingForHaku = () => {
+    loadInFrame(
+      'http://localhost:8350/lomake-editori/applications/haku/1.2.246.562.29.65950024186'
+    )
+  }
+
   const includedHakukohdeProcessingStateFilters = () => {
     return testFrame().find(
       '.application-handling__filter-state:eq(1) .application-handling__filter-state-selected-row'
@@ -201,6 +207,79 @@
 
   const reviewNotesSubmitButton = () => {
     return testFrame().find('.application-handling__review-note-submit-button')
+  }
+
+  const hakukohdeRajausToggleButton = () => {
+    return testFrame().find(
+      '.application-handling__hakukohde-rajaus-toggle-button'
+    )
+  }
+
+  const rajausHakukohdeFromList = (hakukohde) => {
+    return testFrame()
+      .find(
+        '.hakukohde-and-hakukohderyhma-list-item-label:contains(' +
+          hakukohde +
+          ')'
+      )
+      .closest('.hakukohde-and-hakukohderyhma-category-list-item')
+  }
+
+  const applicationPersonNameFromList = (name) => {
+    return testFrame()
+      .find(
+        '.application-handling__list-row--applicant-name:contains(' + name + ')'
+      )
+      .closest('.application-handling__list-row-person-info')
+  }
+
+  const clickNavigateToNextApplicationDetails = () => {
+    return clickElement(() =>
+      testFrame().find(
+        '.application-handling__navigation-link:contains(Seuraava)'
+      )
+    )
+  }
+
+  const clickNavigateToPreviousApplicationDetails = () => {
+    return clickElement(() =>
+      testFrame().find(
+        '.application-handling__navigation-link:contains(Edellinen)'
+      )
+    )
+  }
+
+  const applicationDetailsVisible = (name) => {
+    return testFrame()
+      .find(
+        '.application-handling__review-area-main-heading:contains(' + name + ')'
+      )
+      .closest('.application-handling__detail-container')
+      .find('.application-handling__hakukohde--selectable')
+      .is(':visible')
+  }
+
+  const toggleApplicationDetailsHakukohdeSelected = (hakukohde) => {
+    return clickElement(() =>
+      testFrame()
+        .find(
+          '.application-handling__review-area-hakukohde-heading:contains(' +
+            hakukohde +
+            ')'
+        )
+        .closest('.application-handling__hakukohde--selectable')
+    )
+  }
+
+  const isApplicationDetailsHakukohdeSelected = (hakukohde) => {
+    return testFrame()
+      .find('.application-handling__hakukohde--selected')
+      .find(
+        '.application-handling__review-area-hakukohde-heading:contains(' +
+          hakukohde +
+          ')'
+      )
+      .is(':visible')
   }
 
   const score = () => {
@@ -966,6 +1045,72 @@
               'disabled'
             )
           })
+        })
+      })
+    })
+    describe('Application list filtering', () => {
+      describe('filter by hakukohde and then open hakukohde details by pressing candidate name', () => {
+        before(
+          navigateToApplicationHandlingForHaku,
+          wait.until(() => {
+            return hakukohdeRajausToggleButton().is(':visible')
+          }),
+          clickElement(hakukohdeRajausToggleButton),
+          wait.until(() => {
+            return rajausHakukohdeFromList('Testihakukohde 2').is(':visible')
+          }),
+          clickElement(() => rajausHakukohdeFromList('Testihakukohde 2')),
+          wait.until(() => {
+            return applicationPersonNameFromList('Maynard').is(':visible')
+          }),
+          clickElement(() => applicationPersonNameFromList('Maynard')),
+          wait.until(() => {
+            return applicationDetailsVisible('Maynard')
+          })
+        )
+        it('by default selects the hakukohde according to current filter', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
+        })
+      })
+      describe('move to the next application details', () => {
+        before(
+          clickNavigateToNextApplicationDetails(),
+          wait.until(() => {
+            return applicationDetailsVisible('Johanna')
+          })
+        )
+        it('also by default selects the hakukohde according to current filter', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
+        })
+      })
+      describe('modify and move to the previous application details', () => {
+        before(
+          toggleApplicationDetailsHakukohdeSelected('Testihakukohde 1'),
+          wait.until(() => {
+            return isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          }),
+          clickNavigateToPreviousApplicationDetails(),
+          wait.until(() => {
+            return applicationDetailsVisible('Maynard')
+          })
+        )
+        it('selects the default hakukohde according to current filter, regardless of modifications in previous', () => {
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 1')
+          ).to.eql(false)
+          expect(
+            isApplicationDetailsHakukohdeSelected('Testihakukohde 2')
+          ).to.eql(true)
         })
       })
     })
