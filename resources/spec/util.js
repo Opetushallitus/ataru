@@ -42,7 +42,7 @@ const isRadioButton = ($e) => {
 
 const wait = {
   waitIntervalMs: 100,
-  testTimeoutDefault: 900000,
+  testTimeoutDefault: 60000,
   until: (condition, maxWaitMs, infoText) => {
     return () => {
       if (maxWaitMs == undefined) maxWaitMs = wait.testTimeoutDefault
