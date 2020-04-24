@@ -23,7 +23,6 @@ runner.on('test end', (t) => {
 
 runner.on('fail', (t, err) => {
   console.log('Failed: test:', parseTitle(t))
-  console.log('Failed: error message:', err.message)
   console.log('Failed: error stack:', err.stack)
   failed++
 })
