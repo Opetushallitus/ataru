@@ -98,6 +98,7 @@ const getUrl = () => {
 };
 
 puppeteer.launch({
+    devtools: false,
     headless: true,
     /* slowMo: 500 */
 }).then(browser => {
