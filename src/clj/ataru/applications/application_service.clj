@@ -290,11 +290,13 @@
     (assoc application :asiointikieli asiointikieli)))
 
 (defn- remove-irrelevant-application_hakukohde_reviews [application]
-  (let [relevant-hakukohteet        (set (:hakukohde application))
-        relevant-hakukohde-reviews  (->> application
-                                         :application-hakukohde-reviews
-                                         (filter #(contains? relevant-hakukohteet (:hakukohde %))))]
-    (assoc application :application-hakukohde-reviews relevant-hakukohde-reviews)))
+  (let [relevant-hakukohteet        (set (:hakukohde application))]
+    (if (not-empty relevant-hakukohteet)
+      (let [relevant-hakukohde-reviews  (->> application
+                                             :application-hakukohde-reviews
+                                             (filter #(contains? relevant-hakukohteet (:hakukohde %))))]
+        (assoc application :application-hakukohde-reviews relevant-hakukohde-reviews))
+      application)))
 
 (defn- get-application-list-by-query
     [person-service
