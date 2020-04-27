@@ -935,7 +935,8 @@ SELECT
   key AS "hakemus-oid",
   person_oid "henkilo-oid",
   hakukohde AS "hakukohde-oids",
-  content AS "content"
+  content AS "content",
+  state AS "hakemus-tila"
 FROM latest_applications
   JOIN application_reviews ON application_key = key
 WHERE person_oid IS NOT NULL

@@ -465,6 +465,7 @@
 
 (s/defschema TilastokeskusApplication
   {:hakemus_oid                  s/Str
+   :hakemus_tila                 s/Str
    :haku_oid                     s/Str
    :henkilo_oid                  s/Str
    :hakukohde_oids               [s/Str]

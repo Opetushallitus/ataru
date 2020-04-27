@@ -1276,9 +1276,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
       (->kebab-case-kw)))
 
 (defn- unwrap-tilastokeskus-application
-  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content]}]
+  [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content hakemus-tila]}]
   (let [answers (answers-by-key (:answers content))]
     {:hakemus_oid     hakemus-oid
+     :hakemus_tila    hakemus-tila
      :haku_oid        haku-oid
      :henkilo_oid     henkilo-oid
      :hakukohde_oids  hakukohde-oids
