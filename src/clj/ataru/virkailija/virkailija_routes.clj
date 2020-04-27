@@ -333,7 +333,7 @@
                                               (clojure.string/join ", " (:application-keys body))
                                               " käsittely ei ole sallittu")})))
 
-      (api/POST "/list" {session :session}
+      (api/POST "/list" {session :session}                  ; petar this query gets the filtering criteria
         :body [body ataru-schema/ApplicationQuery]
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse

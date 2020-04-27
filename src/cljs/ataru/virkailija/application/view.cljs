@@ -860,7 +860,7 @@
            [:button.virkailija-close-button.application-handling__filters-popup-close-button
             {:on-click #(reset! filters-visible false)}
             [:i.zmdi.zmdi-close]]]
-          [:div.application-handling__filters-popup-content-container
+          [:div.application-handling__filters-popup-content-container ; petar ovo je kontejner sa svim uslovima, tu treba da bude i (information request) "Täydennyspyyntö"
            [:div.application-handling__popup-column
             (when @show-ensisijaisesti?
               [:div.application-handling__filter-group

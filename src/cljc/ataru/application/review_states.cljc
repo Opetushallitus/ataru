@@ -16,7 +16,7 @@
    ["evaluating" (:evaluating state-translations)]
    ["valintaesitys" (:valintaesitys state-translations)]
    ["processed" (:processed state-translations)]
-   ["information-request" (:information-request state-translations)]])
+   ["information-request" (:information-request state-translations)]])      ; petar odavde dolazi tekst "Täydennyspyyntö"
 
 (def initial-application-hakukohde-processing-state "unprocessed")
 

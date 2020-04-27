@@ -2,7 +2,9 @@
   (:require [ataru.virkailija.virkailija-routes :as v]
             [ataru.test-utils :refer [login should-have-header virkailija-routes]]
             [ring.mock.request :as mock]
+            [ataru.fixtures.db.unit-test-db :as db]
             [ataru.fixtures.form :as fixtures]
+            [ataru.fixtures.application :as application-fixtures]
             [speclj.core :refer :all]
             [cheshire.core :as json]
             [ataru.virkailija.editor.form-diff :as form-diff]))
@@ -31,6 +33,14 @@
 (defn- update-form [id fragments]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" id)
         (json/generate-string fragments))
+      (update-in [:headers] assoc "cookie" (login))
+      (mock/content-type "application/json")
+      virkailija-routes
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(defn- post-applications-list [query]
+  (-> (mock/request :post "/lomake-editori/api/applications/list"
+                    (json/generate-string query))
       (update-in [:headers] assoc "cookie" (login))
       (mock/content-type "application/json")
       virkailija-routes
@@ -210,6 +220,35 @@
         (should= {:fi "A" :en "B"} (get-in success-response [:body :name]))))
 
   )
+
+(describe "Fetching applications list"
+          (tags :unit :api-applications :petar)
+
+  (it "Should fetch nothing when no review matches"
+      (db/init-db-fixture
+        fixtures/minimal-form
+        (assoc application-fixtures/bug2132-application :form (:id fixtures/minimal-form))
+        [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "information-request"}
+         {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "processing"}])
+      (let [resp             (post-applications-list application-fixtures/applications-list-query)
+            status           (:status resp)
+            body             (:body resp)
+            applications     (:applications body)]
+        (should= 200 status)
+        (should= 0 (count applications))))
+
+  (it "Should fetch an application when review matches"
+      (db/init-db-fixture
+        fixtures/minimal-form
+        (assoc application-fixtures/bug2132-application :form (:id fixtures/minimal-form))
+        [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "processing"}
+         {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "information-request"}])
+      (let [resp             (post-applications-list application-fixtures/applications-list-query)
+            status           (:status resp)
+            body             (:body resp)
+            applications     (:applications body)]
+        (should= 200 status)
+        (should= 1 (count applications)))))
 
 (run-specs)
 
