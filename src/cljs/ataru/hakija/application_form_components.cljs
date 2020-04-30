@@ -14,7 +14,8 @@
             [ataru.util :as util]
             [reagent.core :as r]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as tu]))
+            [ataru.translations.translation-util :as tu]
+            [ataru.feature-config :as fc]))
 
 (defonce autocomplete-off "new-password")
 
@@ -781,7 +782,8 @@
                                   attachment-idx]))
         link @(subscribe [:application/attachment-download-link (:key file)])]
     [:div
-     (if (:final file)
+     (if (and (:final file)
+              (fc/feature-enabled? :attachment-download-allowed))
        [:a.application__form-attachment-filename
         {:href link}
         (:filename file)]
