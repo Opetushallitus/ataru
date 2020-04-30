@@ -48,7 +48,7 @@
                    [ec/adjacent-text-field content path]
 
                    {:fieldClass "formField" :fieldType "textField"}
-                   [ec/text-field content path]
+                   [ec/text-field content followups path]
 
                    {:fieldClass "formField" :fieldType "textArea"}
                    [ec/text-area content path]

@@ -611,8 +611,26 @@
                        :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(defn text-component [_ path & {:keys [header-label]}]
+(declare custom-answer-options)
+
+(defn textfield-options-wrapper
+  [initial-content languages value followups path question-group-element? show-followups component-locked?]
+  [:div.editor-form__multi-options_wrapper
+   [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :options])]
+   [custom-answer-options languages (:options value) followups path question-group-element? true show-followups (:id initial-content)]
+   [:div.editor-form__add-dropdown-item
+    [:a
+     {:on-click (fn [evt]
+                  (when-not component-locked?
+                    (.preventDefault evt)
+                    (reset! show-followups nil)
+                    (dispatch [:editor/add-text-field-option path])))
+      :class    (when component-locked? "editor-form__add-dropdown-item--disabled")}
+     [:i.zmdi.zmdi-plus-square] (str " " @(subscribe [:editor/virkailija-translation :add]))]]])
+
+(defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
+        value             (subscribe [:editor/get-component-value path])
         sub-header        (subscribe [:editor/get-component-value path :label])
         size              (subscribe [:editor/get-component-value path :params :size])
         max-length        (subscribe [:editor/get-component-value path :params :max-length])
@@ -624,8 +642,9 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
-        component-locked?      (subscribe [:editor/component-locked? path])]
-    (fn [initial-content path & {:keys [header-label size-label]}]
+        component-locked? (subscribe [:editor/component-locked? path])
+        show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
+    (fn [initial-content followups path & {:keys [header-label question-group-element? size-label]}]
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
@@ -677,15 +696,17 @@
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet path initial-content]]
-         [info-addon path]]]])))
+         [info-addon path]
+         [:div.editor-form__component-row-wrapper
+          [textfield-options-wrapper initial-content @languages @value followups path question-group-element? show-followups @component-locked?]]]]])))
 
-(defn text-field [initial-content path]
-  [text-component initial-content path
+(defn text-field [initial-content followups path]
+  [text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-field])
    :size-label @(subscribe [:editor/virkailija-translation :text-field-size])])
 
 (defn text-area [initial-content path]
-  [text-component initial-content path
+  [text-component initial-content [] path
    :header-label @(subscribe [:editor/virkailija-translation :text-area])
    :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 
