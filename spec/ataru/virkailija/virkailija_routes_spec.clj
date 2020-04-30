@@ -222,7 +222,7 @@
   )
 
 (describe "Fetching applications list"
-          (tags :unit :api-applications :petar)
+          (tags :unit :api-applications)
 
   (it "Should fetch nothing when no review matches"
       (db/init-db-fixture
