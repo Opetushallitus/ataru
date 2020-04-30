@@ -57,7 +57,7 @@
       {:name          "hakukohde"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+       :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :hakukohde-union-cache-loader})]
    [:hakukohde-cache
@@ -88,7 +88,7 @@
       {:name          "haku"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10 TimeUnit/SECONDS]})
+       :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :haku-union-cache-loader})]
    [:haku-cache
@@ -128,7 +128,7 @@
       {:name          "forms-in-use"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10 TimeUnit/SECONDS]
+       :lock-timeout  [20 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader tarjonta-client/get-forms-in-use)})
      [:redis])]
    [:forms-in-use-cache
@@ -146,7 +146,7 @@
       {:name          "ohjausparametrit"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout  [10 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader ohjausparametrit-client/get-ohjausparametrit)})
      [:redis])]
 
@@ -162,7 +162,7 @@
       {:name          "koulutus"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+       :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :koulutus-union-cache-loader})]
    [:koulutus-cache
@@ -180,7 +180,7 @@
       {:name          "henkilo"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [1 TimeUnit/DAYS]
-       :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+       :lock-timeout  [10 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :henkilo-cache-loader})]
    [:henkilo-cache
@@ -211,7 +211,7 @@
       {:name          "hakukohde-search"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [10 TimeUnit/SECONDS]})
+       :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :hakukohde-search-union-cache-loader})]
 
@@ -220,7 +220,7 @@
      (redis/map->Cache
       {:name         "statistics-month"
        :ttl          [10 TimeUnit/HOURS]
-       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout [10 TimeUnit/SECONDS]
        :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-week-cache
@@ -228,7 +228,7 @@
      (redis/map->Cache
       {:name         "statistics-week"
        :ttl          [1 TimeUnit/HOURS]
-       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout [10 TimeUnit/SECONDS]
        :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-day-cache
@@ -236,7 +236,7 @@
      (redis/map->Cache
       {:name         "statistics-day"
        :ttl          [5 TimeUnit/MINUTES]
-       :lock-timeout [10000 TimeUnit/MILLISECONDS]
+       :lock-timeout [10 TimeUnit/SECONDS]
        :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
      [:redis])]
    [:koodisto-redis-cache
@@ -245,7 +245,7 @@
       {:name          "koodisto"
        :ttl           [3 TimeUnit/DAYS]
        :refresh-after [15 TimeUnit/MINUTES]
-       :lock-timeout  [30 TimeUnit/SECONDS]
+       :lock-timeout  [60 TimeUnit/SECONDS]
        :loader        (cache/->FunctionCacheLoader koodisto-cache/get-koodi-options
                                                    koodisto-cache/koodisto-checker)})
      [:redis])]
