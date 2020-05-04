@@ -361,10 +361,12 @@
                  (selection-limit/query-available-selections form-key)))))))
 
 (defn- render-application [lang]
-  (let [config (json/generate-string (or (:public-config config) {}))]
+  (let [public-config (json/generate-string (or (:public-config config) {}))]
     (selmer/render-file "templates/hakija.html" {:cache-fingerprint cache-fingerprint
                                                  :lang              (or lang "fi")
-                                                 :config            config})))
+                                                 :config            public-config
+                                                 :js-bundle-name    (or (-> config :server :js-bundle-names :hakija)
+                                                                        "hakija-app.js")})))
 
 (defn- wrap-referrer-policy
   [handler policy]

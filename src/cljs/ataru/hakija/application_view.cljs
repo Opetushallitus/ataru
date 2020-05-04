@@ -45,7 +45,9 @@
                                                   (str " (" (translations/get-hakija-translation :not-within-application-period lang) ")"))]))]
     [:div
      [:div.application__header-container
-      [:h1.application__header (or (-> form :tarjonta :haku-name selected-lang)
+      [:h1.application__header
+       {:data-test-id "application-header-label"}
+       (or (-> form :tarjonta :haku-name selected-lang)
                                      (-> form :name selected-lang))]
       (when (and (not submitted?)
                  (not editing?)
