@@ -11,7 +11,8 @@
     "cypress:run:travis": "cypress run -C oph-configuration/cypress.travis.json --browser chrome --headless",
     "lint:clj": "clj-kondo --config .clj-kondo.config.edn --lint src",
     "lint:clj:lint-staged": "clj-kondo --config .clj-kondo.config.edn --lint",
-    "lint:js": "eslint '**/*.{ts,js}'"
+    "lint:js": "eslint '**/*.{ts,js}'",
+    "tsc:type-check": "./bin/type-check.sh"
   },
   "husky": {
     "hooks": {
@@ -19,6 +20,9 @@
     }
   },
   "lint-staged": {
+    "cypress/**/*.ts": [
+      "npm run tsc:type-check"
+    ],
     "**/*.{js,ts}": [
       "npm run lint:js"
     ],

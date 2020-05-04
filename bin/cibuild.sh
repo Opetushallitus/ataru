@@ -27,6 +27,11 @@ npm-dependencies() {
     export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 
+type_check() {
+  echo "Running TypeScript type check"
+  time npm run tsc:type-check
+}
+
 eslint() {
     echo "Running ESLint"
     npm run lint:js
@@ -38,6 +43,7 @@ clj_kondo() {
 }
 
 lint() {
+    type_check
     eslint
     clj_kondo
 }

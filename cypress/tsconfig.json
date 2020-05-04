@@ -1,18 +1,11 @@
 {
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "strict": true,
-    "baseUrl": "../node_modules",
-    "target": "ES6",
-    "lib": [
-      "ES6",
-      "ES5",
-      "DOM"
-    ],
-    "types": [
-      "cypress"
-    ]
+    "module": "commonjs",
+    "target": "ES6"
   },
   "include": [
-    "**/*.ts"
+    "../node_modules/cypress",
+    "./**/*.ts"
   ]
 }

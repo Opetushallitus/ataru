@@ -1,18 +1,7 @@
-import { AssertionError } from 'chai'
-import * as Option from 'fp-ts/lib/Option'
 import * as hakemuseditori from '../hakemuseditori'
 import * as hakemuksentaytto from '../hakemuksentaytto'
 import * as routes from '../routes'
-
-// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-function unsafeFoldOption<T>(o: Option.Option<T>): T {
-  return Option.fold<T, T>(
-    () => {
-      throw new AssertionError('Option was None')
-    },
-    (val) => val
-  )(o)
-}
+import { unsafeFoldOption } from '../option'
 
 describe('Hakemuspalvelu', () => {
   let formKey: string
