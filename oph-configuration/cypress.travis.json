@@ -1,0 +1,5 @@
+{
+  "baseUrl": "http://localhost:8354",
+  "fixturesFolder": "cypress/fixtures",
+  "video": false
+}

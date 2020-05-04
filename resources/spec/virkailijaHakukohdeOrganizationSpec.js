@@ -57,7 +57,7 @@
       )
   }
 
-  function clickComponentMenuItem(title) {
+  const clickComponentMenuItem = (title) => {
     const menuItem = () => {
       triggerEvent(
         testFrame().find('.editor-form > .editor-form__add-component-toolbar'),

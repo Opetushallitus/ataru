@@ -6,9 +6,12 @@
   },
   "license": "EUPL-1.1",
   "scripts": {
+    "cypress:open": "cypress open -C oph-configuration/cypress.json",
+    "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
+    "cypress:run:travis": "cypress run -C oph-configuration/cypress.travis.json --browser chrome --headless",
     "lint:clj": "clj-kondo --config .clj-kondo.config.edn --lint src",
     "lint:clj:lint-staged": "clj-kondo --config .clj-kondo.config.edn --lint",
-    "lint:js": "eslint ."
+    "lint:js": "eslint '**/*.{ts,js}'"
   },
   "husky": {
     "hooks": {
@@ -16,18 +19,29 @@
     }
   },
   "lint-staged": {
-    "**/*.js": [
+    "**/*.{js,ts}": [
       "npm run lint:js"
     ],
     "**/*.{clj,cljs,cljc}": [
       "npm run lint:clj:lint-staged"
     ]
   },
-  "devDependencies": {
+  "dependencies": {
     "chai": "4.2.0",
+    "cypress": "4.4.1",
+    "fp-ts": "2.5.4"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "2.29.0",
+    "@typescript-eslint/parser": "2.29.0",
     "clj-kondo": "2020.1.13",
     "eslint": "6.8.0",
+    "eslint-config-airbnb-base": "14.1.0",
     "eslint-config-prettier": "6.11.0",
+    "eslint-plugin-chai-friendly": "0.6.0",
+    "eslint-plugin-cypress": "2.10.3",
+    "eslint-plugin-import": "2.20.2",
+    "eslint-plugin-prefer-arrow": "1.2.0",
     "eslint-plugin-prettier": "3.1.3",
     "husky": "4.2.5",
     "karma": "5.0.2",
@@ -39,6 +53,7 @@
     "mocha": "7.1.1",
     "pm2": "4.4.0",
     "prettier": "2.0.5",
-    "puppeteer": "2.1.1"
+    "puppeteer": "2.1.1",
+    "typescript": "3.8.3"
   }
 }

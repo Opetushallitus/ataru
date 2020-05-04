@@ -8,10 +8,14 @@ services:
       - POSTGRES_USER=oph
     ports:
       - "15432:5432"
+    networks:
+      - ataru-test-network
   ataru-dev-redis:
     image: "redis:latest"
     ports:
       - "16379:6379"
+    networks:
+      - ataru-test-network
   ataru-test-db:
     build: ./test-postgres
     environment:
@@ -20,12 +24,49 @@ services:
       - POSTGRES_USER=oph
     ports:
       - "15433:5432"
+    networks:
+      - ataru-test-network
+  ataru-cypress-test-db:
+    build: ./test-postgres
+    command: -p 5435
+    environment:
+      - POSTGRES_DB=ataru-test
+      - POSTGRES_PASSWORD=oph
+      - POSTGRES_USER=oph
+    ports:
+      - "5435:5435"
+    networks:
+      - ataru-test-network
+  ataru-cypress-http-proxy:
+    image: nginx
+    container_name: ataru-cypress-http-proxy
+    ports:
+      - "8354:8354"
+    volumes:
+      - ./docker/ataru-cypress-http-proxy/etc/nginx:/etc/nginx
+    networks:
+      - cypress-http-proxy-network
   ataru-test-ftpd:
     build: ./test-ftpd
     ports:
       - "1221:21"
       - "30000-30009:30000-30009"
+    networks:
+      - ataru-test-network
   ataru-test-redis:
     image: "redis:latest"
     ports:
       - "16380:6379"
+    networks:
+      - ataru-test-network
+  ataru-cypress-test-redis:
+    image: "redis:latest"
+    container_name: ataru-cypress-test-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - ataru-test-network
+networks:
+  ataru-test-network:
+  cypress-http-proxy-network:
+    driver: bridge

@@ -1,26 +1,22 @@
-;(function () {
+;(() => {
   const singleHakukohdeHakuOid = '1.2.246.562.29.65950024185'
   const multipleHakukohdeHakuOid = '1.2.246.562.29.65950024186'
   const kkHakuOid = '1.2.246.562.29.65950024190'
   const multipleHakukohdeKkHakuOid = '1.2.246.562.29.65950024191'
   const hakuWithPohjakoulutusMooduliKk = '1.2.246.562.29.65950024192'
 
-  before(function () {
+  before(() => {
     loadInFrame('/hakemus/haku/' + singleHakukohdeHakuOid)
   })
 
-  afterEach(function () {
+  afterEach(() => {
     expect(window.uiError || null).to.be.null
   })
 
-  describe('hakemus by haku with single hakukohde', function () {
-    describe('form loads', function () {
-      before(
-        wait.until(function () {
-          return formSections().length == 3
-        }, 100000)
-      )
-      it('with complete form and the only hakukohde selected', function () {
+  describe('hakemus by haku with single hakukohde', () => {
+    describe('form loads', () => {
+      before(wait.until(() => formSections().length == 3, 100000))
+      it('with complete form and the only hakukohde selected', () => {
         expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('testing2')
@@ -37,12 +33,8 @@
   describe('hakemus by haku KK', () => {
     describe('with single hakukohde', () => {
       before(
-        function () {
-          return loadInFrame('/hakemus/haku/' + kkHakuOid)
-        },
-        wait.until(function () {
-          return formSections().length == 3
-        }, 10000)
+        () => loadInFrame('/hakemus/haku/' + kkHakuOid),
+        wait.until(() => formSections().length == 3, 10000)
       )
       it('does not show the details', () => {
         expect(selectedHakukohdeTexts()).to.equal(
@@ -52,31 +44,21 @@
     })
     describe('with multiple hakukohde', () => {
       before(
-        function () {
-          return loadInFrame('/hakemus/haku/' + multipleHakukohdeKkHakuOid)
-        },
-        wait.until(function () {
-          return formSections().length == 3
-        }, 10000)
+        () => loadInFrame('/hakemus/haku/' + multipleHakukohdeKkHakuOid),
+        wait.until(() => formSections().length == 3, 10000)
       )
-      describe('adding KK hakukohde', function () {
+      describe('adding KK hakukohde', () => {
         before(
           clickElement(addHakukohdeLink),
           setTextFieldValue(hakukohdeSearchInput, 'haku'),
-          wait.until(function () {
-            return hakukohdeSearchHits().length === 3
-          }),
-          clickElement(function () {
-            return nthHakukohdeSearchResultButton(2)
-          }),
-          wait.until(function () {
-            return selectedHakukohteet().length === 1
-          }),
-          wait.until(function () {
-            return invalidFieldsStatus().text() === 'Tarkista 10 tietoa'
-          })
+          wait.until(() => hakukohdeSearchHits().length === 3),
+          clickElement(() => nthHakukohdeSearchResultButton(2)),
+          wait.until(() => selectedHakukohteet().length === 1),
+          wait.until(
+            () => invalidFieldsStatus().text() === 'Tarkista 10 tietoa'
+          )
         )
-        it('has correct selected text and search text, with no description', function () {
+        it('has correct selected text and search text, with no description', () => {
           expect(submitButton().prop('disabled')).to.equal(true)
           expect(selectedHakukohteet().length).to.equal(1)
           expect(selectedHakukohdeTexts()).to.equal(
@@ -120,12 +102,8 @@
           .find('label.application__form-upload-label')
           .eq(0)
       before(
-        function () {
-          return loadInFrame('/hakemus/haku/' + hakuWithPohjakoulutusMooduliKk)
-        },
-        wait.until(function () {
-          return formSections().length == 3
-        }, 10000),
+        () => loadInFrame('/hakemus/haku/' + hakuWithPohjakoulutusMooduliKk),
+        wait.until(() => formSections().length == 3, 10000),
         clickElement(firstSegmentLabel),
         clickElement(firstSegmentYesButton),
         setTextFieldValue(firstSegmentInputBox, '2015'),
@@ -144,17 +122,13 @@
     })
   })
 
-  describe('hakemus by haku with multiple hakukohde', function () {
-    describe('form loads', function () {
+  describe('hakemus by haku with multiple hakukohde', () => {
+    describe('form loads', () => {
       before(
-        function () {
-          return loadInFrame('/hakemus/haku/' + multipleHakukohdeHakuOid)
-        },
-        wait.until(function () {
-          return formSections().length == 3
-        }, 10000)
+        () => loadInFrame('/hakemus/haku/' + multipleHakukohdeHakuOid),
+        wait.until(() => formSections().length == 3, 10000)
       )
-      it('with complete form and no hakukohde selected', function () {
+      it('with complete form and no hakukohde selected', () => {
         expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('testing2')
@@ -164,60 +138,40 @@
       })
     })
 
-    describe('adding hakukohde', function () {
+    describe('adding hakukohde', () => {
       before(
         clickElement(addHakukohdeLink),
         setTextFieldValue(hakukohdeSearchInput, 'haku'),
-        wait.until(function () {
-          return hakukohdeSearchHits().length === 3
-        }),
-        clickElement(function () {
-          return nthHakukohdeSearchResultButton(2)
-        }),
-        wait.until(function () {
-          return selectedHakukohteet().length === 1
-        }),
-        wait.until(function () {
-          return invalidFieldsStatus().text() === 'Tarkista 10 tietoa'
-        })
+        wait.until(() => hakukohdeSearchHits().length === 3),
+        clickElement(() => nthHakukohdeSearchResultButton(2)),
+        wait.until(() => selectedHakukohteet().length === 1),
+        wait.until(() => invalidFieldsStatus().text() === 'Tarkista 10 tietoa')
       )
 
-      it('has correct data', function () {
+      it('has correct data', () => {
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(selectedHakukohteet().length).to.equal(1)
       })
     })
 
-    describe('clicking remove on selected hakukohde', function () {
+    describe('clicking remove on selected hakukohde', () => {
       before(
-        clickElement(function () {
-          return selectedHakukohteet().eq(0).find('button')
-        }),
-        wait.until(function () {
-          return selectedHakukohteet().length === 0
-        }),
-        wait.until(function () {
-          return invalidFieldsStatus().text() === 'Tarkista 11 tietoa'
-        })
+        clickElement(() => selectedHakukohteet().eq(0).find('button')),
+        wait.until(() => selectedHakukohteet().length === 0),
+        wait.until(() => invalidFieldsStatus().text() === 'Tarkista 11 tietoa')
       )
-      it('removes as expected', function () {
+      it('removes as expected', () => {
         expect(invalidFieldsStatus().text()).to.equal('Tarkista 11 tietoa')
       })
     })
 
-    describe('re-adding hakukohde and filling form', function () {
+    describe('re-adding hakukohde and filling form', () => {
       before(
-        clickElement(function () {
-          return nthHakukohdeSearchResultButton(0)
-        }),
-        clickElement(function () {
-          return nthHakukohdeSearchResultButton(1)
-        }),
-        clickElement(function () {
-          return testFrame().find(
-            '.application__hakukohde-selection-open-search'
-          )
-        }),
+        clickElement(() => nthHakukohdeSearchResultButton(0)),
+        clickElement(() => nthHakukohdeSearchResultButton(1)),
+        clickElement(() =>
+          testFrame().find('.application__hakukohde-selection-open-search')
+        ),
         setNthFieldInputValue(1, 'Etunimi Tokanimi'),
         setNthFieldInputValue(3, 'Sukunimi'),
         setNthFieldInputValue(5, '020202A0202'),
@@ -228,80 +182,61 @@
         setNthFieldInputValue(10, '00100'),
         setNthFieldOption(12, '091'),
         setNthFieldInputValue(14, '55cm'),
-        wait.until(function () {
-          return formFields().eq(11).find('input').val() !== ''
-        }),
-        wait.until(function () {
-          return !submitButton().prop('disabled')
-        })
+        wait.until(() => formFields().eq(11).find('input').val() !== ''),
+        wait.until(() => !submitButton().prop('disabled'))
       )
-      it('validates and shows form correctly', function () {
+      it('validates and shows form correctly', () => {
         expect(hakukohdeSearchInput().is(':visible')).to.equal(false)
         expect(selectedHakukohteet().length).to.equal(2)
         expect(invalidFieldsStatus().length).to.equal(0)
       })
     })
 
-    describe('changing hakukohde order back and forth', function () {
+    describe('changing hakukohde order back and forth', () => {
       before(
-        clickElement(function () {
-          return nthHakukohdePriorityDown(0)
-        }),
-        wait.until(function () {
-          return (
+        clickElement(() => nthHakukohdePriorityDown(0)),
+        wait.until(
+          () =>
             selectedHakukohdeTexts() ===
             'Testihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne BTestihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne A'
-          )
-        }),
-        clickElement(function () {
-          return nthHakukohdePriorityUp(1)
-        }),
-        wait.until(function () {
-          return (
+        ),
+        clickElement(() => nthHakukohdePriorityUp(1)),
+        wait.until(
+          () =>
             selectedHakukohdeTexts() ===
             'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B'
-          )
-        }),
+        ),
         //Make sure the disabled buttons do nothing
-        clickElement(function () {
-          return nthHakukohdePriorityUp(0)
-        }),
-        wait.until(function () {
-          return (
+        clickElement(() => nthHakukohdePriorityUp(0)),
+        wait.until(
+          () =>
             selectedHakukohdeTexts() ===
             'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B'
-          )
-        }),
-        clickElement(function () {
-          return nthHakukohdePriorityDown(1)
-        }),
-        wait.until(function () {
-          return (
+        ),
+        clickElement(() => nthHakukohdePriorityDown(1)),
+        wait.until(
+          () =>
             selectedHakukohdeTexts() ===
             'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B'
-          )
-        })
+        )
       )
 
-      it('has hakukohdes in correct order', function () {
+      it('has hakukohdes in correct order', () => {
         expect(selectedHakukohdeTexts()).to.equal(
           'Testihakukohde 1 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi A | Tutkintonimike A | Tarkenne ATestihakukohde 2 – Koulutuskeskus Sedu, Ilmajoki, IlmajoentieKoulutuskoodi B | Tutkintonimike B | Tarkenne B'
         )
       })
     })
 
-    describe('submitting form and viewing results', function () {
+    describe('submitting form and viewing results', () => {
       before(
-        clickElement(function () {
-          return submitButton()
-        }),
-        wait.until(function () {
-          return (
+        clickElement(() => submitButton()),
+        wait.until(
+          () =>
             testFrame().find('.application__sent-placeholder-text').length == 1
-          )
-        })
+        )
       )
-      it('shows readonly application with selected data', function () {
+      it('shows readonly application with selected data', () => {
         const hakukohdeValues = testFrame()
           .find('.application__hakukohde-selected-list')
           .text()
@@ -311,9 +246,7 @@
 
         const otherValues = _.map(
           testFrame().find('.application__text-field-paragraph'),
-          function (e) {
-            return $(e).text()
-          }
+          (e) => $(e).text()
         )
         const expectedOtherValues = [
           'Etunimi Tokanimi',

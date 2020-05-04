@@ -57,12 +57,7 @@ tmux select-pane -t 2
 tmux send-keys "./bin/lein less auto" C-m
 
 tmux select-pane -t 3
-tmux send-keys "$RLWRAP ./bin/lein figwheel-virkailija" C-m
-
-tmux split-window -v
-
-tmux select-pane -t 4
-tmux send-keys "$RLWRAP ./bin/lein figwheel-hakija" C-m
+tmux send-keys "$RLWRAP ./bin/lein start-figwheel" C-m
 
 if [ -n $ITERM_FLAG ]
 then

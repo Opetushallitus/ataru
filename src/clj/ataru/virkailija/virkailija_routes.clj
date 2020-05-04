@@ -14,6 +14,7 @@
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]
+            [ataru.cypress :as cypress]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-access-control :as access-controlled-form]
             [ataru.forms.form-store :as form-store]
@@ -123,11 +124,13 @@
 
 (defn render-virkailija-page
   []
-  (let [config (json/generate-string (or (:public-config config) {}))]
+  (let [public-config (json/generate-string (or (:public-config config) {}))]
     (-> (selmer/render-file "templates/virkailija.html"
                             {:cache-fingerprint cache-fingerprint
-                             :config            config
-                             :front-properties  (url-helper/front-json)})
+                             :config            public-config
+                             :front-properties  (url-helper/front-json)
+                             :js-bundle-name    (or (-> config :server :js-bundle-names :virkailija)
+                                                    "virkailija-app.js")})
         (ok)
         (content-type "text/html"))))
 
@@ -1224,7 +1227,17 @@
                                       application-store/get-latest-application-by-key)]
           (response/ok {:applicationOid (:key application)
                         :personOid      (:person-oid application)})
-          (response/not-found))))))
+          (response/not-found))))
+
+    (when (:dev? env)
+      (api/context "/cypress" []
+        :tags ["cypress-api"]
+
+        (api/DELETE "/form" []
+          :summary "Delete form and all related content"
+          :body [{form-key :formKey} {:formKey s/Str}]
+          (cypress/delete-form form-key)
+          (response/no-content))))))
 
 (api/defroutes resource-routes
   (api/undocumented

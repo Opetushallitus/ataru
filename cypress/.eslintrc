@@ -1,0 +1,30 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint",
+    "prettier",
+    "prefer-arrow"
+  ],
+  "extends": [
+    "airbnb-base",
+    "plugin:import/typescript",
+    "plugin:prettier/recommended",
+    "prettier/@typescript-eslint",
+    "plugin:cypress/recommended",
+    "plugin:chai-friendly/recommended"
+  ],
+  "env": {
+    "mocha": true
+  },
+  "rules": {
+    "@typescript-eslint/no-unused-vars": [
+      "error"
+    ],
+    "import/extensions": "off",
+    "import/prefer-default-export": "off",
+    "array-callback-return": "off",
+    "prefer-arrow/prefer-arrow-functions": "error",
+    "prefer-const": "error",
+    "spaced-comment": "off"
+  }
+}

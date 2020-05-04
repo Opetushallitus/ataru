@@ -10,6 +10,14 @@ FIGWHEEL=ataru-figwheel
 CSS_COMPILER=ataru-css-compilation
 HAKIJA_BACKEND=ataru-hakija-backend-8351
 VIRKAILIJA_BACKEND=ataru-virkailija-backend-8350
+HAKIJA_CYPRESS_BACKEND=ataru-hakija-cypress-backend-8353
+VIRKAILIJA_CYPRESS_BACKEND=ataru-virkailija-cypress-backend-8352
+
+DEV_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_BACKEND) $(VIRKAILIJA_BACKEND)
+CYPRESS_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
+
+DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ftpd ataru-test-redis
+DOCKER_CONTAINERS_CYPRESS = ataru-cypress-test-db ataru-test-ftpd ataru-test-redis ataru-cypress-http-proxy
 
 # General options
 PM2=npx pm2 --no-autorestart
@@ -21,17 +29,6 @@ DOCKER=$(if $(DOCKER_SUDO),sudo )docker
 DOCKER_COMPOSE=COMPOSE_PARALLEL_LIMIT=8 $(if $(DOCKER_SUDO),sudo )docker-compose
 
 NODE_MODULES=node_modules
-
-# ----------------
-# Check ataru-secrets existence and config files
-# ----------------
-ifeq ("$(wildcard $(VIRKAILIJA_CONFIG))","")
-    $(error $(VIRKAILIJA_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
-endif
-
-ifeq ("$(wildcard $(HAKIJA_CONFIG))","")
-    $(error $(HAKIJA_CONFIG) not found, clone/update ataru-secrets alongside ataru since configs are stored there)
-endif
 
 # ----------------
 # Check that all necessary tools are in path and have new enough versions
@@ -51,8 +48,11 @@ check-tools:
 # ----------------
 # Docker build
 # ----------------
-build-docker-images: check-tools
+build-docker-images: check-tools generate-nginx-config
 	$(DOCKER_COMPOSE) build
+
+generate-nginx-config:
+	@./bin/generate-nginx-conf.sh
 
 # ----------------
 # Npm installation
@@ -64,11 +64,25 @@ $(NODE_MODULES): package.json package-lock.json
 # ----------------
 # Start apps
 # ----------------
-start-docker: build-docker-images
+start-docker-all: build-docker-images
 	$(DOCKER_COMPOSE) up -d
 
-start-pm2: $(NODE_MODULES) start-docker
+start-docker: build-docker-images
+	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_DEV)
+
+start-docker-cypress: build-docker-images
+	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_CYPRESS)
+
+start-pm2-all: $(NODE_MODULES) start-docker-all
 	$(PM2) start pm2.config.js
+
+start-pm2: $(NODE_MODULES) start-docker
+	$(foreach service, $(DEV_SERVICES), \
+		$(PM2) $(START_ONLY) $(service) || exit 1;)
+
+start-pm2-cypress: $(NODE_MODULES) start-docker-cypress
+	$(foreach service, $(CYPRESS_SERVICES), \
+		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
 start-watch: $(NODE_MODULES)
 	$(PM2) $(START_ONLY) $(FIGWHEEL)
@@ -136,7 +150,11 @@ load-test-fixture: nuke-test-db init-test-db
 # ----------------
 # Top-level commands (all apps)
 # ----------------
-start: start-pm2
+start: start-pm2-all
+
+start-dev: start-pm2
+
+start-cypress: start-pm2-cypress
 
 stop: stop-pm2 stop-docker
 

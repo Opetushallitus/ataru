@@ -1,0 +1,46 @@
+{:server          {:allow-db-clear? true
+                   :js-bundle-names {:virkailija "virkailija-cypress-app.js"
+                                     :hakija "hakija-cypress-app.js"}}
+ :db              {:database-name "ataru-test"
+                   :pool-name     "ataru-pool"
+                   :username      "oph"
+                   :password      "oph"
+                   :server-name   "localhost"
+                   :port-number   5435
+                   :schema        "public"}
+ :aws             {:region "eu-west-1"
+                   :henkilo-modified-queue {:enabled?      false
+                                            :drain-failed? false
+                                            :queue-url     ""}}
+ :tutkintojen-tunnustaminen {:enabled?                    false
+                             :form-key                    "testi-form-key"
+                             :country-question-id         "testi-country-question-id"
+                             :attachment-total-size-limit 10485760
+                             :ftp                         {:host               "localhost"
+                                                           :port               1221
+                                                           :user               "oph"
+                                                           :password           "oph"
+                                                           :verify-certificate false
+                                                           :path               "/"
+                                                           :timeout-seconds    10}}
+ :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
+ :yksiloimattomat {:allow false}
+ :cache           {:type :redis}
+ :redis           {:uri "redis://localhost:6380"}
+ :cas             {}
+ :public-config   {:virkailija-caller-id                "1.2.246.562.10.00000000001.ataru-editori.frontend"
+                   :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
+                   :applicant                           {:service_url "http://localhost:8354"}
+                   :virkailija                          {:service_url "http://localhost:8354/lomake-editori/"}
+                   :environment-name                    "test"
+                   :enable-re-frisk                     true
+                   :local-dev-logout                    true
+                   :secret-link-valid-days              14
+                   :attachment-file-max-size-bytes      10485760
+                   :attachment-file-part-max-size-bytes 5242880}
+ :temp-files      {:filesystem {:base-path "/tmp"}}
+ :dev             {:fake-dependencies true}
+ :urls            {:virkailija-host "virkailija.untuvaopintopolku.fi"
+                   :hakija-host     "oppija.untuvaopintopolku.fi"
+                   :editor-url      "http://localhost:8354/lomake-editori"
+                   :liiteri-url     ""}}
