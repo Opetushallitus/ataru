@@ -13,9 +13,13 @@ echo "Starting Docker containers for Cypress tests"
 docker-compose up -d ataru-cypress-test-db ataru-cypress-http-proxy
 ./bin/wait-for.sh localhost:8354 -t 10 || exit 1
 
+echo "Running ClojureScript build for Cypress tests"
+time lein cljsbuild once virkailija-cypress hakija-cypress
+
+echo "Running less compilation for Cypress tests"
+time lein less once
+
 echo "Starting services for Cypress tests"
-npx pm2 start pm2.config.js --only ataru-figwheel
-npx pm2 start pm2.config.js --only ataru-css-compilation
 npx pm2 start pm2.config.js --only ataru-hakija-cypress-backend-8353
 npx pm2 start pm2.config.js --only ataru-virkailija-cypress-backend-8352
 
@@ -39,8 +43,6 @@ else
 fi
 
 echo "Stopping processes used by Cypress tests"
-npx pm2 stop pm2.config.js --only ataru-figwheel
-npx pm2 stop pm2.config.js --only ataru-css-compilation
 npx pm2 stop pm2.config.js --only ataru-hakija-cypress-backend-8353
 npx pm2 stop pm2.config.js --only ataru-virkailija-cypress-backend-8352
 docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
