@@ -1,1 +1,1 @@
-export const textInputDelay = 20
+export const textInputDelay = 40
