@@ -243,7 +243,6 @@
           min-range?     (= :min-value range)
           decimals       @(subscribe [:editor/get-component-value path :decimals])
           clean-value    (format-range value)
-          valid?         (valid-range? clean-value decimals)
           opposing-range (if min-range?
                            :max-value
                            :min-value)
