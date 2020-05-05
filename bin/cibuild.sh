@@ -69,7 +69,7 @@ test-clojurescript() {
 }
 
 test-browser() {
-    time ./bin/run-cypress-tests.sh && \
+    time ./bin/run-cypress-tests-in-travis.sh && \
       time ./bin/lein spec -t ui
 }
 
