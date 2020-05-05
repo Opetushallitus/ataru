@@ -197,6 +197,24 @@
                                        :parallel-build       true
                                        :optimizations        :none}}
 
+                       {:id           "virkailija-cypress-travis"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :compiler     {:main                 "ataru.virkailija.core"
+                                       :output-to            "resources/public/js/compiled/virkailija-cypress-travis-app.js"
+                                       :output-dir           "resources/public/js/compiled/virkailija-cypress-travis-out"
+                                       :externs              ["resources/virkailija-externs.js"]
+                                       :parallel-build       true
+                                       :optimizations        :advanced}}
+
+                       {:id           "hakija-cypress-travis"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :compiler     {:main                 "ataru.hakija.core"
+                                       :output-to            "resources/public/js/compiled/hakija-cypress-travis-app.js"
+                                       :output-dir           "resources/public/js/compiled/hakija-cypress-travis-out"
+                                       :externs              ["resources/hakija-externs.js"]
+                                       :parallel-build       true
+                                       :optimizations        :advanced}}
+
                        {:id           "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
                         :compiler     {:output-to     "resources/public/js/test/test.js"
