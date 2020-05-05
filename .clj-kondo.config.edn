@@ -1,4 +1,5 @@
-{:linters {:unresolved-symbol   {:exclude [(compojure.api.sweet/context)
+{:linters {:not-empty?          {:level :off}
+           :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
                                            (clojure.java.jdbc/with-db-transaction)
                                            (clojure.java.jdbc/with-db-connection)
@@ -17,4 +18,4 @@
                                                       print-doc
                                                       pst
                                                       source]}}
-           :invalid-arity {:skip-args [clojure.core.match/match]}}}
+           :invalid-arity       {:skip-args [clojure.core.match/match]}}}
