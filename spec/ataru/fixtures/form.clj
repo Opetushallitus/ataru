@@ -36,6 +36,11 @@
      :fieldType  "fieldset"
      :fieldClass "questionGroup"}))
 
+(def minimal-form
+  (merge (create-form)
+         {:organization-oid "1.2.246.562.10.0439845"
+          :id 5}))
+
 (def form-with-content
   {:name       {:fi "Test fixture!"}
    :created-by "1.2.246.562.11.11111111111"

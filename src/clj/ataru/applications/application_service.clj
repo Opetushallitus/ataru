@@ -289,6 +289,15 @@
                           (:asiointikieli application))]
     (assoc application :asiointikieli asiointikieli)))
 
+(defn- remove-irrelevant-application_hakukohde_reviews [application]
+  (let [relevant-hakukohteet        (set (:hakukohde application))]
+    (if (not-empty relevant-hakukohteet)
+      (let [relevant-hakukohde-reviews  (->> application
+                                             :application-hakukohde-reviews
+                                             (filter #(contains? relevant-hakukohteet (:hakukohde %))))]
+        (assoc application :application-hakukohde-reviews relevant-hakukohde-reviews))
+      application)))
+
 (defn- get-application-list-by-query
     [person-service
      tarjonta-service
@@ -296,7 +305,8 @@
      query
      sort
      states-and-filters]
-    (let [applications            (application-store/get-application-heading-list query sort)
+    (let [applications            (->> (application-store/get-application-heading-list query sort)
+                                       (map remove-irrelevant-application_hakukohde_reviews))
           authorized-applications (aac/filter-authorized
                                    tarjonta-service
                                    (some-fn (partial aac/authorized-by-form? authorized-organization-oids)

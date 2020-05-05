@@ -2,6 +2,7 @@
   (:require [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.virkailija.virkailija-routes :as v]
             [ataru.organization-service.organization-service :as org-service]
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.person-service.person-service :as person-service]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ring.mock.request :as mock]
@@ -19,6 +20,7 @@
 (def virkailija-routes (->
                         (v/new-handler)
                         (assoc :organization-service (org-service/->FakeOrganizationService))
+                        (assoc :tarjonta-service (tarjonta-service/->MockTarjontaService))
                         (assoc :person-service (person-service/->FakePersonService))
                         (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
                         (assoc :application-service (application-service/new-application-service))

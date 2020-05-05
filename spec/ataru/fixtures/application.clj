@@ -393,3 +393,59 @@
                                                      :label     {:en "Home town" :fi "Kotikunta" :sv "Hemkommun"}
                                                      :value     "273"
                                                      :fieldType "textField"}]})
+
+(def bug2139-application
+  (-> person-info-form-application
+      (merge {:form      5
+              :id        2
+              :haku      "1.2.246.562.29.93102260101"
+              :hakukohde ["1.2.246.562.20.49028196524"]
+              :base-education ["pohjakoulutus_kk"]})))
+
+(def applications-list-query
+  {:sort
+                             {:order-by "applicant-name",
+                              :order    "asc"},
+   :attachment-review-states {},
+   :states-and-filters
+                             {:attachment-states-to-include
+                              ["not-checked"
+                               "checked"
+                               "incomplete-attachment"
+                               "attachment-missing"
+                               "overdue"
+                               "no-requirements"],
+                              :processing-states-to-include
+                              ["information-request"],
+                              :selection-states-to-include
+                              ["incomplete" "selection-proposal" "reserve" "selected" "rejected"],
+                              :filters
+                              {:language-requirement
+                                                              {:unreviewed true, :fulfilled true, :unfulfilled true},
+                               :degree-requirement
+                                                              {:unreviewed true, :fulfilled true, :unfulfilled true},
+                               :eligibility-set-automatically {:yes true, :no true},
+                               :only-identified               {:identified true, :unidentified true},
+                               :only-ssn                      {:with-ssn true, :without-ssn true},
+                               :active-status                 {:active true, :passive true},
+                               :eligibility-state
+                                                              {:unreviewed             true,
+                                                               :eligible               true,
+                                                               :uneligible             true,
+                                                               :conditionally-eligible true},
+                               :base-education
+                                                              {:pohjakoulutus_kk_ulk                     true,
+                                                               :pohjakoulutus_lk                         true,
+                                                               :pohjakoulutus_kk                         true,
+                                                               :pohjakoulutus_amt                        true,
+                                                               :pohjakoulutus_ulk                        true,
+                                                               :pohjakoulutus_muu                        true,
+                                                               :pohjakoulutus_avoin                      true,
+                                                               :pohjakoulutus_yo_ammatillinen            true,
+                                                               :pohjakoulutus_am                         true,
+                                                               :pohjakoulutus_yo_ulkomainen              true,
+                                                               :pohjakoulutus_yo                         true,
+                                                               :pohjakoulutus_yo_kansainvalinen_suomessa true},
+                               :payment-obligation
+                                                              {:unreviewed true, :obligated true, :not-obligated true}}},
+   :haku-oid                 "1.2.246.562.29.93102260101"})
