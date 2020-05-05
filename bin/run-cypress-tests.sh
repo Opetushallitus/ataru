@@ -43,6 +43,7 @@ if [ -x "$(command -v artifacts)" ]; then
   artifacts upload \
     --target-paths "artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER" \
     cypress/screenshots/ \
+    cypress/videos \
     logs/pm2/
 else
   echo "Not uploading screenshots to S3"
