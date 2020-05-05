@@ -188,7 +188,7 @@
         (update-modified-by path))))
 
 (defn- number-of-decimals [v]
-  (let [[_ decimals] (clojure.string/split v #",")]
+  (let [[_ decimals] (string/split v #",")]
     (count decimals)))
 
 (defn- format-range [value]
