@@ -1,18 +1,16 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch dispatch-sync subscribe]]
-            [clojure.data :refer [diff]]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe]]
             [clojure.walk :as walk]
+            [clojure.string :as string]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
-            [ataru.number :refer [numeric-matcher lte gte]]
+            [ataru.number :refer [numeric-matcher gte]]
             [cljs.core.match :refer-macros [match]]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as pm]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-            [ataru.virkailija.dev.lomake :as dev]
-            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
@@ -20,8 +18,7 @@
             [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff]
-            [cljs-time.core :as t])
+            [ataru.virkailija.editor.form-diff :as form-diff])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
