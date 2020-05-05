@@ -5,7 +5,8 @@
                                            (clojure.java.jdbc/with-db-connection)
                                            (clojure.core.match/match)
                                            (cljs.core.match/match)
-                                           (ataru.db.flyway-migration/defmigration)]}
+                                           (ataru.db.flyway-migration/defmigration)
+                                           (ataru.virkailija.editor.editor-macros/with-form-key)]}
            :unused-namespace    {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map
                                                       apropos
