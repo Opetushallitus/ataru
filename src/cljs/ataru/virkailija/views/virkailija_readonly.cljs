@@ -99,8 +99,8 @@
                         virus-status-elem (case virus-scan-status
                                             "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
                                                            (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
-                                            "failed" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                      (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
+                                            "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
                                             "done" nil
                                             @(subscribe [:editor/virkailija-translation :error]))]
                     [:div.application__virkailija-readonly-attachment
