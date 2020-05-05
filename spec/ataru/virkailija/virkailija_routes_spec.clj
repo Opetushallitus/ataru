@@ -227,7 +227,7 @@
   (it "Should fetch nothing when no review matches"
       (db/init-db-fixture
         fixtures/minimal-form
-        (assoc application-fixtures/bug2132-application :form (:id fixtures/minimal-form))
+        (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
         [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "information-request"}
          {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "processing"}])
       (let [resp             (post-applications-list application-fixtures/applications-list-query)
@@ -240,7 +240,7 @@
   (it "Should fetch an application when review matches"
       (db/init-db-fixture
         fixtures/minimal-form
-        (assoc application-fixtures/bug2132-application :form (:id fixtures/minimal-form))
+        (assoc application-fixtures/bug2139-application :form (:id fixtures/minimal-form))
         [{:hakukohde "1.2.246.562.20.49028196523" :review-requirement "processing-state" :review-state "processing"}
          {:hakukohde "1.2.246.562.20.49028196524" :review-requirement "processing-state" :review-state "information-request"}])
       (let [resp             (post-applications-list application-fixtures/applications-list-query)
