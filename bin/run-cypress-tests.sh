@@ -32,6 +32,12 @@ echo "Running Cypress tests"
 time npm run cypress:run:travis
 RESULT=$?
 
+echo "Stopping processes used by Cypress tests"
+npx pm2 stop pm2.config.js --only ataru-hakija-cypress-backend-8353
+npx pm2 stop pm2.config.js --only ataru-virkailija-cypress-backend-8352
+docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
+docker-compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
+
 if [ -x "$(command -v artifacts)" ]; then
   echo "Uploading screenshots to S3"
   artifacts upload \
@@ -42,14 +48,8 @@ else
   echo "Not uploading screenshots to S3"
 fi
 
-echo "Stopping processes used by Cypress tests"
-npx pm2 stop pm2.config.js --only ataru-hakija-cypress-backend-8353
-npx pm2 stop pm2.config.js --only ataru-virkailija-cypress-backend-8352
-docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
-docker-compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
-
 if [ $RESULT != 0 ]; then
-  npx pm2 logs --lines 10000 --nostream
+  echo "Cypress tests failed! Please see logs and screenshots from AWS S3"
 fi
 
 exit $RESULT
