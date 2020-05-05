@@ -238,7 +238,8 @@
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
          [validation-error errors]
-         [form-multi-choice-followups-container followups idx]]))))
+         (when (not (string/blank? value))
+          [form-multi-choice-followups-container followups idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
