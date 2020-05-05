@@ -152,6 +152,21 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
+(defn- get-first-option-visible-followups [options]
+  (when (not-empty options)
+    (->> options
+         first
+         :followups
+         (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
+
+(defn- form-multi-choice-followups-container [followups idx & [use-multi-choice-style?]]
+  (when (and (not use-multi-choice-style?)
+             (not-empty followups))
+    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+          (for [followup followups]
+            ^{:key (:id followup)}
+            [render-field followup idx]))))
+
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
         size         (get-in field-descriptor [:params :size])
@@ -167,6 +182,8 @@
             {:keys [value
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
+            options          @(subscribe [:application/visible-options field-descriptor])
+            followups        (get-first-option-visible-followups options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -220,7 +237,8 @@
                   :data-test-id data-test-id}
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
-         [validation-error errors]]))))
+         [validation-error errors]
+         [form-multi-choice-followups-container followups idx]]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
