@@ -80,7 +80,8 @@
     (let [text-field-path (current-form-content-path db [path :options])
           component       (ataru.component-data.component/text-field-option)]
       (-> db
-          (update-in text-field-path into [component])))))
+          (update-in text-field-path into [component])
+          (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
   :editor/set-ordered-by-user
