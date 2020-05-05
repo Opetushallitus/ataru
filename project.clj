@@ -184,8 +184,7 @@
                                        :output-dir           "resources/public/js/compiled/virkailija-cypress-out"
                                        :asset-path           "/lomake-editori/js/compiled/virkailija-cypress-out"
                                        :parallel-build       true
-                                       :optimizations        :none
-                                       :source-map-timestamp true}}
+                                       :optimizations        :none}}
 
                        {:id           "hakija-cypress"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -196,8 +195,7 @@
                                        :output-dir           "resources/public/js/compiled/hakija-cypress-out"
                                        :asset-path           "/hakemus/js/compiled/hakija-cypress-out"
                                        :parallel-build       true
-                                       :optimizations        :none
-                                       :source-map-timestamp true}}
+                                       :optimizations        :none}}
 
                        {:id           "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
