@@ -484,7 +484,7 @@
 
 (reg-event-db
   :editor/unset-used-by-haut
-  (fn [db [_ haut]]
+  (fn [db _]
     (-> db
       (assoc-in [:editor :used-by-haut :fetching?] false)
       (assoc-in [:editor :used-by-haut :error?] true)
@@ -839,7 +839,7 @@
 
 (reg-event-fx
   :editor/fetch-koodisto-for-component-with-id
-  (fn [{db :db} [_ id {:keys [uri version allow-invalid?]}]]
+  (fn [_ [_ id {:keys [uri version allow-invalid?]}]]
     {:http {:method              :get
             :path                (str "/lomake-editori/api/koodisto/" uri "/" version "?allow-invalid=" allow-invalid?)
             :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups
