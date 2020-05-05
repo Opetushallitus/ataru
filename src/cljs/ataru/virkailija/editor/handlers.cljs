@@ -566,8 +566,9 @@
 (defn update-form-with-fragment [form fragments]
   (let [response-promise (async/promise-chan)]
     (put (str "/lomake-editori/api/forms/" (:id form)) fragments
-      (fn [db response] (do (async/put! response-promise response)
-                            db))
+      (fn [db response]
+        (async/put! response-promise response)
+        db)
       :override-args {:skip-parse-times? true
                       :error-handler (fn [error]
                                        (async/put! response-promise (js/Error. error)))})
@@ -590,13 +591,12 @@
                 (asyncm/<? (update-form-with-fragment form fragments))
                 (reset! last-saved-snapshot form)))
             (catch js/Error error
-              (do
-                (prn error)
-                (dispatch [:snackbar-message
-                           [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
-                                                                                    [:fi :sv :en]) "\"")
-                            "Lataa sivu uudelleen ja tarkista omat muutokset"]])
-                (dispatch-flasher-error-msg :post error))))))
+              (prn error)
+              (dispatch [:snackbar-message
+                         [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
+                                                                                      [:fi :sv :en]) "\"")
+                          "Lataa sivu uudelleen ja tarkista omat muutokset"]])
+              (dispatch-flasher-error-msg :post error)))))
       (recur))))
 
 (save-loop save-chan)
