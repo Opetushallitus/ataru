@@ -148,7 +148,7 @@ const setTextFieldValue = (selectFn, contents) => {
 
 ;(() => {
   const origBefore = before
-  before = () => {
+  before = (...arguments) => {
     Array.prototype.slice.call(arguments).forEach((arg) => {
       if (typeof arg !== 'function') {
         throw 'not a function: ' + arg
