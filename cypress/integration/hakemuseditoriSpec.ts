@@ -101,8 +101,7 @@ describe('Hakemuspalvelu', () => {
 
         describe('Hakemuspalvelun hakijan näkymään siirtyminen', () => {
           before(() => {
-            cy.server()
-            cy.visit(routes.hakija.getHakemuspalveluUrl(formKey))
+            cy.loadHakija(formKey)
           })
           it('Lataa hakemuspalvelun hakijanäkymän', () => {
             hakemuksentaytto

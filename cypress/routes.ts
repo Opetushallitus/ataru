@@ -13,4 +13,6 @@ export const virkailija = {
 
 export const hakija = {
   getHakemuspalveluUrl: (formKey: string) => `/hakemus/${formKey}`,
+
+  getFormUrl: (formKey: string) => `/hakemus/api/form/${formKey}?role=hakija`,
 }
