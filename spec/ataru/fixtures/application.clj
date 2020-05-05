@@ -394,7 +394,7 @@
                                                      :value     "273"
                                                      :fieldType "textField"}]})
 
-(def bug2132-application
+(def bug2139-application
   (-> person-info-form-application
       (merge {:form      5
               :id        2
