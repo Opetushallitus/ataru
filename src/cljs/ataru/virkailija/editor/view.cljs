@@ -36,9 +36,10 @@
 
 (defn- add-form []
   [:button.editor-form__control-button.editor-form__control-button--enabled
-   {:on-click (fn [evt]
-                (.preventDefault evt)
-                (dispatch [:editor/add-form]))}
+   {:data-test-id "add-form-button"
+    :on-click     (fn [evt]
+                    (.preventDefault evt)
+                    (dispatch [:editor/add-form]))}
    @(subscribe [:editor/virkailija-translation :new-form])])
 
 (defn- copy-form []
@@ -90,20 +91,21 @@
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
         form-locked?      (subscribe [:editor/form-locked?])]
     (r/create-class
-     {:component-did-update (fn [this]
-                              (when (and focus? @new-form-created?)
-                                (do
-                                  (.focus (r/dom-node this))
-                                  (.select (r/dom-node this)))))
-      :reagent-render       (fn [lang focus?]
-                              [:input.editor-form__form-name-input
-                               {:type        "text"
-                                :value       (get-in @form [:name lang])
-                                :disabled    @form-locked?
-                                :placeholder @(subscribe [:editor/virkailija-translation :form-name])
-                                :on-change   #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
-                                                  (dispatch [:set-state [:editor :new-form-created?] false]))
-                                :on-blur     #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
+      {:component-did-update (fn [this]
+                               (when (and focus? @new-form-created?)
+                                 (do
+                                   (.focus (r/dom-node this))
+                                   (.select (r/dom-node this)))))
+       :reagent-render       (fn [lang focus?]
+                               [:input.editor-form__form-name-input
+                                {:data-test-id "form-name-input"
+                                 :type         "text"
+                                 :value        (get-in @form [:name lang])
+                                 :disabled     @form-locked?
+                                 :placeholder  @(subscribe [:editor/virkailija-translation :form-name])
+                                 :on-change    #(do (dispatch [:editor/change-form-name lang (.-value (.-target %))])
+                                                    (dispatch [:set-state [:editor :new-form-created?] false]))
+                                 :on-blur      #(dispatch [:set-state [:editor :new-form-created?] false])}])})))
 
 (defn- editor-name-wrapper [lang focus? lang-tag?]
   [:div.editor-form__form-name-input-wrapper
@@ -142,10 +144,11 @@
 
 (defn- preview-link [form-key lang-kwd]
   [:a.editor-form__preview-button-link
-   {:key    (str "preview-" (name lang-kwd))
-    :href   (str "/lomake-editori/api/preview/form/" form-key
-                 "?lang=" (name lang-kwd))
-    :target "_blank"}
+   {:key          (str "preview-" (name lang-kwd))
+    :href         (str "/lomake-editori/api/preview/form/" form-key
+                       "?lang=" (name lang-kwd))
+    :target       "_blank"
+    :data-test-id (str "application-preview-link-" (name lang-kwd))}
    [:i.zmdi.zmdi-open-in-new]
    [:span.editor-form__preview-button-text
     (clojure.string/upper-case (name lang-kwd))]])

@@ -29,9 +29,7 @@ variables.
 
 Then, you can start the system using your own configuration files.
 
-    export VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-my-config.edn
-    export HAKIJA_CONFIG=../ataru-secrets/hakija-my-config.edn
-    make start
+    make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-my-config.edn HAKIJA_CONFIG=../ataru-secrets/hakija-my-config.edn
 
 Now your local instances are running using your custom configuration.
 
@@ -57,6 +55,22 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 ```
 
 ## Running tests
+
+### Running Cypress tests
+
+Start the service locally with make start command as usual. Then either open Cypress with command
+
+    npm run cypress:open
+
+or run it headless using command
+
+    npm run cypress:run
+
+### Cypress tests in Travis
+
+Travis runs Cypress tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs, captured screenshots and recorded videos are automatically uploaded to S3.
+
+### Running legacy browser tests
 
 Tests require a database, a Redis and a FTPS server. Here is an example of
 running those with Docker:

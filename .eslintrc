@@ -1,8 +1,10 @@
 {
   "extends": ["prettier", "plugin:prettier/recommended"],
-  "plugins": ["prettier"],
+  "plugins": ["prettier", "prefer-arrow"],
   "rules": {
     "prettier/prettier": ["error"],
+    "prefer-arrow/prefer-arrow-functions": "error",
+    "array-callback-return": "off",
     "prefer-const": "error",
     "no-var": "error"
   },

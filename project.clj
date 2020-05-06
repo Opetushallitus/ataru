@@ -157,8 +157,8 @@
                         :compiler     {:main                 "ataru.virkailija.core"
                                        :preloads             [devtools.preload]
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
-                                       :output-dir           "resources/public/js/compiled/out"
-                                       :asset-path           "/lomake-editori/js/compiled/out"
+                                       :output-dir           "resources/public/js/compiled/virkailija-out"
+                                       :asset-path           "/lomake-editori/js/compiled/virkailija-out"
                                        :parallel-build       true
                                        :optimizations        :none
                                        :source-map-timestamp true}}
@@ -174,6 +174,46 @@
                                        :parallel-build       true
                                        :optimizations        :none
                                        :source-map-timestamp true}}
+
+                       {:id           "virkailija-cypress"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
+                        :compiler     {:main                 "ataru.virkailija.core"
+                                       :preloads             [devtools.preload]
+                                       :output-to            "resources/public/js/compiled/virkailija-cypress-app.js"
+                                       :output-dir           "resources/public/js/compiled/virkailija-cypress-out"
+                                       :asset-path           "/lomake-editori/js/compiled/virkailija-cypress-out"
+                                       :parallel-build       true
+                                       :optimizations        :none}}
+
+                       {:id           "hakija-cypress"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :figwheel     {:on-jsload "ataru.hakija.core/mount-root"}
+                        :compiler     {:main                 "ataru.hakija.core"
+                                       :preloads             [devtools.preload]
+                                       :output-to            "resources/public/js/compiled/hakija-cypress-app.js"
+                                       :output-dir           "resources/public/js/compiled/hakija-cypress-out"
+                                       :asset-path           "/hakemus/js/compiled/hakija-cypress-out"
+                                       :parallel-build       true
+                                       :optimizations        :none}}
+
+                       {:id           "virkailija-cypress-travis"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :compiler     {:main                 "ataru.virkailija.core"
+                                       :output-to            "resources/public/js/compiled/virkailija-cypress-travis-app.js"
+                                       :output-dir           "resources/public/js/compiled/virkailija-cypress-travis-out"
+                                       :externs              ["resources/virkailija-externs.js"]
+                                       :parallel-build       true
+                                       :optimizations        :advanced}}
+
+                       {:id           "hakija-cypress-travis"
+                        :source-paths ["src/cljs" "src/cljc"]
+                        :compiler     {:main                 "ataru.hakija.core"
+                                       :output-to            "resources/public/js/compiled/hakija-cypress-travis-app.js"
+                                       :output-dir           "resources/public/js/compiled/hakija-cypress-travis-out"
+                                       :externs              ["resources/hakija-externs.js"]
+                                       :parallel-build       true
+                                       :optimizations        :advanced}}
 
                        {:id           "test"
                         :source-paths ["src/cljs" "test/cljs/unit" "src/cljc" "test/cljc/unit"]
@@ -249,18 +289,24 @@
                               :env            {:dev? "true"
                                                :config "config/test.edn"}
                               :jvm-opts       ^:replace ["-Durl.valinta-tulos-service.baseUrl=http://localhost:8097"]}
+             :figwheel {:nrepl-port  3334
+                        :server-port 3449
+                        :repl false
+                        :readline false}
 
-             :virkailija-dev [:dev {:figwheel    {:nrepl-port  3334
-                                                  :server-port 3449}
-                                    :target-path "target-virkailija"
+             :virkailija-cypress        {:env {:dev? "true"}
+                                         :target-path "target/target-cypess-virkailija"}
+
+             :hakija-cypress        {:env {:dev? "true"}
+                                     :target-path "target/target-cypess-hakija"}
+
+             :virkailija-dev [:dev {:target-path "target-virkailija"
                                     :env         {:app "virkailija"}
                                     :jvm-opts    ^:replace ["-Dapp=virkailija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
 
-             :hakija-dev     [:dev {:figwheel    {:nrepl-port  3336
-                                                  :server-port 3450}
-                                    :target-path "target-hakija"
+             :hakija-dev     [:dev {:target-path "target-hakija"
                                     :env         {:app "hakija"}
                                     :jvm-opts    ^:replace ["-Dapp=hakija"
                                                             "-Duser.home=."
@@ -278,8 +324,7 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "figwheel-virkailija" ["with-profile" "virkailija-dev" "figwheel" "virkailija-dev"]
-            "figwheel-hakija"     ["with-profile" "hakija-dev" "figwheel" "hakija-dev"]
+            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]

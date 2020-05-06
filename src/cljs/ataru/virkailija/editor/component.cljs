@@ -291,7 +291,8 @@
                                     can-copy?
                                     can-cut?
                                     can-remove?
-                                    sub-header]
+                                    sub-header
+                                    data-test-id]
                              :or   {foldable?   true
                                     can-copy?   true
                                     can-cut?    true
@@ -308,6 +309,9 @@
            {:on-click #(dispatch [:editor/fold id])}
            [:i.zmdi.zmdi-chevron-up]]))
       [:span.editor-form__component-main-header
+       (cond-> {}
+               data-test-id
+               (assoc :data-test-id (str data-test-id "-label")))
        label]
       [:span.editor-form__component-sub-header
        {:class (if (and folded? (some? sub-header))
@@ -985,43 +989,51 @@
         :foldable? false
         :can-cut? true
         :can-copy? false
-        :can-remove? false]
+        :can-remove? false
+        :data-test-id "hakukohteet-header"]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
          @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
-  (let [languages       (subscribe [:editor/languages])
-        value           (subscribe [:editor/get-component-value path])
-        virkailija-lang (subscribe [:editor/virkailija-lang])
-        component-locked?    (subscribe [:editor/component-locked? path])
-        values          (set ["onr" "muu"])]
+  (let [languages         (subscribe [:editor/languages])
+        value             (subscribe [:editor/get-component-value path])
+        virkailija-lang   (subscribe [:editor/virkailija-lang])
+        component-locked? (subscribe [:editor/component-locked? path])
+        values            (set ["onr" "muu"])]
     (fn [content path]
-      [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
-        :foldable? false
-        :can-cut? true
-        :can-copy? false
-        :can-remove? false]
-       [:div.editor-form__component-content-wrapper
-        (when (= "person-info" (name (:module content)))
+      (let [person-info-module? (= "person-info" (name (:module content)))]
+        [:div.editor-form__component-wrapper
+         [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+          :foldable? false
+          :can-cut? true
+          :can-copy? false
+          :can-remove? false
+          :data-test-id (when person-info-module?
+                          "henkilotietomoduuli-header")]
+         [:div.editor-form__component-content-wrapper
+          (when person-info-module?
+            [:div.editor-form__module-fields
+             [:select.editor-form__select
+              {:on-change    (fn [event]
+                               (let [version    (keyword (-> event .-target .-value))
+                                     new-module (pm/person-info-module version)]
+                                 (dispatch-sync [:editor/set-component-value
+                                                 new-module path])))
+               :disabled     @component-locked?
+               :value        (or (get values (:id content)) "onr")
+               :data-test-id "henkilotietomoduuli-select"}
+              (doall (for [opt values]
+                       [:option {:value opt
+                                 :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]])
           [:div.editor-form__module-fields
-           [:select.editor-form__select
-            {:on-change (fn [event]
-                          (let [version    (keyword (-> event .-target .-value))
-                                new-module (pm/person-info-module version)]
-                            (dispatch-sync [:editor/set-component-value
-                                            new-module path])))
-             :disabled  @component-locked?
-             :value     (or (get values (:id content)) "onr")}
-            (doall (for [opt values]
-                     [:option {:value opt
-                               :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]])
-        [:div.editor-form__module-fields
-         [:span.editor-form__module-fields-label
-          @(subscribe [:editor/virkailija-translation :contains-fields])]
-         " "
-         (clojure.string/join ", " (get-leaf-component-labels @value :fi))]]])))
+           [:span.editor-form__module-fields-label
+            @(subscribe [:editor/virkailija-translation :contains-fields])]
+           " "
+           [:span
+            {:data-test-id (when person-info-module?
+                             "henkilotietomoduuli-fields-label")}
+            (clojure.string/join ", " (get-leaf-component-labels @value :fi))]]]]))))
 
 (defn info-element
   "Info text which is a standalone component"

@@ -57,49 +57,42 @@
       )
   }
 
-  function clickLomakeForEdit(name) {
-    return clickElement(() =>
+  const clickLomakeForEdit = (name) =>
+    clickElement(() =>
       formListItems().find(
         '.editor-form__list-form-name:contains("' + name + '")'
       )
     )
+
+  const clickCopyFormComponent = (name) => () => {
+    testFrame()
+      .find('.editor-form__component-wrapper:contains("' + name + '")')
+      .find('.editor-form__component-button:contains("Kopioi")')
+      .click()
   }
 
-  function clickCopyFormComponent(name) {
-    return () => {
+  const clickCloseDetailsButton = () => () => {
+    testFrame().find('.close-details-button').click()
+  }
+
+  const clickPasteFormComponent = (n) => () => {
+    triggerEvent(
       testFrame()
-        .find('.editor-form__component-wrapper:contains("' + name + '")')
-        .find('.editor-form__component-button:contains("Kopioi")')
-        .click()
-    }
+        .find('.editor-form__drag_n_drop_spacer_container_for_component')
+        .eq(n),
+      'mouseover'
+    )
+    const selector =
+      '.editor-form__drag_n_drop_spacer_container_for_component button.editor-form__component-button:visible:enabled:contains("Liitä")'
+    return wait
+      .until(() => {
+        const b = testFrame().find(selector).length !== 0
+        return b
+      })()
+      .then(() => testFrame().find(selector).click())
   }
 
-  function clickCloseDetailsButton() {
-    return () => {
-      testFrame().find('.close-details-button').click()
-    }
-  }
-
-  function clickPasteFormComponent(n) {
-    return () => {
-      triggerEvent(
-        testFrame()
-          .find('.editor-form__drag_n_drop_spacer_container_for_component')
-          .eq(n),
-        'mouseover'
-      )
-      const selector =
-        '.editor-form__drag_n_drop_spacer_container_for_component button.editor-form__component-button:visible:enabled:contains("Liitä")'
-      return wait
-        .until(() => {
-          const b = testFrame().find(selector).length !== 0
-          return b
-        })()
-        .then(() => testFrame().find(selector).click())
-    }
-  }
-
-  function clickComponentMenuItem(title) {
+  const clickComponentMenuItem = (title) => {
     const menuItem = () => {
       triggerEvent(
         testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
@@ -114,7 +107,7 @@
     return clickElement(menuItem)
   }
 
-  function clickSubComponentMenuItem(title, element) {
+  const clickSubComponentMenuItem = (title, element) => {
     const menuItem = () => {
       triggerEvent(
         element().find('.editor-form__add-component-toolbar'),

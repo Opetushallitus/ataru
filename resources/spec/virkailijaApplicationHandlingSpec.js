@@ -286,9 +286,8 @@
     return testFrame().find('.application-handling__score-input')
   }
 
-  function eventCaptions() {
-    return testFrame().find('.application-handling__event-row-header > span')
-  }
+  const eventCaptions = () =>
+    testFrame().find('.application-handling__event-row-header > span')
 
   const selectedState = () => {
     return testFrame().find('.application-handling__review-state-row--selected')
@@ -402,7 +401,7 @@
         expect(applicationHeader().text()).to.equal('Selaintestilomake1')
         expect(downloadLink().text()).to.equal('Lataa Excel')
       })
-      it('stores an event for review state change', function () {
+      it('stores an event for review state change', () => {
         const firstEventNow = testFrame()
           .find('.application-handling__event-row-header > span')
           .first()
