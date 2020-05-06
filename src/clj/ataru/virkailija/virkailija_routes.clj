@@ -32,6 +32,7 @@
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [ataru.translations.texts :as texts]
             [ataru.util.client-error :as client-error]
             [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
@@ -356,7 +357,9 @@
         (ok (virkailija-edit/get-review-settings session)))
 
       (api/GET "/virkailija-texts" {session :session}
-        (ok (get-virkailija-texts localizations-cache)))
+        (ok (if (:dev? env)
+              texts/virkailija-texts
+              (get-virkailija-texts localizations-cache))))
 
       (api/POST "/review-setting" {session :session}
         :body [review-setting ataru-schema/ReviewSetting]

@@ -1083,14 +1083,17 @@
                  review-config))))
 
 (reg-event-fx
+  :application/get-virkailija-texts-from-server
+  (fn [_ _]
+    {:http {:method              :get
+            :path                "/lomake-editori/api/applications/virkailija-texts"
+            :handler-or-dispatch :application/handle-get-virkailija-texts-response}}))
+
+(reg-event-fx
   :application/get-virkailija-texts
   (fn [{:keys [db]} _]
-    (if (-> db :editor :virkailija-texts)
-      {:db db}
-      {:db   db
-       :http {:method              :get
-              :path                "/lomake-editori/api/applications/virkailija-texts"
-              :handler-or-dispatch :application/handle-get-virkailija-texts-response}})))
+    (when-not (-> db :editor :virkailija-texts)
+      {:dispatch [:application/get-virkailija-texts-from-server]})))
 
 (reg-event-db
   :application/handle-get-virkailija-texts-response

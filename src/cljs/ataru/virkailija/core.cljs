@@ -21,6 +21,7 @@
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
+  (re-frame/dispatch [:application/get-virkailija-texts-from-server])
   (reagent/render [views/main-panel]
                   (.getElementById js/document "app")))
 
