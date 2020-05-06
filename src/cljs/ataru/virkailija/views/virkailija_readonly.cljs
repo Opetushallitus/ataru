@@ -83,7 +83,7 @@
             :else
             (render-paragraphs values))]]))
 
-(defn- attachment-item [file-key virus-scan-status virus-status-elem text are-you-sure? removing?]
+(defn- attachment-item [file-key virus-scan-status virus-status-elem text]
   [:div.application__virkailija-readonly-attachment-area
    (if (= virus-scan-status "done")
      [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
@@ -133,7 +133,7 @@
          (for [child children]
            [field child application lang]))])
 
-(defn row-container [application lang children group-idx person-info-field?]
+(defn row-container [_ _ _ group-idx person-info-field?]
   (fn [application lang children]
     (into [:div] (for [child children]
                    [field child application lang group-idx person-info-field?]))))
