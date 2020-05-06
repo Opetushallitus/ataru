@@ -10,12 +10,10 @@ export const addForm = () => {
   cy.server()
   cy.route('POST', routes.virkailija.getPostFormUrl()).as('postForms')
   getAddFormButton().click()
-  return cy.wait('@postForms').then((response) => {
-    return {
-      formKey: responses.postFormResponse.getFormKey(response),
-      formId: responses.postFormResponse.getFormId(response),
-    }
-  })
+  return cy.wait('@postForms').then((response) => ({
+    formKey: responses.postFormResponse.getFormKey(response),
+    formId: responses.postFormResponse.getFormId(response),
+  }))
 }
 
 export const getFormNameInput = () =>
