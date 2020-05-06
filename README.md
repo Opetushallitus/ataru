@@ -1,7 +1,7 @@
 # Ataru
 
 [![Build Status](https://travis-ci.org/Opetushallitus/ataru.svg?branch=master)](https://travis-ci.org/Opetushallitus/ataru)
-![NPM Dependencies Status](https://david-dm.org/opetushallitus/ataru.svg)
+![NPM Dependencies Status](https://david-dm.org/Opetushallitus/ataru.svg)
 
 A system for creating custom forms, applying to education and handling applications.
 
