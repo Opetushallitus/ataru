@@ -1,70 +1,74 @@
-import * as hakemuseditori from '../hakemuseditori'
-import * as hakemuksentaytto from '../hakemuksentaytto'
-import * as routes from '../routes'
+import * as hakemuksenMuokkaus from '../hakemuksenMuokkaus'
+import * as hakijanNakyma from '../hakijanNakyma'
+import * as reitit from '../reitit'
 import { unsafeFoldOption } from '../option'
 
-describe('Hakemuspalvelu', () => {
-  let formKey: string
+describe('Hakemuksen luonti', () => {
+  let lomakkeenAvain: string
 
   describe('Virkailijanäkymä', () => {
     before(() => {
       Cypress.Cookies.defaults({
         whitelist: ['ring-session'],
       })
-      cy.loginToVirkailija()
+      cy.kirjauduVirkailijanNakymaan()
     })
 
     it('Avaa hakemuspalvelun editorinäkymän', () => {
-      hakemuseditori.getAddFormButton().should('be.enabled')
+      hakemuksenMuokkaus.haeLomakkeenLisaysNappi().should('be.enabled')
     })
 
     describe('Uuden lomakkeen luonti', () => {
-      let formId: number
+      let lomakkeenId: number
 
       before(() => {
-        hakemuseditori.addForm().then((form) => {
-          formKey = unsafeFoldOption(form.formKey)
-          formId = unsafeFoldOption(form.formId)
+        hakemuksenMuokkaus.lisaaLomake().then((lomake) => {
+          lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
+          lomakkeenId = unsafeFoldOption(lomake.formId)
         })
       })
 
       after(() => {
-        cy.deleteForm(formKey)
+        cy.poistaLomake(lomakkeenAvain)
       })
 
       it('Näyttää uuden lomakkeen luontinäkymän', () => {
-        cy.url().should((url) => expect(url.endsWith(formKey)).to.be.true)
-        hakemuseditori
-          .getFormNameInput()
+        cy.url().should(
+          (osoite) => expect(osoite.endsWith(lomakkeenAvain)).to.be.true
+        )
+        hakemuksenMuokkaus
+          .haeLomakkeenNimenSyote()
           .should('have.attr', 'placeholder', 'Lomakkeen nimi')
-        hakemuseditori.getFormNameInput().should('have.value', 'Uusi lomake')
-        hakemuseditori
-          .getPreviewLink()
+        hakemuksenMuokkaus
+          .haeLomakkeenNimenSyote()
+          .should('have.value', 'Uusi lomake')
+        hakemuksenMuokkaus
+          .haeLomakkeenEsikatseluLinkki()
           .should('have.text', 'FI')
           .should(
             'have.attr',
             'href',
-            routes.virkailija.getFormPreviewUrl(formKey)
+            reitit.virkailija.haeLomakkeenEsikatseluOsoite(lomakkeenAvain)
           )
       })
 
       it('Näyttää hakukohdeet -moduulin', () => {
-        hakemuseditori.hakukohteet
-          .getHeaderLabel()
+        hakemuksenMuokkaus.hakukohteet
+          .haeOtsikko()
           .should('have.text', 'Hakukohteet')
       })
 
       it('Näyttää henkilötietomoduulin', () => {
-        hakemuseditori.henkilotiedot
-          .getHeaderLabel()
+        hakemuksenMuokkaus.henkilotiedot
+          .haeOtsikko()
           .should('have.text', 'Henkilötiedot')
-        hakemuseditori.henkilotiedot
-          .getSelectComponent()
+        hakemuksenMuokkaus.henkilotiedot
+          .haeHenkilotietojenValintaKomponentti()
           .find(':selected')
           .should('have.attr', 'value', 'onr')
           .should('have.text', 'Opiskelijavalinta')
-        hakemuseditori.henkilotiedot
-          .getFieldsLabel()
+        hakemuksenMuokkaus.henkilotiedot
+          .haeKaytettavatHenkilotietoKentat()
           .should(
             'have.text',
             'Etunimet, Kutsumanimi, Sukunimi, Kansalaisuus, Onko sinulla suomalainen henkilötunnus?, Henkilötunnus, Syntymäaika, Sukupuoli, Syntymäpaikka ja -maa, Passin numero, Kansallinen ID-tunnus, Sähköpostiosoite, Matkapuhelin, Asuinmaa, Katuosoite, Postinumero, Postitoimipaikka, Kotikunta, Kaupunki ja maa, Äidinkieli'
@@ -73,12 +77,15 @@ describe('Hakemuspalvelu', () => {
 
       describe('Henkilötietomoduulin kenttien vaihtaminen', () => {
         before(() => {
-          hakemuseditori.henkilotiedot.selectOption('Muu käyttö', formId)
+          hakemuksenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
+            'Muu käyttö',
+            lomakkeenId
+          )
         })
 
         it('Näyttää henkilötietomoduulin muutetut kentät', () => {
-          hakemuseditori.henkilotiedot
-            .getFieldsLabel()
+          hakemuksenMuokkaus.henkilotiedot
+            .haeKaytettavatHenkilotietoKentat()
             .should(
               'have.text',
               'Etunimet, Kutsumanimi, Sukunimi, Kansalaisuus, Onko sinulla suomalainen henkilötunnus?, Henkilötunnus, Syntymäaika, Sähköpostiosoite, Matkapuhelin, Asuinmaa, Katuosoite, Postinumero, Postitoimipaikka, Kotikunta, Kaupunki ja maa'
@@ -86,27 +93,30 @@ describe('Hakemuspalvelu', () => {
         })
 
         after(() => {
-          hakemuseditori.henkilotiedot.selectOption('Opiskelijavalinta', formId)
+          hakemuksenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
+            'Opiskelijavalinta',
+            lomakkeenId
+          )
         })
       })
 
       describe('Lomakkeen tietojen täyttäminen', () => {
         before(() => {
-          hakemuseditori.setFormName('Testilomake', formId)
+          hakemuksenMuokkaus.asetaLomakkeenNimi('Testilomake', lomakkeenId)
         })
 
         it('Näyttää muokatun lomakkeen nimen', () => {
-          hakemuseditori.getFormNameInput().should('have.value', 'Testilomake')
+          hakemuksenMuokkaus
+            .haeLomakkeenNimenSyote()
+            .should('have.value', 'Testilomake')
         })
 
         describe('Hakemuspalvelun hakijan näkymään siirtyminen', () => {
           before(() => {
-            cy.loadHakija(formKey)
+            cy.avaaLomakeHakijanNakymassa(lomakkeenAvain)
           })
           it('Lataa hakemuspalvelun hakijanäkymän', () => {
-            hakemuksentaytto
-              .getApplicationLabel()
-              .should('have.text', 'Testilomake')
+            hakijanNakyma.haeHakemuksenNimi().should('have.text', 'Testilomake')
           })
         })
       })
