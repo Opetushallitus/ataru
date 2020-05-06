@@ -19,4 +19,5 @@
                                                       print-doc
                                                       pst
                                                       source]}}
-           :invalid-arity       {:skip-args [clojure.core.match/match]}}}
+           :invalid-arity       {:skip-args [clojure.core.match/match
+                                             cljs.core.match/match]}}}
