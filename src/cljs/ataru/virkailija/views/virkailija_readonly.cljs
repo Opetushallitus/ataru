@@ -21,6 +21,8 @@
             [cljs.core.match :refer-macros [match]]
             [goog.string :as s]))
 
+(declare field)
+
 (def exclude-always-included #(not (answer-to-always-include? %)))
 
 (defn- from-multi-lang [text lang]
@@ -50,6 +52,41 @@
        (or (empty? (:children field-descriptor))
            (some #(visible? % application) (:children field-descriptor)))))
 
+(defn- text-form-field-nested-container [selected-options lang application question-group-idx]
+  [:div.application-handling__nested-container
+   (doall
+     (for [option selected-options]
+       ^{:key (:value option)}
+       [:div
+        [:p.application__text-field-paragraph
+         (from-multi-lang (:label option) lang)]
+        (when (some #(visible? % application) (:followups option))
+          [:div.application-handling__nested-container
+           (for [followup (:followups option)]
+             ^{:key (:id followup)}
+             [field followup application lang question-group-idx false])])]))])
+
+(defn- text-form-field-values [id values]
+  [:div.application__form-field-value
+   (cond (and (sequential? values) (< 1 (count values)))
+         [:ul.application__form-field-list
+          (map-indexed
+            (fn [i value]
+              ^{:key (str id i)}
+              [:li (render-paragraphs value)])
+            values)]
+         (sequential? values)
+         (render-paragraphs (first values))
+         :else
+         (render-paragraphs values))])
+
+(defn- text-form-field-label [id field-descriptor lang]
+  [:label.application__form-field-label
+   [:span
+    (str (from-multi-lang (:label field-descriptor) lang)
+         (required-hint field-descriptor))
+    [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
+
 (defn text [field-descriptor application lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
@@ -58,28 +95,16 @@
                                                       (get-value (-> application :answers id) group-idx))
                                                     (:options field-descriptor)
                                                     lang)
+        selected-options (filter #(contains? values (:value %))
+                                 (:options field-descriptor))
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
       :id    id}
-
-     [:label.application__form-field-label
-      [:span
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))
-        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
-     [:div.application__form-field-value
-      (cond (and (sequential? values) (< 1 (count values)))
-            [:ul.application__form-field-list
-             (map-indexed
-              (fn [i value]
-                ^{:key (str id i)}
-                [:li (render-paragraphs value)])
-              values)]
-            (sequential? values)
-            (render-paragraphs (first values))
-            :else
-            (render-paragraphs values))]]))
+     [text-form-field-label id field-descriptor lang]
+     [text-form-field-values id values]
+     (when-not (empty? selected-options)
+      [text-form-field-nested-container selected-options lang application group-idx])]))
 
 (defn- attachment-item [file-key virus-scan-status virus-status-elem text]
   [:div.application__virkailija-readonly-attachment-area
@@ -122,8 +147,6 @@
             (required-hint field-descriptor))
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
-
-(declare field)
 
 (defn wrapper [content application lang children]
   [:div.application__wrapper-element.application__wrapper-element--border
