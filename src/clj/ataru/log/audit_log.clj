@@ -2,6 +2,7 @@
   (:require [ataru.util.app-utils :as app-utils]
             [ataru.config.core :refer [config]]
             [clojure.data :refer [diff]]
+            [clojure.set]
             [clj-timbre-auditlog.audit-log :as cta-audit-log])
   (:import [fi.vm.sade.auditlog
             Operation
@@ -50,8 +51,6 @@
 (defn- map-or-vec? [x]
   (or (map? x)
       (vector? x)))
-
-(def ^:private not-blank? (comp not clojure.string/blank?))
 
 (defn- path-> [p k]
   (str (when p (str p "."))

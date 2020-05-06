@@ -13,6 +13,7 @@
             [ataru.util.client-error :as client-error]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
+            [clojure.string]
             [com.stuartsierra.component :as component]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [compojure.api.exception :as ex]
@@ -35,9 +36,6 @@
             [string-normalizer.filename-normalizer-middleware :as normalizer]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
-
-(defn- deleted? [{:keys [deleted]}]
-  (true? deleted))
 
 (defn- get-application
   [form-by-id-cache
@@ -356,7 +354,7 @@
 
                 form-key
                 (selection-limit/query-available-selections form-key)))
-        (catch clojure.lang.ExceptionInfo e
+        (catch clojure.lang.ExceptionInfo _
                (response/conflict
                  (selection-limit/query-available-selections form-key)))))))
 

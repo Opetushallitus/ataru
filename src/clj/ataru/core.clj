@@ -1,7 +1,6 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
             [clj-time.jdbc] ; for java.sql.Timestamp / org.joda.time.DateTime coercion
-            [clojure.tools.namespace.repl :refer [refresh]]
             [ataru.util.app-utils :as app-utils]
             [ataru.timbre-config :as timbre-config]
             [ataru.log.audit-log :as audit-log]
@@ -36,10 +35,9 @@
 
 (defn stop []
   (swap! system (fn [{:keys [system] :as old-system}]
-                   (do
-                     (when system
-                       (component/stop system))
-                     (dissoc old-system :system)))))
+                  (when system
+                    (component/stop system))
+                  (dissoc old-system :system))))
 
 (defn restart []
   (stop)
@@ -47,17 +45,16 @@
 
 (defn -main [& args]
   (let [app-id         (app-utils/get-app-id args)
-        init-system-fn      (get app-systems app-id)]
+        init-system-fn (get app-systems app-id)]
     (timbre-config/configure-logging! app-id)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
     (when-not init-system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
                (apply str (interpose ", " (map name (keys app-systems)))))
       (System/exit 1))
-    (do
-      (let [audit-logger (audit-log/new-audit-logger)]
-        (reset! system {:app-id       app-id
-                        :audit-logger audit-logger
-                        :system-fn    (init-system-fn audit-logger)})
-        (start)
-        (wait-forever)))))
+    (let [audit-logger (audit-log/new-audit-logger)]
+      (reset! system {:app-id       app-id
+                      :audit-logger audit-logger
+                      :system-fn    (init-system-fn audit-logger)})
+      (start)
+      (wait-forever))))
