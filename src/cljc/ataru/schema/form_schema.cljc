@@ -57,7 +57,7 @@
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)})
 
-(s/defschema Module (s/enum :person-info))
+(s/defschema Module (s/enum :person-info :arvosanat-peruskoulu))
 
 (s/defschema InfoText {(s/optional-key :enabled?) s/Bool
                        (s/optional-key :value)    LocalizedStringOptional

@@ -103,6 +103,25 @@ describe('Hakemuksen luonti', () => {
       describe('Lomakkeen tietojen täyttäminen', () => {
         before(() => {
           hakemuksenMuokkaus.asetaLomakkeenNimi('Testilomake', lomakkeenId)
+          hakemuksenMuokkaus.komponentinLisays
+            .lisaaArvosanat(lomakkeenId)
+            .then(({ result: arvosanatLinkki }) =>
+              cy
+                .wrap(arvosanatLinkki.text())
+                .as('component-toolbar-arvosanat-text')
+            )
+        })
+
+        it.only('Näyttää arvosanat -osion', () => {
+          cy.get('@component-toolbar-arvosanat-text').then((arvosanatTeksti) =>
+            expect(arvosanatTeksti).to.equal('Arvosanat (peruskoulu)')
+          )
+          hakemuksenMuokkaus.komponentinLisays
+            .haeLisaaArvosanatLinkki()
+            .should('have.text', 'Arvosanat (peruskoulu)')
+          hakemuksenMuokkaus.arvosanat
+            .haeOsionNimi()
+            .should('have.text', 'Arvosanat (peruskoulu)')
         })
 
         it('Näyttää muokatun lomakkeen nimen', () => {
