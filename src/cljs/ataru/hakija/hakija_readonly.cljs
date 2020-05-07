@@ -34,32 +34,38 @@
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
+(defn- text-readonly-text [field-descriptor answer lang group-idx]
+  [:div.application__readonly-text
+   (let [values (cond-> (get-value answer group-idx)
+                        (contains? field-descriptor :koodisto-source)
+                        split-if-string
+                        (predefined-value-answer? field-descriptor)
+                        (replace-with-option-label (:options field-descriptor) lang))]
+     (cond (and (sequential? values) (< 1 (count values)))
+           [:ul.application__form-field-list
+            (map-indexed
+              (fn [i value]
+                ^{:key (str (:id field-descriptor) i)}
+                [:li (render-paragraphs value)])
+              values)]
+           (sequential? values)
+           (render-paragraphs (first values))
+           :else
+           (render-paragraphs values)))])
+
+(defn- text-form-field-label [field-descriptor lang]
+  [:label.application__form-field-label
+   (str (from-multi-lang (:label field-descriptor) lang)
+        (required-hint field-descriptor))])
+
 (defn text [field-descriptor _ lang group-idx]
   (let [id     (keyword (:id field-descriptor))
         answer @(subscribe [:application/answer id])]
     [:div.application__form-field
-     [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+     [text-form-field-label field-descriptor lang]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
-       [:div.application__readonly-text
-        (let [values (cond-> (get-value answer group-idx)
-                             (contains? field-descriptor :koodisto-source)
-                             split-if-string
-                             (predefined-value-answer? field-descriptor)
-                             (replace-with-option-label (:options field-descriptor) lang))]
-          (cond (and (sequential? values) (< 1 (count values)))
-                [:ul.application__form-field-list
-                 (map-indexed
-                   (fn [i value]
-                     ^{:key (str (:id field-descriptor) i)}
-                     [:li (render-paragraphs value)])
-                   values)]
-                (sequential? values)
-                (render-paragraphs (first values))
-                :else
-                (render-paragraphs values)))])]))
+       [text-readonly-text field-descriptor answer lang group-idx])]))
 
 (defn- attachment-list [attachments]
   [:div
