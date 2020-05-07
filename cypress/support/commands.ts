@@ -14,7 +14,7 @@ declare global {
 }
 
 Cypress.Commands.add('kirjauduVirkailijanNakymaan', () =>
-  cy.visit(reitit.virkailija.haeHakemuksenMuokkauksenKirjautumisenOsoite())
+  cy.visit(reitit.virkailija.haeVirkailijanNakymaanKirjautumisenOsoite())
 )
 
 Cypress.Commands.add('poistaLomake', (lomakkeenAvain: string) =>

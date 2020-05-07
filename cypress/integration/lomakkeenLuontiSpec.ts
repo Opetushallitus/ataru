@@ -1,9 +1,9 @@
-import * as hakemuksenMuokkaus from '../hakemuksenMuokkaus'
+import * as lomakkeenMuokkaus from '../lomakkeenMuokkaus'
 import * as hakijanNakyma from '../hakijanNakyma'
 import * as reitit from '../reitit'
 import { unsafeFoldOption } from '../option'
 
-describe('Hakemuksen luonti', () => {
+describe('Lomakkeen luonti', () => {
   let lomakkeenAvain: string
 
   describe('Virkailijanäkymä', () => {
@@ -14,15 +14,15 @@ describe('Hakemuksen luonti', () => {
       cy.kirjauduVirkailijanNakymaan()
     })
 
-    it('Avaa hakemuspalvelun editorinäkymän', () => {
-      hakemuksenMuokkaus.haeLomakkeenLisaysNappi().should('be.enabled')
+    it('Avaa lomakkeen muokkausnäkymän', () => {
+      lomakkeenMuokkaus.haeLomakkeenLisaysNappi().should('be.enabled')
     })
 
     describe('Uuden lomakkeen luonti', () => {
       let lomakkeenId: number
 
       before(() => {
-        hakemuksenMuokkaus.lisaaLomake().then((lomake) => {
+        lomakkeenMuokkaus.lisaaLomake().then((lomake) => {
           lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
           lomakkeenId = unsafeFoldOption(lomake.lomakkeenId)
         })
@@ -36,13 +36,13 @@ describe('Hakemuksen luonti', () => {
         cy.url().should(
           (osoite) => expect(osoite.endsWith(lomakkeenAvain)).to.be.true
         )
-        hakemuksenMuokkaus
+        lomakkeenMuokkaus
           .haeLomakkeenNimenSyote()
           .should('have.attr', 'placeholder', 'Lomakkeen nimi')
-        hakemuksenMuokkaus
+        lomakkeenMuokkaus
           .haeLomakkeenNimenSyote()
           .should('have.value', 'Uusi lomake')
-        hakemuksenMuokkaus
+        lomakkeenMuokkaus
           .haeLomakkeenEsikatseluLinkki()
           .should('have.text', 'FI')
           .should(
@@ -53,21 +53,21 @@ describe('Hakemuksen luonti', () => {
       })
 
       it('Näyttää hakukohdeet -moduulin', () => {
-        hakemuksenMuokkaus.hakukohteet
+        lomakkeenMuokkaus.hakukohteet
           .haeOtsikko()
           .should('have.text', 'Hakukohteet')
       })
 
       it('Näyttää henkilötietomoduulin', () => {
-        hakemuksenMuokkaus.henkilotiedot
+        lomakkeenMuokkaus.henkilotiedot
           .haeOtsikko()
           .should('have.text', 'Henkilötiedot')
-        hakemuksenMuokkaus.henkilotiedot
+        lomakkeenMuokkaus.henkilotiedot
           .haeHenkilotietojenValintaKomponentti()
           .find(':selected')
           .should('have.attr', 'value', 'onr')
           .should('have.text', 'Opiskelijavalinta')
-        hakemuksenMuokkaus.henkilotiedot
+        lomakkeenMuokkaus.henkilotiedot
           .haeKaytettavatHenkilotietoKentat()
           .should(
             'have.text',
@@ -77,14 +77,14 @@ describe('Hakemuksen luonti', () => {
 
       describe('Henkilötietomoduulin kenttien vaihtaminen', () => {
         before(() => {
-          hakemuksenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
+          lomakkeenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
             'Muu käyttö',
             lomakkeenId
           )
         })
 
         it('Näyttää henkilötietomoduulin muutetut kentät', () => {
-          hakemuksenMuokkaus.henkilotiedot
+          lomakkeenMuokkaus.henkilotiedot
             .haeKaytettavatHenkilotietoKentat()
             .should(
               'have.text',
@@ -93,7 +93,7 @@ describe('Hakemuksen luonti', () => {
         })
 
         after(() => {
-          hakemuksenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
+          lomakkeenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
             'Opiskelijavalinta',
             lomakkeenId
           )
@@ -102,8 +102,8 @@ describe('Hakemuksen luonti', () => {
 
       describe('Lomakkeen tietojen täyttäminen', () => {
         before(() => {
-          hakemuksenMuokkaus.asetaLomakkeenNimi('Testilomake', lomakkeenId)
-          hakemuksenMuokkaus.komponentinLisays
+          lomakkeenMuokkaus.asetaLomakkeenNimi('Testilomake', lomakkeenId)
+          lomakkeenMuokkaus.komponentinLisays
             .lisaaArvosanat(lomakkeenId)
             .then(({ result: arvosanatLinkki }) =>
               cy
@@ -116,41 +116,41 @@ describe('Hakemuksen luonti', () => {
           cy.get('@component-toolbar-arvosanat-text').then((arvosanatTeksti) =>
             expect(arvosanatTeksti).to.equal('Arvosanat (peruskoulu)')
           )
-          hakemuksenMuokkaus.komponentinLisays
+          lomakkeenMuokkaus.komponentinLisays
             .haeLisaaArvosanatLinkki()
             .should('have.text', 'Arvosanat (peruskoulu)')
-          hakemuksenMuokkaus.arvosanat
+          lomakkeenMuokkaus.arvosanat
             .haeOsionNimi()
             .should('have.text', 'Arvosanat (peruskoulu)')
-          hakemuksenMuokkaus.arvosanat.haePoistaOsioNappi().should('be.enabled')
+          lomakkeenMuokkaus.arvosanat.haePoistaOsioNappi().should('be.enabled')
         })
 
         describe('Arvosanat -osion poistaminen', () => {
           before(() => {
-            hakemuksenMuokkaus.arvosanat.poistaArvosanat(lomakkeenId)
+            lomakkeenMuokkaus.arvosanat.poistaArvosanat(lomakkeenId)
           })
 
           it('Poistaa arvosanat -osion lomakkeelta', () => {
-            hakemuksenMuokkaus.arvosanat.haeOsionNimi().should('not.exist')
+            lomakkeenMuokkaus.arvosanat.haeOsionNimi().should('not.exist')
           })
 
           after(() => {
-            hakemuksenMuokkaus.komponentinLisays.lisaaArvosanat(lomakkeenId)
+            lomakkeenMuokkaus.komponentinLisays.lisaaArvosanat(lomakkeenId)
           })
         })
 
         it('Näyttää muokatun lomakkeen nimen', () => {
-          hakemuksenMuokkaus
+          lomakkeenMuokkaus
             .haeLomakkeenNimenSyote()
             .should('have.value', 'Testilomake')
         })
 
-        describe.skip('Hakemuspalvelun hakijan näkymään siirtyminen', () => {
+        describe.skip('Hakijan näkymään siirtyminen', () => {
           before(() => {
             cy.avaaLomakeHakijanNakymassa(lomakkeenAvain)
           })
-          it('Lataa hakemuspalvelun hakijanäkymän', () => {
-            hakijanNakyma.haeHakemuksenNimi().should('have.text', 'Testilomake')
+          it('Lataa hakijan näkymän', () => {
+            hakijanNakyma.haeLomakkeenNimi().should('have.text', 'Testilomake')
           })
         })
       })
