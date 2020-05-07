@@ -6,7 +6,7 @@
 ; in the future and already do to some extent.
 
 (ns ataru.hakija.hakija-readonly
-  (:require [clojure.string :refer [trim]]
+  (:require [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
@@ -25,7 +25,7 @@
 
 (defn- split-if-string [s]
   (if (string? s)
-    (clojure.string/split s #"\s*,\s*")
+    (string/split s #"\s*,\s*")
     s))
 
 (defn- visible? [ui field-descriptor]
@@ -255,7 +255,7 @@
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
     (-> lang
-        clojure.string/lower-case
+        string/lower-case
         keyword)))
 
 (defn readonly-fields [form application]
