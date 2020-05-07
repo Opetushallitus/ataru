@@ -16,7 +16,7 @@ export const lisaaLomake = () => {
     lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
       response
     ),
-    formId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
+    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
       response
     ),
   }))
@@ -25,10 +25,13 @@ export const lisaaLomake = () => {
 export const haeLomakkeenNimenSyote = () =>
   cy.get('[data-test-id=form-name-input]:visible')
 
-export const asetaLomakkeenNimi = (name: string, formId: number) =>
+export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
   odota.odotaHttpPyyntoa(
     () =>
-      cy.route('PUT', reitit.virkailija.haeLomakkeenMuuttamisenOsoite(formId)),
+      cy.route(
+        'PUT',
+        reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
+      ),
     () =>
       haeLomakkeenNimenSyote()
         .clear()

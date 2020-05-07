@@ -24,7 +24,7 @@ describe('Hakemuksen luonti', () => {
       before(() => {
         hakemuksenMuokkaus.lisaaLomake().then((lomake) => {
           lomakkeenAvain = unsafeFoldOption(lomake.lomakkeenAvain)
-          lomakkeenId = unsafeFoldOption(lomake.formId)
+          lomakkeenId = unsafeFoldOption(lomake.lomakkeenId)
         })
       })
 
