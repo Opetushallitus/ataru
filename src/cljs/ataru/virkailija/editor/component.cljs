@@ -249,16 +249,18 @@
      {:disabled true}
      @(subscribe [:editor/virkailija-translation :copy-element])]))
 
-(defn- remove-component-button [path]
+(defn- remove-component-button [path & {:keys [data-test-id]}]
   (case @(subscribe [:editor/component-button-state path :remove])
     :enabled
     [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/start-remove-component path])}
+     {:on-click #(dispatch [:editor/start-remove-component path])
+      :data-test-id data-test-id}
      @(subscribe [:editor/virkailija-translation :remove])]
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__component-button.editor-form__component-button--confirm
-      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))}
+      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))
+       :data-test-id (some-> data-test-id (str "-confirm"))}
       @(subscribe [:editor/virkailija-translation :confirm-delete])]
      [:button.editor-form__component-button
       {:on-click #(dispatch [:editor/cancel-remove-component path])}
@@ -330,7 +332,7 @@
      (when can-copy?
        [copy-component-button path])
      (when can-remove?
-       [remove-component-button path])]))
+       [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
 (defn- fold-transition
   [component folded? state height]

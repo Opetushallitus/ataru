@@ -112,7 +112,7 @@ describe('Hakemuksen luonti', () => {
             )
         })
 
-        it.only('Näyttää arvosanat -osion', () => {
+        it('Näyttää arvosanat -osion', () => {
           cy.get('@component-toolbar-arvosanat-text').then((arvosanatTeksti) =>
             expect(arvosanatTeksti).to.equal('Arvosanat (peruskoulu)')
           )
@@ -122,6 +122,21 @@ describe('Hakemuksen luonti', () => {
           hakemuksenMuokkaus.arvosanat
             .haeOsionNimi()
             .should('have.text', 'Arvosanat (peruskoulu)')
+          hakemuksenMuokkaus.arvosanat.haePoistaOsioNappi().should('be.enabled')
+        })
+
+        describe('Arvosanat -osion poistaminen', () => {
+          before(() => {
+            hakemuksenMuokkaus.arvosanat.poistaArvosanat(lomakkeenId)
+          })
+
+          it('Poistaa arvosanat -osion lomakkeelta', () => {
+            hakemuksenMuokkaus.arvosanat.haeOsionNimi().should('not.exist')
+          })
+
+          after(() => {
+            hakemuksenMuokkaus.komponentinLisays.lisaaArvosanat(lomakkeenId)
+          })
         })
 
         it('Näyttää muokatun lomakkeen nimen', () => {
@@ -130,7 +145,7 @@ describe('Hakemuksen luonti', () => {
             .should('have.value', 'Testilomake')
         })
 
-        describe('Hakemuspalvelun hakijan näkymään siirtyminen', () => {
+        describe.skip('Hakemuspalvelun hakijan näkymään siirtyminen', () => {
           before(() => {
             cy.avaaLomakeHakijanNakymassa(lomakkeenAvain)
           })

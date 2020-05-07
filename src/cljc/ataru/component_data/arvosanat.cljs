@@ -1,14 +1,10 @@
 (ns ataru.component-data.arvosanat
   (:require [ataru.component-data.component :as component]
             [ataru.translations.texts :as texts]
-            [schema.core :as s]
-            [schema-tools.core :as st]))
-
-(s/defschema ArvosanatSpec
-  {:type (s/enum :peruskoulu)})
+            [schema.core :as s]))
 
 (s/defn arvosanat
-  [{:keys [type]} :- ArvosanatSpec
+  [{:keys [type]} :- {:type (s/enum :peruskoulu)}
    metadata]
   (let [id (case type
              :peruskoulu "arvosanat-peruskoulu")]

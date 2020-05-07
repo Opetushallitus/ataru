@@ -94,5 +94,31 @@ export const komponentinLisays = {
 }
 
 export const arvosanat = {
-  haeOsionNimi: () => cy.get('[data-test-id=arvosanat-moduuli-header-label]'),
+  haeOsionNimi: () =>
+    cy.get('[data-test-id=arvosanat-moduuli-header-label]:visible'),
+
+  haePoistaOsioNappi: () =>
+    cy.get(
+      '[data-test-id=arvosanat-moduuli-header-remove-component-button]:visible'
+    ),
+
+  haeVahvistaPoistaOsioNappi: () =>
+    cy.get(
+      '[data-test-id=arvosanat-moduuli-header-remove-component-button-confirm]:visible'
+    ),
+
+  poistaArvosanat: (lomakkeenId: number) =>
+    arvosanat
+      .haePoistaOsioNappi()
+      .click()
+      .then(() =>
+        odota.odotaHttpPyyntoa(
+          () =>
+            cy.route(
+              'PUT',
+              reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
+            ),
+          () => arvosanat.haeVahvistaPoistaOsioNappi().click()
+        )
+      ),
 }
