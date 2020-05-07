@@ -97,13 +97,14 @@
                                                     lang)
         selected-options (filter #(contains? values (:value %))
                                  (:options field-descriptor))
+        followups?       (some (comp not-empty :followups) selected-options)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [text-form-field-label id field-descriptor lang]
      [text-form-field-values id values]
-     (when-not (empty? selected-options)
+     (when followups?
       [text-form-field-nested-container selected-options lang application group-idx])]))
 
 (defn- attachment-item [file-key virus-scan-status virus-status-elem text]
