@@ -19,7 +19,8 @@
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
-   [reagent.ratom :refer-macros [reaction]]))
+   [reagent.ratom :refer-macros [reaction]]
+   [ataru.component-data.module.module-spec :as module-spec]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -996,47 +997,54 @@
          @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
-  (let [languages         (subscribe [:editor/languages])
+  (let [{:keys [foldable?
+                can-cut?
+                can-copy?
+                can-remove?
+                show-child-component-names?
+                has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
+        languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
-        component-locked? (subscribe [:editor/component-locked? path])
-        values            (set ["onr" "muu"])]
+        component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path]
-      [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
-        :foldable? false
-        :can-cut? true
-        :can-copy? false
-        :can-remove? false
-        :data-test-id (case (:module content)
-                        "person-info" "henkilotietomoduuli-header"
-                        "arvosanat-peruskoulu" "arvosanat-moduuli-header"
-                        nil)]
-       [:div.editor-form__component-content-wrapper
-        (when (= "person-info" (:module content))
-          [:div.editor-form__module-fields
-           [:select.editor-form__select
-            {:on-change    (fn [event]
-                             (let [version    (keyword (-> event .-target .-value))
-                                   new-module (pm/person-info-module version)]
-                               (dispatch-sync [:editor/set-component-value
-                                               new-module path])))
-             :disabled     @component-locked?
-             :value        (or (get values (:id content)) "onr")
-             :data-test-id "henkilotietomoduuli-select"}
-            (doall (for [opt values]
-                     [:option {:value opt
-                               :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]])
-        (when (= "person-info" (:module content))
-          [:div.editor-form__module-fields
-           [:span.editor-form__module-fields-label
-            @(subscribe [:editor/virkailija-translation :contains-fields])]
-           " "
-           [:span
-            {:data-test-id (case (:module content)
-                             "person-info" "henkilotietomoduuli-fields-label"
-                             nil)}
-            (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])]])))
+      (let [module-name         (-> content :module keyword)
+            data-test-id-prefix (case module-name
+                                  :person-info "henkilotietomoduuli"
+                                  :arvosanat-peruskoulu "arvosanat-moduuli"
+                                  nil)]
+        [:div.editor-form__component-wrapper
+         [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+          :foldable? foldable?
+          :can-cut? can-cut?
+          :can-copy? can-copy?
+          :can-remove? can-remove?
+          :show-child-component-names? show-child-component-names?
+          :data-test-id (some-> data-test-id-prefix (str "-header"))]
+         [:div.editor-form__component-content-wrapper
+          (when has-multiple-configurations?
+            (let [values (set ["onr" "muu"])]
+              [:div.editor-form__module-fields
+               [:select.editor-form__select
+                {:on-change    (fn [event]
+                                 (let [version    (keyword (-> event .-target .-value))
+                                       new-module (pm/person-info-module version)]
+                                   (dispatch-sync [:editor/set-component-value
+                                                   new-module path])))
+                 :disabled     @component-locked?
+                 :value        (or (get values (:id content)) "onr")
+                 :data-test-id (some-> data-test-id-prefix (str "-select"))}
+                (doall (for [opt values]
+                         [:option {:value opt
+                                   :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]]))
+          (when show-child-component-names?
+            [:div.editor-form__module-fields
+             [:span.editor-form__module-fields-label
+              @(subscribe [:editor/virkailija-translation :contains-fields])]
+             " "
+             [:span
+              {:data-test-id (some-> data-test-id-prefix (str "-fields-label"))}
+              (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])]]))))
 
 (defn info-element
   "Info text which is a standalone component"
