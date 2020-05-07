@@ -301,13 +301,11 @@
                                      :target-path "target/target-cypess-hakija"}
 
              :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :env         {:app "virkailija"}
                                     :jvm-opts    ^:replace ["-Dapp=virkailija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
 
              :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :env         {:app "hakija"}
                                     :jvm-opts    ^:replace ["-Dapp=hakija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]

@@ -1,7 +1,6 @@
 (ns ataru.core
   (:require [com.stuartsierra.component :as component]
             [clj-time.jdbc] ; for java.sql.Timestamp / org.joda.time.DateTime coercion
-            [ataru.util.app-utils :as app-utils]
             [ataru.timbre-config :as timbre-config]
             [ataru.log.audit-log :as audit-log]
             [ataru.virkailija.virkailija-system :as virkailija-system]
@@ -15,8 +14,8 @@
   []
   @(promise))
 
-(def ^:private app-systems {:virkailija virkailija-system/init-new-system
-                            :hakija hakija-system/init-new-system})
+(def ^:private app-systems {"ataru-editori" virkailija-system/init-new-system
+                            "ataru-hakija"  hakija-system/init-new-system})
 
 (def system (atom {:system nil
                    :system-fn nil}))
@@ -44,9 +43,9 @@
   (start))
 
 (defn -main [& args]
-  (let [app-id         (app-utils/get-app-id args)
+  (let [app-id         (:app env)
         init-system-fn (get app-systems app-id)]
-    (timbre-config/configure-logging! app-id)
+    (timbre-config/configure-logging!)
     (info "Starting application" app-id (if (:dev? env) "dev" ""))
     (when-not init-system-fn
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
