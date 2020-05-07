@@ -11,20 +11,17 @@
                                                                        get-value
                                                                        render-paragraphs
                                                                        replace-with-option-label
-                                                                       predefined-value-answer?
                                                                        scroll-to-anchor
                                                                        copy-link
                                                                        question-group-answer?
                                                                        answers->read-only-format]]
-            [ataru.feature-config :as fc]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
+            [clojure.set :as set]
+            [clojure.string :as string]
             [cljs.core.match :refer-macros [match]]
-            [clojure.string :refer [trim]]
-            [goog.string :as s]
-            [re-frame.core :refer [subscribe]]
-            [reagent.core :as r]))
+            [goog.string :as s]))
 
 (def exclude-always-included #(not (answer-to-always-include? %)))
 
@@ -37,12 +34,12 @@
                                      (filter #(contains? hakukohteet (:oid %)))
                                      (mapcat :hakukohderyhmat)
                                      set)]
-    (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set)
-                                         applied-hakukohderyhmat))))
+    (not-empty (set/intersection (-> field :belongs-to-hakukohderyhma set)
+                                 applied-hakukohderyhmat))))
 
 (defn- belongs-to-hakukohde? [field application]
-  (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
-                                       (set (:hakukohde application)))))
+  (not-empty (set/intersection (set (:belongs-to-hakukohteet field))
+                               (set (:hakukohde application)))))
 
 (defn- visible? [field-descriptor application]
   (and (not (get-in field-descriptor [:params :hidden] false))
@@ -86,7 +83,7 @@
             :else
             (render-paragraphs values))]]))
 
-(defn- attachment-item [file-key virus-scan-status virus-status-elem text are-you-sure? removing?]
+(defn- attachment-item [file-key virus-scan-status virus-status-elem text]
   [:div.application__virkailija-readonly-attachment-area
    (if (= virus-scan-status "done")
      [:a {:href (str "/lomake-editori/api/files/content/" file-key)}
@@ -136,7 +133,7 @@
          (for [child children]
            [field child application lang]))])
 
-(defn row-container [application lang children group-idx person-info-field?]
+(defn row-container [_ _ _ group-idx person-info-field?]
   (fn [application lang children]
     (into [:div] (for [child children]
                    [field child application lang group-idx person-info-field?]))))
@@ -341,7 +338,7 @@
            (required-hint field))]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
-       (clojure.string/join ", " values)]]]))
+       (string/join ", " values)]]]))
 
 (defn field
   [content application lang group-idx person-info-field?]

@@ -1,18 +1,16 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch dispatch-sync subscribe]]
-            [clojure.data :refer [diff]]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe]]
             [clojure.walk :as walk]
+            [clojure.string :as string]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
-            [ataru.number :refer [numeric-matcher lte gte]]
+            [ataru.number :refer [numeric-matcher gte]]
             [cljs.core.match :refer-macros [match]]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as pm]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-            [ataru.virkailija.dev.lomake :as dev]
-            [ataru.virkailija.editor.components.followup-question :as followup]
             [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
             [ataru.virkailija.routes :refer [set-history!]]
             [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
@@ -20,8 +18,7 @@
             [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff]
-            [cljs-time.core :as t])
+            [ataru.virkailija.editor.form-diff :as form-diff])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -191,7 +188,7 @@
         (update-modified-by path))))
 
 (defn- number-of-decimals [v]
-  (let [[_ decimals] (clojure.string/split v #",")]
+  (let [[_ decimals] (string/split v #",")]
     (count decimals)))
 
 (defn- format-range [value]
@@ -246,7 +243,6 @@
           min-range?     (= :min-value range)
           decimals       @(subscribe [:editor/get-component-value path :decimals])
           clean-value    (format-range value)
-          valid?         (valid-range? clean-value decimals)
           opposing-range (if min-range?
                            :max-value
                            :min-value)
@@ -488,7 +484,7 @@
 
 (reg-event-db
   :editor/unset-used-by-haut
-  (fn [db [_ haut]]
+  (fn [db _]
     (-> db
       (assoc-in [:editor :used-by-haut :fetching?] false)
       (assoc-in [:editor :used-by-haut :error?] true)
@@ -570,8 +566,9 @@
 (defn update-form-with-fragment [form fragments]
   (let [response-promise (async/promise-chan)]
     (put (str "/lomake-editori/api/forms/" (:id form)) fragments
-      (fn [db response] (do (async/put! response-promise response)
-                            db))
+      (fn [db response]
+        (async/put! response-promise response)
+        db)
       :override-args {:skip-parse-times? true
                       :error-handler (fn [error]
                                        (async/put! response-promise (js/Error. error)))})
@@ -594,13 +591,12 @@
                 (asyncm/<? (update-form-with-fragment form fragments))
                 (reset! last-saved-snapshot form)))
             (catch js/Error error
-              (do
-                (prn error)
-                (dispatch [:snackbar-message
-                           [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
-                                                                                    [:fi :sv :en]) "\"")
-                            "Lataa sivu uudelleen ja tarkista omat muutokset"]])
-                (dispatch-flasher-error-msg :post error))))))
+              (prn error)
+              (dispatch [:snackbar-message
+                         [(str "Toinen käyttäjä teki muutoksen lomakkeeseen \"" (some #(get-in form [:name %])
+                                                                                      [:fi :sv :en]) "\"")
+                          "Lataa sivu uudelleen ja tarkista omat muutokset"]])
+              (dispatch-flasher-error-msg :post error)))))
       (recur))))
 
 (save-loop save-chan)
@@ -843,7 +839,7 @@
 
 (reg-event-fx
   :editor/fetch-koodisto-for-component-with-id
-  (fn [{db :db} [_ id {:keys [uri version allow-invalid?]}]]
+  (fn [_ [_ id {:keys [uri version allow-invalid?]}]]
     {:http {:method              :get
             :path                (str "/lomake-editori/api/koodisto/" uri "/" version "?allow-invalid=" allow-invalid?)
             :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups

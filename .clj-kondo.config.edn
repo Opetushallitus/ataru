@@ -1,10 +1,12 @@
-{:linters {:unresolved-symbol   {:exclude [(compojure.api.sweet/context)
+{:linters {:not-empty?          {:level :off}
+           :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
                                            (clojure.java.jdbc/with-db-transaction)
                                            (clojure.java.jdbc/with-db-connection)
                                            (clojure.core.match/match)
                                            (cljs.core.match/match)
-                                           (ataru.db.flyway-migration/defmigration)]}
+                                           (ataru.db.flyway-migration/defmigration)
+                                           (ataru.virkailija.editor.editor-macros/with-form-key)]}
            :unused-namespace    {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map
                                                       apropos
@@ -17,4 +19,5 @@
                                                       print-doc
                                                       pst
                                                       source]}}
-           :invalid-arity {:skip-args [clojure.core.match/match]}}}
+           :invalid-arity       {:skip-args [clojure.core.match/match
+                                             cljs.core.match/match]}}}
