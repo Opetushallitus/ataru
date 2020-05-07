@@ -102,7 +102,8 @@
                                             "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
                                                            (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
                                             "done" nil
-                                            @(subscribe [:editor/virkailija-translation :error]))]
+                                            [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                             (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
                     [:div.application__virkailija-readonly-attachment
                      {:key component-key}
                      [attachment-item file-key virus-scan-status virus-status-elem text]]))
