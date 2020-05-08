@@ -4,7 +4,7 @@ import peruskoulunArvosanatOsionPoistaminen from '../testit/arvosanat/peruskoulu
 import peruskoulunArvosanatOsionLisays from '../testit/arvosanat/peruskoulunArvosanatOsionLisays'
 import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 
-describe('Peruskoulun arvosanat -osio', () => {
+describe.skip('Peruskoulun arvosanat -osio', () => {
   kirjautuminenVirkailijanNakymaan(() => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       peruskoulunArvosanatOsionLisays(lomakkeenTunnisteet, () => {
