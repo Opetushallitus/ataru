@@ -116,7 +116,7 @@ const clickElement = (selectFn, infoText) => {
       }
     },
     null,
-    infoText
+    infoText ? infoText : `clickElement: ${selectFn}`
   )
 }
 
