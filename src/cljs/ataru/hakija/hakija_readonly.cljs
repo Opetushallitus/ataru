@@ -19,6 +19,8 @@
                                                                        scroll-to-anchor]]
             [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]))
 
+(declare field)
+
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
 
@@ -33,6 +35,20 @@
            (some #(and (visible? ui %)
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
+
+(defn- text-child-fields [children application lang]        ; TODO: parametri question-group-id kuten child-fields
+  (for [child children]                                     ; TODO: visible? tarkastus kuten child-fields
+    ^{:key (str (:id child))}
+    [field child application lang]))
+
+(defn- text-nested-container [selected-options application lang]
+  [:div.application-handling__nested-container
+   (doall
+     (for [option selected-options]
+       ^{:key (:value option)}
+       [:div                                                ; TODO: visible? tarkastus kuten selectable:ssa?
+        (into [:div.application-handling__nested-container]
+              (text-child-fields (:followups option) application lang))]))])
 
 (defn- text-readonly-text [field-descriptor values]
   [:div.application__readonly-text
@@ -53,19 +69,23 @@
    (str (from-multi-lang (:label field-descriptor) lang)
         (required-hint field-descriptor))])
 
-(defn text [field-descriptor _ lang group-idx]
-  (let [id     (keyword (:id field-descriptor))
-        answer @(subscribe [:application/answer id])
-        values (cond-> (get-value answer group-idx)
-                       (contains? field-descriptor :koodisto-source)
-                       split-if-string
-                       (predefined-value-answer? field-descriptor)
-                       (replace-with-option-label (:options field-descriptor) lang))]
+(defn text [field-descriptor application lang group-idx]
+  (let [id               (keyword (:id field-descriptor))
+        answer           @(subscribe [:application/answer id])
+        values           (cond-> (get-value answer group-idx)
+                                 (contains? field-descriptor :koodisto-source)
+                                 split-if-string
+                                 (predefined-value-answer? field-descriptor)
+                                 (replace-with-option-label (:options field-descriptor) lang))
+        selected-options (filter #(contains? values (:value %)) (:options field-descriptor))
+        followups?       (some (comp not-empty :followups) selected-options)]
     [:div.application__form-field
      [text-form-field-label field-descriptor lang]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
-       [text-readonly-text field-descriptor values])]))
+       [text-readonly-text field-descriptor values])
+     (when followups?
+       [text-nested-container selected-options application lang])]))
 
 (defn- attachment-list [attachments]
   [:div
@@ -88,8 +108,6 @@
       (str (from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))]
      [attachment-list values]]))
-
-(declare field)
 
 (defn child-fields [children application lang ui question-group-id]
   (for [child children
