@@ -19,7 +19,8 @@
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
-   [reagent.ratom :refer-macros [reaction]]))
+   [reagent.ratom :refer-macros [reaction]]
+   [ataru.component-data.module.module-spec :as module-spec]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -248,16 +249,18 @@
      {:disabled true}
      @(subscribe [:editor/virkailija-translation :copy-element])]))
 
-(defn- remove-component-button [path]
+(defn- remove-component-button [path & {:keys [data-test-id]}]
   (case @(subscribe [:editor/component-button-state path :remove])
     :enabled
     [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/start-remove-component path])}
+     {:on-click #(dispatch [:editor/start-remove-component path])
+      :data-test-id data-test-id}
      @(subscribe [:editor/virkailija-translation :remove])]
     :confirm
     [:div.editor-form__component-button-group
      [:button.editor-form__component-button.editor-form__component-button--confirm
-      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))}
+      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))
+       :data-test-id (some-> data-test-id (str "-confirm"))}
       @(subscribe [:editor/virkailija-translation :confirm-delete])]
      [:button.editor-form__component-button
       {:on-click #(dispatch [:editor/cancel-remove-component path])}
@@ -329,7 +332,7 @@
      (when can-copy?
        [copy-component-button path])
      (when can-remove?
-       [remove-component-button path])]))
+       [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
 (defn- fold-transition
   [component folded? state height]
@@ -996,44 +999,54 @@
          @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
-  (let [languages         (subscribe [:editor/languages])
+  (let [{:keys [foldable?
+                can-cut?
+                can-copy?
+                can-remove?
+                show-child-component-names?
+                has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
+        languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
-        component-locked? (subscribe [:editor/component-locked? path])
-        values            (set ["onr" "muu"])]
+        component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path]
-      (let [person-info-module? (= "person-info" (name (:module content)))]
+      (let [module-name         (-> content :module keyword)
+            data-test-id-prefix (case module-name
+                                  :person-info "henkilotietomoduuli"
+                                  :arvosanat-peruskoulu "arvosanat-moduuli"
+                                  nil)]
         [:div.editor-form__component-wrapper
          [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
-          :foldable? false
-          :can-cut? true
-          :can-copy? false
-          :can-remove? false
-          :data-test-id (when person-info-module?
-                          "henkilotietomoduuli-header")]
+          :foldable? foldable?
+          :can-cut? can-cut?
+          :can-copy? can-copy?
+          :can-remove? can-remove?
+          :show-child-component-names? show-child-component-names?
+          :data-test-id (some-> data-test-id-prefix (str "-header"))]
          [:div.editor-form__component-content-wrapper
-          (when person-info-module?
+          (when has-multiple-configurations?
+            (let [values (set ["onr" "muu"])]
+              [:div.editor-form__module-fields
+               [:select.editor-form__select
+                {:on-change    (fn [event]
+                                 (let [version    (keyword (-> event .-target .-value))
+                                       new-module (pm/person-info-module version)]
+                                   (dispatch-sync [:editor/set-component-value
+                                                   new-module path])))
+                 :disabled     @component-locked?
+                 :value        (or (get values (:id content)) "onr")
+                 :data-test-id (some-> data-test-id-prefix (str "-select"))}
+                (doall (for [opt values]
+                         [:option {:value opt
+                                   :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]]))
+          (when show-child-component-names?
             [:div.editor-form__module-fields
-             [:select.editor-form__select
-              {:on-change    (fn [event]
-                               (let [version    (keyword (-> event .-target .-value))
-                                     new-module (pm/person-info-module version)]
-                                 (dispatch-sync [:editor/set-component-value
-                                                 new-module path])))
-               :disabled     @component-locked?
-               :value        (or (get values (:id content)) "onr")
-               :data-test-id "henkilotietomoduuli-select"}
-              (doall (for [opt values]
-                       [:option {:value opt
-                                 :key   opt} @(subscribe [:editor/virkailija-translation (keyword (str "person-info-module-" opt))])]))]])
-          [:div.editor-form__module-fields
-           [:span.editor-form__module-fields-label
-            @(subscribe [:editor/virkailija-translation :contains-fields])]
-           " "
-           [:span
-            {:data-test-id (when person-info-module?
-                             "henkilotietomoduuli-fields-label")}
-            (clojure.string/join ", " (get-leaf-component-labels @value :fi))]]]]))))
+             [:span.editor-form__module-fields-label
+              @(subscribe [:editor/virkailija-translation :contains-fields])]
+             " "
+             [:span
+              {:data-test-id (some-> data-test-id-prefix (str "-fields-label"))}
+              (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])]]))))
 
 (defn info-element
   "Info text which is a standalone component"

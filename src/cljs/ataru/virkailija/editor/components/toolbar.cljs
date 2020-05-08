@@ -4,7 +4,8 @@
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
             [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [ataru.component-data.arvosanat :as arvosanat]))
 
 (def ^:private toolbar-elements
   [[:form-section component/form-section]
@@ -29,7 +30,9 @@
    [:kk-base-education-module kk-base-education-module/module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
-   [:lupatiedot component/lupatiedot]])
+   [:lupatiedot component/lupatiedot]
+   ;[:arvosanat arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
+   ])
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -75,7 +78,7 @@
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
           pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
       (into [:ul.form__add-component-toolbar--list]
-            (for [[component-name generate-fn] elements
+            (for [[component-name generate-fn {:keys [data-test-id]}] elements
                   :when (and (not (and (vector? path)
                                        (= :children (second path))
                                        (= :form-section component-name)))
@@ -86,7 +89,8 @@
               [:li.form__add-component-toolbar--list-item
                [:a {:on-click (fn [evt]
                                 (.preventDefault evt)
-                                (generator generate-fn))}
+                                (generator generate-fn))
+                    :data-test-id data-test-id}
                 @(subscribe [:editor/virkailija-translation component-name])]])))))
 
 
@@ -97,7 +101,8 @@
       [:div.editor-form__add-component-toolbar
        {:class          (when @form-locked? "disabled")
         :on-mouse-enter #(reset! mouse-over? true)
-        :on-mouse-leave #(reset! mouse-over? false)}
+        :on-mouse-leave #(reset! mouse-over? false)
+        :data-test-id   "component-toolbar"}
        (cond @form-locked?
              [:div.plus-component.plus-component--disabled [:span "+"]]
              @mouse-over?

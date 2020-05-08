@@ -71,3 +71,54 @@ export const henkilotiedot = {
           .select(kenttienKuvaus)
     ),
 }
+
+export const komponentinLisays = {
+  hover: () =>
+    cy.get('[data-test-id=component-toolbar]:visible').trigger('mouseover'),
+
+  haeLisaaArvosanatLinkki: () =>
+    cy.get('[data-test-id=component-toolbar-arvosanat]:visible'),
+
+  lisaaArvosanat: (formId: number) =>
+    odota.odotaHttpPyyntoa(
+      () =>
+        cy.route(
+          'PUT',
+          reitit.virkailija.haeLomakkeenMuuttamisenOsoite(formId)
+        ),
+      () => {
+        komponentinLisays.hover()
+        return komponentinLisays.haeLisaaArvosanatLinkki().click()
+      }
+    ),
+}
+
+export const arvosanat = {
+  haeOsionNimi: () =>
+    cy.get('[data-test-id=arvosanat-moduuli-header-label]:visible'),
+
+  haePoistaOsioNappi: () =>
+    cy.get(
+      '[data-test-id=arvosanat-moduuli-header-remove-component-button]:visible'
+    ),
+
+  haeVahvistaPoistaOsioNappi: () =>
+    cy.get(
+      '[data-test-id=arvosanat-moduuli-header-remove-component-button-confirm]:visible'
+    ),
+
+  poistaArvosanat: (lomakkeenId: number) =>
+    arvosanat
+      .haePoistaOsioNappi()
+      .click()
+      .then(() =>
+        odota.odotaHttpPyyntoa(
+          () =>
+            cy.route(
+              'PUT',
+              reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
+            ),
+          () => arvosanat.haeVahvistaPoistaOsioNappi().click()
+        )
+      ),
+}

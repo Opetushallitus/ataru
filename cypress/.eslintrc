@@ -21,6 +21,7 @@
       "error"
     ],
     "import/extensions": "off",
+    "import/no-extraneous-dependencies": "off",
     "import/prefer-default-export": "off",
     "array-callback-return": "off",
     "prefer-arrow/prefer-arrow-functions": "error",
