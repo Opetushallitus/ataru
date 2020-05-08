@@ -107,6 +107,11 @@ export const arvosanat = {
       '[data-test-id=arvosanat-moduuli-header-remove-component-button-confirm]:visible'
     ),
 
+  haeLeikkaaOsioNappi: () =>
+    cy.get(
+      '[data-test-id=arvosanat-moduuli-header-cut-component-button]:visible'
+    ),
+
   poistaArvosanat: (lomakkeenId: number) =>
     arvosanat
       .haePoistaOsioNappi()

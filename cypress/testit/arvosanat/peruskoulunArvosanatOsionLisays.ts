@@ -25,6 +25,7 @@ export default (
         .haeOsionNimi()
         .should('have.text', 'Arvosanat (peruskoulu)')
       lomakkeenMuokkaus.arvosanat.haePoistaOsioNappi().should('be.enabled')
+      lomakkeenMuokkaus.arvosanat.haeLeikkaaOsioNappi().should('be.enabled')
     })
 
     testit()

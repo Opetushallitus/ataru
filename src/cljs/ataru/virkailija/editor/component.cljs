@@ -210,11 +210,12 @@
   [event]
   (.preventDefault event))
 
-(defn- cut-component-button [path]
+(defn- cut-component-button [path & {:keys [data-test-id]}]
   (case @(subscribe [:editor/component-button-state path :cut])
     :enabled
     [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/copy-component path true])}
+     {:on-click #(dispatch [:editor/copy-component path true])
+      :data-test-id data-test-id}
      @(subscribe [:editor/virkailija-translation :cut-element])]
     :active
     [:button.editor-form__component-button
@@ -319,11 +320,15 @@
      (when metadata
        [header-metadata path metadata])
      (when can-cut?
-       [cut-component-button path])
+       [cut-component-button
+        path
+        :data-test-id (some-> data-test-id (str "-cut-component-button"))])
      (when can-copy?
        [copy-component-button path])
      (when can-remove?
-       [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
+       [remove-component-button
+        path
+        :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
 (defn- component-fold-transition
   [component folded? state height]
