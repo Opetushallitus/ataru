@@ -484,9 +484,6 @@
        ^{:key (:id followup)}
        [render-field followup nil])]))
 
-(defn- non-blank-option-label [option langs]
-  (util/non-blank-val (:label option) langs))
-
 (defn dropdown [field-descriptor idx render-field]
   (let [languages (subscribe [:application/default-languages])
         id        (answer-key field-descriptor)
@@ -529,11 +526,11 @@
              (fn [option]
                [:option {:value (:value option)
                          :key   (:value option)}
-                (non-blank-option-label option @languages)])
+                (util/non-blank-option-label option @languages)])
              (cond->> options
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
-                      (sort-by #(non-blank-option-label % @languages))))))]]
+                      (sort-by #(util/non-blank-option-label % @languages))))))]]
      (when-not idx
        (dropdown-followups field-descriptor (:value answer) render-field))]))
 
@@ -548,7 +545,7 @@
 
 (defn- multiple-choice-option [field-descriptor option _ _]
   (let [languages    (subscribe [:application/default-languages])
-        label        (non-blank-option-label option @languages)
+        label        (util/non-blank-option-label option @languages)
         value        (:value option)
         option-id    (util/component-id)
         cannot-edit? (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])]
@@ -598,7 +595,7 @@
                        (cond->> (:options field-descriptor)
                                 (and (some? (:koodisto-source field-descriptor))
                                      (not (:koodisto-ordered-by-user field-descriptor)))
-                                (sort-by #(non-blank-option-label % @languages)))))]])))
+                                (sort-by #(util/non-blank-option-label % @languages)))))]])))
 
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages _ _]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])

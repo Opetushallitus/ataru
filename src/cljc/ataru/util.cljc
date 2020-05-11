@@ -305,3 +305,6 @@
   (let [acc (reduce collect-ids acc (mapcat :followups options))
         acc (reduce collect-ids acc children)]
     (conj acc id)))
+
+(defn non-blank-option-label [option langs]
+  (non-blank-val (:label option) langs))
