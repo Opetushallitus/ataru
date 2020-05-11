@@ -16,7 +16,8 @@
             [reagent.core :as r]
             [clojure.string :as string]
             [ataru.translations.translation-util :as tu]
-            [ataru.feature-config :as fc]))
+            [ataru.feature-config :as fc]
+            [ataru.hakija.components.label-component :as label-component]))
 
 (defonce autocomplete-off "new-password")
 
@@ -245,7 +246,7 @@
                            (->textual-field-change field-descriptor))
             on-blur      (fn [_] (textual-field-blur field-descriptor idx value))]
         [:div.application__form-field
-         [label field-descriptor]
+         [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
@@ -354,7 +355,7 @@
         cannot-edit? @(subscribe [:application/cannot-edit? id])
         answer-count @(subscribe [:application/repeatable-answer-count id idx])]
     [:div.application__form-field
-     [label field-descriptor]
+     [label-component/label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -398,7 +399,7 @@
                            (->multi-value-field-change field-descriptor 0 idx)
                            (->textual-field-change field-descriptor))]
         [:div.application__form-field
-         [label field-descriptor]
+         [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
@@ -532,7 +533,7 @@
                                idx]))
         options   @(subscribe [:application/visible-options field-descriptor])]
     [:div.application__form-field
-     [label field-descriptor]
+     [label-component/label field-descriptor]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -615,7 +616,7 @@
         languages (subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
       [:div.application__form-field
-       [label field-descriptor]
+       [label-component/label field-descriptor]
        (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
          [question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
@@ -702,7 +703,7 @@
                            (map :followups)
                            (first))]
         [:div.application__form-field.application__form-single-choice-button-container
-         [label field-descriptor]
+         [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
@@ -906,7 +907,7 @@
     (fn [{:keys [id] :as field-descriptor} question-group-idx]
       (let [attachment-count (reaction (count @(subscribe [:state-query [:application :answers (keyword id) :values question-group-idx]])))]
         [:div.application__form-field
-         [label field-descriptor]
+         [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
          (when-not (string/blank? @text)
@@ -987,7 +988,7 @@
                                          question-group-idx]))
             lang            @(subscribe [:application/form-language])]
         [:div.application__form-field
-         [label field-descriptor]
+         [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [question-hakukohde-names field-descriptor])
          [info-text field-descriptor]
@@ -1002,7 +1003,7 @@
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
-                                          [label child]]
+                                          [label-component/label child]]
                                          [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
