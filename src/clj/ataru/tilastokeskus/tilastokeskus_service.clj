@@ -31,7 +31,6 @@
   (let [applications (application-store/get-application-info-for-tilastokeskus haku-oid hakukohde-oid)
         haut         (->> (keep :haku_oid applications)
                           distinct
-                          (fn [hs] (log/info (str "haku-oids for applications in haku " haku-oid " hakukohde " hakukohde-oid)) hs)
                           (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                           (into {}))
         results      (map (fn [application]
