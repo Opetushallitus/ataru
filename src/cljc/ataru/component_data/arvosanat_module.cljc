@@ -132,7 +132,9 @@
      :label            (:arvosana-kotitalous texts/virkailija-texts)}))
 
 (s/defn arvosanat-taulukko :- ArvosanatTaulukko
-  [{:keys [metadata children]}]
+  [{:keys [metadata
+           children]} :- {:metadata element-metadata-schema/ElementMetadata
+                          :children [OppiaineenArvosana]}]
   {:id         (util/component-id)
    :fieldClass "wrapperElement"
    :fieldType  "arvosanat-taulukko"
