@@ -8,7 +8,8 @@
               required-hint
               scroll-to-anchor
               is-required-field?
-              markdown-paragraph]]
+              markdown-paragraph
+              id-for-label]]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
@@ -66,15 +67,6 @@
                             value
                             data-idx
                             question-group-idx]))))))
-
-(def field-types-supporting-label-for
-  "These field types can use the <label for=..> syntax, others will use aria-labelled-by"
-  #{"textField" "textArea" "dropdown"})
-
-(defn- id-for-label
-  [field-descriptor]
-  (when-not (contains? field-types-supporting-label-for (:fieldType field-descriptor))
-    (str "application-form-field-label-" (:id field-descriptor))))
 
 (defn- label [field-descriptor]
   (let [languages  (subscribe [:application/default-languages])
