@@ -92,7 +92,7 @@
          (.addEventListener js/window "resize" @listener))
 
        :component-will-unmount
-       (fn [component]
+       (fn [_]
          (.removeEventListener js/window "resize" @listener))
 
        :component-did-update
@@ -151,21 +151,6 @@
   (if (is-required-field? field-descriptor)
     " *"
     ""))
-
-(defn- get-koodi [field-descriptor koodi-uri]
-  (->> (:options field-descriptor)
-       (filter (fn [koodi]
-                 (= (:value koodi) koodi-uri)))
-       first))
-
-(defn- value-or-koodi-uri->label [field-descriptor lang value-or-koodi-uri]
-  (if-let [koodi (get-koodi field-descriptor value-or-koodi-uri)]
-    (get-in koodi [:label lang])
-    value-or-koodi-uri))
-
-(defn- wrap-value [value]
-  ^{:key value}
-  [:li value])
 
 (defn get-value [answer group-idx]
   (if-let [value (:value answer)]
