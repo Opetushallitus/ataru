@@ -19,7 +19,8 @@
             [ataru.translations.translation-util :as tu]
             [ataru.feature-config :as fc]
             [ataru.hakija.components.label-component :as label-component]
-            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]))
+            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
+            [ataru.hakija.components.info-text-component :as info-text-component]))
 
 (defonce autocomplete-off "new-password")
 
@@ -93,13 +94,6 @@
       (not (string/blank? value))
       (seq value))
     (not (contains? validators-processing (keyword (:id field-descriptor))))))
-
-(defn info-text []
-  (let [languages              (subscribe [:application/default-languages])
-        application-identifier (subscribe [:application/application-identifier])]
-    (fn [field-descriptor]
-      (when-let [info (util/non-blank-val (-> field-descriptor :params :info-text :label) @languages)]
-        [markdown-paragraph info (-> field-descriptor :params :info-text-collapse) @application-identifier]))))
 
 (defn- validation-error
   [errors]
@@ -222,7 +216,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
+          [info-text-component/info-text field-descriptor]]
          [:input.application__form-text-input
           (merge {:id           id
                   :type         "text"
@@ -331,7 +325,7 @@
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
-      [info-text field-descriptor]]
+      [info-text-component/info-text field-descriptor]]
      (doall
        (map (fn [repeatable-idx]
               ^{:key (str id "-" repeatable-idx)}
@@ -375,7 +369,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
-          [info-text field-descriptor]]
+          [info-text-component/info-text field-descriptor]]
          [:textarea.application__form-text-input.application__form-text-area
           (merge {:id           id
                   :class        size-class
@@ -509,7 +503,7 @@
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
-      [info-text field-descriptor]]
+      [info-text-component/info-text field-descriptor]]
      [:div.application__form-select-wrapper
       (if disabled?
         [:span.application__form-select-arrow.application__form-select-arrow__disabled
@@ -592,7 +586,7 @@
        (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
          [hakukohde-names-component/question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
-        [info-text field-descriptor]]
+        [info-text-component/info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (id-for-label field-descriptor)
          :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
@@ -679,7 +673,7 @@
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
-          [info-text field-descriptor]]
+          [info-text-component/info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (id-for-label field-descriptor)
            :aria-invalid    (not (:valid answer))
@@ -963,7 +957,7 @@
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
-         [info-text field-descriptor]
+         [info-text-component/info-text field-descriptor]
          [:div
           (->> (range @row-amount)
                (map (fn adjacent-text-fields-row [row-idx]
