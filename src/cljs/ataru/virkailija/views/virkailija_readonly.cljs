@@ -101,6 +101,8 @@
                                                            (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
                                             "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
                                                            (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
+                                            "failed"      [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-scan-failed]))]
                                             "done" nil
                                             [:span.application__virkailija-readonly-attachment-virus-status-failed
                                              (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
