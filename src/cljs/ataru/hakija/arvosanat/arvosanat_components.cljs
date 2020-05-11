@@ -15,7 +15,7 @@
      [:span.arvosana__lisaa-valinnaisaine "Valinnaisaine"]
      (map (fn [arvosana-data]
             (let [label          (-> arvosana-data :label lang)
-                  arvosana-koodi (:fieldType arvosana-data)
+                  arvosana-koodi (:id arvosana-data)
                   key            (str "arvosana-" arvosana-koodi)]
               ^{:key key}
               [arvosana {:label label}]))

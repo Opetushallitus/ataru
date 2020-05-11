@@ -26,8 +26,9 @@
           "KO"))
 
 (s/defschema OppiaineenArvosana
-  {:fieldClass (s/eq "oppiaineenArvosana")
-   :fieldType  OppiaineenKoodi
+  {:fieldClass (s/eq "wrapperElement")
+   :fieldType  (s/eq "oppiaineenArvosana")
+   :id         OppiaineenKoodi
    :label      localized-schema/LocalizedString})
 
 (s/defschema ArvosanatTaulukko
@@ -42,8 +43,9 @@
   [{:keys [oppiaineen-koodi
            label]} :- {:oppiaine OppiaineenKoodi
                        :label    localized-schema/LocalizedString}]
-  {:fieldClass "oppiaineenArvosana"
-   :fieldType  oppiaineen-koodi
+  {:fieldClass "wrapperElement"
+   :fieldType  "oppiaineenArvosana"
+   :id         oppiaineen-koodi
    :label      label})
 
 (def ^:private arvosana-aidinkieli-ja-kirjallisuus
