@@ -42,11 +42,11 @@
     [field child application lang]))
 
 (defn- text-nested-container [selected-options application lang]
-  [:div.application-handling__nested-container
+  [:div.application-handling__nested-container.application-handling__nested-container--top-level
    (doall
      (for [option selected-options]
        ^{:key (:value option)}
-       [:div                                                ; TODO: visible? tarkastus kuten selectable:ssa?
+       [:div.application-handling__nested-container-option  ; TODO: visible? tarkastus kuten selectable:ssa?
         (into [:div.application-handling__nested-container]
               (text-child-fields (:followups option) application lang))]))])
 
