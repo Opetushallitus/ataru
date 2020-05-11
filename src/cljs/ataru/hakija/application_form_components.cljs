@@ -475,7 +475,7 @@
      ^{:key (:id child)}
      [render-field child nil])])
 
-(defn- dropdown-followups [field-descriptor value]
+(defn- dropdown-followups [field-descriptor value render-field]
   (when-let [followups (seq (util/resolve-followups
                               (:options field-descriptor)
                               value))]
@@ -487,7 +487,7 @@
 (defn- non-blank-option-label [option langs]
   (util/non-blank-val (:label option) langs))
 
-(defn dropdown [field-descriptor idx]
+(defn dropdown [field-descriptor idx render-field]
   (let [languages (subscribe [:application/default-languages])
         id        (answer-key field-descriptor)
         disabled? @(subscribe [:application/cannot-edit? id])
@@ -535,7 +535,7 @@
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(non-blank-option-label % @languages))))))]]
      (when-not idx
-       (dropdown-followups field-descriptor (:value answer)))]))
+       (dropdown-followups field-descriptor (:value answer) render-field))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
@@ -1002,7 +1002,7 @@
                {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
                {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor idx]
                {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
-               {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor idx]
+               {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor idx render-field]
                {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
                {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
                {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
