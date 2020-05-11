@@ -1,21 +1,10 @@
 (ns ataru.component-data.arvosanat-module
   (:require [ataru.component-data.component :as component]
+            [ataru.schema.element-metadata-schema :as element-metadata-schema]
+            [ataru.schema.localized-schema :as localized-schema]
             [ataru.translations.texts :as texts]
             [ataru.util :as util]
             [schema.core :as s]))
-
-(s/defschema ElementMetadata
-  {:created-by              {:name s/Str
-                             :oid  s/Str
-                             :date s/Str}                   ; java.time.ZonedDateTime
-   :modified-by             {:name s/Str
-                             :oid  s/Str
-                             :date s/Str}
-   (s/optional-key :locked) s/Bool})
-
-(s/defschema LocalizedString {:fi                  s/Str
-                              (s/optional-key :sv) s/Str
-                              (s/optional-key :en) s/Str})
 
 (s/defschema OppiaineenKoodi
   (s/enum "A"))
@@ -23,20 +12,20 @@
 (s/defschema OppiaineenArvosana
   {:fieldClass (s/eq "oppiaineenArvosana")
    :fieldType  OppiaineenKoodi
-   :label      LocalizedString})
+   :label      localized-schema/LocalizedString})
 
 (s/defschema ArvosanatTaulukko
   {:id         s/Str
    :fieldClass (s/eq "wrapperElement")
    :fieldType  (s/eq "arvosanat-taulukko")
    :children   [OppiaineenArvosana]
-   :metadata   ElementMetadata})
+   :metadata   element-metadata-schema/ElementMetadata})
 
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
            label]} :- {:oppiaine OppiaineenKoodi
-                       :label    LocalizedString}]
+                       :label    localized-schema/LocalizedString}]
   {:fieldClass "oppiaineenArvosana"
    :fieldType  oppiaineen-koodi
    :label      label})

@@ -82,10 +82,10 @@
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
-                             :id                                      s/Str
-                             :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "arvosanat"])
-                             :children                                [(s/conditional #(= (:fieldType %) "arvosanat-taulukko")
+(s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
+                             :id                                         s/Str
+                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "arvosanat"])
+                             :children                                   [(s/conditional #(= (:fieldType %) "arvosanat-taulukko")
                                                                                       arvosanat/ArvosanatTaulukko
                                                                                       #(or (= "wrapperElement" (:fieldClass %))
                                                                                            (= "questionGroup" (:fieldClass %)))
