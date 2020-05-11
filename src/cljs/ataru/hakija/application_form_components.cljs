@@ -20,7 +20,8 @@
             [ataru.feature-config :as fc]
             [ataru.hakija.components.label-component :as label-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
-            [ataru.hakija.components.info-text-component :as info-text-component]))
+            [ataru.hakija.components.info-text-component :as info-text-component]
+            [ataru.hakija.components.dropdown-component :as dropdown-component]))
 
 (defonce autocomplete-off "new-password")
 
@@ -474,65 +475,6 @@
    (for [child (:children field-descriptor)]
      ^{:key (:id child)}
      [render-field child nil])])
-
-(defn- dropdown-followups [field-descriptor value render-field]
-  (when-let [followups (seq (util/resolve-followups
-                              (:options field-descriptor)
-                              value))]
-    [:div.application__form-dropdown-followups.animated.fadeIn
-     (for [followup followups]
-       ^{:key (:id followup)}
-       [render-field followup nil])]))
-
-(defn dropdown [field-descriptor idx render-field]
-  (let [languages (subscribe [:application/default-languages])
-        id        (answer-key field-descriptor)
-        disabled? @(subscribe [:application/cannot-edit? id])
-        answer    @(subscribe [:application/answer id idx nil])
-        on-change (fn [e]
-                    (dispatch [:application/dropdown-change
-                               field-descriptor
-                               (.-value (.-target e))
-                               idx]))
-        options   @(subscribe [:application/visible-options field-descriptor])]
-    [:div.application__form-field
-     [label-component/label field-descriptor]
-     (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-       [hakukohde-names-component/question-hakukohde-names field-descriptor])
-     [:div.application__form-text-input-info-text
-      [info-text-component/info-text field-descriptor]]
-     [:div.application__form-select-wrapper
-      (if disabled?
-        [:span.application__form-select-arrow.application__form-select-arrow__disabled
-         [:i.zmdi.zmdi-chevron-down]]
-        [:span.application__form-select-arrow
-         [:i.zmdi.zmdi-chevron-down]])
-      [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id           (:id field-descriptor)
-        :value        (or (:value answer) "")
-        :on-change    on-change
-        :disabled     disabled?
-        :required     (is-required-field? field-descriptor)
-        :aria-invalid (not (:valid answer))}
-       (doall
-         (concat
-           (when
-             (and
-               (nil? (:koodisto-source field-descriptor))
-               (not (:no-blank-option field-descriptor))
-               (not= "" (:value (first options))))
-             [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-           (map
-             (fn [option]
-               [:option {:value (:value option)
-                         :key   (:value option)}
-                (util/non-blank-option-label option @languages)])
-             (cond->> options
-                      (and (some? (:koodisto-source field-descriptor))
-                           (not (:koodisto-ordered-by-user field-descriptor)))
-                      (sort-by #(util/non-blank-option-label % @languages))))))]]
-     (when-not idx
-       (dropdown-followups field-descriptor (:value answer) render-field))]))
 
 (defn- multi-choice-followups [followups]
   [:div.application__form-multi-choice-followups-outer-container
@@ -999,7 +941,7 @@
                {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
                {:fieldClass "formField" :fieldType "textField" :id id} [text-field field-descriptor idx]
                {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
-               {:fieldClass "formField" :fieldType "dropdown"} [dropdown field-descriptor idx render-field]
+               {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
                {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
                {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
                {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
