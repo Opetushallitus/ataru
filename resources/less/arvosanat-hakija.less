@@ -1,0 +1,21 @@
+.arvosanat-taulukko {
+  display: grid;
+  grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-lisaa-valinnaisaine] 1fr [arvosana-rivi-end]');
+  grid-auto-rows: 1fr;
+}
+
+.arvosana__oppiaine {
+  grid-column-start: arvosana-oppiaine;
+}
+
+.arvosana__oppimaara {
+  grid-column-start: arvosana-oppimaara;
+}
+
+.arvosana__arvosana {
+  grid-column-start: arvosana-arvosana;
+}
+
+.arvosana__lisaa-valinnaisaine {
+  grid-column-start: arvosana-lisaa-valinnaisaine;
+}

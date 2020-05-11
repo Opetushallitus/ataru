@@ -719,9 +719,57 @@
   {:arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
-   :arvosanat-aidinkieli-ja-kirjallisuus            {:fi "Äidinkieli ja kirjallisuus"
+   :arvosana-aidinkieli-ja-kirjallisuus             {:fi "Äidinkieli ja kirjallisuus"
                                                      :sv "Äidinkieli ja kirjallisuus"
                                                      :en "Äidinkieli ja kirjallisuus"}
+   :arvosana-a1-kieli                               {:fi "A1-kieli"
+                                                     :sv "A1-kieli"
+                                                     :en "A1-kieli"}
+   :arvosana-b1-kieli                               {:fi "B1-kieli"
+                                                     :sv "B1-kieli"
+                                                     :en "B1-kieli"}
+   :arvosana-matematiikka                           {:fi "Matematiikka"
+                                                     :sv "Matematiikka"
+                                                     :en "Matematiikka"}
+   :arvosana-biologia                               {:fi "Biologia"
+                                                     :sv "Biologia"
+                                                     :en "Biologia"}
+   :arvosana-maantieto                              {:fi "Maantieto"
+                                                     :sv "Maantieto"
+                                                     :en "Maantieto"}
+   :arvosana-fysiikka                               {:fi "Fysiikka"
+                                                     :sv "Fysiikka"
+                                                     :en "Fysiikka"}
+   :arvosana-kemia                                  {:fi "Kemia"
+                                                     :sv "Kemia"
+                                                     :en "Kemia"}
+   :arvosana-terveystieto                           {:fi "Terveystieto"
+                                                     :sv "Terveystieto"
+                                                     :en "Terveystieto"}
+   :arvosana-uskonto-tai-elamankatsomustieto        {:fi "Uskonto tai elämänkatsomustieto"
+                                                     :sv "Uskonto tai elämänkatsomustieto"
+                                                     :en "Uskonto tai elämänkatsomustieto"}
+   :arvosana-historia                               {:fi "Historia"
+                                                     :sv "Historia"
+                                                     :en "Historia"}
+   :arvosana-yhteiskuntaoppi                        {:fi "Yhteiskuntaoppi"
+                                                     :sv "Yhteiskuntaoppi"
+                                                     :en "Yhteiskuntaoppi"}
+   :arvosana-musiikki                               {:fi "Musiikki"
+                                                     :sv "Musiikki"
+                                                     :en "Musiikki"}
+   :arvosana-kuvataide                              {:fi "Kuvataide"
+                                                     :sv "Kuvataide"
+                                                     :en "Kuvataide"}
+   :arvosana-kasityo                                {:fi "Käsityö"
+                                                     :sv "Käsityö"
+                                                     :en "Käsityö"}
+   :arvosana-liikunta                               {:fi "Liikunta"
+                                                     :sv "Liikunta"
+                                                     :en "Liikunta"}
+   :arvosana-kotitalous                             {:fi "Kotitalous"
+                                                     :sv "Kotitalous"
+                                                     :en "Kotitalous"}
    :arvosanat-info                                  {:fi "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
                                                      :sv "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
                                                      :en "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."}
