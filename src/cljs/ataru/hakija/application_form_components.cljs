@@ -9,7 +9,8 @@
               scroll-to-anchor
               is-required-field?
               markdown-paragraph
-              id-for-label]]
+              id-for-label
+              belongs-to-hakukohde-or-ryhma?]]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
@@ -124,10 +125,6 @@
                   (if @show-hakukohde-list? :hide-application-options :show-application-options)
                   lang)
                 " (" (count selected-hakukohteet-for-field) ")")]])))))
-
-(defn- belongs-to-hakukohde-or-ryhma? [field]
-  (seq (concat (:belongs-to-hakukohteet field)
-               (:belongs-to-hakukohderyhma field))))
 
 (defn- validation-error
   [errors]

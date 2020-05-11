@@ -254,3 +254,7 @@
   [field-descriptor]
   (when-not (contains? field-types-supporting-label-for (:fieldType field-descriptor))
     (str "application-form-field-label-" (:id field-descriptor))))
+
+(defn belongs-to-hakukohde-or-ryhma? [field]
+  (seq (concat (:belongs-to-hakukohteet field)
+               (:belongs-to-hakukohderyhma field))))
