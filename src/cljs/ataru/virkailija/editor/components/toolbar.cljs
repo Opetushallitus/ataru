@@ -5,7 +5,7 @@
             [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [ataru.component-data.arvosanat :as arvosanat]))
+            [ataru.component-data.arvosanat-module :as arvosanat]))
 
 (def ^:private toolbar-elements
   [[:form-section component/form-section]
