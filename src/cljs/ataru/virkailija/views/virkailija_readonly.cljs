@@ -53,11 +53,11 @@
            (some #(visible? % application) (:children field-descriptor)))))
 
 (defn- text-form-field-nested-container [selected-options lang application question-group-idx]
-  [:div.application-handling__nested-container
+  [:div.application-handling__nested-container--top-level
    (doall
      (for [option selected-options]
        ^{:key (:value option)}
-       [:div
+       [:div.application-handling__nested-container-option
         (when (some #(visible? % application) (:followups option))
           [:div.application-handling__nested-container
            (for [followup (:followups option)]
