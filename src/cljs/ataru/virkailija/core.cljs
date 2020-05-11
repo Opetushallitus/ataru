@@ -14,7 +14,8 @@
             [ataru.virkailija.editor.handlers]
             [ataru.application-common.fx :refer [http]] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.virkailija.views.banner :as banner]
-            [ataru.virkailija.application.view :as app-handling-view]))
+            [ataru.virkailija.application.view :as app-handling-view]
+            [ataru.schema-validation :as schema-validation]))
 
 (enable-console-print!)
 
@@ -54,6 +55,7 @@
     {:authenticate-to-valinta-tulos-service {}}))
 
 (defn ^:export init []
+  (schema-validation/enable-schema-fn-validation)
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
