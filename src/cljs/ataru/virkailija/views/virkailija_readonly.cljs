@@ -58,8 +58,6 @@
      (for [option selected-options]
        ^{:key (:value option)}
        [:div
-        [:p.application__text-field-paragraph
-         (from-multi-lang (:label option) lang)]
         (when (some #(visible? % application) (:followups option))
           [:div.application-handling__nested-container
            (for [followup (:followups option)]
