@@ -84,7 +84,7 @@
 
 (s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                         s/Str
-                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "arvosanat"])
+                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                                   [(s/conditional #(= (:fieldType %) "arvosanat-taulukko")
                                                                                       arvosanat/ArvosanatTaulukko
                                                                                       #(or (= "wrapperElement" (:fieldClass %))
