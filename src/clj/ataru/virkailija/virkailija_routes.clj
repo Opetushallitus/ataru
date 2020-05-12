@@ -28,6 +28,7 @@
             [ataru.middleware.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.schema.form-element-schema :as form-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util.client-error :as client-error]
@@ -211,7 +212,7 @@
       :summary "Return forms for editor view. Also used by external services.
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
-      :return {:forms [ataru-schema/Form]}
+      :return {:forms [form-schema/Form]}
       (ok (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service)))
 
 
@@ -372,7 +373,7 @@
                  :attachment-reviews           ataru-schema/AttachmentReviews
                  :hakukohde-reviews            ataru-schema/HakukohdeReviews
                  :form                         ataru-schema/FormWithContent
-                 (s/optional-key :latest-form) ataru-schema/Form
+                 (s/optional-key :latest-form) form-schema/Form
                  :information-requests         [ataru-schema/InformationRequest]
                  :selection-state-used?        s/Bool}
         (if-let [application (application-service/get-application-with-human-readable-koodis

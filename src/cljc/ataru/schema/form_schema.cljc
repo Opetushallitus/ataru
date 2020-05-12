@@ -3,6 +3,7 @@
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
+            [ataru.schema.form-element-schema :as form-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -33,20 +34,6 @@
 ;                                 Vvv'            VVv'
 (declare BasicElement)
 (declare WrapperElement)
-
-(s/defschema Form {(s/optional-key :id)                s/Int
-                   :name                               localized-schema/LocalizedStringOptional
-                   :content                            (s/pred empty?)
-                   (s/optional-key :locked)            #?(:clj  (s/maybe org.joda.time.DateTime)
-                                                          :cljs (s/maybe s/Str))
-                   (s/optional-key :locked-by)         (s/maybe s/Str)
-                   (s/optional-key :languages)         [s/Str]
-                   (s/optional-key :key)               s/Str
-                   (s/optional-key :created-by)        s/Str
-                   (s/optional-key :created-time)      #?(:clj org.joda.time.DateTime
-                                                          :cljs s/Str)
-                   (s/optional-key :application-count) s/Int
-                   (s/optional-key :deleted)           (s/maybe s/Bool)})
 
 (s/defschema InfoText {(s/optional-key :enabled?) s/Bool
                        (s/optional-key :value)    localized-schema/LocalizedStringOptional
@@ -190,7 +177,7 @@
    :limit-reached                [SelectionLimit]})
 
 (s/defschema FormWithContent
-  (merge Form
+  (merge form-schema/Form
          {:content                                       [Content]
           (s/optional-key :priorisoivat-hakukohderyhmat) [PriorisoivaHakukohderyhma]
           (s/optional-key :rajaavat-hakukohderyhmat)     [RajaavaHakukohderyhma]
