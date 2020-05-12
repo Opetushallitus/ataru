@@ -6,6 +6,7 @@
             [ataru.schema.form-element-schema :as form-schema]
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.schema.params-schema :as params-schema]
+            [ataru.schema.pohjakoulutus-ristiriita-schema :as pohjakoulutus-ristiriita-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -95,22 +96,11 @@
                           (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                           (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
-(s/defschema Pohjakoulutusristiriita
-  {:id                   s/Str
-   :fieldClass           (s/eq "pohjakoulutusristiriita")
-   :fieldType            (s/eq "pohjakoulutusristiriita")
-   :exclude-from-answers (s/eq true)
-   :metadata             element-metadata-schema/ElementMetadata
-   :params               {:deny-submit s/Bool}
-   :rules                {s/Keyword s/Any}
-   :label                localized-schema/LocalizedStringOptional
-   :text                 localized-schema/LocalizedStringOptional})
-
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) Button
-   #(= "pohjakoulutusristiriita" (:fieldClass %)) Pohjakoulutusristiriita
+   #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    :else InfoElement))
 
 (s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component :ssn-or-birthdate-component))
