@@ -3,9 +3,9 @@
             [ataru.application.field-types :refer [form-fields]]
             [ataru.hakija.application-validators :as validator]
             [ataru.user-rights :as user-rights]
+            [clojure.string :as string]
             [schema.coerce :as c]
             [schema.core :as s]
-            [schema.experimental.abstract-map :as abstract-map]
             [schema-tools.core :as st]))
 
 ;        __.,,------.._
@@ -732,7 +732,7 @@
 (s/defschema EmailTemplate {:lang           (s/enum "fi" "sv" "en")
                             :content        s/Str
                             :content-ending s/Str
-                            :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
+                            :subject        (s/constrained s/Str (comp not string/blank?))})
 
 (s/defschema Sort
   (s/conditional #(= "applicant-name" (:order-by %))
