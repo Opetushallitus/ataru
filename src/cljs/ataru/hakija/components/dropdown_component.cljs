@@ -4,6 +4,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.application-common.application-field-common :as application-field]
+            [ataru.application-common.components.dropdown-component :as dropdown-component]
             [re-frame.core :as re-frame]))
 
 (defn dropdown [field-descriptor idx render-field]
@@ -64,3 +65,18 @@
              (for [followup followups]
                ^{:key (:id followup)}
                [render-field followup idx])))]))
+
+(defn hakija-dropdown [{:keys [field-descriptor]}]
+  (let [lang             @(re-frame/subscribe [:application/form-language])
+        unselected-label (-> field-descriptor :unselected-label lang)
+        options          (map (fn [option]
+                                {:label (-> option :label lang)
+                                 :value (:value option)})
+                              (:options field-descriptor))]
+    [dropdown-component/dropdown
+     {:options          options
+      :unselected-label unselected-label
+      :on-change        (fn [event]
+                          (re-frame/dispatch [:application/dropdown-change
+                                              field-descriptor
+                                              (.. event -target -value)]))}]))

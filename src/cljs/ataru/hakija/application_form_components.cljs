@@ -877,37 +877,47 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- render-field-with-version [{:keys [field-descriptor]}]
+  (match field-descriptor
+         {:version    "accessible"
+          :fieldClass "formField"
+          :fieldType  "dropdown"}
+         [dropdown-component/hakija-dropdown {:field-descriptor field-descriptor}]))
+
 (defn render-field
   [field-descriptor idx]
-  (match field-descriptor
-    {:id         "email"
-     :fieldClass "formField"
-     :fieldType  "textField"} [email-field field-descriptor idx]
-    {:fieldClass "wrapperElement"
-     :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
-    {:fieldClass "questionGroup"
-     :fieldType  "fieldset"} [question-group field-descriptor idx]
-    {:fieldClass "wrapperElement"
-     :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
-    {:fieldClass "wrapperElement"
-     :fieldType  "arvosanat-taulukko"}
-    [arvosanat/arvosanat-taulukko {:field-descriptor field-descriptor
-                                   :render-field     render-field}]
-    {:fieldClass "wrapperElement"
-     :fieldType  "oppiaineenArvosana"}
-    [arvosanat/oppiaineen-arvosana {:field-descriptor field-descriptor
-                                    :render-field     render-field}]
-    {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
-    {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
-    {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
-    {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
-    {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
-    {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
-    {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
-    {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
-    {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
-    {:fieldClass "infoElement"} [info-element field-descriptor idx]
-    {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
+  (if (:version field-descriptor)
+    (render-field-with-version
+      {:field-descriptor field-descriptor})
+    (match field-descriptor
+           {:id         "email"
+            :fieldClass "formField"
+            :fieldType  "textField"} [email-field field-descriptor idx]
+           {:fieldClass "wrapperElement"
+            :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
+           {:fieldClass "questionGroup"
+            :fieldType  "fieldset"} [question-group field-descriptor idx]
+           {:fieldClass "wrapperElement"
+            :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+           {:fieldClass "wrapperElement"
+            :fieldType  "arvosanat-taulukko"}
+           [arvosanat/arvosanat-taulukko {:field-descriptor field-descriptor
+                                          :render-field     render-field}]
+           {:fieldClass "wrapperElement"
+            :fieldType  "oppiaineenArvosana"}
+           [arvosanat/oppiaineen-arvosana {:field-descriptor field-descriptor
+                                           :render-field     render-field}]
+           {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
+           {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
+           {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
+           {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
+           {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
+           {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
+           {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
+           {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
+           {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
+           {:fieldClass "infoElement"} [info-element field-descriptor idx]
+           {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx])))
 
 (defn editable-fields [_]
   (r/create-class

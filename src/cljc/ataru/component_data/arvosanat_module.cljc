@@ -55,8 +55,8 @@
   [{:keys [oppiaineen-koodi
            label
            second-column-component]} :- (st/open-schema
-                                          {:oppiaine OppiaineenKoodi
-                                           :label    localized-schema/LocalizedString})]
+                                          {:oppiaineen-koodi OppiaineenKoodi
+                                           :label            localized-schema/LocalizedString})]
   (cond-> {:fieldClass "wrapperElement"
            :fieldType  "oppiaineenArvosana"
            :id         oppiaineen-koodi
@@ -65,11 +65,11 @@
                                (some? second-column-component)
                                (conj second-column-component))}))
 
-(def ^:private arvosana-aidinkieli-ja-kirjallisuus
+(defn- arvosana-aidinkieli-ja-kirjallisuus [{:keys [metadata]}]
   (oppiaineen-arvosana
     {:oppiaineen-koodi        "A"
      :label                   (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
-     :second-column-component oppiaineen-oppimaara}))
+     :second-column-component (oppimaara-aidinkieli-ja-kirjallisuus {:metadata metadata})}))
 
 (def ^:private arvosana-a1-kieli
   (oppiaineen-arvosana
@@ -177,7 +177,7 @@
                          (:arvosanat-info texts/virkailija-texts))
                        (arvosanat-taulukko
                          {:metadata metadata
-                          :children [arvosana-aidinkieli-ja-kirjallisuus
+                          :children [(arvosana-aidinkieli-ja-kirjallisuus {:metadata metadata})
                                      arvosana-a1-kieli
                                      arvosana-b1-kieli
                                      arvosana-matematiikka

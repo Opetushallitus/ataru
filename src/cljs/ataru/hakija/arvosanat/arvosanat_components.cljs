@@ -2,12 +2,17 @@
   (:require [ataru.translations.translation-util :as translations]
             [re-frame.core :as re-frame]))
 
-(defn oppiaineen-arvosana [{:keys [field-descriptor]}]
-  (let [lang  @(re-frame/subscribe [:application/form-language])
-        label (-> field-descriptor :label lang)]
+(defn oppiaineen-arvosana [{:keys [field-descriptor
+                                   render-field]}]
+  (let [lang               @(re-frame/subscribe [:application/form-language])
+        label              (-> field-descriptor :label lang)
+        children           (:children field-descriptor)
+        oppimaara-dropdown (when (-> children seq)
+                             (first children))]
     [:<>
      [:span.arvosana__oppiaine (str label)]
-     [:span.arvosana__oppimaara (translations/get-hakija-translation :oppimäärä lang)]
+     (when oppimaara-dropdown
+       [render-field oppimaara-dropdown])
      [:span.arvosana__arvosana (translations/get-hakija-translation :arvosana lang)]
      [:span.arvosana__lisaa-valinnaisaine "+"]]))
 

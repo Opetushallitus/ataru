@@ -1,0 +1,15 @@
+@import "button-component";
+
+@mobile-width: 420px;
+
+@media only screen and (max-width: @mobile-width) {
+  .a-component {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: (@mobile-width + 1)) {
+  .a-native-component {
+    display: none;
+  }
+}

@@ -275,9 +275,15 @@
    :valinnaisaine                               {:fi "Valinnaisaine"
                                                  :sv "Valinnaisaine"
                                                  :en "Valinnaisaine"}
-   :oppimäärä                                   {:fi "Oppimäärä"
+   :oppimaara                                   {:fi "Oppimäärä"
                                                  :sv "Oppimäärä"
                                                  :en "Oppimäärä"}
+   :oppimaara-aidinkieli-ja-kirjallisuus        {:fi "Oppimäärä: äidinkieli ja kirjallisuus"
+                                                 :sv "Oppimäärä: äidinkieli ja kirjallisuus"
+                                                 :en "Oppimäärä: äidinkieli ja kirjallisuus"}
+   :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
+                                                 :sv "Suomi äidinkielenä"
+                                                 :en "Suomi äidinkielenä"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
