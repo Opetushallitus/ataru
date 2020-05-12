@@ -614,19 +614,9 @@
 (declare custom-answer-options)
 
 (defn text-field-options-wrapper
-  [initial-content languages value followups path question-group-element? show-followups component-locked?]
+  [initial-content languages value followups path question-group-element? show-followups _]
   [:div.editor-form__multi-options_wrapper
-   [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :options])]
-   [custom-answer-options languages (:options value) followups path question-group-element? true show-followups (:id initial-content)]
-   [:div.editor-form__add-dropdown-item
-    [:a
-     {:on-click (fn [evt]
-                  (when-not component-locked?
-                    (.preventDefault evt)
-                    (reset! show-followups nil)
-                    (dispatch [:editor/add-text-field-option path])))
-      :class    (when component-locked? "editor-form__add-dropdown-item--disabled")}
-     [:i.zmdi.zmdi-plus-square] (str " " @(subscribe [:editor/virkailija-translation :add]))]]])
+   [custom-answer-options languages (:options value) followups path question-group-element? true show-followups (:id initial-content)]])
 
 (defn- text-field-has-followups [_ _ _]
   (let [id                (util/new-uuid)]
