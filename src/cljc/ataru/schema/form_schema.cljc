@@ -5,6 +5,7 @@
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
+            [ataru.schema.params-schema :as params-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -36,38 +37,12 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema InfoText {(s/optional-key :enabled?) s/Bool
-                       (s/optional-key :value)    localized-schema/LocalizedStringOptional
-                       (s/optional-key :label)    (s/maybe localized-schema/LocalizedStringOptional)})
-
-(s/defschema Params {(s/optional-key :adjacent)                         s/Bool
-                     (s/optional-key :can-submit-multiple-applications) s/Bool
-                     (s/optional-key :deadline)                         (s/maybe s/Str)
-                     (s/optional-key :deadline-label)                   localized-schema/LocalizedDateTime
-                     (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
-                     (s/optional-key :repeatable)                       s/Bool
-                     (s/optional-key :numeric)                          s/Bool
-                     (s/optional-key :min-value)                        s/Str
-                     (s/optional-key :max-value)                        s/Str
-                     (s/optional-key :decimals)                         (s/maybe s/Int)
-                     (s/optional-key :selection-group-id)               s/Str
-                     (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
-                     (s/optional-key :question-group-id)                s/Int
-                     (s/optional-key :max-length)                       s/Str
-                     (s/optional-key :hidden)                           s/Bool
-                     (s/optional-key :size)                             s/Str
-                     (s/optional-key :haku-oid)                         s/Str
-                     (s/optional-key :placeholder)                      localized-schema/LocalizedString
-                     (s/optional-key :mail-attachment?)                 (s/maybe s/Bool)
-                     (s/optional-key :info-text)                        (s/maybe InfoText)
-                     (s/optional-key :info-text-collapse)               (s/maybe s/Bool)})
-
 (s/defschema Button {:fieldClass                                 (s/eq "button")
                      :id                                         s/Str
                      :fieldType                                  s/Keyword
                      :metadata                                   element-metadata-schema/ElementMetadata
                      (s/optional-key :label)                     localized-schema/LocalizedString
-                     (s/optional-key :params)                    Params
+                     (s/optional-key :params)                    params-schema/Params
                      (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
@@ -83,7 +58,7 @@
                         (s/optional-key :label)                          localized-schema/LocalizedString
                         (s/optional-key :label-amendment)                localized-schema/LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
-                        (s/optional-key :params)                         Params
+                        (s/optional-key :params)                         params-schema/Params
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
@@ -114,7 +89,7 @@
                                                                                   "dateRange"
                                                                                   "endOfDateRange"])
                           :metadata                                   element-metadata-schema/ElementMetadata
-                          (s/optional-key :params)                    Params
+                          (s/optional-key :params)                    params-schema/Params
                           (s/optional-key :label)                     localized-schema/LocalizedString
                           (s/optional-key :text)                      localized-schema/LocalizedString
                           (s/optional-key :belongs-to-hakukohteet)    [s/Str]
@@ -150,7 +125,7 @@
                                                                                       BasicElement)]
                              :metadata                                   element-metadata-schema/ElementMetadata
                              (s/optional-key :child-validator)           ChildValidator
-                             (s/optional-key :params)                    Params
+                             (s/optional-key :params)                    params-schema/Params
                              (s/optional-key :label)                     localized-schema/LocalizedString
                              (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
                              (s/optional-key :module)                    module-schema/Module
