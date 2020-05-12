@@ -4,7 +4,8 @@
             [ataru.schema.localized-schema :as localized-schema]
             [ataru.translations.texts :as texts]
             [ataru.util :as util]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 (s/defschema OppiaineenKoodi
   (s/enum "A"
@@ -26,10 +27,11 @@
           "KO"))
 
 (s/defschema OppiaineenArvosana
-  {:fieldClass (s/eq "wrapperElement")
-   :fieldType  (s/eq "oppiaineenArvosana")
-   :id         OppiaineenKoodi
-   :label      localized-schema/LocalizedString})
+  {:fieldClass                (s/eq "wrapperElement")
+   :fieldType                 (s/eq "oppiaineenArvosana")
+   :id                        OppiaineenKoodi
+   :label                     localized-schema/LocalizedString
+   (s/optional-key :children) [s/Any]})
 
 (s/defschema ArvosanatTaulukko
   {:id         s/Str
@@ -38,20 +40,34 @@
    :children   [OppiaineenArvosana]
    :metadata   element-metadata-schema/ElementMetadata})
 
+(def ^:private oppiaineen-oppimaara
+  {:fieldClass "formField"
+   :fieldType  "dropdown"
+   :id         (util/component-id)
+   :label      {:fi ""
+                :sv ""
+                :en ""}
+   :options    [{:value :fi}]})
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
-           label]} :- {:oppiaine OppiaineenKoodi
-                       :label    localized-schema/LocalizedString}]
-  {:fieldClass "wrapperElement"
-   :fieldType  "oppiaineenArvosana"
-   :id         oppiaineen-koodi
-   :label      label})
+           label
+           second-column-component]} :- (st/open-schema
+                                          {:oppiaine OppiaineenKoodi
+                                           :label    localized-schema/LocalizedString})]
+  (cond-> {:fieldClass "wrapperElement"
+           :fieldType  "oppiaineenArvosana"
+           :id         oppiaineen-koodi
+           :label      label
+           :children   (cond-> []
+                               (some? second-column-component)
+                               (conj second-column-component))}))
 
 (def ^:private arvosana-aidinkieli-ja-kirjallisuus
   (oppiaineen-arvosana
-    {:oppiaineen-koodi "A"
-     :label            (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)}))
+    {:oppiaineen-koodi        "A"
+     :label                   (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
+     :second-column-component oppiaineen-oppimaara}))
 
 (def ^:private arvosana-a1-kieli
   (oppiaineen-arvosana

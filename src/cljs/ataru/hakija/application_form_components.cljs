@@ -890,7 +890,13 @@
     {:fieldClass "wrapperElement"
      :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
     {:fieldClass "wrapperElement"
-     :fieldType  "arvosanat-taulukko"} [arvosanat/arvosanat-taulukko field-descriptor idx]
+     :fieldType  "arvosanat-taulukko"}
+    [arvosanat/arvosanat-taulukko {:field-descriptor field-descriptor
+                                   :render-field     render-field}]
+    {:fieldClass "wrapperElement"
+     :fieldType  "oppiaineenArvosana"}
+    [arvosanat/oppiaineen-arvosana {:field-descriptor field-descriptor
+                                    :render-field     render-field}]
     {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
     {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
     {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]

@@ -1,22 +1,25 @@
 (ns ataru.hakija.arvosanat.arvosanat-components
-  (:require [re-frame.core :as re-frame]))
+  (:require [ataru.translations.translation-util :as translations]
+            [re-frame.core :as re-frame]))
 
-(defn- arvosana [{:keys [label]}]
-  [:<>
-   [:span.arvosana__oppiaine (str label)]
-   [:span.arvosana__oppimaara "Oppimäärä"]
-   [:span.arvosana__arvosana "Arvosana"]
-   [:span.arvosana__lisaa-valinnaisaine "+"]])
+(defn oppiaineen-arvosana [{:keys [field-descriptor]}]
+  (let [lang  @(re-frame/subscribe [:application/form-language])
+        label (-> field-descriptor :label lang)]
+    [:<>
+     [:span.arvosana__oppiaine (str label)]
+     [:span.arvosana__oppimaara (translations/get-hakija-translation :oppimäärä lang)]
+     [:span.arvosana__arvosana (translations/get-hakija-translation :arvosana lang)]
+     [:span.arvosana__lisaa-valinnaisaine "+"]]))
 
-(defn arvosanat-taulukko [field-descriptor]
+(defn arvosanat-taulukko [{:keys [field-descriptor
+                                  render-field]}]
   (let [lang @(re-frame/subscribe [:application/form-language])]
     [:div.arvosanat-taulukko
-     [:span.arvosana__oppiaine "Oppiaine"]
-     [:span.arvosana__lisaa-valinnaisaine "Valinnaisaine"]
+     [:span.arvosana__oppiaine (translations/get-hakija-translation :oppiaine lang)]
+     [:span.arvosana__lisaa-valinnaisaine (translations/get-hakija-translation :valinnaisaine lang)]
      (map (fn [arvosana-data]
-            (let [label          (-> arvosana-data :label lang)
-                  arvosana-koodi (:id arvosana-data)
+            (let [arvosana-koodi (:id arvosana-data)
                   key            (str "arvosana-" arvosana-koodi)]
               ^{:key key}
-              [arvosana {:label label}]))
+              [render-field arvosana-data]))
           (:children field-descriptor))]))

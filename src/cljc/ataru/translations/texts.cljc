@@ -95,6 +95,9 @@
    :applications_at_most                        {:fi "Tässä haussa voit hakea %s hakukohteeseen"
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s study programmes "}
+   :arvosana                                    {:fi "Arvosana"
+                                                 :sv "Arvosana"
+                                                 :en "Arvosana"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
@@ -266,6 +269,15 @@
    :not-within-application-period               {:fi "hakuaika ei ole käynnissä"
                                                  :sv "ingen pågående ansökningstid"
                                                  :en "application period currently not ongoing"}
+   :oppiaine                                    {:fi "Oppiaine"
+                                                 :sv "Oppiaine"
+                                                 :en "Oppiaine"}
+   :valinnaisaine                               {:fi "Valinnaisaine"
+                                                 :sv "Valinnaisaine"
+                                                 :en "Valinnaisaine"}
+   :oppimäärä                                   {:fi "Oppimäärä"
+                                                 :sv "Oppimäärä"
+                                                 :en "Oppimäärä"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
