@@ -63,14 +63,9 @@
 
 (defn- belongs-to-hakukohteet-modal
   [_ id _ _ _]
-  (let [search-term     (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
-        fetching?       (subscribe [:editor/fetching-haut?])
-        used-by-haku?   (subscribe [:editor/used-by-haku?])
+  (let [used-by-haku?   (subscribe [:editor/used-by-haku?])
         haut            (subscribe [:editor/filtered-haut id])
-        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])
-        on-click        (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        on-change       (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
-                                           id (.-value (.-target e))]))]
+        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])]
     (fn [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
       (if @used-by-haku?
         [h-and-h/popup
@@ -474,8 +469,7 @@
 
 (defn- koodisto-fields-with-lang [_ _]
   (fn [languages option-path]
-    (let [multiple-languages? (> (count languages) 1)
-          component           @(subscribe [:editor/get-component-value option-path])]
+    (let [component           @(subscribe [:editor/get-component-value option-path])]
       [:div
        {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
        (map-indexed (partial koodisto-field component)
@@ -636,7 +630,6 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
-        numeric?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked?      (subscribe [:editor/component-locked? path])]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
@@ -713,9 +706,8 @@
      :class    (when disabled? "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
-  [option-index _ _ _ path languages show-followups _ _ _ & _]
-  (let [multiple-languages? (< 1 (count languages))
-        component-locked?        (subscribe [:editor/component-locked? path])
+  [option-index _ _ _ path _ show-followups _ _ _ & _]
+  (let [component-locked?        (subscribe [:editor/component-locked? path])
         on-click            (fn [up? event]
                               (when-not @component-locked?
                                 (.preventDefault event)
@@ -782,7 +774,7 @@
           :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path (:allow-invalid? @selected-koodisto)])}
          (when (= (:uri @selected-koodisto) "")
            [:option {:value "" :disabled true} ""])
-         (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+         (for [{:keys [uri title]} koodisto-whitelist/koodisto-whitelist]
            ^{:key (str "koodisto-" uri)}
            [:option {:value uri} title])]
         [:div.editor-form__select-koodisto-dropdown-arrow
@@ -990,7 +982,6 @@
                 can-remove?
                 show-child-component-names?
                 has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
-        languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
         component-locked? (subscribe [:editor/component-locked? path])]
@@ -1141,10 +1132,9 @@
              (fn [component-fn]
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
-(defn adjacent-text-field [_ path]
+(defn adjacent-text-field [_ _]
   (let [languages (subscribe [:editor/languages])
-        radio-group-id    (util/new-uuid)
-        numeric? (subscribe [:editor/get-component-value path :params :numeric])]
+        radio-group-id    (util/new-uuid)]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
