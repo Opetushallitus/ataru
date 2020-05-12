@@ -3,6 +3,7 @@
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
+            [ataru.schema.info-element-schema :as info-element-schema]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -73,28 +74,12 @@
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
                         (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
 
-(s/defschema InfoElement {:fieldClass                                 (s/eq "infoElement")
-                          :id                                         s/Str
-                          :fieldType                                  (apply s/enum ["h1"
-                                                                                  "h3"
-                                                                                  "link"
-                                                                                  "p"
-                                                                                  "bulletList"
-                                                                                  "dateRange"
-                                                                                  "endOfDateRange"])
-                          :metadata                                   element-metadata-schema/ElementMetadata
-                          (s/optional-key :params)                    params-schema/Params
-                          (s/optional-key :label)                     localized-schema/LocalizedString
-                          (s/optional-key :text)                      localized-schema/LocalizedString
-                          (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                          (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
-
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
-   :else InfoElement))
+   :else info-element-schema/InfoElement))
 
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
