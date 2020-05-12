@@ -1,7 +1,7 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
-            [ataru.hakija.application-validators :as validator]
+            [ataru.schema.validator-schema :as validator-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [schema.coerce :as c]
@@ -103,16 +103,13 @@
                      (s/optional-key :belongs-to-hakukohteet) [s/Str]
                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
-(s/defschema Validator (apply s/enum (concat (keys validator/pure-validators)
-                                             (keys validator/async-validators))))
-
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
                         :fieldType                                       (apply s/enum form-fields)
                         :metadata                                        ElementMetadata
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [Validator]
+                        (s/optional-key :validators)                     [validator-schema/Validator]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          LocalizedString
@@ -723,9 +720,9 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(def form-coercion-matchers {Module         keyword
-                             ChildValidator keyword
-                             Validator      keyword})
+(def form-coercion-matchers {Module                     keyword
+                             ChildValidator             keyword
+                             validator-schema/Validator keyword})
 
 (def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
 
