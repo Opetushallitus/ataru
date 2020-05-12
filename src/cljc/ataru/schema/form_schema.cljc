@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.validator-schema :as validator-schema]
+            [ataru.schema.module-schema :as module-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -46,8 +47,6 @@
                                                           :cljs s/Str)
                    (s/optional-key :application-count) s/Int
                    (s/optional-key :deleted)           (s/maybe s/Bool)})
-
-(s/defschema Module (s/enum :person-info :arvosanat-peruskoulu))
 
 (s/defschema InfoText {(s/optional-key :enabled?) s/Bool
                        (s/optional-key :value)    localized-schema/LocalizedStringOptional
@@ -166,7 +165,7 @@
                              (s/optional-key :params)                    Params
                              (s/optional-key :label)                     localized-schema/LocalizedString
                              (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module)                    Module
+                             (s/optional-key :module)                    module-schema/Module
                              (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                              (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
@@ -701,7 +700,7 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(def form-coercion-matchers {Module                     keyword
+(def form-coercion-matchers {module-schema/Module       keyword
                              ChildValidator             keyword
                              validator-schema/Validator keyword})
 
