@@ -1,6 +1,7 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
+            [ataru.schema.button-schema :as button-schema]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -37,15 +38,6 @@
 ;                                 Vvv'            VVv'
 (declare BasicElement)
 (declare WrapperElement)
-
-(s/defschema Button {:fieldClass                                 (s/eq "button")
-                     :id                                         s/Str
-                     :fieldType                                  s/Keyword
-                     :metadata                                   element-metadata-schema/ElementMetadata
-                     (s/optional-key :label)                     localized-schema/LocalizedString
-                     (s/optional-key :params)                    params-schema/Params
-                     (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                     (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
@@ -99,7 +91,7 @@
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
-   #(= "button" (:fieldClass %)) Button
+   #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    :else InfoElement))
 
