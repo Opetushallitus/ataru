@@ -1,9 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require
    [ataru.application-common.application-field-common :refer [copy-link]]
-   [ataru.util :as cutil]
-   [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
-   [ataru.component-data.component :as component]
+   [ataru.cljs-util :as util]
    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
    [ataru.component-data.person-info-module :as pm]
@@ -13,9 +11,7 @@
    [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
    [cljs.core.match :refer-macros [match]]
    [clojure.string :as string]
-   [goog.dom :as gdom]
    [goog.string :as s]
-   [goog.date :as d]
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
