@@ -353,33 +353,33 @@
         height   (r/atom nil)
         listener (unfold-ended-listener folded? state)]
     (r/create-class
-     {:component-did-mount
-      (fn [component]
-        (.addEventListener (r/dom-node component)
-                           "transitionend"
-                           listener)
-        (component-fold-transition component folded? state height))
-      :component-will-unmount
-      (fn [component]
-        (.removeEventListener (r/dom-node component)
-                              "transitionend"
-                              listener))
-      :component-did-update
-      (fn [component]
-        (component-fold-transition component folded? state height))
-      :reagent-render
-      (fn [_ content-component]
-        (let [folded? @folded?]
-          (case @state
-            :unfolded
-            [:div.editor-form__component-content-wrapper
-             content-component]
-            :set-height
-            [:div.editor-form__component-content-wrapper
-             {:style {:height @height}}
-             content-component]
-            :folded
-            [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
+      {:component-did-mount
+       (fn [component]
+         (.addEventListener (r/dom-node component)
+                            "transitionend"
+                            listener)
+         (component-fold-transition component folded? state height))
+       :component-will-unmount
+       (fn [component]
+         (.removeEventListener (r/dom-node component)
+                               "transitionend"
+                               listener))
+       :component-did-update
+       (fn [component]
+         (component-fold-transition component folded? state height))
+       :reagent-render
+       (fn [_ content-component]
+         (let [folded? @folded?]
+           (case @state
+             :unfolded
+             [:div.editor-form__component-content-wrapper
+              content-component]
+             :set-height
+             [:div.editor-form__component-content-wrapper
+              {:style {:height @height}}
+              content-component]
+             :folded
+             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
