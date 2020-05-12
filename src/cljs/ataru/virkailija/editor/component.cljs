@@ -62,7 +62,7 @@
       @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- belongs-to-hakukohteet-modal
-  [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
+  [_ id _ _ _]
   (let [search-term     (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
         fetching?       (subscribe [:editor/fetching-haut?])
         used-by-haku?   (subscribe [:editor/used-by-haku?])
@@ -104,7 +104,7 @@
 (defn- belongs-to
   [_ _ _ _]
   (let [fetching? (subscribe [:editor/fetching-haut?])]
-    (fn [path oid name on-click]
+    (fn [_ _ name on-click]
       [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
        [:span.belongs-to-hakukohteet__hakukohde-label
         (if @fetching?
@@ -115,7 +115,7 @@
         [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
 
 (defn- belongs-to-hakukohteet-option
-  [parent-key index path]
+  [parent-key index _]
   (let [id            (str parent-key "-" index)
         on-click-show (fn [_]
                         (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
@@ -385,7 +385,7 @@
       (fn [component]
         (component-fold-transition component folded? state height))
       :reagent-render
-      (fn [path content-component]
+      (fn [_ content-component]
         (let [folded? @folded?]
           (case @state
             :unfolded
@@ -472,7 +472,7 @@
       {:on-drop prevent-default}
       value]]))
 
-(defn- koodisto-fields-with-lang [languages option-path]
+(defn- koodisto-fields-with-lang [_ _]
   (fn [languages option-path]
     (let [multiple-languages? (> (count languages) 1)
           component           @(subscribe [:editor/get-component-value option-path])]
@@ -588,11 +588,11 @@
           :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
           :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
 
-(defn- text-component-type-selector [component-id path radio-group-id]
+(defn- text-component-type-selector [_ path _]
   (let [id           (util/new-uuid)
         checked?     (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path radio-group-id]
+    (fn [component-id path _]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
@@ -623,7 +623,7 @@
                        :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(defn text-component [initial-content path & {:keys [header-label size-label]}]
+(defn text-component [_ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
         sub-header        (subscribe [:editor/get-component-value path :label])
         size              (subscribe [:editor/get-component-value path :params :size])
@@ -713,10 +713,7 @@
      :class    (when disabled? "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
-  [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
-   {:keys [header? editable?]
-    :or   {header? false editable? true}
-    :as   opts}]
+  [option-index _ _ _ path languages show-followups _ _ _ & _]
   (let [multiple-languages? (< 1 (count languages))
         component-locked?        (subscribe [:editor/component-locked? path])
         on-click            (fn [up? event]
@@ -733,9 +730,8 @@
                                   nil
                                   (js/parseInt n))))]
     (fn [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
-         {:keys [header? editable?]
-          :or   {header? false editable? true}
-          :as   opts}]
+         {:keys [editable?]
+          :or   {editable? true}}]
       [:div
        [:div.editor-form__multi-options-wrapper-outer
         [:div
@@ -792,15 +788,8 @@
         [:div.editor-form__select-koodisto-dropdown-arrow
          [:i.zmdi.zmdi-chevron-down]]]])))
 
-(defn- custom-answer-options [languages
-                              options
-                              followups
-                              path
-                              question-group-element?
-                              editable?
-                              show-followups
-                              parent-key]
-  (fn [languages options followups path question-group-element? editable?]
+(defn- custom-answer-options [_ _ _ _ _ _ _ _]
+  (fn [languages options followups path question-group-element? editable? show-followups parent-key]
     (let [option-count (count options)]
       (when (or (nil? @show-followups)
                 (not (= (count @show-followups) option-count)))
@@ -822,15 +811,15 @@
                               :editable? editable?])
                            options))])))
 
-(defn koodisto-answer-options [id followups path question-group-element? parent-key]
+(defn koodisto-answer-options [_ _ _ _ parent-key]
   (let [opened? (r/atom false)]
-    (fn [id followups path question-group-element?]
+    (fn [_ followups path question-group-element?]
       (let [languages             @(subscribe [:editor/languages])
             value                 @(subscribe [:editor/get-component-value path])
             editable?             false
-            hide-koodisto-options (fn [evt]
+            hide-koodisto-options (fn [_]
                                     (reset! opened? false))
-            show-koodisto-options (fn [evt]
+            show-koodisto-options (fn [_]
                                     (reset! opened? true))
             show-followups        (r/atom nil)]
         (if (not @opened?)
@@ -845,7 +834,7 @@
              [:i.zmdi.zmdi-chevron-up] (str " " @(subscribe [:editor/virkailija-translation :hide-options]))]]
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
-(defn dropdown [initial-content followups path]
+(defn dropdown [_ _ path _]
   (let [languages                (subscribe [:editor/languages])
         options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
         koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
@@ -979,7 +968,7 @@
               :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
 
-(defn hakukohteet-module [content path]
+(defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])]
     (fn [content path]
@@ -1046,7 +1035,7 @@
 
 (defn info-element
   "Info text which is a standalone component"
-  [initial-content path]
+  [_ path]
   (let [languages        (subscribe [:editor/languages])
         collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
         sub-header       (subscribe [:editor/get-component-value path :label])
@@ -1097,7 +1086,7 @@
           [belongs-to-hakukohteet path initial-content]]]]])))
 
 (defn pohjakoulutusristiriita
-  [initial-content path]
+  [_ _]
   (let [languages (subscribe [:editor/languages])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
@@ -1120,7 +1109,7 @@
                                       (markdown-help)]])))
                  doall)]]]]]])))
 
-(defn adjacent-fieldset [content path children]
+(defn adjacent-fieldset [_ path _]
   (let [languages         (subscribe [:editor/languages])
         sub-header        (subscribe [:editor/get-component-value path :label])
         component-locked? (subscribe [:editor/component-locked? path])]
@@ -1152,7 +1141,7 @@
              (fn [component-fn]
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
-(defn adjacent-text-field [content path]
+(defn adjacent-text-field [_ path]
   (let [languages (subscribe [:editor/languages])
         radio-group-id    (util/new-uuid)
         numeric? (subscribe [:editor/get-component-value path :params :numeric])]
@@ -1257,7 +1246,7 @@
               (.getMinutes dt)])
         (s/format deadline-format day month year hours minutes)))))
 
-(defn attachment [content path]
+(defn attachment [_ path]
   (let [component        (subscribe [:editor/get-component-value path])
         languages        (subscribe [:editor/languages])
         deadline-value   (r/atom (get-in @component [:params :deadline]))
