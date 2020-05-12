@@ -369,7 +369,7 @@
          (component-fold-transition component folded? state height))
        :reagent-render
        (fn [_ content-component]
-         (let [folded? @folded?]
+         (let [_ @folded?]
            (case @state
              :unfolded
              [:div.editor-form__component-content-wrapper
