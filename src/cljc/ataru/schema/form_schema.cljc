@@ -4,6 +4,7 @@
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
+            [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.user-rights :as user-rights]
             [clojure.string :as string]
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
@@ -163,11 +164,6 @@
    :hakukohderyhma-oid s/Str
    :raja               s/Int})
 
-(s/defschema PriorisoivaHakukohderyhma
-  {:haku-oid           s/Str
-   :hakukohderyhma-oid s/Str
-   :prioriteetit       [[s/Str]]})
-
 (s/defschema SelectionLimit
   {:question-id s/Str
    :answer-id s/Str})
@@ -179,7 +175,7 @@
 (s/defschema FormWithContent
   (merge form-schema/Form
          {:content                                       [Content]
-          (s/optional-key :priorisoivat-hakukohderyhmat) [PriorisoivaHakukohderyhma]
+          (s/optional-key :priorisoivat-hakukohderyhmat) [priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
           (s/optional-key :rajaavat-hakukohderyhmat)     [RajaavaHakukohderyhma]
           (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 

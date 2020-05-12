@@ -29,6 +29,7 @@
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
+            [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util.client-error :as client-error]
@@ -911,7 +912,7 @@
       (api/GET "/:haku-oid" {session :session}
         :summary "Get configurations for priorisoivat hakukohderyhmät in given haku"
         :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
-        :return [ataru-schema/PriorisoivaHakukohderyhma]
+        :return [priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
         (let [{:keys [ryhmat last-modified]} (hakukohderyhmat/priorisoivat-hakukohderyhmat
                                                tarjonta-service
                                                haku-oid)]
@@ -925,8 +926,8 @@
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :header-params [{if-unmodified-since :- s/Str nil}
                         {if-none-match :- s/Str nil}]
-        :body [ryhma ataru-schema/PriorisoivaHakukohderyhma]
-        :return ataru-schema/PriorisoivaHakukohderyhma
+        :body [ryhma priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
+        :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (try
           (let [if-unmodified-since (if (= "*" if-none-match)
                                       nil
@@ -957,7 +958,7 @@
         :summary "Delete configuration of priorisoiva hakukohderyhmä in given haku"
         :path-params [haku-oid :- (api/describe s/Str "Haku OID")
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
-        :return ataru-schema/PriorisoivaHakukohderyhma
+        :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (let [delete (fn []
                        (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
                          haku-oid
