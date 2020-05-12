@@ -1525,7 +1525,7 @@
                                                      :en "Virus found"}
    :virus-scan-failed                               {:fi "Virustarkistus epäonnistui teknisen virheen vuoksi"
                                                      :sv "Viruskontrollen misslyckades på grund av ett tekniskt fel"
-                                                     :en "Virus scan failed because of technical reasons"}
+                                                     :en "Virus scan failed due to a technical error"}
    :visibility-on-form                              {:fi "Näkyvyys lomakkeella:"
                                                      :sv "Visas på blanketten:"
                                                      :en "EN: Näkyvyys lomakkeella:"}
