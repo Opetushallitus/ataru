@@ -2,6 +2,7 @@
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.button-schema :as button-schema]
+            [ataru.schema.child-validator-schema :as child-validator-schema]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -95,8 +96,6 @@
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    :else InfoElement))
 
-(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component :ssn-or-birthdate-component))
-
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
                              :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
@@ -106,7 +105,7 @@
                                                                                       :else
                                                                                       BasicElement)]
                              :metadata                                   element-metadata-schema/ElementMetadata
-                             (s/optional-key :child-validator)           ChildValidator
+                             (s/optional-key :child-validator)           child-validator-schema/ChildValidator
                              (s/optional-key :params)                    params-schema/Params
                              (s/optional-key :label)                     localized-schema/LocalizedString
                              (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
@@ -640,9 +639,9 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(def form-coercion-matchers {module-schema/Module       keyword
-                             ChildValidator             keyword
-                             validator-schema/Validator keyword})
+(def form-coercion-matchers {module-schema/Module                  keyword
+                             child-validator-schema/ChildValidator keyword
+                             validator-schema/Validator            keyword})
 
 (def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
 
