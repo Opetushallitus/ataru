@@ -31,8 +31,7 @@
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
    [:lupatiedot component/lupatiedot]
-   ;[:arvosanat arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-   ])
+   [:arvosanat arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]])
 
 (def followup-toolbar-element-names
   #{:text-field
