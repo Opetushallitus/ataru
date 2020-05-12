@@ -1218,10 +1218,10 @@
 (defn deadline-date [deadline]
   (when-let [[_ day month year hours minutes] (map js/parseInt (re-matches deadline-pattern deadline))]
     (if-let [dt (t/date-time year month day hours minutes)]
-      (if (= [year month day hours minutes]
-             [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
-              (.getHours dt)
-              (.getMinutes dt)])
+      (when (= [year month day hours minutes]
+               [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
+                (.getHours dt)
+                (.getMinutes dt)])
         (s/format deadline-format day month year hours minutes)))))
 
 (defn attachment [_ path]
