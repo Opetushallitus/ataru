@@ -1,5 +1,6 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.application.review-states :as review-states]
+  (:require [ataru.component-data.arvosanat-module :as arvosanat]
+            [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
@@ -83,8 +84,10 @@
 
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
-                             :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                [(s/conditional #(or (= "wrapperElement" (:fieldClass %))
+                             :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset" "arvosanat"])
+                             :children                                [(s/conditional #(= (:fieldType %) "arvosanat-taulukko")
+                                                                                      arvosanat/ArvosanatTaulukko
+                                                                                      #(or (= "wrapperElement" (:fieldClass %))
                                                                                            (= "questionGroup" (:fieldClass %)))
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else

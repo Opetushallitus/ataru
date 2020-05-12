@@ -20,7 +20,8 @@
             [ataru.hakija.components.label-component :as label-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
-            [ataru.hakija.components.dropdown-component :as dropdown-component]))
+            [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.arvosanat.arvosanat-components :as arvosanat]))
 
 (defonce autocomplete-off "new-password")
 
@@ -888,6 +889,8 @@
      :fieldType  "fieldset"} [question-group field-descriptor idx]
     {:fieldClass "wrapperElement"
      :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+    {:fieldClass "wrapperElement"
+     :fieldType  "arvosanat-taulukko"} [arvosanat/arvosanat-taulukko field-descriptor idx]
     {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
     {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
     {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
