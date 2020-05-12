@@ -325,18 +325,6 @@
      (when can-remove?
        [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
-(defn- fold-transition
-  [component folded? state height]
-  (case [@folded? @state]
-    [true :unfolded]
-    (do (reset! height (.-scrollHeight (r/dom-node component)))
-        (reset! state :set-height))
-    [true :set-height]
-    (reset! state :folded)
-    [false :folded]
-    (reset! state :set-height)
-    nil))
-
 (defn- component-fold-transition
   [component folded? state height]
   (cond (= [true :unfolded] [@folded? @state])
