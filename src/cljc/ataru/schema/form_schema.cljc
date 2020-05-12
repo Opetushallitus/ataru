@@ -1,11 +1,21 @@
 (ns ataru.schema.form-schema
   (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
-            [ataru.hakija.application-validators :as validator]
+            [ataru.schema.button-schema :as button-schema]
+            [ataru.schema.child-validator-schema :as child-validator-schema]
+            [ataru.schema.info-element-schema :as info-element-schema]
+            [ataru.schema.validator-schema :as validator-schema]
+            [ataru.schema.module-schema :as module-schema]
+            [ataru.schema.form-element-schema :as form-schema]
+            [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
+            [ataru.schema.params-schema :as params-schema]
+            [ataru.schema.pohjakoulutus-ristiriita-schema :as pohjakoulutus-ristiriita-schema]
             [ataru.user-rights :as user-rights]
+            [clojure.string :as string]
+            [ataru.schema.element-metadata-schema :as element-metadata-schema]
+            [ataru.schema.localized-schema :as localized-schema]
             [schema.coerce :as c]
             [schema.core :as s]
-            [schema.experimental.abstract-map :as abstract-map]
             [schema-tools.core :as st]))
 
 ;        __.,,------.._
@@ -31,94 +41,19 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema LocalizedString {:fi                  s/Str
-                              (s/optional-key :sv) s/Str
-                              (s/optional-key :en) s/Str})
-
-(s/defschema LocalizedStringOptional {(s/optional-key :fi) s/Str
-                                      (s/optional-key :sv) s/Str
-                                      (s/optional-key :en) s/Str})
-
-(s/defschema LocalizedDateTime {:fi s/Str
-                                :sv s/Str
-                                :en s/Str})
-
-(s/defschema Form {(s/optional-key :id)                s/Int
-                   :name                               LocalizedStringOptional
-                   :content                            (s/pred empty?)
-                   (s/optional-key :locked)            #?(:clj  (s/maybe org.joda.time.DateTime)
-                                                          :cljs (s/maybe s/Str))
-                   (s/optional-key :locked-by)         (s/maybe s/Str)
-                   (s/optional-key :languages)         [s/Str]
-                   (s/optional-key :key)               s/Str
-                   (s/optional-key :created-by)        s/Str
-                   (s/optional-key :created-time)      #?(:clj org.joda.time.DateTime
-                                                          :cljs s/Str)
-                   (s/optional-key :application-count) s/Int
-                   (s/optional-key :deleted)           (s/maybe s/Bool)})
-
-(s/defschema Module (s/enum :person-info :arvosanat-peruskoulu))
-
-(s/defschema InfoText {(s/optional-key :enabled?) s/Bool
-                       (s/optional-key :value)    LocalizedStringOptional
-                       (s/optional-key :label)    (s/maybe LocalizedStringOptional)})
-
-(s/defschema Params {(s/optional-key :adjacent)                         s/Bool
-                     (s/optional-key :can-submit-multiple-applications) s/Bool
-                     (s/optional-key :deadline)                         (s/maybe s/Str)
-                     (s/optional-key :deadline-label)                   LocalizedDateTime
-                     (s/optional-key :yhteishaku)                       (s/maybe s/Bool)
-                     (s/optional-key :repeatable)                       s/Bool
-                     (s/optional-key :numeric)                          s/Bool
-                     (s/optional-key :min-value)                        s/Str
-                     (s/optional-key :max-value)                        s/Str
-                     (s/optional-key :decimals)                         (s/maybe s/Int)
-                     (s/optional-key :selection-group-id)               s/Str
-                     (s/optional-key :max-hakukohteet)                  (s/maybe s/Int)
-                     (s/optional-key :question-group-id)                s/Int
-                     (s/optional-key :max-length)                       s/Str
-                     (s/optional-key :hidden)                           s/Bool
-                     (s/optional-key :size)                             s/Str
-                     (s/optional-key :haku-oid)                         s/Str
-                     (s/optional-key :placeholder)                      LocalizedString
-                     (s/optional-key :mail-attachment?)                 (s/maybe s/Bool)
-                     (s/optional-key :info-text)                        (s/maybe InfoText)
-                     (s/optional-key :info-text-collapse)               (s/maybe s/Bool)})
-
-(s/defschema ElementMetadata
-  {:created-by                {:name s/Str
-                               :oid  s/Str
-                               :date s/Str} ; java.time.ZonedDateTime
-   :modified-by               {:name s/Str
-                               :oid  s/Str
-                               :date s/Str}
-   (s/optional-key :locked)   s/Bool})
-
-(s/defschema Button {:fieldClass                              (s/eq "button")
-                     :id                                      s/Str
-                     :fieldType                               s/Keyword
-                     :metadata                                ElementMetadata
-                     (s/optional-key :label)                  LocalizedString
-                     (s/optional-key :params)                 Params
-                     (s/optional-key :belongs-to-hakukohteet) [s/Str]
-                     (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
-
-(s/defschema Validator (apply s/enum (concat (keys validator/pure-validators)
-                                             (keys validator/async-validators))))
-
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
                         :fieldType                                       (apply s/enum form-fields)
-                        :metadata                                        ElementMetadata
+                        :metadata                                        element-metadata-schema/ElementMetadata
                         (s/optional-key :cannot-view)                    s/Bool
                         (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [Validator]
+                        (s/optional-key :validators)                     [validator-schema/Validator]
                         (s/optional-key :rules)                          {s/Keyword s/Any}
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
-                        (s/optional-key :label)                          LocalizedString
-                        (s/optional-key :label-amendment)                LocalizedString
-                        (s/optional-key :initialValue)                   (s/cond-pre LocalizedString s/Int)
-                        (s/optional-key :params)                         Params
+                        (s/optional-key :label)                          localized-schema/LocalizedString
+                        (s/optional-key :label-amendment)                localized-schema/LocalizedString
+                        (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
+                        (s/optional-key :params)                         params-schema/Params
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
@@ -129,8 +64,8 @@
                                                                           (s/optional-key :title)          s/Str
                                                                           (s/optional-key :allow-invalid?) s/Bool}
                         (s/optional-key :options)                        [{:value                            s/Str
-                                                                           (s/optional-key :label)           LocalizedStringOptional
-                                                                           (s/optional-key :description)     LocalizedStringOptional
+                                                                           (s/optional-key :label)           localized-schema/LocalizedStringOptional
+                                                                           (s/optional-key :description)     localized-schema/LocalizedStringOptional
                                                                            (s/optional-key :selection-limit) (s/maybe s/Int)
                                                                            (s/optional-key :default-value)   (s/maybe s/Bool)
                                                                            (s/optional-key :belongs-to-hakukohteet)    [s/Str]
@@ -139,41 +74,12 @@
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
                         (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
 
-(s/defschema InfoElement {:fieldClass                              (s/eq "infoElement")
-                          :id                                      s/Str
-                          :fieldType                               (apply s/enum ["h1"
-                                                                                  "h3"
-                                                                                  "link"
-                                                                                  "p"
-                                                                                  "bulletList"
-                                                                                  "dateRange"
-                                                                                  "endOfDateRange"])
-                          :metadata                                ElementMetadata
-                          (s/optional-key :params)                 Params
-                          (s/optional-key :label)                  LocalizedString
-                          (s/optional-key :text)                   LocalizedString
-                          (s/optional-key :belongs-to-hakukohteet) [s/Str]
-                          (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
-
-(s/defschema Pohjakoulutusristiriita
-  {:id                   s/Str
-   :fieldClass           (s/eq "pohjakoulutusristiriita")
-   :fieldType            (s/eq "pohjakoulutusristiriita")
-   :exclude-from-answers (s/eq true)
-   :metadata             ElementMetadata
-   :params               {:deny-submit s/Bool}
-   :rules                {s/Keyword s/Any}
-   :label                LocalizedStringOptional
-   :text                 LocalizedStringOptional})
-
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
-   #(= "button" (:fieldClass %)) Button
-   #(= "pohjakoulutusristiriita" (:fieldClass %)) Pohjakoulutusristiriita
-   :else InfoElement))
-
-(s/defschema ChildValidator (s/enum :one-of :birthdate-and-gender-component :ssn-or-birthdate-component))
+   #(= "button" (:fieldClass %)) button-schema/Button
+   #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
+   :else info-element-schema/InfoElement))
 
 (s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
                              :id                                      s/Str
@@ -183,13 +89,13 @@
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
-                             :metadata                                ElementMetadata
-                             (s/optional-key :child-validator)        ChildValidator
-                             (s/optional-key :params)                 Params
-                             (s/optional-key :label)                  LocalizedString
-                             (s/optional-key :label-amendment)        LocalizedString ; Additional info which can be displayed next to the label
-                             (s/optional-key :module)                 Module
-                             (s/optional-key :belongs-to-hakukohteet) [s/Str]
+                             :metadata                                   element-metadata-schema/ElementMetadata
+                             (s/optional-key :child-validator)           child-validator-schema/ChildValidator
+                             (s/optional-key :params)                    params-schema/Params
+                             (s/optional-key :label)                     localized-schema/LocalizedString
+                             (s/optional-key :label-amendment)           localized-schema/LocalizedString ; Additional info which can be displayed next to the label
+                             (s/optional-key :module)                    module-schema/Module
+                             (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                              (s/optional-key :belongs-to-hakukohderyhma) [s/Str]})
 
 (def Content (s/if (comp some? :children) WrapperElement BasicElement))
@@ -198,11 +104,6 @@
   {:haku-oid           s/Str
    :hakukohderyhma-oid s/Str
    :raja               s/Int})
-
-(s/defschema PriorisoivaHakukohderyhma
-  {:haku-oid           s/Str
-   :hakukohderyhma-oid s/Str
-   :prioriteetit       [[s/Str]]})
 
 (s/defschema SelectionLimit
   {:question-id s/Str
@@ -213,9 +114,9 @@
    :limit-reached                [SelectionLimit]})
 
 (s/defschema FormWithContent
-  (merge Form
+  (merge form-schema/Form
          {:content                                       [Content]
-          (s/optional-key :priorisoivat-hakukohderyhmat) [PriorisoivaHakukohderyhma]
+          (s/optional-key :priorisoivat-hakukohderyhmat) [priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
           (s/optional-key :rajaavat-hakukohderyhmat)     [RajaavaHakukohderyhma]
           (s/optional-key :organization-oid)             (s/maybe s/Str)}))
 
@@ -238,7 +139,7 @@
    :groups [CreateMoveElement]})
 
 (s/defschema FormDetails
-  {:name                       LocalizedStringOptional
+  {:name                       localized-schema/LocalizedStringOptional
    (s/optional-key :languages) [s/Str]})
 
 (s/defschema UpdateFormDetailsOperation
@@ -253,9 +154,9 @@
                   #(= "delete" (:type %)) DeleteElementOperation))
 
 (s/defschema Hakuaika
-  {:label                               {:start                 LocalizedDateTime
-                                         :end                   LocalizedDateTime
-                                         :end-time              LocalizedDateTime}
+  {:label                               {:start                 localized-schema/LocalizedDateTime
+                                         :end                   localized-schema/LocalizedDateTime
+                                         :end-time              localized-schema/LocalizedDateTime}
    :start                               s/Int
    :end                                 (s/maybe s/Int)
    :on                                  s/Bool
@@ -265,17 +166,17 @@
 
 (s/defschema Koulutus
   {:oid                       s/Str
-   :koulutuskoodi-name        LocalizedStringOptional
-   :koulutusohjelma-name      LocalizedStringOptional
-   :tutkintonimike-names      [LocalizedStringOptional]
+   :koulutuskoodi-name        localized-schema/LocalizedStringOptional
+   :koulutusohjelma-name      localized-schema/LocalizedStringOptional
+   :tutkintonimike-names      [localized-schema/LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
-   :name                                                                         LocalizedStringOptional
+   :name                                                                         localized-schema/LocalizedStringOptional
    :can-be-applied-to?                                                           s/Bool
    :kohdejoukko-korkeakoulu?                                                     s/Bool
-   :tarjoaja-name                                                                LocalizedStringOptional
+   :tarjoaja-name                                                                localized-schema/LocalizedStringOptional
    (s/optional-key :form-key)                                                    (s/maybe s/Str)
    :hakukohderyhmat                                                              [s/Str]
    :hakuaika                                                                     Hakuaika
@@ -288,7 +189,7 @@
   {:hakukohteet                        [FormTarjontaHakukohde]
    :haku-oid                           s/Str
    :hakuaika                           Hakuaika
-   :haku-name                          LocalizedStringOptional
+   :haku-name                          localized-schema/LocalizedStringOptional
    :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
@@ -296,7 +197,7 @@
 
 (s/defschema Haku
   {:oid                                        s/Str
-   :name                                       LocalizedStringOptional
+   :name                                       localized-schema/LocalizedStringOptional
    :hakukohteet                                [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden? s/Bool
    :kohdejoukko-uri                            s/Str
@@ -315,7 +216,7 @@
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
-   :name            LocalizedStringOptional
+   :name            localized-schema/LocalizedStringOptional
    :hakukohderyhma? (s/eq true)
    :active?         s/Bool})
 
@@ -325,8 +226,8 @@
    :can-be-applied-to?                                                           s/Bool
    :haku-oid                                                                     s/Str
    :koulutus-oids                                                                [s/Str]
-   :name                                                                         LocalizedStringOptional
-   :tarjoaja-name                                                                LocalizedStringOptional
+   :name                                                                         localized-schema/LocalizedStringOptional
+   :tarjoaja-name                                                                localized-schema/LocalizedStringOptional
    :tarjoaja-oids                                                                [s/Str]
    :ryhmaliitokset                                                               [s/Str]
    (s/optional-key :hakuaika-id)                                                 s/Str
@@ -344,7 +245,7 @@
   {:uri                     s/Str
    :version                 s/Int
    :value                   s/Str
-   :label                   LocalizedStringOptional
+   :label                   localized-schema/LocalizedStringOptional
    :valid                   {(s/optional-key :start) java.time.ZonedDateTime
                              (s/optional-key :end)   java.time.ZonedDateTime}
    (s/optional-key :within) [(s/recursive #'Koodi)]})
@@ -393,7 +294,7 @@
    :fieldType                    (apply s/enum form-fields)
    (s/optional-key :cannot-view) s/Bool
    (s/optional-key :label)       (s/maybe (s/cond-pre
-                                           LocalizedString
+                                           localized-schema/LocalizedString
                                            s/Str))})
 
 (s/defschema Answer
@@ -616,7 +517,7 @@
    :first-name                                (s/maybe s/Str)
    :last-name                                 (s/maybe s/Str)
    (s/optional-key :virkailija-organizations) [{:oid                              s/Str
-                                                :name                             LocalizedStringOptional
+                                                :name                             localized-schema/LocalizedStringOptional
                                                 :type                             (s/enum :organization :group)
                                                 (s/optional-key :hakukohderyhma?) s/Bool
                                                 (s/optional-key :active?)         s/Bool}]})
@@ -644,7 +545,7 @@
    :first-name                                (s/maybe s/Str)
    :last-name                                 (s/maybe s/Str)
    (s/optional-key :virkailija-organizations) [{:oid                              s/Str
-                                                :name                             LocalizedStringOptional
+                                                :name                             localized-schema/LocalizedStringOptional
                                                 :type                             (s/enum :organization :group)
                                                 (s/optional-key :hakukohderyhma?) s/Bool
                                                 (s/optional-key :active?)         s/Bool}]
@@ -673,7 +574,7 @@
                            :unprocessed            s/Int
                            :hakukohteet            [ApplicationCountsHakukohde]})
 
-(s/defschema DirectFormHaku {:name                   LocalizedStringOptional
+(s/defschema DirectFormHaku {:name                   localized-schema/LocalizedStringOptional
                              :key                    s/Str
                              :haku-application-count s/Int
                              :application-count      s/Int
@@ -723,16 +624,16 @@
 
 (s/defschema VirkailijaSettings {:review {s/Keyword s/Bool}})
 
-(def form-coercion-matchers {Module         keyword
-                             ChildValidator keyword
-                             Validator      keyword})
+(def form-coercion-matchers {module-schema/Module                  keyword
+                             child-validator-schema/ChildValidator keyword
+                             validator-schema/Validator            keyword})
 
 (def form-coercer (c/coercer! FormWithContent form-coercion-matchers))
 
 (s/defschema EmailTemplate {:lang           (s/enum "fi" "sv" "en")
                             :content        s/Str
                             :content-ending s/Str
-                            :subject        (s/constrained s/Str (comp not clojure.string/blank?))})
+                            :subject        (s/constrained s/Str (comp not string/blank?))})
 
 (s/defschema Sort
   (s/conditional #(= "applicant-name" (:order-by %))

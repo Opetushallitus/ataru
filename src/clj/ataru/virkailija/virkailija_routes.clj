@@ -28,6 +28,8 @@
             [ataru.middleware.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
+            [ataru.schema.form-element-schema :as form-schema]
+            [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.util.client-error :as client-error]
@@ -211,7 +213,7 @@
       :summary "Return forms for editor view. Also used by external services.
                              In practice this is Tarjonta system only for now.
                              Return forms authorized with editor right (:form-edit)"
-      :return {:forms [ataru-schema/Form]}
+      :return {:forms [form-schema/Form]}
       (ok (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service)))
 
 
@@ -372,7 +374,7 @@
                  :attachment-reviews           ataru-schema/AttachmentReviews
                  :hakukohde-reviews            ataru-schema/HakukohdeReviews
                  :form                         ataru-schema/FormWithContent
-                 (s/optional-key :latest-form) ataru-schema/Form
+                 (s/optional-key :latest-form) form-schema/Form
                  :information-requests         [ataru-schema/InformationRequest]
                  :selection-state-used?        s/Bool}
         (if-let [application (application-service/get-application-with-human-readable-koodis
@@ -910,7 +912,7 @@
       (api/GET "/:haku-oid" {session :session}
         :summary "Get configurations for priorisoivat hakukohderyhmät in given haku"
         :path-params [haku-oid :- (api/describe s/Str "Haku OID")]
-        :return [ataru-schema/PriorisoivaHakukohderyhma]
+        :return [priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
         (let [{:keys [ryhmat last-modified]} (hakukohderyhmat/priorisoivat-hakukohderyhmat
                                                tarjonta-service
                                                haku-oid)]
@@ -924,8 +926,8 @@
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
         :header-params [{if-unmodified-since :- s/Str nil}
                         {if-none-match :- s/Str nil}]
-        :body [ryhma ataru-schema/PriorisoivaHakukohderyhma]
-        :return ataru-schema/PriorisoivaHakukohderyhma
+        :body [ryhma priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma]
+        :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (try
           (let [if-unmodified-since (if (= "*" if-none-match)
                                       nil
@@ -956,7 +958,7 @@
         :summary "Delete configuration of priorisoiva hakukohderyhmä in given haku"
         :path-params [haku-oid :- (api/describe s/Str "Haku OID")
                       hakukohderyhma-oid :- (api/describe s/Str "Hakukohderyhmä OID")]
-        :return ataru-schema/PriorisoivaHakukohderyhma
+        :return priorisoiva-hakukohderyhma-schema/PriorisoivaHakukohderyhma
         (let [delete (fn []
                        (hakukohderyhmat/delete-priorisoiva-hakukohderyhma
                          haku-oid
