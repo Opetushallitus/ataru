@@ -16,6 +16,8 @@
             [yesql.core :as sql])
   (:import (fi.vm.sade.utils.cas CasLogout)))
 
+(declare yesql-upsert-virkailija<!)
+
 (defn- redirect-to-login-failed-page []
   (resp/redirect (resolve-url :cas.failure)))
 
@@ -42,45 +44,42 @@
     user-right-organizations))
 
 
-(defn- create-login-failed-handler []
-  (fn
-    ([e]
-     (.printStackTrace e)
-     (log/error e "Error in login ticket handling")
-     (redirect-to-login-failed-page))
-    ([]
-     (redirect-to-login-failed-page))))
+(defn- login-failed
+  ([e]
+   (log/error e "Error in login ticket handling")
+   (redirect-to-login-failed-page))
+  ([]
+   (redirect-to-login-failed-page)))
 
-(defn- create-login-success-handler [organization-service audit-logger session]
-  (fn [response virkailija henkilo username ticket]
-    (let [right-organization-oids   (rights/virkailija->right-organization-oids virkailija rights/right-names)
-          organization-oids         (-> (vals right-organization-oids) (flatten) (set))
-          oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
-          user-right-organizations  (map-kv
-                                      (fn [right org-oids]
-                                        [right (organization-service/get-organizations-for-oids organization-service org-oids)])
-                                      right-organization-oids)
-          organizations-with-rights (->> user-right-organizations
-                                         (map-kv (fn [right organizations]
-                                                   [right (organization-service/get-all-organizations organization-service organizations)]))
-                                         (user-right-organizations->organization-rights))]
-      (log/info "user" username "logged in")
-      (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
-                                              :first_name (:kutsumanimi henkilo)
-                                              :last_name  (:sukunimi henkilo)})
-      (audit-log/log audit-logger
-                               {:new       {:ticket ticket}
-                                :id        {:henkiloOid (:oidHenkilo henkilo)}
-                                :session   session
-                                :operation audit-log/operation-login})
+(defn- login-succeeded [organization-service audit-logger session response virkailija henkilo username ticket]
+  (let [right-organization-oids   (rights/virkailija->right-organization-oids virkailija rights/right-names)
+        organization-oids         (-> (vals right-organization-oids) (flatten) (set))
+        oph-organization-member?  (contains? organization-oids organization-client/oph-organization)
+        user-right-organizations  (map-kv
+                                    (fn [right org-oids]
+                                      [right (organization-service/get-organizations-for-oids organization-service org-oids)])
+                                    right-organization-oids)
+        organizations-with-rights (->> user-right-organizations
+                                       (map-kv (fn [right organizations]
+                                                 [right (organization-service/get-all-organizations organization-service organizations)]))
+                                       (user-right-organizations->organization-rights))]
+    (log/info "user" username "logged in")
+    (db/exec :db yesql-upsert-virkailija<! {:oid        (:oidHenkilo henkilo)
+                                            :first_name (:kutsumanimi henkilo)
+                                            :last_name  (:sukunimi henkilo)})
+    (audit-log/log audit-logger
+                   {:new       {:ticket ticket}
+                    :id        {:henkiloOid (:oidHenkilo henkilo)}
+                    :session   session
+                    :operation audit-log/operation-login})
 
-      (update-in
-        response
-        [:session :identity]
-        assoc
-        :user-right-organizations user-right-organizations
-        :superuser oph-organization-member?
-        :organizations organizations-with-rights))))
+    (update-in
+      response
+      [:session :identity]
+      assoc
+      :user-right-organizations user-right-organizations
+      :superuser oph-organization-member?
+      :organizations organizations-with-rights)))
 
 (defn login [login-provider
              kayttooikeus-service
@@ -89,13 +88,20 @@
              audit-logger
              redirect-url
              session]
-  (crdsa-login/login {:login-provider       login-provider
-                      :virkailija-finder    #(kayttooikeus-service/virkailija-by-username kayttooikeus-service %)
-                      :henkilo-finder       #(person-service/get-person person-service %)
-                      :success-redirect-url redirect-url
-                      :do-on-success        (create-login-success-handler organization-service audit-logger session)
-                      :login-failed-handler (create-login-failed-handler)
-                      :datasource           (db/get-datasource :db)}))
+  (try
+    (if-let [[username ticket] (login-provider)]
+      (let [virkailija (kayttooikeus-service/virkailija-by-username kayttooikeus-service username)
+            henkilo    (person-service/get-person person-service (:oidHenkilo virkailija))
+            response   (crdsa-login/login
+                         {:username             username
+                          :henkilo              henkilo
+                          :ticket               ticket
+                          :success-redirect-url redirect-url
+                          :datasource           (db/get-datasource :db)})]
+        (login-succeeded organization-service audit-logger session response virkailija henkilo username ticket))
+      (login-failed))
+    (catch Exception e
+      (login-failed e))))
 
 (defn cas-initiated-logout [logout-request]
   (log/info "cas-initiated logout")
