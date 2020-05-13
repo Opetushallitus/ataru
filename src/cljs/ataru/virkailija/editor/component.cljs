@@ -768,8 +768,8 @@
         [:div.editor-form__select-koodisto-dropdown-arrow
          [:i.zmdi.zmdi-chevron-down]]]])))
 
-(defn- custom-answer-options [_ _ _ _ _ _ _ _]
-  (fn [languages options followups path question-group-element? editable? show-followups parent-key]
+(defn- custom-answer-options [_ _ _ _ _ _ show-followups parent-key]
+  (fn [languages options followups path question-group-element? editable? _ _]
     (let [option-count (count options)]
       (when (or (nil? @show-followups)
                 (not (= (count @show-followups) option-count)))
