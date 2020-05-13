@@ -621,20 +621,22 @@
 (defn- text-field-has-followups [_ _ _]
   (let [id (util/new-uuid)]
     (fn [path followups component-locked?]
-      (let [has-followups? (not (empty? followups))]
+      (let [has-followups? (not (empty? followups))
+            disabled?      (or component-locked?
+                               has-followups?)]
         [:div.editor-form__checkbox-container
          [:input.editor-form__checkbox
           {:id        id
            :type      "checkbox"
            :checked   has-followups?
-           :disabled  component-locked?
+           :disabled  disabled?
            :on-change (fn [evt]
-                        (when-not component-locked?
+                        (when-not disabled?
                           (.preventDefault evt)
                           (dispatch [:editor/add-text-field-option path])))}]
          [:label.editor-form__checkbox-label
           {:for   id
-           :class (when component-locked? "editor-form__checkbox-label--disabled")}
+           :class (when disabled? "editor-form__checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
 (defn- text-field-followups
