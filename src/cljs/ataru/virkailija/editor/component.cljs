@@ -619,19 +619,20 @@
    [custom-answer-options languages (:options value) followups path question-group-element? true show-followups (:id initial-content)]])
 
 (defn- text-field-has-followups [_ _ _]
-  (let [id                (util/new-uuid)]
+  (let [id (util/new-uuid)]
     (fn [path followups component-locked?]
       (let [has-followups? (not (empty? followups))]
-        [:div.editor-form__text-field-has-followups
-         [:input {:id        id
-                  :type      "checkbox"
-                  :checked   has-followups?
-                  :disabled  component-locked?
-                  :on-change (fn [evt]
-                               (when-not component-locked?
-                                 (.preventDefault evt)
-                                 (dispatch [:editor/add-text-field-option path])))}]
-         [:label
+        [:div.editor-form__checkbox-container
+         [:input.editor-form__checkbox
+          {:id        id
+           :type      "checkbox"
+           :checked   has-followups?
+           :disabled  component-locked?
+           :on-change (fn [evt]
+                        (when-not component-locked?
+                          (.preventDefault evt)
+                          (dispatch [:editor/add-text-field-option path])))}]
+         [:label.editor-form__checkbox-label
           {:for   id
            :class (when component-locked? "editor-form__checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
@@ -639,7 +640,6 @@
 (defn- text-field-followups
   [initial-content languages value followups path question-group-element? show-followups component-locked?]
   [:div.editor-form__component-row-wrapper
-   [text-field-has-followups path followups component-locked?]
    [text-field-options-wrapper initial-content languages value followups path question-group-element? show-followups component-locked?]])
 
 (defn text-component [_ _ path & {:keys [header-label]}]
@@ -710,7 +710,9 @@
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet path initial-content]]
-         [info-addon path]
+         [:div.editor-form__checkbox-wrapper
+          [info-addon path]
+          [text-field-has-followups path followups @component-locked?]]
          [text-field-followups initial-content @languages @value followups path question-group-element? show-followups @component-locked?]]]])))
 
 (defn text-field [initial-content followups path]
