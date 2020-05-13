@@ -278,9 +278,6 @@
    :oppimaara                                   {:fi "Oppimäärä"
                                                  :sv "Oppimäärä"
                                                  :en "Oppimäärä"}
-   :oppimaara-aidinkieli-ja-kirjallisuus        {:fi "Oppimäärä: äidinkieli ja kirjallisuus"
-                                                 :sv "Oppimäärä: äidinkieli ja kirjallisuus"
-                                                 :en "Oppimäärä: äidinkieli ja kirjallisuus"}
    :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
                                                  :sv "Suomi äidinkielenä"
                                                  :en "Suomi äidinkielenä"}
@@ -374,6 +371,59 @@
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
                                                  :sv "Denna ansökningslänk är föråldrad"}})
+
+(def oppiaine-translations
+  {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
+                :sv "Äidinkieli ja kirjallisuus"
+                :en "Äidinkieli ja kirjallisuus"}
+   :oppiaine-a1 {:fi "A1-kieli"
+                 :sv "A1-kieli"
+                 :en "A1-kieli"}
+   :oppiaine-b1 {:fi "B1-kieli"
+                 :sv "B1-kieli"
+                 :en "B1-kieli"}
+   :oppiaine-ma {:fi "Matematiikka"
+                 :sv "Matematiikka"
+                 :en "Matematiikka"}
+   :oppiaine-bi {:fi "Biologia"
+                 :sv "Biologia"
+                 :en "Biologia"}
+   :oppiaine-ge {:fi "Maantieto"
+                 :sv "Maantieto"
+                 :en "Maantieto"}
+   :oppiaine-fy {:fi "Fysiikka"
+                 :sv "Fysiikka"
+                 :en "Fysiikka"}
+   :oppiaine-ke {:fi "Kemia"
+                 :sv "Kemia"
+                 :en "Kemia"}
+   :oppiaine-tt {:fi "Terveystieto"
+                 :sv "Terveystieto"
+                 :en "Terveystieto"}
+   :oppiaine-ty {:fi "Uskonto tai elämänkatsomustieto"
+                 :sv "Uskonto tai elämänkatsomustieto"
+                 :en "Uskonto tai elämänkatsomustieto"}
+   :oppiaine-hi {:fi "Historia"
+                 :sv "Historia"
+                 :en "Historia"}
+   :oppiaine-yh {:fi "Yhteiskuntaoppi"
+                 :sv "Yhteiskuntaoppi"
+                 :en "Yhteiskuntaoppi"}
+   :oppiaine-mu {:fi "Musiikki"
+                 :sv "Musiikki"
+                 :en "Musiikki"}
+   :oppiaine-ku {:fi "Kuvaamataito"
+                 :sv "Kuvaamataito"
+                 :en "Kuvaamataito"}
+   :oppiaine-ka {:fi "Käsityö"
+                 :sv "Käsityö"
+                 :en "Käsityö"}
+   :oppiaine-li {:fi "Liikunta"
+                 :sv "Liikunta"
+                 :en "Liikunta"}
+   :oppiaine-ko {:fi "Kotitalous"
+                 :sv "Kotitalous"
+                 :en "Kotitalous"}})
 
 (def general-texts
   {:yes                {:en "Yes"

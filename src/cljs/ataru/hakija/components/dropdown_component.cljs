@@ -69,6 +69,7 @@
 (defn hakija-dropdown [{:keys [field-descriptor]}]
   (let [lang             @(re-frame/subscribe [:application/form-language])
         unselected-label (-> field-descriptor :unselected-label lang)
+        answer           @(re-frame/subscribe [:application/answer (:id field-descriptor)])
         options          (map (fn [option]
                                 {:label (-> option :label lang)
                                  :value (:value option)})
@@ -76,7 +77,6 @@
     [dropdown-component/dropdown
      {:options          options
       :unselected-label unselected-label
-      :on-change        (fn [event]
-                          (re-frame/dispatch [:application/dropdown-change
-                                              field-descriptor
-                                              (.. event -target -value)]))}]))
+      :selected-value   (:value answer)
+      :on-change        (fn [value]
+                          (re-frame/dispatch [:application/dropdown-change field-descriptor value]))}]))

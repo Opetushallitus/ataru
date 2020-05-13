@@ -1,38 +1,111 @@
+@import "component-colors";
 @import "component-fonts";
 @import "component-layout";
 
 .arvosanat-taulukko {
   .default-font();
-
-  display: grid;
-  grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-lisaa-valinnaisaine] 1fr [arvosana-rivi-end]');
-  grid-auto-rows: 1fr;
 }
 
-.arvosana-taulukko__grid-item {
-  padding: 3px;
-}
-
-.arvosana__oppiaine {
-  .flex-row-top-left();
-
-  grid-column-start: arvosana-oppiaine;
+.arvosanat-taulukko__otsikko {
+  font-weight: 600;
 }
 
 .arvosana__oppimaara {
-  .flex-row-top-right();
-
-  grid-column-start: arvosana-oppimaara;
+  color: @component-gray;
 }
 
 .arvosana__arvosana {
-  .flex-row-top-right();
-
-  grid-column-start: arvosana-arvosana;
+  color: @component-gray;
 }
 
-.arvosana__lisaa-valinnaisaine {
-  .flex-row-top-center();
+.arvosana__lisaa-valinnaisaine--solu {
+  color: @text-green;
+}
 
-  grid-column-start: arvosana-lisaa-valinnaisaine;
+@media only screen and (min-width: (@mobile-width + 1)) {
+  .arvosanat-taulukko {
+    .flex-column-top-center();
+  }
+
+  .arvosanat-taulukko__rivi {
+    display: grid;
+    grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-lisaa-valinnaisaine] 1fr [arvosana-rivi-end]');
+    grid-template-rows: 1fr;
+    width: 100%;
+  }
+
+  .arvosana__oppiaine {
+    .flex-row-left-center();
+
+    grid-area: arvosana-oppiaine;
+  }
+
+  .arvosana__oppimaara {
+    .flex-row-right-center();
+
+    grid-area: arvosana-oppimaara;
+  }
+
+  .arvosana__arvosana {
+    .flex-row-right-center();
+
+    grid-area: arvosana-arvosana;
+  }
+
+  .arvosana__lisaa-valinnaisaine {
+    .flex-row-center-center();
+
+    grid-area: arvosana-lisaa-valinnaisaine;
+  }
+
+  .arvosana__lisaa-valinnaisaine-linkki {
+    display: none;
+  }
+
+  .arvosana__lisaa-valinnaisaine--solu {
+    font-size: 22px;
+  }
+
+  .arvosanat-taulukko__solu {
+    padding-bottom: 10px;
+    padding-top: 10px;
+
+    &:not(:first-of-type) {
+      padding-left: 10px;
+    }
+
+    &:not(:last-of-type) {
+      padding-right: 10px;
+    }
+
+    &:not(.arvosanat-taulukko__otsikko) {
+      border-bottom: 1px solid @component-light-gray;
+    }
+  }
+}
+
+@media only screen and (max-width: @mobile-width) {
+  .arvosanat-taulukko {
+    .flex-column-top-left();
+  }
+
+  .arvosanat-taulukko__rivi {
+    border-left: 2px solid @component-light-gray;
+    padding-left: 10px;
+    width: 200px;
+  }
+
+  .arvosanat-taulukko__rivi:not(:last-child) {
+    margin-bottom: 20px;
+  }
+
+  .arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine {
+    display: none;
+  }
+
+  .arvosana__lisaa-valinnaisaine-ikoni {
+    display: none;
+  }
+
+
 }

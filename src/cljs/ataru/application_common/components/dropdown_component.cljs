@@ -1,47 +1,163 @@
 (ns ataru.application-common.components.dropdown-component
   (:require [ataru.application-common.components.button-component :as button-component]
-            [schema.core :as s]))
+            [ataru.util :as util]
+            [clojure.string :as string]
+            [reagent.core :as reagent]
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 (s/defschema SelectOptionProps
   {:value s/Str
    :label s/Str})
 
+(s/defn dropdown-chevron
+  [{:keys [expanded?]} :- {:expanded? s/Bool}]
+  [:i.zmdi.a-button__chevron
+   {:aria-hidden true
+    :class       (if expanded?
+                   "zmdi-chevron-up"
+                   "zmdi-chevron-down")}])
+
 (s/defn dropdown-select-option
   [{:keys [value
-           label]} :- SelectOptionProps]
+           label
+           selected-value]} :- (st/assoc
+                                 SelectOptionProps
+                                 :selected-value
+                                 (s/maybe s/Str))]
   [:option
-   {:value value}
+   {:value    value
+    :selected (when (= value selected-value)
+                true)}
    label])
 
 (s/defn dropdown-select
-  [{:keys [options
+  [{:keys [expanded?
+           options
            unselected-label
-           on-change]} :- {:options          [SelectOptionProps]
+           selected-value
+           on-click
+           on-change]} :- {:expanded?        s/Bool
+                           :options          [SelectOptionProps]
                            :unselected-label s/Str
+                           :selected-value   (s/maybe s/Str)
+                           :on-click         s/Any
                            :on-change        s/Any}]
-  [:select.a-native-component
-   {:aria-hidden true
-    :on-change   on-change}
-   [dropdown-select-option
-    {:value ""
-     :label unselected-label}]
-   (map (fn [{:keys [value] :as option-props}]
-          (let [key (str "dropdown-select-option-" value)]
-            ^{:key key}
-            [dropdown-select-option option-props]))
-        options)])
+  [:div.a-native-component.a-dropdown-select-container
+   [:select.a-dropdown-select
+    {:aria-hidden true
+     :on-click    on-click
+     :on-change   (fn dropdown-select-on-change [event]
+                    (let [value (.. event -target -value)]
+                      (on-change value)))}
+    [dropdown-select-option
+     {:value          ""
+      :label          unselected-label
+      :selected-value nil}]
+    (map (fn [{:keys [value] :as option-props}]
+           (let [key (str "dropdown-select-option-" value)]
+             ^{:key key}
+             [dropdown-select-option (assoc
+                                       option-props
+                                       :selected-value
+                                       selected-value)]))
+         options)]
+   [dropdown-chevron
+    {:expanded? expanded?}]])
 
-(s/defn dropdown
-  [{:keys [options
-           unselected-label
-           on-change]} :- {:options          [SelectOptionProps]
-                           :unselected-label s/Str
-                           :on-change        s/Any}]
-  [:div
-   [button-component/button
-    {:label unselected-label}]
-   ;[dropdown-select
-   ; {:options          options
-   ;  :unselected-label unselected-label
-   ;  :on-change        on-change}]
-   ])
+(s/defn dropdown-list-option
+  [{:keys [value
+           label
+           on-click
+           selected-value]} :- (st/assoc
+                                 SelectOptionProps
+                                 :on-click s/Any
+                                 :selected-value (s/maybe s/Str))]
+  (let [selected? (= selected-value value)]
+    [:li.a-dropdown-list__option
+     {:id            value
+      :on-click      (fn dropdown-list-option-on-click []
+                       (on-click value))
+      :role          "option"
+      :aria-selected (when selected?
+                       true)}
+     (when selected?
+       [:i.zmdi.zmdi-check.a-dropdown-list-option__checked])
+     [:span label]]))
+
+(s/defn dropdown-list
+  [{:keys [expanded?
+           options
+           on-click
+           label-id
+           selected-value]} :- {:expanded?      s/Bool
+                                :options        [SelectOptionProps]
+                                :on-click       s/Any
+                                :label-id       s/Str
+                                :selected-value (s/maybe s/Str)}]
+  [:div.a-component.a-dropdown-list
+   {:class (when-not expanded?
+             "a-dropdown-list--collapsed")}
+   [:ul.a-dropdown-list-container
+    {:aria-labelledby label-id
+     :role            "listbox"
+     :tab-index       "-1"}
+    (map (fn [{:keys [value] :as option-props}]
+           (let [key (str "dropdown-list-option-" value)]
+             ^{:key key}
+             [dropdown-list-option (merge option-props
+                                          {:on-click       on-click
+                                           :selected-value selected-value})]))
+         options)]])
+
+(defn dropdown
+  []
+  (let [expanded? (reagent/atom false)]
+    (s/fn render-dropdown
+      [{:keys [options
+               unselected-label
+               selected-value
+               on-change]} :- {:options          [SelectOptionProps]
+                               :unselected-label s/Str
+                               :selected-value   (s/maybe s/Str)
+                               :on-change        s/Any}]
+      (let [on-dropdown-value-change (fn on-dropdown-value-change [event]
+                                       (reset! expanded? false)
+                                       (on-change event))
+            on-dropdown-select-open  (fn on-dropdown-select-open []
+                                       (reset! expanded? true))
+            button-label             (if-not (string/blank? selected-value)
+                                       (->> options
+                                            (filter (fn filter-dropdown-select-option [{option-value :value}]
+                                                      (= option-value selected-value)))
+                                            (map :label)
+                                            (first))
+                                       unselected-label)
+            label-id                 (util/component-id)]
+        [:div.a-dropdown
+         [:div.a-dropdown-button-container.a-component
+          {:class (when @expanded?
+                    "a-component")}
+          [button-component/button
+           (cond-> {:label      button-label
+                    :on-click   (fn dropdown-button-on-click []
+                                  (swap! expanded? not))
+                    :aria-attrs {:aria-haspopup   "listbox"
+                                 :aria-labelledby label-id}}
+                   @expanded?
+                   (assoc-in [:aria-attrs :aria-expanded] true))]
+          [dropdown-chevron
+           {:expanded? @expanded?}]]
+         [dropdown-select
+          {:expanded?        @expanded?
+           :options          options
+           :unselected-label unselected-label
+           :selected-value   selected-value
+           :on-click         on-dropdown-select-open
+           :on-change        on-dropdown-value-change}]
+         [dropdown-list
+          {:expanded?      @expanded?
+           :options        options
+           :on-click       on-dropdown-value-change
+           :label-id       label-id
+           :selected-value selected-value}]]))))
