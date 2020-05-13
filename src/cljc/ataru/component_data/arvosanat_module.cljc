@@ -3,7 +3,6 @@
             [ataru.schema.element-metadata-schema :as element-metadata-schema]
             [ataru.schema.localized-schema :as localized-schema]
             [ataru.translations.texts :as texts]
-            [ataru.util :as util]
             [schema.core :as s]
             [schema-tools.core :as st]))
 
@@ -40,14 +39,17 @@
    :children   [OppiaineenArvosana]
    :metadata   element-metadata-schema/ElementMetadata})
 
-(def ^:private oppiaineen-oppimaara
-  {:fieldClass "formField"
-   :fieldType  "dropdown"
-   :id         (util/component-id)
-   :label      {:fi ""
-                :sv ""
-                :en ""}
-   :options    [{:value :fi}]})
+(defn- oppimaara-aidinkieli-ja-kirjallisuus [{:keys [metadata]}]
+  {:fieldClass       "formField"
+   :fieldType        "dropdown"
+   :version          :accessible
+   :id               "oppimaara-aidinkieli-ja-kirjallisuus"
+   :label            (:oppimaara-aidinkieli-ja-kirjallisuus texts/translation-mapping)
+   :unselected-label (:oppimaara texts/translation-mapping)
+   :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
+                       :value "suomi-aidinkielena"}]
+   :metadata         metadata
+   :validators       ["required"]})
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
@@ -153,7 +155,7 @@
   [{:keys [metadata
            children]} :- {:metadata element-metadata-schema/ElementMetadata
                           :children [OppiaineenArvosana]}]
-  {:id         (util/component-id)
+  {:id         "arvosanat-taulukko"
    :fieldClass "wrapperElement"
    :fieldType  "arvosanat-taulukko"
    :children   children
