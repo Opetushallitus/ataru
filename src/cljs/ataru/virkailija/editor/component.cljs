@@ -1,9 +1,7 @@
 (ns ataru.virkailija.editor.component
   (:require
    [ataru.application-common.application-field-common :refer [copy-link]]
-   [ataru.util :as cutil]
-   [ataru.cljs-util :as util :refer [cljs->str str->cljs new-uuid]]
-   [ataru.component-data.component :as component]
+   [ataru.cljs-util :as util]
    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
    [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
    [ataru.component-data.person-info-module :as pm]
@@ -13,9 +11,7 @@
    [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
    [cljs.core.match :refer-macros [match]]
    [clojure.string :as string]
-   [goog.dom :as gdom]
    [goog.string :as s]
-   [goog.date :as d]
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
@@ -66,15 +62,10 @@
       @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- belongs-to-hakukohteet-modal
-  [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
-  (let [search-term     (subscribe [:editor/belongs-to-hakukohteet-modal-search-term-value id])
-        fetching?       (subscribe [:editor/fetching-haut?])
-        used-by-haku?   (subscribe [:editor/used-by-haku?])
+  [_ id _ _ _]
+  (let [used-by-haku?   (subscribe [:editor/used-by-haku?])
         haut            (subscribe [:editor/filtered-haut id])
-        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])
-        on-click        (fn [_] (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        on-change       (fn [e] (dispatch [:editor/on-belongs-to-hakukohteet-modal-search-term-change
-                                           id (.-value (.-target e))]))]
+        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])]
     (fn [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
       (if @used-by-haku?
         [h-and-h/popup
@@ -108,7 +99,7 @@
 (defn- belongs-to
   [_ _ _ _]
   (let [fetching? (subscribe [:editor/fetching-haut?])]
-    (fn [path oid name on-click]
+    (fn [_ _ name on-click]
       [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
        [:span.belongs-to-hakukohteet__hakukohde-label
         (if @fetching?
@@ -119,7 +110,7 @@
         [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
 
 (defn- belongs-to-hakukohteet-option
-  [parent-key index path]
+  [parent-key index _]
   (let [id            (str parent-key "-" index)
         on-click-show (fn [_]
                         (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
@@ -334,18 +325,6 @@
      (when can-remove?
        [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
-(defn- fold-transition
-  [component folded? state height]
-  (case [@folded? @state]
-    [true :unfolded]
-    (do (reset! height (.-scrollHeight (r/dom-node component)))
-        (reset! state :set-height))
-    [true :set-height]
-    (reset! state :folded)
-    [false :folded]
-    (reset! state :set-height)
-    nil))
-
 (defn- component-fold-transition
   [component folded? state height]
   (cond (= [true :unfolded] [@folded? @state])
@@ -374,33 +353,33 @@
         height   (r/atom nil)
         listener (unfold-ended-listener folded? state)]
     (r/create-class
-     {:component-did-mount
-      (fn [component]
-        (.addEventListener (r/dom-node component)
-                           "transitionend"
-                           listener)
-        (component-fold-transition component folded? state height))
-      :component-will-unmount
-      (fn [component]
-        (.removeEventListener (r/dom-node component)
-                              "transitionend"
-                              listener))
-      :component-did-update
-      (fn [component]
-        (component-fold-transition component folded? state height))
-      :reagent-render
-      (fn [path content-component]
-        (let [folded? @folded?]
-          (case @state
-            :unfolded
-            [:div.editor-form__component-content-wrapper
-             content-component]
-            :set-height
-            [:div.editor-form__component-content-wrapper
-             {:style {:height @height}}
-             content-component]
-            :folded
-            [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
+      {:component-did-mount
+       (fn [component]
+         (.addEventListener (r/dom-node component)
+                            "transitionend"
+                            listener)
+         (component-fold-transition component folded? state height))
+       :component-will-unmount
+       (fn [component]
+         (.removeEventListener (r/dom-node component)
+                               "transitionend"
+                               listener))
+       :component-did-update
+       (fn [component]
+         (component-fold-transition component folded? state height))
+       :reagent-render
+       (fn [_ content-component]
+         (let [_ @folded?]
+           (case @state
+             :unfolded
+             [:div.editor-form__component-content-wrapper
+              content-component]
+             :set-height
+             [:div.editor-form__component-content-wrapper
+              {:style {:height @height}}
+              content-component]
+             :folded
+             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
 
 (defn markdown-help []
   [:div.editor-form__markdown-help
@@ -476,10 +455,9 @@
       {:on-drop prevent-default}
       value]]))
 
-(defn- koodisto-fields-with-lang [languages option-path]
+(defn- koodisto-fields-with-lang [_ _]
   (fn [languages option-path]
-    (let [multiple-languages? (> (count languages) 1)
-          component           @(subscribe [:editor/get-component-value option-path])]
+    (let [component           @(subscribe [:editor/get-component-value option-path])]
       [:div
        {:title (clojure.string/join ", " (map (fn [lang] (get-in component [:label lang])) languages))}
        (map-indexed (partial koodisto-field component)
@@ -592,11 +570,11 @@
           :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
           :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
 
-(defn- text-component-type-selector [component-id path radio-group-id]
+(defn- text-component-type-selector [_ path _]
   (let [id           (util/new-uuid)
         checked?     (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path radio-group-id]
+    (fn [component-id path _]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
@@ -627,7 +605,7 @@
                        :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(defn text-component [initial-content path & {:keys [header-label size-label]}]
+(defn text-component [_ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
         sub-header        (subscribe [:editor/get-component-value path :label])
         size              (subscribe [:editor/get-component-value path :params :size])
@@ -640,7 +618,6 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
-        numeric?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked?      (subscribe [:editor/component-locked? path])]
     (fn [initial-content path & {:keys [header-label size-label]}]
       [:div.editor-form__component-wrapper
@@ -717,12 +694,8 @@
      :class    (when disabled? "editor-form__multi-options-remove--cross--disabled")}]])
 
 (defn- dropdown-option
-  [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
-   {:keys [header? editable?]
-    :or   {header? false editable? true}
-    :as   opts}]
-  (let [multiple-languages? (< 1 (count languages))
-        component-locked?        (subscribe [:editor/component-locked? path])
+  [option-index _ _ _ path _ show-followups _ _ _ & _]
+  (let [component-locked?        (subscribe [:editor/component-locked? path])
         on-click            (fn [up? event]
                               (when-not @component-locked?
                                 (.preventDefault event)
@@ -737,9 +710,8 @@
                                   nil
                                   (js/parseInt n))))]
     (fn [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
-         {:keys [header? editable?]
-          :or   {header? false editable? true}
-          :as   opts}]
+         {:keys [editable?]
+          :or   {editable? true}}]
       [:div
        [:div.editor-form__multi-options-wrapper-outer
         [:div
@@ -790,21 +762,14 @@
           :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path (:allow-invalid? @selected-koodisto)])}
          (when (= (:uri @selected-koodisto) "")
            [:option {:value "" :disabled true} ""])
-         (for [{:keys [uri title version]} koodisto-whitelist/koodisto-whitelist]
+         (for [{:keys [uri title]} koodisto-whitelist/koodisto-whitelist]
            ^{:key (str "koodisto-" uri)}
            [:option {:value uri} title])]
         [:div.editor-form__select-koodisto-dropdown-arrow
          [:i.zmdi.zmdi-chevron-down]]]])))
 
-(defn- custom-answer-options [languages
-                              options
-                              followups
-                              path
-                              question-group-element?
-                              editable?
-                              show-followups
-                              parent-key]
-  (fn [languages options followups path question-group-element? editable?]
+(defn- custom-answer-options [_ _ _ _ _ _ show-followups parent-key]
+  (fn [languages options followups path question-group-element? editable? _ _]
     (let [option-count (count options)]
       (when (or (nil? @show-followups)
                 (not (= (count @show-followups) option-count)))
@@ -826,15 +791,15 @@
                               :editable? editable?])
                            options))])))
 
-(defn koodisto-answer-options [id followups path question-group-element? parent-key]
+(defn koodisto-answer-options [_ _ _ _ parent-key]
   (let [opened? (r/atom false)]
-    (fn [id followups path question-group-element?]
+    (fn [_ followups path question-group-element?]
       (let [languages             @(subscribe [:editor/languages])
             value                 @(subscribe [:editor/get-component-value path])
             editable?             false
-            hide-koodisto-options (fn [evt]
+            hide-koodisto-options (fn [_]
                                     (reset! opened? false))
-            show-koodisto-options (fn [evt]
+            show-koodisto-options (fn [_]
                                     (reset! opened? true))
             show-followups        (r/atom nil)]
         (if (not @opened?)
@@ -849,7 +814,7 @@
              [:i.zmdi.zmdi-chevron-up] (str " " @(subscribe [:editor/virkailija-translation :hide-options]))]]
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
-(defn dropdown [initial-content followups path]
+(defn dropdown [_ _ path _]
   (let [languages                (subscribe [:editor/languages])
         options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
         koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
@@ -983,7 +948,7 @@
               :else (-> component :label lang)))]
     (flatten (recursively-get-labels component))))
 
-(defn hakukohteet-module [content path]
+(defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
         value           (subscribe [:editor/get-component-value path])]
     (fn [content path]
@@ -1005,7 +970,6 @@
                 can-remove?
                 show-child-component-names?
                 has-multiple-configurations?]} (-> content :module name module-spec/get-module-spec)
-        languages         (subscribe [:editor/languages])
         value             (subscribe [:editor/get-component-value path])
         virkailija-lang   (subscribe [:editor/virkailija-lang])
         component-locked? (subscribe [:editor/component-locked? path])]
@@ -1050,7 +1014,7 @@
 
 (defn info-element
   "Info text which is a standalone component"
-  [initial-content path]
+  [_ path]
   (let [languages        (subscribe [:editor/languages])
         collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
         sub-header       (subscribe [:editor/get-component-value path :label])
@@ -1101,7 +1065,7 @@
           [belongs-to-hakukohteet path initial-content]]]]])))
 
 (defn pohjakoulutusristiriita
-  [initial-content path]
+  [_ _]
   (let [languages (subscribe [:editor/languages])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
@@ -1124,7 +1088,7 @@
                                       (markdown-help)]])))
                  doall)]]]]]])))
 
-(defn adjacent-fieldset [content path children]
+(defn adjacent-fieldset [_ path _]
   (let [languages         (subscribe [:editor/languages])
         sub-header        (subscribe [:editor/get-component-value path :label])
         component-locked? (subscribe [:editor/component-locked? path])]
@@ -1156,10 +1120,9 @@
              (fn [component-fn]
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
-(defn adjacent-text-field [content path]
+(defn adjacent-text-field [_ _]
   (let [languages (subscribe [:editor/languages])
-        radio-group-id    (util/new-uuid)
-        numeric? (subscribe [:editor/get-component-value path :params :numeric])]
+        radio-group-id    (util/new-uuid)]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
@@ -1255,13 +1218,13 @@
 (defn deadline-date [deadline]
   (when-let [[_ day month year hours minutes] (map js/parseInt (re-matches deadline-pattern deadline))]
     (if-let [dt (t/date-time year month day hours minutes)]
-      (if (= [year month day hours minutes]
-             [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
-              (.getHours dt)
-              (.getMinutes dt)])
+      (when (= [year month day hours minutes]
+               [(.getYear dt) (inc (.getMonth dt)) (.getDate dt)
+                (.getHours dt)
+                (.getMinutes dt)])
         (s/format deadline-format day month year hours minutes)))))
 
-(defn attachment [content path]
+(defn attachment [_ path]
   (let [component        (subscribe [:editor/get-component-value path])
         languages        (subscribe [:editor/languages])
         deadline-value   (r/atom (get-in @component [:params :deadline]))

@@ -1,19 +1,15 @@
 (ns ataru.cljs-util
-  (:require [ataru.translations.translation-util :as tu]
-            [clojure.string :refer [join]]
+  (:require [clojure.set :as set]
+            [clojure.walk :as walk]
             [cljs.core.match :refer-macros [match]]
-            [cljs.reader :as reader :refer [read-string]]
+            [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
-            [re-frame.core :refer [dispatch subscribe]]
+            [re-frame.core :refer [dispatch]]
             [reagent.core :as r]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [goog.string.format]
-            [ataru.translations.translation-util :as translation-util]
-            [goog.string :as gstring]
-            [goog.string.format]
-            [ataru.translations.texts :as texts])
+            [goog.string.format])
   (:import [goog.net Cookies]))
 
 (def wrap-scroll-to
@@ -28,7 +24,7 @@
   ([f timeout]
    (let [id (atom nil)]
      (fn [& args]
-       (if (not (nil? @id))
+       (when (not (nil? @id))
          (js/clearTimeout @id))
        (reset! id (js/setTimeout
                     (apply partial f args)
@@ -110,7 +106,7 @@
 (defn- update-query-params
   [url params]
   (let [new-params (-> (:query url)
-                       (clojure.walk/keywordize-keys)
+                       (walk/keywordize-keys)
                        (merge params)
                        (remove-empty-query-params))]
     (assoc url :query new-params)))
@@ -141,7 +137,7 @@
 
 (defn get-unselected-review-states
   [unselected-states all-states]
-  (clojure.set/difference
+  (set/difference
     (->> all-states
          (map first)
          set)

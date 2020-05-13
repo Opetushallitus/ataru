@@ -6,7 +6,7 @@
 ; in the future and already do to some extent.
 
 (ns ataru.hakija.hakija-readonly
-  (:require [clojure.string :refer [trim]]
+  (:require [clojure.string :as string]
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
@@ -25,7 +25,7 @@
 
 (defn- split-if-string [s]
   (if (string? s)
-    (clojure.string/split s #"\s*,\s*")
+    (string/split s #"\s*,\s*")
     s))
 
 (defn- visible? [ui field-descriptor]
@@ -35,7 +35,7 @@
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
-(defn text [field-descriptor application lang group-idx]
+(defn text [field-descriptor _ lang group-idx]
   (let [id (keyword (:id field-descriptor))
         answer @(subscribe [:application/answer id])]
     [:div.application__form-field
@@ -94,7 +94,7 @@
                   (str "-" question-group-id)))}
     [field child application lang question-group-id]))
 
-(defn wrapper [content application lang children]
+(defn wrapper [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       [:div.application__wrapper-element
@@ -104,7 +104,7 @@
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
 
-(defn question-group [content application lang children]
+(defn question-group [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [content application lang children]
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
@@ -118,7 +118,7 @@
                   (into [:div.application__question-group-row-content.application__form-field]
                         (child-fields children application lang ui idx))]))]))))
 
-(defn row-container [application lang children question-group-index]
+(defn row-container [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
     (fn [application lang children question-group-index]
       (into [:div] (child-fields children application lang ui question-group-index)))))
@@ -255,7 +255,7 @@
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)
     (-> lang
-        clojure.string/lower-case
+        string/lower-case
         keyword)))
 
 (defn readonly-fields [form application]
