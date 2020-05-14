@@ -35,7 +35,7 @@
    :has-multiple-configurations? false})
 
 (s/defn get-module-spec :- ModuleSpec
-  [module-name :- s/Keyword]
+  [module-name :- s/Str]
   (let [spec (cond
                (= module-name "person-info") person-info-module-spec
                (string/starts-with? module-name "arvosanat-") arvosanat-module-spec
