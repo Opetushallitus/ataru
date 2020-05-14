@@ -85,7 +85,7 @@
                  [nrepl "0.7.0"]
                  [com.taoensso/carmine "2.19.1"]
                  [pandect "0.6.1"]
-                 [hikari-cp "2.11.0"]
+                 [hikari-cp "2.12.0"]
                  [ring/ring-mock "0.4.0"]
                  [speclj "3.3.2"]
                  [org.clojure/test.check "1.0.0"]
