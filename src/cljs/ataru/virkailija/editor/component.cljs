@@ -614,9 +614,16 @@
 (declare custom-answer-options)
 
 (defn text-field-options-wrapper
-  [initial-content languages value followups path question-group-element? show-followups _]
-  [:div.editor-form__multi-options_wrapper
-   [custom-answer-options languages (:options value) followups path question-group-element? true show-followups (:id initial-content)]])
+  [options followups path show-followups]
+  (let [option-count (count options)]
+    (when (or (nil? @show-followups)
+              (not (= (count @show-followups) option-count)))
+      (reset! show-followups (vec (replicate option-count true))))
+    (when (< 0 option-count)
+      (let [option-index 0
+            followups    (nth followups option-index)]
+        [:div.editor-form__text-field-options-wrapper
+         [followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-followups [_ _ _]
   (let [id (util/new-uuid)]
@@ -640,9 +647,9 @@
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
 (defn- text-field-followups
-  [initial-content languages value followups path question-group-element? show-followups component-locked?]
+  [value followups path show-followups]
   [:div.editor-form__component-row-wrapper
-   [text-field-options-wrapper initial-content languages value followups path question-group-element? show-followups component-locked?]])
+   [text-field-options-wrapper (:options value) followups path show-followups]])
 
 (defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
@@ -660,7 +667,7 @@
         text-area?        (= "Tekstialue" header-label)
         component-locked? (subscribe [:editor/component-locked? path])
         show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
-    (fn [initial-content followups path & {:keys [header-label question-group-element? size-label]}]
+    (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
@@ -715,7 +722,7 @@
          [:div.editor-form__checkbox-wrapper
           [info-addon path]
           [text-field-has-followups path followups @component-locked?]]
-         [text-field-followups initial-content @languages @value followups path question-group-element? show-followups @component-locked?]]]])))
+         [text-field-followups @value followups path show-followups]]]])))
 
 (defn text-field [initial-content followups path]
   [text-component initial-content followups path
