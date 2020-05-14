@@ -35,7 +35,8 @@
                           (into {}))
         results      (map (fn [application]
                             (try
-                              [nil (enrich-application-data (get haut (:haku_oid application)) application)]
+                              (let [enriched-application (enrich-application-data (get haut (:haku_oid application)) application)]
+                                [nil (dissoc enriched-application :content)])  ; remove keys we don't want to expose through API
                               (catch Exception e
                                 [[e (:key application)] nil])))
                           applications)]
