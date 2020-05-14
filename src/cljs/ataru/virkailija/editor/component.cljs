@@ -613,7 +613,7 @@
 
 (declare custom-answer-options)
 
-(defn text-field-options-wrapper
+(defn text-field-option-followups-wrapper
   [options followups path show-followups]
   (let [option-count (count options)]
     (when (or (nil? @show-followups)
@@ -622,7 +622,7 @@
     (when (< 0 option-count)
       (let [option-index 0
             followups    (nth followups option-index)]
-        [:div.editor-form__text-field-options-wrapper
+        [:div.editor-form__text-field-option-followups-wrapper
          [followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-an-option [_ _ _]
@@ -648,10 +648,10 @@
            :class (when disabled? "editor-form__checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
-(defn- text-field-followups
+(defn- text-field-option-followups
   [value followups path show-followups]
   [:div.editor-form__component-row-wrapper
-   [text-field-options-wrapper (:options value) followups path show-followups]])
+   [text-field-option-followups-wrapper (:options value) followups path show-followups]])
 
 (defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
@@ -724,7 +724,7 @@
          [:div.editor-form__checkbox-wrapper
           [info-addon path]
           [text-field-has-an-option @value path @component-locked?]]
-         [text-field-followups @value followups path show-followups]]]])))
+         [text-field-option-followups @value followups path show-followups]]]])))
 
 (defn text-field [initial-content followups path]
   [text-component initial-content followups path
