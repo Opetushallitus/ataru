@@ -625,12 +625,13 @@
         [:div.editor-form__text-field-option-followups-wrapper
          [followup-question-overlay option-index followups path show-followups]]))))
 
-(defn- text-field-has-an-option [_ _ _]
+(defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
-    (fn [value path component-locked?]
+    (fn [value followups path component-locked?]
       (let [option-index 0
             has-options? (not (empty? (:options value)))
-            disabled?    component-locked?]
+            disabled?    (or component-locked?
+                             (not (empty? (first followups))))]
         [:div.editor-form__checkbox-container
          [:input.editor-form__checkbox
           {:id        id
@@ -723,7 +724,7 @@
           [belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__checkbox-wrapper
           [info-addon path]
-          [text-field-has-an-option @value path @component-locked?]]
+          [text-field-has-an-option @value followups path @component-locked?]]
          [text-field-option-followups @value followups path show-followups]]]])))
 
 (defn text-field [initial-content followups path]
