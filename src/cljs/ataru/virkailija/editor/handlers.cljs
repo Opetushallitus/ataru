@@ -75,6 +75,14 @@
           (update-in (drop-last dropdown-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
+  :editor/remove-text-field-option
+  (fn [db [_ & path]]
+    (let [option-path (current-form-content-path db [path])]
+      (-> db
+          (update-in (drop-last option-path) util/remove-nth (last option-path))
+          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
+
+(reg-event-db
   :editor/add-text-field-option
   (fn [db [_ & path]]
     (let [text-field-path (current-form-content-path db [path :options])
