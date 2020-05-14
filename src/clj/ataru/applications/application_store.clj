@@ -24,7 +24,7 @@
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :as log]
-            [yesql.core :refer [defqueries]]
+            [ataru.applications.application-store-queries :refer :all]
             [ataru.config.core :refer [config]])
   (:import [java.time
             LocalDateTime
@@ -32,7 +32,7 @@
            org.postgresql.util.PSQLException
            java.time.format.DateTimeFormatter))
 
-(defqueries "sql/application-queries.sql")
+
 
 (defn- exec-db
   [ds-key query params]
@@ -1283,6 +1283,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
      :haku_oid        haku-oid
      :henkilo_oid     henkilo-oid
      :hakukohde_oids  hakukohde-oids
+     :content         content
      :kotikunta       (-> answers :home-town :value)
      :asuinmaa        (-> answers :country-of-residence :value)}))
 
