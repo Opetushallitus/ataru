@@ -1,5 +1,5 @@
 (ns ataru.translations.translation-util
-  (:require [ataru.translations.texts :refer [translation-mapping virkailija-texts]]
+  (:require [ataru.translations.texts :refer [translation-mapping]]
             #?@(:cljs [[goog.string :as gstring]
                        [goog.string.format]])))
 
