@@ -8,7 +8,7 @@
 (defn ehdollisesti-hyvaksyttavissa
   [application-key hakukohde-oids]
   (let [ehdollisesti-hyvaksyttavissa? @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa? application-key])
-        disabled?                     @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled? application-key])
+        disabled?                     @(re-frame/subscribe [:hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled? application-key hakukohde-oids])
         checked?                      (= ehdollisesti-hyvaksyttavissa? :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa)]
     [:div.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa
      [:input.hyvaksynnan-ehto-ehdollisesti-hyvaksyttavissa__checkbox
@@ -193,10 +193,10 @@
          [ehto-text application-key hakukohde-oids selected-lang]]))))
 
 (defn- ehto-valintatapajonoissa
-  [application-key]
+  [application-key hakukohde-oids]
   (let [lang  @(re-frame/subscribe [:editor/virkailija-lang])
-        ehdot @(re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key])]
-    (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-single-ehto-valintatapajonoissa? application-key])
+        ehdot @(re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key hakukohde-oids])]
+    (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-single-ehto-valintatapajonoissa? application-key hakukohde-oids])
       [:div.hyvaksynnan-ehto-valintatapajonoissa
        [:p.hyvaksynnan-ehto-valintatapajonoissa__ehto-text
         (util/non-blank-val (second (first ehdot)) [lang :fi :sv :en])]]
@@ -227,14 +227,14 @@
        (if multiple-values?
          [ehdollisesti-hyvaksyttavissa-monta-arvoa]
          [ehdollisesti-hyvaksyttavissa application-key hakukohde-oids])]
-      (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-valintatapajonoissa? application-key])
-        [[ehto-valintatapajonoissa application-key]]
+      (if @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-valintatapajonoissa? application-key hakukohde-oids])
+        [[ehto-valintatapajonoissa application-key hakukohde-oids]]
         [[:div.hyvaksynnan-ehto-error
           (let [errors @(re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])]
             (when (seq errors)
               [:span.hyvaksynnan-ehto-error__text
                @(re-frame/subscribe [:editor/virkailija-translation :operation-failed])]))]
-         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi? application-key])
+         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-koodi? application-key hakukohde-oids])
            [ehto-koodi application-key hakukohde-oids])
-         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-texts? application-key])
+         (when @(re-frame/subscribe [:hyvaksynnan-ehto/show-ehto-texts? application-key hakukohde-oids])
            [ehto-texts application-key hakukohde-oids])]))))
