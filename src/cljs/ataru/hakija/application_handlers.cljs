@@ -1,5 +1,7 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
+  (:require [clojure.set :as set]
+            [clojure.string :as string]
+            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
             [schema.core :as s]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
@@ -220,8 +222,8 @@
                                                             selected-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohteet          (set (map :oid selected-ei-jyemp-hakukohteet-tarjonta))]
-    [(clojure.set/union selected-hakukohteet selected-hakukohderyhmat)
-     (clojure.set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
+    [(set/union selected-hakukohteet selected-hakukohderyhmat)
+     (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
 (declare set-field-visibility)
 
@@ -317,7 +319,7 @@
                              flat-form-content)
         ssn-value      (get-in db [:application :answers :ssn :value])
         have-ssn-value (if (or (and cannot-view? (nil? ssn-value))
-                               (not (clojure.string/blank? ssn-value)))
+                               (not (string/blank? ssn-value)))
                          "true"
                          "false")]
     (update-in db [:application :answers :have-finnish-ssn]
