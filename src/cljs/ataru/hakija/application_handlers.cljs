@@ -520,7 +520,7 @@
           db)
         (map keyword (:selection-limited db))))))
 
-(defn reset-other-selections [db question-id answer-id]
+(defn reset-other-selections [db question-id _]
   (reduce (fn [db key]
             (if (= key question-id)
               db
@@ -609,7 +609,7 @@
 (reg-event-db
   :application/network-online
   [check-schema-interceptor]
-  (fn [db [_ flash]]
+  (fn [db _]
     (if (= :network-offline (get-in db [:error :code]))
       (dissoc db :error)
       db)))
@@ -625,7 +625,7 @@
 (reg-event-db
   :application/network-offline
   [check-schema-interceptor]
-  (fn [db [_ flash]]
+  (fn [db _]
     (if (get db :error)
       db
       (assoc-in db [:error :code] :network-offline))))
@@ -770,36 +770,35 @@
 
 (defn- set-empty-value-dispatch
   [group-idx field-descriptor]
-  (let [id (keyword (:id field-descriptor))]
-    (match field-descriptor
-      {:fieldType (:or "dropdown" "textField" "textArea")}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        ""]]
-      {:fieldType "singleChoice"}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        nil]]
-      {:fieldType "multipleChoice"}
-      (let [d [:application/toggle-multiple-choice-option
-               field-descriptor
-               group-idx
-               (first (:options field-descriptor))]]
-        [d d])
-      {:fieldType "adjacentfieldset"}
-      (mapv (fn [child]
-              [:application/set-repeatable-application-field child group-idx 0 ""])
-            (:children field-descriptor))
-      {:fieldType "attachment"}
-      ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
-      ;; Hacky solution but others would require much rework on the codebase.
-      [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
-      :else
-      nil)))
+  (match field-descriptor
+         {:fieldType (:or "dropdown" "textField" "textArea")}
+         [[:application/set-repeatable-application-field
+           field-descriptor
+           group-idx
+           nil
+           ""]]
+         {:fieldType "singleChoice"}
+         [[:application/set-repeatable-application-field
+           field-descriptor
+           group-idx
+           nil
+           nil]]
+         {:fieldType "multipleChoice"}
+         (let [d [:application/toggle-multiple-choice-option
+                  field-descriptor
+                  group-idx
+                  (first (:options field-descriptor))]]
+           [d d])
+         {:fieldType "adjacentfieldset"}
+         (mapv (fn [child]
+                 [:application/set-repeatable-application-field child group-idx 0 ""])
+               (:children field-descriptor))
+         {:fieldType "attachment"}
+         ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
+         ;; Hacky solution but others would require much rework on the codebase.
+         [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
+         :else
+         nil))
 
 (reg-event-fx
   :application/set-followup-values
