@@ -2,7 +2,8 @@
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
             [ataru.util :as util]
-            ataru.virkailija.application.hyvaksynnan-ehto.subs))
+            ataru.virkailija.application.hyvaksynnan-ehto.subs
+            clojure.string))
 
 (defn ehdollisesti-hyvaksyttavissa
   [application-key hakukohde-oids]

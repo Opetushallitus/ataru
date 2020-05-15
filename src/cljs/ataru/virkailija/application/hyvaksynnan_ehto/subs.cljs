@@ -1,7 +1,9 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.subs
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
-            [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]))
+            [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]
+            clojure.set
+            clojure.string))
 
 (defn- hyvaksynnan-ehto-has-request-in-flight? [[_ hyvaksynnan-ehto]]
   (-> hyvaksynnan-ehto :request-in-flight? true?))
