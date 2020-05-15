@@ -60,7 +60,7 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [root-organization-oid]
-  (let [url      (if (or (string/blank? root-organization-oid) (= root-organization-oid oph-organization))
+  (let [url      (if (or (clojure.string/blank? root-organization-oid) (= root-organization-oid oph-organization))
                    (resolve-url :organisaatio-service.root-hierarchy)
                    (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))
         response (http-util/do-get url)]
