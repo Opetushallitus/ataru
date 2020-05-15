@@ -1,10 +1,9 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe after]]
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
             [schema.core :as s]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
             [ataru.component-data.higher-education-base-education-module :as hebem]
-            [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.person-info-fields :as person-info-fields]
@@ -16,11 +15,10 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
-            [cljs-time.coerce :refer [from-long to-long]]))
+            [cljs-time.coerce :refer [to-long]]))
 
 (def db-validator (s/validator schema/Db))
 
