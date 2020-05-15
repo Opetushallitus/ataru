@@ -33,10 +33,6 @@
                  :answers        {}
                  :editing?       false}})
 
-(defn- required? [field-descriptor]
-  (some (partial = "required")
-        (:validators field-descriptor)))
-
 (reg-event-db
   :application/set-secret-delivery-status
   [check-schema-interceptor]
