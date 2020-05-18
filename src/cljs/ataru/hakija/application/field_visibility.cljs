@@ -35,7 +35,10 @@
           db
           options))
 
-(defn- followups-visibility-checker [value]
+(defn- text-field-followups-are-visible []
+  (fn [_] true))
+
+(defn- selected-option-followups-are-visible [value]
   (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                      (set (mapcat identity value))
                      (vector? value)
@@ -45,10 +48,22 @@
     (fn selected? [option]
       (contains? values (:value option)))))
 
+(defn- followups-visibility-checker [field-descriptor answer-value]
+  (cond
+    (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
+    (selected-option-followups-are-visible answer-value)
+
+    (= "textField" (:fieldType field-descriptor))
+    (text-field-followups-are-visible)
+
+    :else
+    (throw (ex-info "Unknown field type for followups visibility checking"
+                    {:fieldType (:fieldType field-descriptor)}))))
+
 (defn- set-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
   (let [answer-value       (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
-        visibility-checker (followups-visibility-checker answer-value)
+        visibility-checker (followups-visibility-checker field-descriptor answer-value)
         show-followups?    #(and visible?
                                  (visibility-checker %))]
     (set-visibility-for-option-followups db
@@ -114,5 +129,5 @@
                  child-visibility
                  option-visibility
                  field-visibility)
-             (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
+             (#{"dropdown" "multipleChoice" "singleChoice" "textField"} (:fieldType field-descriptor))
              (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))

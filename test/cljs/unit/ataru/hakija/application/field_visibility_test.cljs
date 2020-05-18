@@ -79,3 +79,40 @@
       "dropdown"
       "multipleChoice"
       "singleChoice")))
+
+(deftest set-field-visibility-for-text-field-test
+  (testing "text field: single option, empty followup:"
+    (is
+      (= {:kysymys {0         {:visible? true}
+                    :visible? true}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "Vastaus"}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "textField"
+                                                   :options   [{:value "0"}]})))))
+  (testing "text field: single option, single followup:"
+    (is
+      (= {:kysymys      {0         {:visible? true}
+                         :visible? true}
+          :jatkokysymys {:visible? true}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "Vastaus"}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "textField"
+                                                   :options   [{:value     "0"
+                                                                :followups [{:id "jatkokysymys"}]}]})))))
+  (testing "text field: multiple options, single followup each:"
+    (is
+      (= {:kysymys        {0         {:visible? true}
+                           1         {:visible? true}
+                           :visible? true}
+          :jatkokysymys-0 {:visible? true}
+          :jatkokysymys-1 {:visible? true}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "Vastaus"}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "textField"
+                                                   :options   [{:value     "0"
+                                                                :followups [{:id "jatkokysymys-0"}]}
+                                                               {:value     "1"
+                                                                :followups [{:id "jatkokysymys-1"}]}]}))))))
