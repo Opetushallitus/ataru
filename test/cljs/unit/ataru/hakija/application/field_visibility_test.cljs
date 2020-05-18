@@ -13,7 +13,7 @@
                                                     {:id "kysymys"})
              [:application]
              select-keys [:answers]))))
-  (testing "field visibility:"
+  (testing "field is always visible:"
     (is (= {:kysymys {:visible? true}}
            (ui-of
              (field-visibility/set-field-visibility {} {:id "kysymys"}))))))
@@ -24,19 +24,17 @@
                           :ui      {:kysymys {0         {:visible? true}
                                               :visible? true}}}}
            (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "0"}}}}
-                                                  {:id        "kysymys"
-                                                   :fieldType "singleChoice"
-                                                   :options   [{:value "0"}]}))))
+                                                  {:id      "kysymys"
+                                                   :options [{:value "0"}]}))))
   (testing "multiple options:"
     (is (= {:kysymys {0         {:visible? true}
                       1         {:visible? true}
                       :visible? true}}
            (ui-of
              (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "1"}}}}
-                                                    {:id        "kysymys"
-                                                     :fieldType "singleChoice"
-                                                     :options   [{:value "0"}
-                                                                 {:value "1"}]}))))))
+                                                    {:id      "kysymys"
+                                                     :options [{:value "0"}
+                                                               {:value "1"}]}))))))
 
 (deftest set-field-visibility-for-option-followups-test
   (testing "single option, option selected, single followup: all field types:"
