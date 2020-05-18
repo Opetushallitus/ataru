@@ -26,18 +26,24 @@
 
 (declare set-field-visibility)
 
-(defn- set-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [value  (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
-        values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+(defn- followups-visibility-checker [value]
+  (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                      (set (mapcat identity value))
                      (vector? value)
                      (set value)
                      :else
                      #{value})]
+    (fn selected? [option]
+      (contains? values (:value option)))))
+
+(defn- set-followups-visibility
+  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
+  (let [answer-value           (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
+        show-option-followups? (followups-visibility-checker answer-value)]
     (reduce (fn [db option]
-              (let [selected? (contains? values (:value option))]
-                (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
+              (let [show-followups? (and visible?
+                                         (show-option-followups? option))]
+                (reduce #(set-field-visibility %1 %2 show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
                         db
                         (:followups option))))
             db
