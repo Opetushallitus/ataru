@@ -26,6 +26,15 @@
 
 (declare set-field-visibility)
 
+(defn- set-visibility-for-option-followups [db options show-option-followups? ylioppilastutkinto? hakukohteet-and-ryhmat]
+  (reduce (fn [db option]
+            (let [show-followups? (show-option-followups? option)]
+              (reduce #(set-field-visibility %1 %2 show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
+                      db
+                      (:followups option))))
+          db
+          options))
+
 (defn- followups-visibility-checker [value]
   (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                      (set (mapcat identity value))
@@ -38,16 +47,15 @@
 
 (defn- set-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [answer-value           (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
-        show-option-followups? (followups-visibility-checker answer-value)]
-    (reduce (fn [db option]
-              (let [show-followups? (and visible?
-                                         (show-option-followups? option))]
-                (reduce #(set-field-visibility %1 %2 show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
-                        db
-                        (:followups option))))
-            db
-            (:options field-descriptor))))
+  (let [answer-value       (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
+        visibility-checker (followups-visibility-checker answer-value)
+        show-followups?    #(and visible?
+                                 (visibility-checker %))]
+    (set-visibility-for-option-followups db
+                                         (:options field-descriptor)
+                                         show-followups?
+                                         ylioppilastutkinto?
+                                         hakukohteet-and-ryhmat)))
 
 (defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
   (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
