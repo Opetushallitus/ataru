@@ -100,8 +100,5 @@
                  child-visibility
                  option-visibility
                  field-visibility)
-             (or (= "dropdown" (:fieldType field-descriptor))
-                 (= "singleChoice" (:fieldType field-descriptor)))
-             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
-             (= "multipleChoice" (:fieldType field-descriptor))
+             (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
              (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
