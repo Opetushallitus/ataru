@@ -90,13 +90,16 @@
   }
 
   .arvosanat-taulukko__rivi {
-    border-left: 2px solid @component-light-gray;
     padding-left: 10px;
     width: 200px;
   }
 
   .arvosanat-taulukko__rivi:not(:last-child) {
     margin-bottom: 20px;
+  }
+
+  .arvosanat-taulukko__rivi:not(:first-child) {
+    border-left: 2px solid @component-light-gray;
   }
 
   .arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine {
