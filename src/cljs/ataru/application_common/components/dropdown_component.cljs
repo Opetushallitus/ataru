@@ -49,7 +49,8 @@
      :on-click    on-click
      :on-change   (fn dropdown-select-on-change [event]
                     (let [value (.. event -target -value)]
-                      (on-change value)))}
+                      (on-change value)))
+     :value       (or selected-value "")}
     [dropdown-select-option
      {:value          ""
       :label          unselected-label
@@ -69,13 +70,15 @@
   [{:keys [value
            label
            on-click
+           option-id
            selected-value]} :- (st/assoc
                                  SelectOptionProps
                                  :on-click s/Any
+                                 :option-id s/Str
                                  :selected-value (s/maybe s/Str))]
   (let [selected? (= selected-value value)]
     [:li.a-dropdown-list__option
-     {:id            value
+     {:id            option-id
       :on-click      (fn dropdown-list-option-on-click []
                        (on-click value))
       :role          "option"
@@ -90,29 +93,45 @@
            options
            on-click
            label-id
+           dropdown-id
            selected-value]} :- {:expanded?      s/Bool
                                 :options        [SelectOptionProps]
                                 :on-click       s/Any
                                 :label-id       s/Str
+                                :dropdown-id    s/Str
                                 :selected-value (s/maybe s/Str)}]
-  [:div.a-component.a-dropdown-list
-   {:class (when-not expanded?
-             "a-dropdown-list--collapsed")}
-   [:ul.a-dropdown-list-container
-    {:aria-labelledby label-id
-     :role            "listbox"
-     :tab-index       "-1"}
-    (map (fn [{:keys [value] :as option-props}]
-           (let [key (str "dropdown-list-option-" value)]
-             ^{:key key}
-             [dropdown-list-option (merge option-props
-                                          {:on-click       on-click
-                                           :selected-value selected-value})]))
-         options)]])
+  (let [options-with-id    (map-indexed (fn [option-idx option-props]
+                                          (assoc
+                                            option-props
+                                            :option-id
+                                            (str dropdown-id "-option-" option-idx)))
+                                        options)
+        selected-option-id (->> options-with-id
+                                (filter (fn [{:keys [value]}]
+                                          (= value selected-value)))
+                                (map :option-id)
+                                first)]
+    [:div.a-component.a-dropdown-list
+     {:class (when-not expanded?
+               "a-dropdown-list--collapsed")}
+     [:ul.a-dropdown-list-container
+      (cond-> {:aria-labelledby label-id
+               :role            "listbox"
+               :tab-index       "-1"}
+              (not (string/blank? selected-value))
+              (assoc :aria-activedescendant selected-option-id))
+      (map (fn [{:keys [value] :as option-props}]
+             (let [key (str "dropdown-list-option-" value)]
+               ^{:key key}
+               [dropdown-list-option (merge option-props
+                                            {:on-click       on-click
+                                             :selected-value selected-value})]))
+           options-with-id)]]))
 
 (defn dropdown
   []
-  (let [expanded? (reagent/atom false)]
+  (let [expanded?   (reagent/atom false)
+        dropdown-id (util/component-id)]
     (s/fn render-dropdown
       [{:keys [options
                unselected-label
@@ -133,7 +152,7 @@
                                             (map :label)
                                             (first))
                                        unselected-label)
-            label-id                 (util/component-id)]
+            label-id                 (str dropdown-id "-label")]
         [:div.a-dropdown
          [:div.a-dropdown-button-container.a-component
           {:class (when @expanded?
@@ -160,4 +179,5 @@
            :options        options
            :on-click       on-dropdown-value-change
            :label-id       label-id
+           :dropdown-id    dropdown-id
            :selected-value selected-value}]]))))
