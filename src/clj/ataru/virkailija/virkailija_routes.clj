@@ -1256,7 +1256,8 @@
 (defn- proxy-request [service-path request]
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
-        response (http/get (str prefix path) {:headers (dissoc (:headers request) "host")})]
+        response (http/get (str prefix path) {:headers          (dissoc (:headers request) "host")
+                                              :throw-exceptions false})]
     {:status  (:status response)
      :body    (:body response)
      :headers (:headers response)}))
