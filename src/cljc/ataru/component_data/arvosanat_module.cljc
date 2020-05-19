@@ -65,19 +65,23 @@
        keyword
        texts/oppiaine-translations))
 
-(s/defn oppimaara-aidinkieli-ja-kirjallisuus
-  [{:keys [metadata]} :- {:metadata element-metadata-schema/ElementMetadata}]
+(s/defn oppimaara-dropdown
+  [{:keys [oppiaineen-koodi
+           metadata
+           options]} :- {:oppiaineen-koodi OppiaineenKoodi
+                         :metadata         element-metadata-schema/ElementMetadata
+                         :options          [{:label localized-schema/LocalizedString
+                                             :value s/Str}]}]
   {:fieldClass       "formField"
    :fieldType        "dropdown"
    :version          :generic
-   :id               "oppimaara-aidinkieli-ja-kirjallisuus"
+   :id               (str "oppimaara-" oppiaineen-koodi)
    :label            (concat-labels
                        ": "
                        (:oppimaara texts/translation-mapping)
-                       (oppiaine-label "A"))
+                       (oppiaine-label oppiaineen-koodi))
    :unselected-label (:oppimaara texts/translation-mapping)
-   :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
-                       :value "suomi-aidinkielena"}]
+   :options          options
    :metadata         metadata
    :validators       ["required"]})
 
@@ -103,6 +107,14 @@
                                            :en arvosana}))))
           :metadata         metadata
           :validators       ["required"]}))
+
+(s/defn oppimaara-aidinkieli-ja-kirjallisuus
+  [{:keys [metadata]} :- {:metadata element-metadata-schema/ElementMetadata}]
+  (oppimaara-dropdown
+    {:oppiaineen-koodi "A"
+     :metadata         metadata
+     :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
+                         :value "suomi-aidinkielena"}]}))
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
