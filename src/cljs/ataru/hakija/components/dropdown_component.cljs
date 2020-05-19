@@ -72,10 +72,10 @@
   [{:keys [field-descriptor
            idx]} :- render-field-schema/RenderFieldArgs]
   (let [lang             @(re-frame/subscribe [:application/form-language])
-        unselected-label (-> field-descriptor :unselected-label lang)
         answer           @(re-frame/subscribe [:application/answer
                                                (:id field-descriptor)
                                                idx])
+        unselected-label (-> field-descriptor :unselected-label lang)
         options          (map (fn [option]
                                 {:label (-> option :label lang)
                                  :value (:value option)})

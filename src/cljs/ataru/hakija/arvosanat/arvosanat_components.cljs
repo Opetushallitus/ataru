@@ -3,6 +3,7 @@
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [ataru.translations.translation-util :as translations]
             [ataru.hakija.components.link-component :as link-component]
+            [clojure.string :as string]
             [re-frame.core :as re-frame]
             [schema.core :as s]))
 
@@ -10,10 +11,10 @@
   [{:keys [label
            oppimaara-dropdown
            arvosana-dropdown
-           valinnaisaine-linkki]} :- {:label                                 s/Any
-                                      (s/optional-key :oppimaara-dropdown)   s/Any
-                                      (s/optional-key :arvosana-dropdown)    s/Any
-                                      (s/optional-key :valinnaisaine-linkki) s/Any}]
+           lisaa-valinnaisaine-linkki]} :- {:label                                       s/Any
+                                            (s/optional-key :oppimaara-dropdown)         s/Any
+                                            (s/optional-key :arvosana-dropdown)          s/Any
+                                            (s/optional-key :lisaa-valinnaisaine-linkki) s/Any}]
   [:div.arvosanat-taulukko__rivi
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
     label]
@@ -22,7 +23,53 @@
    [:div.arvosanat-taulukko__solu.arvosana__arvosana
     arvosana-dropdown]
    [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
-    valinnaisaine-linkki]])
+    lisaa-valinnaisaine-linkki]])
+
+(def ^:private max-valinnaisaine-amount 3)
+
+(defn- answered? [{:keys [value valid]}]
+  (and valid
+       (-> value string/blank? not)))
+
+(s/defn lisaa-valinnaisaine-linkki
+  [{:keys [valinnaisaine-rivi?
+           arvosana-dropdown
+           oppimaara-dropdown
+           lang
+           arvosana-idx
+           field-descriptor
+           row-count]} :- {:valinnaisaine-rivi? s/Bool
+                           :arvosana-dropdown   s/Any
+                           :oppimaara-dropdown  (s/maybe s/Any)
+                           :lang                lang-schema/Lang
+                           :arvosana-idx        s/Int
+                           :field-descriptor    s/Any
+                           :row-count           s/Int}]
+  (let [label               (if valinnaisaine-rivi?
+                              (translations/get-hakija-translation :poista lang)
+                              (translations/get-hakija-translation :lisaa-valinnaisaine lang))
+        arvosana-answered?  (some-> (when arvosana-dropdown
+                                      @(re-frame/subscribe [:application/answer (:id arvosana-dropdown) arvosana-idx]))
+                                    answered?)
+        oppimaara-answered? (or (nil? oppimaara-dropdown)
+                                (-> @(re-frame/subscribe [:application/answer (:id oppimaara-dropdown) arvosana-idx])
+                                    answered?))
+        disabled?           (and (not valinnaisaine-rivi?)
+                                 (or (not (< (dec row-count) max-valinnaisaine-amount))
+                                     (not arvosana-answered?)
+                                     (not oppimaara-answered?)))]
+    [link-component/link
+     {:on-click  (fn add-or-remove-oppiaineen-valinnaisaine-row []
+                   (if valinnaisaine-rivi?
+                     (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
+                     (re-frame/dispatch [:application/add-question-group-row field-descriptor])))
+      :disabled? disabled?}
+     (if valinnaisaine-rivi?
+       [:span label]
+       [:<>
+        [:i.zmdi.zmdi-plus-circle-o.arvosana__lisaa-valinnaisaine--ikoni]
+        [:span.arvosana__lisaa-valinnaisaine--linkki
+         label]])]))
 
 (s/defn oppiaineen-arvosana
   [{:keys [field-descriptor
@@ -30,45 +77,42 @@
   (let [lang               @(re-frame/subscribe [:application/form-language])
         row-count          @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
         children           (:children field-descriptor)
-        children-count     (count children)
-        arvosana-dropdown  (case children-count
-                             2 (second children)
-                             1 (first children)
-                             nil)
-        oppimaara-dropdown (when (= children-count 2)
+        arvosana-dropdown  (last children)
+        oppimaara-dropdown (when (= (count children) 2)
                              (first children))]
-    [:<>
-     (map (fn ->oppiaineen-arvosana-rivi [arvosana-idx]
-            (let [key                 (str "oppiaineen-arvosana-rivi-" (:id field-descriptor) "-" arvosana-idx)
-                  valinnaisaine-rivi? (> arvosana-idx 0)]
-              ^{:key key}
-              [oppiaineen-arvosana-rivi
-               {:label                (let [label (cond->> (-> field-descriptor :label lang)
-                                                           valinnaisaine-rivi?
-                                                           (translations/get-hakija-translation :oppiaine-valinnainen lang))]
-                                        [:span
-                                         {:class (when valinnaisaine-rivi?
-                                                   "oppiaineen-arvosana-rivi__oppiaine--valinnaisaine")}
-                                         label])
-                :oppimaara-dropdown   (when oppimaara-dropdown
-                                        [render-field oppimaara-dropdown arvosana-idx])
-                :arvosana-dropdown    (when arvosana-dropdown
-                                        [render-field arvosana-dropdown arvosana-idx])
-                :valinnaisaine-linkki (let [label (if valinnaisaine-rivi?
-                                                    (translations/get-hakija-translation :poista lang)
-                                                    (translations/get-hakija-translation :lisaa-valinnaisaine lang))]
-                                        [link-component/link
-                                         {:on-click (fn add-or-remove-oppiaineen-valinnaisaine-row []
-                                                      (if valinnaisaine-rivi?
-                                                        (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
-                                                        (re-frame/dispatch [:application/add-question-group-row field-descriptor])))}
-                                         (if valinnaisaine-rivi?
-                                           [:span label]
-                                           [:<>
-                                            [:i.zmdi.zmdi-plus-circle-o.arvosana__lisaa-valinnaisaine-ikoni]
-                                            [:span.arvosana__valinnaisaine-linkki
-                                             label]])])}]))
-          (range row-count))]))
+    (->> (range row-count)
+         (mapv (fn ->oppiaineen-arvosana-rivi [arvosana-idx]
+                 (let [key                 (str "oppiaineen-arvosana-rivi-" (:id field-descriptor) "-" arvosana-idx)
+                       valinnaisaine-rivi? (> arvosana-idx 0)]
+                   ^{:key key}
+                   [oppiaineen-arvosana-rivi
+                    {:label
+                     (let [label (cond->> (-> field-descriptor :label lang)
+                                          valinnaisaine-rivi?
+                                          (translations/get-hakija-translation :oppiaine-valinnainen lang))]
+                       [:span
+                        {:class (when valinnaisaine-rivi?
+                                  "oppiaineen-arvosana-rivi__oppiaine--valinnaisaine")}
+                        label])
+
+                     :oppimaara-dropdown
+                     (when oppimaara-dropdown
+                       [render-field oppimaara-dropdown arvosana-idx])
+
+                     :arvosana-dropdown
+                     (when arvosana-dropdown
+                       [render-field arvosana-dropdown arvosana-idx])
+
+                     :lisaa-valinnaisaine-linkki
+                     [lisaa-valinnaisaine-linkki
+                      {:valinnaisaine-rivi? valinnaisaine-rivi?
+                       :arvosana-dropdown   arvosana-dropdown
+                       :oppimaara-dropdown  oppimaara-dropdown
+                       :lang                lang
+                       :arvosana-idx        arvosana-idx
+                       :field-descriptor    field-descriptor
+                       :row-count           row-count}]}])))
+         (into [:<>]))))
 
 (s/defn arvosanat-taulukko-otsikkorivi
   [{:keys [lang]} :- {:lang lang-schema/Lang}]

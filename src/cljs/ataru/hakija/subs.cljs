@@ -194,8 +194,8 @@
 
 (re-frame/reg-sub
   :state-query
-  (fn [db [_ path]]
-    (get-in db (remove nil? path))))
+  (fn [db [_ path default]]
+    (get-in db (remove nil? path) default)))
 
 (re-frame/reg-sub
   :application/valid-status

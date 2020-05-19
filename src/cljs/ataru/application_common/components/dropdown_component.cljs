@@ -1,10 +1,10 @@
 (ns ataru.application-common.components.dropdown-component
   (:require [ataru.application-common.components.button-component :as button-component]
-            [ataru.util :as util]
             [clojure.string :as string]
-            [reagent.core :as reagent]
+            [re-frame.core :as re-frame]
             [schema.core :as s]
-            [schema-tools.core :as st]))
+            [schema-tools.core :as st]
+            [ataru.util :as util]))
 
 (s/defschema SelectOptionProps
   {:value s/Str
@@ -128,10 +128,16 @@
                                              :selected-value selected-value})]))
            options-with-id)]]))
 
-(defn dropdown
-  []
-  (let [expanded?   (reagent/atom false)
-        dropdown-id (util/component-id)]
+(s/defn collapse-dropdown
+  [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
+  (re-frame/dispatch [:application-components/collapse-dropdown {:dropdown-id dropdown-id}]))
+
+(s/defn expand-dropdown
+  [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
+  (re-frame/dispatch [:application-components/expand-dropdown {:dropdown-id dropdown-id}]))
+
+(defn dropdown []
+  (let [dropdown-id (util/component-id)]
     (s/fn render-dropdown
       [{:keys [options
                unselected-label
@@ -140,11 +146,14 @@
                                :unselected-label s/Str
                                :selected-value   (s/maybe s/Str)
                                :on-change        s/Any}]
-      (let [on-dropdown-value-change (fn on-dropdown-value-change [event]
-                                       (reset! expanded? false)
+      (let [expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
+            on-dropdown-value-change (fn on-dropdown-value-change [event]
+                                       (collapse-dropdown {:dropdown-id dropdown-id})
                                        (on-change event))
-            on-dropdown-select-open  (fn on-dropdown-select-open []
-                                       (reset! expanded? true))
+            on-dropdown-button-click (fn on-dropdown-button-click []
+                                       (if expanded?
+                                         (collapse-dropdown {:dropdown-id dropdown-id})
+                                         (expand-dropdown {:dropdown-id dropdown-id})))
             button-label             (if-not (string/blank? selected-value)
                                        (->> options
                                             (filter (fn filter-dropdown-select-option [{option-value :value}]
@@ -155,27 +164,26 @@
             label-id                 (str dropdown-id "-label")]
         [:div.a-dropdown
          [:div.a-dropdown-button-container.a-component
-          {:class (when @expanded?
+          {:class (when expanded?
                     "a-component")}
           [button-component/button
            (cond-> {:label      button-label
-                    :on-click   (fn dropdown-button-on-click []
-                                  (swap! expanded? not))
+                    :on-click   on-dropdown-button-click
                     :aria-attrs {:aria-haspopup   "listbox"
                                  :aria-labelledby label-id}}
-                   @expanded?
+                   expanded?
                    (assoc-in [:aria-attrs :aria-expanded] true))]
           [dropdown-chevron
-           {:expanded? @expanded?}]]
+           {:expanded? expanded?}]]
          [dropdown-select
-          {:expanded?        @expanded?
+          {:expanded?        expanded?
            :options          options
            :unselected-label unselected-label
            :selected-value   selected-value
-           :on-click         on-dropdown-select-open
+           :on-click         expand-dropdown
            :on-change        on-dropdown-value-change}]
          [dropdown-list
-          {:expanded?      @expanded?
+          {:expanded?      expanded?
            :options        options
            :on-click       on-dropdown-value-change
            :label-id       label-id
