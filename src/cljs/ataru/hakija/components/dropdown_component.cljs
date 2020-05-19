@@ -5,7 +5,9 @@
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [schema.core :as s]
+            [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
 (defn dropdown [field-descriptor idx render-field]
   (let [languages (re-frame/subscribe [:application/default-languages])
@@ -66,10 +68,14 @@
                ^{:key (:id followup)}
                [render-field followup idx])))]))
 
-(defn hakija-dropdown [{:keys [field-descriptor]}]
+(s/defn hakija-dropdown
+  [{:keys [field-descriptor
+           idx]} :- render-field-schema/RenderFieldArgs]
   (let [lang             @(re-frame/subscribe [:application/form-language])
         unselected-label (-> field-descriptor :unselected-label lang)
-        answer           @(re-frame/subscribe [:application/answer (:id field-descriptor)])
+        answer           @(re-frame/subscribe [:application/answer
+                                               (:id field-descriptor)
+                                               idx])
         options          (map (fn [option]
                                 {:label (-> option :label lang)
                                  :value (:value option)})
@@ -79,4 +85,4 @@
       :unselected-label unselected-label
       :selected-value   (:value answer)
       :on-change        (fn [value]
-                          (re-frame/dispatch [:application/dropdown-change field-descriptor value]))}]))
+                          (re-frame/dispatch [:application/set-repeatable-application-field field-descriptor idx nil value]))}]))

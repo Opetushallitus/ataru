@@ -179,12 +179,7 @@
                                               (:validators field)))
                            :value  []
                            :values []
-                           :label  label}]
-            [{:fieldClass "oppiaineenArvosana"
-              :label      label}]
-            [:oppiaineen-arvosana {:valid     true
-                                   :order-idx idx
-                                   :label     label}])))
+                           :label  label}])))
        (into {})))
 
 (defn create-initial-answers

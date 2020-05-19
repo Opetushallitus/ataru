@@ -6,6 +6,9 @@
             [schema.core :as s]
             [clojure.string :as string]))
 
+(def ArvosanatVersio
+  (s/eq :oppiaineen-arvosanat))
+
 (s/defschema OppiaineenKoodi
   (s/enum "A"
           "A1"
@@ -26,19 +29,24 @@
           "KO"))
 
 (s/defschema OppiaineenArvosana
-  {:fieldClass                (s/eq "wrapperElement")
-   :fieldType                 (s/eq "oppiaineenArvosana")
+  {:fieldClass                (s/eq "questionGroup")
+   :fieldType                 (s/eq "fieldset")
    :id                        OppiaineenKoodi
    :label                     localized-schema/LocalizedString
    :metadata                  element-metadata-schema/ElementMetadata
+   :version                   ArvosanatVersio
+   :params                    {}
    (s/optional-key :children) [s/Any]})
 
 (s/defschema ArvosanatTaulukko
   {:id         s/Str
    :fieldClass (s/eq "wrapperElement")
-   :fieldType  (s/eq "arvosanat-taulukko")
+   :fieldType  (s/eq "fieldset")
    :children   [OppiaineenArvosana]
-   :metadata   element-metadata-schema/ElementMetadata})
+   :metadata   element-metadata-schema/ElementMetadata
+   :label      localized-schema/LocalizedString
+   :version    ArvosanatVersio
+   :params     {}})
 
 (s/defn concat-labels
   [separator :- s/Str
@@ -61,7 +69,7 @@
   [{:keys [metadata]} :- {:metadata element-metadata-schema/ElementMetadata}]
   {:fieldClass       "formField"
    :fieldType        "dropdown"
-   :version          :accessible
+   :version          :generic
    :id               "oppimaara-aidinkieli-ja-kirjallisuus"
    :label            (concat-labels
                        ": "
@@ -77,24 +85,24 @@
   [{:keys [oppiaineen-koodi
            metadata]} :- {:metadata         element-metadata-schema/ElementMetadata
                           :oppiaineen-koodi OppiaineenKoodi}]
-  {:fieldClass       "formField"
-   :fieldType        "dropdown"
-   :version          :accessible
-   :id               (str "arvosana-" oppiaineen-koodi)
-   :label            (concat-labels
-                       ": "
-                       (:arvosana texts/translation-mapping)
-                       (oppiaine-label oppiaineen-koodi))
-   :unselected-label (:arvosana texts/translation-mapping)
-   :options          (->> (range 4 11)
-                          (map str)
-                          (map (fn [arvosana]
-                                 {:value arvosana
-                                  :label {:fi arvosana
-                                          :sv arvosana
-                                          :en arvosana}})))
-   :metadata         metadata
-   :validators       ["required"]})
+  (merge (component/dropdown metadata)
+         {:version          :generic
+          :id               (str "arvosana-" oppiaineen-koodi)
+          :label            (concat-labels
+                              ": "
+                              (:arvosana texts/translation-mapping)
+                              (oppiaine-label oppiaineen-koodi))
+          :unselected-label (:arvosana texts/translation-mapping)
+          :options          (->> (range 4 11)
+                                 (map str)
+                                 (map (fn [arvosana]
+                                        (assoc (component/dropdown-option arvosana)
+                                          :label
+                                          {:fi arvosana
+                                           :sv arvosana
+                                           :en arvosana}))))
+          :metadata         metadata
+          :validators       ["required"]}))
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
@@ -104,18 +112,18 @@
                           :label                               localized-schema/LocalizedString
                           :metadata                            element-metadata-schema/ElementMetadata
                           (s/optional-key :oppimaara-dropdown) s/Any}]
-  (cond-> {:fieldClass "wrapperElement"
-           :fieldType  "oppiaineenArvosana"
-           :id         oppiaineen-koodi
-           :label      label
-           :metadata   metadata
-           :children   (as-> [] children
-                             (cond-> children
-                                     (some? oppimaara-dropdown)
-                                     (conj oppimaara-dropdown))
-                             (conj children (arvosana-dropdown
-                                              {:metadata         metadata
-                                               :oppiaineen-koodi oppiaineen-koodi})))}))
+  (merge (component/question-group metadata)
+         {:id       oppiaineen-koodi
+          :version  :oppiaineen-arvosanat
+          :label    label
+          :metadata metadata
+          :children (as-> [] children
+                          (cond-> children
+                                  (some? oppimaara-dropdown)
+                                  (conj oppimaara-dropdown))
+                          (conj children (arvosana-dropdown
+                                           {:metadata         metadata
+                                            :oppiaineen-koodi oppiaineen-koodi})))}))
 
 (defn- arvosana-aidinkieli-ja-kirjallisuus [{:keys [metadata]}]
   (oppiaineen-arvosana
@@ -224,11 +232,10 @@
   [{:keys [metadata
            children]} :- {:metadata element-metadata-schema/ElementMetadata
                           :children [OppiaineenArvosana]}]
-  {:id         "arvosanat-taulukko"
-   :fieldClass "wrapperElement"
-   :fieldType  "arvosanat-taulukko"
-   :children   children
-   :metadata   metadata})
+  (merge (component/form-section metadata)
+         {:id       "arvosanat-taulukko"
+          :version  :oppiaineen-arvosanat
+          :children children}))
 
 (s/defn arvosanat
   [{:keys [type]} :- {:type (s/enum :peruskoulu)}
