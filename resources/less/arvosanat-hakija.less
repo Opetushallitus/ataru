@@ -22,6 +22,14 @@
   color: @text-green;
 }
 
+.arvosana__lisaa-valinnaisaine-ikoni {
+  font-size: 22px;
+}
+
+.oppiaineen-arvosana-rivi__oppiaine--valinnaisaine {
+  color: @component-gray;
+}
+
 @media only screen and (min-width: (@mobile-width + 1)) {
   .arvosanat-taulukko {
     .flex-column-top-center();
@@ -58,12 +66,16 @@
     grid-area: arvosana-lisaa-valinnaisaine;
   }
 
-  .arvosana__lisaa-valinnaisaine-linkki {
+  .arvosana__valinnaisaine-linkki {
     display: none;
   }
 
   .arvosana__lisaa-valinnaisaine--solu {
     font-size: 22px;
+  }
+
+  .oppiaineen-arvosana-rivi__oppiaine--valinnaisaine {
+    margin-left: 20px;
   }
 
   .arvosanat-taulukko__solu {
@@ -109,6 +121,4 @@
   .arvosana__lisaa-valinnaisaine-ikoni {
     display: none;
   }
-
-
 }

@@ -370,7 +370,16 @@
                                                  :en "Internal server error."}
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
-                                                 :sv "Denna ansökningslänk är föråldrad"}})
+                                                 :sv "Denna ansökningslänk är föråldrad"}
+   :oppiaine-valinnainen                        {:fi "%s, valinnainen"
+                                                 :sv "%s, valinnainen"
+                                                 :en "%s, valinnainen"}
+   :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
+                                                 :sv "Lisää valinnaisaine"
+                                                 :en "Lisää valinnaisaine"}
+   :poista                                      {:fi "Poista"
+                                                 :sv "Poista"
+                                                 :en "Poista"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
