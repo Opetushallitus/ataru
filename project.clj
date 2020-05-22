@@ -316,7 +316,7 @@
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
-             :opintopolku-local {:local-repo "/m2-home/.m2"}
+             :opintopolku-local {:local-repo "/m2-home/.m2/repository"}
              :opintopolku-local-virkailija {:figwheel {:server-ip "ataru-figwheel-virkailija.kehittajan-oma-kone.testiopintopolku.fi"
                                                        :server-port 3449
                                                        :repl false}}
