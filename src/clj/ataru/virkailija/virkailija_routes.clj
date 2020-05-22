@@ -22,7 +22,6 @@
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.middleware.cache-control :as cache-control]
-            [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ataru.middleware.session-timeout :as session-timeout]
             [clj-ring-db-session.session.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
@@ -59,7 +58,6 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
-            [medley.core :refer [map-kv]]
             [clj-http.client :as http]
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
@@ -73,8 +71,7 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [ataru.user-rights :as user-rights]
-            [ataru.util :as util]
-            [ataru.db.db :as db])
+            [ataru.util :as util])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -155,11 +152,12 @@
     (selmer/render-file filename {:config (json/generate-string js-config)})
     (not-found "Not found")))
 
-(defn- wrap-database-backed-session [handler]
-  (ring-session/wrap-session handler
-                             {:root         "/lomake-editori"
-                              :cookie-attrs {:secure (not (:dev? env))}
-                              :store        (create-session-store (db/get-datasource :db))}))
+(defn- create-wrap-database-backed-session [session-store]
+  (fn [handler]
+    (ring-session/wrap-session handler
+                               {:root         "/lomake-editori"
+                                :cookie-attrs {:secure (not (:dev? env))}
+                                :store        session-store})))
 
 (api/defroutes test-routes
   (api/undocumented
@@ -1364,18 +1362,19 @@
                                 dashboard-routes
                                 (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
-                                                 wrap-database-backed-session
+                                                 (create-wrap-database-backed-session (:session-store this))
                                                  clj-access-logging/wrap-session-access-logging
-                                                 #(crdsa-auth-middleware/with-authentication % (auth-utils/cas-auth-url) (db/get-datasource :db))]
+                                                 #(crdsa-auth-middleware/with-authentication % (auth-utils/cas-auth-url))]
                                                 (api/middleware [session-client/wrap-session-client-headers
                                                                  session-timeout/wrap-idle-session-timeout]
                                                                 app-routes
                                                   (api-routes this))
-                                  (auth-routes (:login-cas-client this)
-                                               (:kayttooikeus-service this)
-                                               (:person-service this)
-                                               (:organization-service this)
-                                               (:audit-logger this))))
+                                  (auth-routes (select-keys this [:login-cas-client
+                                                                  :kayttooikeus-service
+                                                                  :person-service
+                                                                  :organization-service
+                                                                  :audit-logger
+                                                                  :session-store]))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults

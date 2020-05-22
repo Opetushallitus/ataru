@@ -7,8 +7,8 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.user-rights :as rights]
             [ataru.person-service.person-service :as person-service]
-            [clj-ring-db-session.authentication.cas-ticketstore :as cas-ticketstore]
             [clj-ring-db-session.authentication.login :as crdsa-login]
+            [clj-ring-db-session.session.session-store :as crdsa-session-store]
             [medley.core :refer [map-kv]]
             [ring.util.http-response :refer [ok]]
             [ring.util.response :as resp]
@@ -96,18 +96,17 @@
                          {:username             username
                           :henkilo              henkilo
                           :ticket               ticket
-                          :success-redirect-url redirect-url
-                          :datasource           (db/get-datasource :db)})]
+                          :success-redirect-url redirect-url})]
         (login-succeeded organization-service audit-logger session response virkailija henkilo username ticket))
       (login-failed))
     (catch Exception e
       (login-failed e))))
 
-(defn cas-initiated-logout [logout-request]
+(defn cas-initiated-logout [logout-request session-store]
   (log/info "cas-initiated logout")
   (let [ticket (CasLogout/parseTicketFromLogoutRequest logout-request)]
     (log/info "logging out ticket" ticket)
     (if (.isEmpty ticket)
       (log/error "Could not parse ticket from CAS request" logout-request)
-      (cas-ticketstore/logout (.get ticket) (db/get-datasource :ds)))
+      (crdsa-session-store/logout-by-ticket! session-store (.get ticket)))
     (ok)))
