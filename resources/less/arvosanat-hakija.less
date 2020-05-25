@@ -30,10 +30,6 @@
   font-size: 22px;
 }
 
-.oppiaineen-arvosana-rivi__oppiaine--valinnaisaine {
-  color: @component-gray;
-}
-
 @media only screen and (min-width: (@mobile-width + 1)) {
   .arvosanat-taulukko {
     .flex-column-top-center();
@@ -56,6 +52,10 @@
     .flex-row-right-center();
 
     grid-area: arvosana-oppimaara;
+  }
+
+  .oppiaineen-arvosana-rivi__oppiaine--valinnaisaine {
+    color: @component-gray;
   }
 
   .arvosana__arvosana {
