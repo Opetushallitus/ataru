@@ -180,7 +180,8 @@
            :options          options
            :unselected-label unselected-label
            :selected-value   selected-value
-           :on-click         expand-dropdown
+           :on-click         (fn []
+                               (expand-dropdown {:dropdown-id dropdown-id}))
            :on-change        on-dropdown-value-change}]
          [dropdown-list
           {:expanded?      expanded?
