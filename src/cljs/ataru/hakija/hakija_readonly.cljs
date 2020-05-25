@@ -36,19 +36,21 @@
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
-(defn- text-child-fields [children application lang]        ; TODO: parametri question-group-id kuten child-fields
+(defn- text-child-fields [children application lang question-group-id]
   (for [child children]                                     ; TODO: visible? tarkastus kuten child-fields
-    ^{:key (str (:id child))}
-    [field child application lang]))
+    ^{:key (str (:id child)
+                (when question-group-id
+                  (str "-" question-group-id)))}
+    [field child application lang question-group-id]))
 
-(defn- text-nested-container [selected-options application lang]
+(defn- text-nested-container [selected-options application lang group-idx]
   [:div.application-handling__nested-container.application-handling__nested-container--top-level
    (doall
      (for [option selected-options]
        ^{:key (:value option)}
        [:div.application-handling__nested-container-option  ; TODO: visible? tarkastus kuten selectable:ssa?
         (into [:div.application-handling__nested-container]
-              (text-child-fields (:followups option) application lang))]))])
+              (text-child-fields (:followups option) application lang group-idx))]))])
 
 (defn- text-readonly-text [field-descriptor values]
   [:div.application__readonly-text
@@ -85,7 +87,7 @@
        [:div.application__text-field-paragraph "***********"]
        [text-readonly-text field-descriptor values])
      (when followups?
-       [text-nested-container options application lang])]))
+       [text-nested-container options application lang group-idx])]))
 
 (defn- attachment-list [attachments]
   [:div
