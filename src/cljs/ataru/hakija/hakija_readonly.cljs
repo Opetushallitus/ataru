@@ -16,7 +16,8 @@
                                                                        render-paragraphs
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
-                                                                       scroll-to-anchor]]))
+                                                                       scroll-to-anchor]]
+            [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]))
 
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
@@ -150,26 +151,39 @@
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
-  [:div.application__form-field
-   [:div.application__form-field-label
-    (from-multi-lang (:label content) lang)]
-   [:div.application-handling__nested-container
-    (let [values           (-> @(subscribe [:application/answer (:id content) question-group-idx nil])
-                               :value
-                               vector
-                               flatten
-                               set)
-          selected-options (filter #(contains? values (:value %)) (:options content))
-          ui               (subscribe [:state-query [:application :ui]])]
-      (doall
-        (for [option selected-options]
-          ^{:key (:value option)}
-          [:div
-           [:p.application__text-field-paragraph
-            (from-multi-lang (:label option) lang)]
-           (when (some #(visible? ui %) (:followups option))
-             (into [:div.application-handling__nested-container]
-                   (child-fields (:followups option) application lang ui question-group-idx)))])))]])
+  (let [{:keys [arvosanat-taulukko?]} (:readonly-render-options content)
+        {:keys [unselected-label]} content]
+    [:div.application__form-field
+     {:class (when arvosanat-taulukko?
+               "application__form-field--readonly-arvosanat-taulukko")}
+     [:div.application__form-field-label
+      {:class (when arvosanat-taulukko?
+                "application__form-field-label--readonly-arvosanat-taulukko")}
+      (if (and arvosanat-taulukko?
+               (seq unselected-label))
+        (from-multi-lang unselected-label lang)
+        (from-multi-lang (:label content) lang))]
+     [:div.application-handling__nested-container
+      {:class (when arvosanat-taulukko?
+                "application-handling__nested-container--readonly-arvosanat-taulukko")}
+      (let [values           (-> @(subscribe [:application/answer (:id content) question-group-idx nil])
+                                 :value
+                                 vector
+                                 flatten
+                                 set)
+            selected-options (filter #(contains? values (:value %)) (:options content))
+            ui               (subscribe [:state-query [:application :ui]])]
+        (doall
+          (for [option selected-options]
+            ^{:key (:value option)}
+            [:div
+             [:p.application__text-field-paragraph
+              {:class (when arvosanat-taulukko?
+                        "application__text-field-paragraph--readonly-arvosanat-taulukko")}
+              (from-multi-lang (:label option) lang)]
+             (when (some #(visible? ui %) (:followups option))
+               (into [:div.application-handling__nested-container]
+                     (child-fields (:followups option) application lang ui question-group-idx)))])))]]))
 
 (defn- multiple-choice [content application lang question-group-idx]
   [:div.application__form-field
@@ -218,22 +232,35 @@
         ^{:key (str "selected-hakukohde-row-" hakukohde-oid)}
         [selected-hakukohde-row hakukohde-oid])]]]])
 
-(defn field
-  [content application lang question-group-index]
-  (match content
-         {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper content application lang children]
-         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
-         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group content application lang children]
+(defn- render-component-readonly [{:keys [field-descriptor
+                                          application
+                                          lang
+                                          question-group-index]}]
+  (match field-descriptor
+         {:fieldClass "wrapperElement" :module "person-info" :children children} [wrapper field-descriptor application lang children]
+         {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper field-descriptor application lang children]
+         {:fieldClass "questionGroup" :fieldType "fieldset" :children children} [question-group field-descriptor application lang children]
          {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children question-group-index]
-         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children question-group-index]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset field-descriptor application lang children question-group-index]
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "pohjakoulutusristiriita"} nil
          {:fieldClass "infoElement"} nil
-         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice content application lang question-group-index]
-         {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable content application lang question-group-index]
-         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text content application lang question-group-index]
-         {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang question-group-index]
-         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]))
+         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable field-descriptor application lang question-group-index]
+         {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text field-descriptor application lang question-group-index]
+         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor application lang question-group-index]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet field-descriptor]))
+
+(defn field
+  [field-descriptor application lang question-group-index]
+  (let [render-fn (case (:version field-descriptor)
+                    "oppiaineen-arvosanat" arvosanat/render-arvosanat-component-readonly
+                    render-component-readonly)]
+    (render-fn {:field-descriptor     field-descriptor
+                :application          application
+                :lang                 lang
+                :render-field         field
+                :question-group-index question-group-index})))
 
 (defn- application-language [{:keys [lang]}]
   (when (some? lang)

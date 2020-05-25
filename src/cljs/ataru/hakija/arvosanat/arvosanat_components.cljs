@@ -136,3 +136,69 @@
               ^{:key key}
               [render-field arvosana-data idx]))
           (:children field-descriptor))]))
+
+(s/defn oppiaineen-arvosana-readonly
+  [{:keys [field-descriptor
+           application
+           render-field
+           lang
+           idx]} :- {:field-descriptor s/Any
+                     :application      s/Any
+                     :render-field     s/Any
+                     :lang             lang-schema/Lang
+                     :idx              (s/maybe s/Int)}]
+  (let [row-count @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])]
+    [:<>
+     (map (fn ->oppiaineen-arvosana-rivi-readonly [arvosana-idx]
+            (let [key                 (str "oppiaineen-arvosana-rivi-" (:id field-descriptor) "-" arvosana-idx)
+                  valinnaisaine-rivi? (> arvosana-idx 0)
+                  children            (:children field-descriptor)
+                  arvosana-dropdown   (some-> children
+                                              last
+                                              (assoc
+                                                :readonly-render-options
+                                                {:arvosanat-taulukko? true}))
+                  oppimaara-dropdown  (when (= (count children) 2)
+                                        (-> children
+                                            first
+                                            (assoc
+                                              :readonly-render-options
+                                              {:arvosanat-taulukko? true})))]
+              ^{:key key}
+              [oppiaineen-arvosana-rivi
+               {:label
+                (cond->> (-> field-descriptor :label lang)
+                         valinnaisaine-rivi?
+                         (translations/get-hakija-translation :oppiaine-valinnainen lang))
+
+                :oppimaara-dropdown
+                (when oppimaara-dropdown
+                  [render-field oppimaara-dropdown application lang idx])
+
+                :arvosana-dropdown
+                (when arvosana-dropdown
+                  [render-field arvosana-dropdown application lang idx])
+
+                :lisaa-valinnaisaine-linkki
+                nil}]))
+          (range row-count))]))
+
+(s/defn arvosanat-taulukko-readonly
+  [{:keys [field-descriptor
+           render-field
+           lang
+           application
+           idx]} :- {:field-descriptor s/Any
+                     :render-field     s/Any
+                     :lang             lang-schema/Lang
+                     :application      s/Any
+                     :idx              (s/maybe s/Int)}]
+  [:div.arvosanat-taulukko
+   [arvosanat-taulukko-otsikkorivi
+    {:lang lang}]
+   (map (fn field-descriptor->oppiaineen-arvosana-readonly [arvosana-data]
+          (let [arvosana-koodi (:id arvosana-data)
+                key            (str "arvosana-" arvosana-koodi)]
+            ^{:key key}
+            [render-field arvosana-data application lang idx]))
+        (:children field-descriptor))])

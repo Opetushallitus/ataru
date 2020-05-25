@@ -1,5 +1,6 @@
 @import "vars";
 @import "mixins";
+@import "component-layout";
 @field-margin-left: 245px;
 @form-select-width: 305px;
 @total-banner-height: 97px;
@@ -84,6 +85,10 @@ body {
   margin-left: 10px;
 }
 
+.application-handling__nested-container--readonly-arvosanat-taulukko {
+  margin-left: 0;
+}
+
 .application__wrapper-contents {
   margin-top: 13px;
   width: 75%;
@@ -92,6 +97,36 @@ body {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+}
+
+@media only screen and (max-width: @mobile-width) {
+  .application__form-field--readonly-arvosanat-taulukko {
+    .flex-row-left-top();
+  }
+
+  .application__form-field-label.application__form-field-label--readonly-arvosanat-taulukko {
+    flex-basis: 80px;
+    flex-shrink: 0;
+  }
+}
+
+@media only screen and (min-width: (@mobile-width + 1)) {
+  .application__form-field--readonly-arvosanat-taulukko {
+    .flex-row-right-center();
+  }
+
+  .application__form-field-label.application__form-field-label--readonly-arvosanat-taulukko {
+    display: none;
+  }
+}
+
+
+.application__form-field--readonly-arvosanat-taulukko {
+  margin: 0;
+}
+
+.application__form-field-label.application__form-field-label--readonly-arvosanat-taulukko {
+  font-weight: 300;
 }
 
 .application__form-dropdown-followups {
@@ -1124,6 +1159,10 @@ th.application__readonly-adjacent--header {
   }
 }
 
+.application__text-field-paragraph--readonly-arvosanat-taulukko {
+  line-height: unset;
+}
+
 .application__form-adjacent-text-fields-wrapper {
   display: flex;
   flex-wrap: wrap;
@@ -1427,7 +1466,7 @@ th.application__readonly-adjacent--header {
   &:hover {
     opacity: 0.5;
   }
-  
+
   &.disabled {
     cursor: default;
     border-top-color: @sg-gray-lighten-3;
