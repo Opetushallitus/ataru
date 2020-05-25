@@ -12,7 +12,7 @@
 
 (s/defn dropdown-chevron
   [{:keys [expanded?]} :- {:expanded? s/Bool}]
-  [:i.zmdi.a-button__chevron
+  [:i.zmdi.a-dropdown-button--chevron
    {:aria-hidden true
     :class       (if expanded?
                    "zmdi-chevron-up"

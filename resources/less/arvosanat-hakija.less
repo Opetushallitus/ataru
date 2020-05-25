@@ -110,8 +110,12 @@
     width: 200px;
   }
 
-  .arvosanat-taulukko__rivi:not(:last-child) {
-    margin-bottom: 20px;
+  .arvosanat-taulukko__rivi--pakollinen-oppiaine {
+    margin-top: 20px;
+  }
+
+  .arvosanat-taulukko__rivi:not(.arvosanat-taulukko__rivi--pakollinen-oppiaine) {
+    padding-top: 20px;
   }
 
   .arvosanat-taulukko__rivi:not(:first-child) {

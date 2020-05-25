@@ -11,11 +11,15 @@
   [{:keys [label
            oppimaara-dropdown
            arvosana-dropdown
-           lisaa-valinnaisaine-linkki]} :- {:label                                       s/Any
-                                            (s/optional-key :oppimaara-dropdown)         s/Any
-                                            (s/optional-key :arvosana-dropdown)          s/Any
-                                            (s/optional-key :lisaa-valinnaisaine-linkki) s/Any}]
+           lisaa-valinnaisaine-linkki
+           pakollinen-oppiaine?]} :- {:label                                       s/Any
+                                      (s/optional-key :oppimaara-dropdown)         s/Any
+                                      (s/optional-key :arvosana-dropdown)          s/Any
+                                      (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
+                                      :pakollinen-oppiaine?                        s/Bool}]
   [:div.arvosanat-taulukko__rivi
+   {:class (when pakollinen-oppiaine?
+             "arvosanat-taulukko__rivi--pakollinen-oppiaine")}
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
     label]
    [:div.arvosanat-taulukko__solu.arvosana__oppimaara
@@ -86,7 +90,9 @@
                        valinnaisaine-rivi? (> arvosana-idx 0)]
                    ^{:key key}
                    [oppiaineen-arvosana-rivi
-                    {:label
+                    {:pakollinen-oppiaine?
+                     (not valinnaisaine-rivi?)
+                     :label
                      (let [label (cond->> (-> field-descriptor :label lang)
                                           valinnaisaine-rivi?
                                           (translations/get-hakija-translation :oppiaine-valinnainen lang))]
@@ -166,7 +172,9 @@
                                               {:arvosanat-taulukko? true})))]
               ^{:key key}
               [oppiaineen-arvosana-rivi
-               {:label
+               {:pakollinen-oppiaine?
+                (not valinnaisaine-rivi?)
+                :label
                 (cond->> (-> field-descriptor :label lang)
                          valinnaisaine-rivi?
                          (translations/get-hakija-translation :oppiaine-valinnainen lang))
