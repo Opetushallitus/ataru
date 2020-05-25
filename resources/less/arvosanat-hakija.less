@@ -10,11 +10,11 @@
   font-weight: 600;
 }
 
-.arvosana__oppimaara {
+.arvosana__oppimaara:not(.arvosanat-taulukko__otsikko) {
   color: @component-gray;
 }
 
-.arvosana__arvosana {
+.arvosana__arvosana:not(.arvosanat-taulukko__otsikko) {
   color: @component-gray;
 }
 
@@ -127,6 +127,14 @@
   }
 
   .arvosana__lisaa-valinnaisaine--ikoni {
+    display: none;
+  }
+
+  .arvosanat-taulukko__otsikko.arvosana__oppimaara {
+    display: none;
+  }
+
+  .arvosanat-taulukko__otsikko.arvosana__arvosana {
     display: none;
   }
 }

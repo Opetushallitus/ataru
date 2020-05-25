@@ -122,10 +122,18 @@
          (into [:<>]))))
 
 (s/defn arvosanat-taulukko-otsikkorivi
-  [{:keys [lang]} :- {:lang lang-schema/Lang}]
+  [{:keys [lang
+           readonly?]} :- {:lang      lang-schema/Lang
+                           :readonly? s/Bool}]
   [:div.arvosanat-taulukko__rivi
    [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__oppiaine
     [:span (translations/get-hakija-translation :oppiaine lang)]]
+   (when readonly?
+     [:<>
+      [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__oppimaara
+       [:span (translations/get-hakija-translation :oppimaara lang)]]
+      [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__arvosana
+       [:span (translations/get-hakija-translation :arvosana lang)]]])
    [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine
     [:span (translations/get-hakija-translation :valinnaisaine lang)]]])
 
@@ -136,7 +144,8 @@
   (let [lang @(re-frame/subscribe [:application/form-language])]
     [:div.arvosanat-taulukko
      [arvosanat-taulukko-otsikkorivi
-      {:lang lang}]
+      {:lang      lang
+       :readonly? false}]
      (map (fn field-descriptor->oppiaineen-arvosana [arvosana-data]
             (let [arvosana-koodi (:id arvosana-data)
                   key            (str "arvosana-" arvosana-koodi)]
@@ -203,7 +212,8 @@
                      :idx              (s/maybe s/Int)}]
   [:div.arvosanat-taulukko
    [arvosanat-taulukko-otsikkorivi
-    {:lang lang}]
+    {:lang      lang
+     :readonly? true}]
    (map (fn field-descriptor->oppiaineen-arvosana-readonly [arvosana-data]
           (let [arvosana-koodi (:id arvosana-data)
                 key            (str "arvosana-" arvosana-koodi)]
