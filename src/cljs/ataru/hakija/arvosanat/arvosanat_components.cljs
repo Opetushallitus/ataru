@@ -5,7 +5,8 @@
             [ataru.hakija.components.link-component :as link-component]
             [clojure.string :as string]
             [re-frame.core :as re-frame]
-            [schema.core :as s]))
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 (s/defn oppiaineen-arvosana-rivi
   [{:keys [label
@@ -147,12 +148,11 @@
   [{:keys [field-descriptor
            application
            render-field
-           lang
-           idx]} :- {:field-descriptor s/Any
-                     :application      s/Any
-                     :render-field     s/Any
-                     :lang             lang-schema/Lang
-                     :idx              (s/maybe s/Int)}]
+           lang]} :- (st/open-schema
+                       {:field-descriptor s/Any
+                        :application      s/Any
+                        :render-field     s/Any
+                        :lang             lang-schema/Lang})]
   (let [row-count @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])]
     [:<>
      (map (fn ->oppiaineen-arvosana-rivi-readonly [arvosana-idx]
@@ -181,11 +181,11 @@
 
                 :oppimaara-dropdown
                 (when oppimaara-dropdown
-                  [render-field oppimaara-dropdown application lang idx])
+                  [render-field oppimaara-dropdown application lang arvosana-idx])
 
                 :arvosana-dropdown
                 (when arvosana-dropdown
-                  [render-field arvosana-dropdown application lang idx])
+                  [render-field arvosana-dropdown application lang arvosana-idx])
 
                 :lisaa-valinnaisaine-linkki
                 nil}]))
