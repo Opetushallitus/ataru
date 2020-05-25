@@ -93,9 +93,8 @@
                                                       (get-value (-> application :answers id) group-idx))
                                                     (:options field-descriptor)
                                                     lang)
-        selected-options (filter #(contains? values (:value %))
-                                 (:options field-descriptor))
-        followups?       (some (comp not-empty :followups) selected-options)
+        options          (when (not-empty values) (:options field-descriptor))
+        followups?       (some (comp not-empty :followups) options)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
      {:class (when @highlight-field? "highlighted")
@@ -103,7 +102,7 @@
      [text-form-field-label id field-descriptor lang]
      [text-form-field-values id values]
      (when followups?
-      [text-form-field-nested-container selected-options lang application group-idx])]))
+      [text-form-field-nested-container options lang application group-idx])]))
 
 (defn- attachment-item [file-key virus-scan-status virus-status-elem text]
   [:div.application__virkailija-readonly-attachment-area

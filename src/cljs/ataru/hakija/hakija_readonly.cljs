@@ -70,22 +70,22 @@
         (required-hint field-descriptor))])
 
 (defn text [field-descriptor application lang group-idx]
-  (let [id               (keyword (:id field-descriptor))
-        answer           @(subscribe [:application/answer id])
-        values           (cond-> (get-value answer group-idx)
-                                 (contains? field-descriptor :koodisto-source)
-                                 split-if-string
-                                 (predefined-value-answer? field-descriptor)
-                                 (replace-with-option-label (:options field-descriptor) lang))
-        selected-options (filter #(contains? values (:value %)) (:options field-descriptor))
-        followups?       (some (comp not-empty :followups) selected-options)]
+  (let [id         (keyword (:id field-descriptor))
+        answer     @(subscribe [:application/answer id])
+        values     (cond-> (get-value answer group-idx)
+                           (contains? field-descriptor :koodisto-source)
+                           split-if-string
+                           (predefined-value-answer? field-descriptor)
+                           (replace-with-option-label (:options field-descriptor) lang))
+        options    (when (not-empty values) (:options field-descriptor))
+        followups? (some (comp not-empty :followups) options)]
     [:div.application__form-field
      [text-form-field-label field-descriptor lang]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
        [text-readonly-text field-descriptor values])
      (when followups?
-       [text-nested-container selected-options application lang])]))
+       [text-nested-container options application lang])]))
 
 (defn- attachment-list [attachments]
   [:div
