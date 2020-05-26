@@ -159,7 +159,7 @@
          :followups
          (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
 
-(defn- form-multi-choice-followups-container [followups idx & [use-multi-choice-style?]]
+(defn- text-field-followups-container [followups idx & [use-multi-choice-style?]]
   (when (and (not use-multi-choice-style?)
              (not-empty followups))
     (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
@@ -240,7 +240,7 @@
          [validation-error errors]
          (when (not (or (string/blank? value)
                         (:focused? @local-state)))
-          [form-multi-choice-followups-container followups idx])]))))
+           [text-field-followups-container followups idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
