@@ -732,8 +732,8 @@
    :header-label @(subscribe [:editor/virkailija-translation :text-field])
    :size-label @(subscribe [:editor/virkailija-translation :text-field-size])])
 
-(defn text-area [initial-content path]
-  [text-component initial-content [] path
+(defn text-area [initial-content followups path]
+  [text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-area])
    :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 
