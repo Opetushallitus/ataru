@@ -1,6 +1,5 @@
 (ns ataru.schema.form-schema
-  (:require [ataru.component-data.arvosanat-module :as arvosanat]
-            [ataru.application.review-states :as review-states]
+  (:require [ataru.application.review-states :as review-states]
             [ataru.application.field-types :refer [form-fields]]
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
@@ -59,7 +58,7 @@
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
-                        (s/optional-key :version)                        s/Keyword
+                        (s/optional-key :version)                        s/Str
                         (s/optional-key :koodisto-ordered-by-user)       s/Bool
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
@@ -96,7 +95,7 @@
                                                                                       :else
                                                                                       BasicElement)]
                              :metadata                                   element-metadata-schema/ElementMetadata
-                             (s/optional-key :version)                   s/Keyword
+                             (s/optional-key :version)                   s/Str
                              (s/optional-key :child-validator)           child-validator-schema/ChildValidator
                              (s/optional-key :params)                    params-schema/Params
                              (s/optional-key :label)                     localized-schema/LocalizedString

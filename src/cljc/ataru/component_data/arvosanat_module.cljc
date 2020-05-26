@@ -7,7 +7,7 @@
             [clojure.string :as string]))
 
 (def ArvosanatVersio
-  (s/eq :oppiaineen-arvosanat))
+  (s/eq "oppiaineen-arvosanat"))
 
 (s/defschema OppiaineenKoodi
   (s/enum "A"
@@ -74,7 +74,7 @@
                                              :value s/Str}]}]
   {:fieldClass       "formField"
    :fieldType        "dropdown"
-   :version          :generic
+   :version          "generic"
    :id               (str "oppimaara-" oppiaineen-koodi)
    :label            (concat-labels
                        ": "
@@ -95,7 +95,7 @@
            metadata]} :- {:metadata         element-metadata-schema/ElementMetadata
                           :oppiaineen-koodi OppiaineenKoodi}]
   (merge (component/dropdown metadata)
-         {:version          :generic
+         {:version          "generic"
           :id               (str "arvosana-" oppiaineen-koodi)
           :label            (concat-labels
                               ": "
@@ -135,7 +135,7 @@
                           (s/optional-key :oppimaara-dropdown) s/Any}]
   (merge (component/question-group metadata)
          {:id       oppiaineen-koodi
-          :version  :oppiaineen-arvosanat
+          :version  "oppiaineen-arvosanat"
           :label    label
           :metadata metadata
           :children (as-> [] children
@@ -255,7 +255,7 @@
                           :children [OppiaineenArvosana]}]
   (merge (component/form-section metadata)
          {:id       "arvosanat-taulukko"
-          :version  :oppiaineen-arvosanat
+          :version  "oppiaineen-arvosanat"
           :children children}))
 
 (s/defn arvosanat
