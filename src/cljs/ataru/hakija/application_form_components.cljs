@@ -207,7 +207,7 @@
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
          [:input.application__form-text-input
-          (merge {:id           id
+          (merge {:id           (str (when idx (str idx "-")) (name id))
                   :type         "text"
                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                   (util/non-blank-val input-hint languages))
