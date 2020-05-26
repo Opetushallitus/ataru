@@ -350,6 +350,12 @@
    :edit-answers                                {:fi "Muokkaus"
                                                  :sv "Bearbeta"
                                                  :en "Edit"}
+   :hyvaksytty                                  {:fi "Hyväksytty"
+                                                 :sv "Godkänd"
+                                                 :en "Selected"}
+   :ei-arvosanaa                                {:fi "Ei arvosanaa"
+                                                 :sv "Ei arvosanaa"
+                                                 :en "Ei arvosanaa"}
    :preview-answers                             {:fi "Esikatselu"
                                                  :sv "Förhandsvisa"
                                                  :en "Preview"}

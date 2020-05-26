@@ -121,7 +121,7 @@
               (not (string/blank? selected-value))
               (assoc :aria-activedescendant selected-option-id))
       (map (fn [{:keys [value] :as option-props}]
-             (let [key (str "dropdown-list-option-" value)]
+             (let [key (str "dropdown-list-option-" dropdown-id "-" value)]
                ^{:key key}
                [dropdown-list-option (merge option-props
                                             {:on-click       on-click
