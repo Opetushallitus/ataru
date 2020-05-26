@@ -159,9 +159,8 @@
          :followups
          (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
 
-(defn- text-field-followups-container [followups idx & [use-multi-choice-style?]]
-  (when (and (not use-multi-choice-style?)
-             (not-empty followups))
+(defn- text-field-followups-container [followups idx]
+  (when (not-empty followups)
     (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
           (for [followup followups]
             ^{:key (:id followup)}
