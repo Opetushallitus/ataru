@@ -37,11 +37,13 @@
            unselected-label
            selected-value
            on-click
+           dropdown-id
            on-change]} :- {:expanded?        s/Bool
                            :options          [SelectOptionProps]
                            :unselected-label s/Str
                            :selected-value   (s/maybe s/Str)
                            :on-click         s/Any
+                           :dropdown-id      s/Str
                            :on-change        s/Any}]
   [:div.a-native-component.a-dropdown-select-container
    [:select.a-dropdown-select
@@ -55,14 +57,14 @@
      {:value          ""
       :label          unselected-label
       :selected-value nil}]
-    (map (fn [{:keys [value] :as option-props}]
-           (let [key (str "dropdown-select-option-" value)]
-             ^{:key key}
-             [dropdown-select-option (assoc
-                                       option-props
-                                       :selected-value
-                                       selected-value)]))
-         options)]
+    (map-indexed (fn [option-idx option-props]
+                   (let [key (str "dropdown-select-" dropdown-id "-option-" option-idx)]
+                     ^{:key key}
+                     [dropdown-select-option (assoc
+                                               option-props
+                                               :selected-value
+                                               selected-value)]))
+                 options)]
    [dropdown-chevron
     {:expanded? expanded?}]])
 
@@ -120,13 +122,13 @@
                :tab-index       "-1"}
               (not (string/blank? selected-value))
               (assoc :aria-activedescendant selected-option-id))
-      (map (fn [{:keys [value] :as option-props}]
-             (let [key (str "dropdown-list-option-" dropdown-id "-" value)]
-               ^{:key key}
-               [dropdown-list-option (merge option-props
-                                            {:on-click       on-click
-                                             :selected-value selected-value})]))
-           options-with-id)]]))
+      (map-indexed (fn [option-idx option-props]
+                     (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
+                       ^{:key key}
+                       [dropdown-list-option (merge option-props
+                                                    {:on-click       on-click
+                                                     :selected-value selected-value})]))
+                   options-with-id)]]))
 
 (s/defn collapse-dropdown
   [{:keys [dropdown-id]} :- {:dropdown-id s/Str}]
@@ -180,6 +182,7 @@
            :options          options
            :unselected-label unselected-label
            :selected-value   selected-value
+           :dropdown-id      dropdown-id
            :on-click         (fn []
                                (expand-dropdown {:dropdown-id dropdown-id}))
            :on-change        on-dropdown-value-change}]
