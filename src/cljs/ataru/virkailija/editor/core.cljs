@@ -6,7 +6,7 @@
             [cljs.core.match :refer-macros [match]]
             [taoensso.timbre :as log]))
 
-(defn soresu->reagent [content path & args]
+(defn soresu->reagent [_ _ & _]
   (fn [content path & args]
     (let [children  (map-indexed
                      (fn [index child]
