@@ -79,10 +79,17 @@
         options          (map (fn [option]
                                 {:label (-> option :label lang)
                                  :value (:value option)})
-                              (:options field-descriptor))]
+                              (:options field-descriptor))
+        data-test-id     (:data-test-id field-descriptor)]
     [dropdown-component/dropdown
-     {:options          options
-      :unselected-label unselected-label
-      :selected-value   (:value answer)
-      :on-change        (fn [value]
-                          (re-frame/dispatch [:application/set-repeatable-application-field field-descriptor idx nil value]))}]))
+     (cond-> {:options          options
+              :unselected-label unselected-label
+              :selected-value   (:value answer)
+              :on-change        (fn [value]
+                                  (re-frame/dispatch [:application/set-repeatable-application-field
+                                                      field-descriptor
+                                                      idx
+                                                      nil
+                                                      value]))}
+             data-test-id
+             (assoc :data-test-id data-test-id))]))

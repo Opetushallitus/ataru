@@ -73,11 +73,13 @@
            label
            on-click
            option-id
-           selected-value]} :- (st/assoc
-                                 SelectOptionProps
-                                 :on-click s/Any
-                                 :option-id s/Str
-                                 :selected-value (s/maybe s/Str))]
+           selected-value
+           data-test-id]} :- (st/assoc
+                               SelectOptionProps
+                               :on-click s/Any
+                               :option-id s/Str
+                               :selected-value (s/maybe s/Str)
+                               :data-test-id (s/maybe s/Str))]
   (let [selected? (= selected-value value)]
     [:li.a-dropdown-list__option
      {:id            option-id
@@ -85,7 +87,8 @@
                        (on-click value))
       :role          "option"
       :aria-selected (when selected?
-                       true)}
+                       true)
+      :data-test-id  data-test-id}
      (when selected?
        [:i.zmdi.zmdi-check.a-dropdown-list-option__checked])
      [:span label]]))
@@ -96,12 +99,14 @@
            on-click
            label-id
            dropdown-id
-           selected-value]} :- {:expanded?      s/Bool
-                                :options        [SelectOptionProps]
-                                :on-click       s/Any
-                                :label-id       s/Str
-                                :dropdown-id    s/Str
-                                :selected-value (s/maybe s/Str)}]
+           selected-value
+           data-test-id]} :- {:expanded?      s/Bool
+                              :options        [SelectOptionProps]
+                              :on-click       s/Any
+                              :label-id       s/Str
+                              :dropdown-id    s/Str
+                              :selected-value (s/maybe s/Str)
+                              :data-test-id   (s/maybe s/Str)}]
   (let [options-with-id    (map-indexed (fn [option-idx option-props]
                                           (assoc
                                             option-props
@@ -114,8 +119,9 @@
                                 (map :option-id)
                                 first)]
     [:div.a-component.a-dropdown-list
-     {:class (when-not expanded?
-               "a-dropdown-list--collapsed")}
+     {:data-test-id (str data-test-id "-list")
+      :class        (when-not expanded?
+                      "a-dropdown-list--collapsed")}
      [:ul.a-dropdown-list-container
       (cond-> {:aria-labelledby label-id
                :role            "listbox"
@@ -126,8 +132,9 @@
                      (let [key (str "dropdown-list-" dropdown-id "-option-" option-idx)]
                        ^{:key key}
                        [dropdown-list-option (merge option-props
-                                                    {:on-click       on-click
-                                                     :selected-value selected-value})]))
+                                                    (cond-> {:on-click       on-click
+                                                             :selected-value selected-value
+                                                             :data-test-id   (str data-test-id "-option-" (:value option-props))}))]))
                    options-with-id)]]))
 
 (s/defn collapse-dropdown
@@ -144,10 +151,12 @@
       [{:keys [options
                unselected-label
                selected-value
-               on-change]} :- {:options          [SelectOptionProps]
-                               :unselected-label s/Str
-                               :selected-value   (s/maybe s/Str)
-                               :on-change        s/Any}]
+               on-change
+               data-test-id]} :- {:options                       [SelectOptionProps]
+                                  :unselected-label              s/Str
+                                  :selected-value                (s/maybe s/Str)
+                                  :on-change                     s/Any
+                                  (s/optional-key :data-test-id) (s/maybe s/Str)}]
       (let [expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
             on-dropdown-value-change (fn on-dropdown-value-change [event]
                                        (collapse-dropdown {:dropdown-id dropdown-id})
@@ -169,10 +178,11 @@
           {:class (when expanded?
                     "a-component")}
           [button-component/button
-           (cond-> {:label      button-label
-                    :on-click   on-dropdown-button-click
-                    :aria-attrs {:aria-haspopup   "listbox"
-                                 :aria-labelledby label-id}}
+           (cond-> {:label        button-label
+                    :on-click     on-dropdown-button-click
+                    :data-test-id (str data-test-id "-button")
+                    :aria-attrs   {:aria-haspopup   "listbox"
+                                   :aria-labelledby label-id}}
                    expanded?
                    (assoc-in [:aria-attrs :aria-expanded] true))]
           [dropdown-chevron
@@ -192,4 +202,5 @@
            :on-click       on-dropdown-value-change
            :label-id       label-id
            :dropdown-id    dropdown-id
-           :selected-value selected-value}]]))))
+           :selected-value selected-value
+           :data-test-id   data-test-id}]]))))

@@ -43,13 +43,15 @@
            lang
            arvosana-idx
            field-descriptor
-           row-count]} :- {:valinnaisaine-rivi? s/Bool
-                           :arvosana-dropdown   s/Any
-                           :oppimaara-dropdown  (s/maybe s/Any)
-                           :lang                lang-schema/Lang
-                           :arvosana-idx        s/Int
-                           :field-descriptor    s/Any
-                           :row-count           s/Int}]
+           row-count
+           data-test-id]} :- {:valinnaisaine-rivi? s/Bool
+                              :arvosana-dropdown   s/Any
+                              :oppimaara-dropdown  (s/maybe s/Any)
+                              :lang                lang-schema/Lang
+                              :arvosana-idx        s/Int
+                              :field-descriptor    s/Any
+                              :row-count           s/Int
+                              :data-test-id        s/Str}]
   (let [label               (if valinnaisaine-rivi?
                               (translations/get-hakija-translation :poista lang)
                               (translations/get-hakija-translation :lisaa-valinnaisaine lang))
@@ -64,27 +66,29 @@
                                      (not arvosana-answered?)
                                      (not oppimaara-answered?)))]
     [link-component/link
-     {:on-click  (fn add-or-remove-oppiaineen-valinnaisaine-row []
-                   (when-not disabled?
-                     (if valinnaisaine-rivi?
-                       (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
-                       (re-frame/dispatch [:application/add-question-group-row field-descriptor]))))}
+     (cond-> {:on-click  (fn add-or-remove-oppiaineen-valinnaisaine-row []
+                           (if valinnaisaine-rivi?
+                             (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
+                             (re-frame/dispatch [:application/add-question-group-row field-descriptor])))
+              :disabled? disabled?}
+             data-test-id
+             (assoc :data-test-id data-test-id))
      (if valinnaisaine-rivi?
        [:span label]
        [:<>
         [:i.zmdi.zmdi-plus-circle-o.arvosana__lisaa-valinnaisaine--ikoni]
-        [:span.arvosana__lisaa-valinnaisaine--linkki
-         label]])]))
+        [:span.arvosana__lisaa-valinnaisaine--linkki label]])]))
 
 (s/defn oppiaineen-arvosana
   [{:keys [field-descriptor
            render-field]} :- render-field-schema/RenderFieldArgs]
-  (let [lang               @(re-frame/subscribe [:application/form-language])
-        row-count          @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
-        children           (:children field-descriptor)
-        arvosana-dropdown  (last children)
-        oppimaara-dropdown (when (= (count children) 2)
-                             (first children))]
+  (let [lang                @(re-frame/subscribe [:application/form-language])
+        row-count           @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
+        children            (:children field-descriptor)
+        arvosana-dropdown   (last children)
+        oppimaara-dropdown  (when (= (count children) 2)
+                              (first children))
+        data-test-id-prefix (str "oppiaineen-arvosana-" (:id field-descriptor))]
     (->> (range row-count)
          (mapv (fn ->oppiaineen-arvosana-rivi [arvosana-idx]
                  (let [key                 (str "oppiaineen-arvosana-rivi-" (:id field-descriptor) "-" arvosana-idx)
@@ -104,11 +108,15 @@
 
                      :oppimaara-dropdown
                      (when oppimaara-dropdown
-                       [render-field oppimaara-dropdown arvosana-idx])
+                       [render-field
+                        (assoc oppimaara-dropdown :data-test-id (str data-test-id-prefix "-oppimaara-" arvosana-idx))
+                        arvosana-idx])
 
                      :arvosana-dropdown
                      (when arvosana-dropdown
-                       [render-field arvosana-dropdown arvosana-idx])
+                       [render-field
+                        (assoc arvosana-dropdown :data-test-id (str data-test-id-prefix "-arvosana-" arvosana-idx))
+                        arvosana-idx])
 
                      :lisaa-valinnaisaine-linkki
                      [lisaa-valinnaisaine-linkki
@@ -118,7 +126,8 @@
                        :lang                lang
                        :arvosana-idx        arvosana-idx
                        :field-descriptor    field-descriptor
-                       :row-count           row-count}]}])))
+                       :row-count           row-count
+                       :data-test-id        (str data-test-id-prefix "-lisaa-valinnaisaine-linkki-" arvosana-idx "-" (if valinnaisaine-rivi? "poista" "lisaa"))}]}])))
          (into [:<>]))))
 
 (s/defn arvosanat-taulukko-otsikkorivi

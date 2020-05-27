@@ -9,9 +9,10 @@
   &:visited {
     color: @text-green;
   }
+}
 
-  &[disabled] {
-    color: @component-light-gray-2;
-    cursor: default;
-  }
+.a-linkki--disabled {
+  .default-font();
+
+  color: @component-light-gray-2;
 }
