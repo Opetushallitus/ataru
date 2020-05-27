@@ -86,9 +86,12 @@
    :validators       ["required"]})
 
 (s/defn arvosana-option
-  [{:keys [arvosana-label]} :- {:arvosana-label localized-schema/LocalizedString}]
-  (assoc (component/dropdown-option)
-    :label arvosana-label))
+  [{:keys [arvosana-label
+           value]} :- {:arvosana-label localized-schema/LocalizedString
+                       :value          s/Str}]
+  (merge (component/dropdown-option)
+         {:label arvosana-label
+          :value value}))
 
 (s/defn arvosana-dropdown
   [{:keys [oppiaineen-koodi
@@ -109,11 +112,14 @@
                                                (arvosana-option
                                                  {:arvosana-label {:fi arvosana
                                                                    :sv arvosana
-                                                                   :en arvosana}}))))
+                                                                   :en arvosana}
+                                                  :value          (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
                                   (arvosana-option
-                                    {:arvosana-label (:hyvaksytty texts/translation-mapping)})
+                                    {:arvosana-label (:hyvaksytty texts/translation-mapping)
+                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty")})
                                   (arvosana-option
-                                    {:arvosana-label (:ei-arvosanaa texts/translation-mapping)}))
+                                    {:arvosana-label (:ei-arvosanaa texts/translation-mapping)
+                                     :value          (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))
           :metadata         metadata
           :validators       ["required"]}))
 
