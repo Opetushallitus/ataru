@@ -38,7 +38,8 @@
                    :secret-link-valid-days              14
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
-                   :features {:schema-validation true}}
+                   :features {:schema-validation true
+                              :arvosanat true}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
  :urls            {:virkailija-host "virkailija.untuvaopintopolku.fi"
