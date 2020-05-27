@@ -123,7 +123,27 @@
     {:oppiaineen-koodi "A"
      :metadata         metadata
      :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
-                         :value "suomi-aidinkielena"}]}))
+                         :value "suomi-aidinkielena"}
+                        {:label (:suomi-toisena-kielena texts/translation-mapping)
+                         :value "suomi-toisena-kielena"}
+                        {:label (:suomi-viittomakielisille texts/translation-mapping)
+                         :value "suomi-viittomakielisille"}
+                        {:label (:suomi-saamenkielisille texts/translation-mapping)
+                         :value "suomi-saamenkielisille"}
+                        {:label (:ruotsi-aidinkielena texts/translation-mapping)
+                         :value "ruotsi-aidinkielena"}
+                        {:label (:ruotsi-toisena-kielena texts/translation-mapping)
+                         :value "ruotsi-toisena-kielena"}
+                        {:label (:ruotsi-viittomakielisille texts/translation-mapping)
+                         :value "ruotsi-viittomakielisille"}
+                        {:label (:saame-aidinkielena texts/translation-mapping)
+                         :value "saame-aidinkielena"}
+                        {:label (:romani-aidinkielena texts/translation-mapping)
+                         :value "romani-aidinkielena"}
+                        {:label (:viittomakieli-aidinkielena texts/translation-mapping)
+                         :value "viittomakieli-aidinkielena"}
+                        {:label (:muu-oppilaan-aidinkieli texts/translation-mapping)
+                         :value "muu-oppilaan-aidinkieli"}]}))
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi

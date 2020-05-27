@@ -281,6 +281,36 @@
    :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
                                                  :sv "Suomi äidinkielenä"
                                                  :en "Suomi äidinkielenä"}
+   :suomi-toisena-kielena                       {:fi "Suomi toisena kielena"
+                                                 :sv "Suomi toisena kielena"
+                                                 :en "Suomi toisena kielena"}
+   :suomi-viittomakielisille                    {:fi "Suomi viittomakielisille"
+                                                 :sv "Suomi viittomakielisille"
+                                                 :en "Suomi viittomakielisille"}
+   :suomi-saamenkielisille                      {:fi "Suomi saamenkielisille"
+                                                 :sv "Suomi saamenkielisille"
+                                                 :en "Suomi saamenkielisille"}
+   :ruotsi-aidinkielena                         {:fi "Ruotsi äidinkielenä"
+                                                 :sv "Ruotsi äidinkielenä"
+                                                 :en "Ruotsi äidinkielenä"}
+   :ruotsi-toisena-kielena                      {:fi "Ruotsi toisena kielenä"
+                                                 :sv "Ruotsi toisena kielenä"
+                                                 :en "Ruotsi toisena kielenä"}
+   :ruotsi-viittomakielisille                   {:fi "Ruotsi viittomakielisille"
+                                                 :sv "Ruotsi viittomakielisille"
+                                                 :en "Ruotsi viittomakielisille"}
+   :saame-aidinkielena                          {:fi "Saame äidinkielenä"
+                                                 :sv "Saame äidinkielenä"
+                                                 :en "Saame äidinkielenä"}
+   :romani-aidinkielena                         {:fi "Romani äidinkielenä"
+                                                 :sv "Romani äidinkielenä"
+                                                 :en "Romani äidinkielenä"}
+   :viittomakieli-aidinkielena                  {:fi "Viittomakieli äidinkielenä"
+                                                 :sv "Viittomakieli äidinkielenä"
+                                                 :en "Viittomakieli äidinkielenä"}
+   :muu-oppilaan-aidinkieli                     {:fi "Muu oppilaan äidinkieli"
+                                                 :sv "Muu oppilaan äidinkieli"
+                                                 :en "Muu oppilaan äidinkieli"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
