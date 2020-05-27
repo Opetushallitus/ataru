@@ -65,10 +65,10 @@
                                      (not oppimaara-answered?)))]
     [link-component/link
      {:on-click  (fn add-or-remove-oppiaineen-valinnaisaine-row []
-                   (if valinnaisaine-rivi?
-                     (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
-                     (re-frame/dispatch [:application/add-question-group-row field-descriptor])))
-      :disabled? disabled?}
+                   (when-not disabled?
+                     (if valinnaisaine-rivi?
+                       (re-frame/dispatch [:application/remove-question-group-row field-descriptor arvosana-idx])
+                       (re-frame/dispatch [:application/add-question-group-row field-descriptor]))))}
      (if valinnaisaine-rivi?
        [:span label]
        [:<>

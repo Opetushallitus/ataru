@@ -2,15 +2,11 @@
   (:require [schema.core :as s]))
 
 (s/defn link
-  [{:keys [disabled?
-           on-click]} :- {:disabled? s/Bool
-                          :on-click  s/Any}
+  [{:keys [on-click]} :- {:on-click s/Any}
    label :- s/Any]
   [:a.a-linkki
-   {:href     "#"
-    :disabled disabled?
-    :on-click (fn [event]
-                (.preventDefault event)
-                (when-not disabled?
-                  (on-click)))}
+   {:href         "#"
+    :on-click     (fn [event]
+                    (.preventDefault event)
+                    (on-click))}
    label])
