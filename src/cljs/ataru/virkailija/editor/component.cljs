@@ -632,8 +632,8 @@
             has-options? (not (empty? (:options value)))
             disabled?    (or component-locked?
                              (not (empty? (first followups))))]
-        [:div.editor-form__checkbox-container
-         [:input.editor-form__checkbox
+        [:div.editor-form__text-field-checkbox-container
+         [:input.editor-form__text-field-checkbox
           {:id        id
            :type      "checkbox"
            :checked   has-options?
@@ -644,9 +644,9 @@
                           (if (-> evt .-target .-checked)
                             (dispatch [:editor/add-text-field-option path])
                             (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
-         [:label.editor-form__checkbox-label
+         [:label.editor-form__text-field-checkbox-label
           {:for   id
-           :class (when disabled? "editor-form__checkbox-label--disabled")}
+           :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
 (defn- text-field-option-followups
@@ -722,7 +722,7 @@
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet path initial-content]]
-         [:div.editor-form__checkbox-wrapper
+         [:div.editor-form__text-field-checkbox-wrapper
           [info-addon path]
           [text-field-has-an-option @value followups path @component-locked?]]
          [text-field-option-followups @value followups path show-followups]]]])))
