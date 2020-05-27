@@ -12,9 +12,7 @@
      {:hakukohde_oid h
       :sija          i})
    (range 1 7)
-   (concat
-    hakukohteet
-    (repeatedly (constantly nil)))))
+   hakukohteet))
 
 (defn- enrich-application-data
   [haku application]
