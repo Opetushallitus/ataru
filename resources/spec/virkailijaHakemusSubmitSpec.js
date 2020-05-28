@@ -35,6 +35,9 @@
     describe('filling form', () => {
       before(
         setNthFieldInputValue(1, 'Virkailijan'),
+        blurField(() => {
+          return formFields().eq(1).find('input')
+        }),
         setNthFieldInputValue(3, 'Täyttämä'),
         setNthFieldInputValue(5, '020202A0202'),
         setNthFieldInputValue(6, 'test@example.com'),
