@@ -17,22 +17,25 @@
   ([db id]
    (hide-field db id ""))
   ([db id value]
-   (-> db
-       (update-in [:application :answers id] merge {:valid true :value value})
-       (assoc-in [:application :ui id :visible?] false))))
+   (if-let [_ (some #(when (= id (keyword (:id %))) %)
+                    (:flat-form-content db))]
+     (-> db
+         (update-in [:application :answers id] merge {:valid true :value value})
+         (assoc-in [:application :ui id :visible?] false))
+     db)))
 
 (defn- show-field
   ([db id]
    (show-field db id false))
   ([db id valid?]
-   (let [cannot-view? (and (get-in db [:application :editing?])
-                           (->> (:flat-form-content db)
-                                (filter #(= id (keyword (:id %))))
-                                first
-                                :cannot-view))]
-     (-> db
-         (update-in [:application :answers id] set-empty-validity cannot-view? valid?)
-         (assoc-in [:application :ui id :visible?] true)))))
+   (if-let [field (some #(when (= id (keyword (:id %))) %)
+                        (:flat-form-content db))]
+     (let [cannot-view? (and (get-in db [:application :editing?])
+                             (:cannot-view field))]
+       (-> db
+           (update-in [:application :answers id] set-empty-validity cannot-view? valid?)
+           (assoc-in [:application :ui id :visible?] true)))
+     db)))
 
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
