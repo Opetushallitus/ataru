@@ -45,7 +45,7 @@ export const arvosanat = {
         poisKaytosta ? 'span' : 'a'
       }[data-test-id=oppiaineen-arvosana-${oppiaine}-lisaa-valinnaisaine-linkki-0-${
         index === 0 ? 'lisaa' : 'poista'
-      }]:visible`
+      }]`
     ),
 
   lisaaValinnaisaine: ({ oppiaine }: { oppiaine: string }) =>
