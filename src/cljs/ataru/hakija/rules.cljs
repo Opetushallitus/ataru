@@ -1,14 +1,10 @@
 (ns ataru.hakija.rules
-  (:require [ataru.util :as util]
-            [cljs.core.match :refer-macros [match]]
-            [ataru.hakija.hakija-ajax :as ajax]
-            [ataru.hakija.application-validators :as validators]
+  (:require [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
-            [ataru.hakija.application :refer [db->valid-status]]))
-
-(def ^:private no-required-answer {:valid false :value ""})
+            [ataru.hakija.application :refer [db->valid-status]]
+            clojure.string))
 
 (defn- set-empty-validity
   [a cannot-view? valid?]
