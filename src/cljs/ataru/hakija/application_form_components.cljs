@@ -21,7 +21,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
-            [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]
+            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
 
 (defonce autocomplete-off "new-password")
