@@ -18,7 +18,9 @@
           return nthHakukohdeSearchResultButton(0)
         }, 'searchResult1'),
         setNthFieldInputValue(1, 'Etunimi Tokanimi'),
-        selectNthField(2),
+        blurField(() => {
+          return formFields().eq(1).find('input')
+        }),
         setNthFieldInputValue(3, 'Lastname'),
         setNthFieldInputValue(5, '020202A0202'),
         setNthFieldInputValue(6, 'test@example.com'),
