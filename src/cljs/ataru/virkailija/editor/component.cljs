@@ -724,8 +724,10 @@
           [belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
           [info-addon path]
-          [text-field-has-an-option @value followups path @component-locked?]]
-         [text-field-option-followups @value followups path show-followups]]]])))
+          (when-not text-area?
+            [text-field-has-an-option @value followups path @component-locked?])]
+         (when-not text-area?
+           [text-field-option-followups @value followups path show-followups])]]])))
 
 (defn text-field [initial-content followups path]
   [text-component initial-content followups path
