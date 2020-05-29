@@ -197,7 +197,7 @@
                                                       (json/generate-string))}
     connection))
 
-(defn store-reviews [reviews _ connection]
+(defn store-reviews [reviews connection]
   (doseq [review reviews]
     ((if (:updated? review)
        queries/yesql-update-attachment-hakukohde-review!
@@ -220,8 +220,7 @@
                              update?
                              fields-by-id
                              excluded-attachment-ids-when-yo-and-jyemp)]
-    ; TODO: update? param is never actually used, might be a bug?
-    (store-reviews reviews update? connection)
+    (store-reviews reviews connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)
                                         reviews
@@ -252,18 +251,17 @@
       (add-new-secret-to-application-in-tx conn (:key new-application)))
     (unwrap-application new-application)))
 
-; TODO: second param (used to be named lang) is not used in these three functions, bug?
-(defn- get-latest-version-and-lock-for-update [secret _ conn]
+(defn- get-latest-version-and-lock-for-update [secret conn]
   (if-let [application (first (queries/yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
-(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret _ conn]
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret conn]
   (if-let [application (first (queries/yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
 
-(defn- get-latest-version-for-virkailija-edit-and-lock-for-rewrite [virkailija-secret _ conn]
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-rewrite [virkailija-secret conn]
   (if-let [application (first (queries/yesql-get-latest-version-by-virkailija-secret-lock-for-rewrite {:virkailija_secret virkailija-secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when rewriting as virkailija" {:virkailija-secret virkailija-secret}))))
@@ -360,7 +358,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
+(defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -372,13 +370,13 @@
                                                [(get-virkailija-oid-for-update-secret conn virkailija-secret) false]))
           old-application       (cond
                                   rewrite-secret?
-                                  (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret lang conn)
+                                  (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret conn)
 
                                   updated-by-applicant?
-                                  (get-latest-version-and-lock-for-update secret lang conn)
+                                  (get-latest-version-and-lock-for-update secret conn)
 
                                   :else
-                                  (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
+                                  (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
           {:keys [id key] :as new-application} (add-new-application-version
                                                  (merge-applications new-application old-application)
                                                  updated-by-applicant?

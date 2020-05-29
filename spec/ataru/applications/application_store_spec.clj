@@ -316,7 +316,7 @@
                                 #{})]
         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
           (let [connection {:connection connection}]
-            (store/store-reviews reviews false connection)
+            (store/store-reviews reviews connection)
             (should== 0 (store/delete-orphan-attachment-reviews (:key application)
                           reviews
                           connection))
