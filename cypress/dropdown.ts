@@ -7,3 +7,8 @@ export const setDropdownValue = (dataTestIdPrefix: string, value: string) =>
         .get(`[data-test-id=${dataTestIdPrefix}-option-${value}]`)
         .click({ force: true })
     )
+
+export const asetaHakijanNakymanPudotusvalikonArvo = (
+  dataTestIdPrefix: string,
+  value: string
+) => cy.get(`[data-test-id=${dataTestIdPrefix}-input]`).select(value)

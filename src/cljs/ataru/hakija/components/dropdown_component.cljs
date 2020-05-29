@@ -26,7 +26,8 @@
                        first
                        :followups
                        (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))
-        data-test-id (when (some #{id} [:home-town])
+        data-test-id (when (some #{id} [:home-town
+                                        :language])
                        (-> id
                            name
                            (str "-input")))]
