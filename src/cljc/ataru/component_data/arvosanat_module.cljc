@@ -12,6 +12,7 @@
 (s/defschema OppiaineenKoodi
   (s/enum "A"
           "A1"
+          "A2"
           "B1"
           "MA"
           "BI"
@@ -185,6 +186,12 @@
      :label            (:arvosana-a1-kieli texts/virkailija-texts)
      :metadata         metadata}))
 
+(defn- arvosana-a2-kieli [{:keys [metadata]}]
+  (oppiaineen-arvosana
+    {:oppiaineen-koodi "A2"
+     :label            (:arvosana-a2-kieli texts/virkailija-texts)
+     :metadata         metadata}))
+
 (defn- arvosana-b1-kieli [{:keys [metadata]}]
   (oppiaineen-arvosana
     {:oppiaineen-koodi "B1"
@@ -302,6 +309,7 @@
                          {:metadata metadata
                           :children [(arvosana-aidinkieli-ja-kirjallisuus {:metadata metadata})
                                      (arvosana-a1-kieli {:metadata metadata})
+                                     (arvosana-a2-kieli {:metadata metadata})
                                      (arvosana-b1-kieli {:metadata metadata})
                                      (arvosana-matematiikka {:metadata metadata})
                                      (arvosana-biologia {:metadata metadata})
