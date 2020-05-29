@@ -1,14 +1,15 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
+            [ataru.applications.application-store-queries :as queries]
             [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [clojure.java.jdbc :as jdbc]
             [ataru.db.db :as db]
             [ataru.util :as util]
-            [clj-time.core :as c]
-            [speclj.core :refer :all]
-            [ataru.forms.form-store :as forms]))
+            [speclj.core :refer [describe tags it around should= should==]]
+            [ataru.forms.form-store :as forms])
+  (:import [java.util UUID]))
 
 (def form-key (:key fixtures/form))
 
@@ -337,3 +338,29 @@
                 "pohjakoulutus_muu--attachment"}
               (hebem/non-yo-attachment-ids
                form-fixtures/base-education-attachment-test-form))))
+
+(defn- do-payment-obligation-review
+  "Emulates automation by performing a review."
+  [application-key new-review-state]
+  (let [connection           {:connection {:datasource (db/get-datasource :db)}}]
+    (store/save-payment-obligation-automatically-changed application-key hakukohde-oid "payment-obligation" new-review-state)
+    (-> (queries/yesql-get-application-events {:application_key application-key} connection)
+        last
+        (select-keys [:id :application_key :new_review_state :review_key :event_type]))))
+
+(describe "automatic payment obligation for application"
+  (tags :unit :BUG-2110)
+  (it "switches between not-obligated and unreviewed when called multiple times"
+    (let [application-key      (str (UUID/randomUUID))
+          first-event          (do-payment-obligation-review application-key "not-obligated")
+          second-event         (do-payment-obligation-review application-key "unreviewed")]
+      (should= {:id 1
+                :new_review_state "not-obligated"
+                :review_key "payment-obligation"
+                :application_key application-key
+                :event_type "payment-obligation-automatically-changed"} first-event)
+      (should= {:id 2
+                :new_review_state "unreviewed"
+                :review_key "payment-obligation"
+                :application_key application-key
+                :event_type "payment-obligation-automatically-changed"} second-event))))
