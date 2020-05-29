@@ -5,13 +5,24 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             clojure.string))
 
+(defn- update-value [current-value update-fn]
+  (if (vector? current-value)
+    [(update-value (first current-value) update-fn)]
+    (update-fn current-value)))
+
+(defn- blank-value? [value]
+  (or (and (string? value)
+           (clojure.string/blank? value))
+      (and (vector? value)
+           (-> value first blank-value?))))
+
 (defn- set-empty-validity
   [a cannot-view? valid?]
-  (if (and (clojure.string/blank? (:value a))
+  (if (and (blank-value? (:value a))
            (not cannot-view?))
     (-> a
         (assoc :valid valid?)
-        (assoc-in [:values :valid] valid?))
+        (update :values update-value #(assoc % :valid valid?)))
     a))
 
 (defn- hide-field
@@ -20,12 +31,16 @@
   ([db id value]
    (if-let [_ (some #(when (= id (keyword (:id %))) %)
                     (:flat-form-content db))]
-     (-> db
-         (update-in [:application :answers id] merge {:valid true
-                                                      :value value})
-         (update-in [:application :answers id :values] merge {:valid true
-                                                              :value value})
-         (assoc-in [:application :ui id :visible?] false))
+     (as-> db db'
+           (assoc-in db' [:application :ui id :visible?] false)
+           (cond-> db'
+                   (-> db' :application :answers id)
+                   (update-in [:application :answers id]
+                              (fn [answer]
+                                (-> answer
+                                    (assoc :valid true)
+                                    (update :value update-value (constantly value))
+                                    (update :values update-value (constantly {:value value :valid true})))))))
      db)))
 
 (defn- show-field
@@ -34,11 +49,13 @@
   ([db id valid?]
    (if-let [field (some #(when (= id (keyword (:id %))) %)
                         (:flat-form-content db))]
-     (let [cannot-view? (and (get-in db [:application :editing?])
-                             (:cannot-view field))]
-       (-> db
-           (update-in [:application :answers id] set-empty-validity cannot-view? valid?)
-           (assoc-in [:application :ui id :visible?] true)))
+     (as-> db db'
+           (assoc-in db' [:application :ui id :visible?] true)
+           (let [cannot-view? (and (get-in db [:application :editing?])
+                                   (:cannot-view field))]
+             (cond-> db'
+                     (-> db' :application :answers id)
+                     (update-in [:application :answers id] set-empty-validity cannot-view? valid?))))
      db)))
 
 (defn- have-finnish-ssn

@@ -38,10 +38,7 @@
 
 (s/defschema Values
   (s/conditional is-question-group-answer?
-                 [(s/conditional is-question-group-answer?
-                                 [(s/maybe [ValuesValue])]
-                                 :else
-                                 (s/maybe [ValuesValue]))]
+                 [(s/maybe [ValuesValue])]
                  vector?
                  [ValuesValue]
                  :else
