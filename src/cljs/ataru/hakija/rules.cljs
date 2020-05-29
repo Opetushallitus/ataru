@@ -293,6 +293,46 @@
     (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] false)
     (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] true)))
 
+(defn- swedish-nationality? [db]
+  (-> db
+      :application
+      :answers
+      :language
+      :value
+      (= "SV")))
+
+(defn- arvosana-with-no-answer? [db answer-key]
+  (let [value (-> db
+                  :application
+                  :answers
+                  answer-key
+                  :value)]
+    (and (vector? value)
+         (-> value first vector?)
+         (-> value first first (= "")))))
+
+(defn- hide-oppiaine-row [db oppiaine]
+  (let [arvosana (keyword (str "arvosana-" (name oppiaine)))
+        hide     (fn hide [db]
+                   (-> db
+                       (hide-field oppiaine)
+                       (hide-field arvosana)))]
+    (cond-> db
+            (arvosana-with-no-answer? db arvosana)
+            hide)))
+
+(defn- toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
+  [db _]
+  (if (swedish-nationality? db)
+    (-> db
+        (show-field :A2)
+        (show-field :arvosana-A2)
+        (hide-oppiaine-row :B1))
+    (-> db
+        (show-field :B1)
+        (show-field :arvosana-B1)
+        (hide-oppiaine-row :A2))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -310,7 +350,9 @@
     :change-country-of-residence
     change-country-of-residence
     :pohjakoulutusristiriita
-    pohjakoulutusristiriita))
+    pohjakoulutusristiriita
+    :toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
+    toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet))
 
 (defn run-rules
   ([db rules]
