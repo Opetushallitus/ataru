@@ -2,7 +2,10 @@
   (:require [clojure.string :as string]))
 
 (def translation-mapping
-  {:add                                         {:fi "Lisää"
+  {:hyvaksytty-suoritettu                       {:fi "Hyväksytty / suoritettu"
+                                                 :sv "Hyväksytty / suoritettu"
+                                                 :en "Hyväksytty / suoritettu"}
+   :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
                                                  :en "Add"}
    :add-application-option                      {:fi "Lisää hakukohde"

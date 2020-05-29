@@ -116,8 +116,8 @@
                                                                    :en arvosana}
                                                   :value          (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
                                   (arvosana-option
-                                    {:arvosana-label (:hyvaksytty texts/translation-mapping)
-                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty")})
+                                    {:arvosana-label (:hyvaksytty-suoritettu texts/translation-mapping)
+                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty-suoritettu")})
                                   (arvosana-option
                                     {:arvosana-label (:ei-arvosanaa texts/translation-mapping)
                                      :value          (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))
