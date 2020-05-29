@@ -237,7 +237,8 @@
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
          [validation-error errors]
-         (when (not (string/blank? value))
+         (when (not (or (string/blank? value)
+                        show-error?))
            [text-field-followups-container followups idx])]))))
 
 (defn- repeatable-text-field-row
