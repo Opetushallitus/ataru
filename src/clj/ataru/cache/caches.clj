@@ -9,11 +9,11 @@
             [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
-            [ataru.statistics.statistics-service :as s]
+            [ataru.statistics.statistics-service :as stats]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
+            [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [ataru.cas.client :as cas])
   (:import java.util.concurrent.TimeUnit))
@@ -28,6 +28,12 @@
                           :direct-form-haut (application-store/get-direct-form-haut))))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
+   [:organizations-hierarchy-cache
+    (in-memory/map->InMemoryCache
+     {:loader (cache/->FunctionCacheLoader
+               (fn [key] (organization-client/get-organizations key)))
+      :expires-after [2 TimeUnit/DAYS]
+      :refresh-after [60 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
      {:loader        (cache/->FunctionCacheLoader
@@ -201,7 +207,7 @@
      (union-cache/map->CacheLoader
       {:high-priority-loader (cache/->FunctionCacheLoader
                               (fn [key]
-                                (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+                                (let [[haku-oid organization-oid] (s/split key #"#")]
                                   (tarjonta-client/hakukohde-search haku-oid organization-oid)))
                               tarjonta-client/hakukohde-search-checker)})
      {:low-priority-loader :kouta-hakukohde-search-cache-loader})]
@@ -221,7 +227,7 @@
       {:name         "statistics-month"
        :ttl          [10 TimeUnit/HOURS]
        :lock-timeout [10 TimeUnit/SECONDS]
-       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
+       :loader       (cache/->FunctionCacheLoader stats/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-week-cache
     (component/using
@@ -229,7 +235,7 @@
       {:name         "statistics-week"
        :ttl          [1 TimeUnit/HOURS]
        :lock-timeout [10 TimeUnit/SECONDS]
-       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
+       :loader       (cache/->FunctionCacheLoader stats/get-and-parse-application-stats)})
      [:redis])]
    [:statistics-day-cache
     (component/using
@@ -237,7 +243,7 @@
       {:name         "statistics-day"
        :ttl          [5 TimeUnit/MINUTES]
        :lock-timeout [10 TimeUnit/SECONDS]
-       :loader       (cache/->FunctionCacheLoader s/get-and-parse-application-stats)})
+       :loader       (cache/->FunctionCacheLoader stats/get-and-parse-application-stats)})
      [:redis])]
    [:koodisto-redis-cache
     (component/using
