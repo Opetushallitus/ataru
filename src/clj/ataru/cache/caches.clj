@@ -32,7 +32,7 @@
     (in-memory/map->InMemoryCache
      {:loader (cache/->FunctionCacheLoader
                (fn [key] (organization-client/get-organizations key)))
-      :expires-after [2 TimeUnit/DAYS]
+      :expires-after [3 TimeUnit/DAYS]
       :refresh-after [60 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
