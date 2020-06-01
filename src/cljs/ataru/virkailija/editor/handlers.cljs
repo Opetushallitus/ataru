@@ -6,6 +6,7 @@
             [cljs.core.async :as async]
             [ataru.number :refer [numeric-matcher gte]]
             [cljs.core.match :refer-macros [match]]
+            [ataru.collections :as collections]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
@@ -52,9 +53,7 @@
   [field-descriptor]
   (if (nil? (:koodisto-source field-descriptor))
     (update field-descriptor :options
-            #(vec (map-indexed (fn [i option]
-                                 (assoc option :value (str i)))
-                               %)))
+            #(vec (collections/generate-missing-values % cu/new-uuid)))
     field-descriptor))
 
 (reg-event-db

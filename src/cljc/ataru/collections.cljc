@@ -22,3 +22,7 @@
                                     (filter (comp not nil?)))
                               conj)
                    (first)))))
+
+(defn generate-missing-values [coll f]
+  "Iterate through coll and invoke f to generate :value field, if it does not exist"
+  (map #(assoc % :value (or (:value %) (f))) coll))
