@@ -19,10 +19,7 @@
 (defn get-organization-hierarchies
   [organizations-hierarchy-cache direct-oids]
   (mapcat (fn [org-oid]
-            (cache/get-from organizations-hierarchy-cache
-                            (if (s/blank? org-oid)
-                              "all-organizations"
-                              org-oid)))
+            (cache/get-from organizations-hierarchy-cache org-oid))
           direct-oids))
 
 (defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
