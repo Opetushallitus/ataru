@@ -25,11 +25,15 @@
                     "arvosanat-taulukko__rivi--pakollinen-oppiaine")
     :data-test-id data-test-id}
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
+    {:class (when-not oppimaara-dropdown
+              "arvosanat-taulukko__solu--span-2")}
     label]
-   [:div.arvosanat-taulukko__solu.arvosana__oppimaara
-    oppimaara-dropdown]
-   [:div.arvosanat-taulukko__solu.arvosana__arvosana
-    arvosana-dropdown]
+   (when oppimaara-dropdown
+     [:div.arvosanat-taulukko__solu.arvosana__oppimaara
+      oppimaara-dropdown])
+   (when arvosana-dropdown
+     [:div.arvosanat-taulukko__solu.arvosana__arvosana
+      arvosana-dropdown])
    [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
     lisaa-valinnaisaine-linkki]])
 
