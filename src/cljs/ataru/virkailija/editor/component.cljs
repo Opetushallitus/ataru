@@ -836,7 +836,9 @@
                         "dropdown"       (if (some? @options-koodisto)
                                            @(subscribe [:editor/virkailija-translation :dropdown-koodisto])
                                            @(subscribe [:editor/virkailija-translation :dropdown]))
-                        "singleChoice"   @(subscribe [:editor/virkailija-translation :single-choice-button])
+                        "singleChoice"   (if (some? @options-koodisto)
+                                           @(subscribe [:editor/virkailija-translation :single-choice-button-koodisto])
+                                           @(subscribe [:editor/virkailija-translation :single-choice-button]))
                         "multipleChoice" (if (some? @options-koodisto)
                                            @(subscribe [:editor/virkailija-translation :multiple-choice-koodisto])
                                            @(subscribe [:editor/virkailija-translation :multiple-choice])))]

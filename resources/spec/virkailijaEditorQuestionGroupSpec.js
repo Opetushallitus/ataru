@@ -177,6 +177,7 @@
             )
           ).to.eql([
             'Painikkeet, yksi valittavissa',
+            'Painikkeet, yksi valittavissa, koodisto',
             'Pudotusvalikko',
             'Pudotusvalikko, koodisto',
             'Lista, monta valittavissa',
@@ -238,6 +239,7 @@
             )
           ).to.eql([
             'Painikkeet, yksi valittavissa',
+            'Painikkeet, yksi valittavissa, koodisto',
             'Pudotusvalikko',
             'Pudotusvalikko, koodisto',
             'Lista, monta valittavissa',
