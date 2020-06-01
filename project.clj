@@ -56,6 +56,9 @@
                  [com.stuartsierra/component "1.0.0"]
                  [metosin/compojure-api "1.1.13"]
                  [aleph "0.4.6"]
+                 [oph/clj-access-logging "1.0.0-SNAPSHOT"]
+                 [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT"]
+                 [oph/clj-timbre-access-logging "1.0.0-SNAPSHOT"]
                  [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT"]
                  [fi.vm.sade/auditlogger "9.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
@@ -301,13 +304,11 @@
                                      :target-path "target/target-cypess-hakija"}
 
              :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :env         {:app "virkailija"}
                                     :jvm-opts    ^:replace ["-Dapp=virkailija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
 
              :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :env         {:app "hakija"}
                                     :jvm-opts    ^:replace ["-Dapp=hakija"
                                                             "-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]

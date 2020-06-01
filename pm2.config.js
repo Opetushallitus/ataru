@@ -35,7 +35,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['hakija-dev'],
       env: {
-        APP: 'hakija',
+        APP: 'ataru-hakija',
         CONFIG: hakijaConfig,
       },
       cwd: __dirname,
@@ -56,7 +56,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['virkailija-dev'],
       env: {
-        APP: 'virkailija',
+        APP: 'ataru-editori',
         CONFIG: virkailijaConfig,
       },
       cwd: __dirname,
@@ -94,7 +94,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['with-profile', '+hakija-cypress', 'run', 'hakija'],
       env: {
-        APP: 'hakija',
+        APP: 'ataru-hakija',
         ATARU_HTTP_PORT: 8353,
         ATARU_REPL_PORT: 3340,
         CONFIG: 'config/cypress.edn',
@@ -117,7 +117,7 @@ module.exports = {
       interpreter: '/bin/sh',
       args: ['with-profile', '+virkailija-cypress', 'run', 'virkailija'],
       env: {
-        APP: 'virkailija',
+        APP: 'ataru-editori',
         ATARU_HTTP_PORT: 8352,
         ATARU_REPL_PORT: 3339,
         CONFIG: 'config/cypress.edn',

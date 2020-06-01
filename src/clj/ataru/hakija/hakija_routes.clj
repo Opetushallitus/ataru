@@ -1,6 +1,5 @@
 (ns ataru.hakija.hakija-routes
-  (:require [ataru.log.access-log :as access-log]
-            [ataru.log.audit-log :as audit-log]
+  (:require [ataru.log.audit-log :as audit-log]
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-client :as session-client]
             [ataru.applications.application-store :as application-store]
@@ -11,8 +10,12 @@
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.hakija.form-role :as form-role]
             [ataru.util.client-error :as client-error]
+            [clj-access-logging]
+            [clj-stdout-access-logging]
+            [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
+            [clojure.string]
             [com.stuartsierra.component :as component]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [compojure.api.exception :as ex]
@@ -35,9 +38,6 @@
             [string-normalizer.filename-normalizer-middleware :as normalizer]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
-
-(defn- deleted? [{:keys [deleted]}]
-  (true? deleted))
 
 (defn- get-application
   [form-by-id-cache
@@ -356,7 +356,7 @@
 
                 form-key
                 (selection-limit/query-available-selections form-key)))
-        (catch clojure.lang.ExceptionInfo e
+        (catch clojure.lang.ExceptionInfo _
                (response/conflict
                  (selection-limit/query-available-selections form-key)))))))
 
@@ -414,7 +414,12 @@
                                       :query-params [{lang :- s/Str nil}]
                                       (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>"))))
-                            (access-log/wrap-with-access-logging)
+                            (clj-access-logging/wrap-access-logging)
+                            (clj-stdout-access-logging/wrap-stdout-access-logging)
+                            (clj-timbre-access-logging/wrap-timbre-access-logging
+                             {:path (str (-> config :log :hakija-base-path)
+                                         "/access_ataru-hakija"
+                                         (when (:hostname env) (str "_" (:hostname env))))})
                             (wrap-gzip)
                             (wrap-referrer-policy "same-origin")
                             (cache-control/wrap-cache-control))))

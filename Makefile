@@ -139,13 +139,13 @@ clean-lein:
 # Database initialization
 # ----------------
 init-test-db:
-	APP=virkailija lein with-profile test run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
+	lein with-profile test run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
 
 nuke-test-db:
-	APP=virkailija lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
+	lein with-profile test run -m ataru.fixtures.db.unit-test-db/clear-database
 
 load-test-fixture: nuke-test-db init-test-db
-	APP=virkailija lein with-profile test run -m ataru.fixtures.db.browser-test-db/init-db-fixture
+	lein with-profile test run -m ataru.fixtures.db.browser-test-db/init-db-fixture
 
 # ----------------
 # Top-level commands (all apps)
@@ -188,17 +188,17 @@ help:
 # ----------------
 
 compile-test-code:
-	APP=virkailija lein with-profile test less once
-	APP=virkailija lein with-profile test cljsbuild once virkailija-min hakija-min
+	lein with-profile test less once
+	lein with-profile test cljsbuild once virkailija-min hakija-min
 
 test-clojurescript: $(NODE_MODULES)
-	APP=virkailija lein with-profile test doo chrome-headless test once
+	lein with-profile test doo chrome-headless test once
 
 test-browser: $(NODE_MODULES) compile-test-code
-	APP=virkailija lein with-profile test spec -t ui
+	lein with-profile test spec -t ui
 
 test-clojure: nuke-test-db init-test-db
-	APP=virkailija lein with-profile test spec -t ~ui
+	lein with-profile test spec -t ~ui
 
 test: start-docker test-clojurescript test-clojure test-browser
 

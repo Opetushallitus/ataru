@@ -1,6 +1,5 @@
 (ns ataru.virkailija.virkailija-routes
-  (:require [ataru.log.access-log :as access-log]
-            [ataru.applications.automatic-eligibility :as automatic-eligibility]
+  (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
             [ataru.applications.application-access-control :as access-controlled-application]
@@ -46,6 +45,9 @@
             [ataru.valintaperusteet.client :as valintaperusteet-client]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
+            [clj-access-logging]
+            [clj-stdout-access-logging]
+            [clj-timbre-access-logging]
             [clojure.core.match :refer [match]]
             [clojure.java.io :as io]
             [clout.core :as clout]
@@ -1359,6 +1361,7 @@
                                 (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
                                                  wrap-database-backed-session
+                                                 clj-access-logging/wrap-session-access-logging
                                                  auth-middleware/with-authentication]
                                                 (api/middleware [session-client/wrap-session-client-headers
                                                                  session-timeout/wrap-idle-session-timeout]
@@ -1375,7 +1378,12 @@
                                                (assoc :session nil)
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)))
-                            (access-log/wrap-with-access-logging)
+                            (clj-access-logging/wrap-access-logging)
+                            (clj-stdout-access-logging/wrap-stdout-access-logging)
+                            (clj-timbre-access-logging/wrap-timbre-access-logging
+                             {:path (str (-> config :log :virkailija-base-path)
+                                         "/access_ataru-editori"
+                                         (when (:hostname env) (str "_" (:hostname env))))})
                             (wrap-gzip)
                             (cache-control/wrap-cache-control))))
 
