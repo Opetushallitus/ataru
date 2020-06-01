@@ -74,7 +74,7 @@
   {:text-field (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
                     component/text-field)})
 
-(defn- component-toolbar [path elements generator]
+(defn- component-toolbar [_ _ _]
   (fn [path elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
           pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
@@ -95,7 +95,7 @@
                 @(subscribe [:editor/virkailija-translation component-name])]])))))
 
 
-(defn custom-add-component [toolbar path generator]
+(defn custom-add-component [_ _ _]
   (let [mouse-over?  (r/atom false)
         form-locked? (subscribe [:editor/form-locked?])]
     (fn [toolbar path generator]
