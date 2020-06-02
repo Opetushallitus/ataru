@@ -407,7 +407,7 @@
    :haku s/Str
    :email s/Str
    :hakukohteet [s/Str]
-   :submitted org.joda.time.DateTime})
+   :submitted s/Str})
 
 (s/defschema Hakutoive
   {:processingState     s/Str
