@@ -831,18 +831,6 @@ JOIN application_reviews AS ar
   ON ar.application_key = a.key
 LEFT JOIN applications AS la
   ON la.key = a.key AND la.id > a.id
-LEFT JOIN ((SELECT key
-            FROM applications
-            WHERE created_time > :modified_after)
-           UNION
-           (SELECT application_key AS key
-            FROM application_reviews
-            WHERE modified_time > :modified_after)
-           UNION
-           (SELECT application_key AS key
-            FROM application_hakukohde_reviews
-            WHERE modified_time > :modified_after)) AS modified
-  ON modified.key = a.key
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations,
                           jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
                    FROM application_hakukohde_reviews
@@ -862,7 +850,13 @@ WHERE a.person_oid IS NOT NULL AND
       (:hakukohde_oids::varchar[] IS NULL OR a.hakukohde && :hakukohde_oids) AND
       (:person_oids::text[] IS NULL OR a.person_oid = ANY (:person_oids)) AND
       ar.state <> 'inactivated' AND
-      (:modified_after::timestamptz IS NULL OR modified.key IS NOT NULL) AND
+      (:modified_after::timestamptz IS NULL OR
+         (EXISTS (SELECT 1 FROM applications
+                  WHERE created_time > :modified_after AND key = a.key) OR
+          EXISTS (SELECT 1 FROM application_reviews
+                  WHERE modified_time > :modified_after AND application_key = a.key) OR
+          EXISTS (SELECT 1 FROM application_hakukohde_reviews
+                  WHERE modified_time > :modified_after AND application_key = a.key))) AND
       la.id IS NULL AND
       CASE
         WHEN :offset::text IS NULL THEN true
