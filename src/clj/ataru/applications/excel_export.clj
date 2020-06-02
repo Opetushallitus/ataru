@@ -262,7 +262,8 @@
             (catch Exception _
               (util/non-blank-val (:internal-server-error virkailija-texts)
                                   [lang :fi :sv :en])))
-          (not (empty? options))
+          (and (not (= (:fieldType field-descriptor) "textField"))
+               (not (empty? options)))
           (some (fn [option]
                   (when (= value (:value option))
                     (or (util/non-blank-val (:label option) [lang :fi :sv :en])
