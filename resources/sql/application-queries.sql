@@ -75,7 +75,8 @@ SELECT
   ar.state    AS state,
   a.haku      AS haku,
   a.email     AS email,
-  a.hakukohde AS hakukohteet
+  a.hakukohde AS hakukohteet,
+  a.submitted AS submitted
 FROM applications AS a
 JOIN application_reviews AS ar
   ON ar.application_key = a.key
