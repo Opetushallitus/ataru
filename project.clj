@@ -304,13 +304,11 @@
                                      :target-path "target/target-cypess-hakija"}
 
              :virkailija-dev [:dev {:target-path "target-virkailija"
-                                    :jvm-opts    ^:replace ["-Dapp=virkailija"
-                                                            "-Duser.home=."
+                                    :jvm-opts    ^:replace ["-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
 
              :hakija-dev     [:dev {:target-path "target-hakija"
-                                    :jvm-opts    ^:replace ["-Dapp=hakija"
-                                                            "-Duser.home=."
+                                    :jvm-opts    ^:replace ["-Duser.home=."
                                                             "-XX:MaxJavaStackTraceDepth=10"]}]
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
