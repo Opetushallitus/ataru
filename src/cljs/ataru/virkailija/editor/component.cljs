@@ -46,19 +46,22 @@
 
 (defn- repeater-checkbox
   [path initial-content]
-  (let [id           (util/new-uuid)
-        checked?     (-> initial-content :params :repeatable boolean)
-        component-locked? @(subscribe [:editor/component-locked? path])]
+  (let [id                (util/new-uuid)
+        checked?          (-> initial-content :params :repeatable boolean)
+        has-options?      (not (empty? (:options initial-content)))
+        component-locked? @(subscribe [:editor/component-locked? path])
+        disabled?         (or has-options? component-locked?)]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
                                     :checked   checked?
-                                    :disabled  component-locked?
+                                    :disabled  disabled?
                                     :on-change (fn [event]
-                                                 (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
+                                                 (when (not disabled?)
+                                                   (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable])))}]
      [:label.editor-form__checkbox-label
       {:for   id
-       :class (when component-locked? "editor-form__checkbox-label--disabled")}
+       :class (when disabled? "editor-form__checkbox-label--disabled")}
       @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- belongs-to-hakukohteet-modal
@@ -630,8 +633,10 @@
     (fn [value followups path component-locked?]
       (let [option-index 0
             has-options? (not (empty? (:options value)))
+            repeatable?  (-> value :params :repeatable boolean)
             disabled?    (or component-locked?
-                             (not (empty? (first followups))))]
+                             (not (empty? (first followups)))
+                             repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
           {:id        id
