@@ -631,26 +631,24 @@
                                                                                         :hakukohde-reviews
                                                                                         :attachment-reviews])}))})))
 
-(reg-event-fx
+(reg-event-db
   :application/handle-fetch-application-attachment-metadata
-  (fn [{:keys [db]} [_ response]]
-    (let [response-map       (group-by :key response)
-          file-key->metadata (fn file-key->metadata [file-key-or-keys]
-                               (if (vector? file-key-or-keys)
-                                 (mapv file-key->metadata file-key-or-keys)
-                                 (first (response-map file-key-or-keys))))
-          set-file-metadata  (fn [answer]
-                               (assoc answer :values (-> answer :value file-key->metadata)))
-          db                 (->> (get-in db [:application :selected-application-and-form :application :answers])
-                                  (map (fn [[_ {:keys [fieldType] :as answer}]]
-                                         (cond-> answer
-                                           (= fieldType "attachment")
-                                           (set-file-metadata))))
-                                  (reduce (fn [db {:keys [key] :as answer}]
-                                            (assoc-in db [:application :selected-application-and-form :application :answers (keyword key)] answer))
-                                          db))]
-      {:db       db
-       :dispatch [:application/start-autosave]})))
+  (fn [db [_ response]]
+    (let [metadata (util/group-by-first :key response)]
+      (update-in db [:application :selected-application-and-form :application :answers]
+                 (fn [answers]
+                   (->> answers
+                        (map (fn [[key answer]]
+                               [key (if (= "attachment" (:fieldType answer))
+                                      (assoc answer :values
+                                             (if (and (seq (:value answer))
+                                                      (or (nil? (first (:value answer)))
+                                                          (vector? (first (:value answer)))))
+                                               (mapv #(when-not (nil? %) (mapv metadata %))
+                                                     (:value answer))
+                                               (mapv metadata (:value answer))))
+                                      answer)]))
+                        (into {})))))))
 
 (reg-event-fx
   :application/handle-metadata-not-found
@@ -662,19 +660,23 @@
   :application/fetch-application-attachment-metadata
   (fn [{:keys [db]} _]
     (let [file-keys (->> (get-in db [:application :selected-application-and-form :application :answers])
-                         (filter (comp (partial = "attachment") :fieldType second))
-                         (map (comp :value second))
-                         (flatten))]
+                         vals
+                         (filter #(= "attachment" (:fieldType %)))
+                         (mapcat #(if (and (seq (:value %))
+                                           (or (nil? (first (:value %)))
+                                               (vector? (first (:value %)))))
+                                    (mapcat identity (:value %))
+                                    (:value %))))]
       (if (empty? file-keys)
-        ; sanity check to ensure autosave starts if application has no attachments
         {:db       db
          :dispatch [:application/start-autosave]}
-        {:db   db
-         :http {:method              :post
-                :path                "/lomake-editori/api/files/metadata"
-                :params              {:keys file-keys}
-                :override-args {:error-handler #(dispatch [:application/handle-metadata-not-found file-keys])}
-                :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
+        {:db       db
+         :dispatch [:application/start-autosave]
+         :http     {:method              :post
+                    :path                "/lomake-editori/api/files/metadata"
+                    :params              {:keys file-keys}
+                    :override-args       {:error-handler #(dispatch [:application/handle-metadata-not-found file-keys])}
+                    :handler-or-dispatch :application/handle-fetch-application-attachment-metadata}}))))
 
 (defn- application-has-attachments? [db]
   (some (comp (partial = "attachment") :fieldType second)

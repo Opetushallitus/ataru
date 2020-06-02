@@ -272,13 +272,6 @@
           :else
           value)))
 
-(defn- all-answers-sec-or-vec? [answers]
-  (every? sequential? answers))
-
-(defn- kysymysryhma-answer? [value-or-values]
-  (and (sequential? value-or-values)
-       (all-answers-sec-or-vec? value-or-values)))
-
 (defn- write-application! [writer application
                            application-review
                            application-review-notes
@@ -310,14 +303,14 @@
           value-or-values        (get person (keyword answer-key) (:value answer))
           ->human-readable-value (partial raw-values->human-readable-value field-descriptor application get-koodisto-options)
           value                  (cond
-                                   (kysymysryhma-answer? value-or-values)
+                                   (util/is-question-group-answer? value-or-values)
                                    (->> value-or-values
                                         (map #(clojure.string/join "," %))
                                         (map ->human-readable-value)
                                         (map-indexed #(format "#%s: %s,\n" %1 %2))
                                         (apply str))
 
-                                   (sequential? value-or-values)
+                                   (vector? value-or-values)
                                    (->> value-or-values
                                         (map ->human-readable-value)
                                         (interpose ",\n")
@@ -432,13 +425,19 @@
     (.autoSizeColumn sheet (short y))))
 
 (defn- update-hakukohteet-for-legacy-applications [application]
-  (let [hakukohteet (-> application :answers :hakukohteet)
+  (let [hakukohteet (->> (:answers application)
+                         (filter #(= "hakukohteet" (:key %)))
+                         first)
         hakukohde   (:hakukohde application)]
-    (if (or hakukohteet
-            (and (not hakukohteet) (not hakukohde)))
+    (if (or (not-empty hakukohteet) (empty? hakukohde))
       application
       (update application :answers conj
-        {:key "hakukohteet" :fieldType "hakukohteet" :value (:hakukohde application) :label {:fi "Hakukohteet"}}))))
+              {:key       "hakukohteet"
+               :fieldType "hakukohteet"
+               :value     hakukohde
+               :label     {:fi "Hakukohteet"
+                           :sv "Ansökningsmål"
+                           :en "Application options"}}))))
 
 (defn- get-hakukohde-name [get-hakukohde lang-s haku-oid hakukohde-oid]
   (let [lang (keyword lang-s)]
@@ -447,15 +446,17 @@
            (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])))))
 
 (defn- add-hakukohde-name [get-haku get-hakukohde lang hakukohde-answer haku-oid]
-  (update hakukohde-answer :value
-          (partial map-indexed
-                   (fn [index oid]
-                     (let [name           (get-hakukohde-name get-hakukohde lang haku-oid oid)
-                           priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
-                                            (str "(" (inc index) ") "))]
-                       (if name
-                         (str priority-index name " (" oid ")")
-                         (str priority-index oid)))))))
+  (-> hakukohde-answer
+      (update :value
+              (partial map-indexed
+                       (fn [index oid]
+                         (let [name           (get-hakukohde-name get-hakukohde lang haku-oid oid)
+                               priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
+                                                (str "(" (inc index) ") "))]
+                           (if name
+                             (str priority-index name " (" oid ")")
+                             (str priority-index oid))))))
+      (update :value vec)))
 
 (defn- add-hakukohde-names [get-haku get-hakukohde application]
   (update application :answers

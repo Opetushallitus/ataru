@@ -56,7 +56,7 @@
             (partial map (fn [answer]
                            (cond-> answer
                                    (:cannot-view (fields-by-key (:key answer)))
-                                   (assoc :value nil :cannot-view true)))))))
+                                   (assoc :value nil)))))))
 
 (defn- merge-unviewable-answers-from-previous
   [new-application
@@ -165,7 +165,7 @@
         hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
-        applied-hakukohderyhmat       (mapcat :hakukohderyhmat applied-hakukohteet)
+        applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
         [rewrite? virkailija-secret] (if is-modify?
                                        (if-let [rewrite-secret (valid-virkailija-rewrite-secret application)]
                                          [true rewrite-secret]
@@ -409,8 +409,9 @@
           (= fieldType "attachment")
           (update :value (fn [value]
                            (if (and (vector? value)
-                                    (not (empty? value))
-                                    (every? vector? value))
+                                    (not-empty value)
+                                    (or (nil? (first value))
+                                        (vector? (first value))))
                              (mapv file-store/get-metadata value)
                              (file-store/get-metadata value))))))
 

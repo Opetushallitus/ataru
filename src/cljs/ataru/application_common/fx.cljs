@@ -102,17 +102,6 @@
                  (fn [result]
                    (on-validated result)))))
 
-(defn- async-validate-values
-  [{:keys [field-descriptor editing? on-validated values] :as params}]
-  (if (and editing? (:cannot-edit field-descriptor))
-    (on-validated [true [] []])
-    (async/take! (all-valid?
-                   (async/merge
-                     (map (fn [value] (validatep (merge params {:value value})))
-                          values)))
-                 (fn [result]
-                   (on-validated result)))))
-
 (re-frame/reg-fx
   :validate-debounced
   (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
@@ -124,24 +113,13 @@
           #(async-validate-value params)
           validation-debounce-ms)))))
 
-(re-frame/reg-fx
-  :validate-every-debounced
-  (fn [{:keys [field-descriptor field-idx group-idx] :as params}]
-    (let [id                           (keyword (:id field-descriptor))
-          debounce-id                  (keyword (str (name id) "-" field-idx "-" group-idx))]
-      (js/clearTimeout (@validation-debounces debounce-id))
-      (swap! validation-debounces assoc debounce-id
-        (js/setTimeout
-          #(async-validate-values params)
-          validation-debounce-ms)))))
-
 (defn- confirm-window-close!
   [event]
-  (let [lang            @(re-frame/subscribe [:application/form-language])
-        warning-label   (tu/get-hakija-translation :window-close-warning lang)
-        values-changed? @(re-frame/subscribe [:state-query [:application :values-changed?]])
-        submit-status   @(re-frame/subscribe [:state-query [:application :submit-status]])]
-    (when (and (some? values-changed?)
+  (let [lang          @(re-frame/subscribe [:application/form-language])
+        warning-label (tu/get-hakija-translation :window-close-warning lang)
+        edits?        @(re-frame/subscribe [:application/edits?])
+        submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
+    (when (and edits?
                (nil? submit-status))
       (set! (.-returnValue event) warning-label)
       warning-label)))

@@ -62,7 +62,7 @@
 
 (defn- value->text
   [attachments lang field value]
-  (if (sequential? value)
+  (if (vector? value)
     (mapv (partial value->text attachments lang field) value)
     (let [option (some #(when (= value (:value %)) %) (:options field))]
       (cond (= "attachment" (:fieldType field))
@@ -76,26 +76,26 @@
   [answers attachments lang field]
   (when (contains? answers (:id field))
     [(get-in field [:label lang] (:id field))
-     (value->text attachments lang field (get-in answers [(:id field) :value] ""))]))
+     (value->text attachments lang field (get-in answers [(:id field) :value]))]))
 
 (defn- pretty-print-value
-  [prefix value]
-  (if (sequential? value)
-    (clojure.string/join
-     "\n"
-     (map (fn [value]
-            (if (sequential? value)
-              (if (empty? value)
-                (str "  -")
-                (str "  -\n" (pretty-print-value (str prefix "  ") value)))
-              (pretty-print-value (str prefix "- ") value)))
-          value))
-    (str prefix (clojure.string/replace value "\n" (apply str "\n" (repeat (count prefix) " "))))))
+  [value]
+  (cond (vector? value)
+        (mapcat (fn [v]
+                  (let [[r & rs] (pretty-print-value v)]
+                    (cons (str "- " r)
+                          (map #(str "  " %) rs))))
+                value)
+
+        (string? value)
+        (remove clojure.string/blank? (clojure.string/split value #"\n"))
+        :else
+        [""]))
 
 (defn- pretty-print
   [[label value]]
-  (str "- " label "\n"
-       (pretty-print-value "  " value)))
+  (str "- " label "\n  "
+       (clojure.string/join "\n  " (pretty-print-value value))))
 
 (defn- application->document
   [application form attachments]

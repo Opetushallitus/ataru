@@ -19,9 +19,9 @@
 
 (defn ^:private required?
   [{:keys [value]}]
-  (if (or (seq? value) (vector? value))
-    (not (empty? value))
-    (not (clojure.string/blank? value))))
+  (if (string? value)
+    (not (clojure.string/blank? value))
+    (not (empty? value))))
 
 (defn- required-hakija?
   [{:keys [virkailija?] :as params}]
@@ -52,8 +52,8 @@
       (cond (not (ssn/ssn? value))
             [false []]
             (and (not multiple?)
-                 (not (get-in answers-by-key [:ssn :cannot-view]))
-                 (not (get-in answers-by-key [:ssn :cannot-modify]))
+                 (not (:cannot-view field-descriptor))
+                 (not (:cannot-edit field-descriptor))
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
             [false [(texts/ssn-applied-error (when (:valid preferred-name)
@@ -172,14 +172,6 @@
     true
     (not (clojure.string/blank? value))))
 
-(defn- parse-value
-  "Values in answers are a flat string collection when submitted, but a
-  collection of maps beforehand (in front-end db) :("
-  [value]
-  (cond
-    (every? string? value) value
-    (every? map? value) (map :value value)))
-
 (defn- partition-above-and-below
   [match? coll]
   (let [[above below] (split-with (complement match?) coll)]
@@ -220,8 +212,8 @@
   [{:keys [value field-descriptor tarjonta-hakukohteet priorisoivat-hakukohderyhmat rajaavat-hakukohderyhmat]}]
   (let [hakukohde-options          (:options field-descriptor)
         num-answers                (count value)
-        selected                   (parse-value value)
-        selected-set               (set (parse-value value))
+        selected                   value
+        selected-set               (set value)
         answers-subset-of-options? (clojure.set/subset? selected-set (set (map :value hakukohde-options)))
         limitting?                 (not-empty (limitting-hakukohderyhmat (->> tarjonta-hakukohteet
                                                                     (filter (fn [{:keys [oid]}] (contains? selected-set oid))))
@@ -236,39 +228,31 @@
                                         (and (pos? num-answers) answers-subset-of-options?))
      :else true)))
 
-(defn- numeric-value?
-  [field-descriptor value]
+(defn- numeric?
+  [{:keys [value field-descriptor]}]
   (if (clojure.string/blank? value)
     true
     (let [[_ _ integer-part _ _ decimal-part] (re-matches numeric-matcher value)
-          decimal-places (-> field-descriptor :params :decimals)
-          min-value      (-> field-descriptor :params :min-value)
-          max-value      (-> field-descriptor :params :max-value)]
-      (cond
+          decimal-places                      (-> field-descriptor :params :decimals)
+          min-value                           (-> field-descriptor :params :min-value)
+          max-value                           (-> field-descriptor :params :max-value)]
+      (cond (not integer-part)
+            false
 
-              (not integer-part)
-              false
+            (and decimal-part
+                 (not decimal-places))
+            false
 
-              (and decimal-part
-                   (not decimal-places))
-              false
+            (and decimal-part
+                 (> (count decimal-part)
+                    decimal-places))
+            false
 
-              (and decimal-part
-                   (> (count decimal-part)
-                     decimal-places))
-              false
-
-              :else
-              (and (or (nil? min-value)
-                       (gte value min-value))
-                   (or (nil? max-value)
-                       (lte value max-value)))))))
-
-(defn- numeric?
-  [{:keys [value field-descriptor]}]
-  (if (sequential? value)
-    (every? true? (map #(numeric? {:field-descriptor field-descriptor :value %}) value))
-    (numeric-value? field-descriptor value)))
+            :else
+            (and (or (nil? min-value)
+                     (gte value min-value))
+                 (or (nil? max-value)
+                     (lte value max-value)))))))
 
 (def pure-validators {:required        required?
                       :required-hakija required-hakija?

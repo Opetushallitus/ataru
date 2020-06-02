@@ -6,26 +6,23 @@
             [ataru.application-common.application-field-common :as application-field]
             [re-frame.core :as re-frame]))
 
-(defn- dropdown-followups [field-descriptor value render-field]
-  (when-let [followups (seq (util/resolve-followups
-                              (:options field-descriptor)
-                              value))]
-    [:div.application__form-dropdown-followups.animated.fadeIn
-     (for [followup followups]
-       ^{:key (:id followup)}
-       [render-field followup nil])]))
-
 (defn dropdown [field-descriptor idx render-field]
   (let [languages (re-frame/subscribe [:application/default-languages])
         id        (application-field/answer-key field-descriptor)
         disabled? @(re-frame/subscribe [:application/cannot-edit? id])
         answer    @(re-frame/subscribe [:application/answer id idx nil])
         on-change (fn [e]
-                    (re-frame/dispatch [:application/dropdown-change
+                    (re-frame/dispatch [:application/set-repeatable-application-field
                                         field-descriptor
-                                        (.-value (.-target e))
-                                        idx]))
-        options   @(re-frame/subscribe [:application/visible-options field-descriptor])]
+                                        idx
+                                        nil
+                                        (.-value (.-target e))]))
+        options   @(re-frame/subscribe [:application/visible-options field-descriptor])
+        followups (->> options
+                       (filter #(= (:value answer) (:value %)))
+                       first
+                       :followups
+                       (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))]
     [:div.application__form-field
      [label-component/label field-descriptor]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -62,5 +59,8 @@
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
                       (sort-by #(util/non-blank-option-label % @languages))))))]]
-     (when-not idx
-       (dropdown-followups field-descriptor (:value answer) render-field))]))
+     (when (seq followups)
+       (into [:div.application__form-dropdown-followups.animated.fadeIn]
+             (for [followup followups]
+               ^{:key (:id followup)}
+               [render-field followup idx])))]))

@@ -11,60 +11,175 @@
   (->> flattened-form-fields
        (filter util/answerable?)
        (map-indexed
-         (fn [idx field]
-           (match [field]
-                  [{:id      "hakukohteet"
-                    :label   label
-                    :options options}]
-                  (let [values (cond (= 1 (count options))
-                                     [{:value (:value (first options))
-                                       :valid true}]
-                                     (some? preselected-hakukohteet)
-                                     (map (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
-                                     :else
-                                     [])]
-                    [:hakukohteet {:valid     (not (empty? values))
-                                   :order-idx idx
-                                   :label     label
-                                   :values    values}])
-                  [{:id    "pohjakoulutusristiriita"
-                    :label label}]
-                  [:pohjakoulutusristiriita {:valid     true
-                                             :order-idx idx
-                                             :label     label}]
-                  [{:id         id
-                    :fieldClass "formField"
-                    :fieldType  "dropdown"
-                    :label      label
-                    :params     {:question-group-id _}
-                    :options    options}]
-                  (let [value     (some #(when (:default-value %) (:value %)) options)
-                        required? (some #(contains? required-validators %)
-                                        (:validators field))]
-                    [(keyword id) (cond-> {:valid     (or (some? value) (not required?))
-                                           :order-idx idx
-                                           :label     label}
-                                          (some? value)
-                                          (assoc :values [[{:value value :valid true}]] :value [[value]]))])
-                  [{:id         id
-                    :fieldClass "formField"
-                    :fieldType  "dropdown"
-                    :label      label
-                    :options    options}]
-                  (let [value     (some #(when (:default-value %) (:value %)) options)
-                        required? (some #(contains? required-validators %)
-                                        (:validators field))]
-                    [(keyword id) (cond-> {:valid     (or (some? value) (not required?))
-                                           :order-idx idx
-                                           :label     label}
-                                          (some? value)
-                                          (assoc :value value))])
-                  [{:id    id
-                    :label label}]
-                  [(keyword id) {:valid     (not (some #(contains? required-validators %)
-                                                       (:validators field)))
-                                 :label     label
-                                 :order-idx idx}])))
+        (fn [idx field]
+          (match [field]
+            [{:id      "hakukohteet"
+              :label   label
+              :options options}]
+            (let [values (cond (= 1 (count options))
+                               [{:value (:value (first options))
+                                 :valid true}]
+                               (some? preselected-hakukohteet)
+                               (mapv (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
+                               :else
+                               [])]
+              [:hakukohteet {:valid  (not (empty? values))
+                             :label  label
+                             :value  (mapv :value values)
+                             :values values}])
+            [{:id    "pohjakoulutusristiriita"
+              :label label}]
+            [:pohjakoulutusristiriita {:valid  true
+                                       :label  label
+                                       :value  nil
+                                       :values {:value nil
+                                                :valid true}}]
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  (:or "textField" "textArea")
+              :label      label
+              :params     {:question-group-id _}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :label  label
+                             :value  [[""]]
+                             :values [[{:value ""
+                                        :valid (not required?)}]]}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "textField"
+              :label      label
+              :params     {:adjacent-field-id _}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :label  label
+                             :value  [""]
+                             :values [{:value ""
+                                       :valid (not required?)}]}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "textField"
+              :label      label
+              :params     {:repeatable true}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :label  label
+                             :value  [""]
+                             :values [{:value ""
+                                       :valid (not required?)}]}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  (:or "textField" "textArea")
+              :label      label}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :label  label
+                             :value  ""
+                             :values {:value ""
+                                      :valid (not required?)}}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "dropdown"
+              :label      label
+              :params     {:question-group-id _}
+              :options    options}]
+            (let [value     (some #(when (:default-value %) (:value %)) options)
+                  required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (or (some? value) (not required?))
+                             :label  label
+                             :value  [[(or value "")]]
+                             :values [[{:value (or value "")
+                                        :valid (or (some? value) (not required?))}]]}])
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "dropdown"
+              :label      label
+              :options    options}]
+            (let [value     (some #(when (:default-value %) (:value %)) options)
+                  required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (or (some? value) (not required?))
+                             :label  label
+                             :value  (or value "")
+                             :values {:value (or value "")
+                                      :valid (or (some? value) (not required?))}}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "singleChoice"
+              :label      label
+              :params     {:question-group-id _}}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :value  [[nil]]
+                             :values [[{:value nil
+                                        :valid (not required?)}]]
+                             :label  label}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "singleChoice"
+              :label      label}]
+            (let [required? (some #(contains? required-validators %)
+                                  (:validators field))]
+              [(keyword id) {:valid  (not required?)
+                             :value  nil
+                             :values {:value nil
+                                      :valid (not required?)}
+                             :label  label}])
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "multipleChoice"
+              :label      label
+              :params     {:question-group-id _}}]
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                              (:validators field)))
+                           :value  [[]]
+                           :values [[]]
+                           :label  label}]
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "multipleChoice"
+              :label      label}]
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                              (:validators field)))
+                           :value  []
+                           :values []
+                           :label  label}]
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "attachment"
+              :label      label
+              :params     {:question-group-id _}}]
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                              (:validators field)))
+                           :value  [[]]
+                           :values [[]]
+                           :label  label}]
+
+            [{:id         id
+              :fieldClass "formField"
+              :fieldType  "attachment"
+              :label      label}]
+            [(keyword id) {:valid  (not (some #(contains? required-validators %)
+                                              (:validators field)))
+                           :value  []
+                           :values []
+                           :label  label}])))
        (into {})))
 
 (defn create-initial-answers
@@ -87,58 +202,28 @@
            first))))
 
 (defn answers->valid-status [all-answers ui flat-form-content]
-  (let [invalid-fields (for [[key answers] all-answers
-                             :when (and key
-                                        (not (:valid answers))
-                                        (get-in ui [key :visible?] true)
-                                        (or (empty? flat-form-content)
-                                            (some #(= key (keyword (:id %))) flat-form-content)))]
-                         {:key       key
-                          :label     (:label answers)
-                          :order-idx (:order-idx answers)})]
-    {:invalid-fields invalid-fields}))
-
-(defn db->valid-status [db]
-  (answers->valid-status (-> db :application :answers)
-                         (-> db :application :ui)
-                         (-> db :flat-form-content)))
-
-(defn- value-from-values [field-map value]
-  (let [t (if (= (:fieldType field-map) "attachment")
-            #(-> % :value :key)
-            #(or (:value %) ""))]
-    (if (vector? value)
-      (map t value)
-      (t value))))
+  {:invalid-fields (for [field flat-form-content
+                         :let  [key (keyword (:id field))
+                                answer (get all-answers key)]
+                         :when (and (some? answer)
+                                    (not (:valid answer))
+                                    (get-in ui [key :visible?] true))]
+                     {:key   key
+                      :label (:label answer)})})
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (util/form-fields-by-id form)]
-    (for [[ans-key {:keys [value values]}] answers
+    (for [[ans-key {:keys [value]}] answers
           :let
-          [field-descriptor (get flat-form-map ans-key)
-           field-type       (:fieldType field-descriptor)]
+          [field-descriptor (get flat-form-map ans-key)]
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
                    (get-in ui [ans-key :visible?] true))
-               (not (:exclude-from-answers field-descriptor))
-               (or (not-empty value)
-                   values
-                   (:cannot-edit field-descriptor)
-                   (:cannot-view field-descriptor)
-                   ;; permit empty value, because server side validation expects to match form fields to answers
-                   (and (empty? value)
-                        (or (= "dropdown" field-type)
-                            (= "singleChoice" field-type)))))]
-      {:key       (name ans-key)
-       :value     (cond (or (= "dropdown" field-type)
-                            (= "singleChoice" field-type))
-                        value
-                        (some? value)
-                        value
-                        :else
-                        (map (partial value-from-values field-descriptor) values))
-       :fieldType field-type
+               (not (:exclude-from-answers field-descriptor)))]
+      {:key       (:id field-descriptor)
+       :value     value
+       :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 
 (defn create-application-to-submit [application form lang]

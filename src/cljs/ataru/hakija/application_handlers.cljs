@@ -1,5 +1,8 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe]]
+  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe after]]
+            [schema.core :as s]
+            [ataru.feature-config :as fc]
+            [ataru.hakija.schema :as schema]
             [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
@@ -12,18 +15,25 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
-                                              extract-wrapper-sections
-                                              db->valid-status]]
+                                              extract-wrapper-sections]]
             [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
             [cljs-time.coerce :refer [from-long to-long]]))
 
+(def db-validator (s/validator schema/Db))
+
+(def check-schema-interceptor
+  (after (fn [db _]
+           (when (fc/feature-enabled? :schema-validation)
+             (db-validator db)))))
+
 (defn initialize-db [_ _]
   {:form        nil
    :application {:attachments-id (random-uuid)
-                 :answers        {}}})
+                 :answers        {}
+                 :editing?       false}})
 
 (defn- required? [field-descriptor]
   (some (partial = "required")
@@ -31,11 +41,13 @@
 
 (reg-event-db
   :application/set-secret-delivery-status
+  [check-schema-interceptor]
   (fn [db [_ status]]
     (assoc-in db [:application :secret-delivery-status] status)))
 
 (reg-event-fx
   :application/handle-get-application-by-hakija-secret-error
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ old-secret response]]
     (if (and (= (:status response) 401)
              (= "secret-expired" (get-in response [:body :code])))
@@ -48,11 +60,13 @@
 
 (reg-event-db
   :application/handle-send-new-secret
+  [check-schema-interceptor]
   (fn [db _]
     (assoc-in db [:application :secret-delivery-status] :completed)))
 
 (reg-event-fx
   :application/send-new-secret
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [old-secret (get-in db [:application :old-secret])]
       {:db       db
@@ -72,6 +86,7 @@
 
 (reg-event-fx
   :application/get-application-by-hakija-secret
+  [check-schema-interceptor]
   get-application-by-hakija-secret)
 
 (defn- get-application-by-virkailija-secret
@@ -83,10 +98,12 @@
 
 (reg-event-fx
   :application/get-application-by-virkailija-secret
+  [check-schema-interceptor]
   get-application-by-virkailija-secret)
 
 (reg-event-fx
   :application/get-latest-form-by-key
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ form-key virkailija-secret]]
     {:db   (cond-> db
                    (some? virkailija-secret)
@@ -101,6 +118,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-hakukohde
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
     {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] [hakukohde-oid])
                    (some? virkailija-secret)
@@ -115,6 +133,7 @@
 
 (reg-event-fx
   :application/get-latest-form-by-haku
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ haku-oid hakukohde-oids virkailija-secret]]
     {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] hakukohde-oids)
                    (some? virkailija-secret)
@@ -141,6 +160,7 @@
 
 (reg-event-db
   :application/handle-submit-response
+  [check-schema-interceptor]
   handle-submit)
 
 (defn response->error-message [db response]
@@ -150,24 +170,22 @@
 
 (reg-event-fx
   :application/handle-submit-error
+  [check-schema-interceptor]
   (fn [cofx [_ response]]
     {:db (-> (update (:db cofx) :application dissoc :submit-status)
              (response->error-message response))}))
 
 (reg-event-fx
   :application/submit
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (send-application db :post)))
 
 (reg-event-fx
   :application/edit
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (send-application db :put)))
-
-(reg-event-db
-  :application/hide-hakukohteet-if-no-tarjonta
-  (fn [db _]
-    (assoc-in db [:application :ui :hakukohteet :visible?] (boolean (-> db :form :tarjonta)))))
 
 (defn- get-lang-from-path [supported-langs]
   (when-let [lang (-> (util/extract-query-params)
@@ -196,7 +214,7 @@
                  (get-in db [:application :answers :higher-completed-base-education :value]))))
 
 (defn- selected-hakukohteet [db]
-  (map :value (get-in db [:application :answers :hakukohteet :values] [])))
+  (get-in db [:application :answers :hakukohteet :value]))
 
 (defn selected-hakukohteet-and-ryhmat [db]
   (let [selected-hakukohteet                   (set (selected-hakukohteet db))
@@ -214,25 +232,21 @@
 (declare set-field-visibility)
 
 (defn- set-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat option-selected?]
-  (reduce (fn [db option]
-            (let [selected? (option-selected? option)]
-              (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
-                      db
-                      (:followups option))))
-          db
-          (:options field-descriptor)))
-
-(defn- set-single-choice-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])]
-    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat  #(= value (:value %)))))
-
-(defn- set-multi-choice-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [options (get-in db [:application :answers (keyword (:id field-descriptor)) :options])]
-    (set-followups-visibility db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat #(get options (:value %)))))
-
+  (let [value  (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
+        values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+                     (set (mapcat identity value))
+                     (vector? value)
+                     (set value)
+                     :else
+                     #{value})]
+    (reduce (fn [db option]
+              (let [selected? (contains? values (:value option))]
+                (reduce #(set-field-visibility %1 %2 (and visible? selected?) ylioppilastutkinto? hakukohteet-and-ryhmat)
+                        db
+                        (:followups option))))
+            db
+            (:options field-descriptor))))
 
 (defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
   (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
@@ -264,7 +278,7 @@
          excluded-attachment-ids-when-yo-and-jyemp (-> db :application :excluded-attachment-ids-when-yo-and-jyemp)
          jyemp?                 (and ylioppilastutkinto?
                                      (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
-         visible?               (and (not (get-in field-descriptor [:params :hidden] false))
+         visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
                                      (or (not jyemp?) (not-empty selected-ei-jyemp-hakukohteet-and-ryhmat))
                                      (or (empty? belongs-to)
@@ -272,7 +286,8 @@
                                                      belongs-to
                                                      (if jyemp?
                                                        selected-ei-jyemp-hakukohteet-and-ryhmat
-                                                       selected-hakukohteet-and-ryhmat)))))
+                                                       selected-hakukohteet-and-ryhmat))))
+                                     (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta]))))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
                                           db
@@ -280,15 +295,21 @@
          option-visibility      (fn [db]
                                   (reduce #(set-option-visibility %1 %2 visible? id selected-hakukohteet-and-ryhmat)
                                           db
-                                          (map-indexed vector (:options field-descriptor))))]
-     (cond-> (-> (assoc-in db [:application :ui id :visible?] visible?)
-                 (child-visibility)
-                 (option-visibility))
+                                          (map-indexed vector (:options field-descriptor))))
+         field-visibility       (fn [db]
+                                  (assoc-in db [:application :ui id :visible?]
+                                            (and visible? (or (empty? (:children field-descriptor))
+                                                              (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
+                                                                    (:children field-descriptor))))))]
+     (cond-> (-> db
+                 child-visibility
+                 option-visibility
+                 field-visibility)
              (or (= "dropdown" (:fieldType field-descriptor))
                  (= "singleChoice" (:fieldType field-descriptor)))
-             (set-single-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
+             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
              (= "multipleChoice" (:fieldType field-descriptor))
-             (set-multi-choice-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
+             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
 
 (defn set-field-visibilities
   [db]
@@ -296,80 +317,31 @@
    (reduce set-field-visibility db (get-in db [:form :content]))
    (:flat-form-content db)))
 
-(defn- set-multi-value-changed [db id value-key]
-  (let [answer (-> db :application :answers id)
-        [new-diff original-diff _] (d/diff (get answer value-key) (:original-value answer))]
-    (update-in db [:application :values-changed?] (fn [values]
-                                                    (let [values (or values #{})]
-                                                      (if (and (empty? new-diff)
-                                                               (empty? original-diff))
-                                                        (disj values id)
-                                                        (conj values id)))))))
-
-(defn- toggle-multiple-choice-option [answer option-value question-group-idx]
-  (let [option-path            (if question-group-idx
-                                 [:options question-group-idx option-value]
-                                 [:options option-value])
-        answer                 (cond-> answer
-                                 question-group-idx (update :options (util/vector-of-length (inc question-group-idx)))
-                                 true (update-in option-path not))
-        parse-option-values    (fn [options]
-                                 (->> options
-                                      (filter (comp true? second))
-                                      (mapv first)))
-        value                  (if question-group-idx
-                                 (mapv parse-option-values (:options answer))
-                                 (parse-option-values (:options answer)))]
-    (assoc answer :value value)))
-
-(defn- toggle-values
-  [answer options]
-  (reduce (fn [answer [idx option]]
-            (if (vector? option)
-              (reduce #(toggle-multiple-choice-option %1 %2 idx)
-                      (-> answer
-                          (update :options (fnil identity []))
-                          (update-in [:options idx] (fnil identity {}))
-                          (update :value (fnil identity []))
-                          (update-in [:value idx] (fnil identity [])))
-                      option)
-              (toggle-multiple-choice-option answer option nil)))
-          answer
-          (map-indexed vector options)))
-
-(defn- merge-multiple-choice-option-values [value answer]
-  (if (string? value)
-    (toggle-values answer (clojure.string/split value #"\s*,\s*"))
-    (toggle-values answer value)))
-
-(defonce multi-value-field-types #{"multipleChoice" "singleChoice" "textField" "attachment" "hakukohteet" "dropdown" "textArea"})
-
-(defn- supports-multiple-values [field-type]
-  (contains? multi-value-field-types field-type))
-
-(defn application-run-rules [db rule]
-  (if (not-empty rule)
-    (rules/run-rules db rule)
-    (rules/run-all-rules db (:flat-form-content db))))
-
 (defn- set-have-finnish-ssn
-  [db]
-  (let [ssn (get-in db [:application :answers :ssn])]
+  [db flat-form-content]
+  (let [cannot-view?   (some #(and (= "ssn" (:id %)) (:cannot-view %))
+                             flat-form-content)
+        ssn-value      (get-in db [:application :answers :ssn :value])
+        have-ssn-value (if (or (and cannot-view? (nil? ssn-value))
+                               (not (clojure.string/blank? ssn-value)))
+                         "true"
+                         "false")]
     (update-in db [:application :answers :have-finnish-ssn]
-               merge {:valid true
-                      :value (str (or (and (clojure.string/blank? (:value ssn))
-                                           (:cannot-view ssn))
-                                      (not (clojure.string/blank? (:value ssn)))))})))
+               merge {:valid  true
+                      :value  have-ssn-value
+                      :values {:value have-ssn-value
+                               :valid true}})))
 
 (defn- populate-hakukohde-answers-if-necessary
   "Populate hakukohde answers for legacy applications where only top-level hakukohde array exists"
   [db]
   (let [hakukohteet (-> db :application :hakukohde)
-        hakukohde-answers (-> db :application :answers :hakukohteet :value)]
+        hakukohde-answers (-> db :application :answers :hakukohteet :values)]
     (if (and (not-empty hakukohteet)
              (empty? hakukohde-answers))
       (-> db
-          (assoc-in [:application :answers :hakukohteet :values] (map (fn [oid] {:valid true :value oid}) hakukohteet))
+          (assoc-in [:application :answers :hakukohteet :values] (mapv (fn [oid] {:valid true :value oid}) hakukohteet))
+          (assoc-in [:application :answers :hakukohteet :value] (vec hakukohteet))
           (assoc-in [:application :answers :hakukohteet :valid] true))
       db)))
 
@@ -397,83 +369,72 @@
           db
           (:flat-form-content db)))
 
-(defn- merge-single-choice-values [value answer]
-  (if (and (vector? value)
-           (every? vector? value))
-    (merge answer {:valid true
-                   :value value
-                   :values (mapv (partial mapv (fn [value]
-                                                 {:valid true :value value}))
-                                 value)})
-    (merge answer {:valid true :value value})))
-
-(defn- merge-dropdown-values [value answer]
-  (cond-> (merge answer {:valid true :value value})
-          (and (vector? value) (every? vector? value))
-          (merge {:values (mapv (partial mapv (fn [value] {:valid true :value value}))
-                                value)})))
-
-(defn- merge-submitted-answers [db submitted-answers]
-  (-> db
-      (update-in [:application :answers]
-                 (fn [answers]
-                   (reduce (fn [answers {:keys [key value cannot-view] :as answer}]
-                             (let [answer-key (keyword key)
-                                   value      (cond-> value
-                                                (and (vector? value)
-                                                     (not (supports-multiple-values (:fieldType answer))))
-                                                (first))]
-                               (if (contains? answers answer-key)
-                                 (let [answer (match answer
-                                                     {:fieldType "multipleChoice"}
-                                                     (-> answers
-                                                         (update answer-key (partial merge-multiple-choice-option-values value))
-                                                         (assoc-in [answer-key :valid] true))
-
-                                                     {:fieldType "singleChoice"}
-                                                     (update answers answer-key (partial merge-single-choice-values value))
-
-                                                     {:fieldType "dropdown"}
-                                                     (update answers answer-key (partial merge-dropdown-values value))
-
-                                                     {:fieldType (field-type :guard supports-multiple-values) :value (_ :guard vector?)}
-                                                     (letfn [(parse-values [value-or-values]
-                                                               (if (vector? value-or-values)
-                                                                 (mapv parse-values value-or-values)
-                                                                 (cond-> {:valid true :value value-or-values}
-                                                                         (= field-type "attachment")
-                                                                         (assoc :status :ready))))]
-                                                       (update answers answer-key merge
-                                                               {:valid  true
-                                                                :values (parse-values (:value answer))}))
-
-                                                     {:key "email"}
-                                                     (update answers answer-key merge {:valid true :value value :verify value})
-
-                                                     :else
-                                                     (update answers answer-key merge {:valid true :value value}))]
-                                   (assoc-in answer [answer-key :cannot-view] cannot-view))
-                                 answers)))
-                           answers
-                           submitted-answers)))
-      (populate-hakukohde-answers-if-necessary)
-      (set-have-finnish-ssn)
-      (application-run-rules [])
-      (set-question-group-row-amounts)))
+(defn- merge-value [answer value]
+  (merge answer {:valid  true
+                 :value  value
+                 :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+                               (mapv #(when (vector? %)
+                                        (mapv (fn [value] {:valid true :value value}) %))
+                                     value)
+                               (vector? value)
+                               (mapv (fn [value] {:valid true :value value}) value)
+                               :else
+                               {:value value
+                                :valid true})}))
 
 (defn- original-values->answers [db]
-  (cond-> db
-    (or (-> db :application :secret)
-        (-> db :application :virkailija-secret))
-    (update-in [:application :answers]
-               (partial reduce-kv
-                        (fn [answers answer-key {:keys [value values] :as answer}]
-                          (let [answer (assoc answer :original-value
-                                              (or value (if (every? sequential? values)
-                                                          (mapv (partial mapv :value) values)
-                                                          (mapv :value values))))]
-                            (assoc answers answer-key answer)))
-                        {}))))
+  (update-in db [:application :answers]
+             (partial reduce-kv
+                      (fn [answers answer-key answer]
+                        (assoc answers answer-key (assoc answer :original-value (:value answer))))
+                      {})))
+
+(defn- merge-submitted-answers [db submitted-answers flat-form-content]
+  (let [form-fields-by-id (autil/group-by-first (comp keyword :id) flat-form-content)]
+    (-> (reduce (fn [db answer]
+                  (let [id               (keyword (:key answer))
+                        field-descriptor (get form-fields-by-id id)]
+                    (if (contains? (get-in db [:application :answers]) id)
+                      (update-in db [:application :answers id]
+                                 #(cond (= :email id)
+                                        (-> %
+                                            (merge-value (:value answer))
+                                            (assoc :verify (:value answer)))
+
+                                        (= "attachment" (:fieldType field-descriptor))
+                                        (let [values (mapv (fn self [value]
+                                                             (cond (vector? value)
+                                                                   (mapv self value)
+                                                                   (nil? value)
+                                                                   nil
+                                                                   :else
+                                                                   {:value    (:key value)
+                                                                    :filename (:filename value)
+                                                                    :size     (:size value)
+                                                                    :status   :ready
+                                                                    :valid    true}))
+                                                           (:value answer))]
+                                          (merge % {:value  (mapv (fn self [value]
+                                                                    (cond (vector? value)
+                                                                          (mapv self value)
+                                                                          (nil? value)
+                                                                          nil
+                                                                          :else
+                                                                          (:value value)))
+                                                                 values)
+                                                    :values values
+                                                    :valid  true}))
+
+                                        :else
+                                        (merge-value % (:value answer))))
+                      db)))
+                db
+                submitted-answers)
+        (populate-hakukohde-answers-if-necessary)
+        (set-have-finnish-ssn flat-form-content)
+        (original-values->answers)
+        (rules/run-all-rules flat-form-content)
+        (set-question-group-row-amounts))))
 
 (defn- set-question-group-id
   ([field]
@@ -495,10 +456,17 @@
        (contains? field :options)
        (update :options (partial map update-followups))))))
 
+(defn- set-adjacent-field-id
+  [field-descriptor]
+  (if (= "adjacentfieldset" (:fieldType field-descriptor))
+    (update field-descriptor :children (partial mapv #(assoc-in % [:params :adjacent-field-id] (keyword (:id field-descriptor)))))
+    field-descriptor))
+
 (defn- handle-form [db answers server-date form]
   (let [form                       (-> (languages->kwd form)
                                        (set-form-language)
                                        (update :content (partial map set-question-group-id))
+                                       (update :content (partial autil/map-form-fields set-adjacent-field-id))
                                        (assoc :hakuaika-end (->> form :tarjonta :hakukohteet
                                                                  (map :hakuaika)
                                                                  (filter :on)
@@ -531,8 +499,7 @@
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc-in [:application :validators-processing] #{})
         (assoc :wrapper-sections (extract-wrapper-sections form))
-        (merge-submitted-answers answers)
-        (original-values->answers)
+        (merge-submitted-answers answers flat-form-content)
         (set-field-visibilities))))
 
 (defn- selection-limits [{:keys [flat-form-content]}]
@@ -561,11 +528,15 @@
   (reduce (fn [db key]
             (if (= key question-id)
               db
-              (assoc-in db [:application :answers key :value] nil)))
-      db (map keyword (:selection-limited db))))
+              (-> db
+                  (assoc-in [:application :answers key :values :value] nil)
+                  (assoc-in [:application :answers key :value] nil))))
+          db
+          (map keyword (:selection-limited db))))
 
 (reg-event-fx
   :application/handle-update-selection-limits
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
     {:db (cond (false? valid?)
                (-> db
@@ -581,19 +552,19 @@
 
 (reg-event-db
   :application/handle-selection-limit
+  [check-schema-interceptor]
   (fn [db [_ response]]
     (set-limit-reached db (:body response))))
 
 (reg-event-fx
   :application/post-handle-form-dispatches
+  [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (let [selection-limited (selection-limits db)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
-         :dispatch-n [[:application/hide-hakukohteet-if-no-tarjonta]
-                      [:application/hakukohde-query-change (atom "")]
+         :dispatch-n [[:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
-                      [:application/update-answers-validity]
                       [:application/validate-hakukohteet]]}
         (when selection-limited
           {:http {:method  :put
@@ -623,21 +594,25 @@
 
 (reg-event-fx
   :application/handle-get-application
+  [check-schema-interceptor]
   handle-get-application)
 
 (reg-event-db
   :flasher
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (assoc db :flasher flash)))
 
 (reg-event-fx
   :application/handle-form
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
 (reg-event-db
   :application/network-online
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (if (= :network-offline (get-in db [:error :code]))
       (dissoc db :error)
@@ -645,6 +620,7 @@
 
 (reg-event-db
   :application/handle-selection-over-network-uncertain
+  [check-schema-interceptor]
   (fn [db [_ uncertain?]]
     (if uncertain?
       (assoc-in db [:application :selection-over-network-uncertain?] true)
@@ -652,6 +628,7 @@
 
 (reg-event-db
   :application/network-offline
+  [check-schema-interceptor]
   (fn [db [_ flash]]
     (if (get db :error)
       db
@@ -659,44 +636,18 @@
 
 (reg-event-db
   :application/initialize-db
+  [check-schema-interceptor]
   initialize-db)
-
-(reg-event-fx
-  :application/textual-field-blur
-  (fn [{db :db} [_ field value idx]]
-    (let [id          (keyword (:id field))
-          answer      (get-in db [:application :answers id])
-          skip-rules? (or (empty? (:blur-rules field))
-                          (and
-                           (-> answer :valid not)
-                           (not (contains? (-> db :application :validators-processing) id))))
-          plain-value (or value "")
-          value       (clojure.string/trim plain-value)]
-      (merge
-        (when (string? (:value answer))
-          {:db (assoc-in db [:application :answers id :value] value)})
-        {:dispatch-n (vec (concat
-                           (when-not skip-rules?
-                             [[:application/run-rules (:blur-rules field)]])
-                           (when (not= plain-value value)
-                             (if idx
-                               [[:application/set-repeatable-application-field field value 0 idx]]
-                               [[:application/set-application-field field value]]))))}))))
 
 (defn set-validator-processing
   [db id]
   (update-in db [:application :validators-processing] conj id))
 
 (reg-event-db
-  :application/update-answers-validity
-  (fn [db _]
-    (assoc-in db [:application :answers-validity] (db->valid-status db))))
-
-(reg-event-fx
   :application/set-validator-processed
-  (fn [{:keys [db]} [_ id]]
-    {:db       (update-in db [:application :validators-processing] disj id)
-     :dispatch [:application/update-answers-validity]}))
+  [check-schema-interceptor]
+  (fn [db [_ id]]
+    (update-in db [:application :validators-processing] disj id)))
 
 (defn- transform-value [value field-descriptor]
   (let [t (case (:id field-descriptor)
@@ -706,380 +657,393 @@
 
 (reg-event-fx
   :application/set-email-verify-field
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor value verify-value]]
-    (let [id     (keyword (:id field-descriptor))
-          new-db (-> db
-                     (assoc-in [:application :answers id :verify] verify-value)
-                     (set-validator-processing id)
-                     (set-multi-value-changed id :value))]
-      {:db new-db
-       :dispatch [:application/set-application-field field-descriptor value]})))
-
-(reg-event-fx
-  :application/set-application-field
-  (fn [{db :db} [_ field value]]
-    (let [value  (transform-value value field)
-          id     (keyword (:id field))
-          new-db (-> db
-                     (assoc-in [:application :answers id :value] value)
-                     (set-validator-processing id)
-                     (set-multi-value-changed id :value)
-                     (set-field-visibility field))]
-      {:db                 new-db
-       :validate-debounced {:value                        value
-                            :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in new-db [:application :answers])
-                            :field-descriptor             field
-                            :editing?                     (get-in new-db [:application :editing?])
-                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-application-field-valid
-                                                                       field valid? errors]))}})))
+    (let [id (keyword (:id field-descriptor))]
+      {:db       (assoc-in db [:application :answers id :verify] verify-value)
+       :dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]})))
 
 (defn- set-repeatable-field-values
-  [db field-descriptor value data-idx question-group-idx]
-  (let [id         (keyword (:id field-descriptor))
-        value-path (cond-> [:application :answers id :values]
-                     question-group-idx (conj question-group-idx))]
-    (-> db
-        (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
-        (update-in value-path (fnil assoc []) data-idx {:value value}))))
+  [db id group-idx data-idx value]
+  (cond (some? group-idx)
+        (let [data-idx (or data-idx 0)]
+          (-> db
+              (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+              (update-in [:application :answers id :values group-idx] (util/vector-of-length (inc data-idx)))
+              (assoc-in [:application :answers id :values group-idx data-idx :value] value)
+              (update-in [:application :answers id :values group-idx data-idx :valid] (fnil identity true))))
+        (some? data-idx)
+        (-> db
+            (update-in [:application :answers id :values] (util/vector-of-length (inc data-idx)))
+            (assoc-in [:application :answers id :values data-idx :value] value)
+            (update-in [:application :answers id :values data-idx :valid] (fnil identity true)))
+        :else
+        (-> db
+            (assoc-in [:application :answers id :values :value] value)
+            (update-in [:application :answers id :values :valid] (fnil identity true)))))
+
+(defn- toggle-multiple-choice-option
+  [db field-descriptor group-idx option-value]
+  (let [id     (keyword (:id field-descriptor))
+        toggle (fn [values]
+                 (vec
+                  (keep (fn [option]
+                          (let [value (some #(when (= (:value option) (:value %)) %) values)]
+                            (cond (not (= option-value (:value option)))
+                                  value
+                                  (some? value)
+                                  nil
+                                  :else
+                                  {:value (:value option)
+                                   :valid true})))
+                        (:options field-descriptor))))]
+    (if (some? group-idx)
+      (-> db
+          (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+          (update-in [:application :answers id :values group-idx] toggle))
+      (update-in db [:application :answers id :values] toggle))))
 
 (defn- set-repeatable-field-value
-  [db field-descriptor group-idx]
-  (let [id                   (keyword (:id field-descriptor))
-        values               (get-in db [:application :answers id :values])
-        multi-value-answers? (some? group-idx)
-        value                (if multi-value-answers?
-                               (mapv (partial mapv :value) values)
-                               (mapv :value values))]
-    (-> db
-        (assoc-in [:application :answers id :value] value)
-        (set-multi-value-changed id :value))))
+  [db id]
+  (let [values (get-in db [:application :answers id :values])]
+    (assoc-in db [:application :answers id :value]
+              (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+                    (mapv #(when (vector? %)
+                             (mapv :value %)) values)
+                    (vector? values)
+                    (mapv :value values)
+                    :else
+                    (:value values)))))
 
 (defn- set-repeatable-application-repeated-field-valid
   [db id group-idx data-idx valid?]
-  (let [path (cond-> [:application :answers id :values]
-               (some? group-idx) (conj group-idx))]
-    (assoc-in db (conj path data-idx :valid) valid?)))
+  (cond (some? group-idx)
+        (let [data-idx (or data-idx 0)]
+          (-> db
+              (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+              (update-in [:application :answers id :values group-idx] #(when (vector? %)
+                                                                         (-> %
+                                                                             ((util/vector-of-length (inc data-idx)))
+                                                                             (assoc-in [data-idx :valid] valid?))))))
+        (some? data-idx)
+        (-> db
+            (update-in [:application :answers id :values] (util/vector-of-length (inc data-idx)))
+            (assoc-in [:application :answers id :values data-idx :valid] valid?))
+        :else
+        (assoc-in db [:application :answers id :values :valid] valid?)))
+
+(defn- set-multiple-choice-option-valid
+  [db id group-idx option-value valid?]
+  (let [set-valid (fn [values]
+                    (when (vector? values)
+                      (mapv (fn [value]
+                              (if (= option-value (:value value))
+                                (assoc value :valid valid?)
+                                value))
+                            values)))]
+    (if (some? group-idx)
+      (-> db
+          (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+          (update-in [:application :answers id :values group-idx] set-valid))
+      (update-in db [:application :answers id :values] set-valid))))
 
 (defn- set-repeatable-application-field-top-level-valid
-  [db id group-idx required? valid?]
-  (let [values               (get-in db [:application :answers id :values])
-        multi-value-answers? (some? group-idx)
-        is-empty?            (if multi-value-answers?
-                               (some empty? values)
-                               (empty? values))
-        all-valid?           (and (every? :valid (flatten values)) valid?)]
-    (assoc-in db [:application :answers id :valid] (if is-empty?
-                                                     (not required?)
-                                                     all-valid?))))
+  [db id valid?]
+  (let [values (get-in db [:application :answers id :values])]
+    (assoc-in db [:application :answers id :valid]
+              (and valid?
+                   (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+                         (every? #(or (nil? %) (every? :valid %)) values)
+                         (vector? values)
+                         (every? :valid values)
+                         :else
+                         (:valid values))))))
+
+(reg-event-db
+  :application/unset-field-value
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor group-idx]]
+    (let [id (keyword (:id field-descriptor))]
+      (-> (if (some? group-idx)
+            (-> db
+                (update-in [:application :answers id :values] (util/vector-of-length (inc group-idx)))
+                (assoc-in [:application :answers id :values group-idx] nil))
+            (assoc-in db [:application :answers id :values] nil))
+          (set-repeatable-field-value id)
+          (set-repeatable-application-field-top-level-valid id true)))))
+
+(defn- set-empty-value-dispatch
+  [group-idx field-descriptor]
+  (let [id (keyword (:id field-descriptor))]
+    (match field-descriptor
+      {:fieldType (:or "dropdown" "textField" "textArea")}
+      [[:application/set-repeatable-application-field
+        field-descriptor
+        group-idx
+        nil
+        ""]]
+      {:fieldType "singleChoice"}
+      [[:application/set-repeatable-application-field
+        field-descriptor
+        group-idx
+        nil
+        nil]]
+      {:fieldType "multipleChoice"}
+      (let [d [:application/toggle-multiple-choice-option
+               field-descriptor
+               group-idx
+               (first (:options field-descriptor))]]
+        [d d])
+      {:fieldType "adjacentfieldset"}
+      (mapv (fn [child]
+              [:application/set-repeatable-application-field child group-idx 0 ""])
+            (:children field-descriptor))
+      {:fieldType "attachment"}
+      ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
+      ;; Hacky solution but others would require much rework on the codebase.
+      [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
+      :else
+      nil)))
 
 (reg-event-fx
-  :application/set-application-field-valid
-  (fn [{db :db} [_ field-descriptor valid? errors]]
-    (let [id (keyword (:id field-descriptor))
-          rules (:rules field-descriptor)]
-      (cond-> {:db (-> db
-                       (assoc-in [:application :answers id :valid] valid?)
-                       (assoc-in [:application :answers id :errors] errors))
-               :dispatch-n [[:application/update-answers-validity]
-                            [:application/set-validator-processed id]]}
-              (not (empty? rules))
-              (update :dispatch-n conj [:application/run-rules rules])))))
+  :application/set-followup-values
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor]]
+    (let [id    (keyword (:id field-descriptor))
+          value (get-in db [:application :answers id :value])]
+      (when (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+        {:dispatch-n (->> (for [option             (:options field-descriptor)
+                                child              (autil/flatten-form-fields (:followups option))
+                                :when              (autil/answerable? child)
+                                [group-idx values] (map-indexed vector value)]
+                            (if (contains? (set values) (:value option))
+                              (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
+                                (set-empty-value-dispatch group-idx child))
+                              [[:application/unset-field-value child group-idx]]))
+                          (mapcat identity)
+                          vec)}))))
 
 (reg-event-fx
   :application/set-repeatable-application-field-valid
-  (fn [{:keys [db]} [_ field-descriptor group-idx data-idx required? valid?]]
-    (let [id    (keyword (:id field-descriptor))
-          rules (:rules field-descriptor)]
-      (cond-> {:db         (-> db
-                               (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
-                               (set-repeatable-application-field-top-level-valid id group-idx required? valid?))
-               :dispatch-n [[:application/update-answers-validity]
-                            [:application/set-validator-processed id]]}
-              (not (empty? rules))
-              (update :dispatch-n conj [:application/run-rules rules])))))
-
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor group-idx data-idx valid? errors]]
+    (let [id (keyword (:id field-descriptor))]
+      {:db         (-> db
+                       (set-repeatable-application-repeated-field-valid id group-idx data-idx valid?)
+                       (set-repeatable-application-field-top-level-valid id valid?)
+                       (assoc-in [:application :answers id :errors] errors))
+       :dispatch-n [[:application/set-validator-processed id]
+                    [:application/run-rules (:rules field-descriptor)]]})))
 
 (reg-event-fx
   :application/set-repeatable-application-field
-  (fn [{db :db} [_ field-descriptor value data-idx question-group-idx]]
-    (let [id     (keyword (:id field-descriptor))
-          new-db (-> db
-                     (set-validator-processing id)
-                     (set-repeatable-field-values field-descriptor value data-idx question-group-idx)
-                     (set-repeatable-field-value field-descriptor question-group-idx))]
-      {:db                 new-db
-       :validate-debounced {:value                        value
-                            :priorisoivat-hakukohderyhmat (get-in new-db [:form :priorisoivat-hakukohderyhmat])
-                            :answers                      (get-in new-db [:application :answers])
-                            :field-descriptor             field-descriptor
-                            :editing?                     (get-in new-db [:application :editing?])
-                            :group-idx                    question-group-idx
-                            :field-idx                    data-idx
-                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
-                            :on-validated                 (fn [[valid? _]]
-                                                            (dispatch [:application/set-repeatable-application-field-valid
-                                                                       field-descriptor
-                                                                       question-group-idx
-                                                                       data-idx
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
-
-
-(defn- remove-repeatable-field-value
-  [db field-descriptor data-idx question-group-idx]
-  (let [id              (keyword (:id field-descriptor))
-        raw-value-path  (cond-> [:application :answers id :values]
-                                question-group-idx (conj question-group-idx))
-        disp-value-path (cond-> [:application :answers id :value]
-                                question-group-idx (conj question-group-idx))]
-    (cond-> db
-            (seq (get-in db raw-value-path))
-            (update-in raw-value-path
-                       #(autil/remove-nth % data-idx))
-
-            ;; when creating application, we have the value below (and it's important). when editing, we do not.
-            ;; consider this a temporary, terrible bandaid solution
-            (seq (get-in db disp-value-path))
-            (update-in disp-value-path
-                       #(autil/remove-nth (vec %) data-idx))
-
-            true
-            (set-repeatable-field-value field-descriptor question-group-idx)
-
-            true
-            (set-repeatable-application-field-top-level-valid id question-group-idx (required? field-descriptor) true))))
-
-(reg-event-db
-  :application/remove-repeatable-application-field-value
-  (fn [db [_ field-descriptor data-idx question-group-idx]]
-    (remove-repeatable-field-value db field-descriptor data-idx question-group-idx)))
-
-(defn default-error-handler [db [_ response]]
-  (response->error-message db response))
-
-(reg-event-db
-  :application/run-rules
-  (fn [db [_ rule]]
-    (if (#{:submitting :submitted} (-> db :application :submit-status))
-      db
-      (application-run-rules db rule))))
-
-(reg-event-db
-  :application/default-handle-error
-  default-error-handler)
-
-(reg-event-db
- :application/default-http-ok-handler
- (fn [db _] db))
-
-(reg-event-db
-  :application/default-http-progress-handler
-  (fn [db _] db))
-
-(reg-event-db
-  :state-update
-  (fn [db [_ f]]
-    (or (f db)
-        db)))
-
-(reg-event-fx
-  :application/handle-postal-code-input
-  (fn [{:keys [db]} [_ response]]
-    {:db       (update-in db [:application :answers :postal-office]
-                          merge {:value (autil/non-blank-val (:body response) [(-> db :form :selected-language) :fi])
-                                 :valid true})
-     :dispatch [:application/update-answers-validity]}))
-
-(reg-event-fx
-  :application/handle-postal-code-error
-  (fn [{:keys [db]} _]
-    {:db       (-> db
-                   (update-in [:application :answers :postal-code]
-                              merge {:valid false})
-                   (update-in [:application :answers :postal-office]
-                              merge {:value "" :valid false}))
-     :dispatch [:application/update-answers-validity]}))
-
-(reg-event-fx
-  :application/set-multiple-choice-valid
-  (fn [{db :db} [_ field-descriptor valid?]]
-    (let [rules (:rules field-descriptor)
-          id    (keyword (:id field-descriptor))]
-      (cond-> {:db         (assoc-in db [:application :answers id :valid] valid?)
-               :dispatch-n [[:application/set-validator-processed id]]}
-              (not (empty? rules))
-              (update :dispatch-n conj [:application/run-rules rules])))))
-
-(reg-event-fx
-  :application/toggle-multiple-choice-option
-  (fn [{db :db} [_ field-descriptor option question-group-idx]]
-    (let [id (keyword (:id field-descriptor))
-          db (-> db
-                 (update-in [:application :answers id]
-                            (fn [answer]
-                              (toggle-multiple-choice-option answer
-                                                             (:value option)
-                                                             question-group-idx)))
-                 (set-validator-processing id)
-                 (set-multi-value-changed id :value))]
-      (if question-group-idx
-        {:db                       db
-         :validate-every-debounced {:values                       (get-in db [:application :answers id :value])
-                                    :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                                    :answers-by-key               (get-in db [:application :answers])
-                                    :field-descriptor             field-descriptor
-                                    :editing?                     (get-in db [:application :editing?])
-                                    :virkailija?                  (contains? (:application db) :virkailija-secret)
-                                    :on-validated                 (fn [[valid? errors]]
-                                                                    (dispatch [:application/set-multiple-choice-valid
-                                                                               field-descriptor
-                                                                               valid?]))}}
-        {:db                 (set-field-visibility db field-descriptor)
-         :validate-debounced {:value             (get-in db [:application :answers id :value])
-                              :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                              :answers-by-key    (get-in db [:application :answers])
-                              :field-descriptor  field-descriptor
-                              :editing?          (get-in db [:application :editing?])
-                              :virkailija?       (contains? (:application db) :virkailija-secret)
-                              :on-validated      (fn [[valid? errors]]
-                                                   (dispatch [:application/set-multiple-choice-valid
-                                                              field-descriptor
-                                                              valid?]))}}))))
-
-(reg-event-fx
-  :application/select-single-choice-button
-  (fn [{db :db} [_ value field-descriptor question-group-idx]]
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor question-group-idx data-idx value]]
     (let [id                 (keyword (:id field-descriptor))
-          button-path        [:application :answers id]
-          value-path         (cond-> button-path
-                                     (some? question-group-idx)
-                                     (conj :values question-group-idx 0)
-                                     true
-                                     (conj :value))
-          current-value      (get-in db value-path)
-          new-value          (when (not= value current-value) value)
+          value              (transform-value value field-descriptor)
           form-key           (get-in db [:form :key])
           selection-id       (get-in db [:application :selection-id])
           selection-group-id (get-in field-descriptor [:params :selection-group-id])
-          db                 (if (some? question-group-idx)
-                               (-> db
-                                   (update-in (conj button-path :values) (util/vector-of-length (inc question-group-idx)))
-                                   (update-in (conj button-path :values question-group-idx) (fnil identity []))
-                                   (assoc-in value-path new-value)
-                                   (update-in button-path (fn [answer]
-                                                            (assoc answer :value (mapv (partial mapv :value)
-                                                                                   (:values answer)))))
-                                   (set-multi-value-changed id :value))
-                               (-> db
-                                   (assoc-in value-path new-value)
-                                   (set-multi-value-changed id :value)
-                                   (set-field-visibility field-descriptor)))]
-      {:db                 (set-validator-processing db id)
-       :validate-debounced {:value                        new-value
+          db                 (-> db
+                                 (set-repeatable-field-values id question-group-idx data-idx value)
+                                 (set-repeatable-field-value id)
+                                 (set-field-visibility field-descriptor)
+                                 (set-validator-processing id))]
+      {:db                 db
+       :dispatch           [:application/set-followup-values field-descriptor]
+       :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
                             :editing?                     (get-in db [:application :editing?])
-                            :try-selection                (partial try-selection
-                                                            form-key
-                                                            selection-id
-                                                            selection-group-id)
                             :group-idx                    question-group-idx
-                            :field-idx                    0
+                            :field-idx                    data-idx
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
+                            :try-selection                (partial try-selection
+                                                                   form-key
+                                                                   selection-id
+                                                                   selection-group-id)
                             :on-validated                 (fn [[valid? errors selection-limit]]
                                                             (when selection-group-id
                                                               (dispatch [:application/handle-selection-over-network-uncertain
                                                                          (and (not valid?) (not-empty errors))])
                                                               (when (-> (first selection-limit) :limit-reached)
                                                                 (dispatch [:application/handle-update-selection-limits
-                                                                           (first selection-limit) valid? id new-value])))
+                                                                           (first selection-limit) valid? id value])))
                                                             (dispatch [:application/set-repeatable-application-field-valid
                                                                        field-descriptor
                                                                        question-group-idx
-                                                                       0
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
+                                                                       data-idx
+                                                                       valid?
+                                                                       errors]))}})))
+
+(defn- remove-repeatable-field-value
+  [db field-descriptor question-group-idx data-idx]
+  (let [id (keyword (:id field-descriptor))]
+    (-> (if (some? question-group-idx)
+          (update-in db [:application :answers id :values question-group-idx] autil/remove-nth data-idx)
+          (update-in db [:application :answers id :values] autil/remove-nth data-idx))
+        (set-repeatable-field-value id)
+        (set-repeatable-application-field-top-level-valid id true))))
+
+(reg-event-db
+  :application/remove-repeatable-application-field-value
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor question-group-idx data-idx]]
+    (remove-repeatable-field-value db field-descriptor question-group-idx data-idx)))
+
+(defn default-error-handler [db [_ response]]
+  (response->error-message db response))
+
+(reg-event-db
+  :application/run-rules
+  [check-schema-interceptor]
+  (fn [db [_ rules]]
+    (if (#{:submitting :submitted} (-> db :application :submit-status))
+      db
+      (rules/run-rules db rules))))
+
+(reg-event-db
+  :application/default-handle-error
+  [check-schema-interceptor]
+  default-error-handler)
+
+(reg-event-db
+  :application/default-http-ok-handler
+  [check-schema-interceptor]
+  (fn [db _] db))
+
+(reg-event-db
+  :application/default-http-progress-handler
+  [check-schema-interceptor]
+  (fn [db _] db))
+
+(reg-event-db
+  :state-update
+  [check-schema-interceptor]
+  (fn [db [_ f]]
+    (or (f db)
+        db)))
+
+(reg-event-db
+  :application/handle-postal-code-input
+  [check-schema-interceptor]
+  (fn [db [_ response]]
+    (let [id    :postal-office
+          value (autil/non-blank-val (:body response) [(-> db :form :selected-language) :fi :sv :en])]
+      (-> db
+                     (set-repeatable-field-values id nil nil value)
+                     (set-repeatable-field-value id)
+                     (set-repeatable-application-repeated-field-valid id nil nil true)
+                     (set-repeatable-application-field-top-level-valid id true)))))
+
+(reg-event-db
+  :application/handle-postal-code-error
+  [check-schema-interceptor]
+  (fn [db _]
+    (let [id :postal-office]
+      (-> db
+          (set-repeatable-field-values id nil nil "")
+          (set-repeatable-field-value id)
+          (set-repeatable-application-repeated-field-valid id nil nil false)
+          (set-repeatable-application-field-top-level-valid id false)))))
 
 (reg-event-fx
-  :application/set-adjacent-field-answer
-  (fn [{db :db} [_ field-descriptor idx value question-group-idx]]
-    (let [new-db (-> db
-                     (set-validator-processing (keyword (:id field-descriptor)))
-                     (set-repeatable-field-values field-descriptor value idx question-group-idx)
-                     (set-repeatable-field-value field-descriptor question-group-idx))]
-      {:db                 new-db
-       :validate-debounced {:value                        value
+  :application/set-multiple-choice-option-valid
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor group-idx option-value valid? errors]]
+    (let [id (keyword (:id field-descriptor))]
+      {:db         (-> db
+                       (set-multiple-choice-option-valid id group-idx option-value valid?)
+                       (set-repeatable-application-field-top-level-valid id valid?)
+                       (assoc-in [:application :answers id :errors] errors))
+       :dispatch-n [[:application/set-validator-processed id]
+                    [:application/run-rules (:rules field-descriptor)]]})))
+
+(reg-event-fx
+  :application/toggle-multiple-choice-option
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor question-group-idx option]]
+    (let [id (keyword (:id field-descriptor))
+          db (-> db
+                 (toggle-multiple-choice-option field-descriptor
+                                                question-group-idx
+                                                (:value option))
+                 (set-repeatable-field-value id)
+                 (set-field-visibility field-descriptor)
+                 (set-validator-processing id))]
+      {:db                 db
+       :dispatch           [:application/set-followup-values field-descriptor]
+       :validate-debounced {:value                        (if (some? question-group-idx)
+                                                            (get-in db [:application :answers id :value question-group-idx])
+                                                            (get-in db [:application :answers id :value]))
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
-                            :answers-by-key               (get-in new-db [:application :answers])
+                            :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
-                            :editing?                     (get-in new-db [:application :editing?])
-                            :field-idx                    (or idx 0)
-                            :group-idx                    (or question-group-idx 0)
-                            :virkailija?                  (contains? (:application new-db) :virkailija-secret)
+                            :editing?                     (get-in db [:application :editing?])
+                            :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors]]
-                                                            (dispatch [:application/set-repeatable-application-field-valid
+                                                            (dispatch [:application/set-multiple-choice-option-valid
                                                                        field-descriptor
                                                                        question-group-idx
-                                                                       idx
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
+                                                                       (:value option)
+                                                                       valid?
+                                                                       errors]))}})))
 
 (reg-event-fx
   :application/add-adjacent-fields
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx]]
-    {:dispatch-n
-     (reduce (fn [dispatch child]
-               (let [id (keyword (:id child))
-                     new-idx (count (if question-group-idx
-                                      (get-in db [:application :answers id :values question-group-idx])
-                                      (get-in db [:application :answers id :values])))]
-                 (conj dispatch [:application/set-adjacent-field-answer
-                                 child new-idx "" question-group-idx])))
-             []
-             (:children field-descriptor))}))
+    {:dispatch-n (mapv (fn [child]
+                         (let [id      (keyword (:id child))
+                               new-idx (count (if (some? question-group-idx)
+                                                (get-in db [:application :answers id :values question-group-idx])
+                                                (get-in db [:application :answers id :values])))]
+                           [:application/set-repeatable-application-field
+                            child question-group-idx new-idx ""]))
+                       (:children field-descriptor))}))
 
-(reg-event-fx
+(reg-event-db
   :application/remove-adjacent-field
-  (fn [{:keys [db]} [_ field-descriptor row-idx question-group-idx]]
-    {:db       (reduce #(remove-repeatable-field-value %1 %2 row-idx question-group-idx)
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor question-group-idx row-idx]]
+    (reduce #(remove-repeatable-field-value %1 %2 question-group-idx row-idx)
                        db
-                       (:children field-descriptor))
-     :dispatch [:application/update-answers-validity]}))
+                       (:children field-descriptor))))
 
 (defonce max-attachment-size-bytes
   (get (js->clj js/config) "attachment-file-max-size-bytes" (* 10 1024 1024)))
 
 (reg-event-fx
   :application/start-attachment-upload
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]]
     (resumable-upload/upload-file
       "/hakemus/api/files/resumable"
       file
       (:id field-descriptor)
       attachment-idx
       (get-in db [:application :attachments-id])
-      {:handler          [:application/handle-attachment-upload field-descriptor attachment-idx question-group-idx]
-       :error-handler    [:application/handle-attachment-upload-error field-descriptor attachment-idx file (inc retries) question-group-idx]
+      {:handler          [:application/handle-attachment-upload field-descriptor question-group-idx attachment-idx]
+       :error-handler    [:application/handle-attachment-upload-error field-descriptor question-group-idx attachment-idx file (inc retries)]
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
-       :started-handler  [:application/handle-attachment-upload-started field-descriptor attachment-idx question-group-idx]})))
+       :started-handler  [:application/handle-attachment-upload-started field-descriptor question-group-idx attachment-idx]})))
 
 (reg-event-fx
   :application/add-single-attachment-resumable
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx]]
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]]
     (let [id       (keyword (:id field-descriptor))
-          filename (:filename (:value @(subscribe [:application/answer
-                                                   id
-                                                   question-group-idx
-                                                   attachment-idx])))]
+          filename (:filename @(subscribe [:application/answer
+                                           id
+                                           question-group-idx
+                                           attachment-idx]))]
       {:db       (assoc-in db [:attachments-uploading id filename] :downloading)
-       :dispatch [:application/start-attachment-upload field-descriptor attachment-idx file retries question-group-idx]})))
+       :dispatch [:application/start-attachment-upload field-descriptor question-group-idx attachment-idx file retries]})))
 
 (reg-event-fx
   :application/add-attachments
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor question-group-idx files]]
     (let [id                   (keyword (:id field-descriptor))
           path                 (cond-> [:application :answers id :values]
@@ -1087,92 +1051,91 @@
                                        (conj question-group-idx))
           existing-attachments (get-in db path)
           new-files            (remove (fn [file]
-                                         (some #(and (= (.-name file) (get-in % [:value :filename]))
-                                                     (= (.-size file) (get-in % [:value :size])))
+                                         (some #(and (= (.-name file) (:filename %))
+                                                     (= (.-size file) (:size %)))
                                                existing-attachments))
                                        files)
           new-attachments      (map (fn [file]
                                       (cond
                                         (< max-attachment-size-bytes (.-size file))
-                                        {:value  {:filename (.-name file)
-                                                  :size     (.-size file)}
-                                         :valid  false
-                                         :status :error
-                                         :errors [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
+                                        {:value    ""
+                                         :filename (.-name file)
+                                         :size     (.-size file)
+                                         :status   :error
+                                         :valid    false
+                                         :errors   [[:file-size-info (autil/size-bytes->str max-attachment-size-bytes)]]}
 
                                         (zero? (.-size file))
-                                        {:value  {:filename (.-name file)
-                                                  :size     (.-size file)}
-                                         :valid  false
-                                         :status :error
-                                         :errors [[:file-size-info-min]]}
+                                        {:value    ""
+                                         :filename (.-name file)
+                                         :size     (.-size file)
+                                         :status   :error
+                                         :valid    false
+                                         :errors   [[:file-size-info-min]]}
 
                                         :else
-                                        {:value         {:filename     (.-name file)
-                                                         :content-type (.-type file)
-                                                         :size         (.-size file)}
-                                         :valid         false
+                                        {:value         ""
+                                         :filename      (.-name file)
+                                         :size          (.-size file)
                                          :uploaded-size 0
                                          :last-progress (c/now)
                                          :speed         0
-                                         :status        :uploading}))
+                                         :status        :uploading
+                                         :valid         false}))
                                     new-files)]
-      {:db         (-> db
-                       (assoc-in [:application :answers id :valid] false)
-                       (update-in [:application :answers id :values]
-                                  (fnil identity (if (some? question-group-idx)
-                                                   (vec (repeat (inc question-group-idx) []))
-                                                   [])))
-                       (assoc-in path (vec (concat existing-attachments
-                                                   new-attachments))))
+      {:db         (-> (if (some? question-group-idx)
+                         (-> db
+                             (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
+                             (update-in [:application :answers id :values question-group-idx] into new-attachments))
+                         (update-in db [:application :answers id :values] into new-attachments))
+                       (set-repeatable-field-value id)
+                       (set-repeatable-application-field-top-level-valid id true))
        :dispatch-n (keep-indexed (fn [idx file]
                                    (when (< 0 (.-size file) (inc max-attachment-size-bytes))
                                      [:application/add-single-attachment-resumable
                                       field-descriptor
+                                      question-group-idx
                                       (+ (count existing-attachments) idx)
                                       file
-                                      0
-                                      question-group-idx]))
+                                      0]))
                                  new-files)})))
 
 (reg-event-fx
   :application/set-attachment-valid
-  (fn [{:keys [db]} [_ id required? valid?]]
-    (let [answer                 (get-in db [:application :answers id])
-          question-group-answer? (and (vector? (:values answer))
-                                      (not (empty? (:values answer)))
-                                      (every? vector? (:values answer)))
-          new-db                 (assoc-in db [:application :answers id :valid]
-                                           (and (if question-group-answer?
-                                                  (every? (partial every? :valid) (:values answer))
-                                                  (every? :valid (:values answer)))
-                                                (not (and required?
-                                                          (if question-group-answer?
-                                                            (some empty? (:values answer))
-                                                            (empty? (:values answer)))))
-                                                valid?))]
-      {:db       new-db
-       :dispatch [:application/set-validator-processed id]})))
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor valid? errors]]
+    (let [id (keyword (:id field-descriptor))]
+      {:db         (-> db
+                       (set-repeatable-application-field-top-level-valid id valid?)
+                       (assoc-in [:application :answers id :errors] errors))
+       :dispatch-n [[:application/set-validator-processed id]
+                    [:application/run-rules (:rules field-descriptor)]]})))
 
 (reg-event-fx
   :application/handle-attachment-upload
-  (fn [{db :db} [_ field-descriptor attachment-idx question-group-idx response]]
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx response]]
     (let [id       (keyword (:id field-descriptor))
           path     (if question-group-idx
                      [:application :answers id :values question-group-idx attachment-idx]
                      [:application :answers id :values attachment-idx])
-          filename (:filename (:value @(subscribe [:application/answer
-                                                   id
-                                                   question-group-idx
-                                                   attachment-idx])))]
-      {:db                 (-> db
-                               (update-in [:attachments-uploading id] dissoc filename)
-                               (update-in path
-                                          merge
-                                          {:value response :valid true :status :ready})
-                               (set-validator-processing id)
-                               (set-multi-value-changed id :values))
-       :validate-debounced {:value                        (get-in db path)
+          filename (:filename @(subscribe [:application/answer
+                                           id
+                                           question-group-idx
+                                           attachment-idx]))
+          new-db   (-> db
+                       (update-in [:attachments-uploading id] dissoc filename)
+                       (assoc-in path {:value    (:key response)
+                                       :filename (:filename response)
+                                       :size     (:size response)
+                                       :status   :ready
+                                       :valid    true})
+                       (set-repeatable-field-value id)
+                       (set-validator-processing id))]
+      {:db                 new-db
+       :validate-debounced {:value                        (if (some? question-group-idx)
+                                                            (get-in new-db [:application :answers id :value question-group-idx])
+                                                            (get-in new-db [:application :answers id :value]))
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
                             :field-descriptor             field-descriptor
@@ -1180,79 +1143,90 @@
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :on-validated                 (fn [[valid? errors]]
                                                             (dispatch [:application/set-attachment-valid
-                                                                       id
-                                                                       (required? field-descriptor)
-                                                                       valid?]))}})))
+                                                                       field-descriptor
+                                                                       valid?
+                                                                       errors]))}})))
 
 (reg-event-db
   :application/handle-attachment-upload-started
-  (fn [db [_ field-descriptor attachment-idx question-group-idx request]]
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor question-group-idx attachment-idx request]]
     (let [id (keyword (:id field-descriptor))]
-      (-> db
-          (assoc-in (cond-> [:application :answers id :values]
-                            (some? question-group-idx)
-                            (conj question-group-idx)
-                            true
-                            (conj attachment-idx :request))
-                    request)))))
+      (if (some? question-group-idx)
+        (assoc-in db [:application :answers id :values question-group-idx attachment-idx :request] request)
+        (assoc-in db [:application :answers id :values attachment-idx :request] request)))))
 
 (reg-event-fx
   :application/handle-attachment-upload-error
-  (fn [{:keys [db]} [_ field-descriptor attachment-idx file retries question-group-idx response-status]]
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries response-status]]
     (let [id            (keyword (:id field-descriptor))
           current-error (case response-status
-                          ; misc error in resumable file transfer, retry:
+                          ;; misc error in resumable file transfer, retry:
                           409 :file-upload-retransmit
-                          ; rate limited:
+                          ;; rate limited:
                           429 :file-upload-failed
-                          ; forbidden file type:
+                          ;; forbidden file type:
                           400 :file-type-forbidden
-                          ; generic error, e.g. transfer interrupted:
+                          ;; generic error, e.g. transfer interrupted:
                           :file-upload-error)]
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
-         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable field-descriptor attachment-idx file retries question-group-idx]
+         :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable
+                                           field-descriptor
+                                           question-group-idx
+                                           attachment-idx
+                                           file
+                                           retries]
                             :timeout      (+ 2000 (rand-int 2000))}}
-        {:db       (-> db
-                       (update-in [:attachments-uploading id] dissoc (-> @(subscribe [:application/answer
-                                                                                      id
-                                                                                      question-group-idx
-                                                                                      attachment-idx])
-                                                                         :value
-                                                                         :filename))
-                       (update-in (if question-group-idx
-                                    [:application :answers id :values question-group-idx attachment-idx]
-                                    [:application :answers id :values attachment-idx])
-                                  merge
-                                  {:valid  false
-                                   :status :error
-                                   :errors [[current-error]]}))
-         :dispatch [:application/set-attachment-valid
-                    id
-                    (required? field-descriptor)
-                    false]}))))
+        {:db (-> db
+                 (update-in [:attachments-uploading id] dissoc (:filename @(subscribe [:application/answer
+                                                                                       id
+                                                                                       question-group-idx
+                                                                                       attachment-idx])))
+                 (update-in (if question-group-idx
+                              [:application :answers id :values question-group-idx attachment-idx]
+                              [:application :answers id :values attachment-idx])
+                            merge
+                            {:valid  false
+                             :status :error
+                             :errors [[current-error]]}))}))))
 
 (reg-event-fx
   :application/handle-attachment-delete
-  (fn [{db :db} [_ field-descriptor question-group-idx attachment-key _]]
-    (let [id (keyword (:id field-descriptor))]
-      {:db       (-> db
-                     (update-in [:application :answers id :values]
-                                (fnil identity (if (some? question-group-idx)
-                                                 (vec (repeat (inc question-group-idx) []))
-                                                 [])))
+  [check-schema-interceptor]
+  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx attachment-key _]]
+    (let [id     (keyword (:id field-descriptor))
+          new-db (-> (if (some? question-group-idx)
+                       (update-in db [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
+                       db)
                      (update-in (cond-> [:application :answers id :values]
                                         (some? question-group-idx)
                                         (conj question-group-idx))
-                                (comp vec (partial remove (comp (partial = attachment-key) :key :value))))
-                     (set-multi-value-changed id :values))
-       :dispatch [:application/set-attachment-valid
-                  id
-                  (required? field-descriptor)
-                  true]})))
+                                (fn [values]
+                                  (if (some? attachment-idx)
+                                    (autil/remove-nth values attachment-idx)
+                                    (vec (remove #(= attachment-key (:value %)) values)))))
+                     (set-repeatable-field-value id)
+                     (set-validator-processing id))]
+      {:db                 new-db
+       :validate-debounced {:value                        (if (some? question-group-idx)
+                                                            (get-in new-db [:application :answers id :value question-group-idx])
+                                                            (get-in new-db [:application :answers id :value]))
+                            :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
+                            :answers-by-key               (get-in db [:application :answers])
+                            :field-descriptor             field-descriptor
+                            :editing?                     (get-in db [:application :editing?])
+                            :virkailija?                  (contains? (:application db) :virkailija-secret)
+                            :on-validated                 (fn [[valid? errors]]
+                                                            (dispatch [:application/set-attachment-valid
+                                                                       field-descriptor
+                                                                       valid?
+                                                                       errors]))}})))
 
 (reg-event-fx
   :application/remove-attachment
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx]]
     (let [id   (keyword (:id field-descriptor))
           path (cond-> [:application :answers id :values]
@@ -1260,27 +1234,26 @@
                        (conj question-group-idx)
                        true
                        (conj attachment-idx))
-          key  (get-in db (conj path :value :key))]
-      (if (and (not (get-in db [:application :editing?]))
-               (= :ready (get-in db (conj path :status))))
-        {:db   (-> db
-                   (assoc-in [:application :answers id :valid] false)
-                   (update-in path merge {:status :deleting
-                                          :valid  false}))
-         :http {:method  :delete
-                :url     (str "/hakemus/api/files/" key)
-                :handler [:application/handle-attachment-delete field-descriptor question-group-idx key]}}
-        {:db       (-> db
-                       (assoc-in [:application :answers id :valid] false)
-                       (update-in (butlast path) autil/remove-nth attachment-idx)
-                       (set-multi-value-changed id :values))
-         :dispatch [:application/set-attachment-valid
-                    id
-                    (required? field-descriptor)
-                    true]}))))
+          key  (get-in db (conj path :value))]
+      (merge
+       {:db (-> db
+                (update-in path merge {:status :deleting
+                                       :valid  false})
+                (set-repeatable-application-field-top-level-valid id true))}
+       (if (some? key)
+         {:http {:method  :delete
+                 :url     (str "/hakemus/api/files/" key)
+                 :handler [:application/handle-attachment-delete field-descriptor question-group-idx nil key]}}
+         {:dispatch [:application/handle-attachment-delete
+                     field-descriptor
+                     question-group-idx
+                     attachment-idx
+                     nil
+                     nil]})))))
 
 (reg-event-fx
   :application/cancel-attachment-upload
+  [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx]]
     {:http-abort (get-in db (cond-> [:application :answers (keyword (:id field-descriptor)) :values]
                                     (some? question-group-idx)
@@ -1288,26 +1261,15 @@
                                     true
                                     (conj attachment-idx :request)))}))
 
-(reg-event-fx
-  :application/remove-attachment-error
-  (fn [{db :db} [_ field-descriptor component-id attachment-idx question-group-idx]]
-    (let [id (keyword component-id)]
-      {:db (update-in db (cond-> [:application :answers id :values]
-                           (some? question-group-idx)
-                           (conj question-group-idx))
-                      autil/remove-nth attachment-idx)
-       :dispatch [:application/set-attachment-valid
-                  id
-                  (required? field-descriptor)
-                  true]})))
-
 (reg-event-db
   :application/rating-hover
+  [check-schema-interceptor]
   (fn [db [_ star-number]]
     (assoc-in db [:application :feedback :star-hovered] star-number)))
 
 (reg-event-db
   :application/rating-submit
+  [check-schema-interceptor]
   (fn [db [_ star-number]]
     (-> db
         (assoc-in [:application :feedback :stars] star-number)
@@ -1315,15 +1277,18 @@
 
 (reg-event-db
   :application/rating-update-feedback
+  [check-schema-interceptor]
   (fn [db [_ feedback-text]]
     (assoc-in db [:application :feedback :text] feedback-text)))
 
 (reg-event-db
   :application/handle-feedback-submit
+  [check-schema-interceptor]
   (fn [db _] db))
 
 (reg-event-fx
   :application/rating-feedback-submit
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [lang-kw   (keyword (-> db :form :selected-language))
           new-db    (assoc-in db [:application :feedback :status] :feedback-submitted)
@@ -1345,11 +1310,13 @@
 
 (reg-event-db
   :application/rating-form-toggle
+  [check-schema-interceptor]
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
 
 (reg-event-fx
   :application/set-page-title
+  [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [lang-kw       (keyword (-> db :form :selected-language))
           title-prefix  (translations/get-hakija-translation :page-title lang-kw)
@@ -1359,41 +1326,9 @@
       {:db db
        :set-page-title (str title-prefix " – " title-suffix)})))
 
-(defn- set-empty-value-dispatch
-  [group-idx field-descriptor]
-  (let [id (keyword (:id field-descriptor))]
-    (match field-descriptor
-      {:fieldType (:or "dropdown" "textField" "textArea")}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        ""
-        0
-        group-idx]]
-      {:fieldType "singleChoice"}
-      (let [d [:application/select-single-choice-button
-               (:value (first (:options field-descriptor)))
-               field-descriptor
-               group-idx]]
-        [d d])
-      {:fieldType "multipleChoice"}
-      (let [d [:application/toggle-multiple-choice-option
-               field-descriptor
-               (first (:options field-descriptor))
-               group-idx]]
-        [d d])
-      {:fieldType "adjacentfieldset"}
-      (mapv (fn [child]
-              [:application/set-adjacent-field-answer child 0 "" group-idx])
-            (:children field-descriptor))
-      {:fieldType "attachment"}
-           ; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
-           ; Hacky solution but others would require much rework on the codebase.
-      [[:application/handle-attachment-delete field-descriptor group-idx nil nil]]
-      {:fieldClass "infoElement"}
-      [])))
-
 (reg-event-fx
   :application/add-question-group-row
+  [check-schema-interceptor]
   (fn add-question-group-row [{db :db} [_ field-descriptor]]
     (let [id           (keyword (:id field-descriptor))
           repeat-count (get-in db [:application :ui id :count] 1)]
@@ -1405,58 +1340,43 @@
 
 (reg-event-fx
   :application/remove-question-group-row
+  [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor idx]]
     (let [id                     (keyword (:id field-descriptor))
           with-decremented-count (-> db
                                      (update-in [:application :ui id :count] dec)
                                      (update-in [:application :ui id] dissoc :mouse-over-remove-button))
-          rules                  (->> (:children field-descriptor)
-                                      (map :rules)
-                                      (apply merge))]
-      {:db         (autil/reduce-form-fields
-                    (fn [db child]
-                      (let [id     (keyword (:id child))
-                            answer (get-in db [:application :answers id])]
-                        (cond-> db
-                                (contains? answer :values)
-                                (update-in [:application :answers id :values]
-                                           autil/remove-nth idx)
-                                (contains? answer :value)
-                                (update-in [:application :answers id :value]
-                                           autil/remove-nth idx)
-                                (and (contains? answer :values)
-                                     (contains? answer :valid))
-                                (update-in [:application :answers id]
-                                           #(assoc % :valid (->> (:values %)
-                                                                 flatten
-                                                                 (every? :valid))))
-                                (or (contains? answer :values)
-                                    (contains? answer :value))
-                                (update-in [:application :values-changed?] conj id))))
-                    with-decremented-count
-                    (:children field-descriptor))
-       :dispatch-n (cond-> [[:application/update-answers-validity]]
-                           (not-empty rules)
-                           (conj [:application/run-rules rules]))})))
-
-(reg-event-fx
-  :application/dropdown-change
-  (fn [_ [_ field-descriptor value group-idx]]
-    {:dispatch (if (some? group-idx)
-                 [:application/set-repeatable-application-field field-descriptor value 0 group-idx]
-                 [:application/set-application-field field-descriptor value])}))
+          descendants            (->> (:children field-descriptor)
+                                      autil/flatten-form-fields
+                                      (filter autil/answerable?)
+                                      reverse)]
+      {:db         (reduce (fn [db child]
+                             (let [id (keyword (:id child))]
+                               (-> db
+                                   (update-in [:application :answers id :values] autil/remove-nth idx)
+                                   (set-repeatable-field-value id)
+                                   (set-repeatable-application-field-top-level-valid id true)
+                                   (set-field-visibility child))))
+                           with-decremented-count
+                           descendants)
+       :dispatch-n (mapv (fn [descendant]
+                           [:application/run-rules (:rules descendant)])
+                         descendants)})))
 
 (reg-event-db
   :application/remove-question-group-mouse-over
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] true)))
 
 (reg-event-db
   :application/remove-question-group-mouse-out
+  [check-schema-interceptor]
   (fn [db [_ field-descriptor idx]]
     (assoc-in db [:application :ui (keyword (:id field-descriptor)) :mouse-over-remove-button idx] false)))
 
 (reg-event-fx
   :application/setup-window-unload
+  [check-schema-interceptor]
   (fn [_ _]
     {:set-window-close-callback nil}))

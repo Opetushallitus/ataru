@@ -16,9 +16,7 @@
                                                                        render-paragraphs
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
-                                                                       scroll-to-anchor
-                                                                       question-group-answer?
-                                                                       answers->read-only-format]]))
+                                                                       scroll-to-anchor]]))
 
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
@@ -64,8 +62,8 @@
 
 (defn- attachment-list [attachments]
   [:div
-   (map (fn [{:keys [value]}]
-          ^{:key (:key value)}
+   (map (fn [value]
+          ^{:key (str "attachment-" (:value value))}
           [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
         attachments)])
 
@@ -123,23 +121,6 @@
     (fn [application lang children question-group-index]
       (into [:div] (child-fields children application lang ui question-group-index)))))
 
-(defn- extract-values [children answers]
-  (let [l?      (fn [x]
-                  (or (list? x)
-                      (vector? x)))
-        answers (->> children
-                     (map answer-key)
-                     (map (comp (fn [values]
-                                  (if (and (l? values)
-                                           (every? l? values))
-                                    (map (partial map :value) values)
-                                    (map :value values)))
-                                :values
-                                (partial get answers))))]
-    (if (question-group-answer? answers)
-      (answers->read-only-format answers)
-      (apply map vector answers))))
-
 (defn- fieldset-answer-table [answers]
   [:tbody
    (doall
@@ -150,9 +131,11 @@
            [:td.application__readonly-adjacent-cell (str value)]))))])
 
 (defn fieldset [field-descriptor application lang children question-group-idx]
-  (let [fieldset-answers (cond-> (extract-values children (:answers application))
-                           question-group-idx
-                           (nth question-group-idx))]
+  (let [fieldset-answers (->> children
+                              (map #(if (some? question-group-idx)
+                                      (get-in application [:answers (keyword (:id %)) :value question-group-idx])
+                                      (get-in application [:answers (keyword (:id %)) :value])))
+                              (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)

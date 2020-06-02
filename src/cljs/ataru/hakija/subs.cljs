@@ -3,6 +3,7 @@
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
+            [ataru.hakija.application :as autil]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [cemerick.url :as url]))
@@ -78,12 +79,20 @@
 
 (re-frame/reg-sub
   :application/visible-options
-  (fn [db [_ field-description]]
-    (let [visibility (get-in db [:application :ui (keyword (:id field-description))])]
-      (keep-indexed (fn [index option]
-                      (when (get-in visibility [index :visible?] true)
-                        option))
-                    (:options field-description)))))
+  (fn [[_ field-description] _]
+    (re-frame/subscribe [:application/ui-of (keyword (:id field-description))]))
+  (fn [ui-of [_ field-description]]
+    (keep-indexed (fn [index option]
+                    (when (get-in ui-of [index :visible?] true)
+                      option))
+                  (:options field-description))))
+
+(re-frame/reg-sub
+  :application/visible?
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui _]
+    (:visible? ui true)))
 
 (re-frame/reg-sub
   :application/answer
@@ -190,10 +199,19 @@
 
 (re-frame/reg-sub
   :application/valid-status
-  (fn [db]
-    (-> db
-        (get-in [:application :answers-validity])
-        (update :invalid-fields (partial sort-by :order-idx)))))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/answers])
+     (re-frame/subscribe [:application/ui])
+     (re-frame/subscribe [:application/flat-form-content])])
+  (fn [[answers ui flat-form-content] _]
+    (autil/answers->valid-status answers ui flat-form-content)))
+
+(re-frame/reg-sub
+  :application/invalid-fields?
+  (fn [_ _]
+    (re-frame/subscribe [:application/valid-status]))
+  (fn [valid-status _]
+    (not (empty? (:invalid-fields valid-status)))))
 
 (re-frame/reg-sub
   :application/can-apply?
@@ -308,12 +326,31 @@
         row-amount))))
 
 (re-frame/reg-sub
+  :application/question-group-row-count
+  (fn [[_ id] _]
+    (re-frame/subscribe [:application/ui-of id]))
+  (fn [ui-of _]
+    (:count ui-of 1)))
+
+(re-frame/reg-sub
+  :application/attachment-count
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id question-group-idx]]
+    (if (some? question-group-idx)
+      (count (get-in answers [(keyword id) :values question-group-idx]))
+      (count (get-in answers [(keyword id) :values])))))
+
+(re-frame/reg-sub
   :application/multiple-choice-option-checked?
-  (fn [db [_ parent-id option-value question-group-idx]]
-    (let [option-path (cond-> [:application :answers parent-id :options]
-                        question-group-idx (conj question-group-idx))
-          options     (get-in db option-path)]
-      (true? (get options option-value)))))
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers [_ id option-value question-group-idx]]
+    (boolean
+     (some #(= option-value %)
+           (if (some? question-group-idx)
+             (get-in answers [(keyword id) :value question-group-idx])
+             (get-in answers [(keyword id) :value]))))))
 
 (re-frame/reg-sub
   :application/single-choice-option-checked?
@@ -464,6 +501,11 @@
            (some #(get-in db [:application :validators-processing (keyword %)]) limited)))))
 
 (re-frame/reg-sub
+  :application/selection-over-network-uncertain?
+  (fn [db _]
+    (get-in db [:application :selection-over-network-uncertain?])))
+
+(re-frame/reg-sub
   :application/limit-reached?
   (fn [db [_ question-id answer-id]]
     (let [original-value (get-in db [:application :answers question-id :original-value])]
@@ -571,3 +613,10 @@
                   (assoc-in [:query "virkailija-secret"] virkailija-secret))
           (assoc-in [:query "lang"] (name language))
           str))))
+
+(re-frame/reg-sub
+  :application/edits?
+  (fn [_ _]
+    (re-frame/subscribe [:application/answers]))
+  (fn [answers _]
+    (some? (some #(not= (:original-value %) (:value %)) (vals answers)))))

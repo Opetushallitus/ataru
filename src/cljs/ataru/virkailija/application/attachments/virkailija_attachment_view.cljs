@@ -157,12 +157,11 @@
            [:div.attachment-skimming-image-view-no-preview
             [:span.attachment-skimming-image-view-no-preview__text "?"]]])))
 
-(def liitepyynnot->attachment-keys-xform (comp (map (fn [liitepyynto]
-                                                      (let [values (:values liitepyynto)]
-                                                        (cond->> values
-                                                          (every? vector? values)
-                                                          (flatten)))))
-                                               (mapcat identity)
+(def liitepyynnot->attachment-keys-xform (comp (mapcat (fn [liitepyynto]
+                                                         (let [values (:values liitepyynto)]
+                                                           (if (u/is-question-group-answer? values)
+                                                             (mapcat identity values)
+                                                             values))))
                                                (map :key)
                                                (distinct)
                                                (filter (fn [attachment-key]

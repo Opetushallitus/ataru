@@ -233,25 +233,23 @@
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
   [application create-new-secret? applied-hakukohteet old-answers form update? conn]
-  (let [connection                  {:connection conn}
-        answers                     (->> application
-                                         :answers
-                                         (filter #(not-empty (:value %))))
-        application-to-store        {:form_id        (:form application)
-                                     :key            (:key application)
-                                     :lang           (:lang application)
-                                     :preferred_name (find-value-from-answers "preferred-name" answers)
-                                     :last_name      (find-value-from-answers "last-name" answers)
-                                     :ssn            (find-value-from-answers "ssn" answers)
-                                     :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
-                                     :email          (find-value-from-answers "email" answers)
-                                     :hakukohde      (or (:hakukohde application) [])
-                                     :haku           (:haku application)
-                                     :content        {:answers answers}
-                                     :person_oid     (:person-oid application)}
-        new-application             (if (contains? application :key)
-                                      (yesql-add-application-version<! application-to-store connection)
-                                      (yesql-add-application<! application-to-store connection))]
+  (let [connection           {:connection conn}
+        answers              (:answers application)
+        application-to-store {:form_id        (:form application)
+                              :key            (:key application)
+                              :lang           (:lang application)
+                              :preferred_name (find-value-from-answers "preferred-name" answers)
+                              :last_name      (find-value-from-answers "last-name" answers)
+                              :ssn            (find-value-from-answers "ssn" answers)
+                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                              :email          (find-value-from-answers "email" answers)
+                              :hakukohde      (or (:hakukohde application) [])
+                              :haku           (:haku application)
+                              :content        {:answers answers}
+                              :person_oid     (:person-oid application)}
+        new-application      (if (contains? application :key)
+                               (yesql-add-application-version<! application-to-store connection)
+                               (yesql-add-application<! application-to-store connection))]
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))
@@ -727,9 +725,11 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
 
 (defn alter-application-hakukohteet-with-secret
-  [secret new-hakukohteet]
-  (when-not (= (exec-db :db yesql-set-application-hakukohteet-by-secret! {:secret secret :hakukohde new-hakukohteet}) 0)
-    secret))
+  [secret hakukohde answers]
+  (exec-db :db yesql-set-application-hakukohteet-by-secret!
+           {:secret    secret
+            :hakukohde hakukohde
+            :content   {:answers answers}}))
 
 (defn add-new-secret-to-application
   [application-key]
@@ -1302,9 +1302,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
          (into {}))))
 
 (defn- indexed-by-question-group [index-fn key values]
-  (apply concat (map-indexed (fn [i values]
-                               (index-fn (format "%s_group%d" key i) values))
-                             values)))
+  (apply concat (keep-indexed (fn [i values]
+                                (when (some? values)
+                                  (index-fn (format "%s_group%d" key i) values)))
+                              values)))
 
 (defn- indexed-by-values [key values]
   (map (fn [value]
@@ -1331,16 +1332,14 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           indexed-by-value-order
                           :else
                           not-indexed)]
-       (into acc (cond (and (sequential? value)
-                            (every? sequential? value))
+       (into acc (cond (util/is-question-group-answer? value)
                        (indexed-by-question-group index-fn key value)
-                       (and (sequential? value)
-                            (or (= "attachment" fieldType)
-                                (= "multipleChoice" fieldType)
-                                (= "textField" fieldType)))
+                       (vector? value)
                        (index-fn key value)
-                       (not (sequential? value))
+                       (string? value)
                        [[key value]]
+                       (nil? value)
+                       [[key ""]]
                        :else
                        (throw (new RuntimeException
                                    (str "Unknown answer form " answer)))))))
