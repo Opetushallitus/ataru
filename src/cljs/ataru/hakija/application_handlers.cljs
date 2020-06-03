@@ -1,10 +1,11 @@
 (ns ataru.hakija.application-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-fx reg-event-fx dispatch subscribe after]]
+  (:require [clojure.set :as set]
+            [clojure.string :as string]
+            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
             [schema.core :as s]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
             [ataru.component-data.higher-education-base-education-module :as hebem]
-            [ataru.hakija.application-validators :as validator]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.person-info-fields :as person-info-fields]
@@ -16,11 +17,10 @@
             [ataru.hakija.application :refer [create-initial-answers
                                               create-application-to-submit
                                               extract-wrapper-sections]]
-            [clojure.data :as d]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
-            [cljs-time.coerce :refer [from-long to-long]]))
+            [cljs-time.coerce :refer [to-long]]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -34,10 +34,6 @@
    :application {:attachments-id (random-uuid)
                  :answers        {}
                  :editing?       false}})
-
-(defn- required? [field-descriptor]
-  (some (partial = "required")
-        (:validators field-descriptor)))
 
 (reg-event-db
   :application/set-secret-delivery-status
@@ -226,8 +222,8 @@
                                                             selected-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohteet          (set (map :oid selected-ei-jyemp-hakukohteet-tarjonta))]
-    [(clojure.set/union selected-hakukohteet selected-hakukohderyhmat)
-     (clojure.set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
+    [(set/union selected-hakukohteet selected-hakukohderyhmat)
+     (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
 (declare set-field-visibility)
 
@@ -323,7 +319,7 @@
                              flat-form-content)
         ssn-value      (get-in db [:application :answers :ssn :value])
         have-ssn-value (if (or (and cannot-view? (nil? ssn-value))
-                               (not (clojure.string/blank? ssn-value)))
+                               (not (string/blank? ssn-value)))
                          "true"
                          "false")]
     (update-in db [:application :answers :have-finnish-ssn]
@@ -524,7 +520,7 @@
           db)
         (map keyword (:selection-limited db))))))
 
-(defn reset-other-selections [db question-id answer-id]
+(defn reset-other-selections [db question-id _]
   (reduce (fn [db key]
             (if (= key question-id)
               db
@@ -613,7 +609,7 @@
 (reg-event-db
   :application/network-online
   [check-schema-interceptor]
-  (fn [db [_ flash]]
+  (fn [db _]
     (if (= :network-offline (get-in db [:error :code]))
       (dissoc db :error)
       db)))
@@ -629,7 +625,7 @@
 (reg-event-db
   :application/network-offline
   [check-schema-interceptor]
-  (fn [db [_ flash]]
+  (fn [db _]
     (if (get db :error)
       db
       (assoc-in db [:error :code] :network-offline))))
@@ -774,36 +770,35 @@
 
 (defn- set-empty-value-dispatch
   [group-idx field-descriptor]
-  (let [id (keyword (:id field-descriptor))]
-    (match field-descriptor
-      {:fieldType (:or "dropdown" "textField" "textArea")}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        ""]]
-      {:fieldType "singleChoice"}
-      [[:application/set-repeatable-application-field
-        field-descriptor
-        group-idx
-        nil
-        nil]]
-      {:fieldType "multipleChoice"}
-      (let [d [:application/toggle-multiple-choice-option
-               field-descriptor
-               group-idx
-               (first (:options field-descriptor))]]
-        [d d])
-      {:fieldType "adjacentfieldset"}
-      (mapv (fn [child]
-              [:application/set-repeatable-application-field child group-idx 0 ""])
-            (:children field-descriptor))
-      {:fieldType "attachment"}
-      ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
-      ;; Hacky solution but others would require much rework on the codebase.
-      [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
-      :else
-      nil)))
+  (match field-descriptor
+         {:fieldType (:or "dropdown" "textField" "textArea")}
+         [[:application/set-repeatable-application-field
+           field-descriptor
+           group-idx
+           nil
+           ""]]
+         {:fieldType "singleChoice"}
+         [[:application/set-repeatable-application-field
+           field-descriptor
+           group-idx
+           nil
+           nil]]
+         {:fieldType "multipleChoice"}
+         (let [d [:application/toggle-multiple-choice-option
+                  field-descriptor
+                  group-idx
+                  (first (:options field-descriptor))]]
+           [d d])
+         {:fieldType "adjacentfieldset"}
+         (mapv (fn [child]
+                 [:application/set-repeatable-application-field child group-idx 0 ""])
+               (:children field-descriptor))
+         {:fieldType "attachment"}
+         ;; Use handle attachment delete here since when calling with nil it 'initializes' an empty answer.
+         ;; Hacky solution but others would require much rework on the codebase.
+         [[:application/handle-attachment-delete field-descriptor group-idx nil nil nil]]
+         :else
+         nil))
 
 (reg-event-fx
   :application/set-followup-values

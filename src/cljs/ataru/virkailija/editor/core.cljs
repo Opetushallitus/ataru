@@ -1,19 +1,12 @@
 (ns ataru.virkailija.editor.core
-  (:require [ataru.feature-config :as fc]
-            [ataru.virkailija.dev.lomake :as l]
-            [ataru.virkailija.editor.component :as ec]
+  (:require [ataru.virkailija.editor.component :as ec]
             [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
-            [ataru.virkailija.editor.components.followup-question :as followup]
-            [ataru.util :as util]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-sub]]
-            [reagent.ratom :refer-macros [reaction]]
-            [reagent.core :as r]
+            [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
-            [cljs-uuid-utils.core :as uuid]
             [taoensso.timbre :as log]))
 
-(defn soresu->reagent [content path & args]
+(defn soresu->reagent [_ _ & _]
   (fn [content path & args]
     (let [children  (map-indexed
                      (fn [index child]
