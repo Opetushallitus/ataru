@@ -1,5 +1,5 @@
 (ns ataru.hakija.application.field-visibility-test
-  (:require [clojure.test :refer [are deftest is testing]]
+  (:require [cljs.test :refer-macros [are deftest is testing]]
             [ataru.hakija.application.field-visibility :as field-visibility]))
 
 (defn- ui-of [db]
@@ -115,4 +115,18 @@
                                                    :options   [{:value     "0"
                                                                 :followups [{:id "jatkokysymys-0"}]}
                                                                {:value     "1"
-                                                                :followups [{:id "jatkokysymys-1"}]}]}))))))
+                                                                :followups [{:id "jatkokysymys-1"}]}]})))))
+  (testing "text field: followup is not for the selected hakukohde:"
+    (is
+      (= {:kysymys-id      {0         {:visible? true}
+                            :visible? true}
+          :jatkokysymys-id {:visible? false}}
+         (ui-of
+           (field-visibility/set-field-visibility
+             {:application {:answers {:kysymys-id  {:value "Vastaus"}
+                                      :hakukohteet {:value ["valittu-hakukohde-id"]}}}}
+             {:id        "kysymys-id"
+              :fieldType "textField"
+              :options   [{:value     "0"
+                           :followups [{:id                     "jatkokysymys-id"
+                                        :belongs-to-hakukohteet ["hakukohde-id"]}]}]}))))))

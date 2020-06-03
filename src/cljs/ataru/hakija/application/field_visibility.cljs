@@ -76,11 +76,12 @@
   (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
                                 (:belongs-to-hakukohteet option)))]
     (assoc-in db [:application :ui id index :visible?]
-              (and visible?
-                   (or (empty? belongs-to)
-                       (not-empty (set/intersection
-                                    belongs-to
-                                    selected-hakukohteet-and-ryhmat)))))))
+              (boolean
+                (and visible?
+                     (or (empty? belongs-to)
+                         (not (empty? (set/intersection
+                                        belongs-to
+                                        selected-hakukohteet-and-ryhmat)))))))))
 
 (defn set-field-visibility
   ([db field-descriptor]
@@ -104,13 +105,13 @@
                                      (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
          visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
-                                     (or (not jyemp?) (not-empty selected-ei-jyemp-hakukohteet-and-ryhmat))
+                                     (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
                                      (or (empty? belongs-to)
-                                         (not-empty (set/intersection
-                                                      belongs-to
-                                                      (if jyemp?
-                                                        selected-ei-jyemp-hakukohteet-and-ryhmat
-                                                        selected-hakukohteet-and-ryhmat))))
+                                         (not (empty? (set/intersection
+                                                        belongs-to
+                                                        (if jyemp?
+                                                          selected-ei-jyemp-hakukohteet-and-ryhmat
+                                                          selected-hakukohteet-and-ryhmat)))))
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta]))))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
@@ -121,10 +122,13 @@
                                           db
                                           (map-indexed vector (:options field-descriptor))))
          field-visibility       (fn [db]
-                                  (assoc-in db [:application :ui id :visible?]
-                                            (and visible? (or (empty? (:children field-descriptor))
-                                                              (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
-                                                                    (:children field-descriptor))))))]
+                                  (assoc-in db
+                                            [:application :ui id :visible?]
+                                            (boolean
+                                              (and visible?
+                                                   (or (empty? (:children field-descriptor))
+                                                       (some #(get-in db [:application :ui (keyword (:id %)) :visible?])
+                                                             (:children field-descriptor)))))))]
      (cond-> (-> db
                  child-visibility
                  option-visibility
