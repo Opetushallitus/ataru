@@ -490,8 +490,8 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor question-group-idx option]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            followups (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
-                              (:followups option))]
+            followups (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                               (:followups option))]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -544,8 +544,8 @@
         lang           (subscribe [:application/form-language])]
     (fn [option parent-id field-descriptor question-group-idx _ use-multi-choice-style? verifying?]
       (let [checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
-            followups            (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
-                                         (:followups option))
+            followups            (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                                          (:followups option))
             unselectable?        (and (or (not checked?)
                                           (not @valid?))
                                       @limit-reached?)
@@ -604,7 +604,7 @@
                            (filter #(= (:value answer) (:value %)))
                            first
                            :followups
-                           (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
+                           (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
         [:div.application__form-field.application__form-single-choice-button-container
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
