@@ -129,7 +129,7 @@
                     (and (zero? hours) (> 45 minutes))  :application-period-less-than-45-min-left
                     (zero? hours)                       :application-period-less-than-hour-left
                     (> 24 hours)                        :application-period-less-than-day-left)]
-    (if text-code
+    (when text-code
       [:div.application__hakuaika-left
        (translations/get-hakija-translation text-code lang)])))
 
