@@ -93,7 +93,8 @@
                             (not (empty? validators-processing)))
               :on-click #(if editing
                            (dispatch [:application/edit])
-                           (dispatch [:application/submit]))}
+                           (dispatch [:application/submit]))
+              :data-test-id "application__send-application-button"}
              (edit-text editing secret virkailija-secret lang)])))
 
 (defn- preview-toggle

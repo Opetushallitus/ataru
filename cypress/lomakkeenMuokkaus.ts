@@ -2,6 +2,7 @@ import * as httpPaluusanomat from './httpPaluusanomat'
 import * as reitit from './reitit'
 import * as asetukset from './asetukset'
 import * as odota from './odota'
+import { syotaTeksti } from './apu'
 
 export const haeLomakkeenLisaysNappi = () =>
   cy.get('[data-test-id=add-form-button]:visible')
@@ -162,9 +163,7 @@ export const painikeYksiValittavissa = {
     cy.get(
       '[data-test-id=editor-form__singleChoice-component-main-label]:visible'
     ),
-  syotaKysymysTeksti: (teksti: string) =>
-    painikeYksiValittavissa
-      .haeKysymysTeksti()
-      .clear()
-      .type(teksti, { delay: asetukset.tekstikentanSyotonViive }),
+  syotaKysymysTeksti: (teksti: string) => {
+    return syotaTeksti(painikeYksiValittavissa.haeKysymysTeksti(), teksti)
+  },
 }
