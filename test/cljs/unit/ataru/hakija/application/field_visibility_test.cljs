@@ -78,7 +78,27 @@
                                                                             {:id "jatkokysymys-2"}]}]})))
       "dropdown"
       "multipleChoice"
-      "singleChoice")))
+      "singleChoice"))
+  (testing "option selected, followup visibility for selected hakukohde:"
+    (are [fieldType selected belongs-to visible?]
+      (= {:kysymys-id      {0         {:visible? true}
+                            :visible? true}
+          :jatkokysymys-id {:visible? visible?}}
+         (ui-of
+           (field-visibility/set-field-visibility
+             {:application {:answers {:kysymys-id  {:value "0"}
+                                      :hakukohteet {:value [selected]}}}}
+             {:id        "kysymys-id"
+              :fieldType fieldType
+              :options   [{:value     "0"
+                           :followups [{:id                     "jatkokysymys-id"
+                                        :belongs-to-hakukohteet [belongs-to]}]}]})))
+      "dropdown" "valittu-hakukohde-id" "hakukohde-id" false
+      "dropdown" "hakukohde-id" "hakukohde-id" true
+      "multipleChoice" "valittu-hakukohde-id" "hakukohde-id" false
+      "multipleChoice" "hakukohde-id" "hakukohde-id" true
+      "singleChoice" "valittu-hakukohde-id" "hakukohde-id" false
+      "singleChoice" "hakukohde-id" "hakukohde-id" true)))
 
 (deftest set-field-visibility-for-text-field-test
   (testing "text field: single option, empty followup:"
@@ -116,17 +136,19 @@
                                                                 :followups [{:id "jatkokysymys-0"}]}
                                                                {:value     "1"
                                                                 :followups [{:id "jatkokysymys-1"}]}]})))))
-  (testing "text field: followup is not for the selected hakukohde:"
-    (is
+  (testing "text field: followup visibility for selected hakukohde:"
+    (are [selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}
                             :visible? true}
-          :jatkokysymys-id {:visible? false}}
+          :jatkokysymys-id {:visible? visible?}}
          (ui-of
            (field-visibility/set-field-visibility
              {:application {:answers {:kysymys-id  {:value "Vastaus"}
-                                      :hakukohteet {:value ["valittu-hakukohde-id"]}}}}
+                                      :hakukohteet {:value [selected]}}}}
              {:id        "kysymys-id"
               :fieldType "textField"
               :options   [{:value     "0"
                            :followups [{:id                     "jatkokysymys-id"
-                                        :belongs-to-hakukohteet ["hakukohde-id"]}]}]}))))))
+                                        :belongs-to-hakukohteet [belongs-to]}]}]})))
+      "valittu-hakukohde-id" "hakukohde-id" false
+      "hakukohde-id" "hakukohde-id" true)))
