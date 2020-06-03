@@ -1,15 +1,10 @@
 (ns ataru.hakija.application-view
-  (:require [clojure.string :refer [trim]]
-            [ataru.config :as config]
+  (:require [ataru.config :as config]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.translations.translation-util :as translations]
             [re-frame.core :refer [subscribe dispatch]]
-            [cljs.core.match :refer-macros [match]]
-            [cljs-time.core :refer [to-default-time-zone now after?]]
-            [cljs-time.format :refer [unparse unparse-local formatter]]
-            [cljs-time.coerce :refer [from-long]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]))
@@ -72,12 +67,12 @@
         [:span.application__sub-header-modifying-prevented
          (translations/get-hakija-translation :application-processed-cant-modify lang)]])]))
 
-(defn readonly-fields [form]
+(defn readonly-fields [_]
   (let [application (subscribe [:state-query [:application]])]
     (fn [form]
       [readonly-view/readonly-fields form @application])))
 
-(defn- render-fields [form]
+(defn- render-fields [_]
   (let [submit-status    (subscribe [:state-query [:application :submit-status]])
         preview-enabled? (subscribe [:state-query [:application :preview-enabled]])]
     (fn [form]
