@@ -18,13 +18,23 @@
 
 (def fake-config {:organization-service {:base-address "dummy"} :cas {}})
 
-(defn create-org-service-instance [] (.start (org-service/->IntegratedOrganizationService
-                                              (.start
-                                               (in-memory/map->InMemoryCache
-                                                {:loader        (cache/->FunctionCacheLoader
-                                                                 (fn [_] (organization-client/get-groups)))
-                                                 :expires-after [3 TimeUnit/DAYS]
-                                                 :refresh-after [5 TimeUnit/MINUTES]})))))
+(defn create-org-service-instance
+  []
+  (.start (org-service/->IntegratedOrganizationService
+           ; hierarchies cache
+           (.start
+             (in-memory/map->InMemoryCache
+              {:loader        (cache/->FunctionCacheLoader
+                               (fn [key] (organization-client/get-organizations key)))
+               :expires-after [3 TimeUnit/DAYS]
+               :refresh-after [5 TimeUnit/MINUTES]}))
+           ; groups cache
+           (.start
+             (in-memory/map->InMemoryCache
+              {:loader        (cache/->FunctionCacheLoader
+                               (fn [_] (organization-client/get-groups)))
+               :expires-after [3 TimeUnit/DAYS]
+               :refresh-after [5 TimeUnit/MINUTES]})))))
 
 (describe "OrganizationService"
           (tags :unit :organization)
@@ -38,10 +48,8 @@
                 (with-redefs [http/request (partial fake-organization-hierarchy cas-get-call-count)]
                   (let [org-service-instance (create-org-service-instance)]
                     (should= expected-flat-organizations
-                             (.get-all-organizations org-service-instance
-                                                     [{:oid test-user1-organization-oid :name {:fi "org1"}}]))
-                    (should= {test-user1-organization-oid expected-flat-organizations}
-                             (into {} (for [[k v] @(:all-orgs-cache org-service-instance)] [k v])))
+                             (org-service/get-all-organizations org-service-instance
+                                                                [{:oid test-user1-organization-oid :name {:fi "org1"}}]))
                     (should= 1 @cas-get-call-count)))))
 
           (it "Should get all organizations from organization client and return passed in groups as-is"
@@ -49,7 +57,7 @@
                 (let [org-service-instance (create-org-service-instance)
                       group                {:name {:fi "Ryhmä-x"} :oid "1.2.246.562.28.1.29" :type :group}]
                   (should= (into [group] expected-flat-organizations)
-                           (.get-all-organizations org-service-instance
-                                                   [{:oid test-user1-organization-oid :name {:fi "org1"}}
-                                                    group]))))))
+                           (org-service/get-all-organizations org-service-instance
+                                                              [{:oid test-user1-organization-oid :name {:fi "org1"}}
+                                                               group]))))))
 

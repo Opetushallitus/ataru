@@ -46,7 +46,8 @@
 
     :organization-service (component/using
                            (organization-service/new-organization-service)
-                           [:all-organization-groups-cache])
+                           [:organizations-hierarchy-cache
+                            :all-organization-groups-cache])
 
     :tarjonta-service (component/using
                        (tarjonta-service/new-tarjonta-service)
