@@ -25,6 +25,9 @@ export const lisaaLomake = () => {
 export const haeLomakkeenNimenSyote = () =>
   cy.get('[data-test-id=form-name-input]:visible')
 
+const siirryMuokkaamaanLomaketta = (formId: number) => () =>
+  cy.route('PUT', reitit.virkailija.haeLomakkeenMuuttamisenOsoite(formId))
+
 export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
   odota.odotaHttpPyyntoa(
     () =>
@@ -38,8 +41,24 @@ export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
         .type(name, { delay: asetukset.tekstikentanSyotonViive })
   )
 
+const koodistonValitsin = () =>
+  cy.get('[data-test-id=editor-form__select-koodisto-dropdown]:visible')
+
 export const haeLomakkeenEsikatseluLinkki = () =>
   cy.get('[data-test-id=application-preview-link-fi]:visible')
+
+export const valitseKoodisto = (koodistonNimi: string) =>
+  koodistonValitsin().select(koodistonNimi)
+
+export const naytaVastausvaihtoehdot = () =>
+  cy
+    .get('[data-test-id=editor-form__show_koodisto-values__link]:visible')
+    .click()
+
+export const vastausvaihtoehdot = () =>
+  cy
+    .get('[data-test-id=editor-form__multi-options-container')
+    .find('[data-test-id=editor-form__koodisto-field]')
 
 export const hakukohteet = {
   haeOtsikko: () => cy.get('[data-test-id=hakukohteet-header-label]:visible'),
@@ -79,18 +98,22 @@ export const komponentinLisays = {
   haeLisaaArvosanatLinkki: () =>
     cy.get('[data-test-id=component-toolbar-arvosanat]:visible'),
 
-  lisaaArvosanat: (formId: number) =>
-    odota.odotaHttpPyyntoa(
-      () =>
-        cy.route(
-          'PUT',
-          reitit.virkailija.haeLomakkeenMuuttamisenOsoite(formId)
-        ),
-      () => {
-        komponentinLisays.hover()
-        return komponentinLisays.haeLisaaArvosanatLinkki().click()
-      }
-    ),
+  haeElementinLisaysLinkki: (elementinTeksti: string) =>
+    cy
+      .get('[data-test-id=component-toolbar]:visible')
+      .contains(elementinTeksti),
+
+  lisaaArvosanat: (formId: number) => {
+    return odota.odotaHttpPyyntoa(siirryMuokkaamaanLomaketta(formId), () => {
+      komponentinLisays.hover()
+      return komponentinLisays.haeLisaaArvosanatLinkki().click()
+    })
+  },
+  lisaaElementti: (formId: number, elementinTeksti: string) =>
+    odota.odotaHttpPyyntoa(siirryMuokkaamaanLomaketta(formId), () => {
+      komponentinLisays.hover()
+      return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
+    }),
 }
 
 export const arvosanat = {
@@ -126,4 +149,22 @@ export const arvosanat = {
           () => arvosanat.haeVahvistaPoistaOsioNappi().click()
         )
       ),
+}
+
+export const painikeYksiValittavissa = {
+  haeKysymysTeksti: () =>
+    cy
+      .get(
+        '[data-test-id=editor-form__singleChoice-component-question-wrapper]:visible'
+      )
+      .find('input'),
+  haeElementinOtsikko: () =>
+    cy.get(
+      '[data-test-id=editor-form__singleChoice-component-main-label]:visible'
+    ),
+  syotaKysymysTeksti: (teksti: string) =>
+    painikeYksiValittavissa
+      .haeKysymysTeksti()
+      .clear()
+      .type(teksti, { delay: asetukset.tekstikentanSyotonViive }),
 }
