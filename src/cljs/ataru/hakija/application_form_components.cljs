@@ -157,7 +157,7 @@
     (->> options
          first
          :followups
-         (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
+         (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
 
 (defn- text-field-followups-container [followups idx]
   (when (not-empty followups)
