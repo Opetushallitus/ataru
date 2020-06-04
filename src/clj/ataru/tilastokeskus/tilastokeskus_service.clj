@@ -18,7 +18,7 @@
   [haku application]
   (let [answers (-> application :content :answers util/answers-by-key)]
     (merge application
-           {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:key application))
+           {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:hakemus_oid application))
                                           ; This is a vector of vectors where index determines the country for each specific foreign base education
                                           ; This isn't the pretties way to implement this, but it is the easiest for now.
             :pohjakoulutus_kk_ulk_country (some-> (get-in answers [:pohjakoulutus_kk_ulk--country :value]) first first)
