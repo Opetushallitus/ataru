@@ -36,21 +36,18 @@
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
-(defn- text-child-fields [children application lang question-group-id]
-  (for [child children]                                     ; TODO: visible? tarkastus kuten child-fields
-    ^{:key (str (:id child)
-                (when question-group-id
-                  (str "-" question-group-id)))}
-    [field child application lang question-group-id]))
+(declare child-fields)
 
 (defn- text-nested-container [selected-options application lang group-idx]
   [:div.application-handling__nested-container.application-handling__nested-container--top-level
-   (doall
-     (for [option selected-options]
-       ^{:key (:value option)}
-       [:div.application-handling__nested-container-option  ; TODO: visible? tarkastus kuten selectable:ssa?
-        (into [:div.application-handling__nested-container]
-              (text-child-fields (:followups option) application lang group-idx))]))])
+   (let [ui (subscribe [:state-query [:application :ui]])]
+     (doall
+       (for [option selected-options]
+         ^{:key (:value option)}
+         [:div.application-handling__nested-container-option
+          (when (some #(visible? ui %) (:followups option))
+            (into [:div.application-handling__nested-container]
+                  (child-fields (:followups option) application lang ui group-idx)))])))])
 
 (defn- text-readonly-text [field-descriptor values]
   [:div.application__readonly-text
