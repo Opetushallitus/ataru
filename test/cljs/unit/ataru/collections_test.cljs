@@ -36,9 +36,19 @@
 
 (deftest generates-missing-values-do-nothing-if-no-missing-values
   (let [fully-populated [{:value "5"} {:value "3"}]]
-    (is (= fully-populated (c/generate-missing-values fully-populated (constantly "generated"))))))
+    (is (= fully-populated (c/generate-missing-values fully-populated)))))
 
 (deftest generates-missing-values-when-values-are-missing
   (let [partially-populated [{:a 4} {:value "5"} {:b 234} {:value "3"}]
-        expected-value [{:a 4 :value "generated"} {:value "5"} {:b 234 :value "generated"} {:value "3"}]]
-    (is (= expected-value (c/generate-missing-values partially-populated (constantly "generated"))))))
+        expected-value [{:a 4 :value "6"} {:value "5"} {:b 234 :value "7"} {:value "3"}]]
+    (is (= expected-value (c/generate-missing-values partially-populated)))))
+
+(deftest generates-missing-values-when-only-zero-is-there
+  (let [partially-populated [{:a 4} {:value "0"} {:b 234}]
+        expected-value [{:a 4 :value "1"} {:value "0"} {:b 234 :value "2"}]]
+    (is (= expected-value (c/generate-missing-values partially-populated)))))
+
+(deftest generates-missing-values-starts-from-zero-if-there-are-no-values-at-all
+  (let [partially-populated [{:a 4 :value nil} {:b 234} {:value nil}]
+        expected-value [{:a 4 :value "0"} {:b 234 :value "1"} {:value "2"}]]
+    (is (= expected-value (c/generate-missing-values partially-populated)))))

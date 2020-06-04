@@ -53,7 +53,7 @@
   [field-descriptor]
   (if (nil? (:koodisto-source field-descriptor))
     (update field-descriptor :options
-            #(vec (collections/generate-missing-values % cu/new-uuid)))
+            #(vec (collections/generate-missing-values %)))
     field-descriptor))
 
 (reg-event-db

@@ -7,9 +7,13 @@
 (defn- plus? [sign]
   (not (minus? sign)))
 
-(defn- ->int [thestr]
-  #?(:clj  (Integer/parseInt thestr)
+(defn ->int [thestr]
+  #?(:clj  (try (Integer/parseInt thestr) (catch Exception e Double/NaN))
      :cljs (js/parseInt thestr 10)))
+
+(defn isNaN [thenumber]
+  #?(:clj  (Double/isNaN thenumber)
+     :cljs (js/isNaN thenumber)))
 
 (defn- greater-than-or-equal [[value-int value-dec min-int min-dec]]
   (or (> value-int min-int)
