@@ -1,5 +1,6 @@
 (ns ataru.hakija.application.field-visibility
-  (:require [clojure.set :as set]))
+  (:require [clojure.set :as set]
+            [clojure.string :as string]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
@@ -35,8 +36,8 @@
           db
           options))
 
-(defn- text-field-followups-are-visible []
-  (fn [_] true))
+(defn- non-empty-text-field-followups-are-visible [value]
+  (constantly (not (string/blank? value))))
 
 (defn- selected-option-followups-are-visible [value]
   (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
@@ -54,7 +55,7 @@
     (selected-option-followups-are-visible answer-value)
 
     (= "textField" (:fieldType field-descriptor))
-    (text-field-followups-are-visible)
+    (non-empty-text-field-followups-are-visible answer-value)
 
     :else
     (throw (ex-info "Unknown field type for followups visibility checking"

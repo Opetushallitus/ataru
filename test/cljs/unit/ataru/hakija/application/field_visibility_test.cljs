@@ -136,6 +136,17 @@
                                                                 :followups [{:id "jatkokysymys-0"}]}
                                                                {:value     "1"
                                                                 :followups [{:id "jatkokysymys-1"}]}]})))))
+  (testing "text field: empty answer, followup should not be visible:"
+    (is
+      (= {:kysymys      {0         {:visible? true}
+                         :visible? true}
+          :jatkokysymys {:visible? false}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value ""}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "textField"
+                                                   :options   [{:value     "0"
+                                                                :followups [{:id "jatkokysymys"}]}]})))))
   (testing "text field: followup visibility for selected hakukohde:"
     (are [selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}
