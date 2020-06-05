@@ -1,9 +1,8 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel Row VerticalAlignment Row$MissingCellPolicy]
+  (:import [org.apache.poi.ss.usermodel VerticalAlignment Row$MissingCellPolicy]
            [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell XSSFCellStyle])
+           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell])
   (:require [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.files.file-store :as file-store]
@@ -12,9 +11,9 @@
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clj-time.core :as t]
             [clj-time.format :as f]
+            [clojure.set :as set]
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
-            [clojure.java.io :refer [input-stream]]
             [ataru.application.review-states :as review-states]
             [ataru.application.application-states :as application-states]))
 
@@ -260,7 +259,7 @@
           (try
             (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
               (str filename " (" (util/size-bytes->str size) ")"))
-            (catch Exception e
+            (catch Exception _
               (util/non-blank-val (:internal-server-error virkailija-texts)
                                   [lang :fi :sv :en])))
           (not (empty? options))
@@ -573,7 +572,7 @@
                                                                             (set (:belongs-to-hakukohteet form-field))
                                                                             selected-hakukohde)
                                                                           (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
-                                                                            (-> (clojure.set/intersection
+                                                                            (-> (set/intersection
                                                                                   (set (:belongs-to-hakukohderyhma form-field))
                                                                                   (set hakukohderyhmas))
                                                                                 empty?
