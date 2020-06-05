@@ -1,8 +1,9 @@
 (ns ataru.log.audit-log
-  (:require [ataru.util.app-utils :as app-utils]
-            [ataru.config.core :refer [config]]
+  (:require [ataru.config.core :refer [config]]
             [clojure.data :refer [diff]]
-            [clj-timbre-auditlog.audit-log :as cta-audit-log])
+            [clojure.set]
+            [clj-timbre-auditlog.audit-log :as cta-audit-log]
+            [environ.core :refer [env]])
   (:import [fi.vm.sade.auditlog
             Operation
             Changes$Builder
@@ -25,17 +26,13 @@
 (def operation-login (create-operation "kirjautuminen"))
 
 (defn- create-audit-logger []
-  (let [service-name     (case (app-utils/get-app-id)
-                           :virkailija "ataru-editori"
-                           :hakija "ataru-hakija"
-                           nil)
-        base-path        (case (app-utils/get-app-id)
-                           :virkailija (-> config :log :virkailija-base-path)
-                           :hakija (-> config :log :hakija-base-path))
-        application-type (case (app-utils/get-app-id)
-                           :virkailija ApplicationType/VIRKAILIJA
-                           :hakija ApplicationType/OPPIJA
-                           ApplicationType/BACKEND)]
+  (let [service-name     (:app env)
+        base-path        (case service-name
+                           "ataru-editori" (-> config :log :virkailija-base-path)
+                           "ataru-hakija"  (-> config :log :hakija-base-path))
+        application-type (case service-name
+                           "ataru-editori" ApplicationType/VIRKAILIJA
+                           "ataru-hakija"  ApplicationType/OPPIJA)]
     (cta-audit-log/create-audit-logger service-name base-path application-type)))
 
 (defrecord AtaruAuditLogger [auditlog])
@@ -50,8 +47,6 @@
 (defn- map-or-vec? [x]
   (or (map? x)
       (vector? x)))
-
-(def ^:private not-blank? (comp not clojure.string/blank?))
 
 (defn- path-> [p k]
   (str (when p (str p "."))

@@ -1,14 +1,10 @@
 (ns ataru.organization-service.organization-service
-  (:require
-   [clojure.string :refer [join]]
-   [com.stuartsierra.component :as component]
-   [ataru.cache.cache-service :as cache]
-   [ataru.config.core :refer [config]]
-   [clojure.core.cache :as ccache]
-   [medley.core :refer [map-kv]]
-   [ataru.organization-service.organization-client :as org-client]))
+  (:require [clojure.string :as s]
+            [com.stuartsierra.component :as component]
+            [ataru.cache.cache-service :as cache]
+            [ataru.config.core :refer [config]]
+            [ataru.organization-service.organization-client :as org-client]))
 
-(def all-orgs-cache-time-to-live (* 2 60 1000))
 (def group-oid-prefix "1.2.246.562.28")
 
 (defn unknown-group [oid] {:oid oid :name {:fi "Tuntematon ryhmä"} :type :group})
@@ -20,21 +16,11 @@
     "Gets all hakukohde groups")
   (get-organizations-for-oids [this organization-oids]))
 
-(defn get-from-cache-or-real-source [cache-instance cache-key get-from-source-fn]
-  (let [item (delay (get-from-source-fn))]
-    (ccache/lookup (swap! cache-instance
-                          #(if (ccache/has? % cache-key)
-                             (ccache/hit % cache-key)
-                             (ccache/miss % cache-key @item)))
-                   cache-key)))
-
-(defn get-orgs-from-cache-or-client [all-orgs-cache direct-oids]
-  (let [oids-key  (join "-" direct-oids)
-        cache-key (if (clojure.string/blank? oids-key) "all-orgs" oids-key)]
-    (get-from-cache-or-real-source
-      all-orgs-cache
-      cache-key
-      #(mapcat org-client/get-organizations direct-oids))))
+(defn get-organization-hierarchies
+  [organizations-hierarchy-cache direct-oids]
+  (mapcat (fn [org-oid]
+            (cache/get-from organizations-hierarchy-cache org-oid))
+          direct-oids))
 
 (defn group-oid? [oid] (clojure.string/starts-with? oid group-oid-prefix))
 
@@ -43,7 +29,7 @@
     (map #(select-keys % [:oid :name :hakukohderyhma? :active?]) hakukohde-groups)))
 
 ;; The real implementation for Organization service
-(defrecord IntegratedOrganizationService [all-organization-groups-cache]
+(defrecord IntegratedOrganizationService [organizations-hierarchy-cache all-organization-groups-cache]
   component/Lifecycle
   OrganizationService
 
@@ -55,8 +41,8 @@
   (get-all-organizations [this direct-organizations]
     (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations)
           ;; Only fetch hierarchy for actual orgs, not groups:
-          flattened-hierarchy (get-orgs-from-cache-or-client
-                               (:all-orgs-cache this)
+          flattened-hierarchy (get-organization-hierarchies
+                               organizations-hierarchy-cache
                                (map :oid orgs))]
       ;; Include groups as-is in the result:
       (concat groups flattened-hierarchy)))
@@ -68,12 +54,9 @@
           groups      (map #(get all-groups % (unknown-group %)) group-oids)]
       (concat normal-orgs groups)))
 
-  (start [this]
-    (-> this
-        (assoc :all-orgs-cache (atom (ccache/ttl-cache-factory {} :ttl all-orgs-cache-time-to-live)))))
+  (start [this] this)
 
-  (stop [this]
-    (assoc this :all-orgs-cache nil)))
+  (stop [this] this))
 
 (def fake-org-by-oid
   {"1.2.246.562.10.11"          {:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}
@@ -111,4 +94,4 @@
 (defn new-organization-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeOrganizationService)
-    (->IntegratedOrganizationService nil)))
+    (->IntegratedOrganizationService nil nil)))

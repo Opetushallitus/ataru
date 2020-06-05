@@ -9,8 +9,8 @@
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
     "cypress:run:travis": "cypress run -C oph-configuration/cypress.travis.json --browser chrome --headless",
-    "lint:clj": "clj-kondo --config .clj-kondo.config.edn --lint src",
-    "lint:clj:lint-staged": "clj-kondo --config .clj-kondo.config.edn --lint",
+    "lint:clj": "clj-kondo --lint src",
+    "lint:clj:lint-staged": "clj-kondo --lint",
     "lint:js": "eslint '**/*.{ts,js}'",
     "tsc:type-check": "./bin/type-check.sh"
   },

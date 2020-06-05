@@ -1,9 +1,8 @@
 (ns ataru.organization-service.organization-client
-  (:require [ataru.cas.client :as cas-client]
-            [ataru.config.core :refer [config]]
-            [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
+            [clojure.string :as s]
             [taoensso.timbre :as log]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
@@ -60,7 +59,7 @@
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations
    The root organization is the first element"
   [root-organization-oid]
-  (let [url      (if (or (clojure.string/blank? root-organization-oid) (= root-organization-oid oph-organization))
+  (let [url      (if (or (s/blank? root-organization-oid) (= root-organization-oid oph-organization))
                    (resolve-url :organisaatio-service.root-hierarchy)
                    (resolve-url :organisaatio-service.plain-hierarchy root-organization-oid))
         response (http-util/do-get url)]
@@ -83,7 +82,7 @@
   "Get organization by oid or number."
   [oid-or-number]
   (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
-        {:keys [status headers body error] :as resp} (http-util/do-get url)]
+        {:keys [status body]} (http-util/do-get url)]
     (if (= 200 status)
       (json/parse-string body true)
       (log/error (str "Couldn't fetch organization by number from url: " url)))))

@@ -3,8 +3,6 @@ set -e
 
 CONFIG=${CONFIG:-config/dev.edn}
 
-export APP=virkailija
-
 echo "java version:"
 java -version
 

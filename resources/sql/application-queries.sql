@@ -322,11 +322,17 @@ WHERE a.key = :application_key;
 SELECT
   a.haku,
   a.hakukohde,
-  lf.organization_oid
-FROM latest_applications as a
-JOIN forms AS f ON f.id = a.form_id
-JOIN latest_forms AS lf on lf.key = f.key
-WHERE a.key IN (:application_keys);
+  (SELECT organization_oid
+   FROM forms
+   WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
+   ORDER BY id DESC
+   LIMIT 1) AS organization_oid
+FROM applications AS a
+LEFT JOIN applications AS la
+  ON la.key = a.key AND
+     la.id > a.id
+WHERE la.id IS NULL AND
+      a.key IN (:application_keys);
 
 -- name: yesql-persons-applications-authorization-data
 SELECT a.haku,

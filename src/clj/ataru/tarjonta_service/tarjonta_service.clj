@@ -1,17 +1,10 @@
 (ns ataru.tarjonta-service.tarjonta-service
-  (:require
-   [ataru.tarjonta-service.tarjonta-client :as client]
-   [ataru.organization-service.organization-service :as organization-service]
-   [ataru.organization-service.organization-client :refer [oph-organization]]
-   [com.stuartsierra.component :as component]
-   [ataru.config.core :refer [config]]
-   [ataru.cache.cache-service :as cache]
-   [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku get-hakukohde]]
-   [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
-
-(defn- parse-search-result
-  [search-result]
-  (mapcat :tulokset (:tulokset search-result)))
+  (:require [ataru.organization-service.organization-service :as organization-service]
+            [ataru.organization-service.organization-client :refer [oph-organization]]
+            [ataru.config.core :refer [config]]
+            [ataru.cache.cache-service :as cache]
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku get-hakukohde]]
+            [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
 (defn fetch-or-cached-hakukohde-search
   [hakukohde-search-cache haku-oid organization-oid]
