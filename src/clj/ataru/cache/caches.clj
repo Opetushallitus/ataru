@@ -21,7 +21,8 @@
 (def caches
   [[:get-haut-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-get-haut"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [key]
                         (case key
                           :haut             (application-store/get-haut)
@@ -30,19 +31,22 @@
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:organizations-hierarchy-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [key] (organization-client/get-organizations key)))
+     {:name          "in-memory-organizations-hierarchy"
+      :loader        (cache/->FunctionCacheLoader
+                      (fn [key] (organization-client/get-organizations key)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [60 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-all-organization-groups"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [_] (organization-client/get-groups)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:localizations-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
+     {:name          "in-memory-localizations"
+      :loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
 
@@ -264,7 +268,8 @@
      {:redis-cache :koodisto-redis-cache})]
    [:form-by-id-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-form-by-id"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [key] (form-store/fetch-by-id (Integer/valueOf key))))
       :size          10
       :expires-after [3 TimeUnit/DAYS]

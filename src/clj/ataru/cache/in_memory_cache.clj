@@ -1,12 +1,14 @@
 (ns ataru.cache.in-memory-cache
   (:require [com.stuartsierra.component :as component]
             [ataru.cache.cache-service :as cache])
-  (:import [com.github.benmanes.caffeine.cache
+  (:import java.util.concurrent.TimeUnit
+           [com.github.benmanes.caffeine.cache
             CacheLoader
             Caffeine
             LoadingCache]))
 
 (defrecord InMemoryCache [loader
+                          name
                           size
                           expires-after
                           refresh-after
@@ -29,6 +31,14 @@
       this))
   (stop [this]
     (assoc this :caffeine nil))
+
+  cache/Stats
+  (stats [_]
+    (let [caffeine-stats (.stats caffeine)]
+      {:average-load-penalty (.toMillis TimeUnit/NANOSECONDS
+                                        (.averageLoadPenalty caffeine-stats))
+       :hit-rate             (.hitRate caffeine-stats)}))
+
   cache/Cache
   (get-from [this key]
     (.get caffeine key))
