@@ -17,6 +17,7 @@
    [reagent.core :as r]
    [reagent.ratom :refer-macros [reaction]]
    [ataru.component-data.module.module-spec :as module-spec]
+   [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
    [ataru.virkailija.editor.components.text-component :as text-component]))
 
@@ -454,60 +455,6 @@
        (map-indexed (partial koodisto-field component)
                     languages)])))
 
-(defn info-addon
-  "Info text which is added to an existing component"
-  [path]
-  (let [id               (util/new-uuid)
-        checked?         (reaction (some? @(subscribe [:editor/get-component-value path :params :info-text :label])))
-        collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages        (subscribe [:editor/languages])
-        component-locked?     (subscribe [:editor/component-locked? path])]
-    (fn [path]
-      [:div.editor-form__info-addon-wrapper
-       [:div.editor-form__info-addon-checkbox
-        [:input {:id        id
-                 :type      "checkbox"
-                 :checked   @checked?
-                 :disabled  @component-locked?
-                 :on-change (fn [event]
-                              (dispatch [:editor/set-component-value
-                                         (if (-> event .-target .-checked) {:fi "" :sv "" :en ""} nil)
-                                         path :params :info-text :label]))}]
-        [:label
-         {:for   id
-          :class (when @component-locked? "disabled")}
-         @(subscribe [:editor/virkailija-translation :info-addon])]]
-       (when @checked?
-         (let [collapsed-id (util/new-uuid)]
-           [:div.editor-form__info-addon-checkbox
-            [:input {:type      "checkbox"
-                     :id        collapsed-id
-                     :checked   (boolean @collapse-checked)
-                     :disabled  @component-locked?
-                     :on-change (fn [event]
-                                  (dispatch [:editor/set-component-value
-                                             (-> event .-target .-checked)
-                                             path :params :info-text-collapse]))}]
-            [:label
-             {:for   collapsed-id
-              :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-             @(subscribe [:editor/virkailija-translation :collapse-info-text])]]))
-       (when @checked?
-         [:div.editor-form__info-addon-inputs
-          (->> (input-fields-with-lang-component/input-fields-with-lang
-                (fn [lang]
-                  [input-field
-                   (concat path [:params :info-text])
-                   lang
-                   #(dispatch-sync [:editor/set-component-value
-                                    (-> % .-target .-value)
-                                    path :params :info-text :label lang])
-                   {:tag :textarea}])
-                @languages)
-               (map (fn [field]
-                      (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help)]])))
-               (doall))])])))
-
 (defn text-field [initial-content followups path]
   [text-component/text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-field])
@@ -725,7 +672,7 @@
                   {:for allow-invalid-koodis-id}
                   @(subscribe [:editor/virkailija-translation :allow-invalid-koodis])]])]
              [belongs-to-hakukohteet path initial-content]]]
-           [info-addon path initial-content]
+           [info-addon-component/info-addon path initial-content]
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-options_wrapper
              (if (some? @options-koodisto)
@@ -951,7 +898,7 @@
           [:div.editor-form__checkbox-wrapper
            [repeater-checkbox path content]]
           [belongs-to-hakukohteet path content]]
-         [info-addon path]
+         [info-addon-component/info-addon path]
          [:div.editor-form__adjacent-fieldset-container
           children
           (when (and (not @component-locked?)
