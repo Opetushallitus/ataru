@@ -74,7 +74,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-hakukohde"
-       :size                6000
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
@@ -105,7 +104,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-haku"
-       :size                100
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :haku-redis-cache})]
@@ -127,7 +125,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-kouta-hakus-by-form-key"
-       :size                100
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :kouta-hakus-by-form-key-redis-cache})]
@@ -179,7 +176,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-koulutus"
-       :size                6000
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [7 TimeUnit/MINUTES]})
      {:redis-cache :koulutus-redis-cache})]
