@@ -10,6 +10,7 @@
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
     [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
     [ataru.virkailija.editor.components.text-header-component :as text-header-component]
+    [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
     [cljs.core.match :refer-macros [match]]
     [clojure.string :as string]
     [reagent.core :as r]
@@ -17,29 +18,6 @@
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
-
-(defn- validator-checkbox
-  [path initial-content key disabled? on-change]
-  (let [id         (util/new-uuid)
-        disabled?  (or disabled?
-                       @(subscribe [:editor/component-locked? path]))
-        validators (-> initial-content :validators set)]
-    [:div.editor-form__checkbox-container
-     [:input.editor-form__checkbox {:type      "checkbox"
-                                    :id        id
-                                    :checked   (contains? validators (name key))
-                                    :disabled  disabled?
-                                    :on-change (fn [event]
-                                                 (let [checked (boolean (-> event .-target .-checked))]
-                                                   (when on-change
-                                                     (on-change checked))
-                                                   (dispatch [(if checked
-                                                                :editor/add-validator
-                                                                :editor/remove-validator) (name key) path])))}]
-     [:label.editor-form__checkbox-label
-      {:for   id
-       :class (when disabled? "editor-form__checkbox-label--disabled")}
-      @(subscribe [:editor/virkailija-translation key])]]))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -236,7 +214,7 @@
                 :disabled  @component-locked?
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
-           [validator-checkbox path initial-content :required (required-disabled initial-content)]
+           [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?

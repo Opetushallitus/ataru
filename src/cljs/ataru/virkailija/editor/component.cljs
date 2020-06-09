@@ -22,33 +22,11 @@
    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
    [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
    [ataru.virkailija.editor.components.text-component :as text-component]
-   [ataru.virkailija.editor.components.text-header-component :as text-header-component]))
+   [ataru.virkailija.editor.components.text-header-component :as text-header-component]
+   [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
-
-(defn- validator-checkbox
-  [path initial-content key disabled? on-change]
-  (let [id         (util/new-uuid)
-        disabled?  (or disabled?
-                       @(subscribe [:editor/component-locked? path]))
-        validators (-> initial-content :validators set)]
-    [:div.editor-form__checkbox-container
-     [:input.editor-form__checkbox {:type      "checkbox"
-                                    :id        id
-                                    :checked   (contains? validators (name key))
-                                    :disabled  disabled?
-                                    :on-change (fn [event]
-                                                 (let [checked (boolean (-> event .-target .-checked))]
-                                                   (when on-change
-                                                     (on-change checked))
-                                                   (dispatch [(if checked
-                                                                :editor/add-validator
-                                                                :editor/remove-validator) (name key) path])))}]
-     [:label.editor-form__checkbox-label
-      {:for   id
-       :class (when disabled? "editor-form__checkbox-label--disabled")}
-      @(subscribe [:editor/virkailija-translation key])]]))
 
 (defn- prevent-default
   [event]
@@ -257,9 +235,9 @@
                languages
                :header? true)]
              [:div.editor-form__checkbox-wrapper
-              [validator-checkbox path initial-content :required (required-disabled initial-content)]
+              [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
               (when @support-selection-limit?
-                [validator-checkbox path initial-content :selection-limit nil
+                [validator-checkbox-component/validator-checkbox path initial-content :selection-limit nil
                  #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])])
               (when (some? @options-koodisto)
                 [:div.editor-form__checkbox-container
@@ -545,7 +523,7 @@
            @languages
            :header? true)]
          [:div.editor-form__checkbox-wrapper
-          [validator-checkbox path content :required (required-disabled content)]
+          [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
           [text-component/text-component-type-selector (:id content) path radio-group-id]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
@@ -675,6 +653,6 @@
              :on-change   update-deadline}]]
           (when-not @mail-attachment?
             [:div.editor-form__checkbox-wrapper
-             [validator-checkbox path content :required (required-disabled content)]])
+             [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]])
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
          [attachment-textarea path]]]])))
