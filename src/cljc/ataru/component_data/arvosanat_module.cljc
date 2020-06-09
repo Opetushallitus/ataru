@@ -40,14 +40,15 @@
    (s/optional-key :children) [s/Any]})
 
 (s/defschema ArvosanatTaulukko
-  {:id         s/Str
-   :fieldClass (s/eq "wrapperElement")
-   :fieldType  (s/eq "fieldset")
-   :children   [OppiaineenArvosana]
-   :metadata   element-metadata-schema/ElementMetadata
-   :label      localized-schema/LocalizedString
-   :version    ArvosanatVersio
-   :params     {}})
+  {:id              s/Str
+   :fieldClass      (s/eq "wrapperElement")
+   :fieldType       (s/eq "fieldset")
+   :children        [OppiaineenArvosana]
+   :child-validator (s/eq :oppiaine-a1-or-a2-component)
+   :metadata        element-metadata-schema/ElementMetadata
+   :label           localized-schema/LocalizedString
+   :version         ArvosanatVersio
+   :params          {}})
 
 (s/defn concat-labels
   [separator :- s/Str
@@ -287,9 +288,10 @@
            children]} :- {:metadata element-metadata-schema/ElementMetadata
                           :children [OppiaineenArvosana]}]
   (merge (component/form-section metadata)
-         {:id       "arvosanat-taulukko"
-          :version  "oppiaineen-arvosanat"
-          :children children}))
+         {:id              "arvosanat-taulukko"
+          :version         "oppiaineen-arvosanat"
+          :children        children
+          :child-validator :oppiaine-a1-or-a2-component}))
 
 (s/defn arvosanat
   [{:keys [type]} :- {:type (s/enum :peruskoulu)}
