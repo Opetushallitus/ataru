@@ -16,7 +16,8 @@
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
    [reagent.ratom :refer-macros [reaction]]
-   [ataru.component-data.module.module-spec :as module-spec]))
+   [ataru.component-data.module.module-spec :as module-spec]
+   [ataru.virkailija.editor.components.text-component :as text-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -526,221 +527,13 @@
                       (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help)]])))
                (doall))])])))
 
-(defn- get-val [event]
-  (-> event .-target .-value))
-
-(defn- decimal-places-selector [component-id path]
-  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
-        component-locked?   (subscribe [:editor/component-locked? path])
-        min-value      (subscribe [:editor/get-range-value component-id :min-value path])
-        max-value      (subscribe [:editor/get-range-value component-id :max-value path])
-        min-invalid?   (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
-        max-invalid?   (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
-        min-id         (util/new-uuid)
-        max-id         (util/new-uuid)
-        format-range   (fn [value]
-                         (clojure.string/replace (clojure.string/trim (or value "")) "." ","))]
-    (fn [component-id path]
-      [:div
-       [:div.editor-form__additional-params-container
-        [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
-        [:select.editor-form__decimal-places-selector
-         {:value     (or @decimal-places "")
-          :disabled  @component-locked?
-          :on-change (fn [e]
-                       (let [new-val (get-val e)
-                             value   (when (not-empty new-val)
-                                       (js/parseInt new-val))]
-                         (dispatch [:editor/set-decimals-value component-id value path])))}
-         [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
-         (doall
-           (for [i (range 1 5)]
-             [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]]
-       [:div.editor-form__additional-params-container
-        [:label.editor-form__range-label
-         {:for   min-id
-          :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         @(subscribe [:editor/virkailija-translation :numeric-range])]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        min-id
-          :class     (when @min-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @min-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
-        [:span "—"]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        max-id
-          :class     (when @max-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @max-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
-
-(defn- text-component-type-selector [_ path _]
-  (let [id           (util/new-uuid)
-        checked?     (subscribe [:editor/get-component-value path :params :numeric])
-        component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path _]
-      [:div
-       [:div.editor-form__checkbox-container
-        [:input.editor-form__checkbox
-         {:type      "checkbox"
-          :id        id
-          :checked   (or @checked? false)
-          :disabled  @component-locked?
-          :on-change (fn [event]
-                       (let [checked-now? (-> event .-target .-checked)]
-                         (dispatch [:editor/set-component-value checked-now? path :params :numeric])
-                         (dispatch [(if checked-now?
-                                      :editor/add-validator
-                                      :editor/remove-validator) "numeric" path])
-                         (when-not checked-now?
-                           (dispatch [:editor/set-decimals-value component-id nil path]))))}]
-        [:label.editor-form__checkbox-label
-         {:for   id
-          :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         @(subscribe [:editor/virkailija-translation :only-numeric])]]
-       (when @checked?
-         [decimal-places-selector component-id path])])))
-
-(defn- button-label-class
-  [button-name component-locked?]
-  (let [button-class (match button-name
-                       "S" "editor-form__button--left-edge"
-                       "L" "editor-form__button--right-edge"
-                       :else nil)]
-    (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
-
-(declare custom-answer-options)
-
-(defn text-field-option-followups-wrapper
-  [options followups path show-followups]
-  (let [option-count (count options)]
-    (when (or (nil? @show-followups)
-              (not (= (count @show-followups) option-count)))
-      (reset! show-followups (vec (replicate option-count true))))
-    (when (< 0 option-count)
-      (let [option-index 0
-            followups    (nth followups option-index)]
-        [:div.editor-form__text-field-option-followups-wrapper
-         [followup-question-overlay option-index followups path show-followups]]))))
-
-(defn- text-field-has-an-option [_ _ _ _]
-  (let [id (util/new-uuid)]
-    (fn [value followups path component-locked?]
-      (let [option-index 0
-            has-options? (not (empty? (:options value)))
-            repeatable?  (-> value :params :repeatable boolean)
-            disabled?    (or component-locked?
-                             (not (empty? (first followups)))
-                             repeatable?)]
-        [:div.editor-form__text-field-checkbox-container
-         [:input.editor-form__text-field-checkbox
-          {:id        id
-           :type      "checkbox"
-           :checked   has-options?
-           :disabled  disabled?
-           :on-change (fn [evt]
-                        (when-not disabled?
-                          (.preventDefault evt)
-                          (if (-> evt .-target .-checked)
-                            (dispatch [:editor/add-text-field-option path])
-                            (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
-         [:label.editor-form__text-field-checkbox-label
-          {:for   id
-           :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
-          @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
-
-(defn- text-field-option-followups
-  [value followups path show-followups]
-  [:div.editor-form__component-row-wrapper
-   [text-field-option-followups-wrapper (:options value) followups path show-followups]])
-
-(defn text-component [_ _ path & {:keys [header-label]}]
-  (let [languages         (subscribe [:editor/languages])
-        value             (subscribe [:editor/get-component-value path])
-        sub-header        (subscribe [:editor/get-component-value path :label])
-        size              (subscribe [:editor/get-component-value path :params :size])
-        max-length        (subscribe [:editor/get-component-value path :params :max-length])
-        radio-group-id    (util/new-uuid)
-        radio-buttons     ["S" "M" "L"]
-        radio-button-ids  (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        max-length-change (fn [new-val]
-                            (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
-        size-change       (fn [new-size]
-                            (dispatch-sync [:editor/set-component-value new-size path :params :size]))
-        text-area?        (= "Tekstialue" header-label)
-        component-locked? (subscribe [:editor/component-locked? path])
-        show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
-    (fn [initial-content followups path & {:keys [header-label _ size-label]}]
-      [:div.editor-form__component-wrapper
-       [text-header (:id initial-content) header-label path (:metadata initial-content)
-        :sub-header @sub-header]
-       [component-content
-        path;(:id initial-content)
-        [:div
-         [:div.editor-form__component-row-wrapper
-          [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
-            [copy-link (:id initial-content)]]
-           (input-fields-with-lang
-            (fn [lang]
-              [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
-            @languages
-            :header? true)]
-          [:div.editor-form__button-wrapper
-           [:header.editor-form__component-item-header size-label]
-           [:div.editor-form__button-group
-            (doall (for [[btn-name btn-id] radio-button-ids]
-                     ^{:key (str btn-id "-radio")}
-                     [:div
-                      [:input.editor-form__button
-                       {:type      "radio"
-                        :value     btn-name
-                        :checked   (or
-                                    (= @size btn-name)
-                                    (and
-                                     (nil? @size)
-                                     (= "M" btn-name)))
-                        :name      radio-group-id
-                        :id        btn-id
-                        :disabled  @component-locked?
-                        :on-change (fn [] (size-change btn-name))}]
-                      [:label.editor-form__button-label
-                       {:for   btn-id
-                        :class (button-label-class btn-name @component-locked?)}
-                       btn-name]]))]
-           (when text-area?
-             [:div.editor-form__max-length-container
-              [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :max-characters])]
-              [:input.editor-form__text-field.editor-form__text-field-auto-width
-               {:value     @max-length
-                :disabled  @component-locked?
-                :on-change #(max-length-change (get-val %))}]])]
-          [:div.editor-form__checkbox-wrapper
-           [validator-checkbox path initial-content :required (required-disabled initial-content)]
-           (when-not text-area?
-             [repeater-checkbox path initial-content])
-           (when-not text-area?
-             [text-component-type-selector (:id initial-content) path radio-group-id])]
-          [belongs-to-hakukohteet path initial-content]]
-         [:div.editor-form__text-field-checkbox-wrapper
-          [info-addon path]
-          (when-not text-area?
-            [text-field-has-an-option @value followups path @component-locked?])]
-         (when-not text-area?
-           [text-field-option-followups @value followups path show-followups])]]])))
-
 (defn text-field [initial-content followups path]
-  [text-component initial-content followups path
+  [text-component/text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-field])
    :size-label @(subscribe [:editor/virkailija-translation :text-field-size])])
 
 (defn text-area [initial-content followups path]
-  [text-component initial-content followups path
+  [text-component/text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-area])
    :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 
@@ -1209,7 +1002,7 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox path content :required (required-disabled content)]
-          [text-component-type-selector (:id content) path radio-group-id]]
+          [text-component/text-component-type-selector (:id content) path radio-group-id]]
         [belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
