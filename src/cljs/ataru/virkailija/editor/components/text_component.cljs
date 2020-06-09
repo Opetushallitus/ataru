@@ -107,9 +107,7 @@
                             :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(declare custom-answer-options)
-
-(defn text-field-option-followups-wrapper
+(defn- text-field-option-followups-wrapper
   [options followups path show-followups]
   (let [option-count (count options)]
     (when (or (nil? @show-followups)
