@@ -8,6 +8,7 @@
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
+    [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
     [ataru.virkailija.editor.components.text-header-component :as text-header-component]
     [cljs.core.match :refer-macros [match]]
     [clojure.string :as string]
@@ -39,26 +40,6 @@
       {:for   id
        :class (when disabled? "editor-form__checkbox-label--disabled")}
       @(subscribe [:editor/virkailija-translation key])]]))
-
-(defn- repeater-checkbox
-  [path initial-content]
-  (let [id                (util/new-uuid)
-        checked?          (-> initial-content :params :repeatable boolean)
-        has-options?      (not (empty? (:options initial-content)))
-        component-locked? @(subscribe [:editor/component-locked? path])
-        disabled?         (or has-options? component-locked?)]
-    [:div.editor-form__checkbox-container
-     [:input.editor-form__checkbox {:type      "checkbox"
-                                    :id        id
-                                    :checked   checked?
-                                    :disabled  disabled?
-                                    :on-change (fn [event]
-                                                 (when (not disabled?)
-                                                   (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable])))}]
-     [:label.editor-form__checkbox-label
-      {:for   id
-       :class (when disabled? "editor-form__checkbox-label--disabled")}
-      @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -257,7 +238,7 @@
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox path initial-content :required (required-disabled initial-content)]
            (when-not text-area?
-             [repeater-checkbox path initial-content])
+             [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]

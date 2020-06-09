@@ -20,6 +20,7 @@
    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
+   [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
    [ataru.virkailija.editor.components.text-component :as text-component]
    [ataru.virkailija.editor.components.text-header-component :as text-header-component]))
 
@@ -48,26 +49,6 @@
       {:for   id
        :class (when disabled? "editor-form__checkbox-label--disabled")}
       @(subscribe [:editor/virkailija-translation key])]]))
-
-(defn- repeater-checkbox
-  [path initial-content]
-  (let [id                (util/new-uuid)
-        checked?          (-> initial-content :params :repeatable boolean)
-        has-options?      (not (empty? (:options initial-content)))
-        component-locked? @(subscribe [:editor/component-locked? path])
-        disabled?         (or has-options? component-locked?)]
-    [:div.editor-form__checkbox-container
-     [:input.editor-form__checkbox {:type      "checkbox"
-                                    :id        id
-                                    :checked   checked?
-                                    :disabled  disabled?
-                                    :on-change (fn [event]
-                                                 (when (not disabled?)
-                                                   (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable])))}]
-     [:label.editor-form__checkbox-label
-      {:for   id
-       :class (when disabled? "editor-form__checkbox-label--disabled")}
-      @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- prevent-default
   [event]
@@ -531,7 +512,7 @@
             @languages
             :header? true)]
           [:div.editor-form__checkbox-wrapper
-           [repeater-checkbox path content]]
+           [repeater-checkbox-component/repeater-checkbox path content]]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
          [info-addon-component/info-addon path]
          [:div.editor-form__adjacent-fieldset-container
