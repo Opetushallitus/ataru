@@ -2,6 +2,7 @@
   (:require
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
     [reagent.core :as r]
     [reagent.ratom :refer-macros [reaction]]))
@@ -9,26 +10,6 @@
 (defn- prevent-default
   [event]
   (.preventDefault event))
-
-(defn- markdown-help []
-  [:div.editor-form__markdown-help
-   [:div
-    [:div.editor-form__markdown-help-arrow-left]
-    [:div.editor-form__markdown-help-content
-     [:span @(subscribe [:editor/virkailija-translation :md-help-title])]
-     [:br]
-     [:span @(subscribe [:editor/virkailija-translation :md-help-bold])]
-     [:br]
-     [:span @(subscribe [:editor/virkailija-translation :md-help-cursive])]
-     [:br]
-     [:span @(subscribe [:editor/virkailija-translation :md-help-link])]
-     [:br]
-     [:a {:href          "https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet"
-          :target        "_blank"
-          :on-mouse-down (fn [evt]
-                           (let [url (.getAttribute (-> evt .-target) "href")]
-                             (.open js/window url "_blank")))}
-      @(subscribe [:editor/virkailija-translation :md-help-more])]]]])
 
 (defn- input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
                                           :or   {tag :input}}]
@@ -108,6 +89,6 @@
                     {:tag :textarea}])
                  @languages)
                (map (fn [field]
-                      (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help)]])))
+                      (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help-component/markdown-help)]])))
                (doall))])])))
 
