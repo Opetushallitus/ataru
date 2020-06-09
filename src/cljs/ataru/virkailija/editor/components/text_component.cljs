@@ -3,6 +3,7 @@
     [ataru.application-common.application-field-common :refer [copy-link]]
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
+    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.temporal :as temporal]
     [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
     [cljs.core.match :refer-macros [match]]
@@ -377,26 +378,6 @@
                                 :disabled     @component-locked?
                                 :data-test-id "tekstikenttä-kysymys"}])})))
 
-(defn- add-multi-lang-class [field-spec]
-  (let [multi-lang-class "editor-form__text-field-wrapper--with-label"]
-    (if (map? (last field-spec))
-      (assoc-in field-spec [(dec (count field-spec)) :class] multi-lang-class)
-      (conj field-spec {:class multi-lang-class}))))
-
-(defn- input-fields-with-lang [field-fn languages & {:keys [header?] :or {header? false}}]
-  (let [multiple-languages? (> (count languages) 1)]
-    (map-indexed (fn [idx lang]
-                   (let [field-spec (field-fn lang)]
-                     ^{:key (str "option-" lang "-" idx)}
-                     [:div.editor-form__text-field-container
-                      (when-not header?
-                        {:class "editor-form__multi-option-wrapper"})
-                      (cond-> field-spec
-                              multiple-languages? add-multi-lang-class)
-                      (when multiple-languages?
-                        [:div.editor-form__text-field-label (-> lang name clojure.string/upper-case)])]))
-                 languages)))
-
 (defn info-addon
   "Info text which is added to an existing component"
   [path]
@@ -437,7 +418,7 @@
              @(subscribe [:editor/virkailija-translation :collapse-info-text])]]))
        (when @checked?
          [:div.editor-form__info-addon-inputs
-          (->> (input-fields-with-lang
+          (->> (input-fields-with-lang-component/input-fields-with-lang
                  (fn [lang]
                    [input-field
                     (concat path [:params :info-text])
@@ -611,7 +592,7 @@
           [:div.editor-form__text-field-wrapper
            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
             [copy-link (:id initial-content)]]
-           (input-fields-with-lang
+           (input-fields-with-lang-component/input-fields-with-lang
              (fn [lang]
                [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
              @languages
