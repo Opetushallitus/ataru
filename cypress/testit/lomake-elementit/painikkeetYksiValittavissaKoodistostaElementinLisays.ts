@@ -1,7 +1,5 @@
 import * as lomakkeenMuokkaus from '../../lomakkeenMuokkaus'
 import LomakkeenTunnisteet from '../../LomakkeenTunnisteet'
-import * as odota from '../../odota'
-import * as reitit from '../../reitit'
 
 export default (
   lomakkeenTunnisteet: () => LomakkeenTunnisteet,
@@ -37,14 +35,8 @@ export default (
             })
         })
         .then(() => {
-          odota.odotaHttpPyyntoa(
-            () =>
-              cy.route(
-                'PUT',
-                reitit.virkailija.haeLomakkeenMuuttamisenOsoite(
-                  lomakkeenTunnisteet().lomakkeenId
-                )
-              ),
+          lomakkeenMuokkaus.siirryMuokkaamaanLomaketta(
+            lomakkeenTunnisteet().lomakkeenId,
             () =>
               lomakkeenMuokkaus.painikeYksiValittavissa
                 .haeElementinOtsikko()

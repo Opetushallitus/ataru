@@ -4,6 +4,9 @@ import * as asetukset from './asetukset'
 import * as odota from './odota'
 import { syotaTeksti } from './apu'
 
+import Chainable = Cypress.Chainable
+import WaitXHR = Cypress.WaitXHR
+
 export const haeLomakkeenLisaysNappi = () =>
   cy.get('[data-test-id=add-form-button]:visible')
 
@@ -26,20 +29,26 @@ export const lisaaLomake = () => {
 export const haeLomakkeenNimenSyote = () =>
   cy.get('[data-test-id=form-name-input]:visible')
 
-const siirryMuokkaamaanLomaketta = (formId: number) => () =>
-  cy.route('PUT', reitit.virkailija.haeLomakkeenMuuttamisenOsoite(formId))
-
-export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
-  odota.odotaHttpPyyntoa(
+// eslint-disable-next-line prefer-arrow/prefer-arrow-functions
+export function siirryMuokkaamaanLomaketta<T>(
+  lomakkeenId: number,
+  muokkaaLomaketta: () => Chainable<T>
+): Chainable<{ result: T; xhr: WaitXHR }> {
+  return odota.odotaHttpPyyntoa<T>(
     () =>
       cy.route(
         'PUT',
         reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
       ),
-    () =>
-      haeLomakkeenNimenSyote()
-        .clear()
-        .type(name, { delay: asetukset.tekstikentanSyotonViive })
+    muokkaaLomaketta
+  )
+}
+
+export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
+  siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+    haeLomakkeenNimenSyote()
+      .clear()
+      .type(name, { delay: asetukset.tekstikentanSyotonViive })
   )
 
 const koodistonValitsin = () =>
@@ -79,16 +88,10 @@ export const henkilotiedot = {
     kenttienKuvaus: string,
     lomakkeenId: number
   ) =>
-    odota.odotaHttpPyyntoa(
-      () =>
-        cy.route(
-          'PUT',
-          reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
-        ),
-      () =>
-        henkilotiedot
-          .haeHenkilotietojenValintaKomponentti()
-          .select(kenttienKuvaus)
+    siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+      henkilotiedot
+        .haeHenkilotietojenValintaKomponentti()
+        .select(kenttienKuvaus)
     ),
 }
 
@@ -105,13 +108,13 @@ export const komponentinLisays = {
       .contains(elementinTeksti),
 
   lisaaArvosanat: (formId: number) => {
-    return odota.odotaHttpPyyntoa(siirryMuokkaamaanLomaketta(formId), () => {
+    return siirryMuokkaamaanLomaketta(formId, () => {
       komponentinLisays.hover()
       return komponentinLisays.haeLisaaArvosanatLinkki().click()
     })
   },
   lisaaElementti: (formId: number, elementinTeksti: string) =>
-    odota.odotaHttpPyyntoa(siirryMuokkaamaanLomaketta(formId), () => {
+    siirryMuokkaamaanLomaketta(formId, () => {
       komponentinLisays.hover()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
     }),
@@ -141,13 +144,8 @@ export const arvosanat = {
       .haePoistaOsioNappi()
       .click()
       .then(() =>
-        odota.odotaHttpPyyntoa(
-          () =>
-            cy.route(
-              'PUT',
-              reitit.virkailija.haeLomakkeenMuuttamisenOsoite(lomakkeenId)
-            ),
-          () => arvosanat.haeVahvistaPoistaOsioNappi().click()
+        siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+          arvosanat.haeVahvistaPoistaOsioNappi().click()
         )
       ),
 }
