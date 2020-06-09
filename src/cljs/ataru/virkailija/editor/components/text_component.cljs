@@ -2,6 +2,7 @@
   (:require
     [ataru.application-common.application-field-common :refer [copy-link]]
     [ataru.cljs-util :as util]
+    [ataru.virkailija.editor.components.component-content :as component-content]
     [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.editor.components.input-field-component :as input-field-component]
@@ -272,62 +273,6 @@
      (when can-remove?
        [remove-component-button path :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
-(defn- component-fold-transition
-  [component folded? state height]
-  (cond (= [true :unfolded] [@folded? @state])
-        ;; folding, calculate and set height
-        (do (reset! height (.-scrollHeight (r/dom-node component)))
-            (reset! state :set-height))
-        (= [true :set-height] [@folded? @state])
-        ;; folding, render folded
-        (reset! state :folded)
-        (= [false :folded] [@folded? @state])
-        ;; unfolding, set height
-        (reset! state :set-height)))
-
-(defn- unfold-ended-listener
-  [folded? state]
-  (fn [_]
-    (when (= [false :set-height] [@folded? @state])
-      ;; unfolding, render unfolded
-      (reset! state :unfolded))))
-
-(defn- component-content
-  [path _]
-  (let [folded?  (subscribe [:editor/path-folded? path])
-        state    (r/atom (if @folded?
-                           :folded :unfolded))
-        height   (r/atom nil)
-        listener (unfold-ended-listener folded? state)]
-    (r/create-class
-      {:component-did-mount
-       (fn [component]
-         (.addEventListener (r/dom-node component)
-                            "transitionend"
-                            listener)
-         (component-fold-transition component folded? state height))
-       :component-will-unmount
-       (fn [component]
-         (.removeEventListener (r/dom-node component)
-                               "transitionend"
-                               listener))
-       :component-did-update
-       (fn [component]
-         (component-fold-transition component folded? state height))
-       :reagent-render
-       (fn [_ content-component]
-         (let [_ @folded?]
-           (case @state
-             :unfolded
-             [:div.editor-form__component-content-wrapper
-              content-component]
-             :set-height
-             [:div.editor-form__component-content-wrapper
-              {:style {:height @height}}
-              content-component]
-             :folded
-             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
-
 (defn- get-val [event]
   (-> event .-target .-value))
 
@@ -481,7 +426,7 @@
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
-       [component-content
+       [component-content/component-content
         path;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper

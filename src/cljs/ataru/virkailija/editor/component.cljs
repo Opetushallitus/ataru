@@ -16,6 +16,7 @@
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
    [ataru.component-data.module.module-spec :as module-spec]
+   [ataru.virkailija.editor.components.component-content :as component-content]
    [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
@@ -337,62 +338,6 @@
         path
         :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
 
-(defn- component-fold-transition
-  [component folded? state height]
-  (cond (= [true :unfolded] [@folded? @state])
-        ;; folding, calculate and set height
-        (do (reset! height (.-scrollHeight (r/dom-node component)))
-            (reset! state :set-height))
-        (= [true :set-height] [@folded? @state])
-        ;; folding, render folded
-        (reset! state :folded)
-        (= [false :folded] [@folded? @state])
-        ;; unfolding, set height
-        (reset! state :set-height)))
-
-(defn- unfold-ended-listener
-  [folded? state]
-  (fn [_]
-    (when (= [false :set-height] [@folded? @state])
-      ;; unfolding, render unfolded
-      (reset! state :unfolded))))
-
-(defn- component-content
-  [path _]
-  (let [folded?  (subscribe [:editor/path-folded? path])
-        state    (r/atom (if @folded?
-                           :folded :unfolded))
-        height   (r/atom nil)
-        listener (unfold-ended-listener folded? state)]
-    (r/create-class
-      {:component-did-mount
-       (fn [component]
-         (.addEventListener (r/dom-node component)
-                            "transitionend"
-                            listener)
-         (component-fold-transition component folded? state height))
-       :component-will-unmount
-       (fn [component]
-         (.removeEventListener (r/dom-node component)
-                               "transitionend"
-                               listener))
-       :component-did-update
-       (fn [component]
-         (component-fold-transition component folded? state height))
-       :reagent-render
-       (fn [_ content-component]
-         (let [_ @folded?]
-           (case @state
-             :unfolded
-             [:div.editor-form__component-content-wrapper
-              content-component]
-             :set-height
-             [:div.editor-form__component-content-wrapper
-              {:style {:height @height}}
-              content-component]
-             :folded
-             [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
-
 (defn- koodisto-field [component idx lang]
   (let [value (get-in component [:label lang])]
     [:div.editor-form__koodisto-field-container
@@ -660,7 +605,7 @@
     [:div.editor-form__component-wrapper
      [text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
-     [component-content
+     [component-content/component-content
       path ;id
       [:div
        [:div.editor-form__text-field-wrapper
@@ -766,7 +711,7 @@
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
         :sub-header @sub-header]
-       [component-content
+       [component-content/component-content
         path ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
@@ -813,7 +758,7 @@
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
-       [component-content
+       [component-content/component-content
         path ;(:id initial-content)
         [:div
          [:div.editor-form__component-row-wrapper
@@ -839,7 +784,7 @@
       [:div.editor-form__component-wrapper
        [text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
         :sub-header @sub-header]
-       [component-content
+       [component-content/component-content
         path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
@@ -991,7 +936,7 @@
       [:div.editor-form__component-wrapper
        [text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)
         :sub-header (:label @component)]
-       [component-content
+       [component-content/component-content
         path ;(:id content)
         [:div
          [:div.editor-form__component-row-wrapper
