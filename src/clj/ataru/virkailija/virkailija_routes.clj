@@ -1165,6 +1165,7 @@
         :return [ataru-schema/TilastokeskusApplication]
         (if-let [applications (access-controlled-application/get-applications-for-tilastokeskus organization-service
                                                                                                 session
+                                                                                                tarjonta-service
                                                                                                 hakuOid
                                                                                                 hakukohdeOid)]
           (response/ok applications)
