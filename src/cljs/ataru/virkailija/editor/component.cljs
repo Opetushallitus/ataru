@@ -7,7 +7,6 @@
    [ataru.component-data.person-info-module :as pm]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
-   [ataru.virkailija.temporal :as temporal]
    [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
    [cljs.core.match :refer-macros [match]]
    [clojure.string :as string]
@@ -21,7 +20,8 @@
    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
-   [ataru.virkailija.editor.components.text-component :as text-component]))
+   [ataru.virkailija.editor.components.text-component :as text-component]
+   [ataru.virkailija.editor.components.text-header-component :as text-header-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -218,126 +218,6 @@
   [event]
   (.preventDefault event))
 
-(defn- cut-component-button [path & {:keys [data-test-id]}]
-  (case @(subscribe [:editor/component-button-state path :cut])
-    :enabled
-    [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/copy-component path true])
-      :data-test-id data-test-id}
-     @(subscribe [:editor/virkailija-translation :cut-element])]
-    :active
-    [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/cancel-copy-component])}
-     @(subscribe [:editor/virkailija-translation :cancel-cut])]
-    :disabled
-    [:button.editor-form__component-button
-     {:disabled true}
-     @(subscribe [:editor/virkailija-translation :cut-element])]))
-
-(defn- copy-component-button [path]
-  (case @(subscribe [:editor/component-button-state path :copy])
-    :enabled
-    [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/copy-component path false])}
-     @(subscribe [:editor/virkailija-translation :copy-element])]
-    :active
-    [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/cancel-copy-component])}
-     @(subscribe [:editor/virkailija-translation :cancel-copy])]
-    :disabled
-    [:button.editor-form__component-button
-     {:disabled true}
-     @(subscribe [:editor/virkailija-translation :copy-element])]))
-
-(defn- remove-component-button [path & {:keys [data-test-id]}]
-  (case @(subscribe [:editor/component-button-state path :remove])
-    :enabled
-    [:button.editor-form__component-button
-     {:on-click #(dispatch [:editor/start-remove-component path])
-      :data-test-id data-test-id}
-     @(subscribe [:editor/virkailija-translation :remove])]
-    :confirm
-    [:div.editor-form__component-button-group
-     [:button.editor-form__component-button.editor-form__component-button--confirm
-      {:on-click (fn [_] (dispatch [:editor/confirm-remove-component path]))
-       :data-test-id (some-> data-test-id (str "-confirm"))}
-      @(subscribe [:editor/virkailija-translation :confirm-delete])]
-     [:button.editor-form__component-button
-      {:on-click #(dispatch [:editor/cancel-remove-component path])}
-      @(subscribe [:editor/virkailija-translation :cancel-remove])]]
-    :disabled
-    [:button.editor-form__component-button
-     {:disabled true}
-     @(subscribe [:editor/virkailija-translation :remove])]))
-
-(defn- header-metadata
-  [path metadata]
-  [:div
-   [:span.editor-form__component-main-header-metadata
-    (s/format "%s %s, %s %s %s"
-              @(subscribe [:editor/virkailija-translation :created-by])
-              (-> metadata :created-by :name)
-              @(subscribe [:editor/virkailija-translation :last-modified-by])
-              (if (= (-> metadata :created-by :oid)
-                     (-> metadata :modified-by :oid))
-                ""
-                (-> metadata :modified-by :name))
-              (-> metadata :modified-by :date temporal/str->googdate temporal/time->date))]
-   [:button.editor-form__component-lock-button
-    {:on-click #(dispatch [:editor/toggle-component-lock path])}
-    (if @(subscribe [:editor/component-locked? path])
-      [:i.zmdi.zmdi-lock-outline.zmdi-hc-lg.editor-form__component-lock-button--locked]
-      [:i.zmdi.zmdi-lock-open.zmdi-hc-lg])]])
-
-(defn- text-header
-  [id label path metadata & {:keys [foldable?
-                                    can-copy?
-                                    can-cut?
-                                    can-remove?
-                                    sub-header
-                                    data-test-id]
-                             :or   {foldable?   true
-                                    can-copy?   true
-                                    can-cut?    true
-                                    can-remove? true}}]
-  (let [folded? @(subscribe [:editor/folded? id])]
-    [:div.editor-form__header-wrapper
-     [:header.editor-form__component-header
-      (when foldable?
-        (if folded?
-          [:button.editor-form__component-fold-button
-           {:on-click #(dispatch [:editor/unfold id])}
-           [:i.zmdi.zmdi-chevron-down]]
-          [:button.editor-form__component-fold-button
-           {:on-click #(dispatch [:editor/fold id])}
-           [:i.zmdi.zmdi-chevron-up]]))
-      [:span.editor-form__component-main-header
-       (cond-> {}
-               data-test-id
-               (assoc :data-test-id (str data-test-id "-label")))
-       label]
-      [:span.editor-form__component-sub-header
-       {:class (if (and folded? (some? sub-header))
-                 "editor-form__component-sub-header-visible"
-                 "editor-form__component-sub-header-hidden")}
-       (when (some? sub-header)
-         (->> [:fi :sv :en]
-              (map (partial get sub-header))
-              (remove clojure.string/blank?)
-              (clojure.string/join " - ")))]]
-     (when metadata
-       [header-metadata path metadata])
-     (when can-cut?
-       [cut-component-button
-        path
-        :data-test-id (some-> data-test-id (str "-cut-component-button"))])
-     (when can-copy?
-       [copy-component-button path])
-     (when can-remove?
-       [remove-component-button
-        path
-        :data-test-id (some-> data-test-id (str "-remove-component-button"))])]))
-
 (defn- koodisto-field [component idx lang]
   (let [value (get-in component [:label lang])]
     [:div.editor-form__koodisto-field-container
@@ -524,9 +404,9 @@
                                            @(subscribe [:editor/virkailija-translation :multiple-choice-koodisto])
                                            @(subscribe [:editor/virkailija-translation :multiple-choice])))
                data-test-id (str "editor-form__" field-type "-component-main")]
-           [text-header (:id initial-content) header path (:metadata initial-content)
+           [text-header-component/text-header (:id initial-content) header path (:metadata initial-content)
             :sub-header (:label @value) :data-test-id data-test-id])
-         [component-content
+         [component-content/component-content
           path
           [:div
            [:div.editor-form__component-row-wrapper
@@ -603,7 +483,7 @@
                             "wrapperElement" @(subscribe [:editor/virkailija-translation :wrapper-header])
                             "questionGroup"  @(subscribe [:editor/virkailija-translation :group-header]))]
     [:div.editor-form__component-wrapper
-     [text-header id group-header-text path (:metadata content)
+     [text-header-component/text-header id group-header-text path (:metadata content)
       :sub-header (:label value)]
      [component-content/component-content
       path ;id
@@ -641,7 +521,7 @@
         value           (subscribe [:editor/get-component-value path])]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+       [text-header-component/text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
         :foldable? false
         :can-cut? true
         :can-copy? false
@@ -668,7 +548,7 @@
                                   :arvosanat-peruskoulu "arvosanat-moduuli"
                                   nil)]
         [:div.editor-form__component-wrapper
-         [text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
+         [text-header-component/text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
           :foldable? foldable?
           :can-cut? can-cut?
           :can-copy? can-copy?
@@ -709,7 +589,7 @@
         component-locked?     (subscribe [:editor/component-locked? path])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
+       [text-header-component/text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content/component-content
         path ;(:id initial-content)
@@ -757,7 +637,7 @@
   (let [languages (subscribe [:editor/languages])]
     (fn [initial-content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
+       [text-header-component/text-header (:id initial-content) (get-in initial-content [:label :fi]) path (:metadata initial-content)]
        [component-content/component-content
         path ;(:id initial-content)
         [:div
@@ -782,7 +662,7 @@
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path children]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
+       [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
         :sub-header @sub-header]
        [component-content/component-content
         path ;(:id content)
@@ -813,7 +693,7 @@
         radio-group-id    (util/new-uuid)]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
+       [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
         :foldable? false
         :can-cut? false
         :can-copy? false
@@ -934,7 +814,7 @@
                               :else (update-value value nil false))))]
     (fn [content path]
       [:div.editor-form__component-wrapper
-       [text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)
+       [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :attachment]) path (:metadata content)
         :sub-header (:label @component)]
        [component-content/component-content
         path ;(:id content)
