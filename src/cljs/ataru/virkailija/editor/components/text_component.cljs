@@ -2,13 +2,13 @@
   (:require
     [ataru.application-common.application-field-common :refer [copy-link]]
     [ataru.cljs-util :as util]
+    [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
     [ataru.virkailija.editor.components.component-content :as component-content]
     [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
     [ataru.virkailija.editor.components.text-header-component :as text-header-component]
-    [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
     [cljs.core.match :refer-macros [match]]
     [clojure.string :as string]
     [reagent.core :as r]
@@ -59,103 +59,6 @@
       {:for   id
        :class (when disabled? "editor-form__checkbox-label--disabled")}
       @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
-
-(defn- belongs-to-hakukohteet-modal
-  [_ id _ _ _]
-  (let [used-by-haku?   (subscribe [:editor/used-by-haku?])
-        haut            (subscribe [:editor/filtered-haut id])
-        hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])]
-    (fn [path id selected-hakukohteet selected-hakukohderyhmat hidden-disabled?]
-      (if @used-by-haku?
-        [h-and-h/popup
-         [h-and-h/search-input
-          {:id                       id
-           :haut                     (map second @haut)
-           :hakukohderyhmat          @hakukohderyhmat
-           :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
-           :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
-         (when-not hidden-disabled?
-           [h-and-h/visibility-checkbox id path])
-         [h-and-h/search-listing
-          {:id                         id
-           :haut                       (map second @haut)
-           :hakukohderyhmat            @hakukohderyhmat
-           :hakukohde-selected?        #(contains? (set selected-hakukohteet) %)
-           :hakukohderyhma-selected?   #(contains? (set selected-hakukohderyhmat) %)
-           :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
-           :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
-           :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
-           :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}]
-         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]
-        [h-and-h/popup
-         [:div.belongs-to-hakukohteet-modal__no-haku-row
-          [:p.belongs-to-hakukohteet-modal__no-haku
-           @(subscribe [:editor/virkailija-translation :set-haku-to-form])]]
-         nil
-         nil
-         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]))))
-
-(defn- belongs-to
-  [_ _ _ _]
-  (let [fetching? (subscribe [:editor/fetching-haut?])]
-    (fn [_ _ name on-click]
-      [:li.belongs-to-hakukohteet__hakukohde-list-item.animated.fadeIn
-       [:span.belongs-to-hakukohteet__hakukohde-label
-        (if @fetching?
-          [:i.zmdi.zmdi-spinner.spin]
-          name)]
-       [:button.belongs-to-hakukohteet__hakukohde-remove
-        {:on-click on-click}
-        [:i.zmdi.zmdi-close.zmdi-hc-lg]]])))
-
-(defn- belongs-to-hakukohteet
-  [path initial-content]
-  (let [id            (:id initial-content)
-        on-click-show (fn [_]
-                        (dispatch [:editor/show-belongs-to-hakukohteet-modal id]))
-        on-click-hide (fn [_]
-                        (dispatch [:editor/hide-belongs-to-hakukohteet-modal id]))
-        show-modal?   (subscribe [:editor/show-belongs-to-hakukohteet-modal id])
-        component-locked?  (subscribe [:editor/component-locked? path])]
-    (fn [path initial-content]
-      (let [visible-hakukohteet     (mapv (fn [oid] {:oid      oid
-                                                     :name     @(subscribe [:editor/belongs-to-hakukohde-name oid])
-                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohteet
-                                                                                  path oid]))})
-                                          (:belongs-to-hakukohteet initial-content))
-            visible-hakukohderyhmat (mapv (fn [oid] {:oid      oid
-                                                     :name     @(subscribe [:editor/belongs-to-hakukohderyhma-name oid])
-                                                     :on-click (fn [_] (dispatch [:editor/remove-from-belongs-to-hakukohderyhma
-                                                                                  path oid]))})
-                                          (:belongs-to-hakukohderyhma initial-content))
-            hidden?                 (subscribe [:editor/get-component-value path :params :hidden])
-            visible                 (sort-by :name (concat visible-hakukohteet
-                                                           visible-hakukohderyhmat))]
-        [:div.belongs-to-hakukohteet
-         [:button.belongs-to-hakukohteet__modal-toggle
-          {:disabled @component-locked?
-           :class    (when @component-locked? "belongs-to-hakukohteet__modal-toggle--disabled")
-           :on-click (when-not @component-locked?
-                       (if @show-modal? on-click-hide on-click-show))}
-          (str @(subscribe [:editor/virkailija-translation :visibility-on-form]) " ")]
-         [:span.belongs-to-hakukohteet__modal-toggle-label
-          (cond @hidden?
-                @(subscribe [:editor/virkailija-translation :hidden])
-
-                (and (empty? visible))
-                @(subscribe [:editor/virkailija-translation :visible-to-all])
-
-                :else
-                @(subscribe [:editor/virkailija-translation :visible-to-hakukohteet]))]
-         (when @show-modal?
-           [belongs-to-hakukohteet-modal path
-            (:id initial-content)
-            (map :oid visible-hakukohteet)
-            (map :oid visible-hakukohderyhmat)])
-         [:ul.belongs-to-hakukohteet__hakukohde-list
-          (for [{:keys [oid name on-click]} visible]
-            ^{:key oid}
-            [belongs-to path oid name on-click])]]))))
 
 (defn- get-val [event]
   (-> event .-target .-value))
@@ -357,7 +260,7 @@
              [repeater-checkbox path initial-content])
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
-          [belongs-to-hakukohteet path initial-content]]
+          [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
           [info-addon-component/info-addon path]
           (when-not text-area?
