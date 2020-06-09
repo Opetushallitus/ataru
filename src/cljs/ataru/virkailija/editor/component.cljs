@@ -15,10 +15,10 @@
    [cljs-time.core :as t]
    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
    [reagent.core :as r]
-   [reagent.ratom :refer-macros [reaction]]
    [ataru.component-data.module.module-spec :as module-spec]
    [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
    [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+   [ataru.virkailija.editor.components.input-field-component :as input-field-component]
    [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
    [ataru.virkailija.editor.components.text-component :as text-component]))
 
@@ -393,32 +393,6 @@
              :folded
              [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
 
-(defn input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
-                                          :or   {tag :input}}]
-  (let [component    (subscribe [:editor/get-component-value path])
-        focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value        (or
-                      (when value-fn
-                        (reaction (value-fn @component)))
-                      (reaction (get-in @component [:label lang])))
-        languages    (subscribe [:editor/languages])
-        component-locked? (subscribe [:editor/component-locked? path])]
-    (r/create-class
-     {:component-did-mount (fn [component]
-                             (when (cond-> @focus?
-                                           (> (count @languages) 1)
-                                           (and (= (first @languages) lang)))
-                               (let [dom-node (r/dom-node component)]
-                                 (.focus dom-node))))
-      :reagent-render      (fn [_ _ _ _]
-                             [tag
-                              {:class     (str "editor-form__text-field " (when-not (empty? class) class))
-                               :value     @value
-                               :placeholder placeholder
-                               :on-change dispatch-fn
-                               :on-drop   prevent-default
-                               :disabled  @component-locked?}])})))
-
 (defn- koodisto-field [component idx lang]
   (let [value (get-in component [:label lang])]
     [:div.editor-form__koodisto-field-container
@@ -491,13 +465,13 @@
          (if editable?
            (input-fields-with-lang-component/input-fields-with-lang
             (fn [lang]
-              [input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
+              [input-field-component/input-field option-path lang #(dispatch [:editor/set-dropdown-option-value (-> % .-target .-value) option-path :label lang])])
             languages)
            [koodisto-fields-with-lang languages option-path])]
         (when @selection-limit?
           [:div.editor-form__selection-limit
-           [input-field option-path :dont-care #(dispatch [:editor/set-dropdown-option-selection-limit
-                                                           (only-numbers (-> % .-target .-value)) option-path :selection-limit])
+           [input-field-component/input-field option-path :dont-care #(dispatch [:editor/set-dropdown-option-selection-limit
+                                                                                 (only-numbers (-> % .-target .-value)) option-path :selection-limit])
             {:placeholder @(subscribe [:editor/virkailija-translation :selection-limit-input])
              :class       "editor-form__text-field--selection-limit"
              :value-fn    (fn [v] (:selection-limit v))}]])
@@ -618,7 +592,7 @@
                [copy-link (:id initial-content)]]
               (input-fields-with-lang-component/input-fields-with-lang
                (fn [lang]
-                 [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+                 [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
                languages
                :header? true)]
              [:div.editor-form__checkbox-wrapper
@@ -692,11 +666,11 @@
        [:div.editor-form__text-field-wrapper
         [:header.editor-form__component-item-header header-label-text]
         (input-fields-with-lang-component/input-fields-with-lang
-         (fn [lang]
-           [input-field path lang #(dispatch-sync [:editor/set-component-value
-                                                   (-> % .-target .-value)
-                                                   path
-                                                   :label lang])])
+          (fn [lang]
+            [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value
+                                                                          (-> % .-target .-value)
+                                                                          path
+                                                                          :label lang])])
          languages
          :header? true)]
        [:div.editor-form__wrapper-element-well
@@ -800,14 +774,14 @@
            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
            (input-fields-with-lang-component/input-fields-with-lang
             (fn [lang]
-              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+              [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
             @languages
             :header? true)
            [:div.infoelement
             [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :text])]
             (->> (input-fields-with-lang-component/input-fields-with-lang
                   (fn [lang]
-                    [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                    [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
                      {:value-fn (fn [component] (get-in component [:text lang]))
                       :tag      :textarea}])
                   @languages
@@ -847,7 +821,7 @@
            [:div.infoelement
             (->> (input-fields-with-lang-component/input-fields-with-lang
                   (fn [lang]
-                    [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
+                    [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :text lang])
                      {:value-fn (fn [component] (get-in component [:text lang]))
                       :tag      :textarea}])
                   @languages
@@ -873,7 +847,7 @@
            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
            (input-fields-with-lang-component/input-fields-with-lang
             (fn [lang]
-              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+              [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
             @languages
             :header? true)]
           [:div.editor-form__checkbox-wrapper
@@ -906,7 +880,7 @@
            [copy-link (:id content)]]
           (input-fields-with-lang-component/input-fields-with-lang
            (fn [lang]
-             [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+             [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
            @languages
            :header? true)]
          [:div.editor-form__checkbox-wrapper
@@ -970,7 +944,7 @@
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang-component/input-fields-with-lang
                 (fn attachment-textarea-input [lang]
-                  [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
+                  [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :params :info-text :value lang])
                    {:value-fn #(get-in % [:params :info-text :value lang])
                     :tag      :textarea}])
                 @languages
@@ -1026,7 +1000,7 @@
             [copy-link (:id content)]]
            (input-fields-with-lang-component/input-fields-with-lang
             (fn attachment-file-name-input [lang]
-              [input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
+              [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (-> % .-target .-value) path :label lang])])
             @languages
             :header? true)]
           [:div.editor-form__text-field-wrapper

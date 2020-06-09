@@ -2,41 +2,10 @@
   (:require
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.markdown-help-component :as markdown-help-component]
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-    [reagent.core :as r]
     [reagent.ratom :refer-macros [reaction]]))
-
-(defn- prevent-default
-  [event]
-  (.preventDefault event))
-
-(defn- input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
-                                          :or   {tag :input}}]
-  (let [component    (subscribe [:editor/get-component-value path])
-        focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value        (or
-                       (when value-fn
-                         (reaction (value-fn @component)))
-                       (reaction (get-in @component [:label lang])))
-        languages    (subscribe [:editor/languages])
-        component-locked? (subscribe [:editor/component-locked? path])]
-    (r/create-class
-      {:component-did-mount (fn [component]
-                              (when (cond-> @focus?
-                                            (> (count @languages) 1)
-                                            (and (= (first @languages) lang)))
-                                (let [dom-node (r/dom-node component)]
-                                  (.focus dom-node))))
-       :reagent-render      (fn [_ _ _ _]
-                              [tag
-                               {:class        (str "editor-form__text-field " (when-not (empty? class) class))
-                                :value        @value
-                                :placeholder  placeholder
-                                :on-change    dispatch-fn
-                                :on-drop      prevent-default
-                                :disabled     @component-locked?
-                                :data-test-id "tekstikenttä-kysymys"}])})))
 
 (defn info-addon
   "Info text which is added to an existing component"
@@ -80,7 +49,7 @@
          [:div.editor-form__info-addon-inputs
           (->> (input-fields-with-lang-component/input-fields-with-lang
                  (fn [lang]
-                   [input-field
+                   [input-field-component/input-field
                     (concat path [:params :info-text])
                     lang
                     #(dispatch-sync [:editor/set-component-value

@@ -4,6 +4,7 @@
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
+    [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
     [ataru.virkailija.temporal :as temporal]
     [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
@@ -11,7 +12,6 @@
     [clojure.string :as string]
     [goog.string :as s]
     [reagent.core :as r]
-    [reagent.ratom :refer-macros [reaction]]
     [re-frame.core :refer [subscribe dispatch dispatch-sync]]))
 
 (defn- required-disabled [initial-content]
@@ -156,10 +156,6 @@
           (for [{:keys [oid name on-click]} visible]
             ^{:key oid}
             [belongs-to path oid name on-click])]]))))
-
-(defn- prevent-default
-  [event]
-  (.preventDefault event))
 
 (defn- cut-component-button [path]
   (case @(subscribe [:editor/component-button-state path :cut])
@@ -332,33 +328,6 @@
              :folded
              [:div.editor-form__component-content-wrapper.editor-form__component-content-wrapper--folded])))})))
 
-(defn- input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
-                                          :or   {tag :input}}]
-  (let [component    (subscribe [:editor/get-component-value path])
-        focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
-        value        (or
-                       (when value-fn
-                         (reaction (value-fn @component)))
-                       (reaction (get-in @component [:label lang])))
-        languages    (subscribe [:editor/languages])
-        component-locked? (subscribe [:editor/component-locked? path])]
-    (r/create-class
-      {:component-did-mount (fn [component]
-                              (when (cond-> @focus?
-                                            (> (count @languages) 1)
-                                            (and (= (first @languages) lang)))
-                                (let [dom-node (r/dom-node component)]
-                                  (.focus dom-node))))
-       :reagent-render      (fn [_ _ _ _]
-                              [tag
-                               {:class        (str "editor-form__text-field " (when-not (empty? class) class))
-                                :value        @value
-                                :placeholder  placeholder
-                                :on-change    dispatch-fn
-                                :on-drop      prevent-default
-                                :disabled     @component-locked?
-                                :data-test-id "tekstikenttä-kysymys"}])})))
-
 (defn- get-val [event]
   (-> event .-target .-value))
 
@@ -521,7 +490,7 @@
             [copy-link (:id initial-content)]]
            (input-fields-with-lang-component/input-fields-with-lang
              (fn [lang]
-               [input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
+               [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
              @languages
              :header? true)]
           [:div.editor-form__button-wrapper
