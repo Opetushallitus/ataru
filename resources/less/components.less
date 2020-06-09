@@ -1,0 +1,16 @@
+@import "component-link";
+@import "button-component";
+@import "dropdown-component";
+@import "component-layout";
+
+@media only screen and (max-width: @mobile-width) {
+  .a-component {
+    display: none;
+  }
+}
+
+@media only screen and (min-width: (@mobile-width + 1)) {
+  .a-native-component {
+    display: none;
+  }
+}

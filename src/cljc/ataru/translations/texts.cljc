@@ -95,6 +95,9 @@
    :applications_at_most                        {:fi "Tässä haussa voit hakea %s hakukohteeseen"
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s study programmes "}
+   :arvosana                                    {:fi "Arvosana"
+                                                 :sv "Arvosana"
+                                                 :en "Arvosana"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
                                                  :en "Best Regards"}
@@ -266,6 +269,48 @@
    :not-within-application-period               {:fi "hakuaika ei ole käynnissä"
                                                  :sv "ingen pågående ansökningstid"
                                                  :en "application period currently not ongoing"}
+   :oppiaine                                    {:fi "Oppiaine"
+                                                 :sv "Oppiaine"
+                                                 :en "Oppiaine"}
+   :valinnaisaine                               {:fi "Valinnaisaine"
+                                                 :sv "Valinnaisaine"
+                                                 :en "Valinnaisaine"}
+   :oppimaara                                   {:fi "Oppimäärä"
+                                                 :sv "Oppimäärä"
+                                                 :en "Oppimäärä"}
+   :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
+                                                 :sv "Suomi äidinkielenä"
+                                                 :en "Suomi äidinkielenä"}
+   :suomi-toisena-kielena                       {:fi "Suomi toisena kielena"
+                                                 :sv "Suomi toisena kielena"
+                                                 :en "Suomi toisena kielena"}
+   :suomi-viittomakielisille                    {:fi "Suomi viittomakielisille"
+                                                 :sv "Suomi viittomakielisille"
+                                                 :en "Suomi viittomakielisille"}
+   :suomi-saamenkielisille                      {:fi "Suomi saamenkielisille"
+                                                 :sv "Suomi saamenkielisille"
+                                                 :en "Suomi saamenkielisille"}
+   :ruotsi-aidinkielena                         {:fi "Ruotsi äidinkielenä"
+                                                 :sv "Ruotsi äidinkielenä"
+                                                 :en "Ruotsi äidinkielenä"}
+   :ruotsi-toisena-kielena                      {:fi "Ruotsi toisena kielenä"
+                                                 :sv "Ruotsi toisena kielenä"
+                                                 :en "Ruotsi toisena kielenä"}
+   :ruotsi-viittomakielisille                   {:fi "Ruotsi viittomakielisille"
+                                                 :sv "Ruotsi viittomakielisille"
+                                                 :en "Ruotsi viittomakielisille"}
+   :saame-aidinkielena                          {:fi "Saame äidinkielenä"
+                                                 :sv "Saame äidinkielenä"
+                                                 :en "Saame äidinkielenä"}
+   :romani-aidinkielena                         {:fi "Romani äidinkielenä"
+                                                 :sv "Romani äidinkielenä"
+                                                 :en "Romani äidinkielenä"}
+   :viittomakieli-aidinkielena                  {:fi "Viittomakieli äidinkielenä"
+                                                 :sv "Viittomakieli äidinkielenä"
+                                                 :en "Viittomakieli äidinkielenä"}
+   :muu-oppilaan-aidinkieli                     {:fi "Muu oppilaan äidinkieli"
+                                                 :sv "Muu oppilaan äidinkieli"
+                                                 :en "Muu oppilaan äidinkieli"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
                                                  :sv "Studieinfo – ansökningsblankett"}
@@ -335,6 +380,12 @@
    :edit-answers                                {:fi "Muokkaus"
                                                  :sv "Bearbeta"
                                                  :en "Edit"}
+   :hyvaksytty                                  {:fi "Hyväksytty"
+                                                 :sv "Godkänd"
+                                                 :en "Selected"}
+   :ei-arvosanaa                                {:fi "Ei arvosanaa"
+                                                 :sv "Ei arvosanaa"
+                                                 :en "Ei arvosanaa"}
    :preview-answers                             {:fi "Esikatselu"
                                                  :sv "Förhandsvisa"
                                                  :en "Preview"}
@@ -355,7 +406,69 @@
                                                  :en "Internal server error."}
    :secret-expired                              {:fi "Tämä hakemuslinkki on vanhentunut"
                                                  :en "This application link has expired"
-                                                 :sv "Denna ansökningslänk är föråldrad"}})
+                                                 :sv "Denna ansökningslänk är föråldrad"}
+   :oppiaine-valinnainen                        {:fi "%s, valinnainen"
+                                                 :sv "%s, valinnainen"
+                                                 :en "%s, valinnainen"}
+   :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
+                                                 :sv "Lisää valinnaisaine"
+                                                 :en "Lisää valinnaisaine"}
+   :poista                                      {:fi "Poista"
+                                                 :sv "Poista"
+                                                 :en "Poista"}})
+
+(def oppiaine-translations
+  {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
+                :sv "Äidinkieli ja kirjallisuus"
+                :en "Äidinkieli ja kirjallisuus"}
+   :oppiaine-a1 {:fi "A1-kieli"
+                 :sv "A1-kieli"
+                 :en "A1-kieli"}
+   :oppiaine-b1 {:fi "B1-kieli"
+                 :sv "B1-kieli"
+                 :en "B1-kieli"}
+   :oppiaine-ma {:fi "Matematiikka"
+                 :sv "Matematiikka"
+                 :en "Matematiikka"}
+   :oppiaine-bi {:fi "Biologia"
+                 :sv "Biologia"
+                 :en "Biologia"}
+   :oppiaine-ge {:fi "Maantieto"
+                 :sv "Maantieto"
+                 :en "Maantieto"}
+   :oppiaine-fy {:fi "Fysiikka"
+                 :sv "Fysiikka"
+                 :en "Fysiikka"}
+   :oppiaine-ke {:fi "Kemia"
+                 :sv "Kemia"
+                 :en "Kemia"}
+   :oppiaine-tt {:fi "Terveystieto"
+                 :sv "Terveystieto"
+                 :en "Terveystieto"}
+   :oppiaine-ty {:fi "Uskonto tai elämänkatsomustieto"
+                 :sv "Uskonto tai elämänkatsomustieto"
+                 :en "Uskonto tai elämänkatsomustieto"}
+   :oppiaine-hi {:fi "Historia"
+                 :sv "Historia"
+                 :en "Historia"}
+   :oppiaine-yh {:fi "Yhteiskuntaoppi"
+                 :sv "Yhteiskuntaoppi"
+                 :en "Yhteiskuntaoppi"}
+   :oppiaine-mu {:fi "Musiikki"
+                 :sv "Musiikki"
+                 :en "Musiikki"}
+   :oppiaine-ku {:fi "Kuvaamataito"
+                 :sv "Kuvaamataito"
+                 :en "Kuvaamataito"}
+   :oppiaine-ka {:fi "Käsityö"
+                 :sv "Käsityö"
+                 :en "Käsityö"}
+   :oppiaine-li {:fi "Liikunta"
+                 :sv "Liikunta"
+                 :en "Liikunta"}
+   :oppiaine-ko {:fi "Kotitalous"
+                 :sv "Kotitalous"
+                 :en "Kotitalous"}})
 
 (def general-texts
   {:yes                {:en "Yes"
@@ -716,9 +829,60 @@
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}})
 
 (def virkailija-texts
-  {:arvosanat                                       {:fi "Arvosanat (peruskoulu)"
+  {:arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
+   :arvosana-aidinkieli-ja-kirjallisuus             {:fi "Äidinkieli ja kirjallisuus"
+                                                     :sv "Äidinkieli ja kirjallisuus"
+                                                     :en "Äidinkieli ja kirjallisuus"}
+   :arvosana-a1-kieli                               {:fi "A1-kieli"
+                                                     :sv "A1-kieli"
+                                                     :en "A1-kieli"}
+   :arvosana-b1-kieli                               {:fi "B1-kieli"
+                                                     :sv "B1-kieli"
+                                                     :en "B1-kieli"}
+   :arvosana-matematiikka                           {:fi "Matematiikka"
+                                                     :sv "Matematiikka"
+                                                     :en "Matematiikka"}
+   :arvosana-biologia                               {:fi "Biologia"
+                                                     :sv "Biologia"
+                                                     :en "Biologia"}
+   :arvosana-maantieto                              {:fi "Maantieto"
+                                                     :sv "Maantieto"
+                                                     :en "Maantieto"}
+   :arvosana-fysiikka                               {:fi "Fysiikka"
+                                                     :sv "Fysiikka"
+                                                     :en "Fysiikka"}
+   :arvosana-kemia                                  {:fi "Kemia"
+                                                     :sv "Kemia"
+                                                     :en "Kemia"}
+   :arvosana-terveystieto                           {:fi "Terveystieto"
+                                                     :sv "Terveystieto"
+                                                     :en "Terveystieto"}
+   :arvosana-uskonto-tai-elamankatsomustieto        {:fi "Uskonto tai elämänkatsomustieto"
+                                                     :sv "Uskonto tai elämänkatsomustieto"
+                                                     :en "Uskonto tai elämänkatsomustieto"}
+   :arvosana-historia                               {:fi "Historia"
+                                                     :sv "Historia"
+                                                     :en "Historia"}
+   :arvosana-yhteiskuntaoppi                        {:fi "Yhteiskuntaoppi"
+                                                     :sv "Yhteiskuntaoppi"
+                                                     :en "Yhteiskuntaoppi"}
+   :arvosana-musiikki                               {:fi "Musiikki"
+                                                     :sv "Musiikki"
+                                                     :en "Musiikki"}
+   :arvosana-kuvataide                              {:fi "Kuvataide"
+                                                     :sv "Kuvataide"
+                                                     :en "Kuvataide"}
+   :arvosana-kasityo                                {:fi "Käsityö"
+                                                     :sv "Käsityö"
+                                                     :en "Käsityö"}
+   :arvosana-liikunta                               {:fi "Liikunta"
+                                                     :sv "Liikunta"
+                                                     :en "Liikunta"}
+   :arvosana-kotitalous                             {:fi "Kotitalous"
+                                                     :sv "Kotitalous"
+                                                     :en "Kotitalous"}
    :arvosanat-info                                  {:fi "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
                                                      :sv "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
                                                      :en "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."}

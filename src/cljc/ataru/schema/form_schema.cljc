@@ -52,11 +52,13 @@
                         (s/optional-key :blur-rules)                     {s/Keyword s/Any}
                         (s/optional-key :label)                          localized-schema/LocalizedString
                         (s/optional-key :label-amendment)                localized-schema/LocalizedString
+                        (s/optional-key :unselected-label)               localized-schema/LocalizedString
                         (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
                         (s/optional-key :params)                         params-schema/Params
                         (s/optional-key :no-blank-option)                s/Bool
                         (s/optional-key :exclude-from-answers)           s/Bool
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
+                        (s/optional-key :version)                        s/Str
                         (s/optional-key :koodisto-ordered-by-user)       s/Bool
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
@@ -81,15 +83,19 @@
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
    :else info-element-schema/InfoElement))
 
-(s/defschema WrapperElement {:fieldClass                              (apply s/enum ["wrapperElement" "questionGroup"])
-                             :id                                      s/Str
-                             :fieldType                               (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
-                             :children                                [(s/conditional #(or (= "wrapperElement" (:fieldClass %))
+(s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
+                             :id                                         s/Str
+                             :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
+                             :children                                   [(s/conditional
+                                                                                      ;#(= (:id %) "arvosanat-taulukko")
+                                                                                      ;arvosanat/ArvosanatTaulukko
+                                                                                      #(or (= "wrapperElement" (:fieldClass %))
                                                                                            (= "questionGroup" (:fieldClass %)))
                                                                                       (s/recursive #'WrapperElement)
                                                                                       :else
                                                                                       BasicElement)]
                              :metadata                                   element-metadata-schema/ElementMetadata
+                             (s/optional-key :version)                   s/Str
                              (s/optional-key :child-validator)           child-validator-schema/ChildValidator
                              (s/optional-key :params)                    params-schema/Params
                              (s/optional-key :label)                     localized-schema/LocalizedString

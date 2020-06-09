@@ -1,15 +1,18 @@
 import kirjautuminenVirkailijanNakymaan from '../testit/kirjautuminenVirkailijanNakymaan'
 import lomakkeenLuonti from '../testit/lomakkeenLuonti'
 import peruskoulunArvosanatOsionPoistaminen from '../testit/arvosanat/peruskoulunArvosanatOsionPoistaminen'
+import peruskoulunArvosanatOsionTayttaminenHakijana from '../testit/arvosanat/peruskoulunArvosanatOsionTayttaminenHakijana'
 import peruskoulunArvosanatOsionLisays from '../testit/arvosanat/peruskoulunArvosanatOsionLisays'
 import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 
-describe.skip('Peruskoulun arvosanat -osio', () => {
+describe('Peruskoulun arvosanat -osio', () => {
   kirjautuminenVirkailijanNakymaan(() => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       peruskoulunArvosanatOsionLisays(lomakkeenTunnisteet, () => {
         peruskoulunArvosanatOsionPoistaminen(lomakkeenTunnisteet)
-        hakijanNakymaanSiirtyminen(lomakkeenTunnisteet)
+        hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
+          peruskoulunArvosanatOsionTayttaminenHakijana()
+        })
       })
     })
   })

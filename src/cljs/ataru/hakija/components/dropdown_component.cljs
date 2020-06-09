@@ -4,7 +4,10 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.application-common.application-field-common :as application-field]
-            [re-frame.core :as re-frame]))
+            [ataru.application-common.components.dropdown-component :as dropdown-component]
+            [re-frame.core :as re-frame]
+            [schema.core :as s]
+            [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
 (defn dropdown [field-descriptor idx render-field]
   (let [languages (re-frame/subscribe [:application/default-languages])
@@ -64,3 +67,29 @@
              (for [followup followups]
                ^{:key (:id followup)}
                [render-field followup idx])))]))
+
+(s/defn hakija-dropdown
+  [{:keys [field-descriptor
+           idx]} :- render-field-schema/RenderFieldArgs]
+  (let [lang             @(re-frame/subscribe [:application/form-language])
+        answer           @(re-frame/subscribe [:application/answer
+                                               (:id field-descriptor)
+                                               idx])
+        unselected-label (-> field-descriptor :unselected-label lang)
+        options          (map (fn [option]
+                                {:label (-> option :label lang)
+                                 :value (:value option)})
+                              (:options field-descriptor))
+        data-test-id     (:data-test-id field-descriptor)]
+    [dropdown-component/dropdown
+     (cond-> {:options          options
+              :unselected-label unselected-label
+              :selected-value   (:value answer)
+              :on-change        (fn [value]
+                                  (re-frame/dispatch [:application/set-repeatable-application-field
+                                                      field-descriptor
+                                                      idx
+                                                      nil
+                                                      value]))}
+             data-test-id
+             (assoc :data-test-id data-test-id))]))

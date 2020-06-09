@@ -5,34 +5,35 @@
             [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
-            [ataru.component-data.arvosanat :as arvosanat]))
+            [ataru.component-data.arvosanat-module :as arvosanat]))
 
-(def ^:private toolbar-elements
-  [[:form-section component/form-section]
-   [:single-choice-button component/single-choice-button]
-   [:dropdown component/dropdown]
-   [:dropdown-koodisto (fn [metadata]
-                         (assoc (component/dropdown metadata)
-                                :koodisto-source {:uri "" :title "" :version 1}
-                                :options []))]
-   [:multiple-choice component/multiple-choice]
-   [:multiple-choice-koodisto (fn [metadata]
-                                (assoc (component/multiple-choice metadata)
-                                       :koodisto-source {:uri "" :title "" :version 1}
-                                       :options []))]
-   [:text-field component/text-field]
-   [:text-area component/text-area]
-   [:adjacent-fieldset component/adjacent-fieldset]
-   [:attachment component/attachment]
-   [:question-group component/question-group]
-   [:info-element component/info-element]
-   [:base-education-module base-education-module/module]
-   [:kk-base-education-module kk-base-education-module/module]
-   [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
-   [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
-   [:lupatiedot component/lupatiedot]
-   ;[:arvosanat arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-   ])
+(defn- toolbar-elements []
+  (cond-> [[:form-section component/form-section]
+           [:single-choice-button component/single-choice-button]
+           [:dropdown component/dropdown]
+           [:dropdown-koodisto (fn [metadata]
+                                 (assoc (component/dropdown metadata)
+                                        :koodisto-source {:uri "" :title "" :version 1}
+                                        :options []))]
+           [:multiple-choice component/multiple-choice]
+           [:multiple-choice-koodisto (fn [metadata]
+                                        (assoc (component/multiple-choice metadata)
+                                               :koodisto-source {:uri "" :title "" :version 1}
+                                               :options []))]
+           [:text-field component/text-field]
+           [:text-area component/text-area]
+           [:adjacent-fieldset component/adjacent-fieldset]
+           [:attachment component/attachment]
+           [:question-group component/question-group]
+           [:info-element component/info-element]
+           [:base-education-module base-education-module/module]
+           [:kk-base-education-module kk-base-education-module/module]
+           [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
+           [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
+           [:lupatiedot component/lupatiedot]]
+
+          (fc/feature-enabled? :arvosanat)
+          (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}])))
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -59,15 +60,15 @@
     :attachment
     :adjacent-fieldset})
 
-(def ^:private followup-toolbar-elements
+(defn- followup-toolbar-elements []
   (filter
     (fn [[el-name _]] (contains? followup-toolbar-element-names el-name))
-    toolbar-elements))
+    (toolbar-elements)))
 
-(def ^:private question-group-toolbar-elements
+(defn- question-group-toolbar-elements []
   (filter
     (fn [[el-name _]] (contains? question-group-toolbar-element-names el-name))
-    toolbar-elements))
+    (toolbar-elements)))
 
 (def ^:private adjacent-fieldset-toolbar-elements
   {:text-field (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
@@ -111,15 +112,15 @@
              [:div.plus-component [:span "+"]])])))
 
 (defn add-component [path]
-  [custom-add-component toolbar-elements path
+  [custom-add-component (toolbar-elements) path
    (fn [generate-fn]
      (dispatch [:generate-component generate-fn path]))])
 
 (defn followup-toolbar [option-path generator]
-  [custom-add-component followup-toolbar-elements option-path generator])
+  [custom-add-component (followup-toolbar-elements) option-path generator])
 
 (defn question-group-toolbar [option-path generator]
-  [custom-add-component question-group-toolbar-elements option-path generator])
+  [custom-add-component (question-group-toolbar-elements) option-path generator])
 
 (defn adjacent-fieldset-toolbar [path generator]
   [custom-add-component adjacent-fieldset-toolbar-elements path generator])

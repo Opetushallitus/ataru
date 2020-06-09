@@ -20,7 +20,9 @@
             [ataru.hakija.components.label-component :as label-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
-            [ataru.hakija.components.dropdown-component :as dropdown-component]))
+            [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]
+            [ataru.hakija.render-generic-component :as generic-component]))
 
 (defonce autocomplete-off "new-password")
 
@@ -876,29 +878,40 @@
             {:on-click add-on-click}
             [:i.zmdi.zmdi-plus-square] (str " " (tu/get-hakija-translation :add-row lang))])]))))
 
+(defn- render-component [{:keys [field-descriptor
+                                 idx]}]
+  (match field-descriptor
+         {:id         "email"
+          :fieldClass "formField"
+          :fieldType  "textField"} [email-field field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
+         {:fieldClass "questionGroup"
+          :fieldType  "fieldset"} [question-group field-descriptor idx]
+         {:fieldClass "wrapperElement"
+          :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
+         {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
+         {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
+         {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
+         {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
+         {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
+         {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
+         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
+         {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
+         {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
+         {:fieldClass "infoElement"} [info-element field-descriptor idx]
+         {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
+
 (defn render-field
   [field-descriptor idx]
-  (match field-descriptor
-    {:id         "email"
-     :fieldClass "formField"
-     :fieldType  "textField"} [email-field field-descriptor idx]
-    {:fieldClass "wrapperElement"
-     :fieldType  "fieldset"} [wrapper-field field-descriptor idx]
-    {:fieldClass "questionGroup"
-     :fieldType  "fieldset"} [question-group field-descriptor idx]
-    {:fieldClass "wrapperElement"
-     :fieldType  "rowcontainer"} [row-wrapper field-descriptor idx]
-    {:fieldClass "formField" :fieldType "textField" :params {:repeatable true}} [repeatable-text-field field-descriptor idx]
-    {:fieldClass "formField" :fieldType "textField"} [text-field field-descriptor idx]
-    {:fieldClass "formField" :fieldType "textArea"} [text-area field-descriptor idx]
-    {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
-    {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
-    {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
-    {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
-    {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet field-descriptor idx]
-    {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
-    {:fieldClass "infoElement"} [info-element field-descriptor idx]
-    {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
+  (let [render-fn (case (:version field-descriptor)
+                    "generic" generic-component/render-generic-component
+                    "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
+                    render-component)]
+    (render-fn
+      {:field-descriptor field-descriptor
+       :idx              idx
+       :render-field     render-field})))
 
 (defn editable-fields [_]
   (r/create-class

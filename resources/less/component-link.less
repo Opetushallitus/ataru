@@ -1,0 +1,18 @@
+@import "component-fonts";
+@import "component-colors";
+
+.a-linkki {
+  .default-font();
+
+  color: @text-green;
+
+  &:visited {
+    color: @text-green;
+  }
+}
+
+.a-linkki--disabled {
+  .default-font();
+
+  color: @component-light-gray-2;
+}
