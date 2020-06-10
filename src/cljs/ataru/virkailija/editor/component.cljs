@@ -524,7 +524,7 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
-          [text-component/text-component-type-selector (:id content) path radio-group-id]]
+          [text-component/text-component-type-selector (:id content) path radio-group-id {}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]

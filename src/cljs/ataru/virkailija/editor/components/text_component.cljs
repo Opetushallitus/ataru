@@ -75,16 +75,47 @@
          :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]])))
 
-(defn- kenttään-vain-numeroita [component-id path]
+(defn- lisäkysymys-arvon-perusteella [_]
+  (let [id (util/new-uuid)]
+    (fn [{:keys [component-locked?
+                 followups?
+                 options?
+                 path
+                 repeatable?]}]
+      (let [checked?     options?
+            disabled?    (or component-locked?
+                             followups?
+                             repeatable?)
+            option-index 0]
+        [:div.editor-form__additional-params-container
+         [:input.editor-form__text-field-checkbox
+          {:id           id
+           :type         "checkbox"
+           :checked      checked?
+           :disabled     disabled?
+           :on-change    (fn [evt]
+                           (when-not disabled?
+                             (.preventDefault evt)
+                             (if (-> evt .-target .-checked)
+                               (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path])
+                               (dispatch [:editor/poista-tekstikentän-arvon-perusteella-optio path :options option-index]))))
+           :data-test-id "tekstikenttä-valinta-lisäkysymys-arvon-perusteella"}]
+         [:label.editor-form__text-field-checkbox-label
+          {:for   id
+           :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]]))))
+
+(defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
   [:div.editor-form__text-field-kenttään-vain-numeroita
    [numeerisen-kentän-muoto component-id path]
-   [numeerisen-kentän-arvoalueen-rajaus component-id path]])
+   [numeerisen-kentän-arvoalueen-rajaus component-id path]
+   [lisäkysymys-arvon-perusteella props]])
 
-(defn text-component-type-selector [_ path _]
+(defn text-component-type-selector [_ path _ _]
   (let [id                (util/new-uuid)
         checked?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path _]
+    (fn [component-id path _ props]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
@@ -105,7 +136,8 @@
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
          @(subscribe [:editor/virkailija-translation :only-numeric])]]
        (when @checked?
-         [kenttään-vain-numeroita component-id path])])))
+         [kenttään-vain-numeroita (merge props {:component-id component-id
+                                                :path         path})])])))
 
 (defn- button-label-class
   [button-name component-locked?]
@@ -179,7 +211,7 @@
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content/component-content
-        path;(:id initial-content)
+        path
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -224,7 +256,11 @@
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
-             [text-component-type-selector (:id initial-content) path radio-group-id])]
+             (let [props {:component-locked? @component-locked?
+                          :followups?        (not (empty? (first followups)))
+                          :options?          (not (empty? (:options @value)))
+                          :repeatable?       (-> @value :params :repeatable boolean)}]
+               [text-component-type-selector (:id initial-content) path radio-group-id props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
           [info-addon-component/info-addon path]

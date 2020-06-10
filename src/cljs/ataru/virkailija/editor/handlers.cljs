@@ -90,6 +90,23 @@
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
+  :editor/poista-tekstikentän-arvon-perusteella-optio
+  (fn [db [_ & path]]
+    (let [option-path (current-form-content-path db [path])]
+      (-> db
+          (update-in (drop-last option-path) util/remove-nth (last option-path))
+          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
+
+(reg-event-db
+  :editor/lisää-tekstikentän-arvon-perusteella-optio
+  (fn [db [_ & path]]
+    (let [text-field-path (current-form-content-path db [path :options])
+          component       (ataru.component-data.component/text-field-conditional-option "0")]
+      (-> db
+          (update-in text-field-path into [component])
+          (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
+
+(reg-event-db
   :editor/set-ordered-by-user
   (fn [db [_ value & path]]
     (let [component-path (current-form-content-path db [path])]

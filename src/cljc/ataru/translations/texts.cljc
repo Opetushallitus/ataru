@@ -1802,7 +1802,10 @@
                                                      :en "EN: Hakemuksen tilaa ei voi muuttaa, koska hakemukselle on muodostunut valinnan tuloksia. Ota yhteyttä Opetushallitukseen hakemuksen passivoimiseksi."}
    :lisakysymys                                     {:fi "Lisäkysymys"
                                                      :sv "Tilläggsfråga"
-                                                     :en "Extra question"}})
+                                                     :en "Extra question"}
+   :lisakysymys-arvon-perusteella                   {:fi "Lisäkysymys arvon perusteella"
+                                                     :sv "SV: Lisäkysymys arvon perusteella"
+                                                     :en "EN: Lisäkysymys arvon perusteella"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

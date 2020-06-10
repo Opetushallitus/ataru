@@ -16,6 +16,13 @@
    {:value value
     :label {:fi "" :sv ""}}))
 
+(defn text-field-conditional-option
+  ([] (text-field-conditional-option ""))
+  ([value]
+   {:value     value
+    :label     {:fi "" :sv ""}
+    :condition {:comparison-operator "="}}))
+
 (defn text-area [metadata]
   (assoc (text-field metadata)
          :fieldType "textArea"))
