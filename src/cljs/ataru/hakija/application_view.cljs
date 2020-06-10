@@ -134,7 +134,7 @@
          (translations/get-hakija-translation :application-submitted lang)]]
        [:div.application__submitted-submit-notification-inner
         [:a.application__send-feedback-button.application__send-feedback-button--enabled
-         {:on-click #(reset! hidden? true)
+         {:on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
