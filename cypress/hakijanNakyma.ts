@@ -57,10 +57,10 @@ export const arvosanat = {
       .click(),
 }
 
-const syota = (
-  elementti: Chainable<unknown>,
+const syota = <T>(
+  elementti: Chainable<T>,
   teksti: string
-): (() => Chainable<unknown>) => () => syotaTeksti(elementti, teksti)
+): (() => Chainable<T>) => () => syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
   haeEtunimiKentta: () => cy.get('#first-name'),

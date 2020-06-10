@@ -2,8 +2,8 @@ import * as asetukset from './asetukset'
 
 import Chainable = Cypress.Chainable
 
-export const syotaTeksti = (
-  elementti: Chainable<unknown>,
+export const syotaTeksti = <T>(
+  elementti: Chainable<T>,
   teksti: string
-): Chainable<unknown> =>
+): Chainable<T> =>
   elementti.clear().type(teksti, { delay: asetukset.tekstikentanSyotonViive })
