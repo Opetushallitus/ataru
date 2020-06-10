@@ -179,7 +179,8 @@
                                                 :ssn
                                                 :phone
                                                 :address
-                                                :postal-code])
+                                                :postal-code
+                                                :postal-office])
                                (-> id
                                    name
                                    (str "-input")))]

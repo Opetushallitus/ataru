@@ -71,6 +71,7 @@ export const henkilotiedot = {
   haeMatkapuhelinKentta: () => cy.get('[data-test-id=phone-input]'),
   haeKatuosoiteKentta: () => cy.get('[data-test-id=address-input]'),
   haePostinumeroKentta: () => cy.get('[data-test-id=postal-code-input]'),
+  haePostitoimipaikkaKentta: () => cy.get('[data-test-id=postal-office-input]'),
   haeKotikuntaKentta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {

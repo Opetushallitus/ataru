@@ -1,22 +1,15 @@
 import * as hakijanNakyma from '../../hakijanNakyma'
-import LomakkeenTunnisteet from '../../LomakkeenTunnisteet'
 
-export default (lomakkeenTunnisteet: () => LomakkeenTunnisteet) => () => {
+export default () => {
   describe('Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"', () => {
     before(() => {
-      cy.avaaLomakeHakijanNakymassa(lomakkeenTunnisteet().lomakkeenAvain).then(
-        () =>
-          hakijanNakyma.henkilotiedot
-            .taytaTiedot()
-            .then(() =>
-              hakijanNakyma.klikkaa(
-                'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
-              )
-            )
-            .then(hakijanNakyma.lahetaHakemus)
-            .then(hakijanNakyma.painaOkPalautenakymassa)
-            .then(hakijanNakyma.suljePalaute)
-      )
+      hakijanNakyma
+        .klikkaa(
+          'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+        )
+        .then(hakijanNakyma.lahetaHakemus)
+        .then(hakijanNakyma.painaOkPalautenakymassa)
+        .then(hakijanNakyma.suljePalaute)
     })
 
     it('Näyttää lomakkeen nimen', () =>
