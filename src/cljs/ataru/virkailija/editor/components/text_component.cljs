@@ -22,59 +22,67 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
-(defn- decimal-places-selector [component-id path]
-  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
-        component-locked?   (subscribe [:editor/component-locked? path])
-        min-value      (subscribe [:editor/get-range-value component-id :min-value path])
-        max-value      (subscribe [:editor/get-range-value component-id :max-value path])
-        min-invalid?   (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
-        max-invalid?   (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
-        min-id         (util/new-uuid)
-        max-id         (util/new-uuid)
-        format-range   (fn [value]
-                         (string/replace (string/trim (or value "")) "." ","))]
+(defn- numeerisen-kentän-muoto [_ path]
+  (let [decimal-places    (subscribe [:editor/get-component-value path :params :decimals])
+        component-locked? (subscribe [:editor/component-locked? path])]
     (fn [component-id path]
-      [:div
-       [:div.editor-form__additional-params-container
-        [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
-        [:select.editor-form__decimal-places-selector
-         {:value     (or @decimal-places "")
-          :disabled  @component-locked?
-          :on-change (fn [e]
-                       (let [new-val (get-val e)
-                             value   (when (not-empty new-val)
-                                       (js/parseInt new-val))]
-                         (dispatch [:editor/set-decimals-value component-id value path])))}
-         [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
-         (doall
-           (for [i (range 1 5)]
-             [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]]
-       [:div.editor-form__additional-params-container
-        [:label.editor-form__range-label
-         {:for   min-id
-          :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         @(subscribe [:editor/virkailija-translation :numeric-range])]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        min-id
-          :class     (when @min-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @min-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
-        [:span "—"]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        max-id
-          :class     (when @max-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @max-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
+      [:div.editor-form__additional-params-container
+       [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
+       [:select.editor-form__decimal-places-selector
+        {:value     (or @decimal-places "")
+         :disabled  @component-locked?
+         :on-change (fn [e]
+                      (let [new-val (get-val e)
+                            value   (when (not-empty new-val)
+                                      (js/parseInt new-val))]
+                        (dispatch [:editor/set-decimals-value component-id value path])))}
+        [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
+        (doall
+          (for [i (range 1 5)]
+            [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]])))
+
+(defn- numeerisen-kentän-arvoalueen-rajaus [component-id path]
+  (let [component-locked? (subscribe [:editor/component-locked? path])
+        min-value         (subscribe [:editor/get-range-value component-id :min-value path])
+        max-value         (subscribe [:editor/get-range-value component-id :max-value path])
+        min-invalid?      (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
+        max-invalid?      (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
+        min-id            (util/new-uuid)
+        max-id            (util/new-uuid)
+        format-range      (fn [value]
+                            (string/replace (string/trim (or value "")) "." ","))]
+    (fn [component-id path]
+      [:div.editor-form__additional-params-container
+       [:label.editor-form__range-label
+        {:for   min-id
+         :class (when @component-locked? "editor-form__checkbox-label--disabled")}
+        @(subscribe [:editor/virkailija-translation :numeric-range])]
+       [:input.editor-form__range-input
+        {:type      "text"
+         :id        min-id
+         :class     (when @min-invalid? "editor-form__text-field--invalid")
+         :disabled  @component-locked?
+         :value     @min-value
+         :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
+         :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
+       [:span "—"]
+       [:input.editor-form__range-input
+        {:type      "text"
+         :id        max-id
+         :class     (when @max-invalid? "editor-form__text-field--invalid")
+         :disabled  @component-locked?
+         :value     @max-value
+         :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
+         :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]])))
+
+(defn- kenttään-vain-numeroita [component-id path]
+  [:div.editor-form__text-field-kenttään-vain-numeroita
+   [numeerisen-kentän-muoto component-id path]
+   [numeerisen-kentän-arvoalueen-rajaus component-id path]])
 
 (defn text-component-type-selector [_ path _]
-  (let [id           (util/new-uuid)
-        checked?     (subscribe [:editor/get-component-value path :params :numeric])
+  (let [id                (util/new-uuid)
+        checked?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [component-id path _]
       [:div
@@ -97,7 +105,7 @@
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
          @(subscribe [:editor/virkailija-translation :only-numeric])]]
        (when @checked?
-         [decimal-places-selector component-id path])])))
+         [kenttään-vain-numeroita component-id path])])))
 
 (defn- button-label-class
   [button-name component-locked?]
