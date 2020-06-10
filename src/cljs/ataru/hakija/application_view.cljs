@@ -135,7 +135,7 @@
        [:div.application__submitted-submit-notification-inner
         [:a.application__send-feedback-button.application__send-feedback-button--enabled
          {:on-click #(reset! hidden? true)
-          :data-test-id "application__send-feedback-button--enabled"}
+          :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
 (defn feedback-form
@@ -155,7 +155,7 @@
           [:div.application-feedback-form
            [:a.application-feedback-form__close-button
             {:on-click #(dispatch [:application/rating-form-toggle])
-             :data-test-id "application-feedback-form__close-button"}
+             :data-test-id "close-feedback-form-button"}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)

@@ -91,10 +91,10 @@ export const klikkaa = (elementinTeksti: string) =>
   cy.get(`label:contains(${elementinTeksti})`).click({ multiple: true })
 
 export const lahetaHakemus = () =>
-  cy.get('[data-test-id=application__send-application-button]').click()
+  cy.get('[data-test-id=send-application-button]').click()
 
 export const painaOkPalautenakymassa = () =>
-  cy.get('[data-test-id=application__send-feedback-button--enabled]').click()
+  cy.get('[data-test-id=send-feedback-button]').click()
 
 export const suljePalaute = () =>
-  cy.get('[data-test-id=application-feedback-form__close-button]').click()
+  cy.get('[data-test-id=close-feedback-form-button]').click()
