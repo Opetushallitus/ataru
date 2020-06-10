@@ -30,7 +30,7 @@ export const haeLomakkeenNimenSyote = () =>
   cy.get('[data-test-id=form-name-input]:visible')
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
-export function siirryMuokkaamaanLomaketta<T>(
+export function teeJaodotaLomakkeenTallennusta<T>(
   lomakkeenId: number,
   muokkaaLomaketta: () => Chainable<T>
 ): Chainable<{ result: T; xhr: WaitXHR }> {
@@ -45,7 +45,7 @@ export function siirryMuokkaamaanLomaketta<T>(
 }
 
 export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
-  siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+  teeJaodotaLomakkeenTallennusta(lomakkeenId, () =>
     haeLomakkeenNimenSyote()
       .clear()
       .type(name, { delay: asetukset.tekstikentanSyotonViive })
@@ -88,7 +88,7 @@ export const henkilotiedot = {
     kenttienKuvaus: string,
     lomakkeenId: number
   ) =>
-    siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+    teeJaodotaLomakkeenTallennusta(lomakkeenId, () =>
       henkilotiedot
         .haeHenkilotietojenValintaKomponentti()
         .select(kenttienKuvaus)
@@ -108,13 +108,13 @@ export const komponentinLisays = {
       .contains(elementinTeksti),
 
   lisaaArvosanat: (formId: number) => {
-    return siirryMuokkaamaanLomaketta(formId, () => {
+    return teeJaodotaLomakkeenTallennusta(formId, () => {
       komponentinLisays.hover()
       return komponentinLisays.haeLisaaArvosanatLinkki().click()
     })
   },
   lisaaElementti: (formId: number, elementinTeksti: string) =>
-    siirryMuokkaamaanLomaketta(formId, () => {
+    teeJaodotaLomakkeenTallennusta(formId, () => {
       komponentinLisays.hover()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
     }),
@@ -144,7 +144,7 @@ export const arvosanat = {
       .haePoistaOsioNappi()
       .click()
       .then(() =>
-        siirryMuokkaamaanLomaketta(lomakkeenId, () =>
+        teeJaodotaLomakkeenTallennusta(lomakkeenId, () =>
           arvosanat.haeVahvistaPoistaOsioNappi().click()
         )
       ),

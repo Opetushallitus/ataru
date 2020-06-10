@@ -35,7 +35,7 @@ export default (
             })
         })
         .then(() => {
-          lomakkeenMuokkaus.siirryMuokkaamaanLomaketta(
+          lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
             lomakkeenTunnisteet().lomakkeenId,
             () =>
               lomakkeenMuokkaus.painikeYksiValittavissa
