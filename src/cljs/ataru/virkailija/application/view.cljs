@@ -5,7 +5,7 @@
             [ataru.virkailija.dropdown :as dropdown]
             [ataru.virkailija.question-search.view :as question-search]
             [ataru.virkailija.question-search.handlers :as qsh]
-            [ataru.translations.texts :refer [state-translations general-texts]]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -20,19 +20,15 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
-            [ataru.virkailija.routes :as routes]
-            [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
             [ataru.virkailija.views.modal :as modal]
             [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-            [ataru.virkailija.virkailija-ajax :as ajax]
-            [cljs-time.format :as f]
             [cljs.core.match :refer-macros [match]]
+            [clojure.set :as set]
             [clojure.string :as string]
             [goog.string :as gstring]
-            [medley.core :refer [find-first]]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]))
 
@@ -110,7 +106,7 @@
                        :value selected-hakukohderyhma}])]
            [:button.application-handling__excel-request-button
             {:disabled @loading?
-             :on-click (fn [e]
+             :on-click (fn [_]
                          (.submit (.getElementById js/document "excel-download-link")))}
             [:span
              (str @(subscribe [:editor/virkailija-translation :load-excel])
@@ -354,55 +350,53 @@
           selected-hakukohderyhma-oid
           hakukohteet
           hakukohderyhmat]]
-      (let [hakukohde-oids      (map :oid hakukohteet)
-            hakukohderyhma-oids (map :oid hakukohderyhmat)]
-        [:div.application-handling__header-haku-and-hakukohde
-         [:div.application-handling__header-haku
-          (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
-            haku-name
-            [:i.zmdi.zmdi-spinner.spin])]
-         (closed-row (if @list-opened close-list open-list)
-                     (cond (some? selected-hakukohde-oid)
-                           @(subscribe [:application/hakukohde-name
-                                        selected-hakukohde-oid])
-                           (some? selected-hakukohderyhma-oid)
-                           @(subscribe [:application/hakukohderyhma-name
-                                        selected-hakukohderyhma-oid])
-                           :else
-                           @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
-         (when @list-opened
-           [h-and-h/popup
-            [h-and-h/search-input
-             {:id                       haku-oid
-              :haut                     [{:oid         haku-oid
-                                          :hakukohteet hakukohteet}]
-              :hakukohderyhmat          hakukohderyhmat
-              :hakukohde-selected?      #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
-            nil
-            [h-and-h/search-listing
-             {:id                       haku-oid
-              :haut                     [{:oid         haku-oid
-                                          :hakukohteet hakukohteet}]
-              :hakukohderyhmat          hakukohderyhmat
-              :hakukohde-selected?      #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
-              :on-hakukohde-select      #(do (close-list)
+      [:div.application-handling__header-haku-and-hakukohde
+       [:div.application-handling__header-haku
+        (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
+          haku-name
+          [:i.zmdi.zmdi-spinner.spin])]
+       (closed-row (if @list-opened close-list open-list)
+                   (cond (some? selected-hakukohde-oid)
+                         @(subscribe [:application/hakukohde-name
+                                      selected-hakukohde-oid])
+                         (some? selected-hakukohderyhma-oid)
+                         @(subscribe [:application/hakukohderyhma-name
+                                      selected-hakukohderyhma-oid])
+                         :else
+                         @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
+       (when @list-opened
+         [h-and-h/popup
+          [h-and-h/search-input
+           {:id                       haku-oid
+            :haut                     [{:oid         haku-oid
+                                        :hakukohteet hakukohteet}]
+            :hakukohderyhmat          hakukohderyhmat
+            :hakukohde-selected?      #(= selected-hakukohde-oid %)
+            :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
+          nil
+          [h-and-h/search-listing
+           {:id                       haku-oid
+            :haut                     [{:oid         haku-oid
+                                        :hakukohteet hakukohteet}]
+            :hakukohderyhmat          hakukohderyhmat
+            :hakukohde-selected?      #(= selected-hakukohde-oid %)
+            :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
+            :on-hakukohde-select      #(do (close-list)
+                                           (dispatch [:application/navigate
+                                              (str "/lomake-editori/applications/hakukohde/" %)]))
+            :on-hakukohde-unselect      #(do (close-list)
                                              (dispatch [:application/navigate
-                                                (str "/lomake-editori/applications/hakukohde/" %)]))
-              :on-hakukohde-unselect      #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))
-              :on-hakukohderyhma-select   #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/"
-                                                               haku-oid
-                                                               "/hakukohderyhma/"
-                                                               %)]))
-              :on-hakukohderyhma-unselect #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))}]
-            close-list])]))))
+                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))
+            :on-hakukohderyhma-select   #(do (close-list)
+                                             (dispatch [:application/navigate
+                                                        (str "/lomake-editori/applications/haku/"
+                                                             haku-oid
+                                                             "/hakukohderyhma/"
+                                                             %)]))
+            :on-hakukohderyhma-unselect #(do (close-list)
+                                             (dispatch [:application/navigate
+                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+          close-list])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -539,8 +533,8 @@
 (defn application-list-row [application selected?]
   (let [selected-time-column    (subscribe [:state-query [:application :selected-time-column]])
         day-date-time           (-> (get application (keyword @selected-time-column))
-                                    (t/str->googdate)
-                                    (t/time->str)
+                                    (temporal/str->googdate)
+                                    (temporal/time->str)
                                     (clojure.string/split #"\s"))
         day                     (first day-date-time)
         date-time               (->> day-date-time (rest) (clojure.string/join " "))
@@ -659,7 +653,7 @@
                                             ")")))]]]))
                    states)))]))))
 
-(defn application-list-basic-column-header [column-id heading]
+(defn application-list-basic-column-header []
   (let [application-sort (subscribe [:state-query [:application :sort]])]
     (fn [column-id heading]
       [:span.application-handling__basic-list-basic-column-header
@@ -814,8 +808,7 @@
 
 (defn- application-filters
   []
-  (let [filters                                   (subscribe [:state-query [:application :filters]])
-        filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
+  (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
         applications-count                        (subscribe [:application/loaded-applications-count])
         fetching?                                 (subscribe [:application/fetching-applications?])
         enabled-filter-count                      (subscribe [:application/enabled-filter-count])
@@ -957,7 +950,7 @@
              :on-click #(dispatch [:application/undo-filters])}
             @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])])))
 
-(defn- application-list-header [applications]
+(defn- application-list-header []
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
@@ -1013,8 +1006,7 @@
     [review-state-selected-row #() (get review-state-label lang) multiple-values?]
     [:div.application-handling__review-state-row
      {:on-click (fn []
-                  (let [selected-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
-                    (dispatch [:application/update-review-field state-name review-state-id])))}
+                  (dispatch [:application/update-review-field state-name review-state-id]))}
      [icon-unselected] (get review-state-label lang)]))
 
 (defn opened-review-state-list [state-name current-state all-states lang multiple-values?]
@@ -1057,12 +1049,6 @@
            [:div.application-handling__review-deactivate-toggle-label-right
             @(subscribe [:editor/virkailija-translation :passive])]]]]))))
 
-(defn- hakukohde-name [hakukohde-oid]
-  (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
-                                       hakukohde-oid])]
-    [:span hakukohde-name]
-    [:i.zmdi.zmdi-spinner.spin]))
-
 (defn- opened-review-hakukohde-list-row
   [toggle-list-open list-opened hakukohde-oid disabled?]
   (let [selected-hakukohde-oids (subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
@@ -1074,7 +1060,7 @@
            {:data-hakukohde-oid hakukohde-oid
             :class (when disabled?
                      "application-handling__review-state-row--disabled")
-            :on-click (when-not disabled? (fn [event] (if @list-opened
+            :on-click (when-not disabled? (fn [_] (if @list-opened
                                               (dispatch [:application/select-review-hakukohde hakukohde-oid])
                                               (toggle-list-open))))}
            (if selected?
@@ -1144,7 +1130,7 @@
         start-removing-note (fn []
                               (reset! removing? true)
                               (js/setTimeout #(reset! removing? false) 1200))]
-    (fn [note-idx]
+    (fn [_]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
@@ -1189,7 +1175,7 @@
         @notes]])))
 
 (defn- review-state-comment
-  [state-name]
+  []
   (fn [state-name]
     (let [current-hakukohteet @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           note-state-path     (if (and (seq current-hakukohteet)
@@ -1527,7 +1513,7 @@
                [:i.zmdi.zmdi-chevron-up]
                [:i.zmdi.zmdi-chevron-down]))]
           [:div.application-handling__event-timestamp
-           (t/time->short-str (or (:time event) (:created-time event)))]
+           (temporal/time->short-str (or (:time event) (:created-time event)))]
           caption]
          (when (and @show-details? (some? details))
            [:div.application-handling__event-row-details
@@ -1771,7 +1757,7 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        @(subscribe [:editor/virkailija-translation :send-edit-link-to-applicant])])))
 
-(defn- attachment-review-row [selected-attachment-keys all-similar-attachments lang]
+(defn- attachment-review-row []
   (let [list-opened (r/atom false)]
     (fn [selected-attachment-keys all-similar-attachments lang]
       (let [all-reviews          (map first all-similar-attachments)
@@ -1800,8 +1786,8 @@
                          (let [attachment-keys-of-liitepyynto          (->> files
                                                                             (map :key)
                                                                             (set))
-                               attachments-with-inconsistent-visibility (clojure.set/difference attachment-keys-of-liitepyynto
-                                                                                               selected-attachment-keys)
+                               attachments-with-inconsistent-visibility (set/difference attachment-keys-of-liitepyynto
+                                                                                        selected-attachment-keys)
                                attachments-to-toggle                   (if (-> attachments-with-inconsistent-visibility
                                                                                (count)
                                                                                (= 0))
@@ -1915,7 +1901,7 @@
                        :value csrf-token}])]
            [:button.application-handling__download-attachments-button
             {:disabled (empty? selected-attachment-keys)
-             :on-click (fn [e]
+             :on-click (fn [_]
                          (.submit (.getElementById js/document "attachment-download-link")))}
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
@@ -1987,7 +1973,7 @@
               [application-deactivate-toggle]
               [application-review-events]]]]))})))
 
-(defn notification [link-params]
+(defn notification []
   (fn [{:keys [text link-text href on-click]}]
     [:div.application__message-display--details-notification @(subscribe [:editor/virkailija-translation text])
      [:a.application-handling__form-outdated--button.application-handling__button
@@ -2020,7 +2006,10 @@
                                         (.preventDefault evt)
                                         (select-application (:key application) selected-review-hakukohde true))}])
           (when show-creating-henkilo-failed?
-            [notification {:text :creating-henkilo-failed}])
+            [notification {:text      :creating-henkilo-failed
+                           :link-text :review-in-henkilopalvelu
+                           :href      (str "/henkilo-ui/oppija/"
+                                           person-oid)}])
           (when show-not-yksiloity?
             [notification {:text      :person-not-individualized
                            :link-text :individualize-in-henkilopalvelu
@@ -2103,11 +2092,6 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
-(defn- floating-application-review-placeholder
-  "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
-  []
-  [:div.application-handling__floating-application-review-placeholder])
-
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
@@ -2176,7 +2160,7 @@
          [:div.application-handling__version-history-header-text
           (str @(subscribe [:editor/virkailija-translation :diff-from-changes])
                " "
-               (t/time->short-str (or (:time @event) (:created-time @event))))]
+               (temporal/time->short-str (or (:time @event) (:created-time @event))))]
          [:div.application-handling__version-history-header-sub-text
           [:span.application-handling__version-history-header-virkailija
            changed-by]
