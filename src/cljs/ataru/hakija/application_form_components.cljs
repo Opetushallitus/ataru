@@ -120,7 +120,8 @@
                                "***********"
                                (:value answer))
               :on-paste      (fn [event]
-                               (.preventDefault event))}
+                               (.preventDefault event))
+              :data-test-id  "email-input"}
              (when @(subscribe [:application/cannot-edit? id])
                {:disabled true}))]
      [validation-error (:errors answer)]
@@ -149,7 +150,7 @@
                                " application__form-text-input--normal"))
           :aria-invalid (not (:valid answer))
           :autoComplete autocomplete-off
-          }]])]))
+          :data-test-id "verify-email-input"}]])]))
 
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
@@ -172,7 +173,16 @@
             on-change        (if idx
                                (partial multi-value-field-change field-descriptor idx)
                                (partial textual-field-change field-descriptor))
-            on-blur          (fn [_] (textual-field-blur field-descriptor))]
+            on-blur          (fn [_] (textual-field-blur field-descriptor))
+            data-test-id     (when (some #{id} [:first-name
+                                                :last-name
+                                                :ssn
+                                                :phone
+                                                :address
+                                                :postal-code])
+                               (-> id
+                                   name
+                                   (str "-input")))]
         [:div.application__form-field
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -205,7 +215,8 @@
                                       (:focused? @local-state)
                                       (:value @local-state)
                                       :else
-                                      value)}
+                                      value)
+                  :data-test-id data-test-id}
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
          [validation-error errors]]))))

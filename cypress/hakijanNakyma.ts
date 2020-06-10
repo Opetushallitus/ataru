@@ -63,15 +63,15 @@ const syota = <T>(
 ): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
-  haeEtunimiKentta: () => cy.get('#first-name'),
-  haeSukunimiKentta: () => cy.get('#last-name'),
-  haeHenkilotunnusKentta: () => cy.get('#ssn'),
-  haeSahkopostiKentta: () => cy.get('#email'),
-  haeSahkostinVarmistus: () => cy.get('#verify-email'),
-  haeMatkapuhelinKentta: () => cy.get('#phone'),
-  haeKatuosoiteKentta: () => cy.get('#address'),
-  haePostinumeroKentta: () => cy.get('#postal-code'),
-  haeKotikuntaKentta: () => cy.get('#home-town'),
+  haeEtunimiKentta: () => cy.get('[data-test-id=first-name-input]'),
+  haeSukunimiKentta: () => cy.get('[data-test-id=last-name-input]'),
+  haeHenkilotunnusKentta: () => cy.get('[data-test-id=ssn-input]'),
+  haeSahkopostiKentta: () => cy.get('[data-test-id=email-input]'),
+  haeSahkostinVarmistus: () => cy.get('[data-test-id=verify-email-input]'),
+  haeMatkapuhelinKentta: () => cy.get('[data-test-id=phone-input]'),
+  haeKatuosoiteKentta: () => cy.get('[data-test-id=address-input]'),
+  haePostinumeroKentta: () => cy.get('[data-test-id=postal-code-input]'),
+  haeKotikuntaKentta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {
     return tekstikentta

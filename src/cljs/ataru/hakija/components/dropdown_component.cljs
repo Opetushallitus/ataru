@@ -25,7 +25,11 @@
                        (filter #(= (:value answer) (:value %)))
                        first
                        :followups
-                       (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))]
+                       (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))
+        data-test-id (when (some #{id} [:home-town])
+                       (-> id
+                           name
+                           (str "-input")))]
     [:div.application__form-field
      [label-component/label field-descriptor]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
@@ -44,7 +48,8 @@
         :on-change    on-change
         :disabled     disabled?
         :required     (application-field/is-required-field? field-descriptor)
-        :aria-invalid (not (:valid answer))}
+        :aria-invalid (not (:valid answer))
+        :data-test-id data-test-id}
        (doall
          (concat
            (when
