@@ -1,4 +1,4 @@
-import { syotaTeksti } from './apu'
+import * as tekstikentta from './tekstikentta'
 import * as dropdown from './dropdown'
 
 import Chainable = Cypress.Chainable
@@ -60,7 +60,7 @@ export const arvosanat = {
 const syota = <T>(
   elementti: Chainable<T>,
   teksti: string
-): (() => Chainable<T>) => () => syotaTeksti(elementti, teksti)
+): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
   haeEtunimiKentta: () => cy.get('#first-name'),
@@ -74,7 +74,8 @@ export const henkilotiedot = {
   haeKotikuntaKentta: () => cy.get('#home-town'),
 
   taytaTiedot: () => {
-    return syotaTeksti(henkilotiedot.haeEtunimiKentta(), 'Frank Zacharias')
+    return tekstikentta
+      .syotaTeksti(henkilotiedot.haeEtunimiKentta(), 'Frank Zacharias')
       .then(syota(henkilotiedot.haeSukunimiKentta(), 'Testerberg'))
       .then(syota(henkilotiedot.haeHenkilotunnusKentta(), '160600A999C'))
       .then(syota(henkilotiedot.haeSahkopostiKentta(), 'f.t@example.com'))

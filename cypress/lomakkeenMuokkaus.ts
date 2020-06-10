@@ -2,7 +2,7 @@ import * as httpPaluusanomat from './httpPaluusanomat'
 import * as reitit from './reitit'
 import * as asetukset from './asetukset'
 import * as odota from './odota'
-import { syotaTeksti } from './apu'
+import * as tekstikentta from './tekstikentta'
 
 import Chainable = Cypress.Chainable
 import WaitXHR = Cypress.WaitXHR
@@ -162,6 +162,9 @@ export const painikeYksiValittavissa = {
       '[data-test-id=editor-form__singleChoice-component-main-label]:visible'
     ),
   syotaKysymysTeksti: (teksti: string) => {
-    return syotaTeksti(painikeYksiValittavissa.haeKysymysTeksti(), teksti)
+    return tekstikentta.syotaTeksti(
+      painikeYksiValittavissa.haeKysymysTeksti(),
+      teksti
+    )
   },
 }
