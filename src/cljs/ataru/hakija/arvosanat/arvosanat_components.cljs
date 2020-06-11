@@ -187,6 +187,17 @@
     (when (= oppimaara "a")
       [render-field field-descriptor idx])))
 
+(s/defn poista-valinnainen-kieli
+  [{:keys [field-descriptor
+           idx]} :- {:field-descriptor s/Any
+                     :idx              s/Int}]
+  (let [lang @(re-frame/subscribe [:application/form-language])]
+    [link-component/link
+     {:on-click  (fn remove-valinnainen-kieli-row []
+                   (re-frame/dispatch [:application/remove-question-group-row field-descriptor idx]))
+      :disabled? false}
+     (translations/get-hakija-translation :remove lang)]))
+
 (s/defn valinnaiset-kielet
   [{:keys [field-descriptor
            render-field]} :- (-> render-field-schema/RenderFieldArgs
@@ -223,7 +234,12 @@
                                                        :idx              valinnainen-kieli-rivi-idx}]
 
                                                      :arvosana-dropdown
-                                                     [render-field arvosana-dropdown valinnainen-kieli-rivi-idx]}]))))
+                                                     [render-field arvosana-dropdown valinnainen-kieli-rivi-idx]
+
+                                                     :lisaa-valinnaisaine-linkki
+                                                     [poista-valinnainen-kieli
+                                                      {:field-descriptor field-descriptor
+                                                       :idx              valinnainen-kieli-rivi-idx}]}]))))
         lisaa-valinnainen-kieli-row [oppiaineen-arvosana-rivi
                                      {:pakollinen-oppiaine?
                                       false
