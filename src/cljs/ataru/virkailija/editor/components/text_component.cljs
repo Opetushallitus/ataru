@@ -4,7 +4,7 @@
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
     [ataru.virkailija.editor.components.component-content :as component-content]
-    [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
+    [ataru.virkailija.editor.components.followup-question :as followup-question]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
@@ -157,7 +157,7 @@
       (let [option-index 0
             followups    (nth followups option-index)]
         [:div.editor-form__text-field-option-followups-wrapper
-         [followup-question-overlay option-index followups path show-followups]]))))
+         [followup-question/followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
