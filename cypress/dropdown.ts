@@ -9,6 +9,6 @@ export const setDropdownValue = (dataTestIdPrefix: string, value: string) =>
     )
 
 export const asetaHakijanNakymanPudotusvalikonArvo = (
-  dataTestIdPrefix: string,
+  dataTestId: string,
   value: string
-) => cy.get(`[data-test-id=${dataTestIdPrefix}-input]`).select(value)
+) => cy.get(`[data-test-id=${dataTestId}]`).select(value)
