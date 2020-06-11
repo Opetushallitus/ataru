@@ -23,6 +23,28 @@
     (not (clojure.string/blank? value))
     (not (empty? value))))
 
+(defn- required-valinnainen-oppimaara
+  [params]
+  (let [answer-key (-> params :field-descriptor :id keyword)
+        last-idx   (-> params :answers-by-key :oppiaine-valinnainen-kieli :values count dec)]
+    (->> params
+         :answers-by-key
+         answer-key
+         :values
+         count
+         range
+         (every? (fn [value-idx]
+                   (or (= value-idx last-idx)
+                       (-> params
+                           :answers-by-key
+                           :oppiaine-valinnainen-kieli
+                           :values
+                           (get value-idx)
+                           first
+                           :value
+                           (not= "oppiaine-valinnainen-kieli-a"))
+                       (required? params)))))))
+
 (defn- required-hakija?
   [{:keys [virkailija?] :as params}]
   (or (required? params)
@@ -254,18 +276,19 @@
                  (or (nil? max-value)
                      (lte value max-value)))))))
 
-(def pure-validators {:required        required?
-                      :required-hakija required-hakija?
-                      :postal-code     postal-code?
-                      :postal-office   postal-office?
-                      :phone           phone?
-                      :past-date       past-date?
-                      :main-first-name pn/main-first-name?
-                      :birthplace      birthplace?
-                      :home-town       home-town?
-                      :city            city?
-                      :hakukohteet     hakukohteet?
-                      :numeric         numeric?})
+(def pure-validators {:required                       required?
+                      :required-valinnainen-oppimaara required-valinnainen-oppimaara
+                      :required-hakija                required-hakija?
+                      :postal-code                    postal-code?
+                      :postal-office                  postal-office?
+                      :phone                          phone?
+                      :past-date                      past-date?
+                      :main-first-name                pn/main-first-name?
+                      :birthplace                     birthplace?
+                      :home-town                      home-town?
+                      :city                           city?
+                      :hakukohteet                    hakukohteet?
+                      :numeric                        numeric?})
 
 (def async-validators {:selection-limit selection-limit?
                        :ssn ssn?

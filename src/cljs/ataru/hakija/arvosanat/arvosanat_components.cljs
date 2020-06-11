@@ -3,10 +3,12 @@
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [ataru.translations.translation-util :as translations]
             [ataru.hakija.components.link-component :as link-component]
+            [ataru.hakija.components.dropdown-component :as dropdown-component]
             [clojure.string :as string]
             [re-frame.core :as re-frame]
             [schema.core :as s]
-            [schema-tools.core :as st]))
+            [schema-tools.core :as st]
+            [ataru.translations.texts :as texts]))
 
 (s/defn oppiaineen-arvosana-rivi
   [{:keys [label
@@ -138,6 +140,108 @@
                        :row-count           row-count
                        :data-test-id        (str data-test-id "-lisaa-valinnaisaine-linkki-" arvosana-idx "-" (if valinnaisaine-rivi? "poista" "lisaa"))}]}])))
          (into [:<>]))))
+
+(s/defn valinnainen-kieli-dropdown
+  [{:keys [valinnainen-kieli-field-descriptor
+           valinnaiset-kielet-field-descriptor
+           render-field
+           idx]} :- (-> render-field-schema/RenderFieldArgs
+                        (st/select-keys [:render-field :idx])
+                        (st/merge {:valinnainen-kieli-field-descriptor  s/Any
+                                   :valinnaiset-kielet-field-descriptor s/Any}))]
+  [dropdown-component/hakija-dropdown
+   {:field-descriptor valinnainen-kieli-field-descriptor
+    :render-field     render-field
+    :idx              idx
+    :on-change        (fn []
+                        (re-frame/dispatch [:application/add-question-group-row valinnaiset-kielet-field-descriptor]))}])
+
+(def ^:private valinnainen-kieli-id-oppiaine-koodi-idx
+  (count "oppiaine-valinnainen-kieli-"))
+
+(s/defn valinnainen-kieli-label
+  [{:keys [field-descriptor
+           idx
+           lang]} :- {:field-descriptor s/Any
+                      :idx              s/Int
+                      :lang             lang-schema/Lang}]
+  (let [answer @(re-frame/subscribe [:application/answer
+                                     (:id field-descriptor)
+                                     idx])
+        label  (as-> (:value answer) key
+                     (subs key valinnainen-kieli-id-oppiaine-koodi-idx)
+                     (str "oppiaine-" key)
+                     (keyword key)
+                     (-> texts/oppiaine-translations key lang))]
+    [:span label]))
+
+(s/defn valinnainen-kieli-oppimaara
+  [{:keys [field-descriptor
+           render-field
+           idx]} :- render-field-schema/RenderFieldArgs]
+  (let [oppimaara (some-> @(re-frame/subscribe [:application/answer
+                                                :oppiaine-valinnainen-kieli
+                                                idx])
+                          :value
+                          (subs valinnainen-kieli-id-oppiaine-koodi-idx))]
+    (when (= oppimaara "a")
+      [render-field field-descriptor idx])))
+
+(s/defn valinnaiset-kielet
+  [{:keys [field-descriptor
+           render-field]} :- (-> render-field-schema/RenderFieldArgs
+                                 (st/dissoc :idx)
+                                 st/open-schema)]
+  (let [row-count                   @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
+        [oppiaine-dropdown
+         oppimaara-dropdown
+         arvosana-dropdown] (:children field-descriptor)
+        last-oppiaine-answer        @(re-frame/subscribe [:application/answer
+                                                          :oppiaine-valinnainen-kieli
+                                                          (dec row-count)])
+        lang                        @(re-frame/subscribe [:application/form-language])
+        valinnaiset-kielet-rows     (->> (cond-> row-count
+                                                 (string/blank? (:value last-oppiaine-answer))
+                                                 dec)
+                                         range
+                                         (mapv (fn ->valinnainen-kieli-rivi [valinnainen-kieli-rivi-idx]
+                                                 (let [key (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-rivi-idx)]
+                                                   ^{:key key}
+                                                   [oppiaineen-arvosana-rivi
+                                                    {:pakollinen-oppiaine?
+                                                     false
+
+                                                     :label
+                                                     [valinnainen-kieli-label {:field-descriptor oppiaine-dropdown
+                                                                               :idx              valinnainen-kieli-rivi-idx
+                                                                               :lang             lang}]
+
+                                                     :oppimaara-dropdown
+                                                     [valinnainen-kieli-oppimaara
+                                                      {:field-descriptor oppimaara-dropdown
+                                                       :render-field     render-field
+                                                       :idx              valinnainen-kieli-rivi-idx}]
+
+                                                     :arvosana-dropdown
+                                                     [render-field arvosana-dropdown valinnainen-kieli-rivi-idx]}]))))
+        lisaa-valinnainen-kieli-row [oppiaineen-arvosana-rivi
+                                     {:pakollinen-oppiaine?
+                                      false
+
+                                      :label
+                                      [valinnainen-kieli-dropdown
+                                       {:valinnainen-kieli-field-descriptor  oppiaine-dropdown
+                                        :valinnaiset-kielet-field-descriptor field-descriptor
+                                        :render-field                        render-field
+                                        :idx                                 (dec row-count)}]}]]
+    (as-> [:<>] valinnaiset-kielet-component
+
+          (cond-> valinnaiset-kielet-component
+                  (> (count valinnaiset-kielet-rows) 0)
+                  (into valinnaiset-kielet-rows))
+
+          (conj valinnaiset-kielet-component
+                lisaa-valinnainen-kieli-row))))
 
 (s/defn arvosanat-taulukko-otsikkorivi
   [{:keys [lang

@@ -14,6 +14,16 @@
          [arvosanat/arvosanat-taulukko render-field-args]
 
          {:fieldClass "questionGroup"
+          :fieldType  "fieldset"
+          :id         "oppiaineen-arvosanat-valinnaiset-kielet"}
+         [arvosanat/valinnaiset-kielet render-field-args]
+
+         ;{:fieldClass "formField"
+         ; :fieldType  "dropdown"
+         ; :id         "oppiaine-valinnainen-kieli"}
+         ;[arvosanat/valinnainen-kieli-dropdown render-field-args]
+
+         {:fieldClass "questionGroup"
           :fieldType  "fieldset"}
          [arvosanat/oppiaineen-arvosana render-field-args]))
 

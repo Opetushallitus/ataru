@@ -7,6 +7,10 @@
        (or (vector? (first value))
            (nil? (first value)))))
 
+(defn- question-group-inside-question-group? [x]
+  (and (vector? x)
+       (every? is-question-group-answer? x)))
+
 (s/defschema Label
   {(s/optional-key :fi) s/Str
    (s/optional-key :sv) s/Str
@@ -37,7 +41,9 @@
    (s/optional-key :request)       s/Any})
 
 (s/defschema Values
-  (s/conditional is-question-group-answer?
+  (s/conditional question-group-inside-question-group?
+                 [Values]
+                 is-question-group-answer?
                  [(s/maybe [ValuesValue])]
                  vector?
                  [ValuesValue]

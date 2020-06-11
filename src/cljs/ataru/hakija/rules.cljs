@@ -3,7 +3,9 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
-            clojure.string))
+            clojure.string
+            [clojure.string :as string])
+  (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
   (if (vector? current-value)
@@ -87,31 +89,31 @@
 (defn- parse-birth-date-from-ssn
   [ssn]
   (let [century-sign (nth ssn 6)
-        day (subs ssn 0 2)
-        month (subs ssn 2 4)
-        year (subs ssn 4 6)
-        century (case century-sign
-                  "+" "18"
-                  "-" "19"
-                  "A" "20")]
+        day          (subs ssn 0 2)
+        month        (subs ssn 2 4)
+        year         (subs ssn 4 6)
+        century      (case century-sign
+                       "+" "18"
+                       "-" "19"
+                       "A" "20")]
     (str day "." month "." century year)))
 
 (defn- parse-gender-from-ssn
   [ssn]
   (if (zero? (mod (js/parseInt (nth ssn 9)) 2))
-    "2" ;; based on koodisto-values
+    "2"                                                     ;; based on koodisto-values
     "1"))
 
 (defn- birth-date-and-gender
   ^{:dependencies [:have-finnish-ssn :ssn]}
   [db]
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
-        ssn (get-in db [:application :answers :ssn])
-        cannot-view? (and (get-in db [:application :editing?])
-                          (->> (:flat-form-content db)
-                               (filter #(= "ssn" (:id %)))
-                               first
-                               :cannot-view))]
+        ssn              (get-in db [:application :answers :ssn])
+        cannot-view?     (and (get-in db [:application :editing?])
+                              (->> (:flat-form-content db)
+                                   (filter #(= "ssn" (:id %)))
+                                   first
+                                   :cannot-view))]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
                                            (not-empty (:value ssn)))
@@ -217,8 +219,8 @@
 (defn- postal-office
   ^{:dependencies [:country-of-residence :postal-code]}
   [db]
-  (let [answers (-> db :application :answers)
-        country (-> answers :country-of-residence :value)
+  (let [answers     (-> db :application :answers)
+        country     (-> answers :country-of-residence :value)
         is-finland? (or (= country finland-country-code)
                         (clojure.string/blank? country))
         postal-code (-> answers :postal-code)
@@ -242,7 +244,7 @@
 (defn- home-town-and-city
   ^{:dependencies [:country-of-residence]}
   [db]
-  (let [country (get-in db [:application :answers :country-of-residence :value])
+  (let [country     (get-in db [:application :answers :country-of-residence :value])
         is-finland? (or (= country finland-country-code)
                         (clojure.string/blank? country))]
     (if is-finland?
@@ -333,6 +335,60 @@
         (show-field :arvosana-B1)
         (hide-oppiaine-row :A2))))
 
+(defn- set-oppiaine-valinnainen-kieli-value
+  [db _]
+  (let [last-idx (-> db :application :ui :oppiaineen-arvosanat-valinnaiset-kielet :count dec)]
+    (when (>= last-idx 0)
+      (reduce (fn [db' answer-key]
+                (update-in
+                  db'
+                  [:application :answers answer-key]
+                  (fn [answer]
+                    (as-> answer answer'
+                          (update answer'
+                                  :values
+                                  (fn [values]
+                                    (->> values
+                                         (map-indexed
+                                           (fn [values-idx values']
+                                             (let [oppiaine-koodi (-> db
+                                                                      :application
+                                                                      :answers
+                                                                      :oppiaine-valinnainen-kieli
+                                                                      :values
+                                                                      (get values-idx)
+                                                                      first
+                                                                      :value)]
+                                               (mapv (fn [value]
+                                                       (let [last-valinnainen-oppiaine-row? (= values-idx last-idx)
+                                                             value-not-blank?               (-> value :value string/blank? not)
+                                                             valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank? answer-key oppiaine-koodi]
+                                                                                                   [true _ _ _]
+                                                                                                   true
+
+                                                                                                   [false true :oppimaara-valinnainen-kieli "oppiaine-valinnainen-kieli-a"]
+                                                                                                   true
+
+                                                                                                   [false _ :oppimaara-valinnainen-kieli (_ :guard #(not= % "oppiaine-valinnainen-kieli-a"))]
+                                                                                                   true
+
+                                                                                                   [false true (_ :guard #(not= % :oppimaara-valinnainen-kieli)) _]
+                                                                                                   true
+
+                                                                                                   :else
+                                                                                                   false)]
+                                                         (assoc value :valid valid?)))
+                                                     values'))))
+                                         (into []))))
+                          (assoc answer'
+                                 :valid
+                                 (every? (comp true? :valid first)
+                                         (:values answer')))))))
+              db
+              [:oppimaara-valinnainen-kieli
+               :oppiaine-valinnainen-kieli
+               :arvosana-valinnainen-kieli]))))
+
 (defn- hakija-rule-to-fn [rule]
   (case rule
     :prefill-preferred-first-name
@@ -352,7 +408,9 @@
     :pohjakoulutusristiriita
     pohjakoulutusristiriita
     :toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
-    toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet))
+    toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
+    :set-oppiaine-valinnainen-kieli-value
+    set-oppiaine-valinnainen-kieli-value))
 
 (defn run-rules
   ([db rules]
