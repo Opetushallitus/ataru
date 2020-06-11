@@ -1,15 +1,11 @@
 (ns ataru.virkailija.editor.components.followup-question
   (:require
    [ataru.cljs-util :as util]
-   [ataru.component-data.component :as component]
    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
-   [cljs.core.match :refer-macros [match]]
+   [ataru.virkailija.temporal :as temporal]
    [goog.string :as s]
-   [re-frame.core :refer [subscribe dispatch reg-sub reg-event-db reg-fx reg-event-fx]]
-   [reagent.core :as r]
-   [reagent.ratom :refer-macros [reaction]]
-   [ataru.virkailija.temporal :as temporal]))
+   [re-frame.core :refer [subscribe dispatch reg-event-db]]))
 
 (reg-event-db
   :editor/generate-followup-component
