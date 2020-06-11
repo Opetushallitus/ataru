@@ -33,7 +33,7 @@
             (fn [generate-fn]
               (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]])))
 
-(defn followup-question [option-index followups option-path show-followups]
+(defn followup-question [option-index followups show-followups]
   (let [attrs {:on-click #(swap! show-followups
                                  (fn [v] (update v option-index not)))}]
     [:div.editor-form__followup-question
