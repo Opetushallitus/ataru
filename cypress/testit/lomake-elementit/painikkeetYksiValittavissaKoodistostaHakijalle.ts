@@ -1,26 +1,26 @@
 import * as hakijanNakyma from '../../hakijanNakyma'
+import hakemuksenLahettaminen from '../hakemuksenLahettaminen'
 
 export default () => {
   describe('Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"', () => {
     before(() => {
-      hakijanNakyma
-        .klikkaa(
-          'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
-        )
-        .then(hakijanNakyma.lahetaHakemus)
-        .then(hakijanNakyma.painaOkPalautenakymassa)
-        .then(hakijanNakyma.suljePalaute)
+      hakijanNakyma.klikkaa(
+        'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+      )
     })
 
-    it('Näyttää lomakkeen nimen', () =>
-      hakijanNakyma.haeLomakkeenNimi().should('have.text', 'Testilomake'))
+    hakemuksenLahettaminen(() => {
+      describe('Painikkeet, yksi valittavissa, koodisto -toiminnon arvojen näyttäminen hakemuksen lähettämisen jälkeen', () => {
+        it('Näyttää kysymyksen tekstin', () => {
+          cy.contains('Minkä koulutuksen olet suorittanut?')
+        })
 
-    it('Näyttää kysymyksen tekstin', () =>
-      cy.contains('Minkä koulutuksen olet suorittanut?'))
-
-    it('Näyttää valitun koodiarvon', () =>
-      cy.contains(
-        'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
-      ))
+        it('Näyttää valitun koodiarvon', () => {
+          cy.contains(
+            'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+          )
+        })
+      })
+    })
   })
 }
