@@ -107,6 +107,13 @@
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
+  :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
+  (fn [db [_ path value]]
+    (let [followup-path (current-form-content-path db [path :options 0 :condition])]
+      (-> db
+          (update-in followup-path assoc :answer-compared-to (js/parseInt value))))))
+
+(reg-event-db
   :editor/set-ordered-by-user
   (fn [db [_ value & path]]
     (let [component-path (current-form-content-path db [path])]

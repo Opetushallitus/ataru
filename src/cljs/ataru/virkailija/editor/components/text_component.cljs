@@ -147,6 +147,31 @@
                             :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
+(defn- text-field-option-condition [option path]
+  (let [component-locked? (subscribe [:editor/component-locked? path])
+        id                (util/new-uuid)
+        value             (-> option :condition :answer-compared-to)
+        local-state       (r/atom {:focused? false
+                                   :value    value})]
+    (fn [option path]
+      (let [value (-> option :condition :answer-compared-to)]
+        [:div.editor-form__text-field-option-condition
+         [:label
+          {:for   id
+           :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+         [:input.editor-form__text-field-option-condition-answer-compared-to
+          {:disabled  @component-locked?
+           :id        id
+           :on-blur   (fn [event]
+                        (swap! local-state assoc :focused? false)
+                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)]))
+           :on-change (fn [event] (swap! local-state assoc :focused? true :value (get-val event)))
+           :type      "text"
+           :value     (if (:focused? @local-state)
+                        (:value @local-state)
+                        value)}]]))))
+
 (defn- text-field-option-followups-wrapper
   [options followups path show-followups]
   (let [option-count (count options)]
@@ -157,6 +182,9 @@
       (let [option-index 0
             followups    (nth followups option-index)]
         [:div.editor-form__text-field-option-followups-wrapper
+         [:div.editor-form__text-field-option-followups-header
+          [text-field-option-condition (first options) path]
+          [followup-question/followup-question option-index followups show-followups]]
          [followup-question/followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-an-option [_ _ _ _]

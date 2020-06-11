@@ -21,8 +21,7 @@
   ([value]
    {:value     value
     :label     {:fi "" :sv ""}
-    :condition {:answer-compared-to  8
-                :comparison-operator "="}}))
+    :condition {:comparison-operator "="}}))
 
 (defn text-area [metadata]
   (assoc (text-field metadata)

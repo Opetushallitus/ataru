@@ -1805,7 +1805,10 @@
                                                      :en "Extra question"}
    :lisakysymys-arvon-perusteella                   {:fi "Lisäkysymys arvon perusteella"
                                                      :sv "SV: Lisäkysymys arvon perusteella"
-                                                     :en "EN: Lisäkysymys arvon perusteella"}})
+                                                     :en "EN: Lisäkysymys arvon perusteella"}
+   :lisakysymys-arvon-perusteella-ehto              {:fi "Jos vastauksen arvo on yhtä suuri kuin"
+                                                     :sv "SV: Jos vastauksen arvo on yhtä suuri kuin"
+                                                     :en "EN: Jos vastauksen arvo on yhtä suuri kuin"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
