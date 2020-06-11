@@ -1,6 +1,6 @@
 import * as hakijanNakyma from '../hakijanNakyma'
 
-export default () => {
+export default (testit: () => void) => {
   describe('Henkilötietomoduulin täyttäminen', () => {
     before(() => {
       hakijanNakyma.henkilotiedot.taytaTiedot()
@@ -11,5 +11,7 @@ export default () => {
         .haePostitoimipaikkaKentta()
         .should('have.value', 'HELSINKI')
     })
+
+    testit()
   })
 }

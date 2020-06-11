@@ -12,8 +12,9 @@ describe('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', () => {
         lomakkeenTunnisteet,
         () => {
           hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-            henkilotietoModuulinTayttaminen()
-            painikkeetYksiValittavissaKoodistostaHakijalle()
+            henkilotietoModuulinTayttaminen(() => {
+              painikkeetYksiValittavissaKoodistostaHakijalle()
+            })
           })
         }
       )
