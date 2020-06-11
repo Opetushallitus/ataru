@@ -5,6 +5,7 @@ import peruskoulunArvosanatOsionTayttaminenHakijana from '../testit/arvosanat/pe
 import peruskoulunArvosanatOsionLisays from '../testit/arvosanat/peruskoulunArvosanatOsionLisays'
 import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 import peruskoulunArvosanatOsionAidinkielenVaihtaminen from '../testit/arvosanat/peruskoulunArvosanatOsionAidinkielenVaihtaminen'
+import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTayttaminen'
 
 describe('Peruskoulun arvosanat -osio', () => {
   kirjautuminenVirkailijanNakymaan(() => {
@@ -12,8 +13,10 @@ describe('Peruskoulun arvosanat -osio', () => {
       peruskoulunArvosanatOsionLisays(lomakkeenTunnisteet, () => {
         peruskoulunArvosanatOsionPoistaminen(lomakkeenTunnisteet)
         hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-          peruskoulunArvosanatOsionAidinkielenVaihtaminen()
-          peruskoulunArvosanatOsionTayttaminenHakijana()
+          henkilotietoModuulinTayttaminen(() => {
+            peruskoulunArvosanatOsionAidinkielenVaihtaminen()
+            peruskoulunArvosanatOsionTayttaminenHakijana()
+          })
         })
       })
     })
