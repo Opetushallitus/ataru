@@ -68,7 +68,7 @@ export const naytaVastausvaihtoehdot = () =>
 export const vastausvaihtoehdot = () =>
   cy
     .get('[data-test-id=editor-form__multi-options-container')
-    .find('[data-test-id=editor-form__koodisto-field]')
+    .find('[data-test-id=editor-form__koodisto-field]:visible')
 
 export const hakukohteet = {
   haeOtsikko: () => cy.get('[data-test-id=hakukohteet-header-label]:visible'),
