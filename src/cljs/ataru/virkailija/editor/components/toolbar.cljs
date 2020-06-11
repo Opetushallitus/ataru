@@ -10,6 +10,10 @@
 (defn- toolbar-elements []
   (cond-> [[:form-section component/form-section]
            [:single-choice-button component/single-choice-button]
+           [:single-choice-button-koodisto (fn [metadata]
+                                             (assoc (component/single-choice-button metadata)
+                                               :koodisto-source {:uri "" :title "" :version 1}
+                                               :options []))]
            [:dropdown component/dropdown]
            [:dropdown-koodisto (fn [metadata]
                                  (assoc (component/dropdown metadata)
@@ -39,6 +43,7 @@
   #{:text-field
     :text-area
     :single-choice-button
+    :single-choice-button-koodisto
     :dropdown
     :dropdown-koodisto
     :multiple-choice
@@ -52,6 +57,7 @@
   #{:text-field
     :text-area
     :single-choice-button
+    :single-choice-button-koodisto
     :dropdown
     :dropdown-koodisto
     :multiple-choice
@@ -74,7 +80,7 @@
   {:text-field (comp (fn [text-field] (assoc text-field :params {:adjacent true}))
                     component/text-field)})
 
-(defn- component-toolbar [path elements generator]
+(defn- component-toolbar [_ _ _]
   (fn [path elements generator]
     (let [base-education-module-exists?   (subscribe [:editor/base-education-module-exists?])
           pohjakoulutusristiriita-exists? (subscribe [:editor/pohjakoulutusristiriita-exists?])]
@@ -95,7 +101,7 @@
                 @(subscribe [:editor/virkailija-translation component-name])]])))))
 
 
-(defn custom-add-component [toolbar path generator]
+(defn custom-add-component [_ _ _]
   (let [mouse-over?  (r/atom false)
         form-locked? (subscribe [:editor/form-locked?])]
     (fn [toolbar path generator]

@@ -1,4 +1,5 @@
 {
   "baseUrl": "http://localhost:8354",
-  "fixturesFolder": "cypress/fixtures"
+  "fixturesFolder": "cypress/fixtures",
+  "viewportHeight": 2000
 }

@@ -1,11 +1,8 @@
 (ns ataru.hakija.banner
   (:require [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
-            [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
-            [goog.string :as s]
             [cljs.core.match :refer-macros [match]]
-            [ataru.util :as util]
             [ataru.translations.translation-util :as translations]))
 
 (defn logo []
@@ -14,12 +11,6 @@
       :fi [:div.logo-fi {:title "Opintopolku.fi"}]
       :sv [:div.logo-sv {:title "Studieinfo.fi"}]
       :en [:div.logo-en {:title "Studyinfo.fi"}])))
-
-(defn- form-field-type [form-fields key]
-  (->> form-fields
-       (filter (comp (partial = key) keyword :id))
-       (map :fieldType)
-       (first)))
 
 (defn invalid-field-status []
   (let [show-details        (r/atom false)
@@ -102,7 +93,8 @@
                             (not (empty? validators-processing)))
               :on-click #(if editing
                            (dispatch [:application/edit])
-                           (dispatch [:application/submit]))}
+                           (dispatch [:application/submit]))
+              :data-test-id "send-application-button"}
              (edit-text editing secret virkailija-secret lang)])))
 
 (defn- preview-toggle
@@ -126,10 +118,6 @@
   (when (and (some? hakuaika-end) (some? time-diff))
     (/ (- hakuaika-end (.getTime (js/Date.)) time-diff) 1000)))
 
-(defn- round [value step]
-  (let [inv (/ 1.0 step)]
-    (/ (Math/ceil (* value inv)) inv)))
-
 (defn hakuaika-left-text [seconds-left lang]
   (let [hours     (Math/floor (/ seconds-left 3600))
         minutes   (Math/floor (/ (rem seconds-left 3600) 60))
@@ -142,7 +130,7 @@
                     (and (zero? hours) (> 45 minutes))  :application-period-less-than-45-min-left
                     (zero? hours)                       :application-period-less-than-hour-left
                     (> 24 hours)                        :application-period-less-than-day-left)]
-    (if text-code
+    (when text-code
       [:div.application__hakuaika-left
        (translations/get-hakija-translation text-code lang)])))
 

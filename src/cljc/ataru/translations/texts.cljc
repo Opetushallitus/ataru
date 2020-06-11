@@ -1603,6 +1603,9 @@
    :single-choice-button                            {:fi "Painikkeet, yksi valittavissa"
                                                      :sv "En tangent kan väljas"
                                                      :en "EN: Painikkeet, yksi valittavissa"}
+   :single-choice-button-koodisto                   {:fi "Painikkeet, yksi valittavissa, koodisto"
+                                                     :sv "En tangent kan väljas, kodregister"
+                                                     :en "EN: Painikkeet, yksi valittavissa, codes"}
    :ssn                                             {:fi "Henkilötunnus"
                                                      :sv "Personbeteckning"
                                                      :en "Personal identity code"}

@@ -117,14 +117,6 @@
             (update-in options-path swap-vector index (inc index))
             (update-in (drop-last options-path) set-non-koodisto-option-values))))))
 
-(reg-event-db
-  :editor/select-custom-multi-options
-  (fn [db [_ & path]]
-    (let [dropdown-path (current-form-content-path db [path])]
-      (-> db
-          (update-in dropdown-path dissoc :koodisto-source)
-          (update-in dropdown-path assoc :options [])))))
-
 (reg-event-fx
   :editor/select-koodisto-options
   (fn [{db :db} [_ uri path allow-invalid?]]
@@ -645,7 +637,7 @@
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
-                                            (map (fn [component] (clojure.walk/prewalk
+                                            (map (fn [component] (walk/prewalk
                                                                    #(-> %
                                                                         (reset-selection-group-id)) component))
                                                  content)))
@@ -761,7 +753,7 @@
                    reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
                                                       (assoc-in x [:params :selection-group-id] form-key)
                                                       x))
-                   component                (clojure.walk/prewalk
+                   component                (walk/prewalk
                                              #(-> %
                                                   (reset-uuid)
                                                   (reset-selection-group-id)) component)
@@ -828,7 +820,7 @@
                           (sort-by (partial index-of lang-order)))))
         (update-in [:editor :ui]
                    (fn [ui]
-                     (clojure.walk/prewalk
+                     (walk/prewalk
                       (fn [x]
                         (if (= [:focus? true] x)
                           [:focus? false]
@@ -864,7 +856,7 @@
                                                (= version (get-in component [:koodisto-source :version])))
                                         (update-koodisto-component component)
                                         component))
-          updated-form              (clojure.walk/prewalk find-koodisto-component form)]
+          updated-form              (walk/prewalk find-koodisto-component form)]
       (assoc-in db [:editor :forms key :content] updated-form))))
 
 (reg-event-fx

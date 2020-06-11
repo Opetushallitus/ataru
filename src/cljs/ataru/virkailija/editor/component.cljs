@@ -457,7 +457,8 @@
     [:div.editor-form__koodisto-field-container
      {:key (str "option-" lang "-" idx)}
      [:div.editor-form__koodisto-field
-      {:on-drop prevent-default}
+      {:on-drop prevent-default
+       :data-test-id "editor-form__koodisto-field"}
       value]]))
 
 (defn- koodisto-fields-with-lang [_ _]
@@ -762,7 +763,8 @@
         [:select.editor-form__select-koodisto-dropdown
          {:id        id
           :value     (:uri @selected-koodisto)
-          :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path (:allow-invalid? @selected-koodisto)])}
+          :on-change #(dispatch [:editor/select-koodisto-options (.-value (.-target %)) path (:allow-invalid? @selected-koodisto)])
+          :data-test-id "editor-form__select-koodisto-dropdown"}
          (when (= (:uri @selected-koodisto) "")
            [:option {:value "" :disabled true} ""])
          (for [{:keys [uri title]} koodisto-whitelist/koodisto-whitelist]
@@ -778,6 +780,7 @@
                 (not (= (count @show-followups) option-count)))
         (reset! show-followups (vec (replicate option-count false))))
       [:div.editor-form__multi-options-container
+       {:data-test-id "editor-form__multi-options-container"}
        (doall (map-indexed (fn [idx option]
                              ^{:key (str "options-" idx)}
                              [dropdown-option
@@ -808,7 +811,8 @@
         (if (not @opened?)
           [:div.editor-form__show-koodisto-values
            [:a
-            {:on-click show-koodisto-options}
+            {:on-click show-koodisto-options
+             :data-test-id "editor-form__show_koodisto-values__link"}
             [:i.zmdi.zmdi-chevron-down] (str " " @(subscribe [:editor/virkailija-translation :show-options]))]]
           [:div
            [:div.editor-form__show-koodisto-values
@@ -832,22 +836,27 @@
             field-type     (:fieldType @value)
             show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
+         {:data-test-id "editor-form__dropdopwn-component-wrapper"}
          (let [header (case field-type
                         "dropdown"       (if (some? @options-koodisto)
                                            @(subscribe [:editor/virkailija-translation :dropdown-koodisto])
                                            @(subscribe [:editor/virkailija-translation :dropdown]))
-                        "singleChoice"   @(subscribe [:editor/virkailija-translation :single-choice-button])
+                        "singleChoice"   (if (some? @options-koodisto)
+                                           @(subscribe [:editor/virkailija-translation :single-choice-button-koodisto])
+                                           @(subscribe [:editor/virkailija-translation :single-choice-button]))
                         "multipleChoice" (if (some? @options-koodisto)
                                            @(subscribe [:editor/virkailija-translation :multiple-choice-koodisto])
-                                           @(subscribe [:editor/virkailija-translation :multiple-choice])))]
+                                           @(subscribe [:editor/virkailija-translation :multiple-choice])))
+               data-test-id (str "editor-form__" field-type "-component-main")]
            [text-header (:id initial-content) header path (:metadata initial-content)
-            :sub-header (:label @value)])
+            :sub-header (:label @value) :data-test-id data-test-id])
          [component-content
           path
           [:div
            [:div.editor-form__component-row-wrapper
             [:div.editor-form__multi-question-wrapper
              [:div.editor-form__text-field-wrapper
+              {:data-test-id (str "editor-form__" field-type "-component-question-wrapper")}
               [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :question])
                [copy-link (:id initial-content)]]
               (input-fields-with-lang
