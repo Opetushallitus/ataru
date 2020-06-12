@@ -180,11 +180,13 @@
       (reset! show-followups (vec (replicate option-count true))))
     (when (< 0 option-count)
       (let [option-index 0
-            followups    (nth followups option-index)]
+            followups    (nth followups option-index)
+            option       (nth options option-index)]
         [:div.editor-form__text-field-option-followups-wrapper
-         [:div.editor-form__text-field-option-followups-header
-          [text-field-option-condition (first options) path]
-          [followup-question/followup-question option-index followups show-followups]]
+         (when (:condition option)
+           [:div.editor-form__text-field-option-followups-header
+            [text-field-option-condition option path]
+            [followup-question/followup-question option-index followups show-followups]])
          [followup-question/followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-an-option [_ _ _ _]
