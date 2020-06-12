@@ -156,7 +156,7 @@
     (fn [option path]
       (let [value (-> option :condition :answer-compared-to)]
         [:div.editor-form__text-field-option-condition
-         [:label
+         [:label.editor-form__text-field-option-condition-label
           {:for   id
            :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]

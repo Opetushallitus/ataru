@@ -672,14 +672,27 @@
   align-items: stretch;
   background-color: @element-list-item-background;
   display: flex;
-  flex-flow: row nowrap;
+  flex-flow: row wrap;
   margin-bottom: 12px;
 }
 
 .editor-form__text-field-option-condition {
+  align-items: center;
   border-radius: 3px;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
   margin-right: 2px;
   padding: 4px 10px;
+}
+
+.editor-form__text-field-option-condition-label {
+  margin-right: 5px;
+}
+
+.editor-form__text-field-option-condition-answer-compared-to {
+  text-align: center;
+  width: 50px;
 }
 
 .editor-form__multi-question-wrapper {
