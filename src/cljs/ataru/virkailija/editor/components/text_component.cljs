@@ -79,12 +79,14 @@
   (let [id (util/new-uuid)]
     (fn [{:keys [component-locked?
                  followups?
-                 options?
+                 options-with-condition?
+                 options-without-condition?
                  path
                  repeatable?]}]
-      (let [checked?     options?
+      (let [checked?     options-with-condition?
             disabled?    (or component-locked?
                              followups?
+                             options-without-condition?
                              repeatable?)
             option-index 0]
         [:div.editor-form__additional-params-container
@@ -192,24 +194,26 @@
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
     (fn [value followups path component-locked?]
-      (let [option-index 0
-            has-options? (not (empty? (:options value)))
-            repeatable?  (-> value :params :repeatable boolean)
-            disabled?    (or component-locked?
-                             (not (empty? (first followups)))
-                             repeatable?)]
+      (let [option-index               0
+            options-without-condition? (not (empty? (remove :condition (:options value))))
+            options-with-condition?    (not (empty? (filter :condition (:options value))))
+            repeatable?                (-> value :params :repeatable boolean)
+            disabled?                  (or component-locked?
+                                           options-with-condition?
+                                           (not (empty? (first followups)))
+                                           repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
-          {:id        id
-           :type      "checkbox"
-           :checked   has-options?
-           :disabled  disabled?
-           :on-change (fn [evt]
-                        (when-not disabled?
-                          (.preventDefault evt)
-                          (if (-> evt .-target .-checked)
-                            (dispatch [:editor/add-text-field-option path])
-                            (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
+          {:id           id
+           :type         "checkbox"
+           :checked      options-without-condition?
+           :disabled     disabled?
+           :on-change    (fn [evt]
+                           (when-not disabled?
+                             (.preventDefault evt)
+                             (if (-> evt .-target .-checked)
+                               (dispatch [:editor/add-text-field-option path])
+                               (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
@@ -286,10 +290,12 @@
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
-             (let [props {:component-locked? @component-locked?
-                          :followups?        (not (empty? (first followups)))
-                          :options?          (not (empty? (:options @value)))
-                          :repeatable?       (-> @value :params :repeatable boolean)}]
+             (let [options (:options @value)
+                   props   {:component-locked?          @component-locked?
+                            :followups?                 (not (empty? (first followups)))
+                            :options-with-condition?    (not (empty? (filter :condition options)))
+                            :options-without-condition? (not (empty? (remove :condition options)))
+                            :repeatable?                (-> @value :params :repeatable boolean)}]
                [text-component-type-selector (:id initial-content) path radio-group-id props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
