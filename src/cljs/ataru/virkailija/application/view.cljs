@@ -1989,6 +1989,7 @@
           selected-review-hakukohde     @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           show-not-latest-form?         (some? @(subscribe [:state-query [:application :latest-form]]))
           show-creating-henkilo-failed? @(subscribe [:application/show-creating-henkilo-failed?])
+          show-henkilo-info-incomplete? @(subscribe [:application/show-henkilo-info-incomplete?])
           show-not-yksiloity?           (and (some? person-oid)
                                              (not (-> application :person :yksiloity)))
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])]
@@ -2005,8 +2006,10 @@
                            :on-click  (fn [evt]
                                         (.preventDefault evt)
                                         (select-application (:key application) selected-review-hakukohde true))}])
-          (when show-creating-henkilo-failed?
-            [notification {:text      :creating-henkilo-failed
+          (when show-creating-henkilo-failed?  ; henkilo details are missing entirely
+            [notification {:text      :creating-henkilo-failed}])
+          (when show-henkilo-info-incomplete?  ; henkilo is missing some essential information, such as language
+            [notification {:text      :henkilo-info-incomplete
                            :link-text :review-in-henkilopalvelu
                            :href      (str "/henkilo-ui/oppija/"
                                            person-oid)}])
