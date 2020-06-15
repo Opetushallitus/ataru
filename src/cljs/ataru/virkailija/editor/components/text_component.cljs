@@ -114,7 +114,8 @@
   [:div.editor-form__text-field-kenttään-vain-numeroita
    [numeerisen-kentän-muoto props]
    [numeerisen-kentän-arvoalueen-rajaus component-id path]
-   [lisäkysymys-arvon-perusteella props]])
+   (when (not (:adjacent-text-field? props))
+     [lisäkysymys-arvon-perusteella props])])
 
 (defn text-component-type-selector [_ path _]
   (let [id                (util/new-uuid)

@@ -523,7 +523,8 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
-          [text-component/text-component-type-selector (:id content) path {}]]
+          [text-component/text-component-type-selector (:id content) path {:adjacent-text-field? true
+                                                                           :allow-decimals?      true}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
