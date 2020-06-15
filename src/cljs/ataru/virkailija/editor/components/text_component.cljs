@@ -124,7 +124,8 @@
          {:type      "checkbox"
           :id        id
           :checked   (or @checked? false)
-          :disabled  @component-locked?
+          :disabled  (or @component-locked?
+                         (:cannot-change-type? props))
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric])
@@ -313,12 +314,14 @@
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
-             (let [options (:options @value)
-                   props   {:component-locked?          @component-locked?
-                            :followups?                 (not (empty? (first followups)))
-                            :options-with-condition?    (not (empty? (filter :condition options)))
-                            :options-without-condition? (not (empty? (remove :condition options)))
-                            :repeatable?                (-> @value :params :repeatable boolean)}]
+             (let [options                 (:options @value)
+                   options-with-condition? (not (empty? (filter :condition options)))
+                   props                   {:cannot-change-type?        options-with-condition?
+                                            :component-locked?          @component-locked?
+                                            :followups?                 (not (empty? (first followups)))
+                                            :options-with-condition?    options-with-condition?
+                                            :options-without-condition? (not (empty? (remove :condition options)))
+                                            :repeatable?                (-> @value :params :repeatable boolean)}]
                [text-component-type-selector (:id initial-content) path props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
