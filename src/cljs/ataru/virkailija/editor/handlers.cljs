@@ -61,8 +61,7 @@
   (fn [db [_ & path]]
     (let [option-path (current-form-content-path db [path])]
       (-> db
-          (update-in (drop-last option-path) util/remove-nth (last option-path))
-          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
+          (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/add-dropdown-option
@@ -118,8 +117,7 @@
       db
       (let [options-path (current-form-content-path db [path :options])]
         (-> db
-            (update-in options-path swap-vector index (dec index))
-            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
+            (update-in options-path swap-vector index (dec index)))))))
 
 (reg-event-db
   :editor/move-option-down
@@ -130,8 +128,7 @@
       (if is-last-option?
         db
         (-> db
-            (update-in options-path swap-vector index (inc index))
-            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
+            (update-in options-path swap-vector index (inc index)))))))
 
 (reg-event-fx
   :editor/select-koodisto-options
