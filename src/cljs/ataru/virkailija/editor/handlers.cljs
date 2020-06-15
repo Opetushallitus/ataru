@@ -109,9 +109,13 @@
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
   (fn [db [_ path value]]
-    (let [followup-path (current-form-content-path db [path :options 0 :condition])]
+    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
       (-> db
-          (update-in followup-path assoc :answer-compared-to (js/parseInt value))))))
+          (update-in condition-path
+                     (fn [condition]
+                       (if (string/blank? value)
+                         (dissoc condition :answer-compared-to)
+                         (assoc condition :answer-compared-to (js/parseInt value)))))))))
 
 (reg-event-db
   :editor/set-ordered-by-user

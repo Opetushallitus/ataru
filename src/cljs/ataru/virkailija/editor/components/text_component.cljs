@@ -149,30 +149,53 @@
                             :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(defn- text-field-option-condition [option path]
+(def ^:private integer-matcher #"([+-]?)(0|[1-9][0-9]*)")
+
+(defn- clean-format [value]
+  (string/replace (string/trim (or value "")) "." ","))
+
+(defn- valid-integer? [value]
+  (let [clean (clean-format value)]
+    (or
+      (empty? clean)
+      (some? (re-matches integer-matcher clean)))))
+
+(defn- text-field-option-condition [_ path]
   (let [component-locked? (subscribe [:editor/component-locked? path])
         id                (util/new-uuid)
-        value             (-> option :condition :answer-compared-to)
         local-state       (r/atom {:focused? false
-                                   :value    value})]
-    (fn [option path]
-      (let [value (-> option :condition :answer-compared-to)]
-        [:div.editor-form__text-field-option-condition
-         [:label.editor-form__text-field-option-condition-label
-          {:for   id
-           :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
-          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
-         [:input.editor-form__text-field-option-condition-answer-compared-to
-          {:disabled  @component-locked?
-           :id        id
-           :on-blur   (fn [event]
-                        (swap! local-state assoc :focused? false)
-                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)]))
-           :on-change (fn [event] (swap! local-state assoc :focused? true :value (get-val event)))
-           :type      "text"
-           :value     (if (:focused? @local-state)
-                        (:value @local-state)
-                        value)}]]))))
+                                   :valid?   true
+                                   :value    ""})]
+    (fn [condition path]
+      (when (not (:focused? @local-state))
+        (let [value (str (-> condition :answer-compared-to))]
+          (swap! local-state
+                 assoc
+                 :valid? true
+                 :value value)))
+      [:div.editor-form__text-field-option-condition
+       [:label.editor-form__text-field-option-condition-label
+        {:for   id
+         :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
+        @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+       [:input.editor-form__text-field-option-condition-answer-compared-to
+        {:disabled  @component-locked?
+         :class     (when (not (:valid? @local-state))
+                      "editor-form__text-field-option-condition-answer-compared-to--invalid")
+         :id        id
+         :on-blur   (fn [event]
+                      (swap! local-state
+                             assoc
+                             :focused? false)
+                      (when (:valid? @local-state)
+                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)])))
+         :on-change (fn [event] (swap! local-state
+                                       assoc
+                                       :focused? true
+                                       :valid? (valid-integer? (get-val event))
+                                       :value (get-val event)))
+         :type      "text"
+         :value     (:value @local-state)}]])))
 
 (defn- text-field-option-followups-wrapper
   [options followups path show-followups]
@@ -187,7 +210,7 @@
         [:div.editor-form__text-field-option-followups-wrapper
          (when (:condition option)
            [:div.editor-form__text-field-option-followups-header
-            [text-field-option-condition option path]
+            [text-field-option-condition (:condition option) path]
             [followup-question/followup-question option-index followups show-followups]])
          [followup-question/followup-question-overlay option-index followups path show-followups]]))))
 
