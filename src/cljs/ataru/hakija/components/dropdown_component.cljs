@@ -90,18 +90,23 @@
                                 {:label (-> option :label lang)
                                  :value (:value option)})
                               (:options field-descriptor))
-        data-test-id     (:data-test-id field-descriptor)]
+        data-test-id     (:data-test-id field-descriptor)
+        unselected-label-icon           (:unselected-label-icon field-descriptor)]
     [dropdown-component/dropdown
-     (cond-> {:options          options
-              :unselected-label unselected-label
-              :selected-value   (:value answer)
-              :on-change        (fn [value]
-                                  (re-frame/dispatch [:application/set-repeatable-application-field
-                                                      field-descriptor
-                                                      idx
-                                                      nil
-                                                      value])
-                                  (when on-change
-                                    (on-change)))}
+     (cond-> {:options               options
+              :unselected-label      unselected-label
+              :selected-value        (:value answer)
+              :on-change             (fn [value]
+                                       (re-frame/dispatch [:application/set-repeatable-application-field
+                                                           field-descriptor
+                                                           idx
+                                                           nil
+                                                           value])
+                                       (when on-change
+                                         (on-change)))}
+
              data-test-id
-             (assoc :data-test-id data-test-id))]))
+             (assoc :data-test-id data-test-id)
+
+             unselected-label-icon
+             (assoc :unselected-label-icon unselected-label-icon))]))

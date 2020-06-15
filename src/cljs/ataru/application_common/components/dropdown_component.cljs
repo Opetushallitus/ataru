@@ -150,13 +150,15 @@
     (s/fn render-dropdown
       [{:keys [options
                unselected-label
+               unselected-label-icon
                selected-value
                on-change
-               data-test-id]} :- {:options                       [SelectOptionProps]
-                                  :unselected-label              s/Str
-                                  :selected-value                (s/maybe s/Str)
-                                  :on-change                     s/Any
-                                  (s/optional-key :data-test-id) (s/maybe s/Str)}]
+               data-test-id]} :- {:options                                [SelectOptionProps]
+                                  :unselected-label                       s/Str
+                                  (s/optional-key :unselected-label-icon) [(s/one s/Str "icon component")]
+                                  :selected-value                         (s/maybe s/Str)
+                                  :on-change                              s/Any
+                                  (s/optional-key :data-test-id)          (s/maybe s/Str)}]
       (let [expanded?                @(re-frame/subscribe [:state-query [:components :dropdown dropdown-id :expanded?] false])
             on-dropdown-value-change (fn on-dropdown-value-change [event]
                                        (collapse-dropdown {:dropdown-id dropdown-id})
@@ -165,28 +167,31 @@
                                        (if expanded?
                                          (collapse-dropdown {:dropdown-id dropdown-id})
                                          (expand-dropdown {:dropdown-id dropdown-id})))
+            label-id                 (str dropdown-id "-label")
             button-label             (if-not (string/blank? selected-value)
                                        (->> options
                                             (filter (fn filter-dropdown-select-option [{option-value :value}]
                                                       (= option-value selected-value)))
                                             (map :label)
                                             (first))
-                                       unselected-label)
-            label-id                 (str dropdown-id "-label")]
+                                       unselected-label)]
         [:div.a-dropdown
          [:div.a-dropdown-button-container.a-component
           {:class (when expanded?
                     "a-component")}
           [button-component/button
-           (cond-> {:label        button-label
-                    :on-click     on-dropdown-button-click
-                    :data-test-id (str data-test-id "-button")
-                    :aria-attrs   {:aria-haspopup   "listbox"
-                                   :aria-labelledby label-id}}
-                   expanded?
-                   (assoc-in [:aria-attrs :aria-expanded] true))]
-          [dropdown-chevron
-           {:expanded? expanded?}]]
+           {:label        (cond->> [:span.a-dropdown-button__label
+                                    {:aria-labelledby label-id
+                                     :aria-expanded   expanded?}
+                                    button-label]
+                                   (seq unselected-label-icon)
+                                   (conj [:<> unselected-label-icon]))
+            :on-click     on-dropdown-button-click
+            :data-test-id (str data-test-id "-button")
+            :aria-attrs   {:aria-haspopup "listbox"}}]
+          (when-not (seq unselected-label-icon)
+            [dropdown-chevron
+             {:expanded? expanded?}])]
          [dropdown-select
           {:expanded?        expanded?
            :options          options

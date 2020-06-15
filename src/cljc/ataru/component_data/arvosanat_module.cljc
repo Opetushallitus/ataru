@@ -172,19 +172,20 @@
 (s/defn oppiaine-valinnainen-kieli-dropdown
   [{:keys [metadata]} :- {:metadata element-metadata-schema/ElementMetadata}]
   (merge (component/dropdown metadata)
-         {:version          "oppiaineen-arvosanat"
-          :id               (str "oppiaine-valinnainen-kieli")
-          :label            (:oppiaine texts/translation-mapping)
-          :unselected-label (:oppiaine texts/translation-mapping)
-          :options          [(dropdown-option {:label (:oppiaine-a1 texts/oppiaine-translations)
-                                               :value "oppiaine-valinnainen-kieli-a1"})
-                             (dropdown-option {:label (:oppiaine-a2 texts/oppiaine-translations)
-                                               :value "oppiaine-valinnainen-kieli-a2"})
-                             (dropdown-option {:label (:oppiaine-b2 texts/oppiaine-translations)
-                                               :value "oppiaine-valinnainen-kieli-b2"})
-                             (dropdown-option {:label (:oppiaine-a texts/oppiaine-translations)
-                                               :value "oppiaine-valinnainen-kieli-a"})]
-          :rules            {:set-oppiaine-valinnainen-kieli-value nil}}))
+         {:version               "oppiaineen-arvosanat"
+          :id                    (str "oppiaine-valinnainen-kieli")
+          :label                 (:oppiaine texts/translation-mapping)
+          :unselected-label      (:lisaa-kieli texts/translation-mapping)
+          :unselected-label-icon [:i.zmdi.zmdi-plus-circle-o.arvosana__lisaa-valinnaisaine--ikoni.arvosana__lisaa-valinnainen-kieli--ikoni]
+          :options               [(dropdown-option {:label (:oppiaine-a1 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a1"})
+                                  (dropdown-option {:label (:oppiaine-a2 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a2"})
+                                  (dropdown-option {:label (:oppiaine-b2 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-b2"})
+                                  (dropdown-option {:label (:oppiaine-a texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a"})]
+          :rules                 {:set-oppiaine-valinnainen-kieli-value nil}}))
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
