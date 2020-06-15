@@ -22,10 +22,10 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
-(defn- numeerisen-kentän-muoto [_ path]
+(defn- numeerisen-kentän-muoto [{:keys [path]}]
   (let [decimal-places    (subscribe [:editor/get-component-value path :params :decimals])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path]
+    (fn [{:keys [component-id path allow-decimals?]}]
       [:div.editor-form__additional-params-container
        [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
        [:select.editor-form__decimal-places-selector
@@ -39,7 +39,8 @@
         [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
         (doall
           (for [i (range 1 5)]
-            [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]])))
+            [:option {:value i :key i :disabled (not allow-decimals?)}
+             (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]])))
 
 (defn- numeerisen-kentän-arvoalueen-rajaus [component-id path]
   (let [component-locked? (subscribe [:editor/component-locked? path])
@@ -76,8 +77,9 @@
          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]])))
 
 (defn- lisäkysymys-arvon-perusteella [_]
-  (let [id (util/new-uuid)]
+  (let [id        (util/new-uuid)]
     (fn [{:keys [component-locked?
+                 decimals-in-use?
                  followups?
                  options-with-condition?
                  options-without-condition?
@@ -85,6 +87,7 @@
                  repeatable?]}]
       (let [checked?     options-with-condition?
             disabled?    (or component-locked?
+                             decimals-in-use?
                              followups?
                              options-without-condition?
                              repeatable?)
@@ -109,7 +112,7 @@
 
 (defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
   [:div.editor-form__text-field-kenttään-vain-numeroita
-   [numeerisen-kentän-muoto component-id path]
+   [numeerisen-kentän-muoto props]
    [numeerisen-kentän-arvoalueen-rajaus component-id path]
    [lisäkysymys-arvon-perusteella props]])
 
@@ -316,8 +319,10 @@
            (when-not text-area?
              (let [options                 (:options @value)
                    options-with-condition? (not (empty? (filter :condition options)))
-                   props                   {:cannot-change-type?        options-with-condition?
+                   props                   {:allow-decimals?            (not options-with-condition?)
+                                            :cannot-change-type?        options-with-condition?
                                             :component-locked?          @component-locked?
+                                            :decimals-in-use?           (-> @value :params :decimals pos?)
                                             :followups?                 (not (empty? (first followups)))
                                             :options-with-condition?    options-with-condition?
                                             :options-without-condition? (not (empty? (remove :condition options)))
