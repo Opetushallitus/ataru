@@ -503,8 +503,7 @@
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
 (defn adjacent-text-field [_ _]
-  (let [languages (subscribe [:editor/languages])
-        radio-group-id    (util/new-uuid)]
+  (let [languages (subscribe [:editor/languages])]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
@@ -524,7 +523,7 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
-          [text-component/text-component-type-selector (:id content) path radio-group-id {}]]
+          [text-component/text-component-type-selector (:id content) path {}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]

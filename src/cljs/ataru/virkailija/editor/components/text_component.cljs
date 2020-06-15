@@ -113,11 +113,11 @@
    [numeerisen-kentän-arvoalueen-rajaus component-id path]
    [lisäkysymys-arvon-perusteella props]])
 
-(defn text-component-type-selector [_ path _ _]
+(defn text-component-type-selector [_ path _]
   (let [id                (util/new-uuid)
         checked?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path _ props]
+    (fn [component-id path props]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
@@ -319,7 +319,7 @@
                             :options-with-condition?    (not (empty? (filter :condition options)))
                             :options-without-condition? (not (empty? (remove :condition options)))
                             :repeatable?                (-> @value :params :repeatable boolean)}]
-               [text-component-type-selector (:id initial-content) path radio-group-id props]))]
+               [text-component-type-selector (:id initial-content) path props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
           [info-addon-component/info-addon path]
