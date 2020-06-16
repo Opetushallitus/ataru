@@ -380,10 +380,7 @@
 
                 :arvosana-dropdown
                 (when arvosana-dropdown
-                  [render-field arvosana-dropdown application lang arvosana-idx])
-
-                :lisaa-valinnaisaine-linkki
-                nil}]))
+                  [render-field arvosana-dropdown application lang arvosana-idx])}]))
           (range row-count))]))
 
 (s/defn arvosanat-taulukko-readonly
