@@ -49,9 +49,16 @@
 
   .arvosanat-taulukko__rivi {
     display: grid;
-    grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-lisaa-valinnaisaine] 1fr [arvosana-rivi-end]');
     min-height: 50px;
     width: 100%;
+  }
+
+  .arvosanat-taulukko__rivi:not(.arvosanat-taulukko__rivi--readonly) {
+    grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-lisaa-valinnaisaine] 1fr [arvosana-rivi-end]');
+  }
+
+  .arvosanat-taulukko__rivi--readonly {
+    grid-template-columns: e('[arvosana-oppiaine] 1fr [arvosana-oppimaara] 1fr [arvosana-arvosana] 1fr [arvosana-rivi-end]');
   }
 
   .arvosanat-taulukko__rivi:not(:last-child) {

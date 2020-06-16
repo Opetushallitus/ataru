@@ -15,17 +15,24 @@
            oppimaara-dropdown
            arvosana-dropdown
            lisaa-valinnaisaine-linkki
-           pakollinen-oppiaine?
-           data-test-id]} :- {:label                                       s/Any
-                              (s/optional-key :oppimaara-dropdown)         s/Any
-                              (s/optional-key :arvosana-dropdown)          s/Any
-                              (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
-                              :pakollinen-oppiaine?                        s/Bool
-                              (s/optional-key :data-test-id)               s/Str}]
+           data-test-id
+pakollinen-oppiaine?
+           readonly?]} :- {:label                                       s/Any
+                           (s/optional-key :oppimaara-dropdown)         s/Any
+                           (s/optional-key :arvosana-dropdown)          s/Any
+                           (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
+                           :pakollinen-oppiaine?                        s/Bool
+                           (s/optional-key :data-test-id)               s/Str
+                           (s/optional-key :readonly?)                  s/Bool}]
   [:div.arvosanat-taulukko__rivi
-   {:class        (when pakollinen-oppiaine?
-                    "arvosanat-taulukko__rivi--pakollinen-oppiaine")
-    :data-test-id data-test-id}
+   {:data-test-id data-test-id
+    :class         (cond-> ""
+
+                           readonly?
+                           (str " arvosanat-taulukko__rivi--readonly")
+
+                           pakollinen-oppiaine?
+                           (str " arvosanat-taulukko__rivi--pakollinen-oppiaine"))}
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
     {:class (when-not oppimaara-dropdown
               "arvosanat-taulukko__solu--span-2")}
@@ -36,8 +43,9 @@
    (when arvosana-dropdown
      [:div.arvosanat-taulukko__solu.arvosana__arvosana
       arvosana-dropdown])
-   [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
-    lisaa-valinnaisaine-linkki]])
+   (when lisaa-valinnaisaine-linkki
+     [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
+      lisaa-valinnaisaine-linkki])])
 
 (def ^:private max-valinnaisaine-amount 3)
 
@@ -264,6 +272,8 @@
            readonly?]} :- {:lang      lang-schema/Lang
                            :readonly? s/Bool}]
   [:div.arvosanat-taulukko__rivi
+   {:class (when readonly?
+             "arvosanat-taulukko__rivi--readonly")}
    [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__oppiaine
     [:span (translations/get-hakija-translation :oppiaine lang)]]
    (when readonly?
@@ -272,8 +282,9 @@
        [:span (translations/get-hakija-translation :oppimaara lang)]]
       [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__arvosana
        [:span (translations/get-hakija-translation :arvosana lang)]]])
-   [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine
-    [:span (translations/get-hakija-translation :valinnaisaine lang)]]])
+   (when-not readonly?
+     [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine
+      [:span (translations/get-hakija-translation :valinnaisaine lang)]])])
 
 (s/defn valinnaiset-kielet-readonly
   [{:keys [field-descriptor
@@ -296,6 +307,9 @@
                    [oppiaineen-arvosana-rivi
                     {:pakollinen-oppiaine?
                      false
+
+                     :readonly?
+                     true
 
                      :label
                      [valinnainen-kieli-label
@@ -369,6 +383,10 @@
               [oppiaineen-arvosana-rivi
                {:pakollinen-oppiaine?
                 (not valinnaisaine-rivi?)
+
+                :readonly?
+                true
+
                 :label
                 (cond->> (-> field-descriptor :label lang)
                          valinnaisaine-rivi?
