@@ -222,7 +222,8 @@
       (merge {:label (:language person-info-module-texts)
               :validators [:required]
               :id :language
-              :koodisto-source {:uri "kieli" :version 1 :default-option "suomi"}})))
+              :koodisto-source {:uri "kieli" :version 1 :default-option "suomi"}
+              :rules {:toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet nil}})))
 
 (defn onr-person-info-module [metadata]
   [(first-name-section metadata)

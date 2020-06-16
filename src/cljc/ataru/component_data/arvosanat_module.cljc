@@ -12,6 +12,7 @@
 (s/defschema OppiaineenKoodi
   (s/enum "A"
           "A1"
+          "A2"
           "B1"
           "MA"
           "BI"
@@ -39,14 +40,15 @@
    (s/optional-key :children) [s/Any]})
 
 (s/defschema ArvosanatTaulukko
-  {:id         s/Str
-   :fieldClass (s/eq "wrapperElement")
-   :fieldType  (s/eq "fieldset")
-   :children   [OppiaineenArvosana]
-   :metadata   element-metadata-schema/ElementMetadata
-   :label      localized-schema/LocalizedString
-   :version    ArvosanatVersio
-   :params     {}})
+  {:id              s/Str
+   :fieldClass      (s/eq "wrapperElement")
+   :fieldType       (s/eq "fieldset")
+   :children        [OppiaineenArvosana]
+   :child-validator (s/eq :oppiaine-a1-or-a2-component)
+   :metadata        element-metadata-schema/ElementMetadata
+   :label           localized-schema/LocalizedString
+   :version         ArvosanatVersio
+   :params          {}})
 
 (s/defn concat-labels
   [separator :- s/Str
@@ -115,8 +117,8 @@
                                                                    :en arvosana}
                                                   :value          (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
                                   (arvosana-option
-                                    {:arvosana-label (:hyvaksytty texts/translation-mapping)
-                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty")})
+                                    {:arvosana-label (:hyvaksytty-suoritettu texts/translation-mapping)
+                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty-suoritettu")})
                                   (arvosana-option
                                     {:arvosana-label (:ei-arvosanaa texts/translation-mapping)
                                      :value          (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))
@@ -183,6 +185,12 @@
   (oppiaineen-arvosana
     {:oppiaineen-koodi "A1"
      :label            (:arvosana-a1-kieli texts/virkailija-texts)
+     :metadata         metadata}))
+
+(defn- arvosana-a2-kieli [{:keys [metadata]}]
+  (oppiaineen-arvosana
+    {:oppiaineen-koodi "A2"
+     :label            (:arvosana-a2-kieli texts/virkailija-texts)
      :metadata         metadata}))
 
 (defn- arvosana-b1-kieli [{:keys [metadata]}]
@@ -280,9 +288,10 @@
            children]} :- {:metadata element-metadata-schema/ElementMetadata
                           :children [OppiaineenArvosana]}]
   (merge (component/form-section metadata)
-         {:id       "arvosanat-taulukko"
-          :version  "oppiaineen-arvosanat"
-          :children children}))
+         {:id              "arvosanat-taulukko"
+          :version         "oppiaineen-arvosanat"
+          :children        children
+          :child-validator :oppiaine-a1-or-a2-component}))
 
 (s/defn arvosanat
   [{:keys [type]} :- {:type (s/enum :peruskoulu)}
@@ -302,6 +311,7 @@
                          {:metadata metadata
                           :children [(arvosana-aidinkieli-ja-kirjallisuus {:metadata metadata})
                                      (arvosana-a1-kieli {:metadata metadata})
+                                     (arvosana-a2-kieli {:metadata metadata})
                                      (arvosana-b1-kieli {:metadata metadata})
                                      (arvosana-matematiikka {:metadata metadata})
                                      (arvosana-biologia {:metadata metadata})

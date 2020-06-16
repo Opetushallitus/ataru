@@ -31,6 +31,20 @@
            (and (clojure.string/blank? (-> answers-by-key :ssn :value))
                 (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value)))))))
 
+(defn- validate-oppiaine-a1-or-a2-component
+  [answers-by-key failed _]
+  (let [language          (-> answers-by-key :language :value)
+        ignore-answer-key (if (= language "SV")
+                            :arvosana-B1
+                            :arvosana-A2)]
+    (reduce-kv (fn [acc k v]
+                 (cond-> acc
+                         (or (not= k ignore-answer-key)
+                             (-> answers-by-key ignore-answer-key :value seq some?))
+                         (assoc k v)))
+               {}
+               failed)))
+
 (defn validator-keyword->fn [validator-keyword]
   (case (keyword validator-keyword)
     :birthdate-and-gender-component
@@ -41,7 +55,10 @@
 
     :one-of ; one of the answers of a group of fields must validate to true - used in old versions of person info module
     (fn [_ failed children]
-      (some #(not (contains? failed (keyword (:id %)))) children))))
+      (some #(not (contains? failed (keyword (:id %)))) children))
+
+    :oppiaine-a1-or-a2-component
+    validate-oppiaine-a1-or-a2-component))
 
 (defn extra-answers-not-in-original-form [form-keys answer-keys]
   (apply disj (set answer-keys) form-keys))

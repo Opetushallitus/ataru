@@ -17,7 +17,7 @@
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor]]
-            [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]))
+            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]))
 
 (declare field)
 

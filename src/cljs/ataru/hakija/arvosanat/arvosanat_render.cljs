@@ -1,4 +1,4 @@
-(ns ataru.hakija.arvosanat.render-arvosanat
+(ns ataru.hakija.arvosanat.arvosanat-render
   (:require [ataru.hakija.arvosanat.arvosanat-components :as arvosanat]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [ataru.schema.lang-schema :as lang-schema]

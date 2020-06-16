@@ -2,7 +2,10 @@
   (:require [clojure.string :as string]))
 
 (def translation-mapping
-  {:add                                         {:fi "Lisää"
+  {:hyvaksytty-suoritettu                       {:fi "Hyväksytty / suoritettu"
+                                                 :sv "Hyväksytty / suoritettu"
+                                                 :en "Hyväksytty / suoritettu"}
+   :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
                                                  :en "Add"}
    :add-application-option                      {:fi "Lisää hakukohde"
@@ -424,6 +427,9 @@
    :oppiaine-a1 {:fi "A1-kieli"
                  :sv "A1-kieli"
                  :en "A1-kieli"}
+   :oppiaine-a2 {:fi "A2-kieli"
+                 :sv "A2-kieli"
+                 :en "A2-kieli"}
    :oppiaine-b1 {:fi "B1-kieli"
                  :sv "B1-kieli"
                  :en "B1-kieli"}
@@ -838,6 +844,9 @@
    :arvosana-a1-kieli                               {:fi "A1-kieli"
                                                      :sv "A1-kieli"
                                                      :en "A1-kieli"}
+   :arvosana-a2-kieli                               {:fi "A2-kieli"
+                                                     :sv "A2-kieli"
+                                                     :en "A2-kieli"}
    :arvosana-b1-kieli                               {:fi "B1-kieli"
                                                      :sv "B1-kieli"
                                                      :en "B1-kieli"}

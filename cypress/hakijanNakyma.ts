@@ -55,6 +55,9 @@ export const arvosanat = {
     arvosanat
       .haeValinnaisaineLinkki({ oppiaine, index: 0, poisKaytosta: false })
       .click(),
+
+  haeOppiaineenArvosanaRivi: ({ oppiaine }: { oppiaine: string }) =>
+    cy.get(`[data-test-id=oppiaineen-arvosana-${oppiaine}]`),
 }
 
 const syota = <T>(

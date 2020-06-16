@@ -1,6 +1,6 @@
 import * as hakijanNakyma from '../hakijanNakyma'
 
-export default (testit: () => void) => {
+export default (testit?: () => void) => {
   describe('Hakemuksen lähettäminen', () => {
     before(() => {
       hakijanNakyma
@@ -13,6 +13,6 @@ export default (testit: () => void) => {
       hakijanNakyma.haeLomakkeenNimi().should('have.text', 'Testilomake')
     })
 
-    testit()
+    testit?.()
   })
 }

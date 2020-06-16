@@ -13,20 +13,27 @@
            oppimaara-dropdown
            arvosana-dropdown
            lisaa-valinnaisaine-linkki
-           pakollinen-oppiaine?]} :- {:label                                       s/Any
-                                      (s/optional-key :oppimaara-dropdown)         s/Any
-                                      (s/optional-key :arvosana-dropdown)          s/Any
-                                      (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
-                                      :pakollinen-oppiaine?                        s/Bool}]
+           pakollinen-oppiaine?
+           data-test-id]} :- {:label                                       s/Any
+                              (s/optional-key :oppimaara-dropdown)         s/Any
+                              (s/optional-key :arvosana-dropdown)          s/Any
+                              (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
+                              :pakollinen-oppiaine?                        s/Bool
+                              (s/optional-key :data-test-id)               s/Str}]
   [:div.arvosanat-taulukko__rivi
-   {:class (when pakollinen-oppiaine?
-             "arvosanat-taulukko__rivi--pakollinen-oppiaine")}
+   {:class        (when pakollinen-oppiaine?
+                    "arvosanat-taulukko__rivi--pakollinen-oppiaine")
+    :data-test-id data-test-id}
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
+    {:class (when-not oppimaara-dropdown
+              "arvosanat-taulukko__solu--span-2")}
     label]
-   [:div.arvosanat-taulukko__solu.arvosana__oppimaara
-    oppimaara-dropdown]
-   [:div.arvosanat-taulukko__solu.arvosana__arvosana
-    arvosana-dropdown]
+   (when oppimaara-dropdown
+     [:div.arvosanat-taulukko__solu.arvosana__oppimaara
+      oppimaara-dropdown])
+   (when arvosana-dropdown
+     [:div.arvosanat-taulukko__solu.arvosana__arvosana
+      arvosana-dropdown])
    [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
     lisaa-valinnaisaine-linkki]])
 
@@ -82,20 +89,22 @@
 (s/defn oppiaineen-arvosana
   [{:keys [field-descriptor
            render-field]} :- render-field-schema/RenderFieldArgs]
-  (let [lang                @(re-frame/subscribe [:application/form-language])
-        row-count           @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
-        children            (:children field-descriptor)
-        arvosana-dropdown   (last children)
-        oppimaara-dropdown  (when (= (count children) 2)
-                              (first children))
-        data-test-id-prefix (str "oppiaineen-arvosana-" (:id field-descriptor))]
+  (let [lang               @(re-frame/subscribe [:application/form-language])
+        row-count          @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
+        children           (:children field-descriptor)
+        arvosana-dropdown  (last children)
+        oppimaara-dropdown (when (= (count children) 2)
+                             (first children))
+        data-test-id       (str "oppiaineen-arvosana-" (:id field-descriptor))]
     (->> (range row-count)
          (mapv (fn ->oppiaineen-arvosana-rivi [arvosana-idx]
                  (let [key                 (str "oppiaineen-arvosana-rivi-" (:id field-descriptor) "-" arvosana-idx)
                        valinnaisaine-rivi? (> arvosana-idx 0)]
                    ^{:key key}
                    [oppiaineen-arvosana-rivi
-                    {:pakollinen-oppiaine?
+                    {:data-test-id
+                     data-test-id
+                     :pakollinen-oppiaine?
                      (not valinnaisaine-rivi?)
                      :label
                      (let [label (cond->> (-> field-descriptor :label lang)
@@ -109,13 +118,13 @@
                      :oppimaara-dropdown
                      (when oppimaara-dropdown
                        [render-field
-                        (assoc oppimaara-dropdown :data-test-id (str data-test-id-prefix "-oppimaara-" arvosana-idx))
+                        (assoc oppimaara-dropdown :data-test-id (str data-test-id "-oppimaara-" arvosana-idx))
                         arvosana-idx])
 
                      :arvosana-dropdown
                      (when arvosana-dropdown
                        [render-field
-                        (assoc arvosana-dropdown :data-test-id (str data-test-id-prefix "-arvosana-" arvosana-idx))
+                        (assoc arvosana-dropdown :data-test-id (str data-test-id "-arvosana-" arvosana-idx))
                         arvosana-idx])
 
                      :lisaa-valinnaisaine-linkki
@@ -127,7 +136,7 @@
                        :arvosana-idx        arvosana-idx
                        :field-descriptor    field-descriptor
                        :row-count           row-count
-                       :data-test-id        (str data-test-id-prefix "-lisaa-valinnaisaine-linkki-" arvosana-idx "-" (if valinnaisaine-rivi? "poista" "lisaa"))}]}])))
+                       :data-test-id        (str data-test-id "-lisaa-valinnaisaine-linkki-" arvosana-idx "-" (if valinnaisaine-rivi? "poista" "lisaa"))}]}])))
          (into [:<>]))))
 
 (s/defn arvosanat-taulukko-otsikkorivi

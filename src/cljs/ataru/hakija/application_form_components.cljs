@@ -21,7 +21,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
-            [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]
+            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
 
 (defonce autocomplete-off "new-password")
@@ -933,16 +933,17 @@
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
-(defn render-field
-  [field-descriptor idx]
+(defn render-field [field-descriptor idx]
   (let [render-fn (case (:version field-descriptor)
                     "generic" generic-component/render-generic-component
                     "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
-                    render-component)]
-    (render-fn
-      {:field-descriptor field-descriptor
-       :idx              idx
-       :render-field     render-field})))
+                    render-component)
+        visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
+    (when visible?
+      [render-fn
+       {:field-descriptor field-descriptor
+        :idx              idx
+        :render-field     render-field}])))
 
 (defn editable-fields [_]
   (r/create-class
