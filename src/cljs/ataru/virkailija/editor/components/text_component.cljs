@@ -170,14 +170,27 @@
         id                (util/new-uuid)
         local-state       (r/atom {:focused? false
                                    :valid?   true
-                                   :value    ""})]
+                                   :value    ""})
+        initialize-state  (fn [value]
+                            (swap! local-state
+                                   assoc
+                                   :valid? true
+                                   :value value))
+        on-blur-fn        (fn [path event]
+                            (swap! local-state
+                                   assoc
+                                   :focused? false)
+                            (when (:valid? @local-state)
+                              (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)])))
+        on-change-fn      (fn [event] (swap! local-state
+                                             assoc
+                                             :focused? true
+                                             :valid? (valid-integer? (get-val event))
+                                             :value (get-val event)))]
     (fn [condition path]
       (when (not (:focused? @local-state))
         (let [value (str (-> condition :answer-compared-to))]
-          (swap! local-state
-                 assoc
-                 :valid? true
-                 :value value)))
+          (initialize-state value)))
       [:div.editor-form__text-field-option-condition
        [:label.editor-form__text-field-option-condition-label
         {:for   id
@@ -188,17 +201,8 @@
          :class     (when (not (:valid? @local-state))
                       "editor-form__text-field-option-condition-answer-compared-to--invalid")
          :id        id
-         :on-blur   (fn [event]
-                      (swap! local-state
-                             assoc
-                             :focused? false)
-                      (when (:valid? @local-state)
-                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)])))
-         :on-change (fn [event] (swap! local-state
-                                       assoc
-                                       :focused? true
-                                       :valid? (valid-integer? (get-val event))
-                                       :value (get-val event)))
+         :on-blur   (partial on-blur-fn path)
+         :on-change on-change-fn
          :type      "text"
          :value     (:value @local-state)}]])))
 
