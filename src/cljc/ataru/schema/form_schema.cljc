@@ -41,7 +41,7 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema OptionCondition {:comparison-operator                 (s/enum "=")
+(s/defschema OptionCondition {:comparison-operator                 (s/enum "<" "=" ">")
                               (s/optional-key :answer-compared-to) s/Int})
 
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")

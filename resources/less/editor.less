@@ -669,11 +669,12 @@
 }
 
 .editor-form__text-field-option-followups-header {
-  align-items: stretch;
+  align-items: center;
   background-color: @element-list-item-background;
   display: flex;
   flex-flow: row wrap;
   margin-bottom: 12px;
+  min-height: 32px;
 }
 
 .editor-form__text-field-option-condition {
@@ -682,15 +683,20 @@
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
-  margin-right: 2px;
-  padding: 4px 10px;
+  margin-left: 10px;
 }
 
 .editor-form__text-field-option-condition-label {
-  margin-right: 5px;
+}
+
+.editor-form__text-field-option-condition-comparison-operator {
+  height: 24px;
+  margin-left: 10px;
 }
 
 .editor-form__text-field-option-condition-answer-compared-to {
+  height: 24px;
+  margin-left: 10px;
   text-align: center;
   width: 50px;
 }

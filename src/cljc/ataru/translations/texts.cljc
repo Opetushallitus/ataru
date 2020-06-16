@@ -1806,9 +1806,18 @@
    :lisakysymys-arvon-perusteella                   {:fi "Lisäkysymys arvon perusteella"
                                                      :sv "SV: Lisäkysymys arvon perusteella"
                                                      :en "EN: Lisäkysymys arvon perusteella"}
-   :lisakysymys-arvon-perusteella-ehto              {:fi "Jos vastauksen arvo on yhtä suuri kuin"
-                                                     :sv "SV: Jos vastauksen arvo on yhtä suuri kuin"
-                                                     :en "EN: Jos vastauksen arvo on yhtä suuri kuin"}})
+   :lisakysymys-arvon-perusteella-ehto              {:fi "Jos vastauksen arvo on"
+                                                     :sv "SV: Jos vastauksen arvo on"
+                                                     :en "EN: Jos vastauksen arvo on"}
+   :lisakysymys-arvon-perusteella-ehto-pienempi     {:fi "pienempi kuin"
+                                                     :sv "SV: mindre än"
+                                                     :en "EN: less than"}
+   :lisakysymys-arvon-perusteella-ehto-suurempi     {:fi "suurempi kuin"
+                                                     :sv "SV: större än"
+                                                     :en "EN: greater than"}
+   :lisakysymys-arvon-perusteella-ehto-yhtasuuri    {:fi "yhtä suuri kuin"
+                                                     :sv "SV: lika med"
+                                                     :en "EN: equal to"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

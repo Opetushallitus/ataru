@@ -196,6 +196,14 @@
         {:for   id
          :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
         @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+       [:select.editor-form__text-field-option-condition-comparison-operator
+        {:disabled  @component-locked?
+         :on-change (fn [event]
+                      (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-operaattori path (get-val event)]))
+         :value     (or (-> condition :comparison-operator) "<")}
+        [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
+        [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
+        [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
        [:input.editor-form__text-field-option-condition-answer-compared-to
         {:disabled  @component-locked?
          :class     (when (not (:valid? @local-state))
