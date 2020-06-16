@@ -267,7 +267,7 @@
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
         component-locked? (subscribe [:editor/component-locked? path])
-        show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
+        show-followups    (r/atom nil)]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
