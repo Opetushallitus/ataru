@@ -48,6 +48,15 @@
            :idx              question-group-index}]
 
          {:fieldClass "questionGroup"
+          :fieldType  "fieldset"
+          :id         "oppiaineen-arvosanat-valinnaiset-kielet"}
+         [arvosanat/valinnaiset-kielet-readonly
+          {:lang             lang
+           :application      application
+           :render-field     render-field
+           :field-descriptor field-descriptor}]
+
+         {:fieldClass "questionGroup"
           :fieldType  "fieldset"}
          [arvosanat/oppiaineen-arvosana-readonly
           {:field-descriptor field-descriptor

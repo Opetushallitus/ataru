@@ -275,6 +275,54 @@
    [:div.arvosanat-taulukko__solu.arvosanat-taulukko__otsikko.arvosana__lisaa-valinnaisaine
     [:span (translations/get-hakija-translation :valinnaisaine lang)]]])
 
+(s/defn valinnaiset-kielet-readonly
+  [{:keys [field-descriptor
+           render-field
+           application
+           lang]} :- (-> render-field-schema/RenderFieldArgs
+                         (st/dissoc :idx)
+                         (st/merge {:lang        lang-schema/Lang
+                                    :application s/Any}))]
+  (let [row-count @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])]
+    (->> row-count
+         dec
+         range
+         (mapv (fn ->valinnainen-kieli-readonly [valinnainen-kieli-idx]
+                 (let [key (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-idx)
+                       [oppiaine
+                        oppimaara
+                        arvosana] (:children field-descriptor)]
+                   ^{:key key}
+                   [oppiaineen-arvosana-rivi
+                    {:pakollinen-oppiaine?
+                     false
+
+                     :label
+                     [valinnainen-kieli-label
+                      {:field-descriptor oppiaine
+                       :idx              valinnainen-kieli-idx
+                       :lang             lang}]
+
+                     :oppimaara-dropdown
+                     [valinnainen-kieli-oppimaara
+                      {:field-descriptor (assoc
+                                           oppimaara
+                                           :readonly-render-options
+                                           {:arvosanat-taulukko? true})
+                       :render-field     render-field
+                       :idx              valinnainen-kieli-idx}]
+
+                     :arvosana-dropdown
+                     [render-field
+                      (assoc
+                        arvosana
+                        :readonly-render-options
+                        {:arvosanat-taulukko? true})
+                      application
+                      lang
+                      valinnainen-kieli-idx]}])))
+         (into [:<>]))))
+
 (s/defn arvosanat-taulukko
   [{:keys [field-descriptor
            render-field
