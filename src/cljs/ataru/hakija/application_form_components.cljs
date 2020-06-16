@@ -152,6 +152,20 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
+(defn- get-first-option-visible-followups [options]
+  (when (not-empty options)
+    (->> options
+         first
+         :followups
+         (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
+
+(defn- text-field-followups-container [followups idx]
+  (when (not-empty followups)
+    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+          (for [followup followups]
+            ^{:key (:id followup)}
+            [render-field followup idx]))))
+
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
         size         (get-in field-descriptor [:params :size])
@@ -167,6 +181,8 @@
             {:keys [value
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
+            options          @(subscribe [:application/visible-options field-descriptor])
+            followups        (get-first-option-visible-followups options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -191,7 +207,7 @@
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
          [:input.application__form-text-input
-          (merge {:id           id
+          (merge {:id           (str (when idx (str idx "-")) (name id))
                   :type         "text"
                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                   (util/non-blank-val input-hint languages))
@@ -220,7 +236,10 @@
                   :data-test-id data-test-id}
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
-         [validation-error errors]]))))
+         [validation-error errors]
+         (when (not (or (string/blank? value)
+                        show-error?))
+           [text-field-followups-container followups idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
@@ -471,8 +490,8 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor question-group-idx option]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            followups (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
-                              (:followups option))]
+            followups (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                               (:followups option))]
         [:div {:key option-id}
          [:input.application__form-checkbox
           (merge {:id        option-id
@@ -525,8 +544,8 @@
         lang           (subscribe [:application/form-language])]
     (fn [option parent-id field-descriptor question-group-idx _ use-multi-choice-style? verifying?]
       (let [checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
-            followups            (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))
-                                         (:followups option))
+            followups            (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+                                          (:followups option))
             unselectable?        (and (or (not checked?)
                                           (not @valid?))
                                       @limit-reached?)
@@ -585,7 +604,7 @@
                            (filter #(= (:value answer) (:value %)))
                            first
                            :followups
-                           (filter #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
+                           (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
         [:div.application__form-field.application__form-single-choice-button-container
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)

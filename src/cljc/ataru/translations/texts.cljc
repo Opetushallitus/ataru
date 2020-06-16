@@ -1790,7 +1790,10 @@
                                                      :sv "Försök igen, om problemet kvarstår, kontakta registratorn."}
    :cannot-deactivate-info                          {:fi "Hakemuksen tilaa ei voi muuttaa, koska hakemukselle on muodostunut valinnan tuloksia. Ota yhteyttä Opetushallitukseen hakemuksen passivoimiseksi."
                                                      :sv "Ansökningens status kan inte ändras eftersom antagningsresultat har bildats för ansökningen. Kontakta Utbildningsstyrelsen för att få ansökningen passiverad."
-                                                     :en "EN: Hakemuksen tilaa ei voi muuttaa, koska hakemukselle on muodostunut valinnan tuloksia. Ota yhteyttä Opetushallitukseen hakemuksen passivoimiseksi."}})
+                                                     :en "EN: Hakemuksen tilaa ei voi muuttaa, koska hakemukselle on muodostunut valinnan tuloksia. Ota yhteyttä Opetushallitukseen hakemuksen passivoimiseksi."}
+   :lisakysymys                                     {:fi "Lisäkysymys"
+                                                     :sv "Tilläggsfråga"
+                                                     :en "Extra question"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

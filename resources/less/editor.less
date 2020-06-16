@@ -515,14 +515,49 @@
   .editor-form__info-addon-checkbox {
     display: flex;
     font-size: 14px;
+    label {
+      margin-left: 4px;
+    }
     label:not(.disabled) {
       color: @blue-text-color;
       cursor: pointer;
     }
     input {
-      margin-right: 9px;
+      margin-left: 0px;
     }
   }
+}
+
+.editor-form__text-field-checkbox-wrapper {
+  display: flex;
+  flex: auto;
+  flex-flow: column nowrap;
+  padding: 0px 14px 20px;
+  justify-content: flex-start;
+}
+
+.editor-form__text-field-checkbox-container {
+  display: flex;
+  margin: 0 0 8px 0;
+}
+
+.editor-form__text-field-checkbox-container:last-child {
+  margin: 0;
+}
+
+.editor-form__text-field-checkbox-label {
+  color: @blue-text-color;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+}
+
+.editor-form__text-field-checkbox-label--disabled {
+  cursor: default;
+}
+
+.editor-form__text-field-checkbox {
+  margin-left: 0px;
 }
 
 .editor-form__text-field-wrapper {
@@ -625,6 +660,10 @@
     height: 70px;
     width: 434px;
   }
+}
+
+.editor-form__text-field-option-followups-wrapper {
+  width: 100%;
 }
 
 .editor-form__multi-question-wrapper {

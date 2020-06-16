@@ -46,19 +46,22 @@
 
 (defn- repeater-checkbox
   [path initial-content]
-  (let [id           (util/new-uuid)
-        checked?     (-> initial-content :params :repeatable boolean)
-        component-locked? @(subscribe [:editor/component-locked? path])]
+  (let [id                (util/new-uuid)
+        checked?          (-> initial-content :params :repeatable boolean)
+        has-options?      (not (empty? (:options initial-content)))
+        component-locked? @(subscribe [:editor/component-locked? path])
+        disabled?         (or has-options? component-locked?)]
     [:div.editor-form__checkbox-container
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
                                     :checked   checked?
-                                    :disabled  component-locked?
+                                    :disabled  disabled?
                                     :on-change (fn [event]
-                                                 (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable]))}]
+                                                 (when (not disabled?)
+                                                   (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable])))}]
      [:label.editor-form__checkbox-label
       {:for   id
-       :class (when component-locked? "editor-form__checkbox-label--disabled")}
+       :class (when disabled? "editor-form__checkbox-label--disabled")}
       @(subscribe [:editor/virkailija-translation :multiple-answers])]]))
 
 (defn- belongs-to-hakukohteet-modal
@@ -611,8 +614,54 @@
                        :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
-(defn text-component [_ path & {:keys [header-label]}]
+(declare custom-answer-options)
+
+(defn text-field-option-followups-wrapper
+  [options followups path show-followups]
+  (let [option-count (count options)]
+    (when (or (nil? @show-followups)
+              (not (= (count @show-followups) option-count)))
+      (reset! show-followups (vec (replicate option-count true))))
+    (when (< 0 option-count)
+      (let [option-index 0
+            followups    (nth followups option-index)]
+        [:div.editor-form__text-field-option-followups-wrapper
+         [followup-question-overlay option-index followups path show-followups]]))))
+
+(defn- text-field-has-an-option [_ _ _ _]
+  (let [id (util/new-uuid)]
+    (fn [value followups path component-locked?]
+      (let [option-index 0
+            has-options? (not (empty? (:options value)))
+            repeatable?  (-> value :params :repeatable boolean)
+            disabled?    (or component-locked?
+                             (not (empty? (first followups)))
+                             repeatable?)]
+        [:div.editor-form__text-field-checkbox-container
+         [:input.editor-form__text-field-checkbox
+          {:id        id
+           :type      "checkbox"
+           :checked   has-options?
+           :disabled  disabled?
+           :on-change (fn [evt]
+                        (when-not disabled?
+                          (.preventDefault evt)
+                          (if (-> evt .-target .-checked)
+                            (dispatch [:editor/add-text-field-option path])
+                            (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
+         [:label.editor-form__text-field-checkbox-label
+          {:for   id
+           :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
+          @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
+
+(defn- text-field-option-followups
+  [value followups path show-followups]
+  [:div.editor-form__component-row-wrapper
+   [text-field-option-followups-wrapper (:options value) followups path show-followups]])
+
+(defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
+        value             (subscribe [:editor/get-component-value path])
         sub-header        (subscribe [:editor/get-component-value path :label])
         size              (subscribe [:editor/get-component-value path :params :size])
         max-length        (subscribe [:editor/get-component-value path :params :max-length])
@@ -624,8 +673,9 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
-        component-locked?      (subscribe [:editor/component-locked? path])]
-    (fn [initial-content path & {:keys [header-label size-label]}]
+        component-locked? (subscribe [:editor/component-locked? path])
+        show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
+    (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
@@ -677,15 +727,20 @@
            (when-not text-area?
              [text-component-type-selector (:id initial-content) path radio-group-id])]
           [belongs-to-hakukohteet path initial-content]]
-         [info-addon path]]]])))
+         [:div.editor-form__text-field-checkbox-wrapper
+          [info-addon path]
+          (when-not text-area?
+            [text-field-has-an-option @value followups path @component-locked?])]
+         (when-not text-area?
+           [text-field-option-followups @value followups path show-followups])]]])))
 
-(defn text-field [initial-content path]
-  [text-component initial-content path
+(defn text-field [initial-content followups path]
+  [text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-field])
    :size-label @(subscribe [:editor/virkailija-translation :text-field-size])])
 
-(defn text-area [initial-content path]
-  [text-component initial-content path
+(defn text-area [initial-content followups path]
+  [text-component initial-content followups path
    :header-label @(subscribe [:editor/virkailija-translation :text-area])
    :size-label @(subscribe [:editor/virkailija-translation :text-area-size])])
 

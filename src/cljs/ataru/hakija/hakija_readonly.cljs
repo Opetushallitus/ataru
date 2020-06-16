@@ -19,6 +19,8 @@
                                                                        scroll-to-anchor]]
             [ataru.hakija.arvosanat.render-arvosanat :as arvosanat]))
 
+(declare field)
+
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
 
@@ -34,32 +36,55 @@
                        (not= "infoElement" (:fieldClass %)))
                  (:children field-descriptor)))))
 
-(defn text [field-descriptor _ lang group-idx]
-  (let [id (keyword (:id field-descriptor))
-        answer @(subscribe [:application/answer id])]
+(declare child-fields)
+
+(defn- text-nested-container [selected-options application lang group-idx]
+  [:div.application-handling__nested-container.application-handling__nested-container--top-level
+   (let [ui (subscribe [:state-query [:application :ui]])]
+     (doall
+       (for [option selected-options]
+         ^{:key (:value option)}
+         [:div.application-handling__nested-container-option
+          (when (some #(visible? ui %) (:followups option))
+            (into [:div.application-handling__nested-container]
+                  (child-fields (:followups option) application lang ui group-idx)))])))])
+
+(defn- text-readonly-text [field-descriptor values]
+  [:div.application__readonly-text
+   (cond (and (sequential? values) (< 1 (count values)))
+         [:ul.application__form-field-list
+          (map-indexed
+            (fn [i value]
+              ^{:key (str (:id field-descriptor) i)}
+              [:li (render-paragraphs value)])
+            values)]
+         (sequential? values)
+         (render-paragraphs (first values))
+         :else
+         (render-paragraphs values))])
+
+(defn- text-form-field-label [field-descriptor lang]
+  [:label.application__form-field-label
+   (str (from-multi-lang (:label field-descriptor) lang)
+        (required-hint field-descriptor))])
+
+(defn text [field-descriptor application lang group-idx]
+  (let [id         (keyword (:id field-descriptor))
+        answer     @(subscribe [:application/answer id])
+        values     (cond-> (get-value answer group-idx)
+                           (contains? field-descriptor :koodisto-source)
+                           split-if-string
+                           (predefined-value-answer? field-descriptor)
+                           (replace-with-option-label (:options field-descriptor) lang))
+        options    (when (not-empty values) (:options field-descriptor))
+        followups? (some (comp not-empty :followups) options)]
     [:div.application__form-field
-     [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+     [text-form-field-label field-descriptor lang]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
-       [:div.application__readonly-text
-        (let [values (cond-> (get-value answer group-idx)
-                       (contains? field-descriptor :koodisto-source)
-                       split-if-string
-                       (predefined-value-answer? field-descriptor)
-                       (replace-with-option-label (:options field-descriptor) lang))]
-          (cond (and (sequential? values) (< 1 (count values)))
-                [:ul.application__form-field-list
-                 (map-indexed
-                  (fn [i value]
-                    ^{:key (str (:id field-descriptor) i)}
-                    [:li (render-paragraphs value)])
-                  values)]
-                (sequential? values)
-                (render-paragraphs (first values))
-                :else
-                (render-paragraphs values)))])]))
+       [text-readonly-text field-descriptor values])
+     (when followups?
+       [text-nested-container options application lang group-idx])]))
 
 (defn- attachment-list [attachments]
   [:div
@@ -82,8 +107,6 @@
       (str (from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))]
      [attachment-list values]]))
-
-(declare field)
 
 (defn child-fields [children application lang ui question-group-id]
   (for [child children

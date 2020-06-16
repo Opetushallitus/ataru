@@ -133,6 +133,9 @@
     describe('change values and save', () => {
       before(
         setNthFieldInputValue(1, 'Etunimi'),
+        blurField(() => {
+          return formFields().eq(1).find('input')
+        }),
         setNthFieldValue(23, 'textarea', 'Muokattu vastaus'),
         clickNthFieldRadio(26, 'Toinen vaihtoehto'),
         wait.until(() => {

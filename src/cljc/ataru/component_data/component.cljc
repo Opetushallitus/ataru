@@ -10,6 +10,12 @@
    :metadata   metadata
    :params     {}})
 
+(defn text-field-option
+  ([] (text-field-option ""))
+  ([value]
+   {:value value
+    :label {:fi "" :sv ""}}))
+
 (defn text-area [metadata]
   (assoc (text-field metadata)
          :fieldType "textArea"))

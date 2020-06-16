@@ -173,6 +173,9 @@
           testFrame().find('.application__hakukohde-selection-open-search')
         ),
         setNthFieldInputValue(1, 'Etunimi Tokanimi'),
+        blurField(() => {
+          return formFields().eq(1).find('input')
+        }),
         setNthFieldInputValue(3, 'Sukunimi'),
         setNthFieldInputValue(5, '020202A0202'),
         setNthFieldInputValue(6, 'test@example.com'),

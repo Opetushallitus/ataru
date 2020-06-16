@@ -1,13 +1,16 @@
 {:linters {:not-empty?          {:level :off}
+           :refer-all           {:exclude [speclj.core]}
            :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
                                            (clojure.java.jdbc/with-db-transaction)
                                            (clojure.java.jdbc/with-db-connection)
                                            (clojure.core.match/match)
                                            (cljs.core.match/match)
+                                           (ataru.applications.excel-export-spec/with-excel)
+                                           (ataru.applications.excel-export.text-field-spec/with-excel)
                                            (ataru.db.flyway-migration/defmigration)
                                            (ataru.virkailija.editor.editor-macros/with-form-key)
-                                           (speclj.core/around)]}
+                                           (speclj.core/describe [around context describe it should== tags with])]}
            :unused-namespace    {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map
                                                       apropos
@@ -21,4 +24,5 @@
                                                       pst
                                                       source]}}
            :invalid-arity       {:skip-args [clojure.core.match/match
-                                             cljs.core.match/match]}}}
+                                             cljs.core.match/match]}}
+ :lint-as {speclj.core/with clojure.core/def}}
