@@ -49,47 +49,6 @@
 
 (def hakukohde-oid "1.2.246.562.29.11111111110")
 
-(describe "get-applications"
-          (tags :unit)
-
-          (around [spec]
-                  (with-redefs [store/exec-db (fn [ds-key query-fn params]
-                                                (should= :db ds-key)
-                                                (should= "yesql-get-applications-for-form" (-> query-fn .meta :name))
-                                                (should= {:form_key "abcdefghjkl" :filtered_states ["unprocessed"]} params)
-                                                (->> fixtures/applications
-                                                     (filter #(empty? (:hakukohde %)))
-                                                     (sort-by :created-time)
-                                                     reverse))]
-                    (spec)))
-
-          (it "should return all applications belonging to a form"
-              (should=
-               (mapv #(select-keys % [:id :key]) expected-applications)
-               (mapv #(select-keys % [:id :key]) (store/get-applications-for-form form-key ["unprocessed"])))))
-
-(describe "get-applications"
-          (tags :unit)
-
-          (around [spec]
-                  (with-redefs [store/exec-db (fn [ds-key query-fn params]
-                                                (should= :db ds-key)
-                                                (should= "yesql-get-applications-for-hakukohde" (-> query-fn .meta :name))
-                                                (should= {:filtered_states ["unprocessed"]
-                                                          :hakukohde_oid   hakukohde-oid}
-                                                         params)
-                                                (->> fixtures/applications
-                                                     (filter #(and (contains? (set (:hakukohde %)) hakukohde-oid)
-                                                                   (= (:form_id %) 703)))
-                                                     (sort-by :created-time)
-                                                     reverse))]
-                    (spec)))
-
-          (it "should return all applications belonging to a hakukohde"
-              (should=
-               expected-hakukohde-application-ids
-               (mapv :id (store/get-applications-for-hakukohde ["unprocessed"] hakukohde-oid)))))
-
 (describe "setting person oid to application"
           (tags :unit)
 
