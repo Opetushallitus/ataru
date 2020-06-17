@@ -24,7 +24,9 @@
   (:import [java.time
             LocalDateTime
             ZoneId]
-           org.postgresql.util.PSQLException
+           [org.postgresql.util
+            PGobject
+            PSQLException]
            java.time.format.DateTimeFormatter))
 
 
@@ -241,7 +243,17 @@
                               :person_oid     (:person-oid application)}
         new-application      (if (contains? application :key)
                                (queries/yesql-add-application-version<! application-to-store connection)
-                               (queries/yesql-add-application<! application-to-store connection))]
+                               (queries/yesql-add-application<! application-to-store connection))
+        add-answers-args     {:application_id (:id new-application)
+                              :answers        (doto (new PGobject)
+                                                (.setType "jsonb")
+                                                (.setValue (json/generate-string answers)))}]
+    (queries/yesql-add-application-answers! add-answers-args connection)
+    (queries/yesql-add-application-multi-answers! add-answers-args connection)
+    (queries/yesql-add-application-multi-answer-values! add-answers-args connection)
+    (queries/yesql-add-application-group-answers! add-answers-args connection)
+    (queries/yesql-add-application-group-answer-groups! add-answers-args connection)
+    (queries/yesql-add-application-group-answer-values! add-answers-args connection)
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))
@@ -719,11 +731,22 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   (:secret (first (->> (exec-db :db queries/yesql-get-latest-application-secret {})))))
 
 (defn alter-application-hakukohteet-with-secret
-  [secret hakukohde answers]
-  (exec-db :db queries/yesql-set-application-hakukohteet-by-secret!
-           {:secret    secret
-            :hakukohde hakukohde
-            :content   {:answers answers}}))
+  [secret hakukohteet answers]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (queries/yesql-set-application-hakukohteet-by-secret!
+     {:secret    secret
+      :hakukohde hakukohteet
+      :content   {:answers answers}}
+     {:connection connection})
+    (queries/yesql-delete-application-hakukohteet-answer-values-by-secret!
+     {:secret secret}
+     {:connection connection})
+    (queries/yesql-insert-application-hakukohteet-answer-values-by-secret!
+     {:secret      secret
+      :hakukohteet (doto (new PGobject)
+                     (.setType "jsonb")
+                     (.setValue (json/generate-string hakukohteet)))}
+     {:connection connection})))
 
 (defn add-new-secret-to-application
   [application-key]
