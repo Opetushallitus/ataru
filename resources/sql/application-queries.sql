@@ -28,6 +28,45 @@ INSERT INTO applications (
   now()
 );
 
+-- name: yesql-add-application-answers!
+INSERT INTO answers (application_id, key, field_type, value)
+SELECT :application_id, t->>'key', t->>'fieldType', t->>'value'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'string' OR
+      jsonb_typeof(t->'value') = 'null';
+
+-- name: yesql-add-application-multi-answers!
+INSERT INTO multi_answers (application_id, key, field_type, data_idx, value)
+SELECT :application_id, t->>'key', t->>'fieldType', tt.data_idx, tt.value->>0
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(value, data_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      jsonb_typeof(tt.value) = 'string';
+
+-- name: yesql-add-application-group-answers!
+INSERT INTO group_answers (application_id, key, field_type, group_idx, data_idx, value)
+SELECT :application_id, key, field_type, group_idx, data_idx, value
+FROM ((SELECT t->>'key' AS key,
+              t->>'fieldType' AS field_type,
+              tt.group_idx AS group_idx,
+              ttt.data_idx AS data_idx,
+              ttt.value->>0 AS value
+       FROM jsonb_array_elements(:answers) AS t
+       CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(group_value, group_idx)
+       CROSS JOIN jsonb_array_elements(tt.group_value) WITH ORDINALITY AS ttt(value, data_idx)
+       WHERE jsonb_typeof(t->'value') = 'array' AND
+             jsonb_typeof(tt.group_value) = 'array')
+      UNION ALL
+      (SELECT t->>'key' AS key,
+              t->>'fieldType' AS field_type,
+              tt.group_idx AS group_idx,
+              0 AS data_idx,
+              null AS value
+       FROM jsonb_array_elements(:answers) AS t
+       CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(group_value, group_idx)
+       WHERE jsonb_typeof(t->'value') = 'array' AND
+             jsonb_typeof(tt.group_value) = 'null')) AS t
+
 -- name: yesql-add-application-version<!
 -- Add application version
 INSERT INTO applications (
@@ -198,6 +237,7 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
+  a.submitted,
   a.content,
   a.haku,
   a.hakukohde,
@@ -873,9 +913,33 @@ LIMIT 1;
 UPDATE applications
 SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) [],
     content = :content
-FROM application_secrets
-WHERE application_secrets.secret = :secret AND
-      application_secrets.application_key = applications.key;
+WHERE id = (SELECT max(id)
+            FROM applications
+            WHERE key = (SELECT application_key
+                         FROM application_secrets
+                         WHERE secret = :secret));
+
+--name: yesql-delete-application-hakukohteet-answers-by-secret!
+DELETE FROM multi_answers
+WHERE application_id = (SELECT max(id)
+                        FROM applications
+                        WHERE key = (SELECT application_key
+                                     FROM application_secrets
+                                     WHERE secret = :secret)) AND
+      key = 'hakukohteet';
+
+--name: yesql-insert-application-hakukohteet-answers-by-secret!
+INSERT INTO multi_answers (application_id, key, field_type, data_idx, value)
+SELECT (SELECT max(id)
+        FROM applications
+        WHERE key = (SELECT application_key
+                     FROM application_secrets
+                     WHERE secret = :secret)),
+       'hakukohteet',
+       'hakukohteet',
+       t.data_idx,
+       t.value->>0
+FROM jsonb_array_elements(:hakukohteet) WITH ORDINALITY AS t(value, data_idx);
 
 --name: yesql-get-application-versions
 SELECT content, form_id
