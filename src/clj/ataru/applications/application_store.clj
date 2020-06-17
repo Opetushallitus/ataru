@@ -675,7 +675,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn get-latest-application-by-key [application-key]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (get-latest-application-by-key-in-tx connection application-key)))
+    (dissoc (get-latest-application-by-key-in-tx connection application-key)
+            :secret
+            :application-hakukohde-reviews)))
 
 (defn get-application-hakukohde-reviews
   [application-key]
@@ -1134,19 +1136,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
        (map unwrap-person-and-hakemus-oid)
        (into {})))
 
-(defn- get-latest-application-by-key-with-hakukohde-reviews
-  [connection application-key]
-  (-> (queries/yesql-get-latest-application-by-key-with-hakukohde-reviews
-       {:application_key application-key}
-       connection)
-      (first)
-      (unwrap-application)))
-
 (defn- update-hakukohde-process-state!
   [connection session hakukohde-oid from-state to-state application-key]
-  (let [application      (get-latest-application-by-key-with-hakukohde-reviews
-                          connection
-                          application-key)
+  (let [application      (get-latest-application-by-key-in-tx connection
+                                                              application-key)
         existing-reviews (filter
                           #(= (:state %) from-state)
                           (application-states/get-all-reviews-for-requirement "processing-state" application (when hakukohde-oid [hakukohde-oid])))
@@ -1164,9 +1157,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
     (doseq [new-review new-reviews]
-      (queries/yesql-upsert-application-hakukohde-review! new-review connection)
+      (queries/yesql-upsert-application-hakukohde-review! new-review {:connection connection})
       (queries/yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
-                                             connection))
+                                             {:connection connection}))
     (when new-reviews
       {:new       new-event
        :id        {:applicationOid application-key
@@ -1188,11 +1181,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state audit-logger]
   (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
-  (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection {:connection conn}]
-                              (mapv
-                               (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
-                               application-keys)))]
+  (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                            (mapv
+                             (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
+                             application-keys))]
     (doseq [audit-log-entry (filter some? audit-log-entries)]
       (audit-log/log audit-logger audit-log-entry))
     true))
