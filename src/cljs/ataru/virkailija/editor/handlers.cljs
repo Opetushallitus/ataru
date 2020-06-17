@@ -107,8 +107,8 @@
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-operaattori
-  (fn [db [_ path value]]
-    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
+  (fn [db [_ path option-index value]]
+    (let [condition-path (current-form-content-path db [path :options option-index :condition])]
       (-> db
           (update-in condition-path
                      (fn [condition]
@@ -116,8 +116,8 @@
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
-  (fn [db [_ path value]]
-    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
+  (fn [db [_ path option-index value]]
+    (let [condition-path (current-form-content-path db [path :options option-index :condition])]
       (-> db
           (update-in condition-path
                      (fn [condition]

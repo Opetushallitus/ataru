@@ -108,7 +108,10 @@
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
-          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]]))))
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]
+         [:a
+          {:on-click (fn [] (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path]))}
+          "Lisää ehto"]]))))
 
 (defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
   [:div.editor-form__text-field-kenttään-vain-numeroita
@@ -165,71 +168,82 @@
       (empty? clean)
       (some? (re-matches integer-matcher clean)))))
 
-(defn- text-field-option-condition [_ path]
+(defn- text-field-option-condition [{:keys [path]}]
   (let [component-locked? (subscribe [:editor/component-locked? path])
         id                (util/new-uuid)
         local-state       (r/atom {:focused? false
                                    :valid?   true
-                                   :value    ""})
-        initialize-state  (fn [value]
-                            (swap! local-state
-                                   assoc
-                                   :valid? true
-                                   :value value))
-        on-blur-fn        (fn [path event]
-                            (swap! local-state
-                                   assoc
-                                   :focused? false)
-                            (when (:valid? @local-state)
-                              (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)])))
-        on-change-fn      (fn [event] (swap! local-state
-                                             assoc
-                                             :focused? true
-                                             :valid? (valid-integer? (get-val event))
-                                             :value (get-val event)))]
-    (fn [condition path]
-      (when (not (:focused? @local-state))
-        (let [value (str (-> condition :answer-compared-to))]
-          (initialize-state value)))
-      [:div.editor-form__text-field-option-condition
-       [:label.editor-form__text-field-option-condition-label
-        {:for   id
-         :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
-        @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
-       [:select.editor-form__text-field-option-condition-comparison-operator
-        {:disabled  @component-locked?
-         :on-change (fn [event]
-                      (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-operaattori path (get-val event)]))
-         :value     (or (-> condition :comparison-operator) "<")}
-        [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
-        [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
-        [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
-       [:input.editor-form__text-field-option-condition-answer-compared-to
-        {:disabled  @component-locked?
-         :class     (when (not (:valid? @local-state))
-                      "editor-form__text-field-option-condition-answer-compared-to--invalid")
-         :id        id
-         :on-blur   (partial on-blur-fn path)
-         :on-change on-change-fn
-         :type      "text"
-         :value     (:value @local-state)}]])))
+                                   :value    ""})]
+    (fn [{:keys [condition option-index path]}]
+      (let [initialize-state (fn [value]
+                               (swap! local-state
+                                      assoc
+                                      :valid? true
+                                      :value value))
+            on-blur-fn       (fn [path event]
+                               (swap! local-state
+                                      assoc
+                                      :focused? false)
+                               (when (:valid? @local-state)
+                                 (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
+                                            path
+                                            option-index
+                                            (get-val event)])))
+            on-change-fn     (fn [event] (swap! local-state
+                                                assoc
+                                                :focused? true
+                                                :valid? (valid-integer? (get-val event))
+                                                :value (get-val event)))]
+        (when (not (:focused? @local-state))
+          (let [value (str (-> condition :answer-compared-to))]
+            (initialize-state value)))
+        [:div.editor-form__text-field-option-condition
+         [:label.editor-form__text-field-option-condition-label
+          {:for   id
+           :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+         [:select.editor-form__text-field-option-condition-comparison-operator
+          {:disabled  @component-locked?
+           :on-change (fn [event]
+                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-operaattori
+                                   path
+                                   option-index
+                                   (get-val event)]))
+           :value     (or (-> condition :comparison-operator) "<")}
+          [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
+          [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
+          [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
+         [:input.editor-form__text-field-option-condition-answer-compared-to
+          {:disabled  @component-locked?
+           :class     (when (not (:valid? @local-state))
+                        "editor-form__text-field-option-condition-answer-compared-to--invalid")
+           :id        id
+           :on-blur   (partial on-blur-fn path)
+           :on-change on-change-fn
+           :type      "text"
+           :value     (:value @local-state)}]]))))
 
 (defn- text-field-option-followups-wrapper
   [options followups path show-followups]
   (let [option-count (count options)]
     (when (or (nil? @show-followups)
               (not (= (count @show-followups) option-count)))
-      (reset! show-followups (vec (replicate option-count true))))
-    (when (< 0 option-count)
-      (let [option-index 0
-            followups    (nth followups option-index)
-            option       (nth options option-index)]
-        [:div.editor-form__text-field-option-followups-wrapper
-         (when (:condition option)
-           [:div.editor-form__text-field-option-followups-header
-            [text-field-option-condition (:condition option) path]
-            [followup-question/followup-question option-index followups show-followups]])
-         [followup-question/followup-question-overlay option-index followups path show-followups]]))))
+      (reset! show-followups (vec (replicate option-count false))))
+    [:<>
+     (doall
+       (map-indexed
+         (fn [index option]
+           (let [followups (nth followups index)]
+             ^{:key (str "options-" index)}
+             [:div.editor-form__text-field-option-followups-wrapper
+              (when (:condition option)
+                [:div.editor-form__text-field-option-followups-header
+                 [text-field-option-condition {:condition    (:condition option)
+                                               :option-index index
+                                               :path         path}]
+                 [followup-question/followup-question index followups show-followups]])
+              [followup-question/followup-question-overlay index followups path show-followups]]))
+         options))]))
 
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
@@ -336,7 +350,7 @@
                                             :cannot-change-type?        options-with-condition?
                                             :component-locked?          @component-locked?
                                             :decimals-in-use?           (-> @value :params :decimals pos?)
-                                            :followups?                 (not (empty? (first followups)))
+                                            :followups?                 (not (empty? (filter empty? followups)))
                                             :options-with-condition?    options-with-condition?
                                             :options-without-condition? (not (empty? (remove :condition options)))
                                             :repeatable?                (-> @value :params :repeatable boolean)}]
