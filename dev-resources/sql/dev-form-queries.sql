@@ -21,6 +21,24 @@ DELETE FROM application_secrets
 WHERE application_key IN (SELECT key FROM applications
                           WHERE form_id = :form_id);
 
+-- name: yesql-delete-fixture-application-answers!
+DELETE FROM answers
+WHERE application_id IN (SELECT id
+                         FROM applications
+                         WHERE form_id = :form_id);
+
+-- name: yesql-delete-fixture-application-multi-answers!
+DELETE FROM multi_answers
+WHERE application_id IN (SELECT id
+                         FROM applications
+                         WHERE form_id = :form_id);
+
+-- name: yesql-delete-fixture-application-group-answers!
+DELETE FROM group_answers
+WHERE application_id IN (SELECT id
+                         FROM applications
+                         WHERE form_id = :form_id);
+
 -- name: yesql-delete-fixture-application!
 DELETE FROM applications
 WHERE form_id = :form_id;

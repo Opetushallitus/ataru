@@ -28,6 +28,59 @@ INSERT INTO applications (
   now()
 );
 
+-- name: yesql-add-application-answers!
+INSERT INTO answers (application_id, key, field_type, value)
+SELECT :application_id, t->>'key', t->>'fieldType', t->>'value'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'string' OR
+      jsonb_typeof(t->'value') = 'null';
+
+-- name: yesql-add-application-multi-answers!
+INSERT INTO multi_answers (application_id, key, field_type)
+SELECT :application_id, t->>'key', t->>'fieldType'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_array_length(t->'value') = 0 OR
+       jsonb_typeof(t->'value'->0) = 'string');
+
+-- name: yesql-add-application-multi-answer-values!
+INSERT INTO multi_answer_values (application_id, key, data_idx, value)
+SELECT :application_id, t->>'key', tt.data_idx, tt.value->>0
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(value, data_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      jsonb_typeof(t->'value'->0) = 'string';
+
+-- name: yesql-add-application-group-answers!
+INSERT INTO group_answers (application_id, key, field_type)
+SELECT :application_id, t->>'key', t->>'fieldType'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
+-- name: yesql-add-application-group-answer-groups!
+INSERT INTO group_answer_groups (application_id, key, group_idx, is_null)
+SELECT :application_id, t->>'key', tt.group_idx, jsonb_typeof(tt.value) = 'null'
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(value, group_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
+-- name: yesql-add-application-group-answer-values!
+INSERT INTO group_answer_values (application_id, key, group_idx, data_idx, value)
+SELECT :application_id, t->>'key', tt.group_idx, ttt.data_idx, ttt.value->>0
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(group_value, group_idx)
+CROSS JOIN jsonb_array_elements(CASE jsonb_typeof(tt.group_value)
+                                    WHEN 'array' THEN tt.group_value
+                                    ELSE '[]'::jsonb
+                                END) WITH ORDINALITY AS ttt(value, data_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
 -- name: yesql-add-application-version<!
 -- Add application version
 INSERT INTO applications (
@@ -198,6 +251,7 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
+  a.submitted,
   a.content,
   a.haku,
   a.hakukohde,
@@ -867,9 +921,32 @@ LIMIT 1;
 UPDATE applications
 SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) [],
     content = :content
-FROM application_secrets
-WHERE application_secrets.secret = :secret AND
-      application_secrets.application_key = applications.key;
+WHERE id = (SELECT max(id)
+            FROM applications
+            WHERE key = (SELECT application_key
+                         FROM application_secrets
+                         WHERE secret = :secret));
+
+--name: yesql-delete-application-hakukohteet-answer-values-by-secret!
+DELETE FROM multi_answer_values
+WHERE application_id = (SELECT max(id)
+                        FROM applications
+                        WHERE key = (SELECT application_key
+                                     FROM application_secrets
+                                     WHERE secret = :secret)) AND
+      key = 'hakukohteet';
+
+--name: yesql-insert-application-hakukohteet-answer-values-by-secret!
+INSERT INTO multi_answer_values (application_id, key, data_idx, value)
+SELECT (SELECT max(id)
+        FROM applications
+        WHERE key = (SELECT application_key
+                     FROM application_secrets
+                     WHERE secret = :secret)),
+       'hakukohteet',
+       t.data_idx,
+       t.value->>0
+FROM jsonb_array_elements(:hakukohteet) WITH ORDINALITY AS t(value, data_idx);
 
 --name: yesql-get-application-versions
 SELECT content, form_id
