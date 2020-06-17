@@ -12,6 +12,9 @@
   (ataru-db/exec :db yesql-delete-fixture-application-review! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-events! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-secrets! {:form_id form-id})
+  (ataru-db/exec :db yesql-delete-fixture-application-answers! {:form_id form-id})
+  (ataru-db/exec :db yesql-delete-fixture-application-multi-answers! {:form_id form-id})
+  (ataru-db/exec :db yesql-delete-fixture-application-group-answers! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-form! {:id form-id}))
 
