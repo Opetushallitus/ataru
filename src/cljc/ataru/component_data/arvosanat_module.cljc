@@ -190,11 +190,11 @@
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
            label
-           oppimaara-dropdown
-           metadata]} :- {:oppiaineen-koodi                    OppiaineenKoodi
-                          :label                               localized-schema/LocalizedString
-                          :metadata                            element-metadata-schema/ElementMetadata
-                          (s/optional-key :oppimaara-dropdown) s/Any}]
+           oppimaara-column
+           metadata]} :- {:oppiaineen-koodi                  OppiaineenKoodi
+                          :label                             localized-schema/LocalizedString
+                          :metadata                          element-metadata-schema/ElementMetadata
+                          (s/optional-key :oppimaara-column) s/Any}]
   (merge (component/question-group metadata)
          {:id       oppiaineen-koodi
           :version  "oppiaineen-arvosanat"
@@ -202,8 +202,8 @@
           :metadata metadata
           :children (as-> [] children
                           (cond-> children
-                                  (some? oppimaara-dropdown)
-                                  (conj oppimaara-dropdown))
+                                  (some? oppimaara-column)
+                                  (conj oppimaara-column))
                           (conj children (arvosana-dropdown
                                            {:metadata         metadata
                                             :oppiaineen-koodi oppiaineen-koodi
@@ -230,12 +230,12 @@
 
 (defn- arvosana-aidinkieli-ja-kirjallisuus [{:keys [metadata]}]
   (oppiaineen-arvosana
-    {:oppiaineen-koodi   "A"
-     :label              (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
-     :oppimaara-dropdown (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
-                                                                :oppiaineen-koodi      "A"
-                                                                :valinnainen-oppiaine? false})
-     :metadata           metadata}))
+    {:oppiaineen-koodi "A"
+     :label            (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
+     :oppimaara-column (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
+                                                              :oppiaineen-koodi      "A"
+                                                              :valinnainen-oppiaine? false})
+     :metadata         metadata}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
   (oppiaineen-arvosana

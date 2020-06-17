@@ -12,40 +12,40 @@
 
 (s/defn oppiaineen-arvosana-rivi
   [{:keys [label
-           oppimaara-dropdown
-           arvosana-dropdown
-           lisaa-valinnaisaine-linkki
+           oppimaara-column
+           arvosana-column
+           valinnaisaine-column
            data-test-id
-pakollinen-oppiaine?
-           readonly?]} :- {:label                                       s/Any
-                           (s/optional-key :oppimaara-dropdown)         s/Any
-                           (s/optional-key :arvosana-dropdown)          s/Any
-                           (s/optional-key :lisaa-valinnaisaine-linkki) s/Any
-                           :pakollinen-oppiaine?                        s/Bool
-                           (s/optional-key :data-test-id)               s/Str
-                           (s/optional-key :readonly?)                  s/Bool}]
+           pakollinen-oppiaine?
+           readonly?]} :- {:label                                 s/Any
+                           (s/optional-key :oppimaara-column)     s/Any
+                           (s/optional-key :arvosana-column)      s/Any
+                           (s/optional-key :valinnaisaine-column) s/Any
+                           :pakollinen-oppiaine?                  s/Bool
+                           (s/optional-key :data-test-id)         s/Str
+                           (s/optional-key :readonly?)            s/Bool}]
   [:div.arvosanat-taulukko__rivi
    {:data-test-id data-test-id
-    :class         (cond-> ""
+    :class        (cond-> ""
 
-                           readonly?
-                           (str " arvosanat-taulukko__rivi--readonly")
+                          readonly?
+                          (str " arvosanat-taulukko__rivi--readonly")
 
-                           pakollinen-oppiaine?
-                           (str " arvosanat-taulukko__rivi--pakollinen-oppiaine"))}
+                          pakollinen-oppiaine?
+                          (str " arvosanat-taulukko__rivi--pakollinen-oppiaine"))}
    [:div.arvosanat-taulukko__solu.arvosana__oppiaine
-    {:class (when-not oppimaara-dropdown
+    {:class (when-not oppimaara-column
               "arvosanat-taulukko__solu--span-2")}
     label]
-   (when oppimaara-dropdown
+   (when oppimaara-column
      [:div.arvosanat-taulukko__solu.arvosana__oppimaara
-      oppimaara-dropdown])
-   (when arvosana-dropdown
+      oppimaara-column])
+   (when arvosana-column
      [:div.arvosanat-taulukko__solu.arvosana__arvosana
-      arvosana-dropdown])
-   (when lisaa-valinnaisaine-linkki
+      arvosana-column])
+   (when valinnaisaine-column
      [:div.arvosanat-taulukko__solu.arvosana__lisaa-valinnaisaine.arvosana__lisaa-valinnaisaine--solu
-      lisaa-valinnaisaine-linkki])])
+      valinnaisaine-column])])
 
 (def ^:private max-valinnaisaine-amount 3)
 
@@ -55,15 +55,15 @@ pakollinen-oppiaine?
 
 (s/defn lisaa-valinnaisaine-linkki
   [{:keys [valinnaisaine-rivi?
-           arvosana-dropdown
-           oppimaara-dropdown
+           arvosana-column
+           oppimaara-column
            lang
            arvosana-idx
            field-descriptor
            row-count
            data-test-id]} :- {:valinnaisaine-rivi? s/Bool
-                              :arvosana-dropdown   s/Any
-                              :oppimaara-dropdown  (s/maybe s/Any)
+                              :arvosana-column     s/Any
+                              :oppimaara-column    (s/maybe s/Any)
                               :lang                lang-schema/Lang
                               :arvosana-idx        s/Int
                               :field-descriptor    s/Any
@@ -72,11 +72,11 @@ pakollinen-oppiaine?
   (let [label               (if valinnaisaine-rivi?
                               (translations/get-hakija-translation :poista lang)
                               (translations/get-hakija-translation :lisaa-valinnaisaine lang))
-        arvosana-answered?  (some-> (when arvosana-dropdown
-                                      @(re-frame/subscribe [:application/answer (:id arvosana-dropdown) arvosana-idx]))
+        arvosana-answered?  (some-> (when arvosana-column
+                                      @(re-frame/subscribe [:application/answer (:id arvosana-column) arvosana-idx]))
                                     answered?)
-        oppimaara-answered? (or (nil? oppimaara-dropdown)
-                                (-> @(re-frame/subscribe [:application/answer (:id oppimaara-dropdown) arvosana-idx])
+        oppimaara-answered? (or (nil? oppimaara-column)
+                                (-> @(re-frame/subscribe [:application/answer (:id oppimaara-column) arvosana-idx])
                                     answered?))
         disabled?           (and (not valinnaisaine-rivi?)
                                  (or (not (< (dec row-count) max-valinnaisaine-amount))
@@ -125,23 +125,23 @@ pakollinen-oppiaine?
                                   "oppiaineen-arvosana-rivi__oppiaine--valinnaisaine")}
                         label])
 
-                     :oppimaara-dropdown
+                     :oppimaara-column
                      (when oppimaara-dropdown
                        [render-field
                         (assoc oppimaara-dropdown :data-test-id (str data-test-id "-oppimaara-" arvosana-idx))
                         arvosana-idx])
 
-                     :arvosana-dropdown
+                     :arvosana-column
                      (when arvosana-dropdown
                        [render-field
                         (assoc arvosana-dropdown :data-test-id (str data-test-id "-arvosana-" arvosana-idx))
                         arvosana-idx])
 
-                     :lisaa-valinnaisaine-linkki
+                     :valinnaisaine-column
                      [lisaa-valinnaisaine-linkki
                       {:valinnaisaine-rivi? valinnaisaine-rivi?
-                       :arvosana-dropdown   arvosana-dropdown
-                       :oppimaara-dropdown  oppimaara-dropdown
+                       :arvosana-column     arvosana-dropdown
+                       :oppimaara-column    oppimaara-dropdown
                        :lang                lang
                        :arvosana-idx        arvosana-idx
                        :field-descriptor    field-descriptor
@@ -235,16 +235,16 @@ pakollinen-oppiaine?
                                                                                :idx              valinnainen-kieli-rivi-idx
                                                                                :lang             lang}]
 
-                                                     :oppimaara-dropdown
+                                                     :oppimaara-column
                                                      [valinnainen-kieli-oppimaara
                                                       {:field-descriptor oppimaara-dropdown
                                                        :render-field     render-field
                                                        :idx              valinnainen-kieli-rivi-idx}]
 
-                                                     :arvosana-dropdown
+                                                     :arvosana-column
                                                      [render-field arvosana-dropdown valinnainen-kieli-rivi-idx]
 
-                                                     :lisaa-valinnaisaine-linkki
+                                                     :valinnaisaine-column
                                                      [poista-valinnainen-kieli
                                                       {:field-descriptor field-descriptor
                                                        :idx              valinnainen-kieli-rivi-idx}]}]))))
@@ -318,7 +318,7 @@ pakollinen-oppiaine?
                          :idx              valinnainen-kieli-idx
                          :lang             lang}]
 
-                       :oppimaara-dropdown
+                       :oppimaara-column
                        [valinnainen-kieli-oppimaara
                         {:field-descriptor (assoc
                                              oppimaara
@@ -327,7 +327,7 @@ pakollinen-oppiaine?
                          :render-field     render-field
                          :idx              valinnainen-kieli-idx}]
 
-                       :arvosana-dropdown
+                       :arvosana-column
                        [render-field
                         (assoc
                           arvosana
@@ -393,11 +393,11 @@ pakollinen-oppiaine?
                          valinnaisaine-rivi?
                          (translations/get-hakija-translation :oppiaine-valinnainen lang))
 
-                :oppimaara-dropdown
+                :oppimaara-column
                 (when oppimaara-dropdown
                   [render-field oppimaara-dropdown application lang arvosana-idx])
 
-                :arvosana-dropdown
+                :arvosana-column
                 (when arvosana-dropdown
                   [render-field arvosana-dropdown application lang arvosana-idx])}]))
           (range row-count))]))
