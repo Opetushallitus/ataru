@@ -869,32 +869,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
             (queries/yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
-(s/defn get-applications-for-form :- [schema/Application]
-  [form-key :- s/Str filtered-states :- [s/Str]]
-  (->> {:form_key form-key :filtered_states filtered-states}
-       (exec-db :db queries/yesql-get-applications-for-form)
-       (mapv unwrap-application)))
-
 (defn get-applications-by-keys
   [application-keys]
   (mapv unwrap-application
         (exec-db :db queries/yesql-get-applications-by-keys {:application_keys application-keys})))
-
-(s/defn get-applications-for-hakukohde :- [schema/Application]
-  [filtered-states :- [s/Str]
-   hakukohde-oid :- s/Str]
-  (mapv unwrap-application
-        (exec-db :db queries/yesql-get-applications-for-hakukohde
-                 {:filtered_states filtered-states
-                  :hakukohde_oid   hakukohde-oid})))
-
-(s/defn get-applications-for-haku :- [schema/Application]
-  [haku-oid :- s/Str
-   filtered-states :- [s/Str]]
-  (mapv unwrap-application
-        (exec-db :db queries/yesql-get-applications-for-haku
-                 {:filtered_states filtered-states
-                  :haku_oid        haku-oid})))
 
 (defn add-person-oid
   "Add person OID to an application"
@@ -981,28 +959,6 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
      :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)
      :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
-
-(defn get-hakurekisteri-applications ;; deprecated, use suoritusrekisteri-applications
-  [haku-oid hakukohde-oids person-oids modified-after]
-  (->> (jdbc/with-db-connection [conn {:datasource (db/get-datasource :db)}]
-         (queries/yesql-applications-for-hakurekisteri
-          {:has_haku_oid       (some? haku-oid)
-           :haku_oid           haku-oid
-           :has_hakukohde_oids (not (empty? hakukohde-oids))
-           :has_person_oids    (not (empty? person-oids))
-           :hakukohde_oids     (->> hakukohde-oids
-                                    (to-array)
-                                    (.createArrayOf (:connection conn) "varchar"))
-           :person_oids        (->> person-oids
-                                    to-array
-                                    (.createArrayOf (:connection conn) "text"))
-           :has_modified_after (some? modified-after)
-           :modified_after     (some-> modified-after
-                                       (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
-                                       (.atZone (ZoneId/of "Europe/Helsinki"))
-                                       .toOffsetDateTime)}
-          {:connection conn}))
-       (map unwrap-hakurekisteri-application)))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]

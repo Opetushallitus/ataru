@@ -999,24 +999,6 @@
                                 person-oid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
-      (api/GET "/hakurekisteri/applications" {session :session} ;; deprecated, use /suoritusrekisteri
-        :summary "Get the latest versions of applications."
-        :query-params [{hakuOid :- s/Str nil}
-                       {hakukohdeOids :- [s/Str] nil}
-                       {hakijaOids :- [s/Str] nil}
-                       {modifiedAfter :- s/Str nil}]
-        :return [ataru-schema/HakurekisteriApplication]
-        (if (every? nil? [hakuOid hakukohdeOids hakijaOids modifiedAfter])
-          (response/bad-request {:error "No search terms provided."})
-          (if-let [applications (access-controlled-application/hakurekisteri-applications
-                                  organization-service
-                                  session
-                                  hakuOid
-                                  hakukohdeOids
-                                  hakijaOids
-                                  modifiedAfter)]
-            (response/ok applications)
-            (response/unauthorized {:error "Unauthorized"}))))
       (api/POST "/suoritusrekisteri" {session :session}
         :summary "Applications for suoritusrekisteri"
         :body-params [{hakuOid :- s/Str nil}
