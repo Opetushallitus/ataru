@@ -1,10 +1,12 @@
 (ns ataru.tutkintojen-tunnustaminen
-  (:require [ataru.cache.cache-service :as cache-service]
+  (:require [ataru.applications.application-store :as application-store]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.cache.in-memory-cache :as in-memory]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.dob :as dob]
             [ataru.forms.form-store :as form-store]
+            [ataru.log.audit-log :as audit-log]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
             [speclj.core :refer :all]
@@ -161,7 +163,8 @@
   (tags :unit)
 
   (around [it]
-    (let [form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (let [audit-logger  (audit-log/new-dummy-audit-logger)
+          form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id (yesql-add-form<! {:name             {:fi "Lomake"}
                                                   :content          {:content [{:id              (get-in config [:tutkintojen-tunnustaminen :country-question-id])
                                                                                 :fieldType       "dropdown"
@@ -208,7 +211,8 @@
                                                   :deleted          false
                                                   :locked           nil
                                                   :locked_by        nil}
-                                                 {:connection connection})))
+                                {:connection connection})))
+          form          (form-store/fetch-by-id form-id)
           wrong-form-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id(yesql-add-form<! {:name             {:fi "Lomake"}
                                                  :content          {:content []}
@@ -220,38 +224,43 @@
                                                  :locked           nil
                                                  :locked_by        nil}
                                                 {:connection connection})))
-          application   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (yesql-add-application<! {:form_id        form-id
-                                                    :content        {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                                :value     "024"
-                                                                                :fieldType "dropdown"}
-                                                                               {:key       "liite-1"
-                                                                                :value     ["liite-1-id"]
-                                                                                :fieldType "attachment"}
-                                                                               {:key       "liite-2"
-                                                                                :value     ["liite-2-1-id" "liite-2-2-id"]
-                                                                                :fieldType "attachment"}
-                                                                               {:key       "liite-3"
-                                                                                :value     [["liite-3-1-1-id"]
-                                                                                            []
-                                                                                            ["liite-3-2-1-id" "liite-3-2-2-id"]]
-                                                                                :fieldType "attachment"}
-                                                                               {:key       "first-name"
-                                                                                :value     "Etunimi Toinenetunimi"
-                                                                                :fieldType "textField"}
-                                                                               {:key       "last-name"
-                                                                                :value     "Sukunimi"
-                                                                                :fieldType "textField"}]}
-                                                    :lang           "fi"
-                                                    :preferred_name "Testi"
-                                                    :last_name      "Testi"
-                                                    :hakukohde      []
-                                                    :haku           nil
-                                                    :person_oid     nil
-                                                    :ssn            nil
-                                                    :dob            (dob/str->dob "24.09.1989")
-                                                    :email          "test@example.com"}
-                                                   {:connection connection}))
+          wrong-form    (form-store/fetch-by-id wrong-form-id)
+          application   (application-store/get-application
+                         (application-store/add-application
+                          {:form      form-id
+                           :answers   [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                        :value     "024"
+                                        :fieldType "dropdown"}
+                                       {:key       "liite-1"
+                                        :value     ["liite-1-id"]
+                                        :fieldType "attachment"}
+                                       {:key       "liite-2"
+                                        :value     ["liite-2-1-id" "liite-2-2-id"]
+                                        :fieldType "attachment"}
+                                       {:key       "liite-3"
+                                        :value     [["liite-3-1-1-id"]
+                                                    []
+                                                    ["liite-3-2-1-id" "liite-3-2-2-id"]]
+                                        :fieldType "attachment"}
+                                       {:key       "first-name"
+                                        :value     "Etunimi Toinenetunimi"
+                                        :fieldType "textField"}
+                                       {:key       "last-name"
+                                        :value     "Sukunimi"
+                                        :fieldType "textField"}
+                                       {:key       "birth-date"
+                                        :fieldType "textField"
+                                        :value     "24.09.1989"}
+                                       {:key       "email"
+                                        :fieldType "textField"
+                                        :value     "test@example.com"}]
+                           :lang      "fi"
+                           :hakukohde []
+                           :haku      nil}
+                          []
+                          form
+                          {}
+                          audit-logger))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           event-id      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id (yesql-add-application-event<! {:application_key          (:key application)
@@ -264,44 +273,33 @@
                                                               {:connection connection})))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           edited        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (yesql-add-application-version<! (assoc application :content
-                                                                  {:answers [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                              :value     "028"
-                                                                              :fieldType "dropdown"}
-                                                                             {:key       "liite-1"
-                                                                              :value     ["liite-1-id"]
-                                                                              :fieldType "attachment"}
-                                                                             {:key       "liite-2"
-                                                                              :value     ["liite-2-1-id" "liite-2-2-id"]
-                                                                              :fieldType "attachment"}
-                                                                             {:key       "liite-3"
-                                                                              :value     [["liite-3-1-2-id"]]
-                                                                              :fieldType "attachment"}
-                                                                             {:key       "first-name"
-                                                                              :value     "Etunimi Toinenetunimi"
-                                                                              :fieldType "textField"}
-                                                                             {:key       "last-name"
-                                                                              :value     "Sukunimi"
-                                                                              :fieldType "textField"}]})
-                                                           {:connection connection}))
+                          (application-store/update-application
+                           (update application :answers #(map (fn [answer]
+                                                                (cond (= (get-in config [:tutkintojen-tunnustaminen :country-question-id]) (:key answer))
+                                                                      (assoc answer :value "028")
+                                                                      (= "liite-3" (:key answer))
+                                                                      (assoc answer :value [["liite-3-1-2-id"]])
+                                                                      :else
+                                                                      answer)) %))
+                           []
+                           form
+                           {}
+                           audit-logger))
           in-wrong-form (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (yesql-add-application-version<! (assoc application
-                                                                  :content
-                                                                  {:answers [{:key       "first-name"
-                                                                              :value     "Etunimi Toinenetunimi"
-                                                                              :fieldType "textField"}
-                                                                             {:key       "last-name"
-                                                                              :value     "Sukunimi"
-                                                                              :fieldType "textField"}]}
-                                                                  :form_id
-                                                                  wrong-form-id)
-                                                           {:connection connection}))]
+                          (application-store/update-application
+                           (-> edited
+                               application-store/get-application
+                               (assoc :form wrong-form-id))
+                           []
+                           wrong-form
+                           {}
+                           audit-logger))]
       (binding [*form-id*                      form-id
                 *wrong-form-id*                wrong-form-id
                 *application-id*               (:id application)
                 *event-id*                     event-id
-                *edited-application-id*        (:id edited)
-                *in-wrong-form-application-id* (:id in-wrong-form)
+                *edited-application-id*        edited
+                *in-wrong-form-application-id* in-wrong-form
                 *application-key*              (:key application)
                 *application-submitted*        (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
                                                           (:submitted application))]
@@ -322,8 +320,8 @@
                              ["DELETE FROM applications
                                WHERE id IN (?, ?, ?)"
                               (:id application)
-                              (:id edited)
-                              (:id in-wrong-form)])
+                              edited
+                              in-wrong-form])
               (jdbc/execute! connection
                              ["DELETE FROM forms
                                WHERE id IN (?, ?)"
