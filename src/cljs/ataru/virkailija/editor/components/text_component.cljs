@@ -92,7 +92,7 @@
                              options-without-condition?
                              repeatable?)
             option-index 0]
-        [:div.editor-form__additional-params-container
+        [:div.editor-form__text-field-additional-params-container
          [:input.editor-form__text-field-checkbox
           {:id           id
            :type         "checkbox"
@@ -109,9 +109,10 @@
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]
-         [:a
+         [:span " | "]
+         [:a.editor-form__text-field-checkbox-add-condition
           {:on-click (fn [] (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path]))}
-          "Lisää ehto"]]))))
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-lisaa-ehto])]]))))
 
 (defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
   [:div.editor-form__text-field-kenttään-vain-numeroita

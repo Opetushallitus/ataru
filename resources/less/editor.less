@@ -545,6 +545,12 @@
   margin: 0;
 }
 
+.editor-form__text-field-additional-params-container {
+  display: flex;
+  flex-flow: row wrap;
+  margin-left: 20px;
+}
+
 .editor-form__text-field-checkbox-label {
   color: @blue-text-color;
   cursor: pointer;
@@ -558,6 +564,17 @@
 
 .editor-form__text-field-checkbox {
   margin-left: 0px;
+}
+
+.editor-form__text-field-checkbox-add-condition {
+  color: @pale-blue;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+
+  &:hover {
+    color: @selected-blue;
+  }
 }
 
 .editor-form__text-field-wrapper {
