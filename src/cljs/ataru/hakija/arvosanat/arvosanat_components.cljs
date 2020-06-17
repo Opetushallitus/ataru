@@ -416,9 +416,17 @@
    [arvosanat-taulukko-otsikkorivi
     {:lang      lang
      :readonly? true}]
-   (map (fn field-descriptor->oppiaineen-arvosana-readonly [arvosana-data]
-          (let [arvosana-koodi (:id arvosana-data)
-                key            (str "arvosana-" arvosana-koodi)]
-            ^{:key key}
-            [render-field arvosana-data application lang idx]))
-        (:children field-descriptor))])
+   (->> (:children field-descriptor)
+        (filter (fn [arvosana-data]
+                  (let [arvosana-koodi (:id arvosana-data)
+                        value          @(re-frame/subscribe [:application/answer
+                                                             (keyword (str "arvosana-" arvosana-koodi))
+                                                             0])]
+                    (or (= arvosana-koodi "oppiaineen-arvosanat-valinnaiset-kielet")
+                        (-> value :value string/blank? not)))))
+        (map (fn field-descriptor->oppiaineen-arvosana-readonly [arvosana-data]
+               (let [arvosana-koodi (:id arvosana-data)
+                     key            (str "arvosana-" arvosana-koodi)]
+                 ^{:key key}
+                 [render-field arvosana-data application lang idx])))
+        doall)])
