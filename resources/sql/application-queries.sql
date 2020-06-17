@@ -242,6 +242,7 @@ SELECT
   a.hakukohde,
   a.haku,
   a.person_oid,
+  las.secret,
   (SELECT organization_oid
    FROM forms
    WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
@@ -253,8 +254,14 @@ SELECT
      ON la.key = oa.key AND la.id > oa.id
    WHERE la.id IS NULL AND
          ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
-          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count
+          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM latest_applications AS a
+JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;
 
 -- name: yesql-applications-authorization-data
@@ -281,34 +288,6 @@ FROM applications AS a, forms AS f
 WHERE a.person_oid IN (:person_oids) AND
       a.id = (SELECT max(id) FROM applications WHERE key = a.key) AND
       f.id = (SELECT max(id) FROM forms WHERE key = (SELECT key FROM forms WHERE id = a.form_id));
-
--- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id                           AS form,
-  a.created_time,
-  a.content,
-  a.hakukohde,
-  a.haku,
-  a.person_oid,
-  las.secret,
-  (SELECT count(*)
-   FROM applications AS oa
-   LEFT JOIN applications AS la
-     ON la.key = oa.key AND la.id > oa.id
-   WHERE la.id IS NULL AND
-         ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
-          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count,
-  (SELECT json_agg(json_build_object('requirement', requirement,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
-   FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
-FROM latest_applications AS a
-  JOIN latest_application_secrets las ON a.key = las.application_key
-WHERE a.key = :application_key;
 
 -- name: yesql-get-latest-application-by-secret
 SELECT
