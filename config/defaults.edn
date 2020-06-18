@@ -39,7 +39,7 @@
  :background-job  {:exec-interval-seconds 15}
  :log             {:virkailija-base-path "/tmp"
                    :hakija-base-path     "/tmp"}
- :urls            {:virkailija-host "virkailija.untuvaopintopolku.fi"
-                   :hakija-host     "oppija.untuvaopintopolku.fi"
+ :urls            {:virkailija-host "toimimaton.virkailija-host-arvo.defaults.edn-tiedostosta"
+                   :hakija-host     "toimimaton.hakija-host-arvo.defaults.edn-tiedostosta"
                    :editor-url      "http://localhost:8350/lomake-editori"
                    :liiteri-url     "https://virkailija.untuvaopintopolku.fi/liiteri"}}

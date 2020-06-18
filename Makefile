@@ -80,7 +80,7 @@ start-pm2: $(NODE_MODULES) start-docker
 	$(foreach service, $(DEV_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
-start-pm2-cypress: $(NODE_MODULES) start-docker-cypress
+start-pm2-cypress: $(NODE_MODULES) start-docker-cypress run-fake-deps-server
 	$(foreach service, $(CYPRESS_SERVICES), \
 		$(PM2) $(START_ONLY) $(service) || exit 1;)
 
@@ -135,10 +135,14 @@ clean-docker:
 clean-lein:
 	lein clean
 
+# Fake dependencies for tests
+run-fake-deps-server:
+	./bin/start-fake-deps-server.sh
+
 # ----------------
 # Database initialization
 # ----------------
-init-test-db:
+init-test-db: run-fake-deps-server
 	lein with-profile test run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
 
 nuke-test-db:
@@ -194,7 +198,7 @@ compile-test-code:
 test-clojurescript: $(NODE_MODULES)
 	lein with-profile test doo chrome-headless test once
 
-test-browser: $(NODE_MODULES) compile-test-code
+test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
 	lein with-profile test spec -t ui
 
 test-clojure: nuke-test-db init-test-db

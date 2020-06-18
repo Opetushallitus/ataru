@@ -73,6 +73,7 @@ test-browser() {
 
 run-migrations() {
     echo "Running migrations"
+    ./bin/start-fake-deps-server.sh
     time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
 }
 
