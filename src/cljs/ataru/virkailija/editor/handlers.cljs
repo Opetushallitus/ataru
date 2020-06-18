@@ -90,7 +90,7 @@
 
 (reg-event-db
   :editor/poista-tekstikentän-arvon-perusteella-optio
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [option-path (current-form-content-path db [path])]
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))
@@ -98,7 +98,7 @@
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-optio
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [text-field-path (current-form-content-path db [path :options])
           component       (ataru.component-data.component/text-field-conditional-option "0")]
       (-> db

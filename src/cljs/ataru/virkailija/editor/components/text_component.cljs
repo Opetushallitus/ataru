@@ -90,8 +90,7 @@
                              decimals-in-use?
                              followups?
                              options-without-condition?
-                             repeatable?)
-            option-index 0]
+                             repeatable?)]
         [:div.editor-form__text-field-additional-params-container
          [:input.editor-form__text-field-checkbox
           {:id           id
@@ -101,9 +100,8 @@
            :on-change    (fn [evt]
                            (when-not disabled?
                              (.preventDefault evt)
-                             (if (-> evt .-target .-checked)
-                               (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path])
-                               (dispatch [:editor/poista-tekstikentän-arvon-perusteella-optio path :options option-index]))))
+                             (when (-> evt .-target .-checked)
+                               (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path]))))
            :data-test-id "tekstikenttä-valinta-lisäkysymys-arvon-perusteella"}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
@@ -157,6 +155,15 @@
                             "L" "editor-form__button--right-edge"
                             :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
+
+(defn- remove-option [{:keys [disabled? option-index path]}]
+  [:div.editor-form__text-field-remove-option
+   {:class (when disabled? "editor-form__text-field-remove-option--disabled")}
+   [:i.zmdi.zmdi-delete.zmdi-hc-lg
+    {:on-click (fn [evt]
+                 (when-not disabled?
+                   (.preventDefault evt)
+                   (dispatch [:editor/poista-tekstikentän-arvon-perusteella-optio (conj path :options option-index)])))}]])
 
 (def ^:private integer-matcher #"([+-]?)(0|[1-9][0-9]*)")
 
@@ -225,7 +232,7 @@
            :value     (:value @local-state)}]]))))
 
 (defn- text-field-option-followups-wrapper
-  [options followups path show-followups]
+  [{:keys [component-locked? followups options path show-followups]}]
   (let [option-count (count options)]
     (when (or (nil? @show-followups)
               (not (= (count @show-followups) option-count)))
@@ -242,7 +249,10 @@
                  [text-field-option-condition {:condition    (:condition option)
                                                :option-index index
                                                :path         path}]
-                 [followup-question/followup-question index followups show-followups]])
+                 [followup-question/followup-question index followups show-followups]
+                 [remove-option {:disabled?    component-locked?
+                                 :option-index index
+                                 :path         path}]])
               [followup-question/followup-question-overlay index followups path show-followups]]))
          options))]))
 
@@ -275,9 +285,9 @@
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
 (defn- text-field-option-followups
-  [value followups path show-followups]
+  [props]
   [:div.editor-form__component-row-wrapper
-   [text-field-option-followups-wrapper (:options value) followups path show-followups]])
+   [text-field-option-followups-wrapper props]])
 
 (defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
@@ -362,4 +372,8 @@
           (when-not text-area?
             [text-field-has-an-option @value followups path @component-locked?])]
          (when-not text-area?
-           [text-field-option-followups @value followups path show-followups])]]])))
+           [text-field-option-followups {:component-locked? @component-locked?
+                                         :followups         followups
+                                         :options           (:options @value)
+                                         :path              path
+                                         :show-followups    show-followups}])]]])))
