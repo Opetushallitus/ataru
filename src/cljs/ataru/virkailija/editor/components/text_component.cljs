@@ -238,29 +238,31 @@
            :value     (:value @local-state)}]]))))
 
 (defn- text-field-option-followups-wrapper
-  [{:keys [component-locked? followups options path show-followups]}]
-  (let [option-count (count options)]
-    (when (or (nil? @show-followups)
-              (not (= (count @show-followups) option-count)))
-      (reset! show-followups (vec (replicate option-count false))))
-    [:<>
-     (doall
-       (map-indexed
-         (fn [index option]
-           (let [followups (nth followups index)]
-             ^{:key (str "options-" index)}
-             [:div.editor-form__text-field-option-followups-wrapper
-              (when (:condition option)
-                [:div.editor-form__text-field-option-followups-header
-                 [text-field-option-condition {:condition    (:condition option)
-                                               :option-index index
-                                               :path         path}]
-                 [followup-question/followup-question index followups show-followups]
-                 [remove-option {:disabled?    component-locked?
-                                 :option-index index
-                                 :path         path}]])
-              [followup-question/followup-question-overlay index followups path show-followups]]))
-         options))]))
+  [_]
+  (let [show-followups (r/atom nil)]
+    (fn [{:keys [component-locked? followups options path]}]
+      (let [option-count (count options)]
+        (when (or (nil? @show-followups)
+                  (not (= (count @show-followups) option-count)))
+          (reset! show-followups (vec (replicate option-count true))))
+        [:<>
+         (doall
+           (map-indexed
+             (fn [index option]
+               (let [followups (nth followups index)]
+                 ^{:key (str "options-" index)}
+                 [:div.editor-form__text-field-option-followups-wrapper
+                  (when (:condition option)
+                    [:div.editor-form__text-field-option-followups-header
+                     [text-field-option-condition {:condition    (:condition option)
+                                                   :option-index index
+                                                   :path         path}]
+                     [followup-question/followup-question index followups show-followups]
+                     [remove-option {:disabled?    component-locked?
+                                     :option-index index
+                                     :path         path}]])
+                  [followup-question/followup-question-overlay index followups path show-followups]]))
+             options))]))))
 
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
@@ -309,8 +311,7 @@
         size-change       (fn [new-size]
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
-        component-locked? (subscribe [:editor/component-locked? path])
-        show-followups    (r/atom nil)]
+        component-locked? (subscribe [:editor/component-locked? path])]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
@@ -381,5 +382,4 @@
            [text-field-option-followups {:component-locked? @component-locked?
                                          :followups         followups
                                          :options           (:options @value)
-                                         :path              path
-                                         :show-followups    show-followups}])]]])))
+                                         :path              path}])]]])))
