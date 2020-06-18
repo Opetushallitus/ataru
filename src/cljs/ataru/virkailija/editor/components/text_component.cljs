@@ -241,10 +241,11 @@
   [_]
   (let [show-followups (r/atom nil)]
     (fn [{:keys [component-locked? followups options path]}]
-      (let [option-count (count options)]
+      (let [option-count                      (count options)
+            show-if-options-without-condition (not (empty? (remove :condition options)))]
         (when (or (nil? @show-followups)
                   (not (= (count @show-followups) option-count)))
-          (reset! show-followups (vec (replicate option-count true))))
+          (reset! show-followups (vec (replicate option-count show-if-options-without-condition))))
         [:<>
          (doall
            (map-indexed
