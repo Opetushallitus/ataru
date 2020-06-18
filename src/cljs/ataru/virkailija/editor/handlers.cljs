@@ -6,6 +6,7 @@
             [cljs.core.async :as async]
             [ataru.number :refer [numeric-matcher gte]]
             [cljs.core.match :refer-macros [match]]
+            [ataru.collections :as collections]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
@@ -52,9 +53,7 @@
   [field-descriptor]
   (if (nil? (:koodisto-source field-descriptor))
     (update field-descriptor :options
-            #(vec (map-indexed (fn [i option]
-                                 (assoc option :value (str i)))
-                               %)))
+            #(vec (collections/generate-missing-values %)))
     field-descriptor))
 
 (reg-event-db
@@ -62,14 +61,13 @@
   (fn [db [_ & path]]
     (let [option-path (current-form-content-path db [path])]
       (-> db
-          (update-in (drop-last option-path) util/remove-nth (last option-path))
-          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
+          (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])
-          component     (ataru.component-data.component/dropdown-option)]
+          component     (ataru.component-data.component/dropdown-option nil)]
       (-> db
           (update-in dropdown-path into [component])
           (update-in (drop-last dropdown-path) set-non-koodisto-option-values)))))
@@ -119,8 +117,7 @@
       db
       (let [options-path (current-form-content-path db [path :options])]
         (-> db
-            (update-in options-path swap-vector index (dec index))
-            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
+            (update-in options-path swap-vector index (dec index)))))))
 
 (reg-event-db
   :editor/move-option-down
@@ -131,8 +128,7 @@
       (if is-last-option?
         db
         (-> db
-            (update-in options-path swap-vector index (inc index))
-            (update-in (drop-last options-path) set-non-koodisto-option-values))))))
+            (update-in options-path swap-vector index (inc index)))))))
 
 (reg-event-fx
   :editor/select-koodisto-options

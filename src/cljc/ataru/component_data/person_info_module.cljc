@@ -47,7 +47,7 @@
 
 (defn ^:private dropdown-option
   [value labels & {:keys [default-value] :or {default-value false}}]
-  (-> (component/dropdown-option)
+  (-> (component/dropdown-option "0")
       (merge {:value value :label labels}
              (when default-value
                {:default-value default-value}))))
