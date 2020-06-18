@@ -107,10 +107,12 @@
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]
-         [:span " | "]
-         [:a.editor-form__text-field-checkbox-add-condition
-          {:on-click (fn [] (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path]))}
-          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-lisaa-ehto])]]))))
+         (when checked?
+           [:div.editor-form__text-field-checkbox-add-condition
+            [:span " | "]
+            [:a
+             {:on-click (fn [] (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path]))}
+             @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-lisaa-ehto])]])]))))
 
 (defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
   [:div.editor-form__text-field-kenttään-vain-numeroita
