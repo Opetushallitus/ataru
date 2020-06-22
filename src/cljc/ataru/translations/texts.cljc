@@ -439,6 +439,9 @@
    :oppiaine-b2 {:fi "B2-kieli"
                  :sv "B2-kieli"
                  :en "B2-kieli"}
+   :oppiaine-b3 {:fi "B3-kieli"
+                 :sv "B3-kieli"
+                 :en "B3-kieli"}
    :oppiaine-ma {:fi "Matematiikka"
                  :sv "Matematiikka"
                  :en "Matematiikka"}
@@ -847,6 +850,9 @@
   {:arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
+   :arvosanat-2-aste                                {:fi "Arvosanat (2. aste)"
+                                                     :sv "Arvosanat (2. aste)"
+                                                     :en "Arvosanat (2. aste)"}
    :arvosana-aidinkieli-ja-kirjallisuus             {:fi "Äidinkieli ja kirjallisuus"
                                                      :sv "Äidinkieli ja kirjallisuus"
                                                      :en "Äidinkieli ja kirjallisuus"}
