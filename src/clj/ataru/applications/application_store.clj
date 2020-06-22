@@ -465,10 +465,10 @@
        a.hakukohde,
        a.ssn,
        to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
-       (SELECT value->'value' AS value
-        FROM jsonb_array_elements(a.content->'answers')
-        WHERE value->>'key' = 'higher-completed-base-education'
-        LIMIT 1)                        AS \"base-education\",
+       (SELECT array_agg(value ORDER BY data_idx ASC)
+        FROM multi_answer_values
+        WHERE application_id = a.id AND
+              key = 'higher-completed-base-education') AS \"base-education\",
        (SELECT state
         FROM application_reviews
         WHERE application_key = a.key)  AS state,
