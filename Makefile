@@ -137,7 +137,10 @@ clean-lein:
 
 # Fake dependencies for tests
 run-fake-deps-server:
-	./bin/start-fake-deps-server.sh
+	./bin/fake-deps-server.sh start
+
+stop-fake-deps-server:
+	/bin/fake-deps-server.sh stop
 
 # ----------------
 # Database initialization
@@ -160,7 +163,7 @@ start-dev: start-pm2
 
 start-cypress: start-pm2-cypress
 
-stop: stop-pm2 stop-docker
+stop: stop-pm2 stop-docker stop-fake-deps-server
 
 restart: stop-pm2 start-pm2
 
