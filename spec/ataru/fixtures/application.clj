@@ -342,10 +342,7 @@
       (assoc :haku      "1.2.246.562.29.65950024186"
              :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"])
       (update :answers (comp vec concat)
-              [{:key       "more-answers-dropdown-id"
-                :value     ""
-                :fieldType "dropdown"}
-               {:key       "hakukohteet"
+              [{:key       "hakukohteet"
                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                 :fieldType "hakukohteet"
                 :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}])))
