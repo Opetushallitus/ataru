@@ -81,6 +81,7 @@
     (fn [{:keys [component-locked?
                  decimals-in-use?
                  followups?
+                 in-question-group?
                  options-with-condition?
                  options-without-condition?
                  path
@@ -89,6 +90,7 @@
             disabled?    (or component-locked?
                              decimals-in-use?
                              followups?
+                             in-question-group?
                              options-without-condition?
                              repeatable?)]
         [:div.editor-form__text-field-additional-params-container
@@ -370,6 +372,7 @@
                                             :component-locked?          @component-locked?
                                             :decimals-in-use?           (-> @value :params :decimals pos?)
                                             :followups?                 (not (empty? (filter empty? followups)))
+                                            :in-question-group?         (->> path (some #{:children}) boolean)
                                             :options-with-condition?    options-with-condition?
                                             :options-without-condition? (not (empty? (remove :condition options)))
                                             :repeatable?                (-> @value :params :repeatable boolean)}]
