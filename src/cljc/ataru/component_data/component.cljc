@@ -11,7 +11,7 @@
    :params     {}})
 
 (defn text-field-option
-  ([] (text-field-option ""))
+  ([] (text-field-option nil))
   ([value]
    {:value value
     :label {:fi "" :sv ""}}))
