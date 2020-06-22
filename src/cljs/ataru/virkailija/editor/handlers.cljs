@@ -108,21 +108,21 @@
   :editor/aseta-lisäkysymys-arvon-perusteella-operaattori
   (fn [db [_ path option-index value]]
     (let [condition-path (current-form-content-path db [path :options option-index :condition])]
-      (-> db
-          (update-in condition-path
-                     (fn [condition]
-                       (assoc condition :comparison-operator value)))))))
+      (update-in db
+                 condition-path
+                 (fn [condition]
+                   (assoc condition :comparison-operator value))))))
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
   (fn [db [_ path option-index value]]
     (let [condition-path (current-form-content-path db [path :options option-index :condition])]
-      (-> db
-          (update-in condition-path
-                     (fn [condition]
-                       (if (string/blank? value)
-                         (dissoc condition :answer-compared-to)
-                         (assoc condition :answer-compared-to (js/parseInt value)))))))))
+      (update-in db
+                 condition-path
+                 (fn [condition]
+                   (if (string/blank? value)
+                     (dissoc condition :answer-compared-to)
+                     (assoc condition :answer-compared-to (js/parseInt value))))))))
 
 (reg-event-db
   :editor/set-ordered-by-user
