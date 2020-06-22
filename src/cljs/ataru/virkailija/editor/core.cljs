@@ -94,5 +94,5 @@
                       [soresu->reagent element [index]])
                     content))
      [dnd/drag-n-drop-spacer [(count content)]]
-     [toolbar/add-component (count content)]]))
+     [toolbar/add-component (count content) true]]))
 

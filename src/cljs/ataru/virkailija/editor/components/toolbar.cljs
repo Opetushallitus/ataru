@@ -8,36 +8,33 @@
             [ataru.component-data.arvosanat-module :as arvosanat]))
 
 (defn- toolbar-elements []
-  (cond-> [[:form-section component/form-section]
-           [:single-choice-button component/single-choice-button]
-           [:single-choice-button-koodisto (fn [metadata]
-                                             (assoc (component/single-choice-button metadata)
-                                               :koodisto-source {:uri "" :title "" :version 1}
-                                               :options []))]
-           [:dropdown component/dropdown]
-           [:dropdown-koodisto (fn [metadata]
-                                 (assoc (component/dropdown metadata)
-                                        :koodisto-source {:uri "" :title "" :version 1}
-                                        :options []))]
-           [:multiple-choice component/multiple-choice]
-           [:multiple-choice-koodisto (fn [metadata]
-                                        (assoc (component/multiple-choice metadata)
-                                               :koodisto-source {:uri "" :title "" :version 1}
-                                               :options []))]
-           [:text-field component/text-field]
-           [:text-area component/text-area]
-           [:adjacent-fieldset component/adjacent-fieldset]
-           [:attachment component/attachment]
-           [:question-group component/question-group]
-           [:info-element component/info-element]
-           [:base-education-module base-education-module/module]
-           [:kk-base-education-module kk-base-education-module/module]
-           [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
-           [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
-           [:lupatiedot component/lupatiedot]]
-
-          (fc/feature-enabled? :arvosanat)
-          (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}])))
+  [[:form-section component/form-section]
+   [:single-choice-button component/single-choice-button]
+   [:single-choice-button-koodisto (fn [metadata]
+                                     (assoc (component/single-choice-button metadata)
+                                            :koodisto-source {:uri "" :title "" :version 1}
+                                            :options []))]
+   [:dropdown component/dropdown]
+   [:dropdown-koodisto (fn [metadata]
+                         (assoc (component/dropdown metadata)
+                                :koodisto-source {:uri "" :title "" :version 1}
+                                :options []))]
+   [:multiple-choice component/multiple-choice]
+   [:multiple-choice-koodisto (fn [metadata]
+                                (assoc (component/multiple-choice metadata)
+                                       :koodisto-source {:uri "" :title "" :version 1}
+                                       :options []))]
+   [:text-field component/text-field]
+   [:text-area component/text-area]
+   [:adjacent-fieldset component/adjacent-fieldset]
+   [:attachment component/attachment]
+   [:question-group component/question-group]
+   [:info-element component/info-element]
+   [:base-education-module base-education-module/module]
+   [:kk-base-education-module kk-base-education-module/module]
+   [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
+   [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
+   [:lupatiedot component/lupatiedot]])
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -117,10 +114,14 @@
              :else
              [:div.plus-component [:span "+"]])])))
 
-(defn add-component [path]
-  [custom-add-component (toolbar-elements) path
-   (fn [generate-fn]
-     (dispatch [:generate-component generate-fn path]))])
+(defn add-component [path root-level-add-component?]
+  (let [elements (cond-> (toolbar-elements)
+                         (and root-level-add-component?
+                              (fc/feature-enabled? :arvosanat))
+                         (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]))]
+    [custom-add-component elements path
+     (fn [generate-fn]
+       (dispatch [:generate-component generate-fn path]))]))
 
 (defn followup-toolbar [option-path generator]
   [custom-add-component (followup-toolbar-elements) option-path generator])
