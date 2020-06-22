@@ -67,7 +67,7 @@
   :editor/add-dropdown-option
   (fn [db [_ & path]]
     (let [dropdown-path (current-form-content-path db [path :options])
-          component     (ataru.component-data.component/dropdown-option nil)]
+          component     (component/dropdown-option nil)]
       (-> db
           (update-in dropdown-path into [component])
           (update-in (drop-last dropdown-path) set-non-koodisto-option-values)))))
@@ -83,7 +83,7 @@
   :editor/add-text-field-option
   (fn [db [_ path]]
     (let [text-field-path (current-form-content-path db [path :options])
-          component       (ataru.component-data.component/text-field-option)]
+          component       (component/text-field-option)]
       (-> db
           (update-in text-field-path into [component])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
