@@ -384,10 +384,10 @@
                  :information-requests         [ataru-schema/InformationRequest]
                  :selection-state-used?        s/Bool}
         (if-let [application (application-service/get-application-with-human-readable-koodis
-                               application-service
-                               application-key
-                               session
-                               newest-form)]
+                              application-service
+                              application-key
+                              session
+                              newest-form)]
           (response/ok application)
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key

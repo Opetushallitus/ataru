@@ -1,5 +1,6 @@
 (ns ataru.virkailija.application.application-subs
   (:require [clojure.core.match :refer [match]]
+            [clojure.set :as cs]
             [cljs-time.core :as t]
             [re-frame.core :as re-frame]
             [medley.core :refer [find-first]]

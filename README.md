@@ -185,3 +185,45 @@ Before transfering data between environments one can anonymize the data by runni
 ```
 CONFIG=path-to-application-config.edn lein anonymize-data fake-person-file.txt
 ```
+
+## Troubleshooting
+
+### `make start` hangs in container creation
+
+If your build gets stuck in the phase where all containers are listed by `docker-compose` like so:
+
+```bash
+Step 6/7 : RUN chmod a=,u=rw /etc/ssl/private/pure-ftpd.pem
+ ---> Using cache
+ ---> c6033ca419e9
+Step 7/7 : CMD /run.sh -l puredb:/etc/pure-ftpd/pureftpd.pdb -E -j -R -P $PUBLICHOST -s -A -j -Z -H -4 -E -R -X -x -d -d --tls 3
+ ---> Using cache
+ ---> 1818a90a9990
+Successfully built 1818a90a9990
+Successfully tagged ataru_ataru-test-ftpd:latest
+COMPOSE_PARALLEL_LIMIT=8 docker-compose up -d
+Creating network "ataru_ataru-test-network" with the default driver
+Creating network "ataru_cypress-http-proxy-network" with driver "bridge"
+Creating ataru_ataru-dev-db_1 ...
+Creating ataru_ataru-cypress-test-db_1 ...
+Creating ataru_ataru-test-redis_1      ...
+Creating ataru-cypress-http-proxy      ...
+Creating ataru_ataru-test-db_1         ...
+Creating ataru_ataru-dev-redis_1       ...
+Creating ataru_ataru-test-ftpd_1       ...
+Creating ataru-cypress-test-redis      ...
+```
+
+and there's no containers running as shown by `docker ps`:
+
+```bash
+➜  ~ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+```
+
+try running Docker Compose manually with
+```bash
+docker-compose up -d
+```
+
+If everything starts, run `make stop` and now `make start` should work as expected. Why? Who knows...

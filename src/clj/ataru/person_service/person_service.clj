@@ -36,15 +36,7 @@
              {:language (-> answers :language :value)}))))
 
 (defn- parse-onr-aidinkieli [person]
-  (try
-    (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
-    (catch Exception e
-      (throw (new RuntimeException
-                  (str "Could not parse aidinkieli "
-                       (:aidinkieli person)
-                       "of person "
-                       (:oidHenkilo person))
-                  e)))))
+  (some-> person :aidinkieli :kieliKoodi clojure.string/upper-case))
 
 (defn- person-info-from-onr-person [person]
   (merge {:first-name     (:etunimet person)

@@ -331,7 +331,7 @@
 (s/defschema ApplicationInfo
   {:id                                              s/Int
    :key                                             s/Str
-   :lang                                            s/Str
+   (s/optional-key :lang)                           s/Str
    :state                                           s/Str
    :score                                           (s/maybe s/Num)
    :new-application-modifications                   s/Int
@@ -359,7 +359,7 @@
 (s/defschema Application
   {(s/optional-key :key)                s/Str
    :form                                s/Int
-   :lang                                s/Str
+   (s/optional-key :lang)               s/Str
    :answers                             [Answer]
    (s/optional-key :applications-count) s/Int
    (s/optional-key :state)              (s/maybe s/Str)
