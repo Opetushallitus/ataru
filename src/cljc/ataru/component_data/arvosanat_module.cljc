@@ -98,7 +98,7 @@
   [{:keys [label
            value]} :- {:label localized-schema/LocalizedString
                        :value s/Str}]
-  (merge (component/dropdown-option)
+  (merge (component/dropdown-option value)
          {:label label
           :value value}))
 
