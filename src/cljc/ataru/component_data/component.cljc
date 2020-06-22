@@ -46,6 +46,7 @@
    :params     {}})
 
 (defn dropdown-option
+  ([] (dropdown-option nil))
   ([value]
    {:value value
     :label {:fi "" :sv ""}}))
