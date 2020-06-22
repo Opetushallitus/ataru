@@ -27,17 +27,23 @@ SET preferred_name = t.preferred_name,
     ssn = t.ssn,
     dob = t.dob
 FROM (SELECT a.id,
-             (array_agg(answers->>'value')
-              FILTER (WHERE answers->>'key' = 'preferred-name'))[1] AS preferred_name,
-             (array_agg(answers->>'value')
-              FILTER (WHERE answers->>'key' = 'last-name'))[1] AS last_name,
-             upper((array_agg(answers->>'value')
-                    FILTER (WHERE answers->>'key' = 'ssn'))[1]) AS ssn,
-             to_date((array_agg(answers->>'value')
-                      FILTER (WHERE answers->>'key' = 'birth-date'))[1],
-                     'DD.MM.YYYY') AS dob
+             (SELECT value
+              FROM answers
+              WHERE key = 'preferred-name' AND
+                    application_id = a.id) AS preferred_name,
+             (SELECT value
+              FROM answers
+              WHERE key = 'last-name' AND
+                    application_id = a.id) AS last_name,
+             (SELECT upper(value)
+              FROM answers
+              WHERE key = 'ssn' AND
+                    application_id = a.id) AS ssn,
+             (SELECT to_date(value, 'DD.MM.YYYY')
+              FROM answers
+              WHERE key = 'birth-date' AND
+                    application_id = a.id) AS dob
       FROM applications AS a
-      JOIN LATERAL jsonb_array_elements(a.content->'answers') AS answers ON true
       WHERE a.person_oid = :person_oid AND
             NOT EXISTS (SELECT 1
                         FROM applications AS a2
