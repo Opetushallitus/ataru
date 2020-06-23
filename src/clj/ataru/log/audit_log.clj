@@ -2,8 +2,7 @@
   (:require [ataru.config.core :refer [config]]
             [clojure.data :refer [diff]]
             [clojure.set]
-            [clj-timbre-auditlog.audit-log :as cta-audit-log]
-            [environ.core :refer [env]])
+            [clj-timbre-auditlog.audit-log :as cta-audit-log])
   (:import [fi.vm.sade.auditlog
             Operation
             Changes$Builder
@@ -25,9 +24,9 @@
 (def operation-delete (create-operation "poisto"))
 (def operation-login (create-operation "kirjautuminen"))
 
-(defn- create-audit-logger []
-  (let [service-name     (:app env)
-        base-path        (case service-name
+;; Huom: tätä funktiota tulee kutsua tuotantosovelluksessa vain kerran, jotta ei synny useampia Audit-instansseja.
+(defn new-audit-logger [service-name]
+  (let [base-path        (case service-name
                            "ataru-editori" (-> config :log :virkailija-base-path)
                            "ataru-hakija"  (-> config :log :hakija-base-path))
         application-type (case service-name
@@ -35,14 +34,8 @@
                            "ataru-hakija"  ApplicationType/OPPIJA)]
     (cta-audit-log/create-audit-logger service-name base-path application-type)))
 
-(defrecord AtaruAuditLogger [auditlog])
-
-;; Huom: tätä funktiota tulee kutsua tuotantosovelluksessa vain kerran, jotta ei synny useampia Audit-instansseja.
-(defn new-audit-logger []
-  map->AtaruAuditLogger (create-audit-logger))
-
 (defn new-dummy-audit-logger []
-  map->AtaruAuditLogger (new DummyAuditLog))
+  (new DummyAuditLog))
 
 (defn- map-or-vec? [x]
   (or (map? x)

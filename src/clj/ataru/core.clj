@@ -51,7 +51,7 @@
       (println "ERROR: No system map found for application" app-id "exiting. Valid keys: "
                (apply str (interpose ", " (map name (keys app-systems)))))
       (System/exit 1))
-    (let [audit-logger (audit-log/new-audit-logger)]
+    (let [audit-logger (audit-log/new-audit-logger app-id)]
       (reset! system {:app-id       app-id
                       :audit-logger audit-logger
                       :system-fn    (init-system-fn audit-logger)})
