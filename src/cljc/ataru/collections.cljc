@@ -1,7 +1,9 @@
-(ns ataru.collections)
+(ns ataru.collections
+  (:require [ataru.number :as number]))
 
-(defn before? [a b coll]
+(defn before?
   "Testaa onko a ennen b:tä annetussa coll:ssa iteroimatta turhia"
+  [a b coll]
   (true? (and a
               b
               (not= a b)
@@ -23,8 +25,9 @@
                               conj)
                    (first)))))
 
-(defn generate-missing-values [coll]
+(defn generate-missing-values
   "Iterate through coll and to generate :value field, if it does not exist"
+  [coll]
   (:options
     (reduce (fn [{:keys [next-value options]} option]
             (if (:value option)
@@ -34,7 +37,7 @@
                :options    (conj options (assoc option :value (str next-value)))}))
           {:next-value (if (seq coll)
                          (->> coll
-                              (map #(ataru.number/->int (:value %)))
+                              (map #(number/->int (:value %)))
                               (map #(if (nil? %) -1 %))
                               (apply max)
                               inc)
