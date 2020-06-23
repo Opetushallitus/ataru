@@ -146,7 +146,3 @@
     :redis (redis/map->Redis {})
 
     (mapcat identity caches))))
-
-(defn init-new-system [audit-logger]
-  (fn []
-    (new-system audit-logger)))
