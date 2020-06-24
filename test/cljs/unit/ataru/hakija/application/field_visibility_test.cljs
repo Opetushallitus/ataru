@@ -79,6 +79,26 @@
       "dropdown"
       "multipleChoice"
       "singleChoice"))
+  (testing "options in question group:"
+    (are [answer-value visibility-0 visibility-1]
+      (= {:kysymys        {0         {:visible? true}
+                           1         {:visible? true}
+                           :visible? true}
+          :jatkokysymys-0 {:visible? visibility-0}
+          :jatkokysymys-1 {:visible? visibility-1}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value answer-value}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "singleChoice"
+                                                   :options   [{:value     "0"
+                                                                :followups [{:id "jatkokysymys-0"}]}
+                                                               {:value     "1"
+                                                                :followups [{:id "jatkokysymys-1"}]}]})))
+      [["0"]] true false
+      [["1"]] false true
+      [["0"] ["1"]] true true
+      [nil ["0"]] true false
+      [[] ["0"]] true false))
   (testing "option selected, followup visibility for selected hakukohde:"
     (are [fieldType selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}
