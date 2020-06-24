@@ -36,24 +36,34 @@
           db
           options))
 
+(declare answer-values)
+
+(defn- non-blank-answer-satisfies-condition? [value option]
+  (and (not (string/blank? value))
+       (if-let [condition (:condition option)]
+         (let [operator (case (:comparison-operator condition)
+                          "<" <
+                          "=" =
+                          ">" >)]
+           (operator (js/parseInt value) (:answer-compared-to condition)))
+         true)))
+
 (defn- non-blank-answer-with-option-condition-satisfied-checker [value]
-  (fn non-blank-answer-satisfies-condition? [option]
-    (and (not (string/blank? value))
-         (if-let [condition (:condition option)]
-           (let [operator (case (:comparison-operator condition)
-                            "<" <
-                            "=" =
-                            ">" >)]
-             (operator (js/parseInt value) (:answer-compared-to condition)))
-           true))))
+  (fn [option]
+    (boolean
+      (some #(non-blank-answer-satisfies-condition? % option)
+            (answer-values value)))))
+
+(defn- answer-values [value]
+  (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
+        (set (mapcat identity value))
+        (vector? value)
+        (set value)
+        :else
+        #{value}))
 
 (defn- selected-option-checker [value]
-  (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
-                     (set (mapcat identity value))
-                     (vector? value)
-                     (set value)
-                     :else
-                     #{value})]
+  (let [values (answer-values value)]
     (fn selected? [option]
       (contains? values (:value option)))))
 
