@@ -21,7 +21,8 @@
 (def caches
   [[:get-haut-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-get-haut"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [key]
                         (case key
                           :haut             (application-store/get-haut)
@@ -30,19 +31,22 @@
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:organizations-hierarchy-cache
     (in-memory/map->InMemoryCache
-     {:loader (cache/->FunctionCacheLoader
-               (fn [key] (organization-client/get-organizations key)))
+     {:name          "in-memory-organizations-hierarchy"
+      :loader        (cache/->FunctionCacheLoader
+                      (fn [key] (organization-client/get-organizations key)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [60 TimeUnit/MINUTES]})]
    [:all-organization-groups-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-all-organization-groups"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [_] (organization-client/get-groups)))
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
    [:localizations-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
+     {:name          "in-memory-localizations"
+      :loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
 
@@ -70,7 +74,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-hakukohde"
-       :size                6000
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :hakukohde-redis-cache})]
@@ -101,7 +104,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-haku"
-       :size                100
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :haku-redis-cache})]
@@ -123,7 +125,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-kouta-hakus-by-form-key"
-       :size                100
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [5 TimeUnit/MINUTES]})
      {:redis-cache :kouta-hakus-by-form-key-redis-cache})]
@@ -175,7 +176,6 @@
     (component/using
      (two-layer/map->Cache
       {:name                "in-memory-koulutus"
-       :size                6000
        :expire-after-access [3 TimeUnit/DAYS]
        :refresh-after       [7 TimeUnit/MINUTES]})
      {:redis-cache :koulutus-redis-cache})]
@@ -264,7 +264,8 @@
      {:redis-cache :koodisto-redis-cache})]
    [:form-by-id-cache
     (in-memory/map->InMemoryCache
-     {:loader        (cache/->FunctionCacheLoader
+     {:name          "in-memory-form-by-id"
+      :loader        (cache/->FunctionCacheLoader
                       (fn [key] (form-store/fetch-by-id (Integer/valueOf key))))
       :size          10
       :expires-after [3 TimeUnit/DAYS]
