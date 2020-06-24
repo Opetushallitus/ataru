@@ -152,7 +152,7 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
-(defn- option-satisfies-condition [option answer-value]
+(defn- option-satisfies-condition [answer-value option]
   (if-let [condition (:condition option)]
     (let [operator (case (:comparison-operator condition)
                      "<" <
@@ -162,7 +162,7 @@
     true))
 
 (defn- options-satisfying-condition [answer-value options]
-  (filter #(option-satisfies-condition % answer-value) options))
+  (filter #(option-satisfies-condition answer-value %) options))
 
 (defn- get-visible-followups [answer-value options]
   (->> options
@@ -171,12 +171,13 @@
        flatten
        (filterv #(deref (subscribe [:application/visible? (keyword (:id %))])))))
 
-(defn- text-field-followups-container [followups idx]
-  (when (not-empty followups)
-    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
-          (for [followup followups]
-            ^{:key (:id followup)}
-            [render-field followup idx]))))
+(defn- text-field-followups-container [options answer-value question-group-idx]
+  (let [followups (get-visible-followups answer-value options)]
+    (when (not-empty followups)
+      (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+            (for [followup followups]
+              ^{:key (:id followup)}
+              [render-field followup question-group-idx])))))
 
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
@@ -194,7 +195,6 @@
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
-            followups        (get-visible-followups value options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -251,7 +251,7 @@
          [validation-error errors]
          (when (not (or (string/blank? value)
                         show-error?))
-           [text-field-followups-container followups idx])]))))
+           [text-field-followups-container options value idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
