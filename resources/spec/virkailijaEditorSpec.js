@@ -196,9 +196,8 @@
     describe('form creation', () => {
       before(
         clickElement(addNewFormLink),
-        wait.until(() => elementExists(formTitleField())),
+        wait.forMilliseconds(10 * 1000), // Odota, että autosave on valmistunut
         setTextFieldValue(formTitleField, 'Testilomake'),
-        wait.until(() => formTitleField().val() === 'Testilomake'),
         wait.until(
           () => formListItems(0).find('span:eq(0)').text() === 'Testilomake'
         ),
