@@ -62,7 +62,7 @@
    :first-name     (str etunimi " " toinennimi)
    :preferred-name etunimi
    :postal-code    "00100"
-   :postal-office  "Helsinki"
+   :postal-office  "HELSINKI"
    :home-town      "091"
    :gender         sukupuoli
    :birth-date     syntymaaika})
