@@ -98,7 +98,8 @@
           () =>
             formListItems(0).find('span:eq(0)').text() ===
             'Kysymysryhmä: testilomake'
-        )
+        ),
+        wait.forElement(personInfoModule)
       )
       it('creates blank form', () => {
         expect(formTitleField().val()).to.equal('Kysymysryhmä: testilomake')

@@ -201,7 +201,8 @@
         wait.until(() => formTitleField().val() === 'Testilomake'),
         wait.until(
           () => formListItems(0).find('span:eq(0)').text() === 'Testilomake'
-        )
+        ),
+        wait.forElement(personInfoModule)
       )
       it('creates blank form', () => {
         expect(formComponents()).to.have.length(0)
