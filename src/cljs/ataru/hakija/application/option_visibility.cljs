@@ -41,5 +41,4 @@
     (non-blank-answer-with-option-condition-satisfied-checker answer-value)
 
     :else
-    (throw (ex-info "Unknown field type for option visibility checking"
-                    {:fieldType (:fieldType field-descriptor)}))))
+    (constantly true)))
