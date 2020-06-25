@@ -21,6 +21,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
 
@@ -152,27 +153,18 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
-(defn- option-satisfies-condition [answer-value option]
-  (if-let [condition (:condition option)]
-    (let [operator (case (:comparison-operator condition)
-                     "<" <
-                     "=" =
-                     ">" >)]
-      (operator (js/parseInt answer-value) (:answer-compared-to condition)))
-    true))
+(defn- options-satisfying-condition [field-descriptor answer-value options]
+  (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
 
-(defn- options-satisfying-condition [answer-value options]
-  (filter #(option-satisfies-condition answer-value %) options))
-
-(defn- get-visible-followups [answer-value options]
+(defn- get-visible-followups [field-descriptor answer-value options]
   (->> options
-       (options-satisfying-condition answer-value)
+       (options-satisfying-condition field-descriptor answer-value)
        (map :followups)
        flatten
        (filterv #(deref (subscribe [:application/visible? (keyword (:id %))])))))
 
-(defn- text-field-followups-container [options answer-value question-group-idx]
-  (let [followups (get-visible-followups answer-value options)]
+(defn- text-field-followups-container [field-descriptor options answer-value question-group-idx]
+  (let [followups (get-visible-followups field-descriptor answer-value options)]
     (when (not-empty followups)
       (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
             (for [followup followups]
@@ -251,7 +243,7 @@
          [validation-error errors]
          (when (not (or (string/blank? value)
                         show-error?))
-           [text-field-followups-container options value idx])]))))
+           [text-field-followups-container field-descriptor options value idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
