@@ -67,7 +67,7 @@
     (fn selected? [option]
       (contains? values (:value option)))))
 
-(defn- followups-visibility-checker [field-descriptor answer-value]
+(defn followups-visibility-checker [field-descriptor answer-value]
   (cond
     (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
     (selected-option-checker answer-value)

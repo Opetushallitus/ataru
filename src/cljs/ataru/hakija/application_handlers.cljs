@@ -702,6 +702,10 @@
          :else
          nil))
 
+(defn- option-visible? [field-descriptor option values]
+  (let [visibility-checker (field-visibility/followups-visibility-checker field-descriptor values)]
+    (visibility-checker option)))
+
 (reg-event-fx
   :application/set-followup-values
   [check-schema-interceptor]
@@ -713,8 +717,7 @@
                                 child              (autil/flatten-form-fields (:followups option))
                                 :when              (autil/answerable? child)
                                 [group-idx values] (map-indexed vector value)]
-                            (if (or (contains? (set values) (:value option))
-                                    (= (:fieldType field-descriptor) "textField"))
+                            (if (option-visible? field-descriptor option values)
                               (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
                                 (set-empty-value-dispatch group-idx child))
                               [[:application/unset-field-value child group-idx]]))
