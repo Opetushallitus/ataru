@@ -1018,10 +1018,14 @@
             clickElement(massInformationRequestSendButton),
             wait.until(() => {
               return massInformationRequestSendButton().length === 0
+            }),
+            wait.until(() => {
+              return !_.isEmpty(massInformationRequestStatusText())
             })
           )
           it('removes button', () => {
             expect(massInformationRequestStatusText()).to.be.oneOf([
+              'Käsitellään viestejä...',
               'Lähetetään viestejä...',
               'Viestit lisätty lähetysjonoon!',
             ])
