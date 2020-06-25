@@ -81,10 +81,10 @@
          util/flatten-form-fields
          (keep (fn [{:keys [id cannot-edit]}]
                  (when (and cannot-edit
-                            (not= (if (sequential? (:value (new-answers id)))
-                                    (seq (:value (new-answers id)))
-                                    (:value (new-answers id)))
-                                  (:value (old-answers id))))
+                            (if (contains? old-answers id)
+                              (not= (:value (new-answers id))
+                                    (:value (old-answers id)))
+                              (not-empty (:value (new-answers id)))))
                    id))))))
 
 (defn- flatten-attachment-keys [application]
