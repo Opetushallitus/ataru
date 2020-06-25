@@ -17,6 +17,7 @@
                                               create-application-to-submit
                                               extract-wrapper-sections]]
             [ataru.hakija.application.field-visibility :as field-visibility]
+            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
@@ -703,7 +704,7 @@
          nil))
 
 (defn- option-visible? [field-descriptor option values]
-  (let [visibility-checker (field-visibility/followups-visibility-checker field-descriptor values)]
+  (let [visibility-checker (option-visibility/visibility-checker field-descriptor values)]
     (visibility-checker option)))
 
 (reg-event-fx
