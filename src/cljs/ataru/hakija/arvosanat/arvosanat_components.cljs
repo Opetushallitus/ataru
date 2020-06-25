@@ -379,7 +379,8 @@
                                             first
                                             (assoc
                                               :readonly-render-options
-                                              {:arvosanat-taulukko? true})))]
+                                              {:arvosanat-taulukko? true})))
+                  data-test-id        (str "oppiaineen-arvosana-readonly-" (:id field-descriptor))]
               ^{:key key}
               [oppiaineen-arvosana-rivi
                {:pakollinen-oppiaine?
@@ -395,11 +396,18 @@
 
                 :oppimaara-column
                 (when oppimaara-dropdown
-                  [render-field oppimaara-dropdown application lang arvosana-idx])
+                  [render-field
+                   (assoc oppimaara-dropdown :data-test-id (str data-test-id "-oppimaara-" arvosana-idx))
+                   application
+                   lang arvosana-idx])
 
                 :arvosana-column
                 (when arvosana-dropdown
-                  [render-field arvosana-dropdown application lang arvosana-idx])}]))
+                  [render-field
+                   (assoc arvosana-dropdown :data-test-id (str data-test-id "-arvosana-" arvosana-idx))
+                   application
+                   lang
+                   arvosana-idx])}]))
           (range row-count))]))
 
 (s/defn arvosanat-taulukko-readonly

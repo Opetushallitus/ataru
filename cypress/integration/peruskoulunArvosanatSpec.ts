@@ -7,6 +7,7 @@ import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 import peruskoulunArvosanatOsionAidinkielenVaihtaminen from '../testit/arvosanat/peruskoulunArvosanatOsionAidinkielenVaihtaminen'
 import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTayttaminen'
 import hakemuksenLahettaminen from '../testit/hakemuksenLahettaminen'
+import peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen from '../testit/arvosanat/peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen'
 
 describe('Peruskoulun arvosanat -osio', () => {
   kirjautuminenVirkailijanNakymaan(() => {
@@ -17,7 +18,9 @@ describe('Peruskoulun arvosanat -osio', () => {
           henkilotietoModuulinTayttaminen(() => {
             peruskoulunArvosanatOsionAidinkielenVaihtaminen()
             peruskoulunArvosanatOsionTayttaminenHakijana()
-            hakemuksenLahettaminen()
+            hakemuksenLahettaminen(() => {
+              peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen()
+            })
           })
         })
       })
