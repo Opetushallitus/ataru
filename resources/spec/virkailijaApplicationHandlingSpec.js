@@ -896,7 +896,7 @@
       describe('updates applications', () => {
         before(
           wait.until(() => {
-            return applicationHakukohdeStates().length > 0
+            return _.includes(applicationHakukohdeStates(), 'Käsitelty')
           })
         )
         it('to selected state', () => {
