@@ -5,7 +5,7 @@
             [ataru.virkailija.dropdown :as dropdown]
             [ataru.virkailija.question-search.view :as question-search]
             [ataru.virkailija.question-search.handlers :as qsh]
-            [ataru.translations.texts :refer [state-translations general-texts]]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.util :as util]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
@@ -20,21 +20,17 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
-            [ataru.virkailija.routes :as routes]
-            [ataru.virkailija.temporal :as t]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
             [ataru.virkailija.views.modal :as modal]
             [ataru.virkailija.views.virkailija-readonly :as readonly-contents]
-            [ataru.virkailija.virkailija-ajax :as ajax]
-            [cljs-time.format :as f]
             [cljs.core.match :refer-macros [match]]
             [clojure.string :as string]
             [goog.string :as gstring]
-            [medley.core :refer [find-first]]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [reagent.ratom :refer-macros [reaction]]))
+            [reagent.ratom :refer-macros [reaction]]
+            [clojure.set :as set]))
 
 (defn- icon-check []
   [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
@@ -110,7 +106,7 @@
                        :value selected-hakukohderyhma}])]
            [:button.application-handling__excel-request-button
             {:disabled @loading?
-             :on-click (fn [e]
+             :on-click (fn [_]
                          (.submit (.getElementById js/document "excel-download-link")))}
             [:span
              (str @(subscribe [:editor/virkailija-translation :load-excel])
@@ -354,55 +350,53 @@
           selected-hakukohderyhma-oid
           hakukohteet
           hakukohderyhmat]]
-      (let [hakukohde-oids      (map :oid hakukohteet)
-            hakukohderyhma-oids (map :oid hakukohderyhmat)]
-        [:div.application-handling__header-haku-and-hakukohde
-         [:div.application-handling__header-haku
-          (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
-            haku-name
-            [:i.zmdi.zmdi-spinner.spin])]
-         (closed-row (if @list-opened close-list open-list)
-                     (cond (some? selected-hakukohde-oid)
-                           @(subscribe [:application/hakukohde-name
-                                        selected-hakukohde-oid])
-                           (some? selected-hakukohderyhma-oid)
-                           @(subscribe [:application/hakukohderyhma-name
-                                        selected-hakukohderyhma-oid])
-                           :else
-                           @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
-         (when @list-opened
-           [h-and-h/popup
-            [h-and-h/search-input
-             {:id                       haku-oid
-              :haut                     [{:oid         haku-oid
+      [:div.application-handling__header-haku-and-hakukohde
+       [:div.application-handling__header-haku
+        (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
+          haku-name
+          [:i.zmdi.zmdi-spinner.spin])]
+       (closed-row (if @list-opened close-list open-list)
+                   (cond (some? selected-hakukohde-oid)
+                         @(subscribe [:application/hakukohde-name
+                                      selected-hakukohde-oid])
+                         (some? selected-hakukohderyhma-oid)
+                         @(subscribe [:application/hakukohderyhma-name
+                                      selected-hakukohderyhma-oid])
+                         :else
+                         @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
+       (when @list-opened
+         [h-and-h/popup
+          [h-and-h/search-input
+           {:id                       haku-oid
+            :haut                     [{:oid         haku-oid
+                                        :hakukohteet hakukohteet}]
+            :hakukohderyhmat          hakukohderyhmat
+            :hakukohde-selected?      #(= selected-hakukohde-oid %)
+            :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
+          nil
+          [h-and-h/search-listing
+           {:id                         haku-oid
+            :haut                       [{:oid         haku-oid
                                           :hakukohteet hakukohteet}]
-              :hakukohderyhmat          hakukohderyhmat
-              :hakukohde-selected?      #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
-            nil
-            [h-and-h/search-listing
-             {:id                       haku-oid
-              :haut                     [{:oid         haku-oid
-                                          :hakukohteet hakukohteet}]
-              :hakukohderyhmat          hakukohderyhmat
-              :hakukohde-selected?      #(= selected-hakukohde-oid %)
-              :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
-              :on-hakukohde-select      #(do (close-list)
+            :hakukohderyhmat            hakukohderyhmat
+            :hakukohde-selected?        #(= selected-hakukohde-oid %)
+            :hakukohderyhma-selected?   #(= selected-hakukohderyhma-oid %)
+            :on-hakukohde-select        #(do (close-list)
                                              (dispatch [:application/navigate
-                                                (str "/lomake-editori/applications/hakukohde/" %)]))
-              :on-hakukohde-unselect      #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))
-              :on-hakukohderyhma-select   #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/"
-                                                               haku-oid
-                                                               "/hakukohderyhma/"
-                                                               %)]))
-              :on-hakukohderyhma-unselect #(do (close-list)
-                                               (dispatch [:application/navigate
-                                                          (str "/lomake-editori/applications/haku/" haku-oid)]))}]
-            close-list])]))))
+                                                        (str "/lomake-editori/applications/hakukohde/" %)]))
+            :on-hakukohde-unselect      #(do (close-list)
+                                             (dispatch [:application/navigate
+                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))
+            :on-hakukohderyhma-select   #(do (close-list)
+                                             (dispatch [:application/navigate
+                                                        (str "/lomake-editori/applications/haku/"
+                                                             haku-oid
+                                                             "/hakukohderyhma/"
+                                                             %)]))
+            :on-hakukohderyhma-unselect #(do (close-list)
+                                             (dispatch [:application/navigate
+                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+          close-list])])))
 
 (defn selected-applications-heading
   [haku-data list-heading]
@@ -539,11 +533,11 @@
 (defn application-list-row [application selected?]
   (let [selected-time-column    (subscribe [:state-query [:application :selected-time-column]])
         day-date-time           (-> (get application (keyword @selected-time-column))
-                                    (t/str->googdate)
-                                    (t/time->str)
-                                    (clojure.string/split #"\s"))
+                                    (temporal/str->googdate)
+                                    (temporal/time->str)
+                                    (string/split #"\s"))
         day                     (first day-date-time)
-        date-time               (->> day-date-time (rest) (clojure.string/join " "))
+        date-time               (->> day-date-time (rest) (string/join " "))
         applicant               (str (-> application :person :last-name) ", " (-> application :person :preferred-name))
         review-settings         (subscribe [:state-query [:application :review-settings :config]])
         filtered-hakukohde      (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
@@ -551,7 +545,7 @@
         form-attachment-states  (:form attachment-states)]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application) @filtered-hakukohde false)
-      :class    (clojure.string/join " " [(when selected?
+      :class    (string/join " " [(when selected?
                                             "application-handling__list-row--selected")
                                           (when (= "inactivated" (:state application))
                                             "application-handling__list-row--inactivated")])
@@ -594,7 +588,7 @@
                      (remove #(= filter-id %) hakukohde-filters)
                      (conj hakukohde-filters filter-id))]
     (cljs-util/update-url-with-query-params
-      {filter-kw (clojure.string/join ","
+      {filter-kw (string/join ","
                                       (cljs-util/get-unselected-review-states
                                         new-filter
                                         states))})
@@ -633,7 +627,7 @@
                              :on-change (fn [_]
                                           (cljs-util/update-url-with-query-params
                                             {filter-kw (if all-filters-selected?
-                                                         (clojure.string/join "," (map first states))
+                                                         (string/join "," (map first states))
                                                          nil)})
                                           (dispatch [:state-update #(assoc-in % [:application filter-kw]
                                                                               (if all-filters-selected?
@@ -659,7 +653,7 @@
                                             ")")))]]]))
                    states)))]))))
 
-(defn application-list-basic-column-header [column-id heading]
+(defn application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
     (fn [column-id heading]
       [:span.application-handling__basic-list-basic-column-header
@@ -814,8 +808,7 @@
 
 (defn- application-filters
   []
-  (let [filters                                   (subscribe [:state-query [:application :filters]])
-        filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
+  (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
         applications-count                        (subscribe [:application/loaded-applications-count])
         fetching?                                 (subscribe [:application/fetching-applications?])
         enabled-filter-count                      (subscribe [:application/enabled-filter-count])
@@ -957,7 +950,7 @@
              :on-click #(dispatch [:application/undo-filters])}
             @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])])))
 
-(defn- application-list-header [applications]
+(defn- application-list-header [_]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
@@ -1013,8 +1006,7 @@
     [review-state-selected-row #() (get review-state-label lang) multiple-values?]
     [:div.application-handling__review-state-row
      {:on-click (fn []
-                  (let [selected-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
-                    (dispatch [:application/update-review-field state-name review-state-id])))}
+                  (dispatch [:application/update-review-field state-name review-state-id]))}
      [icon-unselected] (get review-state-label lang)]))
 
 (defn opened-review-state-list [state-name current-state all-states lang multiple-values?]
@@ -1057,12 +1049,6 @@
            [:div.application-handling__review-deactivate-toggle-label-right
             @(subscribe [:editor/virkailija-translation :passive])]]]]))))
 
-(defn- hakukohde-name [hakukohde-oid]
-  (if-let [hakukohde-name @(subscribe [:application/hakukohde-name
-                                       hakukohde-oid])]
-    [:span hakukohde-name]
-    [:i.zmdi.zmdi-spinner.spin]))
-
 (defn- opened-review-hakukohde-list-row
   [toggle-list-open list-opened hakukohde-oid disabled?]
   (let [selected-hakukohde-oids (subscribe [:state-query [:application :selected-review-hakukohde-oids]])]
@@ -1074,7 +1060,7 @@
            {:data-hakukohde-oid hakukohde-oid
             :class (when disabled?
                      "application-handling__review-state-row--disabled")
-            :on-click (when-not disabled? (fn [event] (if @list-opened
+            :on-click (when-not disabled? (fn [_] (if @list-opened
                                               (dispatch [:application/select-review-hakukohde hakukohde-oid])
                                               (toggle-list-open))))}
            (if selected?
@@ -1144,7 +1130,7 @@
         start-removing-note (fn []
                               (reset! removing? true)
                               (js/setTimeout #(reset! removing? false) 1200))]
-    (fn [note-idx]
+    (fn [_]
       [:div.application-handling__review-note
        (when @animated?
          {:class "animated fadeIn"})
@@ -1189,7 +1175,7 @@
         @notes]])))
 
 (defn- review-state-comment
-  [state-name]
+  [_]
   (fn [state-name]
     (let [current-hakukohteet @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           note-state-path     (if (and (seq current-hakukohteet)
@@ -1201,7 +1187,7 @@
           latest-note         (if-let [idx (first selected-notes-idx)]
                                 @(subscribe [:state-query [:application :review-notes idx :notes]])
                                 "")
-          button-disabled?    (or (clojure.string/blank? review-note)
+          button-disabled?    (or (string/blank? review-note)
                                   (= review-note latest-note))]
       [:div.application-handling__review-state-comment-container
        [:textarea.application-handling__review-note-input
@@ -1455,7 +1441,7 @@
        [:span @(subscribe [:application/field-label (:review-key event)])]]
       [:div
        [:span (str @(subscribe [:editor/virkailija-translation :liitepyynto-deadline-date]) ": ")]
-       [:span (t/time->short-str (:new-review-state event))]]
+       [:span (temporal/time->short-str (:new-review-state event))]]
       (event-organizations-list event lang)]]
 
     {:event-type "field-deadline-unset"}
@@ -1527,7 +1513,7 @@
                [:i.zmdi.zmdi-chevron-up]
                [:i.zmdi.zmdi-chevron-down]))]
           [:div.application-handling__event-timestamp
-           (t/time->short-str (or (:time event) (:created-time event)))]
+           (temporal/time->short-str (or (:time event) (:created-time event)))]
           caption]
          (when (and @show-details? (some? details))
            [:div.application-handling__event-row-details
@@ -1548,7 +1534,7 @@
   (let [input-value               (subscribe [:state-query [:application :review-comment]])
         review-notes              (subscribe [:state-query [:application :review-notes]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
-        button-enabled?           (reaction (and (-> @input-value clojure.string/blank? not)
+        button-enabled?           (reaction (and (-> @input-value string/blank? not)
                                                  (every? (comp not :animated?) @review-notes)))]
     (fn []
       [:div.application-handling__review-row.application-handling__review-row--notes-row
@@ -1600,9 +1586,9 @@
 
 (defn- score->number
   [score]
-  (let [maybe-number (js/Number (clojure.string/replace score #"," "."))]
+  (let [maybe-number (js/Number (string/replace score #"," "."))]
     (cond
-      (clojure.string/blank? score) nil
+      (string/blank? score) nil
       ; NaN:
       (not= maybe-number maybe-number) nil
       :else maybe-number)))
@@ -1610,7 +1596,7 @@
 (defn- valid-display-score?
   [score]
   (or
-    (clojure.string/blank? score)
+    (string/blank? score)
     (if (re-matches #"^[0-9]+[,.]$" score)
       (some? (score->number (apply str (butlast score))))
       (some? (score->number score)))))
@@ -1620,7 +1606,7 @@
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
-        display-value     (r/atom (clojure.string/replace (str @score) #"\." ","))]
+        display-value     (r/atom (string/replace (str @score) #"\." ","))]
     (fn []
       [:div.application-handling__review-inputs
        (when (or @settings-visible? @input-visible?)
@@ -1771,7 +1757,7 @@
        [:div.application-handling__resend-modify-link-confirmation-indicator]
        @(subscribe [:editor/virkailija-translation :send-edit-link-to-applicant])])))
 
-(defn- attachment-review-row [selected-attachment-keys all-similar-attachments lang]
+(defn- attachment-review-row [_ _ _]
   (let [list-opened (r/atom false)]
     (fn [selected-attachment-keys all-similar-attachments lang]
       (let [all-reviews          (map first all-similar-attachments)
@@ -1797,16 +1783,16 @@
            {:type      "checkbox"
             :checked   (every? #(contains? selected-attachment-keys (:key %)) files)
             :on-change (fn [_]
-                         (let [attachment-keys-of-liitepyynto          (->> files
-                                                                            (map :key)
-                                                                            (set))
-                               attachments-with-inconsistent-visibility (clojure.set/difference attachment-keys-of-liitepyynto
-                                                                                               selected-attachment-keys)
-                               attachments-to-toggle                   (if (-> attachments-with-inconsistent-visibility
-                                                                               (count)
-                                                                               (= 0))
-                                                                         attachment-keys-of-liitepyynto
-                                                                         attachments-with-inconsistent-visibility)]
+                         (let [attachment-keys-of-liitepyynto           (->> files
+                                                                             (map :key)
+                                                                             (set))
+                               attachments-with-inconsistent-visibility (set/difference attachment-keys-of-liitepyynto
+                                                                                        selected-attachment-keys)
+                               attachments-to-toggle                    (if (-> attachments-with-inconsistent-visibility
+                                                                                (count)
+                                                                                (= 0))
+                                                                          attachment-keys-of-liitepyynto
+                                                                          attachments-with-inconsistent-visibility)]
                            (dispatch [:virkailija-attachments/toggle-attachment-selection attachments-to-toggle])))}]
           [:p.application__attachment-review-row-label (some #(-> review :label % not-empty) [lang :fi :sv :en])]
           (if @list-opened
@@ -1915,7 +1901,7 @@
                        :value csrf-token}])]
            [:button.application-handling__download-attachments-button
             {:disabled (empty? selected-attachment-keys)
-             :on-click (fn [e]
+             :on-click (fn [_]
                          (.submit (.getElementById js/document "attachment-download-link")))}
             @(subscribe [:editor/virkailija-translation :load-attachments])]]]]
         (doall (for [all-similar-attachments (vals reviews)]
@@ -1987,7 +1973,7 @@
               [application-deactivate-toggle]
               [application-review-events]]]]))})))
 
-(defn notification [link-params]
+(defn notification [_]
   (fn [{:keys [text link-text href on-click]}]
     [:div.application__message-display--details-notification @(subscribe [:editor/virkailija-translation text])
      [:a.application-handling__form-outdated--button.application-handling__button
@@ -2103,11 +2089,6 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
-(defn- floating-application-review-placeholder
-  "Keeps the content of the application in the same place when review-area starts floating (fixed position)"
-  []
-  [:div.application-handling__floating-application-review-placeholder])
-
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
@@ -2176,7 +2157,7 @@
          [:div.application-handling__version-history-header-text
           (str @(subscribe [:editor/virkailija-translation :diff-from-changes])
                " "
-               (t/time->short-str (or (:time @event) (:created-time @event))))]
+               (temporal/time->short-str (or (:time @event) (:created-time @event))))]
          [:div.application-handling__version-history-header-sub-text
           [:span.application-handling__version-history-header-virkailija
            changed-by]
