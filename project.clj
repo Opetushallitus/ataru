@@ -73,6 +73,7 @@
                  [bk/ring-gzip "0.3.0"]
                  [buddy/buddy-auth "2.2.0"]
                  [yesql "0.5.3"]
+                 [com.layerware/hugsql "0.5.1"]
                  ; Flyway 4 breaks our migrations
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
                  [camel-snake-kebab "0.4.1"]

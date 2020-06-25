@@ -29,8 +29,6 @@
             PSQLException]
            java.time.format.DateTimeFormatter))
 
-
-
 (defn- exec-db
   [ds-key query params]
   (db/exec ds-key query params))
@@ -426,177 +424,37 @@
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
-(defn- query->db-query
+(defn- to-sql-array [s connection type]
+  (.createArrayOf (:connection connection) type (to-array s)))
+
+(defn query->db-query
   [connection query sort]
-  (let [query (cond-> query
-                      (contains? query :hakukohde)
-                      (update :hakukohde
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
-                      (contains? query :ensisijainen-hakukohde)
-                      (update :ensisijainen-hakukohde
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
-                      (contains? query :ensisijaisesti-hakukohteissa)
-                      (update :ensisijaisesti-hakukohteissa
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
+  (let [query (cond-> (assoc query
+                             :order-by (:order-by sort)
+                             :order (:order sort))
+
+                      (seq (:hakukohde query))
+                      (update :hakukohde to-sql-array connection "varchar")
+
+                      (seq (:ensisijainen-hakukohde query))
+                      (update :ensisijainen-hakukohde to-sql-array connection "varchar")
+
+                      (seq (:ensisijaisesti-hakukohteissa query))
+                      (update :ensisijaisesti-hakukohteissa to-sql-array connection "varchar")
+
                       (contains? query :attachment-review-states)
-                      (update :attachment-review-states
-                              (fn [[attachment-field-id states]]
-                                [attachment-field-id
-                                 (some->> (seq states)
-                                          to-array
-                                          (.createArrayOf (:connection connection) "varchar"))])))
-        comp  (if (= "asc" (:order sort)) ">" "<")
-        order (if (= "asc" (:order sort)) "ASC" "DESC")]
-    (cons
-     (str "SELECT a.id,
-       a.person_oid                     AS \"person-oid\",
-       a.key,
-       a.lang,
-       a.preferred_name                 AS \"preferred-name\",
-       a.last_name                      AS \"last-name\",
-       a.created_time                   AS \"created-time\",
-       a.haku,
-       a.hakukohde,
-       a.ssn,
-       to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
-       (SELECT array_agg(value ORDER BY data_idx ASC)
-        FROM multi_answer_values
-        WHERE application_id = a.id AND
-              key = 'higher-completed-base-education') AS \"base-education\",
-       (SELECT state
-        FROM application_reviews
-        WHERE application_key = a.key)  AS state,
-       (SELECT score
-        FROM application_reviews
-        WHERE application_key = a.key)  AS score,
-       a.form_id                        AS form,
-       (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.event_type = 'eligibility-state-automatically-changed'), '{}')
-        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, event_type
-              FROM application_events
-              WHERE application_key = a.key AND
-                    review_key = 'eligibility-state'
-              ORDER BY hakukohde, id DESC) AS ae) AS \"eligibility-set-automatically\",
-       (SELECT count(*) FILTER (WHERE ae.new_review_state = 'information-request' AND
-                                      ae.time < a.created_time)
-        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, time, new_review_state
-              FROM application_events
-              WHERE application_key = a.key AND
-                    review_key = 'processing-state'
-              ORDER BY hakukohde, id DESC) AS ae) AS \"new-application-modifications\",
-       a.submitted,
-       (SELECT organization_oid
-        FROM forms
-        WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
-        ORDER BY id DESC
-        LIMIT 1)                        AS \"organization-oid\",
-       (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
-                                            'state', state,
-                                            'hakukohde', hakukohde))
-        FROM application_hakukohde_reviews ahr
-        WHERE ahr.application_key = a.key) AS \"application-hakukohde-reviews\",
-       ahar.agg                            AS \"application-attachment-reviews\"
-FROM applications AS a
-LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
-          (str "JOIN LATERAL (SELECT "
-               (if-let [[_ states] (:attachment-review-states query)]
-                 (str "count(*) FILTER (WHERE attachment_key = ?"
-                      (when (some? states)
-                        "\n                                        AND state = ANY(?)")
-                      (when (or (contains? query :hakukohde)
-                                (contains? query :ensisijainen-hakukohde))
-                        "\n                                        AND hakukohde = ANY(?)")
-                      ") > 0 AS found,")
-                 "true AS found,")
-               "\n                     jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
-                                                  'state', state,
-                                                  'hakukohde', hakukohde)) AS agg
-              FROM application_hakukohde_attachment_reviews
-              WHERE application_key = a.key) AS ahar ON ahar.found\n")
-          "WHERE la.key IS NULL\n"
-          (when (contains? query :form)
-            "      AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = ?\n")
-          (when (contains? query :application-oid)
-            "      AND a.key = ?\n")
-          (when (contains? query :person-oid)
-            "      AND a.person_oid = ?\n")
-          (when (contains? query :name)
-            "      AND to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', ?)\n")
-          (when (contains? query :email)
-            "      AND lower(a.email) = lower(?)\n")
-          (when (contains? query :dob)
-            "      AND a.dob = to_date(?, 'DD.MM.YYYY')\n")
-          (when (contains? query :ssn)
-            "      AND a.ssn = ?\n")
-          (when (contains? query :haku)
-            "      AND a.haku = ?\n")
-          (when (contains? query :hakukohde)
-            "      AND a.hakukohde && ?\n")
-          (when (contains? query :ensisijainen-hakukohde)
-            (if (contains? query :ensisijaisesti-hakukohteissa)
-              "      AND (SELECT t.h
-           FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
-           WHERE t.h = ANY(?)
-           ORDER BY t.i ASC
-           LIMIT 1) = ANY(?)\n"
-              "      AND a.hakukohde[1] = ANY(?)\n"))
-          (when (contains? sort :offset)
-            (case (:order-by sort)
-              "submitted"
-              (str "      AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) "
-                   comp
-                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
-              "created-time"
-              (str "      AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) "
-                   comp
-                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
-              "applicant-name"
-              (str "      AND (a.last_name, a.preferred_name, a.key) "
-                   comp
-                   " (? COLLATE \"fi_FI\", ? COLLATE \"fi_FI\", ?)\n")))
-          (case (:order-by sort)
-            "submitted"
-            (str "ORDER BY date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') " order ",\n"
-                 "         a.key " order "\n")
-            "created-time"
-            (str "ORDER BY date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') " order ",\n"
-                 "         a.key " order "\n")
-            "applicant-name"
-            (str "ORDER BY a.last_name COLLATE \"fi_FI\" " order ",\n"
-                 "         a.preferred_name COLLATE \"fi_FI\" " order ",\n"
-                 "         a.key " order "\n"))
-          "LIMIT 1000;")
-     (concat (when-let [[attachment-field-id states] (:attachment-review-states query)]
-               (cond-> [attachment-field-id]
-                       (some? states)
-                       (conj states)
-                       (or (contains? query :hakukohde)
-                           (contains? query :ensisijainen-hakukohde))
-                       (conj (or (:ensisijainen-hakukohde query) (:hakukohde query)))))
-             (keep #(get query %) [:form
-                                   :application-oid
-                                   :person-oid
-                                   :name
-                                   :email
-                                   :dob
-                                   :ssn
-                                   :haku
-                                   :hakukohde
-                                   :ensisijaisesti-hakukohteissa
-                                   :ensisijainen-hakukohde])
-             (when (contains? sort :offset)
-               (case (:order-by sort)
-                 "submitted"
-                 [(:submitted (:offset sort)) (:key (:offset sort))]
-                 "created-time"
-                 [(:created-time (:offset sort)) (:key (:offset sort))]
-                 "applicant-name"
-                 [(:last-name (:offset sort)) (:preferred-name (:offset sort)) (:key (:offset sort))]))))))
+                      (assoc :attachment-key (first (:attachment-review-states query)))
+
+                      (seq (second (:attachment-review-states query)))
+                      (assoc :attachment-states (to-sql-array (second (:attachment-review-states query)) connection "varchar"))
+
+                      (contains? sort :offset)
+                      (assoc :offset-key (:key (:offset sort))
+                             :offset-submitted (:submitted (:offset sort))
+                             :offset-created-time (:created-time (:offset sort))
+                             :offset-last-name (:last-name (:offset sort))
+                             :offset-preferred-name (:preferred-name (:offset sort))))]
+    (queries/get-application-list-sqlvec query)))
 
 (defn get-application-heading-list
   [query sort]
