@@ -1,7 +1,8 @@
 (ns ataru.virkailija.views
     (:require [re-frame.core :as re-frame]
               [ataru.virkailija.views.banner :refer [snackbar top-banner]]
-              [ataru.virkailija.application.view :refer [application application-version-changes]]
+              [ataru.virkailija.application.view :refer [application]]
+              [ataru.virkailija.application.view.version-history :refer [application-version-changes]]
               [ataru.virkailija.application.attachments.virkailija-attachment-view :as attachments]
               [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.editor.view :refer [editor]]
