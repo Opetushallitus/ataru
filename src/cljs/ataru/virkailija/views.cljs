@@ -18,7 +18,7 @@
 (defn some-right-exists-for-user? [rights orgs]
   (boolean (some rights (->> orgs (map :rights) flatten (map keyword)))))
 
-(defn privileged-panel [panel rights]
+(defn privileged-panel [_ _]
   (let [organizations (re-frame/subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [panel rights]
       (if (some-right-exists-for-user? rights @organizations)
