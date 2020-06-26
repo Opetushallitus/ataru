@@ -10,7 +10,7 @@
                                            (ataru.applications.excel-export.text-field-spec/with-excel)
                                            (ataru.db.flyway-migration/defmigration)
                                            (ataru.virkailija.editor.editor-macros/with-form-key)
-                                           (speclj.core/describe [around context describe it should== tags with])]}
+                                           (speclj.core/describe [spec around context describe it should= should== tags with])]}
            :unused-namespace    {:exclude [cljs.repl]}
            :unused-referred-var {:exclude {cljs.repl [Error->map
                                                       apropos
