@@ -1,7 +1,7 @@
 (ns ataru.applications.application-store
   (:require [ataru.application.application-states :as application-states]
             [cheshire.core :as json]
-            [ataru.application.review-states :refer [incomplete-states] :as application-review-states]
+            [ataru.application.review-states :as application-review-states]
             [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
@@ -15,16 +15,14 @@
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
-            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
-            [clj-time.coerce :as c]
-            [clj-time.core :as time]
-            [clj-time.format :as f]
+            [clojure.set]
+            [clojure.string]
             [clojure.java.jdbc :as jdbc]
             [schema.core :as s]
             [taoensso.timbre :as log]
-            [ataru.applications.application-store-queries :refer :all]
+            [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]])
   (:import [java.time
             LocalDateTime
@@ -52,16 +50,16 @@
   [application]
   (when application
     (assoc (->kebab-case-kw (dissoc application :content))
-      :answers
-      (mapv (fn [answer]
-              (update answer :label (fn [label]
-                                      (label/get-language-label-in-preferred-order label))))
-            (-> application :content :answers)))))
+           :answers
+           (mapv (fn [answer]
+                   (update answer :label (fn [label]
+                                           (label/get-language-label-in-preferred-order label))))
+                 (-> application :content :answers)))))
 
 (defn- application-exists-with-secret-tx?
   "NB: takes into account also expired secrets"
   [hakija-secret connection]
-  (let [application-count (->> (yesql-get-application-count-for-secret {:secret hakija-secret} connection)
+  (let [application-count (->> (queries/yesql-get-application-count-for-secret {:secret hakija-secret} connection)
                                (first)
                                :count)]
     (pos? application-count)))
@@ -74,7 +72,7 @@
 (defn get-application-language-by-secret
   "NB: takes into account also expired secrets"
   [hakija-secret]
-  (-> (exec-db :db yesql-get-latest-application-language-by-any-version-of-secret {:secret hakija-secret})
+  (-> (exec-db :db queries/yesql-get-latest-application-language-by-any-version-of-secret {:secret hakija-secret})
       (first)
       :lang))
 
@@ -85,9 +83,9 @@
   (loop []
     (let [secret     (crypto/url-part 34)
           collision? (try
-                       (yesql-add-application-secret<! {:application_key application-key
-                                                        :secret          secret}
-                                                       {:connection connection})
+                       (queries/yesql-add-application-secret<! {:application_key application-key
+                                                                :secret          secret}
+                                                               {:connection connection})
                        false
                        (catch PSQLException e
                          (if (= unique-violation (.getSQLState e))
@@ -144,7 +142,7 @@
 (defn- followup-option-selected?
   [field answers]
   (let [parent-answer-key (-> field :followup-of keyword)
-        answers    (-> answers
+        answers           (-> answers
                        parent-answer-key
                        :value
                        vector ; Make sure we won't flatten a string answer to ()
@@ -193,29 +191,29 @@
 
 (defn delete-orphan-attachment-reviews
   [application-key reviews connection]
-  (yesql-delete-application-attachment-reviews!
-    {:application_key                            application-key
-     :attachment_key_and_applied_hakukohde_array (->> reviews
-                                                      (map (fn [review]
-                                                               [(:attachment_key review) (:hakukohde review)]))
-                                                      (json/generate-string))}
-    connection))
+  (queries/yesql-delete-application-attachment-reviews!
+   {:application_key                            application-key
+    :attachment_key_and_applied_hakukohde_array (->> reviews
+                                                     (map (fn [review]
+                                                            [(:attachment_key review) (:hakukohde review)]))
+                                                     (json/generate-string))}
+   connection))
 
-(defn store-reviews [reviews update? connection]
+(defn store-reviews [reviews connection]
   (doseq [review reviews]
     ((if (:updated? review)
-       yesql-update-attachment-hakukohde-review!
-       yesql-save-attachment-review!)
+       queries/yesql-update-attachment-hakukohde-review!
+       queries/yesql-save-attachment-review!)
      (dissoc review :updated?) connection)))
 
 (defn- create-attachment-hakukohde-reviews-for-application
   [application applied-hakukohteet old-answers form update? connection]
-  (let [flat-form-content   (-> form :content util/flatten-form-fields)
-        fields-by-id        (util/form-fields-by-id form)
+  (let [flat-form-content                         (-> form :content util/flatten-form-fields)
+        fields-by-id                              (util/form-fields-by-id form)
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
-        answers-by-key      (-> application :content :answers util/answers-by-key)
-        visible-attachments (filter-visible-attachments answers-by-key flat-form-content fields-by-id)
-        reviews             (create-application-attachment-reviews
+        answers-by-key                            (-> application :content :answers util/answers-by-key)
+        visible-attachments                       (filter-visible-attachments answers-by-key flat-form-content fields-by-id)
+        reviews                                   (create-application-attachment-reviews
                              (:key application)
                              visible-attachments
                              answers-by-key
@@ -224,7 +222,7 @@
                              update?
                              fields-by-id
                              excluded-attachment-ids-when-yo-and-jyemp)]
-    (store-reviews reviews update? connection)
+    (store-reviews reviews connection)
     (when update?
       (delete-orphan-attachment-reviews (:key application)
                                         reviews
@@ -248,25 +246,25 @@
                               :content        {:answers answers}
                               :person_oid     (:person-oid application)}
         new-application      (if (contains? application :key)
-                               (yesql-add-application-version<! application-to-store connection)
-                               (yesql-add-application<! application-to-store connection))]
+                               (queries/yesql-add-application-version<! application-to-store connection)
+                               (queries/yesql-add-application<! application-to-store connection))]
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))
     (unwrap-application new-application)))
 
-(defn- get-latest-version-and-lock-for-update [secret lang conn]
-  (if-let [application (first (yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
+(defn- get-latest-version-and-lock-for-update [secret conn]
+  (if-let [application (first (queries/yesql-get-latest-version-by-secret-lock-for-update {:secret secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating" {:secret secret}))))
 
-(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret lang conn]
-  (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-update [virkailija-secret conn]
+  (if-let [application (first (queries/yesql-get-latest-version-by-virkailija-secret-lock-for-update {:virkailija_secret virkailija-secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when updating as virkailija" {:virkailija-secret virkailija-secret}))))
 
-(defn- get-latest-version-for-virkailija-edit-and-lock-for-rewrite [virkailija-secret lang conn]
-  (if-let [application (first (yesql-get-latest-version-by-virkailija-secret-lock-for-rewrite {:virkailija_secret virkailija-secret} {:connection conn}))]
+(defn- get-latest-version-for-virkailija-edit-and-lock-for-rewrite [virkailija-secret conn]
+  (if-let [application (first (queries/yesql-get-latest-version-by-virkailija-secret-lock-for-rewrite {:virkailija_secret virkailija-secret} {:connection conn}))]
     (unwrap-application application)
     (throw (ex-info "No existing form found when rewriting as virkailija" {:virkailija-secret virkailija-secret}))))
 
@@ -311,49 +309,49 @@
   (update answer :value remove-null-bytes-from-value))
 
 (defn add-application [new-application applied-hakukohteet form session audit-logger]
-    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-      (let [selection-id   (:selection-id new-application)
-            virkailija-oid (when-let [secret (:virkailija-secret new-application)]
-                             (get-virkailija-oid-for-create-secret conn secret))
-            {:keys [id key] :as new-application} (add-new-application-version
-                                                   (update new-application :answers (partial mapv remove-null-bytes-from-answer))
-                                                   true
-                                                   applied-hakukohteet
-                                                   nil
-                                                   form
-                                                   false
-                                                   conn)
-            connection     {:connection conn}]
-        (audit-log/log audit-logger
-                       {:new       new-application
-                        :operation audit-log/operation-new
-                        :session   session
-                        :id        {:email (util/extract-email new-application)}})
-        (yesql-add-application-event<! {:application_key          key
-                                        :event_type               (if (some? virkailija-oid)
-                                                                    "received-from-virkailija"
-                                                                    "received-from-applicant")
-                                        :new_review_state         nil
-                                        :virkailija_oid           virkailija-oid
-                                        :virkailija_organizations nil
-                                        :hakukohde                nil
-                                        :review_key               nil}
-          connection)
-        (yesql-add-application-review! {:application_key key
-                                        :state           application-review-states/initial-application-review-state}
-          connection)
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (let [selection-id                         (:selection-id new-application)
+          virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
+                           (get-virkailija-oid-for-create-secret conn secret))
+          {:keys [id key] :as new-application} (add-new-application-version
+                                                (update new-application :answers (partial mapv remove-null-bytes-from-answer))
+                                                true
+                                                applied-hakukohteet
+                                                nil
+                                                form
+                                                false
+                                                conn)
+          connection                           {:connection conn}]
+      (audit-log/log audit-logger
+                     {:new       new-application
+                      :operation audit-log/operation-new
+                      :session   session
+                      :id        {:email (util/extract-email new-application)}})
+      (queries/yesql-add-application-event<! {:application_key          key
+                                              :event_type               (if (some? virkailija-oid)
+                                                                          "received-from-virkailija"
+                                                                          "received-from-applicant")
+                                              :new_review_state         nil
+                                              :virkailija_oid           virkailija-oid
+                                              :virkailija_organizations nil
+                                              :hakukohde                nil
+                                              :review_key               nil}
+                                             connection)
+      (queries/yesql-add-application-review! {:application_key key
+                                              :state           application-review-states/initial-application-review-state}
+                                             connection)
 
-        (selection-limit/permanent-select-on-store-application key new-application selection-id form connection)
+      (selection-limit/permanent-select-on-store-application key new-application selection-id form connection)
 
-        id)))
+      id)))
 
 (defn- form->form-id [{:keys [form] :as application}]
   (assoc (dissoc application :form) :form-id form))
 
 (defn- application->loggable-form [{:keys [form] :as application}]
   (cond-> application
-    (some? form)
-    (form->form-id)))
+          (some? form)
+          (form->form-id)))
 
 (defn- merge-applications [new-application old-application]
   (merge new-application
@@ -362,46 +360,46 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [lang secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
+(defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (let [updated-by-applicant? (not-blank? secret)
+    (let [updated-by-applicant?            (not-blank? secret)
           [virkailija-oid rewrite-secret?] (if updated-by-applicant?
                                              [nil nil]
                                              (if-let [oid (get-virkailija-oid-for-rewrite-secret conn virkailija-secret)]
                                                [oid true]
                                                [(get-virkailija-oid-for-update-secret conn virkailija-secret) false]))
-          old-application       (cond
-                                  rewrite-secret?
-                                  (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret lang conn)
+          old-application                  (cond
+                                             rewrite-secret?
+                                             (get-latest-version-for-virkailija-edit-and-lock-for-rewrite virkailija-secret conn)
 
-                                  updated-by-applicant?
-                                  (get-latest-version-and-lock-for-update secret lang conn)
+                                             updated-by-applicant?
+                                             (get-latest-version-and-lock-for-update secret conn)
 
-                                  :else
-                                  (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret lang conn))
+                                             :else
+                                             (get-latest-version-for-virkailija-edit-and-lock-for-update virkailija-secret conn))
           {:keys [id key] :as new-application} (add-new-application-version
-                                                 (merge-applications new-application old-application)
-                                                 updated-by-applicant?
-                                                 applied-hakukohteet
-                                                 (-> old-application :answers util/answers-by-key)
-                                                 form
-                                                 true
-                                                 conn)]
+                                                (merge-applications new-application old-application)
+                                                updated-by-applicant?
+                                                applied-hakukohteet
+                                                (-> old-application :answers util/answers-by-key)
+                                                form
+                                                true
+                                                conn)]
       (log/info (str "Updating application with key "
                      (:key old-application)
                      " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
-      (yesql-add-application-event<! {:application_key          key
-                                      :event_type               (if updated-by-applicant?
-                                                                  "updated-by-applicant"
-                                                                  "updated-by-virkailija")
-                                      :new_review_state         nil
-                                      :virkailija_oid           virkailija-oid
-                                      :virkailija_organizations nil
-                                      :hakukohde                nil
-                                      :review_key               nil}
-                                    {:connection conn})
+      (queries/yesql-add-application-event<! {:application_key          key
+                                              :event_type               (if updated-by-applicant?
+                                                                          "updated-by-applicant"
+                                                                          "updated-by-virkailija")
+                                              :new_review_state         nil
+                                              :virkailija_oid           virkailija-oid
+                                              :virkailija_organizations nil
+                                              :hakukohde                nil
+                                              :review_key               nil}
+                                             {:connection conn})
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form {:connection conn})
 
@@ -602,7 +600,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (->> (yesql-get-application-list-by-person-oid-for-omatsivut
+    (->> (queries/yesql-get-application-list-by-person-oid-for-omatsivut
           {:person_oid             person-oid
            :secret_link_valid_days (-> config :public-config :secret-link-valid-days)}
           {:connection conn})
@@ -628,48 +626,48 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
      :idTunnus     (-> answers :national-id-number :value)}))
 
 (defn onr-applications [person-oid]
-  (->> (exec-db :db yesql-onr-applications {:person_oid person-oid})
+  (->> (exec-db :db queries/yesql-onr-applications {:person_oid person-oid})
        (map unwrap-onr-application)))
 
 (defn has-ssn-applied [haku-oid ssn]
-  (->> (exec-db :db yesql-has-ssn-applied {:haku_oid haku-oid
-                                           :ssn ssn})
+  (->> (exec-db :db queries/yesql-has-ssn-applied {:haku_oid haku-oid
+                                                   :ssn      ssn})
        first
        ->kebab-case-kw))
 
 (defn has-email-applied [haku-oid email]
-  (->> (exec-db :db yesql-has-email-applied {:haku_oid haku-oid
-                                             :email email})
+  (->> (exec-db :db queries/yesql-has-email-applied {:haku_oid haku-oid
+                                                     :email    email})
        first
        ->kebab-case-kw))
 
 (defn get-application-review-notes [application-key]
-  (->> (exec-db :db yesql-get-application-review-notes {:application_key application-key})
+  (->> (exec-db :db queries/yesql-get-application-review-notes {:application_key application-key})
        (map ->kebab-case-kw)
        (map util/remove-nil-values)))
 
 (defn get-application-review [application-key]
-  (->> (exec-db :db yesql-get-application-review {:application_key application-key})
+  (->> (exec-db :db queries/yesql-get-application-review {:application_key application-key})
        (map ->kebab-case-kw)
        (first)))
 
 (defn get-application-reviews-by-keys [application-keys]
   (map ->kebab-case-kw
-       (exec-db :db yesql-get-application-reviews-by-keys {:application_keys application-keys})))
+       (exec-db :db queries/yesql-get-application-reviews-by-keys {:application_keys application-keys})))
 
 (defn get-application-review-notes-by-keys [application-keys]
   (map ->kebab-case-kw
-       (exec-db :db yesql-get-application-review-notes-by-keys {:application_keys application-keys})))
+       (exec-db :db queries/yesql-get-application-review-notes-by-keys {:application_keys application-keys})))
 
 (defn selection-state-used? [haku-oid]
-  (:exists (first (exec-db :db yesql-selection-state-used {:haku_oid haku-oid}))))
+  (:exists (first (exec-db :db queries/yesql-selection-state-used {:haku_oid haku-oid}))))
 
 (defn get-application [application-id]
-  (unwrap-application (first (exec-db :db yesql-get-application-by-id {:application_id application-id}))))
+  (unwrap-application (first (exec-db :db queries/yesql-get-application-by-id {:application_id application-id}))))
 
 (defn get-latest-application-by-key-in-tx
   [connection application-key]
-  (-> (yesql-get-latest-application-by-key
+  (-> (queries/yesql-get-latest-application-by-key
        {:application_key application-key}
        {:connection connection})
       first
@@ -681,16 +679,16 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn get-application-hakukohde-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-hakukohde-reviews {:application_key application-key})))
+  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn get-application-attachment-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-application-attachment-reviews {:application_key application-key})))
+  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key})))
 
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db
-                                       yesql-get-latest-application-by-secret
-                                       {:secret secret
+                                       queries/yesql-get-latest-application-by-secret
+                                       {:secret                 secret
                                         :secret_link_valid_days (-> config :public-config :secret-link-valid-days)})
                               (first)
                               (unwrap-application))]
@@ -699,13 +697,13 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
         (assoc :application-hakukohde-reviews (get-application-hakukohde-reviews (:key application))))))
 
 (defn get-latest-application-for-virkailija-edit [virkailija-secret]
-  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
+  (when-let [application (->> (exec-db :db queries/yesql-get-latest-application-by-virkailija-secret {:virkailija_secret virkailija-secret})
                               (first)
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))
 
 (defn get-latest-application-for-virkailija-rewrite-edit [virkailija-secret]
-  (when-let [application (->> (exec-db :db yesql-get-latest-application-by-virkailija-rewrite-secret {:virkailija_secret virkailija-secret})
+  (when-let [application (->> (exec-db :db queries/yesql-get-latest-application-by-virkailija-rewrite-secret {:virkailija_secret virkailija-secret})
                               (first)
                               (unwrap-application))]
     (assoc application :state (-> (:key application) get-application-review :state))))
@@ -722,11 +720,11 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn get-latest-application-secret
   []
-  (:secret (first (->> (exec-db :db yesql-get-latest-application-secret {})))))
+  (:secret (first (->> (exec-db :db queries/yesql-get-latest-application-secret {})))))
 
 (defn alter-application-hakukohteet-with-secret
   [secret hakukohde answers]
-  (exec-db :db yesql-set-application-hakukohteet-by-secret!
+  (exec-db :db queries/yesql-set-application-hakukohteet-by-secret!
            {:secret    secret
             :hakukohde hakukohde
             :content   {:answers answers}}))
@@ -740,10 +738,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   [old-secret]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
-          application-key (-> (yesql-get-application-key-for-any-version-of-secret {:secret old-secret} connection)
+          application-key (-> (queries/yesql-get-application-key-for-any-version-of-secret {:secret old-secret} connection)
                               (first)
                               :application_key)
-          application     (-> (yesql-get-latest-application-by-key
+          application     (-> (queries/yesql-get-latest-application-by-key
                                {:application_key application-key}
                                connection)
                               (first)
@@ -752,7 +750,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
       (:id application))))
 
 (defn get-application-events [application-key]
-  (->> (exec-db :db yesql-get-application-events {:application_key application-key})
+  (->> (exec-db :db queries/yesql-get-application-events {:application_key application-key})
        (mapv ->kebab-case-kw)
        (mapv #(if (nil? (:virkailija-organizations %))
                 (dissoc % :virkailija-organizations)
@@ -778,7 +776,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [connection      {:connection conn}
           app-key         (:application-key review)
-          old-review      (when-let [data (first (yesql-get-application-review {:application_key app-key} connection))]
+          old-review      (when-let [data (first (queries/yesql-get-application-review {:application_key app-key} connection))]
                             {:application_key (:application_key data)
                              :state           (:state data)
                              :score           (some-> (:score data) (.doubleValue))})
@@ -786,7 +784,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                            :state           (:state review)
                            :score           (:score review)}]
       (when (not= old-review review-to-store)
-        (yesql-save-application-review! review-to-store connection)
+        (queries/yesql-save-application-review! review-to-store connection)
         (auditlog-review-modify review-to-store old-review session audit-logger))
       (when (not= (:state old-review) (:state review-to-store))
         (let [event {:application_key          app-key
@@ -796,29 +794,29 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                      :virkailija_organizations (edit-application-right-organizations->json session)
                      :hakukohde                nil
                      :review_key               nil}]
-          (:id (yesql-add-application-event<! event connection)))))))
+          (:id (queries/yesql-add-application-event<! event connection)))))))
 
 (defn save-application-hakukohde-review
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection                  {:connection conn}
-                                  review-to-store             {:application_key application-key
-                                                               :requirement     hakukohde-review-requirement
-                                                               :state           hakukohde-review-state
-                                                               :hakukohde       hakukohde-oid}
-                                  existing-duplicate-review   (yesql-get-existing-application-hakukohde-review review-to-store connection)
-                                  existing-requirement-review (yesql-get-existing-requirement-review review-to-store connection)]
-                              (when (empty? existing-duplicate-review)
-                                (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
-                                (yesql-upsert-application-hakukohde-review! review-to-store connection)
-                                (let [event {:application_key          application-key
-                                             :event_type               "hakukohde-review-state-change"
-                                             :new_review_state         (:state review-to-store)
-                                             :review_key               hakukohde-review-requirement
-                                             :hakukohde                (:hakukohde review-to-store)
-                                             :virkailija_oid           (-> session :identity :oid)
-                                             :virkailija_organizations (edit-application-right-organizations->json session)}]
-                                  (yesql-add-application-event<! event connection))))))
+    (let [connection                  {:connection conn}
+          review-to-store             {:application_key application-key
+                                       :requirement     hakukohde-review-requirement
+                                       :state           hakukohde-review-state
+                                       :hakukohde       hakukohde-oid}
+          existing-duplicate-review   (queries/yesql-get-existing-application-hakukohde-review review-to-store connection)
+          existing-requirement-review (queries/yesql-get-existing-requirement-review review-to-store connection)]
+      (when (empty? existing-duplicate-review)
+        (auditlog-review-modify review-to-store (first existing-requirement-review) session audit-logger)
+        (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
+        (let [event {:application_key          application-key
+                     :event_type               "hakukohde-review-state-change"
+                     :new_review_state         (:state review-to-store)
+                     :review_key               hakukohde-review-requirement
+                     :hakukohde                (:hakukohde review-to-store)
+                     :virkailija_oid           (-> session :identity :oid)
+                     :virkailija_organizations (edit-application-right-organizations->json session)}]
+          (queries/yesql-add-application-event<! event connection))))))
 
 (defn save-payment-obligation-automatically-changed
   [application-key hakukohde-oid hakukohde-review-requirement hakukohde-review-state]
@@ -828,18 +826,18 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                                        :requirement     hakukohde-review-requirement
                                        :state           hakukohde-review-state
                                        :hakukohde       hakukohde-oid}
-          automatically-changed?      (->> (yesql-get-application-events {:application_key application-key} connection)
+          automatically-changed?      (->> (queries/yesql-get-application-events {:application_key application-key} connection)
                                            (filter #(and (= hakukohde-oid (:hakukohde %))
                                                          (= hakukohde-review-requirement (:review_key %))))
                                            last
                                            :event_type
                                            (= "payment-obligation-automatically-changed"))
-          existing-requirement-review (first (yesql-get-existing-requirement-review review-to-store connection))]
+          existing-requirement-review (first (queries/yesql-get-existing-requirement-review review-to-store connection))]
       (when (and (not= (:state review-to-store) (:state existing-requirement-review))
                  (or (nil? (:state existing-requirement-review))
                      (= "unreviewed" (:state existing-requirement-review))
                      automatically-changed?))
-        (yesql-upsert-application-hakukohde-review! review-to-store connection)
+        (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
         (let [event {:application_key          application-key
                      :event_type               "payment-obligation-automatically-changed"
                      :new_review_state         (:state review-to-store)
@@ -847,7 +845,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                      :hakukohde                (:hakukohde review-to-store)
                      :virkailija_oid           nil
                      :virkailija_organizations nil}]
-          (yesql-add-application-event<! event connection))))))
+          (queries/yesql-add-application-event<! event connection))))))
 
 (defn save-attachment-hakukohde-review
   [application-key hakukohde-oid attachment-key hakukohde-review-state session audit-logger]
@@ -857,10 +855,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                            :attachment_key  attachment-key
                            :state           hakukohde-review-state
                            :hakukohde       hakukohde-oid}]
-      (if-let [existing-attachment-review (first (yesql-get-existing-attachment-review review-to-store connection))]
+      (if-let [existing-attachment-review (first (queries/yesql-get-existing-attachment-review review-to-store connection))]
         (when-not (= hakukohde-review-state (:state existing-attachment-review))
           (auditlog-review-modify review-to-store existing-attachment-review session audit-logger)
-          (yesql-update-attachment-hakukohde-review! review-to-store connection)
+          (queries/yesql-update-attachment-hakukohde-review! review-to-store connection)
           (let [event {:application_key          application-key
                        :event_type               "attachment-review-state-change"
                        :new_review_state         (:state review-to-store)
@@ -868,25 +866,25 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                        :hakukohde                (:hakukohde review-to-store)
                        :virkailija_oid           (-> session :identity :oid)
                        :virkailija_organizations (edit-application-right-organizations->json session)}]
-            (yesql-add-application-event<! event connection)))
+            (queries/yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
 (s/defn get-applications-for-form :- [schema/Application]
   [form-key :- s/Str filtered-states :- [s/Str]]
   (->> {:form_key form-key :filtered_states filtered-states}
-       (exec-db :db yesql-get-applications-for-form)
+       (exec-db :db queries/yesql-get-applications-for-form)
        (mapv unwrap-application)))
 
 (defn get-applications-by-keys
   [application-keys]
   (mapv unwrap-application
-        (exec-db :db yesql-get-applications-by-keys {:application_keys application-keys})))
+        (exec-db :db queries/yesql-get-applications-by-keys {:application_keys application-keys})))
 
 (s/defn get-applications-for-hakukohde :- [schema/Application]
   [filtered-states :- [s/Str]
    hakukohde-oid :- s/Str]
   (mapv unwrap-application
-        (exec-db :db yesql-get-applications-for-hakukohde
+        (exec-db :db queries/yesql-get-applications-for-hakukohde
                  {:filtered_states filtered-states
                   :hakukohde_oid   hakukohde-oid})))
 
@@ -894,28 +892,28 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   [haku-oid :- s/Str
    filtered-states :- [s/Str]]
   (mapv unwrap-application
-        (exec-db :db yesql-get-applications-for-haku
+        (exec-db :db queries/yesql-get-applications-for-haku
                  {:filtered_states filtered-states
                   :haku_oid        haku-oid})))
 
 (defn add-person-oid
   "Add person OID to an application"
   [application-id person-oid]
-  (exec-db :db yesql-add-person-oid!
-    {:id application-id :person_oid person-oid}))
+  (exec-db :db queries/yesql-add-person-oid!
+           {:id application-id :person_oid person-oid}))
 
 (defn get-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-haut-and-hakukohteet-from-applications {})))
+  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-haut-and-hakukohteet-from-applications {})))
 
 (defn get-direct-form-haut
   []
-  (mapv ->kebab-case-kw (exec-db :db yesql-get-direct-form-haut {})))
+  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-direct-form-haut {})))
 
 (defn add-application-feedback
   [feedback]
   (->kebab-case-kw
-    (exec-db :db yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
+   (exec-db :db queries/yesql-add-application-feedback<! (transform-keys ->snake_case feedback))))
 
 (defn- kk-base-educations-old-module [answers]
   (->> [["kk" :higher-education-qualification-in-finland-year-and-date]
@@ -987,7 +985,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn get-hakurekisteri-applications ;; deprecated, use suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after]
   (->> (jdbc/with-db-connection [conn {:datasource (db/get-datasource :db)}]
-         (yesql-applications-for-hakurekisteri
+         (queries/yesql-applications-for-hakurekisteri
           {:has_haku_oid       (some? haku-oid)
            :haku_oid           haku-oid
            :has_hakukohde_oids (not (empty? hakukohde-oids))
@@ -1009,7 +1007,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
   (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                  (yesql-suoritusrekisteri-applications
+                  (queries/yesql-suoritusrekisteri-applications
                    {:haku_oid       haku-oid
                     :hakukohde_oids (some->> (seq hakukohde-oids)
                                              to-array
@@ -1069,7 +1067,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
        (hakutoiveet-priority-order (:hakukohde application))))
 
 (defn- unwrap-external-application
-  [{:keys [key haku organization_oid person_oid lang email hakukohde content] :as application}]
+  [{:keys [key haku organization_oid person_oid lang email content] :as application}]
   (let [answers (answers-by-key (:answers content))]
     {:oid              key
      :hakuOid          haku
@@ -1087,13 +1085,13 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn get-external-applications ;; deprecated, use valinta-tulos-service-applications
   [haku-oid hakukohde-oid hakemus-oids]
   (->> (exec-db :db
-                yesql-applications-by-haku-and-hakukohde-oids
-                {:haku_oid                     haku-oid
-                 ; Empty string to avoid empty parameter lists
-                 :hakukohde_oids               (cond-> [""]
-                                                       (some? hakukohde-oid)
-                                                       (conj hakukohde-oid))
-                 :hakemus_oids                 (cons "" hakemus-oids)})
+                queries/yesql-applications-by-haku-and-hakukohde-oids
+                {:haku_oid       haku-oid
+                 ;; Empty string to avoid empty parameter lists
+                 :hakukohde_oids (cond-> [""]
+                                         (some? hakukohde-oid)
+                                         (conj hakukohde-oid))
+                 :hakemus_oids   (cons "" hakemus-oids)})
        (map unwrap-external-application)))
 
 (defn valinta-tulos-service-applications
@@ -1105,7 +1103,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                              :henkiloOid (:person-oid %)
                              :asiointikieli (:asiointikieli %)
                              :email (:email %))
-                  (yesql-valinta-tulos-service-applications
+                  (queries/yesql-valinta-tulos-service-applications
                    {:haku_oid      haku-oid
                     :hakukohde_oid hakukohde-oid
                     :hakemus_oids  (some->> (seq hakemus-oids)
@@ -1118,11 +1116,11 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
              {:offset (:oid a)}))))
 
 (defn- convert-asiointikieli [kielikoodi]
-      (cond
-        (= "fi" kielikoodi) {:kieliKoodi "fi" :kieliTyyppi "suomi"}
-        (= "sv" kielikoodi) {:kieliKoodi "sv" :kieliTyyppi "svenska"}
-        (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
-        :else {:kieliKoodi "" :kieliTyyppi ""}))
+  (cond
+    (= "fi" kielikoodi) {:kieliKoodi "fi" :kieliTyyppi "suomi"}
+    (= "sv" kielikoodi) {:kieliKoodi "sv" :kieliTyyppi "svenska"}
+    (= "en" kielikoodi) {:kieliKoodi "en" :kieliTyyppi "english"}
+    :else               {:kieliKoodi "" :kieliTyyppi ""}))
 
 (defn- enrich-persons-from-onr [person-service applications]
   (let [persons (person-service/get-persons person-service (map #(get % :person-oid) applications))]
@@ -1138,19 +1136,19 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   [query person-service]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
     (->> {:connection connection}
-         (yesql-valinta-ui-applications (-> (merge {:application_oids nil
-                                                    :name             nil
-                                                    :haku             nil
-                                                    :hakukohde        nil}
-                                                   (transform-keys ->snake_case query))
-                                            (update :application_oids
-                                                    #(some->> (seq %)
-                                                              to-array
-                                                              (.createArrayOf (:connection connection) "text")))
-                                            (update :hakukohde
-                                                    #(some->> (seq %)
-                                                              to-array
-                                                              (.createArrayOf (:connection connection) "varchar")))))
+         (queries/yesql-valinta-ui-applications (-> (merge {:application_oids nil
+                                                            :name             nil
+                                                            :haku             nil
+                                                            :hakukohde        nil}
+                                                           (transform-keys ->snake_case query))
+                                                    (update :application_oids
+                                                            #(some->> (seq %)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "text")))
+                                                    (update :hakukohde
+                                                            #(some->> (seq %)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "varchar")))))
          (map #(assoc (->kebab-case-kw %)
                       :hakutoiveet
                       (unwrap-external-application-hakutoiveet %)))
@@ -1173,16 +1171,16 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn get-person-and-application-oids
   [haku-oid hakukohde-oids]
-  (->> (exec-db :db yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
-                                                                   ; Empty string to avoid empty parameter lists
-                                                                   :hakukohde_oids (cons "" hakukohde-oids)
-                                                                   :hakemus_oids    [""]})
+  (->> (exec-db :db queries/yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
+                                                                           ;; Empty string to avoid empty parameter lists
+                                                                           :hakukohde_oids (cons "" hakukohde-oids)
+                                                                           :hakemus_oids   [""]})
        (map unwrap-person-and-hakemus-oid)
        (into {})))
 
 (defn- get-latest-application-by-key-with-hakukohde-reviews
   [connection application-key]
-  (-> (yesql-get-latest-application-by-key-with-hakukohde-reviews
+  (-> (queries/yesql-get-latest-application-by-key-with-hakukohde-reviews
        {:application_key application-key}
        connection)
       (first)
@@ -1194,13 +1192,13 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           connection
                           application-key)
         existing-reviews (filter
-                           #(= (:state %) from-state)
-                           (application-states/get-all-reviews-for-requirement "processing-state" application (when hakukohde-oid [hakukohde-oid])))
+                          #(= (:state %) from-state)
+                          (application-states/get-all-reviews-for-requirement "processing-state" application (when hakukohde-oid [hakukohde-oid])))
         new-reviews      (map
-                           #(-> %
-                                (assoc :state to-state)
-                                (assoc :application_key application-key))
-                           existing-reviews)
+                          #(-> %
+                               (assoc :state to-state)
+                               (assoc :application_key application-key))
+                          existing-reviews)
         new-event        {:application_key          application-key
                           :event_type               "hakukohde-review-state-change"
                           :new_review_state         to-state
@@ -1210,9 +1208,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
     (doseq [new-review new-reviews]
-      (yesql-upsert-application-hakukohde-review! new-review connection)
-      (yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
-                                     connection))
+      (queries/yesql-upsert-application-hakukohde-review! new-review connection)
+      (queries/yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
+                                             connection))
     (when new-reviews
       {:new       new-event
        :id        {:applicationOid application-key
@@ -1223,12 +1221,12 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn applications-authorization-data [application-keys]
   (map ->kebab-case-kw
-       (exec-db :db yesql-applications-authorization-data
+       (exec-db :db queries/yesql-applications-authorization-data
                 {:application_keys application-keys})))
 
 (defn persons-applications-authorization-data [person-oids]
   (map ->kebab-case-kw
-       (exec-db :db yesql-persons-applications-authorization-data
+       (exec-db :db queries/yesql-persons-applications-authorization-data
                 {:person_oids person-oids})))
 
 (defn mass-update-application-states
@@ -1245,7 +1243,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn add-application-event [event session]
   (jdbc/with-db-transaction [db {:datasource (db/get-datasource :db)}]
-    (let [conn       {:connection db}]
+    (let [conn {:connection db}]
       (-> {:event_type               nil
            :new_review_state         nil
            :virkailija_oid           (-> session :identity :oid)
@@ -1253,23 +1251,23 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
            :hakukohde                nil
            :review_key               nil}
           (merge (transform-keys ->snake_case event))
-          (yesql-add-application-event<! conn)
+          (queries/yesql-add-application-event<! conn)
           (dissoc :virkailija_oid)
           (merge (select-keys (:identity session) [:first-name :last-name]))
           (->kebab-case-kw)))))
 
 (defn get-applications-newer-than [date limit offset]
-  (exec-db :db yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
+  (exec-db :db queries/yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
 
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
          (-> note :notes clojure.string/blank? not)]}
-  (-> (exec-db :db yesql-add-review-note<! {:application_key          (:application-key note)
-                                            :notes                    (:notes note)
-                                            :virkailija_oid           (-> session :identity :oid)
-                                            :hakukohde                (:hakukohde note)
-                                            :virkailija_organizations (edit-application-right-organizations->json session)
-                                            :state_name               (:state-name note)})
+  (-> (exec-db :db queries/yesql-add-review-note<! {:application_key          (:application-key note)
+                                                    :notes                    (:notes note)
+                                                    :virkailija_oid           (-> session :identity :oid)
+                                                    :hakukohde                (:hakukohde note)
+                                                    :virkailija_organizations (edit-application-right-organizations->json session)
+                                                    :state_name               (:state-name note)})
       util/remove-nil-values
       (merge (select-keys (:identity session) [:first-name :last-name]))
       (dissoc :virkailija_oid :removed)
@@ -1278,17 +1276,17 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn- unwrap-tilastokeskus-application
   [{:keys [haku-oid hakemus-oid henkilo-oid hakukohde-oids content hakemus-tila]}]
   (let [answers (answers-by-key (:answers content))]
-    {:hakemus_oid     hakemus-oid
-     :hakemus_tila    hakemus-tila
-     :haku_oid        haku-oid
-     :henkilo_oid     henkilo-oid
-     :hakukohde_oids  hakukohde-oids
-     :content         content
-     :kotikunta       (-> answers :home-town :value)
-     :asuinmaa        (-> answers :country-of-residence :value)}))
+    {:hakemus_oid    hakemus-oid
+     :hakemus_tila   hakemus-tila
+     :haku_oid       haku-oid
+     :henkilo_oid    henkilo-oid
+     :hakukohde_oids hakukohde-oids
+     :content        content
+     :kotikunta      (-> answers :home-town :value)
+     :asuinmaa       (-> answers :country-of-residence :value)}))
 
 (defn get-application-info-for-tilastokeskus [haku-oid hakukohde-oid]
-  (->> (exec-db :db yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
+  (->> (exec-db :db queries/yesql-tilastokeskus-applications {:haku_oid haku-oid :hakukohde_oid hakukohde-oid})
        (map unwrap-tilastokeskus-application)))
 
 (defn- get-application-eligibilities-by-hakutoive [application]
@@ -1365,7 +1363,7 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn get-applications-for-valintalaskenta [hakukohde-oid application-keys]
   (let [partition-size 10000
         fetch          (fn [key-partition]
-                         (->> (exec-db :db yesql-valintalaskenta-applications
+                         (->> (exec-db :db queries/yesql-valintalaskenta-applications
                                        {:hakukohde_oid    hakukohde-oid
                                         :application_keys (cons "" key-partition)})
                               (map unwrap-valintalaskenta-application)))]
@@ -1387,20 +1385,20 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
         (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn siirto-applications [hakukohde-oid application-keys]
-  (->> (exec-db :db yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
-                                               :application_keys (cons "" application-keys)})
+  (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
+                                                       :application_keys (cons "" application-keys)})
        (map unwrap-siirto-application)))
 
 (defn remove-review-note [note-id]
-  (when-not (= (exec-db :db yesql-remove-review-note! {:id note-id}) 0)
+  (when-not (= (exec-db :db queries/yesql-remove-review-note! {:id note-id}) 0)
     note-id))
 
 (defn get-application-keys-for-person-oid [person-oid]
-  (exec-db :db yesql-get-latest-application-keys-distinct-by-person-oid {:person_oid person-oid}))
+  (exec-db :db queries/yesql-get-latest-application-keys-distinct-by-person-oid {:person_oid person-oid}))
 
 (defn get-application-version-changes [koodisto-cache application-key]
   (let [all-versions         (exec-db :db
-                                      yesql-get-application-versions
+                                      queries/yesql-get-application-versions
                                       {:application_key application-key})
         all-versions-paired  (map vector all-versions (rest all-versions))
         get-koodisto-options (partial koodisto/get-koodisto-options
@@ -1412,8 +1410,8 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                  lang                  (or (-> newer-application :lang keyword) :fi)
                  form-fields           (util/form-fields-by-id (forms/get-form-by-application newer-application))]
              (into {}
-                   (for [key answer-keys
-                         :let [old-value (-> older-version-answers key :value)
+                   (for [key   answer-keys
+                         :let  [old-value (-> older-version-answers key :value)
                                new-value (-> newer-version-answers key :value)
                                field     (key form-fields)]
                          :when (not= old-value new-value)]
