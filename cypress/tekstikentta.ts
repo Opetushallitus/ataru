@@ -2,6 +2,10 @@ import * as asetukset from './asetukset'
 
 import Chainable = Cypress.Chainable
 
+/**
+ * Tämä tapa on nopeampi joten sitä kannattaa käyttää, jos ei ole riskiä siitä,
+ * että Reactin hallinta hävittäisi syötettyjä merkkejä.
+ */
 export const syotaTekstiTarkistamatta = <T>(
   elementti: Chainable<T>,
   teksti: string
@@ -11,6 +15,11 @@ export const syotaTekstiTarkistamatta = <T>(
     .type(teksti, { delay: asetukset.tekstikentanSyotonViive })
 }
 
+/**
+ * Tämä on turvallinen tapa täyttää tekstikenttä, koska se tarkistaa jokaisen
+ * merkin syöttämisen jälkeen, että syötetty merkki ehtii renderöityä kenttään
+ * ennen kuin seuraava merkki syötetään.
+ */
 export const syotaTeksti = <T>(
   elementti: Chainable<T>,
   teksti: string
