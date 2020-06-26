@@ -8,7 +8,7 @@ export default (testit: () => void) => {
 
     it('Näyttää täytetyn henkilötietomoduulin', () => {
       hakijanNakyma.henkilotiedot
-        .haePostitoimipaikkaKentta()
+        .postitoimipaikka()
         .should('have.value', 'HELSINKI')
     })
 

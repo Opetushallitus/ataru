@@ -63,31 +63,37 @@ export const arvosanat = {
 const syota = <T>(
   elementti: Chainable<T>,
   teksti: string
+): (() => Chainable<T>) => () =>
+  tekstikentta.syotaTekstiTarkistamatta(elementti, teksti)
+
+const syotaTurvallisesti = <T>(
+  elementti: Chainable<T>,
+  teksti: string
 ): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
-  haeEtunimiKentta: () => cy.get('[data-test-id=first-name-input]'),
-  haeSukunimiKentta: () => cy.get('[data-test-id=last-name-input]'),
-  haeHenkilotunnusKentta: () => cy.get('[data-test-id=ssn-input]'),
-  haeSahkopostiKentta: () => cy.get('[data-test-id=email-input]'),
-  haeSahkostinVarmistus: () => cy.get('[data-test-id=verify-email-input]'),
-  haeMatkapuhelinKentta: () => cy.get('[data-test-id=phone-input]'),
-  haeKatuosoiteKentta: () => cy.get('[data-test-id=address-input]'),
-  haePostinumeroKentta: () => cy.get('[data-test-id=postal-code-input]'),
-  haePostitoimipaikkaKentta: () => cy.get('[data-test-id=postal-office-input]'),
-  haeKotikuntaKentta: () => cy.get('[data-test-id=home-town-input]'),
+  etunimi: () => cy.get('[data-test-id=first-name-input]'),
+  sukunimi: () => cy.get('[data-test-id=last-name-input]'),
+  henkilotunnus: () => cy.get('[data-test-id=ssn-input]'),
+  sahkoposti: () => cy.get('[data-test-id=email-input]'),
+  sahkopostitoisto: () => cy.get('[data-test-id=verify-email-input]'),
+  matkapuhelin: () => cy.get('[data-test-id=phone-input]'),
+  katusoite: () => cy.get('[data-test-id=address-input]'),
+  postinumero: () => cy.get('[data-test-id=postal-code-input]'),
+  postitoimipaikka: () => cy.get('[data-test-id=postal-office-input]'),
+  kotikunta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {
     return tekstikentta
-      .syotaTeksti(henkilotiedot.haeEtunimiKentta(), 'Frank Zacharias')
-      .then(syota(henkilotiedot.haeSukunimiKentta(), 'Testerberg'))
-      .then(syota(henkilotiedot.haeHenkilotunnusKentta(), '160600A999C'))
-      .then(syota(henkilotiedot.haeSahkopostiKentta(), 'f.t@example.com'))
-      .then(syota(henkilotiedot.haeSahkostinVarmistus(), 'f.t@example.com'))
-      .then(syota(henkilotiedot.haeMatkapuhelinKentta(), '0401234567'))
-      .then(syota(henkilotiedot.haeKatuosoiteKentta(), 'Yliopistonkatu 4'))
-      .then(syota(henkilotiedot.haePostinumeroKentta(), '00100'))
-      .then(() => henkilotiedot.haeKotikuntaKentta().select('Forssa'))
+      .syotaTekstiTarkistamatta(henkilotiedot.etunimi(), 'Frank Zacharias')
+      .then(syota(henkilotiedot.sukunimi(), 'Testerberg'))
+      .then(syota(henkilotiedot.henkilotunnus(), '160600A999C'))
+      .then(syotaTurvallisesti(henkilotiedot.sahkoposti(), 'f.t@ex.com'))
+      .then(syotaTurvallisesti(henkilotiedot.sahkopostitoisto(), 'f.t@ex.com'))
+      .then(syota(henkilotiedot.matkapuhelin(), '0401234567'))
+      .then(syota(henkilotiedot.katusoite(), 'Yliopistonkatu 4'))
+      .then(syota(henkilotiedot.postinumero(), '00100'))
+      .then(() => henkilotiedot.kotikunta().select('Forssa'))
   },
 }
 

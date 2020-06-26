@@ -1,8 +1,8 @@
 import * as httpPaluusanomat from './httpPaluusanomat'
 import * as reitit from './reitit'
-import * as asetukset from './asetukset'
 import * as odota from './odota'
 import * as tekstikentta from './tekstikentta'
+import { syotaTeksti } from './tekstikentta'
 
 import Chainable = Cypress.Chainable
 import WaitXHR = Cypress.WaitXHR
@@ -46,9 +46,7 @@ export function teeJaodotaLomakkeenTallennusta<T>(
 
 export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
   teeJaodotaLomakkeenTallennusta(lomakkeenId, () =>
-    haeLomakkeenNimenSyote()
-      .clear()
-      .type(name, { delay: asetukset.tekstikentanSyotonViive })
+    syotaTeksti(haeLomakkeenNimenSyote(), name)
   )
 
 const koodistonValitsin = () =>
