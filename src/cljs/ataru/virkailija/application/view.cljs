@@ -17,6 +17,8 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
+            [ataru.virkailija.application.view.icons :as icons]
+            [ataru.virkailija.application.view.mass-review :as mass-review]
             [ataru.virkailija.dropdown :as dropdown]
             [ataru.virkailija.question-search.handlers :as qsh]
             [ataru.virkailija.question-search.view :as question-search]
@@ -31,27 +33,6 @@
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [re-frame.core :refer [subscribe dispatch]]))
-
-(defn- icon-check []
-  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
-  [:i.zmdi.zmdi-check.zmdi-hc-stack-1x]])
-
-(defn- icon-many-checked []
-  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
-   [:i.zmdi.zmdi-check-all.zmdi-hc-stack-1x]])
-
-(defn- icon-unselected []
-  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
-    [:i.zmdi.zmdi-hc-stack-1x]])
-
-(defn- icon-multi-check []
-  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
-    [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]
-    [:i.zmdi.zmdi-check.zmdi-hc-stack-1x]])
-
-(defn- icon-select []
-  [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
-    [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]])
 
 (defn excel-download-link
   [_ _ _]
@@ -113,146 +94,6 @@
                   (when @loading? " "))
              (when @loading?
                [:i.zmdi.zmdi-spinner.spin])]]]])])))
-
-(defn- selected-or-default-mass-review-state
-  [selected all]
-  (if @selected
-    @selected
-    (or
-      (ffirst (filter (comp pos? second) all))
-      (ffirst all))))
-
-(defn- review-state-label
-  [state-name]
-  (get (->> review-states/application-hakukohde-processing-states
-            (filter #(= (first %) state-name))
-            first
-            second)
-       @(subscribe [:editor/virkailija-lang])))
-
-(defn- review-label-with-count
-  [label count]
-  (str label
-       (when (< 0 count)
-         (str " (" count ")"))))
-
-(defn- selected-or-default-mass-review-state-label
-  [selected all review-state-counts]
-  (let [name  (selected-or-default-mass-review-state selected all)
-        label (review-state-label name)
-        count (get review-state-counts name)]
-    (review-label-with-count label count)))
-
-(defn- mass-review-state-selected-row
-  [on-click label]
-  [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update.application-handling__review-state-row--selected
-   {:on-click on-click}
-   [icon-check] label])
-
-(defn- mass-review-state-row
-  [current-review-state states review-state-counts disable-empty-rows? state]
-  (let [review-state-count (get review-state-counts state 0)
-        review-state-label (review-state-label state)
-        label-with-count   (review-label-with-count review-state-label review-state-count)
-        on-click           #(reset! current-review-state state)
-        disabled?          (and disable-empty-rows? (zero? review-state-count))]
-    (if (= (selected-or-default-mass-review-state current-review-state states) state)
-      (mass-review-state-selected-row #() label-with-count)
-      [:div.application-handling__review-state-row.application-handling__review-state-row--mass-update
-       {:on-click (when-not disabled? on-click)
-        :class    (when disabled? "application-handling__review-state-row--disabled")}
-       [icon-unselected] label-with-count])))
-
-(defn- opened-mass-review-state-list
-  [current-state states review-state-counts disable-empty-rows?]
-  (mapv (partial mass-review-state-row current-state states review-state-counts disable-empty-rows?) (map first states)))
-
-(defn- mass-update-applications-link
-  []
-  (let [visible?                   (subscribe [:state-query [:application :mass-update :visible?]])
-        from-list-open?            (r/atom false)
-        to-list-open?              (r/atom false)
-        submit-button-state        (r/atom :submit)
-        selected-from-review-state (r/atom nil)
-        selected-to-review-state   (r/atom nil)
-        haku-header                (subscribe [:application/list-heading-data-for-haku])
-        review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
-        loading?                   (subscribe [:application/fetching-applications?])
-        all-states                 (reduce (fn [acc [state _]]
-                                             (assoc acc state 0))
-                                           {}
-                                           review-states/application-hakukohde-processing-states)]
-    (fn []
-      (let [from-states (merge all-states @review-state-counts)]
-        [:span.application-handling__mass-edit-review-states-container
-         [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-          {:on-click #(dispatch [:application/set-mass-update-popup-visibility true])}
-          @(subscribe [:editor/virkailija-translation :mass-edit])]
-         (when @visible?
-           [:div.application-handling__mass-edit-review-states-popup.application-handling__popup
-            [:div.application-handling__mass-edit-review-states-title-container
-             [:h4.application-handling__mass-edit-review-states-title
-              @(subscribe [:editor/virkailija-translation :mass-edit])]
-             [:button.virkailija-close-button
-              {:on-click #(dispatch [:application/set-mass-update-popup-visibility false])}
-              [:i.zmdi.zmdi-close]]]
-            (when-let [[haku-oid hakukohde-oid _ _ _] @haku-header]
-              [:p
-               @(subscribe [:application/haku-name haku-oid])
-               (when hakukohde-oid
-                 (str ", " @(subscribe [:application/hakukohde-name hakukohde-oid])))])
-            [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :from-state])]
-
-            (if @from-list-open?
-              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                     {:on-click #(swap! from-list-open? not)}]
-                    (opened-mass-review-state-list selected-from-review-state from-states @review-state-counts true))
-              (mass-review-state-selected-row
-               (fn []
-                 (swap! from-list-open? not)
-                 (reset! submit-button-state :submit))
-               (selected-or-default-mass-review-state-label selected-from-review-state from-states @review-state-counts)))
-
-            [:h4.application-handling__mass-edit-review-states-heading @(subscribe [:editor/virkailija-translation :to-state])]
-
-            (if @to-list-open?
-              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                     {:on-click #(when (-> from-states (keys) (count) (pos?)) (swap! to-list-open? not))}]
-                    (opened-mass-review-state-list selected-to-review-state all-states @review-state-counts false))
-              (mass-review-state-selected-row
-               (fn []
-                 (swap! to-list-open? not)
-                 (reset! submit-button-state :submit))
-               (selected-or-default-mass-review-state-label selected-to-review-state all-states @review-state-counts)))
-
-            (case @submit-button-state
-              :submit
-              (let [button-disabled? (or (= (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                            (selected-or-default-mass-review-state selected-to-review-state all-states))
-                                         @loading?)]
-                [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button
-                 {:on-click #(when-not button-disabled? (reset! submit-button-state :confirm))
-                  :disabled button-disabled?}
-                 [:span
-                  (str @(subscribe [:editor/virkailija-translation :change])
-                       (when @loading? " "))
-                  (when @loading?
-                    [:i.zmdi.zmdi-spinner.spin])]])
-
-              :confirm
-              [:a.application-handling__link-button.application-handling__mass-edit-review-states-submit-button--confirm
-               {:on-click (fn []
-                            (let [from-state-name (selected-or-default-mass-review-state selected-from-review-state from-states)
-                                  to-state-name   (selected-or-default-mass-review-state selected-to-review-state all-states)]
-                              (dispatch [:application/mass-update-application-reviews
-                                         from-state-name
-                                         to-state-name])
-                              (dispatch [:application/set-mass-update-popup-visibility false])
-                              (reset! selected-from-review-state nil)
-                              (reset! selected-to-review-state nil)
-                              (reset! from-list-open? false)
-                              (reset! to-list-open? false)))}
-               @(subscribe [:editor/virkailija-translation :confirm-change])])])]))))
 
 (declare application-information-request-contains-modification-link)
 
@@ -418,7 +259,7 @@
       (when (pos? @applications-count)
         [mass-information-request-link])
       (when @show-mass-update-link?
-        [mass-update-applications-link])
+        [mass-review/mass-update-applications-link])
       (when @show-excel-link?
         (let [selected-hakukohde      (or @rajaus-hakukohteella (second @haku-header))
               selected-hakukohderyhma (when (nil? selected-hakukohde) (nth @haku-header 2))]
@@ -994,10 +835,10 @@
                   "application-handling__review-state-row--disabled")}
      (if multiple-values?
        [:span
-        [icon-many-checked]
+        [icons/icon-many-checked]
         [:span @(subscribe [:editor/virkailija-translation :multiple-values])]]
        [:span
-        [icon-check]
+        [icons/icon-check]
         [:span label]])]))
 
 (defn review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
@@ -1007,7 +848,7 @@
     [:div.application-handling__review-state-row
      {:on-click (fn []
                   (dispatch [:application/update-review-field state-name review-state-id]))}
-     [icon-unselected] (get review-state-label lang)]))
+     [icons/icon-unselected] (get review-state-label lang)]))
 
 (defn opened-review-state-list [state-name current-state all-states lang multiple-values?]
   (let [current-state (if (and (not multiple-values?)
@@ -1065,9 +906,9 @@
                                               (toggle-list-open))))}
            (if selected?
              (if @list-opened
-               [icon-multi-check]
-               [icon-check])
-             [icon-select])
+               [icons/icon-multi-check]
+               [icons/icon-check])
+             [icons/icon-select])
            [hakukohde-and-tarjoaja-name hakukohde-oid]])))))
 
 (defn- application-hakukohde-selection
@@ -1809,14 +1650,14 @@
                                    (swap! list-opened not)
                                    (doall (map #(dispatch [:application/update-attachment-review attachment-key % state]) selected-hakukohteet))))
                      :key      (str attachment-key label)}
-                    (if (= state selected-state) [icon-check]
-                                                 [icon-unselected]) label])))]
+                    (if (= state selected-state) [icons/icon-check]
+                                                 [icons/icon-unselected]) label])))]
             [:div.application-handling__review-state-row.application-handling__review-state-row--selected
              {:class    (if @can-edit?
                           "application-handling__review-state-row--enabled"
                           "application-handling__review-state-row--disabled")
               :on-click #(when @can-edit? (swap! list-opened not))}
-             [icon-check]
+             [icons/icon-check]
              (application-states/get-review-state-label-by-name review-types selected-state @virkailija-lang)])]
          [:div.application__attachment-review-deadline-row
           (when (or (= "incomplete-attachment" selected-state)
