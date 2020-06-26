@@ -63,6 +63,12 @@ export const arvosanat = {
 const syota = <T>(
   elementti: Chainable<T>,
   teksti: string
+): (() => Chainable<T>) => () =>
+  tekstikentta.syotaTekstiTarkistamatta(elementti, teksti)
+
+const syotaTurv = <T>(
+  elementti: Chainable<T>,
+  teksti: string
 ): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
@@ -79,11 +85,14 @@ export const henkilotiedot = {
 
   taytaTiedot: () => {
     return tekstikentta
-      .syotaTeksti(henkilotiedot.haeEtunimiKentta(), 'Frank Zacharias')
+      .syotaTekstiTarkistamatta(
+        henkilotiedot.haeEtunimiKentta(),
+        'Frank Zacharias'
+      )
       .then(syota(henkilotiedot.haeSukunimiKentta(), 'Testerberg'))
       .then(syota(henkilotiedot.haeHenkilotunnusKentta(), '160600A999C'))
-      .then(syota(henkilotiedot.haeSahkopostiKentta(), 'f.t@example.com'))
-      .then(syota(henkilotiedot.haeSahkostinVarmistus(), 'f.t@example.com'))
+      .then(syotaTurv(henkilotiedot.haeSahkopostiKentta(), 'f.t@example.com'))
+      .then(syotaTurv(henkilotiedot.haeSahkostinVarmistus(), 'f.t@example.com'))
       .then(syota(henkilotiedot.haeMatkapuhelinKentta(), '0401234567'))
       .then(syota(henkilotiedot.haeKatuosoiteKentta(), 'Yliopistonkatu 4'))
       .then(syota(henkilotiedot.haePostinumeroKentta(), '00100'))

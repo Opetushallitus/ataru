@@ -1,1 +1,1 @@
-export const tekstikentanSyotonViive = 40
+export const tekstikentanSyotonViive = 0
