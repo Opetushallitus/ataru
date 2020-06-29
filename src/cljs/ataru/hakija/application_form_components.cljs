@@ -604,11 +604,7 @@
     (fn [field-descriptor idx]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
-            followups (->> options
-                           (filter #(= (:value answer) (:value %)))
-                           first
-                           :followups
-                           (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
+            followups (get-visible-followups field-descriptor (:value answer) options)]
         [:div.application__form-field.application__form-single-choice-button-container
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
