@@ -223,7 +223,7 @@
                                    path
                                    option-index
                                    (get-val event)]))
-           :value     (or (-> condition :comparison-operator) "<")}
+           :value     (-> condition :comparison-operator)}
           [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
           [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
           [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
