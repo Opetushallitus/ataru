@@ -278,16 +278,16 @@
                                            repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
-          {:id           id
-           :type         "checkbox"
-           :checked      options-without-condition?
-           :disabled     disabled?
-           :on-change    (fn [evt]
-                           (when-not disabled?
-                             (.preventDefault evt)
-                             (if (-> evt .-target .-checked)
-                               (dispatch [:editor/add-text-field-option path])
-                               (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
+          {:id        id
+           :type      "checkbox"
+           :checked   options-without-condition?
+           :disabled  disabled?
+           :on-change (fn [evt]
+                        (when-not disabled?
+                          (.preventDefault evt)
+                          (if (-> evt .-target .-checked)
+                            (dispatch [:editor/add-text-field-option path])
+                            (dispatch [:editor/remove-text-field-option (conj path :options option-index)]))))}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
