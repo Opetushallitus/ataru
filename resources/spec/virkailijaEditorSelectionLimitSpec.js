@@ -96,7 +96,7 @@
       before(
         wait.until(editorPageIsLoaded),
         clickElement(addNewFormLink),
-        wait.forMilliseconds(1000), // TODO: fix form refresh in frontend so that this isn't required (or check that no AJAX requests are ongoing)
+        wait.forMilliseconds(10 * 1000), // Odota, että autosave on valmistunut
         setTextFieldValue(formTitleField, 'Selection Limit'),
         wait.until(
           () => formListItems(0).find('span:eq(0)').text() === 'Selection Limit'

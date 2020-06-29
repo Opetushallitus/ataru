@@ -317,9 +317,9 @@
     }
   }
 
-  const applicantNamesExist = () => {
+  const applicantNamesExist = (minimumNumberOfApplicants) => {
     return () => {
-      return applicantNames().length > 0
+      return applicantNames().length >= minimumNumberOfApplicants
     }
   }
 
@@ -543,7 +543,7 @@
         })
       )
       describe('Default sort', () => {
-        before(wait.until(applicantNamesExist))
+        before(wait.until(applicantNamesExist(3)))
         it('Descending by applicant name', () => {
           expectApplicants([
             'Kuikeloinen, Seija Susanna',
@@ -896,7 +896,7 @@
       describe('updates applications', () => {
         before(
           wait.until(() => {
-            return applicationHakukohdeStates().length > 0
+            return _.includes(applicationHakukohdeStates(), 'Käsitelty')
           })
         )
         it('to selected state', () => {

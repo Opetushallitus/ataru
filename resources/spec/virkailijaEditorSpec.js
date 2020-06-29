@@ -196,12 +196,12 @@
     describe('form creation', () => {
       before(
         clickElement(addNewFormLink),
-        wait.until(() => elementExists(formTitleField())),
+        wait.forMilliseconds(10 * 1000), // Odota, että autosave on valmistunut
         setTextFieldValue(formTitleField, 'Testilomake'),
-        wait.until(() => formTitleField().val() === 'Testilomake'),
         wait.until(
           () => formListItems(0).find('span:eq(0)').text() === 'Testilomake'
-        )
+        ),
+        wait.forElement(personInfoModule)
       )
       it('creates blank form', () => {
         expect(formComponents()).to.have.length(0)
@@ -1442,7 +1442,10 @@
           clickLockForm(), // this locking is sometimes so fast that the previous request gets blocked.
           wait.until(() =>
             elementExists(testFrame().find('.editor-form__form-editing-locked'))
-          )
+          ),
+          wait.until(() => {
+            return getInputs(':enabled').length === 0
+          })
         )
         it('all inputs are locked', () => {
           expect(getInputs(':disabled').length).to.equal(getInputs('').length)
