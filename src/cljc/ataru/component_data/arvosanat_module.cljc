@@ -82,17 +82,20 @@
                          :metadata         element-metadata-schema/ElementMetadata
                          :options          [{:label localized-schema/LocalizedString
                                              :value s/Str}]}]
-  {:fieldClass       "formField"
-   :fieldType        "dropdown"
-   :version          "generic"
-   :id               (str "oppimaara-" oppiaineen-koodi)
-   :label            (concat-labels
-                       ": "
-                       (:oppimaara texts/translation-mapping)
-                       (oppiaine-label oppiaineen-koodi))
-   :unselected-label (:oppimaara texts/translation-mapping)
-   :options          options
-   :metadata         metadata})
+  (let [label-kwd (if (= oppiaineen-koodi "A")
+                    :oppimaara
+                    :oppiaine)]
+    {:fieldClass       "formField"
+     :fieldType        "dropdown"
+     :version          "generic"
+     :id               (str "oppimaara-" oppiaineen-koodi)
+     :label            (concat-labels
+                         ": "
+                         (label-kwd texts/translation-mapping)
+                         (oppiaine-label oppiaineen-koodi))
+     :unselected-label (label-kwd texts/translation-mapping)
+     :options          options
+     :metadata         metadata}))
 
 (s/defn dropdown-option
   [{:keys [label
@@ -248,23 +251,45 @@
                                                               :valinnainen-oppiaine? false})
      :metadata         metadata}))
 
+(s/defn oppiaine-kieli
+  [{:keys [metadata
+           oppiaineen-koodi]} :- {:metadata         element-metadata-schema/ElementMetadata
+                                  :oppiaineen-koodi OppiaineenKoodi}]
+  (merge
+    (oppimaara-dropdown
+      {:oppiaineen-koodi oppiaineen-koodi
+       :metadata         metadata
+       :options          []})
+    {:validators      ["required"]
+     :rules           {:set-oppiaine-valinnainen-kieli-value nil}
+     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielikoodistoopetushallinto" :version 1}}))
+
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "A1"
-     :label            (:arvosana-a1-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "A1"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-a1-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-a2-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "A2"
-     :label            (:arvosana-a2-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "A2"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-a2-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-b1-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "B1"
-     :label            (:arvosana-b1-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "B1"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-b1-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-matematiikka [{:keys [metadata]}]
   (oppiaineen-arvosana

@@ -303,7 +303,7 @@
       :value
       (= "SV")))
 
-(defn- arvosana-with-no-answer? [db answer-key]
+(defn- arvosana-rivi-dropdown-without-answer? [db answer-key]
   (let [value (-> db
                   :application
                   :answers
@@ -313,14 +313,17 @@
          (-> value first vector?)
          (-> value first first (= "")))))
 
-(defn- hide-oppiaine-row [db oppiaine]
-  (let [arvosana (keyword (str "arvosana-" (name oppiaine)))
-        hide     (fn hide [db]
-                   (-> db
-                       (hide-field oppiaine)
-                       (hide-field arvosana)))]
+(defn- hide-kieli-oppiaine-row [db oppiaine]
+  (let [arvosana  (keyword (str "arvosana-" (name oppiaine)))
+        oppimaara (keyword (str "oppimaara-" (name oppiaine))) ; oppimäärä viittaa tässä varsinaiseen kieleen, jota opiskellaan
+        hide      (fn hide [db]
+                    (-> db
+                        (hide-field oppiaine)
+                        (hide-field arvosana)
+                        (hide-field oppimaara)))]
     (cond-> db
-            (arvosana-with-no-answer? db arvosana)
+            (and (arvosana-rivi-dropdown-without-answer? db arvosana)
+                 (arvosana-rivi-dropdown-without-answer? db oppimaara))
             hide)))
 
 (defn- toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
@@ -328,12 +331,14 @@
   (if (swedish-nationality? db)
     (-> db
         (show-field :A2)
+        (show-field :oppimaara-A2)
         (show-field :arvosana-A2)
-        (hide-oppiaine-row :B1))
+        (hide-kieli-oppiaine-row :B1))
     (-> db
         (show-field :B1)
+        (show-field :oppimaara-B1)
         (show-field :arvosana-B1)
-        (hide-oppiaine-row :A2))))
+        (hide-kieli-oppiaine-row :A2))))
 
 (defn- set-oppiaine-valinnainen-kieli-value
   [db _]
@@ -351,34 +356,20 @@
                                     (->> values
                                          (map-indexed
                                            (fn [values-idx values']
-                                             (let [oppiaine-koodi (-> db
-                                                                      :application
-                                                                      :answers
-                                                                      :oppiaine-valinnainen-kieli
-                                                                      :values
-                                                                      (get values-idx)
-                                                                      first
-                                                                      :value)]
-                                               (mapv (fn [value]
-                                                       (let [last-valinnainen-oppiaine-row? (= values-idx last-idx)
-                                                             value-not-blank?               (-> value :value string/blank? not)
-                                                             valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank? answer-key oppiaine-koodi]
-                                                                                                   [true _ _ _]
-                                                                                                   true
+                                             (mapv (fn [value]
+                                                     (let [last-valinnainen-oppiaine-row? (= values-idx last-idx)
+                                                           value-not-blank?               (-> value :value string/blank? not)
+                                                           valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank?]
+                                                                                                 [true _]
+                                                                                                 true
 
-                                                                                                   [false true :oppimaara-valinnainen-kieli "oppiaine-valinnainen-kieli-a"]
-                                                                                                   true
+                                                                                                 [false true]
+                                                                                                 true
 
-                                                                                                   [false _ :oppimaara-valinnainen-kieli (_ :guard #(not= % "oppiaine-valinnainen-kieli-a"))]
-                                                                                                   true
-
-                                                                                                   [false true (_ :guard #(not= % :oppimaara-valinnainen-kieli)) _]
-                                                                                                   true
-
-                                                                                                   :else
-                                                                                                   false)]
-                                                         (assoc value :valid valid?)))
-                                                     values'))))
+                                                                                                 :else
+                                                                                                 false)]
+                                                       (assoc value :valid valid?)))
+                                                   values')))
                                          (into []))))
                           (assoc answer'
                                  :valid

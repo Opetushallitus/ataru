@@ -47,6 +47,7 @@ export default () => {
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'A1',
             arvosana: '10',
+            oppimaara: 'FI',
             index: 0,
           })
         )
@@ -54,6 +55,7 @@ export default () => {
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'B1',
             arvosana: '9',
+            oppimaara: 'SV',
             index: 0,
           })
         )

@@ -187,13 +187,17 @@
   [{:keys [field-descriptor
            render-field
            idx]} :- render-field-schema/RenderFieldArgs]
-  (let [oppimaara (some-> @(re-frame/subscribe [:application/answer
-                                                :oppiaine-valinnainen-kieli
-                                                idx])
-                          :value
-                          (subs valinnainen-kieli-id-oppiaine-koodi-idx))]
-    (when (= oppimaara "a")
-      [render-field field-descriptor idx])))
+  (let [oppiaine (some-> @(re-frame/subscribe [:application/answer
+                                               :oppiaine-valinnainen-kieli
+                                               idx])
+                         :value
+                         (subs valinnainen-kieli-id-oppiaine-koodi-idx))
+        label    (if (= oppiaine "a")
+                   (:oppimaara texts/translation-mapping)
+                   (:oppiaine texts/translation-mapping))]
+    [render-field
+     (assoc field-descriptor :unselected-label label)
+     idx]))
 
 (s/defn poista-valinnainen-kieli
   [{:keys [field-descriptor
