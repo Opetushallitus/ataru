@@ -33,7 +33,7 @@
                            name
                            (str "-input")))]
     [:div.application__form-field
-     [label-component/label field-descriptor]
+     [label-component/label field-descriptor idx]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -45,7 +45,7 @@
         [:span.application__form-select-arrow
          [:i.zmdi.zmdi-chevron-down]])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id           (:id field-descriptor)
+       {:id           (application-field/form-field-id field-descriptor idx)
         :value        (or (:value answer) "")
         :on-change    on-change
         :disabled     disabled?
