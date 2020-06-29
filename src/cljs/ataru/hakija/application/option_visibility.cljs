@@ -1,5 +1,6 @@
 (ns ataru.hakija.application.option-visibility
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [ataru.number :as number]))
 
 (declare answer-values)
 
@@ -10,7 +11,7 @@
                           "<" <
                           "=" =
                           ">" >)]
-           (operator (js/parseInt value) (:answer-compared-to condition)))
+           (operator (number/->int value) (:answer-compared-to condition)))
          true)))
 
 (defn- non-blank-answer-with-option-condition-satisfied-checker [value]
