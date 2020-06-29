@@ -269,8 +269,8 @@
   (let [id (util/new-uuid)]
     (fn [value followups path component-locked?]
       (let [option-index               0
-            options-without-condition? (not (empty? (remove :condition (:options value))))
-            options-with-condition?    (not (empty? (filter :condition (:options value))))
+            options-without-condition? (->> (:options value) (remove :condition) empty? not)
+            options-with-condition?    (->> (:options value) (filter :condition) empty? not)
             repeatable?                (-> value :params :repeatable boolean)
             disabled?                  (or component-locked?
                                            options-with-condition?
@@ -364,14 +364,14 @@
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
              (let [options                 (:options @value)
-                   options-with-condition? (not (empty? (filter :condition options)))
+                   options-with-condition? (->> options (filter :condition) empty? not)
                    props                   {:allow-decimals?            (not options-with-condition?)
                                             :cannot-change-type?        options-with-condition?
                                             :component-locked?          @component-locked?
                                             :decimals-in-use?           (-> @value :params :decimals pos?)
-                                            :followups?                 (not (empty? (filter empty? followups)))
+                                            :followups?                 (->> followups (filter empty?) empty? not)
                                             :options-with-condition?    options-with-condition?
-                                            :options-without-condition? (not (empty? (remove :condition options)))
+                                            :options-without-condition? (->> options (remove :condition) empty? not)
                                             :repeatable?                (-> @value :params :repeatable boolean)}]
                [text-component-type-selector (:id initial-content) path props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
