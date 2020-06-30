@@ -44,8 +44,9 @@
             (into [:div.application-handling__nested-container]
                   (child-fields (:followups option) application lang ui group-idx)))])))])
 
-(defn- text-readonly-text [field-descriptor values]
+(defn- text-readonly-text [field-descriptor values group-idx]
   [:div.application__readonly-text
+   {:aria-labelledby (application-field/id-for-label field-descriptor group-idx)}
    (cond (and (sequential? values) (< 1 (count values)))
          [:ul.application__form-field-list
           (map-indexed
@@ -58,8 +59,9 @@
          :else
          (application-field/render-paragraphs values))])
 
-(defn- text-form-field-label [field-descriptor lang]
-  [:label.application__form-field-label
+(defn- text-form-field-label [field-descriptor lang group-idx]
+  [:div.application__form-field-label
+   {:id (application-field/id-for-label field-descriptor group-idx)}
    (str (from-multi-lang (:label field-descriptor) lang)
         (application-field/required-hint field-descriptor))])
 
@@ -75,10 +77,10 @@
         options    (filter visible? (:options field-descriptor))
         followups? (some (comp not-empty :followups) options)]
     [:div.application__form-field
-     [text-form-field-label field-descriptor lang]
+     [text-form-field-label field-descriptor lang group-idx]
      (if @(subscribe [:application/cannot-view? id])
        [:div.application__text-field-paragraph "***********"]
-       [text-readonly-text field-descriptor values])
+       [text-readonly-text field-descriptor values group-idx])
      (when followups?
        [text-nested-container options application lang group-idx])]))
 
