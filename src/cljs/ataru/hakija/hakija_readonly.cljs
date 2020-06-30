@@ -10,13 +10,7 @@
             [re-frame.core :refer [subscribe]]
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
-            [ataru.application-common.application-field-common :refer [answer-key
-                                                                       required-hint
-                                                                       get-value
-                                                                       render-paragraphs
-                                                                       replace-with-option-label
-                                                                       predefined-value-answer?
-                                                                       scroll-to-anchor]]
+            [ataru.application-common.application-field-common :as application-field]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.application.option-visibility :as option-visibility]))
 
@@ -57,26 +51,26 @@
           (map-indexed
             (fn [i value]
               ^{:key (str (:id field-descriptor) i)}
-              [:li (render-paragraphs value)])
+              [:li (application-field/render-paragraphs value)])
             values)]
          (sequential? values)
-         (render-paragraphs (first values))
+         (application-field/render-paragraphs (first values))
          :else
-         (render-paragraphs values))])
+         (application-field/render-paragraphs values))])
 
 (defn- text-form-field-label [field-descriptor lang]
   [:label.application__form-field-label
    (str (from-multi-lang (:label field-descriptor) lang)
-        (required-hint field-descriptor))])
+        (application-field/required-hint field-descriptor))])
 
 (defn text [field-descriptor application lang group-idx]
   (let [id         (keyword (:id field-descriptor))
         answer     @(subscribe [:application/answer id])
-        values     (cond-> (get-value answer group-idx)
+        values     (cond-> (application-field/get-value answer group-idx)
                            (contains? field-descriptor :koodisto-source)
                            split-if-string
-                           (predefined-value-answer? field-descriptor)
-                           (replace-with-option-label (:options field-descriptor) lang))
+                           (application-field/predefined-value-answer? field-descriptor)
+                           (application-field/replace-with-option-label (:options field-descriptor) lang))
         visible?   (option-visibility/visibility-checker field-descriptor values)
         options    (filter visible? (:options field-descriptor))
         followups? (some (comp not-empty :followups) options)]
@@ -96,7 +90,7 @@
         attachments)])
 
 (defn attachment [field-descriptor application lang question-group-index]
-  (let [answer-key (keyword (answer-key field-descriptor))
+  (let [answer-key (keyword (application-field/answer-key field-descriptor))
         values     (if question-group-index
                      (-> application
                          :answers
@@ -107,7 +101,7 @@
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+           (application-field/required-hint field-descriptor))]
      [attachment-list values]]))
 
 (defn child-fields [children application lang ui question-group-id]
@@ -124,7 +118,7 @@
       [:div.application__wrapper-element
        [:div.application__wrapper-heading
         [:h2 (from-multi-lang (:label content) lang)]
-        [scroll-to-anchor content]]
+        [application-field/scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
 
@@ -165,14 +159,14 @@
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+           (application-field/required-hint field-descriptor))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header
             (str (from-multi-lang (:label child) lang)
-                 (required-hint field-descriptor))]))]
+                 (application-field/required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
@@ -246,7 +240,7 @@
   [content]
   [:div.application__wrapper-heading
    [:h2 @(subscribe [:application/hakukohteet-header])]
-   [scroll-to-anchor content]])
+   [application-field/scroll-to-anchor content]])
 
 (defn- hakukohteet
   [content]
