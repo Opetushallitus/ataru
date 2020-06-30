@@ -242,7 +242,7 @@
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         cannot-edit? (subscribe [:application/cannot-edit? id])
         local-state  (r/atom {:focused? false :value nil})]
-    (fn [{:keys [field-descriptor last? question-group-idx repeatable-idx]}]
+    (fn [{:keys [field-descriptor field-label-id last? question-group-idx repeatable-idx]}]
       (let [padded?                      (or (zero? repeatable-idx) last?)
             first-is-empty?              (empty? (:value @(subscribe [:application/answer id question-group-idx 0])))
             {:keys [value
@@ -279,25 +279,26 @@
         [:div.application__form-repeatable-text-wrap
          {:class (when padded? "application__form-repeatable-text-wrap--padded")}
          [:input.application__form-text-input
-          {:type         "text"
-           :class        (str size-class
-                              (if show-validation-error-class?
-                                " application__form-field-error"
-                                " application__form-text-input--normal")
-                              (when last?
-                                " application__form-text-input--disabled"))
-           :value        (cond last?
-                               nil
-                               (:focused? @local-state)
-                               (:value @local-state)
-                               :else
-                               value)
-           :placeholder  (when last? (tu/get-hakija-translation :add-more lang))
-           :disabled     (or cannot-edit? (and last? first-is-empty?))
-           :aria-invalid (not valid)
-           :autoComplete autocomplete-off
-           :on-blur      on-blur
-           :on-change    on-change}]
+          {:type            "text"
+           :class           (str size-class
+                                 (if show-validation-error-class?
+                                   " application__form-field-error"
+                                   " application__form-text-input--normal")
+                                 (when last?
+                                   " application__form-text-input--disabled"))
+           :value           (cond last?
+                                  nil
+                                  (:focused? @local-state)
+                                  (:value @local-state)
+                                  :else
+                                  value)
+           :placeholder     (when last? (tu/get-hakija-translation :add-more lang))
+           :disabled        (or cannot-edit? (and last? first-is-empty?))
+           :aria-invalid    (not valid)
+           :aria-labelledby field-label-id
+           :autoComplete    autocomplete-off
+           :on-blur         on-blur
+           :on-change       on-change}]
          (when (and (not cannot-edit?) (not last?))
            [:a.application__form-repeatable-text--addremove
             [:i.zmdi.zmdi-close.zmdi-hc-lg
@@ -307,10 +308,9 @@
   [field-descriptor idx]
   (let [id            (keyword (:id field-descriptor))
         cannot-edit?  @(subscribe [:application/cannot-edit? id])
-        answer-count  @(subscribe [:application/repeatable-answer-count id idx])
-        form-field-id (application-field/form-field-id field-descriptor idx)]
+        answer-count  @(subscribe [:application/repeatable-answer-count id idx])]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor form-field-id]
+     [generic-label-component/generic-label field-descriptor idx]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -320,6 +320,7 @@
               ^{:key (str id "-" repeatable-idx)}
               [repeatable-text-field-row
                {:field-descriptor   field-descriptor
+                :field-label-id     (generic-label-component/id-for-label field-descriptor idx)
                 :last?              (= repeatable-idx answer-count)
                 :question-group-idx idx
                 :repeatable-idx     repeatable-idx}])
