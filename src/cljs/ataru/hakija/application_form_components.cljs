@@ -822,7 +822,7 @@
 (defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (fn [{:keys [field-descriptor question-group-idx row-idx]}]
+    (fn [{:keys [field-descriptor labelledby question-group-idx row-idx]}]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
@@ -841,19 +841,20 @@
                                            row-idx
                                            value])))]
         [:input.application__form-text-input
-         {:class        (if show-error?
-                          " application__form-field-error"
-                          " application__form-text-input--normal")
-          :id           (str id "-" row-idx)
-          :type         "text"
-          :value        (if (:focused? @local-state)
-                          (:value @local-state)
-                          value)
-          :on-blur      on-blur
-          :on-change    on-change
-          :disabled     cannot-edit?
-          :aria-invalid (not valid)
-          :autoComplete autocomplete-off}]))))
+         {:class           (if show-error?
+                             " application__form-field-error"
+                             " application__form-text-input--normal")
+          :id              (str id "-" row-idx)
+          :type            "text"
+          :value           (if (:focused? @local-state)
+                             (:value @local-state)
+                             value)
+          :on-blur         on-blur
+          :on-change       on-change
+          :disabled        cannot-edit?
+          :aria-invalid    (not valid)
+          :aria-labelledby labelledby
+          :autoComplete    autocomplete-off}]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
@@ -872,10 +873,10 @@
                               (dispatch [:application/add-adjacent-fields
                                          field-descriptor
                                          question-group-idx]))
-            form-field-id   (application-field/form-field-id field-descriptor question-group-idx)
-            lang            @(subscribe [:application/form-language])]
+            lang            @(subscribe [:application/form-language])
+            header-label-id (generic-label-component/id-for-label field-descriptor question-group-idx)]
         [:div.application__form-field
-         [form-field-label-component/form-field-label field-descriptor form-field-id]
+         [generic-label-component/generic-label field-descriptor question-group-idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [info-text-component/info-text field-descriptor]
@@ -885,16 +886,19 @@
                       ^{:key (str "adjacent-fields-" row-idx)}
                       [:div.application__form-adjacent-text-fields-wrapper
                        (map-indexed (fn adjacent-text-fields-column [col-idx child]
-                                      (let [key           (str "adjacent-field-" row-idx "-" col-idx)
-                                            form-field-id (application-field/form-field-id child row-idx)]
+                                      (let [key            (str "adjacent-field-" row-idx "-" col-idx)
+                                            field-label-id (generic-label-component/id-for-label child
+                                                                                                 question-group-idx)]
                                         ^{:key key}
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
-                                          [form-field-label-component/form-field-label child form-field-id]]
-                                         [adjacent-field-input {:field-descriptor   child
-                                                                :question-group-idx question-group-idx
-                                                                :row-idx            row-idx}]]))
+                                          [generic-label-component/generic-label child question-group-idx]]
+                                         [adjacent-field-input
+                                          {:field-descriptor   child
+                                           :labelledby         (str header-label-id " " field-label-id)
+                                           :question-group-idx question-group-idx
+                                           :row-idx            row-idx}]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
