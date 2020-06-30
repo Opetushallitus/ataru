@@ -1,6 +1,8 @@
 (ns ataru.hakija.try-selection
   (:require [cljs.core.async :as async]
-            [ajax.core :refer [PUT]]))
+            [ajax.core :refer [PUT]]
+            [clojure.string]
+            [ataru.cljs-util :as util]))
 
 (defn try-selection
   [form-key selection-id selection-group-id question-id answer-id]
@@ -17,6 +19,8 @@
        :error-handler   (fn [response]
                           (let [selection (:response response)]
                             (send selection [:server-error])))
+       :headers         {"Caller-Id" (aget js/config "hakija-caller-id")
+                         "CSRF"      (util/csrf-token)}
        :format          :json
        :response-format :json
        :keywords?       true})
