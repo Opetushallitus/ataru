@@ -3,11 +3,15 @@
             [ataru.util :as util]
             [re-frame.core :as re-frame]))
 
+(defn id-for-label
+  [field-descriptor idx]
+  (application-field/id-for-label field-descriptor idx))
+
 (defn generic-label [_ _]
   (let [languages  (re-frame/subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
       (let [label (util/non-blank-val (:label field-descriptor) @languages)]
         [:div.application__form-field-label
-         {:id (application-field/id-for-label field-descriptor idx)}
+         {:id (id-for-label field-descriptor idx)}
          [:span (str label (application-field/required-hint field-descriptor))]
          [application-field/scroll-to-anchor field-descriptor]]))))

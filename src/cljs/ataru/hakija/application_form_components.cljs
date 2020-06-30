@@ -518,7 +518,7 @@
        [:div.application__form-text-input-info-text
         [info-text-component/info-text field-descriptor]]
        [:div.application__form-outer-checkbox-container
-        {:aria-labelledby (application-field/id-for-label field-descriptor idx)
+        {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
          :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
          :role            "listbox"}
         (doall
@@ -605,7 +605,7 @@
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
          [:div.application__form-single-choice-button-outer-container
-          {:aria-labelledby (application-field/id-for-label field-descriptor idx)
+          {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid answer))
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
