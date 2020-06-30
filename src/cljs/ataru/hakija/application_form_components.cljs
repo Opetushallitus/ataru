@@ -237,12 +237,12 @@
            [text-field-followups-container field-descriptor options value idx])]))))
 
 (defn- repeatable-text-field-row
-  [field-descriptor _ _ _]
+  [{:keys [field-descriptor]}]
   (let [id           (keyword (:id field-descriptor))
         size-class   (text-field-size->class (get-in field-descriptor [:params :size]))
         cannot-edit? (subscribe [:application/cannot-edit? id])
         local-state  (r/atom {:focused? false :value nil})]
-    (fn [field-descriptor question-group-idx repeatable-idx last?]
+    (fn [{:keys [field-descriptor last? question-group-idx repeatable-idx]}]
       (let [padded?                      (or (zero? repeatable-idx) last?)
             first-is-empty?              (empty? (:value @(subscribe [:application/answer id question-group-idx 0])))
             {:keys [value
@@ -319,10 +319,10 @@
        (map (fn [repeatable-idx]
               ^{:key (str id "-" repeatable-idx)}
               [repeatable-text-field-row
-               field-descriptor
-               idx
-               repeatable-idx
-               (= repeatable-idx answer-count)])
+               {:field-descriptor   field-descriptor
+                :last?              (= repeatable-idx answer-count)
+                :question-group-idx idx
+                :repeatable-idx     repeatable-idx}])
             (range (if cannot-edit?
                      answer-count
                      (inc answer-count)))))]))
