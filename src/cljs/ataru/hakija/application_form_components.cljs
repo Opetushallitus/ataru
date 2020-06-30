@@ -797,11 +797,10 @@
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
   (let [languages              @(subscribe [:application/default-languages])
         text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
-        form-field-id          (application-field/form-field-id field-descriptor nil)
         attachment-count       @(subscribe [:application/attachment-count id question-group-idx])
         application-identifier @(subscribe [:application/application-identifier])]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor form-field-id]
+     [generic-label-component/generic-label field-descriptor question-group-idx]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
      (when-not (clojure.string/blank? text)
