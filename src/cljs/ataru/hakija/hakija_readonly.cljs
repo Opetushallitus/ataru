@@ -101,7 +101,7 @@
                          (nth question-group-index))
                      (-> application :answers answer-key :values))]
     [:div.application__form-field
-     [:label.application__form-field-label
+     [:div.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
            (application-field/required-hint field-descriptor))]
      [attachment-list values]]))
@@ -159,7 +159,7 @@
                                       (get-in application [:answers (keyword (:id %)) :value])))
                               (apply map vector))]
     [:div.application__form-field
-     [:label.application__form-field-label
+     [:div.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
            (application-field/required-hint field-descriptor))]
      [:table.application__readonly-adjacent
