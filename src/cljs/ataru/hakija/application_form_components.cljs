@@ -76,23 +76,24 @@
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
 (defn email-field [field-descriptor idx]
-  (let [id          (keyword (:id field-descriptor))
-        size        (get-in field-descriptor [:params :size])
-        size-class  (text-field-size->class size)
-        answer      @(subscribe [:application/answer id idx nil])
-        on-change   #(if idx
-                       (multi-value-field-change field-descriptor idx %)
-                       (textual-field-change field-descriptor %))
-        show-error? @(subscribe [:application/show-validation-error-class? id idx nil])
-        value       (:value answer)
-        languages   @(subscribe [:application/default-languages])
-        lang        @(subscribe [:application/form-language])]
+  (let [id            (keyword (:id field-descriptor))
+        size          (get-in field-descriptor [:params :size])
+        size-class    (text-field-size->class size)
+        answer        @(subscribe [:application/answer id idx nil])
+        form-field-id (application-field/form-field-id field-descriptor idx)
+        on-change     #(if idx
+                         (multi-value-field-change field-descriptor idx %)
+                         (textual-field-change field-descriptor %))
+        show-error?   @(subscribe [:application/show-validation-error-class? id idx nil])
+        value         (:value answer)
+        languages     @(subscribe [:application/default-languages])
+        lang          @(subscribe [:application/form-language])]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor form-field-id]
      [:div.application__form-info-element
       [markdown-paragraph (tu/get-hakija-translation :email-info-text lang) false nil]]
      [:input.application__form-text-input
-      (merge {:id            (application-field/form-field-id field-descriptor idx)
+      (merge {:id            form-field-id
               :type          "text"
               :placeholder   (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                (util/non-blank-val input-hint languages))
@@ -183,6 +184,7 @@
                                (partial multi-value-field-change field-descriptor idx)
                                (partial textual-field-change field-descriptor))
             on-blur          (fn [_] (textual-field-blur field-descriptor))
+            form-field-id    (application-field/form-field-id field-descriptor idx)
             data-test-id     (when (some #{id} [:first-name
                                                 :last-name
                                                 :ssn
@@ -194,13 +196,13 @@
                                    name
                                    (str "-input")))]
         [:div.application__form-field
-         [form-field-label-component/form-field-label field-descriptor idx]
+         [form-field-label-component/form-field-label field-descriptor form-field-id]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
          [:input.application__form-text-input
-          (merge {:id           (application-field/form-field-id field-descriptor idx)
+          (merge {:id           form-field-id
                   :type         "text"
                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
                                   (util/non-blank-val input-hint languages))
@@ -303,11 +305,12 @@
 
 (defn repeatable-text-field
   [field-descriptor idx]
-  (let [id           (keyword (:id field-descriptor))
-        cannot-edit? @(subscribe [:application/cannot-edit? id])
-        answer-count @(subscribe [:application/repeatable-answer-count id idx])]
+  (let [id            (keyword (:id field-descriptor))
+        cannot-edit?  @(subscribe [:application/cannot-edit? id])
+        answer-count  @(subscribe [:application/repeatable-answer-count id idx])
+        form-field-id (application-field/form-field-id field-descriptor idx)]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -346,18 +349,19 @@
     (fn [field-descriptor idx]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id idx nil])
+            form-field-id   (application-field/form-field-id field-descriptor idx)
             cannot-edit?    @cannot-edit?
             on-change       (if idx
                               (partial multi-value-field-change field-descriptor idx)
                               (partial textual-field-change field-descriptor))]
         [:div.application__form-field
-         [form-field-label-component/form-field-label field-descriptor idx]
+         [form-field-label-component/form-field-label field-descriptor form-field-id]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
           [info-text-component/info-text field-descriptor]]
          [:textarea.application__form-text-input.application__form-text-area
-          (merge {:id           (application-field/form-field-id field-descriptor idx)
+          (merge {:id           form-field-id
                   :class        size-class
                   :maxLength    max-length
                   :value        (if (:focused? @local-state)
@@ -792,10 +796,11 @@
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
   (let [languages              @(subscribe [:application/default-languages])
         text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
+        form-field-id          (application-field/form-field-id field-descriptor nil)
         attachment-count       @(subscribe [:application/attachment-count id question-group-idx])
         application-identifier @(subscribe [:application/application-identifier])]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor nil]
+     [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
      (when-not (clojure.string/blank? text)
@@ -866,9 +871,10 @@
                               (dispatch [:application/add-adjacent-fields
                                          field-descriptor
                                          question-group-idx]))
+            form-field-id   (application-field/form-field-id field-descriptor question-group-idx)
             lang            @(subscribe [:application/form-language])]
         [:div.application__form-field
-         [form-field-label-component/form-field-label field-descriptor question-group-idx]
+         [form-field-label-component/form-field-label field-descriptor form-field-id]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [info-text-component/info-text field-descriptor]
@@ -878,12 +884,13 @@
                       ^{:key (str "adjacent-fields-" row-idx)}
                       [:div.application__form-adjacent-text-fields-wrapper
                        (map-indexed (fn adjacent-text-fields-column [col-idx child]
-                                      (let [key (str "adjacent-field-" row-idx "-" col-idx)]
+                                      (let [key           (str "adjacent-field-" row-idx "-" col-idx)
+                                            form-field-id (application-field/form-field-id child row-idx)]
                                         ^{:key key}
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
-                                          [form-field-label-component/form-field-label child nil]]
+                                          [form-field-label-component/form-field-label child form-field-id]]
                                          [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))

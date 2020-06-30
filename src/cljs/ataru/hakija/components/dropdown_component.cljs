@@ -11,29 +11,30 @@
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
 (defn dropdown [field-descriptor idx render-field]
-  (let [languages (re-frame/subscribe [:application/default-languages])
-        id        (application-field/answer-key field-descriptor)
-        disabled? @(re-frame/subscribe [:application/cannot-edit? id])
-        answer    @(re-frame/subscribe [:application/answer id idx nil])
-        on-change (fn [e]
-                    (re-frame/dispatch [:application/set-repeatable-application-field
-                                        field-descriptor
-                                        idx
-                                        nil
-                                        (.-value (.-target e))]))
-        options   @(re-frame/subscribe [:application/visible-options field-descriptor])
-        followups (->> options
-                       (filter #(= (:value answer) (:value %)))
-                       first
-                       :followups
-                       (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))
-        data-test-id (when (some #{id} [:home-town
-                                        :language])
-                       (-> id
-                           name
-                           (str "-input")))]
+  (let [languages     (re-frame/subscribe [:application/default-languages])
+        id            (application-field/answer-key field-descriptor)
+        disabled?     @(re-frame/subscribe [:application/cannot-edit? id])
+        answer        @(re-frame/subscribe [:application/answer id idx nil])
+        on-change     (fn [e]
+                        (re-frame/dispatch [:application/set-repeatable-application-field
+                                            field-descriptor
+                                            idx
+                                            nil
+                                            (.-value (.-target e))]))
+        options       @(re-frame/subscribe [:application/visible-options field-descriptor])
+        followups     (->> options
+                           (filter #(= (:value answer) (:value %)))
+                           first
+                           :followups
+                           (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))
+        form-field-id (application-field/form-field-id field-descriptor idx)
+        data-test-id  (when (some #{id} [:home-town
+                                         :language])
+                        (-> id
+                            name
+                            (str "-input")))]
     [:div.application__form-field
-     [form-field-label-component/form-field-label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -45,7 +46,7 @@
         [:span.application__form-select-arrow
          [:i.zmdi.zmdi-chevron-down]])
       [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id           (application-field/form-field-id field-descriptor idx)
+       {:id           form-field-id
         :value        (or (:value answer) "")
         :on-change    on-change
         :disabled     disabled?
