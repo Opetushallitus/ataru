@@ -819,10 +819,10 @@
        (when-not @(subscribe [:application/cannot-edit? (keyword id)])
          [attachment-upload field-descriptor id attachment-count question-group-idx]))]))
 
-(defn- adjacent-field-input [field-descriptor _ _]
+(defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (fn [field-descriptor row-idx question-group-idx]
+    (fn [{:keys [field-descriptor question-group-idx row-idx]}]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
@@ -892,7 +892,9 @@
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
                                           [form-field-label-component/form-field-label child form-field-id]]
-                                         [adjacent-field-input child row-idx question-group-idx]]))
+                                         [adjacent-field-input {:field-descriptor   child
+                                                                :question-group-idx question-group-idx
+                                                                :row-idx            row-idx}]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
