@@ -17,10 +17,11 @@
             [clojure.string :as string]
             [ataru.translations.translation-util :as tu]
             [ataru.feature-config :as fc]
-            [ataru.hakija.components.label-component :as label-component]
-            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
-            [ataru.hakija.components.info-text-component :as info-text-component]
+            [ataru.hakija.components.form-field-label-component :as form-field-label-component]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.components.generic-label-component :as generic-label-component]
+            [ataru.hakija.components.info-text-component :as info-text-component]
+            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
@@ -87,7 +88,7 @@
         languages   @(subscribe [:application/default-languages])
         lang        @(subscribe [:application/form-language])]
     [:div.application__form-field
-     [label-component/label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor idx]
      [:div.application__form-info-element
       [markdown-paragraph (tu/get-hakija-translation :email-info-text lang) false nil]]
      [:input.application__form-text-input
@@ -193,7 +194,7 @@
                                    name
                                    (str "-input")))]
         [:div.application__form-field
-         [label-component/label field-descriptor idx]
+         [form-field-label-component/form-field-label field-descriptor idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
@@ -306,7 +307,7 @@
         cannot-edit? @(subscribe [:application/cannot-edit? id])
         answer-count @(subscribe [:application/repeatable-answer-count id idx])]
     [:div.application__form-field
-     [label-component/label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor idx]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
@@ -350,7 +351,7 @@
                               (partial multi-value-field-change field-descriptor idx)
                               (partial textual-field-change field-descriptor))]
         [:div.application__form-field
-         [label-component/label field-descriptor idx]
+         [form-field-label-component/form-field-label field-descriptor idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-area-info-text
@@ -507,7 +508,7 @@
         languages (subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
       [:div.application__form-field
-       [label-component/label field-descriptor idx]
+       [generic-label-component/generic-label field-descriptor idx]
        (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
          [hakukohde-names-component/question-hakukohde-names field-descriptor])
        [:div.application__form-text-input-info-text
@@ -594,7 +595,7 @@
             options   @(subscribe [:application/visible-options field-descriptor])
             followups (get-visible-followups field-descriptor (:value answer) options)]
         [:div.application__form-field.application__form-single-choice-button-container
-         [label-component/label field-descriptor idx]
+         [generic-label-component/generic-label field-descriptor idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
@@ -794,7 +795,7 @@
         attachment-count       @(subscribe [:application/attachment-count id question-group-idx])
         application-identifier @(subscribe [:application/application-identifier])]
     [:div.application__form-field
-     [label-component/label field-descriptor nil]
+     [form-field-label-component/form-field-label field-descriptor nil]
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
      (when-not (clojure.string/blank? text)
@@ -867,7 +868,7 @@
                                          question-group-idx]))
             lang            @(subscribe [:application/form-language])]
         [:div.application__form-field
-         [label-component/label field-descriptor question-group-idx]
+         [form-field-label-component/form-field-label field-descriptor question-group-idx]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [info-text-component/info-text field-descriptor]
@@ -882,7 +883,7 @@
                                         [:div.application__form-adjacent-row
                                          [:div (when-not (= row-idx 0)
                                                  {:class "application__form-adjacent-row--mobile-only"})
-                                          [label-component/label child]]
+                                          [form-field-label-component/form-field-label child nil]]
                                          [adjacent-field-input child row-idx question-group-idx]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))

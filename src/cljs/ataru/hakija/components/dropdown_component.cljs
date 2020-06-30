@@ -1,8 +1,8 @@
 (ns ataru.hakija.components.dropdown-component
   (:require [ataru.util :as util]
-            [ataru.hakija.components.label-component :as label-component]
-            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
+            [ataru.hakija.components.form-field-label-component :as form-field-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
+            [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
             [re-frame.core :as re-frame]
@@ -33,7 +33,7 @@
                            name
                            (str "-input")))]
     [:div.application__form-field
-     [label-component/label field-descriptor idx]
+     [form-field-label-component/form-field-label field-descriptor idx]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
