@@ -4,7 +4,7 @@
             [clojure.string :as string]
             [cljs-time.core :as c]
             [cljs.core.async :as async]
-            [ataru.number :refer [numeric-matcher gte]]
+            [ataru.number :as number]
             [cljs.core.match :refer-macros [match]]
             [ataru.collections :as collections]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
@@ -74,14 +74,14 @@
 
 (reg-event-db
   :editor/remove-text-field-option
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [option-path (current-form-content-path db [path])]
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/add-text-field-option
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [text-field-path (current-form-content-path db [path :options])
           component       (ataru.component-data.component/text-field-option)]
       (-> db
@@ -122,7 +122,7 @@
                  (fn [condition]
                    (if (string/blank? value)
                      (dissoc condition :answer-compared-to)
-                     (assoc condition :answer-compared-to (js/parseInt value))))))))
+                     (assoc condition :answer-compared-to (number/->int value))))))))
 
 (reg-event-db
   :editor/set-ordered-by-user
@@ -238,7 +238,7 @@
                      (let [clean (format-range value)]
                        (or
                         (empty? clean)
-                        (and (re-matches numeric-matcher clean)
+                        (and (re-matches number/numeric-matcher clean)
                              (<= (number-of-decimals clean) decimals)))))
 
 (defn- validate-min-max [min max decimals]
@@ -249,7 +249,7 @@
         empty-range?   (and (not (empty? min))
                             (not (empty? max))
                             (and min-valid? max-valid?)
-                            (gte min max))]
+                            (number/gte min max))]
     (if empty-range?
       [false false]
       [min-valid? max-valid?])))

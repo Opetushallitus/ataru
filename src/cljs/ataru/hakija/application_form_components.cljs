@@ -21,6 +21,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
 
@@ -152,31 +153,23 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
-(defn- option-satisfies-condition [option answer-value]
-  (if-let [condition (:condition option)]
-    (let [operator (case (:comparison-operator condition)
-                     "<" <
-                     "=" =
-                     ">" >)]
-      (operator (js/parseInt answer-value) (:answer-compared-to condition)))
-    true))
+(defn- options-satisfying-condition [field-descriptor answer-value options]
+  (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
 
-(defn- options-satisfying-condition [answer-value options]
-  (filter #(option-satisfies-condition % answer-value) options))
-
-(defn- get-visible-followups [answer-value options]
+(defn- get-visible-followups [field-descriptor answer-value options]
   (->> options
-       (options-satisfying-condition answer-value)
+       (options-satisfying-condition field-descriptor answer-value)
        (map :followups)
        flatten
        (filterv #(deref (subscribe [:application/visible? (keyword (:id %))])))))
 
-(defn- text-field-followups-container [followups idx]
-  (when (not-empty followups)
-    (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
-          (for [followup followups]
-            ^{:key (:id followup)}
-            [render-field followup idx]))))
+(defn- text-field-followups-container [field-descriptor options answer-value question-group-idx]
+  (let [followups (get-visible-followups field-descriptor answer-value options)]
+    (when (not-empty followups)
+      (into [:div.application__form-multi-choice-followups-container.animated.fadeIn]
+            (for [followup followups]
+              ^{:key (:id followup)}
+              [render-field followup question-group-idx])))))
 
 (defn text-field [field-descriptor _]
   (let [id           (keyword (:id field-descriptor))
@@ -194,7 +187,6 @@
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
-            followups        (get-visible-followups value options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
@@ -251,7 +243,7 @@
          [validation-error errors]
          (when (not (or (string/blank? value)
                         show-error?))
-           [text-field-followups-container followups idx])]))))
+           [text-field-followups-container field-descriptor options value idx])]))))
 
 (defn- repeatable-text-field-row
   [field-descriptor _ _ _]
@@ -612,11 +604,7 @@
     (fn [field-descriptor idx]
       (let [answer    @(subscribe [:application/answer button-id idx nil])
             options   @(subscribe [:application/visible-options field-descriptor])
-            followups (->> options
-                           (filter #(= (:value answer) (:value %)))
-                           first
-                           :followups
-                           (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))]
+            followups (get-visible-followups field-descriptor (:value answer) options)]
         [:div.application__form-field.application__form-single-choice-button-container
          [label-component/label field-descriptor]
          (when (belongs-to-hakukohde-or-ryhma? field-descriptor)

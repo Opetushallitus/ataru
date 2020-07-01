@@ -17,6 +17,7 @@
                                               create-application-to-submit
                                               extract-wrapper-sections]]
             [ataru.hakija.application.field-visibility :as field-visibility]
+            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
@@ -702,6 +703,10 @@
          :else
          nil))
 
+(defn- option-visible? [field-descriptor option values]
+  (let [visibility-checker (option-visibility/visibility-checker field-descriptor values)]
+    (visibility-checker option)))
+
 (reg-event-fx
   :application/set-followup-values
   [check-schema-interceptor]
@@ -713,8 +718,7 @@
                                 child              (autil/flatten-form-fields (:followups option))
                                 :when              (autil/answerable? child)
                                 [group-idx values] (map-indexed vector value)]
-                            (if (or (contains? (set values) (:value option))
-                                    (= (:fieldType field-descriptor) "textField"))
+                            (if (option-visible? field-descriptor option values)
                               (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
                                 (set-empty-value-dispatch group-idx child))
                               [[:application/unset-field-value child group-idx]]))

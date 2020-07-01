@@ -81,7 +81,6 @@
     (fn [{:keys [component-locked?
                  decimals-in-use?
                  followups?
-                 in-question-group?
                  options-with-condition?
                  options-without-condition?
                  path
@@ -90,7 +89,6 @@
             disabled?    (or component-locked?
                              decimals-in-use?
                              followups?
-                             in-question-group?
                              options-without-condition?
                              repeatable?)]
         [:div.editor-form__text-field-additional-params-container
@@ -225,7 +223,7 @@
                                    path
                                    option-index
                                    (get-val event)]))
-           :value     (or (-> condition :comparison-operator) "<")}
+           :value     (-> condition :comparison-operator)}
           [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
           [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
           [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
@@ -239,40 +237,69 @@
            :type      "text"
            :value     (:value @local-state)}]]))))
 
-(defn- text-field-option-followups-wrapper
+(defn- text-field-option-followups-header [{:keys [component-locked?
+                                                   condition
+                                                   followups
+                                                   option-index
+                                                   path
+                                                   show-followups]}]
+  [:div.editor-form__text-field-option-followups-header
+   [text-field-option-condition {:condition    condition
+                                 :option-index option-index
+                                 :path         path}]
+   [followup-question/followup-question option-index followups show-followups]
+   [remove-option {:disabled?    component-locked?
+                   :option-index option-index
+                   :path         path}]])
+
+(defn- text-field-option-followups-wrapper [{:keys [component-locked?
+                                                    condition
+                                                    followups
+                                                    option-index
+                                                    path
+                                                    show-followups]}]
+  [:div.editor-form__text-field-option-followups-wrapper
+   (when condition
+     [text-field-option-followups-header {:component-locked? component-locked?
+                                          :condition         condition
+                                          :followups         followups
+                                          :option-index      option-index
+                                          :path              path
+                                          :show-followups    show-followups}])
+   [followup-question/followup-question-overlay option-index followups path show-followups]])
+
+(defn- initialize-show-followups [show-followups options]
+  (let [option-count                   (count options)
+        show-options-without-condition (not (empty? (remove :condition options)))]
+    (when (or (nil? @show-followups)
+              (not (= (count @show-followups) option-count)))
+      (reset! show-followups (vec (replicate option-count show-options-without-condition))))))
+
+(defn- text-field-option-followups
   [_]
   (let [show-followups (r/atom nil)]
     (fn [{:keys [component-locked? followups options path]}]
-      (let [option-count                      (count options)
-            show-if-options-without-condition (not (empty? (remove :condition options)))]
-        (when (or (nil? @show-followups)
-                  (not (= (count @show-followups) option-count)))
-          (reset! show-followups (vec (replicate option-count show-if-options-without-condition))))
-        [:<>
-         (doall
-           (map-indexed
-             (fn [index option]
-               (let [followups (nth followups index)]
-                 ^{:key (str "options-" index)}
-                 [:div.editor-form__text-field-option-followups-wrapper
-                  (when (:condition option)
-                    [:div.editor-form__text-field-option-followups-header
-                     [text-field-option-condition {:condition    (:condition option)
-                                                   :option-index index
-                                                   :path         path}]
-                     [followup-question/followup-question index followups show-followups]
-                     [remove-option {:disabled?    component-locked?
-                                     :option-index index
-                                     :path         path}]])
-                  [followup-question/followup-question-overlay index followups path show-followups]]))
-             options))]))))
+      (initialize-show-followups show-followups options)
+      [:<>
+       (doall
+         (map-indexed
+           (fn [index option]
+             (let [followups (nth followups index)]
+               ^{:key (str "options-" index)}
+               [text-field-option-followups-wrapper {:component-locked? component-locked?
+                                                     :condition         (:condition option)
+                                                     :followups         followups
+                                                     :option-index      index
+                                                     :path              path
+                                                     :show-followups    show-followups}]))
+           options))])))
 
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
     (fn [value followups path component-locked?]
       (let [option-index               0
-            options-without-condition? (not (empty? (remove :condition (:options value))))
-            options-with-condition?    (not (empty? (filter :condition (:options value))))
+            options-without-condition? (->> (:options value) (remove :condition) empty? not)
+            options-with-condition?    (->> (:options value) (filter :condition) empty? not)
             repeatable?                (-> value :params :repeatable boolean)
             disabled?                  (or component-locked?
                                            options-with-condition?
@@ -280,25 +307,20 @@
                                            repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
-          {:id           id
-           :type         "checkbox"
-           :checked      options-without-condition?
-           :disabled     disabled?
-           :on-change    (fn [evt]
-                           (when-not disabled?
-                             (.preventDefault evt)
-                             (if (-> evt .-target .-checked)
-                               (dispatch [:editor/add-text-field-option path])
-                               (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
+          {:id        id
+           :type      "checkbox"
+           :checked   options-without-condition?
+           :disabled  disabled?
+           :on-change (fn [evt]
+                        (when-not disabled?
+                          (.preventDefault evt)
+                          (if (-> evt .-target .-checked)
+                            (dispatch [:editor/add-text-field-option path])
+                            (dispatch [:editor/remove-text-field-option (conj path :options option-index)]))))}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
-
-(defn- text-field-option-followups
-  [props]
-  [:div.editor-form__component-row-wrapper
-   [text-field-option-followups-wrapper props]])
 
 (defn text-component [_ _ path & {:keys [header-label]}]
   (let [languages         (subscribe [:editor/languages])
@@ -366,15 +388,14 @@
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
              (let [options                 (:options @value)
-                   options-with-condition? (not (empty? (filter :condition options)))
+                   options-with-condition? (->> options (filter :condition) empty? not)
                    props                   {:allow-decimals?            (not options-with-condition?)
                                             :cannot-change-type?        options-with-condition?
                                             :component-locked?          @component-locked?
                                             :decimals-in-use?           (-> @value :params :decimals pos?)
-                                            :followups?                 (not (empty? (filter empty? followups)))
-                                            :in-question-group?         (->> path (some #{:children}) boolean)
+                                            :followups?                 (->> followups (filter empty?) empty? not)
                                             :options-with-condition?    options-with-condition?
-                                            :options-without-condition? (not (empty? (remove :condition options)))
+                                            :options-without-condition? (->> options (remove :condition) empty? not)
                                             :repeatable?                (-> @value :params :repeatable boolean)}]
                [text-component-type-selector (:id initial-content) path props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
@@ -383,7 +404,8 @@
           (when-not text-area?
             [text-field-has-an-option @value followups path @component-locked?])]
          (when-not text-area?
-           [text-field-option-followups {:component-locked? @component-locked?
-                                         :followups         followups
-                                         :options           (:options @value)
-                                         :path              path}])]]])))
+           [:div.editor-form__component-row-wrapper
+            [text-field-option-followups {:component-locked? @component-locked?
+                                          :followups         followups
+                                          :options           (:options @value)
+                                          :path              path}]])]]])))

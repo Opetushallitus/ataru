@@ -17,7 +17,8 @@
                                                                        replace-with-option-label
                                                                        predefined-value-answer?
                                                                        scroll-to-anchor]]
-            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]))
+            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
+            [ataru.hakija.application.option-visibility :as option-visibility]))
 
 (declare field)
 
@@ -76,7 +77,8 @@
                            split-if-string
                            (predefined-value-answer? field-descriptor)
                            (replace-with-option-label (:options field-descriptor) lang))
-        options    (when (not-empty values) (:options field-descriptor))
+        visible?   (option-visibility/visibility-checker field-descriptor values)
+        options    (filter visible? (:options field-descriptor))
         followups? (some (comp not-empty :followups) options)]
     [:div.application__form-field
      [text-form-field-label field-descriptor lang]

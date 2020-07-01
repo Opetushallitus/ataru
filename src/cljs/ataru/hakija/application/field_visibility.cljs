@@ -1,6 +1,6 @@
 (ns ataru.hakija.application.field-visibility
   (:require [clojure.set :as set]
-            [clojure.string :as string]))
+            [ataru.hakija.application.option-visibility :as option-visibility]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
@@ -36,43 +36,10 @@
           db
           options))
 
-(defn- non-blank-answer-with-option-condition-satisfied-checker [value]
-  (fn non-blank-answer-satisfies-condition? [option]
-    (and (not (string/blank? value))
-         (if-let [condition (:condition option)]
-           (let [operator (case (:comparison-operator condition)
-                            "<" <
-                            "=" =
-                            ">" >)]
-             (operator (js/parseInt value) (:answer-compared-to condition)))
-           true))))
-
-(defn- selected-option-checker [value]
-  (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
-                     (set (mapcat identity value))
-                     (vector? value)
-                     (set value)
-                     :else
-                     #{value})]
-    (fn selected? [option]
-      (contains? values (:value option)))))
-
-(defn- followups-visibility-checker [field-descriptor answer-value]
-  (cond
-    (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
-    (selected-option-checker answer-value)
-
-    (= "textField" (:fieldType field-descriptor))
-    (non-blank-answer-with-option-condition-satisfied-checker answer-value)
-
-    :else
-    (throw (ex-info "Unknown field type for followups visibility checking"
-                    {:fieldType (:fieldType field-descriptor)}))))
-
 (defn- set-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
   (let [answer-value       (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
-        visibility-checker (followups-visibility-checker field-descriptor answer-value)
+        visibility-checker (option-visibility/visibility-checker field-descriptor answer-value)
         show-followups?    #(and visible?
                                  (visibility-checker %))]
     (set-visibility-for-option-followups db
