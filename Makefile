@@ -140,7 +140,7 @@ run-fake-deps-server:
 	./bin/fake-deps-server.sh start
 
 stop-fake-deps-server:
-	/bin/fake-deps-server.sh stop
+	./bin/fake-deps-server.sh stop
 
 # ----------------
 # Database initialization
