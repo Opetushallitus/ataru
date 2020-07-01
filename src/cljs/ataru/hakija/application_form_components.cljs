@@ -221,6 +221,7 @@
                                   (on-change evt))
                   :required     (is-required-field? field-descriptor)
                   :aria-invalid (not valid)
+                  :tab-index    "0"
                   :autoComplete autocomplete-off
                   :value        (cond cannot-view?
                                       "***********"
@@ -296,6 +297,7 @@
            :disabled        (or cannot-edit? (and last? first-is-empty?))
            :aria-invalid    (not valid)
            :aria-labelledby field-label-id
+           :tab-index       "0"
            :autoComplete    autocomplete-off
            :on-blur         on-blur
            :on-change       on-change}]
@@ -377,7 +379,8 @@
                                          :value (-> evt .-target .-value))
                                   (on-change evt))
                   :required     (is-required-field? field-descriptor)
-                  :aria-invalid (not valid)}
+                  :aria-invalid (not valid)
+                  :tab-index    "0"}
                  (when cannot-edit?
                    {:disabled true}))]
          (when max-length
@@ -521,6 +524,7 @@
        [:div.application__form-outer-checkbox-container
         {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
          :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
+         :tab-index       "0"
          :role            "listbox"}
         (doall
           (map-indexed (fn [option-idx option]
@@ -608,6 +612,7 @@
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid answer))
+           :tab-index       "0"
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
@@ -853,6 +858,7 @@
           :disabled        cannot-edit?
           :aria-invalid    (not valid)
           :aria-labelledby labelledby
+          :tab-index       "0"
           :autoComplete    autocomplete-off}]))))
 
 (defn adjacent-text-fields [field-descriptor _]
