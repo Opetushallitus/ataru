@@ -262,7 +262,7 @@
        :options          []})
     {:validators      ["required"]
      :rules           {:set-oppiaine-valinnainen-kieli-value nil}
-     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielikoodistoopetushallinto" :version 1}}))
+     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
   (let [oppiaineen-koodi "A1"]
