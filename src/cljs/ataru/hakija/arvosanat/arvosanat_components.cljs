@@ -218,6 +218,7 @@
   (let [row-count                   @(re-frame/subscribe [:application/question-group-row-count (:id field-descriptor)])
         [oppiaine-dropdown
          oppimaara-dropdown
+         oppiaine-kieli-dropdown
          arvosana-dropdown] (:children field-descriptor)
         last-oppiaine-answer        @(re-frame/subscribe [:application/answer
                                                           :oppiaine-valinnainen-kieli
@@ -228,7 +229,12 @@
                                                  dec)
                                          range
                                          (mapv (fn ->valinnainen-kieli-rivi [valinnainen-kieli-rivi-idx]
-                                                 (let [key (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-rivi-idx)]
+                                                 (let [key              (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-rivi-idx)
+                                                       oppiaineen-koodi (some-> @(re-frame/subscribe [:application/answer
+                                                                                                      :oppiaine-valinnainen-kieli
+                                                                                                      valinnainen-kieli-rivi-idx])
+                                                                                :value
+                                                                                (subs (count "oppiaine-valinnainen-kieli-")))]
                                                    ^{:key key}
                                                    [oppiaineen-arvosana-rivi
                                                     {:pakollinen-oppiaine?
@@ -241,7 +247,9 @@
 
                                                      :oppimaara-column
                                                      [valinnainen-kieli-oppimaara
-                                                      {:field-descriptor oppimaara-dropdown
+                                                      {:field-descriptor (if (= oppiaineen-koodi "a")
+                                                                           oppimaara-dropdown
+                                                                           oppiaine-kieli-dropdown)
                                                        :render-field     render-field
                                                        :idx              valinnainen-kieli-rivi-idx}]
 
@@ -304,10 +312,16 @@
            dec
            range
            (mapv (fn ->valinnainen-kieli-readonly [valinnainen-kieli-idx]
-                   (let [key (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-idx)
+                   (let [key              (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-idx)
                          [oppiaine
                           oppimaara
-                          arvosana] (:children field-descriptor)]
+                          oppiaine-kieli
+                          arvosana] (:children field-descriptor)
+                         oppiaineen-koodi (some-> @(re-frame/subscribe [:application/answer
+                                                                        :oppiaine-valinnainen-kieli
+                                                                        valinnainen-kieli-idx])
+                                                  :value
+                                                  (subs (count "oppiaine-valinnainen-kieli-")))]
                      ^{:key key}
                      [oppiaineen-arvosana-rivi
                       {:pakollinen-oppiaine?
@@ -325,7 +339,9 @@
                        :oppimaara-column
                        [valinnainen-kieli-oppimaara
                         {:field-descriptor (assoc
-                                             oppimaara
+                                             (if (= oppiaineen-koodi "a")
+                                               oppimaara
+                                               oppiaine-kieli)
                                              :readonly-render-options
                                              {:arvosanat-taulukko? true})
                          :render-field     render-field

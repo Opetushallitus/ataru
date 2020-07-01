@@ -357,13 +357,20 @@
                                          (map-indexed
                                            (fn [values-idx values']
                                              (mapv (fn [value]
-                                                     (let [last-valinnainen-oppiaine-row? (= values-idx last-idx)
+                                                     (let [oppiaineen-koodi               (some-> db :application :answers :oppiaine-valinnainen-kieli :values (get values-idx) first :value (subs (count "oppiaine-valinnainen-kieli-")))
+                                                           last-valinnainen-oppiaine-row? (= values-idx last-idx)
                                                            value-not-blank?               (-> value :value string/blank? not)
-                                                           valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank?]
-                                                                                                 [true _]
+                                                           valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank? oppiaineen-koodi answer-key]
+                                                                                                 [true _ _ _]
                                                                                                  true
 
-                                                                                                 [false true]
+                                                                                                 [false false "a" :oppimaara-kieli-valinnainen-kieli]
+                                                                                                 true
+
+                                                                                                 [false false (_ :guard #(not= % "a")) :oppimaara-a-valinnainen-kieli]
+                                                                                                 true
+
+                                                                                                 [false true _ _]
                                                                                                  true
 
                                                                                                  :else
@@ -377,6 +384,7 @@
                                          (:values answer')))))))
               db
               [:oppimaara-a-valinnainen-kieli
+               :oppimaara-kieli-valinnainen-kieli
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 

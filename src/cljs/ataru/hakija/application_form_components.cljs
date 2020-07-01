@@ -934,16 +934,17 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
-  (let [render-fn (case (:version field-descriptor)
-                    "generic" generic-component/render-generic-component
-                    "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
-                    render-component)
-        visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
-    (when visible?
-      [render-fn
-       {:field-descriptor field-descriptor
-        :idx              idx
-        :render-field     render-field}])))
+  (when field-descriptor
+    (let [render-fn (case (:version field-descriptor)
+                      "generic" generic-component/render-generic-component
+                      "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
+                      render-component)
+          visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
+      (when visible?
+        [render-fn
+         {:field-descriptor field-descriptor
+          :idx              idx
+          :render-field     render-field}]))))
 
 (defn editable-fields [_]
   (r/create-class

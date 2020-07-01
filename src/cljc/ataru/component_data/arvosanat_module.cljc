@@ -226,6 +226,20 @@
                                                                 (:arvosana texts/translation-mapping)
                                                                 (oppiaine-label oppiaineen-koodi))})))}))
 
+(s/defn oppiaine-kieli
+  [{:keys [metadata
+           oppiaineen-koodi]} :- {:metadata         element-metadata-schema/ElementMetadata
+                                  :oppiaineen-koodi OppiaineenKoodi}]
+  (merge
+    (oppimaara-dropdown
+      {:oppiaineen-koodi oppiaineen-koodi
+       :metadata         metadata
+       :options          []})
+    {:validators      ["required"]
+     :rules           {:set-oppiaine-valinnainen-kieli-value nil}
+     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}
+     :id              (str "oppimaara-kieli-" oppiaineen-koodi)}))
+
 (defn- valinnaiset-kielet [{:keys [metadata
                                    b3-kieli?]}]
   (merge (component/question-group metadata)
@@ -236,6 +250,8 @@
                      (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
                                                             :oppiaineen-koodi      "valinnainen-kieli"
                                                             :valinnainen-oppiaine? true})
+                     (oppiaine-kieli {:metadata metadata
+                                      :oppiaineen-koodi "valinnainen-kieli"})
                      (arvosana-dropdown
                        {:metadata         metadata
                         :oppiaineen-koodi "valinnainen-kieli"
@@ -252,20 +268,6 @@
                                                               :oppiaineen-koodi      "A"
                                                               :valinnainen-oppiaine? false})
      :metadata         metadata}))
-
-(s/defn oppiaine-kieli
-  [{:keys [metadata
-           oppiaineen-koodi]} :- {:metadata         element-metadata-schema/ElementMetadata
-                                  :oppiaineen-koodi OppiaineenKoodi}]
-  (merge
-    (oppimaara-dropdown
-      {:oppiaineen-koodi oppiaineen-koodi
-       :metadata         metadata
-       :options          []})
-    {:validators      ["required"]
-     :rules           {:set-oppiaine-valinnainen-kieli-value nil}
-     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}
-     :id              (str "oppimaara-kieli-" oppiaineen-koodi)}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
   (let [oppiaineen-koodi "A1"]
