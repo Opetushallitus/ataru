@@ -88,7 +88,6 @@
     {:fieldClass       "formField"
      :fieldType        "dropdown"
      :version          "generic"
-     :id               (str "oppimaara-" oppiaineen-koodi)
      :label            (concat-labels
                          ": "
                          (label-kwd texts/translation-mapping)
@@ -168,7 +167,10 @@
                            :value "muu-oppilaan-aidinkieli"}]})
     (cond-> {:validators [(if valinnainen-oppiaine?
                             "required-valinnainen-oppimaara"
-                            "required")]}
+                            "required")]
+             :id         (cond-> (str "oppimaara-a")
+                                 (= oppiaineen-koodi "valinnainen-kieli")
+                                 (str "-valinnainen-kieli"))}
             valinnainen-oppiaine?
             (assoc :rules {:set-oppiaine-valinnainen-kieli-value nil}))))
 
@@ -262,7 +264,8 @@
        :options          []})
     {:validators      ["required"]
      :rules           {:set-oppiaine-valinnainen-kieli-value nil}
-     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}}))
+     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}
+     :id              (str "oppimaara-kieli-" oppiaineen-koodi)}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
   (let [oppiaineen-koodi "A1"]

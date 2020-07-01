@@ -315,7 +315,7 @@
 
 (defn- hide-kieli-oppiaine-row [db oppiaine]
   (let [arvosana  (keyword (str "arvosana-" (name oppiaine)))
-        oppimaara (keyword (str "oppimaara-" (name oppiaine))) ; oppimäärä viittaa tässä varsinaiseen kieleen, jota opiskellaan
+        oppimaara (keyword (str "oppimaara-kieli-" (name oppiaine))) ; oppimäärä viittaa tässä varsinaiseen kieleen, jota opiskellaan
         hide      (fn hide [db]
                     (-> db
                         (hide-field oppiaine)
@@ -331,12 +331,12 @@
   (if (swedish-nationality? db)
     (-> db
         (show-field :A2)
-        (show-field :oppimaara-A2)
+        (show-field :oppimaara-kieli-A2)
         (show-field :arvosana-A2)
         (hide-kieli-oppiaine-row :B1))
     (-> db
         (show-field :B1)
-        (show-field :oppimaara-B1)
+        (show-field :oppimaara-kieli-B1)
         (show-field :arvosana-B1)
         (hide-kieli-oppiaine-row :A2))))
 
@@ -376,7 +376,7 @@
                                  (every? (comp true? :valid first)
                                          (:values answer')))))))
               db
-              [:oppimaara-valinnainen-kieli
+              [:oppimaara-a-valinnainen-kieli
                :oppiaine-valinnainen-kieli
                :arvosana-valinnainen-kieli]))))
 
