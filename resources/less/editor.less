@@ -545,6 +545,12 @@
   margin: 0;
 }
 
+.editor-form__text-field-additional-params-container {
+  display: flex;
+  flex-flow: row wrap;
+  margin-left: 20px;
+}
+
 .editor-form__text-field-checkbox-label {
   color: @blue-text-color;
   cursor: pointer;
@@ -558,6 +564,22 @@
 
 .editor-form__text-field-checkbox {
   margin-left: 0px;
+}
+
+.editor-form__text-field-checkbox-add-condition {
+  color: @pale-blue;
+  cursor: pointer;
+  font-size: 14px;
+  margin-left: 4px;
+
+  &:hover {
+    color: @selected-blue;
+  }
+}
+
+.editor-form__text-field-checkbox-add-condition-disabled {
+  color: @gray;
+  cursor: default;
 }
 
 .editor-form__text-field-wrapper {
@@ -704,6 +726,19 @@
 .editor-form__text-field-option-condition-answer-compared-to--invalid {
   background: @invalid-input-background-color;
   border: 1px solid @invalid-input-border-color;
+}
+
+.editor-form__text-field-remove-option {
+  color: @pale-blue;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 10px;
+}
+
+.editor-form__text-field-remove-option--disabled {
+  color: @gray;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .editor-form__multi-question-wrapper {

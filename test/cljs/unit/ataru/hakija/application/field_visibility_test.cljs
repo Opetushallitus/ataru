@@ -166,6 +166,24 @@
       11 "<" 12 true true
       11 ">" 12 true false
       13 ">" 12 true true))
+  (testing "text field: multiple options with condition"
+    (is (= {:kysymys        {0         {:visible? true}
+                             1         {:visible? true}
+                             :visible? true}
+            :jatkokysymys-0 {:visible? true}
+            :jatkokysymys-1 {:visible? true}}
+           (ui-of
+             (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value (str 1)}}}}
+                                                    {:id        "kysymys"
+                                                     :fieldType "textField"
+                                                     :options   [{:value     "0"
+                                                                  :condition {:answer-compared-to  2
+                                                                              :comparison-operator "<"}
+                                                                  :followups [{:id "jatkokysymys-0"}]}
+                                                                 {:value     "1"
+                                                                  :condition {:answer-compared-to  3
+                                                                              :comparison-operator "<"}
+                                                                  :followups [{:id "jatkokysymys-1"}]}]})))))
   (testing "text field: followup visibility for selected hakukohde:"
     (are [selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}

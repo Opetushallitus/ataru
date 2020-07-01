@@ -90,40 +90,39 @@
 
 (reg-event-db
   :editor/poista-tekstikentän-arvon-perusteella-optio
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [option-path (current-form-content-path db [path])]
       (-> db
-          (update-in (drop-last option-path) util/remove-nth (last option-path))
-          (update-in (drop-last 2 option-path) set-non-koodisto-option-values)))))
+          (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-optio
-  (fn [db [_ & path]]
+  (fn [db [_ path]]
     (let [text-field-path (current-form-content-path db [path :options])
-          component       (ataru.component-data.component/text-field-conditional-option "0")]
+          component       (component/text-field-conditional-option)]
       (-> db
           (update-in text-field-path into [component])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-operaattori
-  (fn [db [_ path value]]
-    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
-      (-> db
-          (update-in condition-path
-                     (fn [condition]
-                       (assoc condition :comparison-operator value)))))))
+  (fn [db [_ path option-index value]]
+    (let [condition-path (current-form-content-path db [path :options option-index :condition])]
+      (update-in db
+                 condition-path
+                 (fn [condition]
+                   (assoc condition :comparison-operator value))))))
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
-  (fn [db [_ path value]]
-    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
-      (-> db
-          (update-in condition-path
-                     (fn [condition]
-                       (if (string/blank? value)
-                         (dissoc condition :answer-compared-to)
-                         (assoc condition :answer-compared-to (js/parseInt value)))))))))
+  (fn [db [_ path option-index value]]
+    (let [condition-path (current-form-content-path db [path :options option-index :condition])]
+      (update-in db
+                 condition-path
+                 (fn [condition]
+                   (if (string/blank? value)
+                     (dissoc condition :answer-compared-to)
+                     (assoc condition :answer-compared-to (js/parseInt value))))))))
 
 (reg-event-db
   :editor/set-ordered-by-user

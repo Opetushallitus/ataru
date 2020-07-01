@@ -17,7 +17,7 @@
     :label {:fi "" :sv ""}}))
 
 (defn text-field-conditional-option
-  ([] (text-field-conditional-option ""))
+  ([] (text-field-conditional-option nil))
   ([value]
    {:value     value
     :label     {:fi "" :sv ""}

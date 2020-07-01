@@ -164,13 +164,12 @@
 (defn- options-satisfying-condition [answer-value options]
   (filter #(option-satisfies-condition % answer-value) options))
 
-(defn- get-first-option-visible-followups [answer-value options]
-  (when (not-empty options)
-    (->> options
-         (options-satisfying-condition answer-value)
-         first
-         :followups
-         (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
+(defn- get-visible-followups [answer-value options]
+  (->> options
+       (options-satisfying-condition answer-value)
+       (map :followups)
+       flatten
+       (filterv #(deref (subscribe [:application/visible? (keyword (:id %))])))))
 
 (defn- text-field-followups-container [followups idx]
   (when (not-empty followups)
@@ -195,7 +194,7 @@
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
-            followups        (get-first-option-visible-followups value options)
+            followups        (get-visible-followups value options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])

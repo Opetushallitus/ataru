@@ -1817,7 +1817,10 @@
                                                      :en "EN: greater than"}
    :lisakysymys-arvon-perusteella-ehto-yhtasuuri    {:fi "yhtä suuri kuin"
                                                      :sv "SV: lika med"
-                                                     :en "EN: equal to"}})
+                                                     :en "EN: equal to"}
+   :lisakysymys-arvon-perusteella-lisaa-ehto        {:fi "Lisää ehto"
+                                                     :sv "SV: Lisää ehto"
+                                                     :en "EN: Lisää ehto"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
