@@ -40,7 +40,11 @@
   (fn non-blank-answer-satisfies-condition? [option]
     (and (not (string/blank? value))
          (if-let [condition (:condition option)]
-           (= (js/parseInt value) (:answer-compared-to condition))
+           (let [operator (case (:comparison-operator condition)
+                            "<" <
+                            "=" =
+                            ">" >)]
+             (operator (js/parseInt value) (:answer-compared-to condition)))
            true))))
 
 (defn- selected-option-checker [value]

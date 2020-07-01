@@ -106,6 +106,15 @@
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
+  :editor/aseta-lisäkysymys-arvon-perusteella-operaattori
+  (fn [db [_ path value]]
+    (let [condition-path (current-form-content-path db [path :options 0 :condition])]
+      (-> db
+          (update-in condition-path
+                     (fn [condition]
+                       (assoc condition :comparison-operator value)))))))
+
+(reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
   (fn [db [_ path value]]
     (let [condition-path (current-form-content-path db [path :options 0 :condition])]

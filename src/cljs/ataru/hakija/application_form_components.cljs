@@ -154,8 +154,12 @@
 
 (defn- option-satisfies-condition [option answer-value]
   (if-let [condition (:condition option)]
-    (= (js/parseInt answer-value) (:answer-compared-to condition))
-    option))
+    (let [operator (case (:comparison-operator condition)
+                     "<" <
+                     "=" =
+                     ">" >)]
+      (operator (js/parseInt answer-value) (:answer-compared-to condition)))
+    true))
 
 (defn- options-satisfying-condition [answer-value options]
   (filter #(option-satisfies-condition % answer-value) options))

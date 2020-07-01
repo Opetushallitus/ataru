@@ -148,7 +148,7 @@
                                                    :options   [{:value     "0"
                                                                 :followups [{:id "jatkokysymys"}]}]})))))
   (testing "text field: option with condition:"
-    (are [answer answer-compared-to option-visible? followup-visible?]
+    (are [answer comparison-operator answer-compared-to option-visible? followup-visible?]
       (= {:kysymys      {0         {:visible? true}
                          :visible? option-visible?}
           :jatkokysymys {:visible? followup-visible?}}
@@ -158,10 +158,14 @@
                                                    :fieldType "textField"
                                                    :options   [{:value     "0"
                                                                 :condition {:answer-compared-to  answer-compared-to
-                                                                            :comparison-operator "="}
+                                                                            :comparison-operator comparison-operator}
                                                                 :followups [{:id "jatkokysymys"}]}]})))
-      12 11 true false
-      12 12 true true))
+      12 "=" 11 true false
+      12 "=" 12 true true
+      13 "<" 12 true false
+      11 "<" 12 true true
+      11 ">" 12 true false
+      13 ">" 12 true true))
   (testing "text field: followup visibility for selected hakukohde:"
     (are [selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}
