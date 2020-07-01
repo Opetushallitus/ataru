@@ -36,10 +36,14 @@
           db
           options))
 
-(defn- non-empty-text-field-followups-are-visible [value]
-  (constantly (not (string/blank? value))))
+(defn- non-blank-answer-with-option-condition-satisfied-checker [value]
+  (fn non-blank-answer-satisfies-condition? [option]
+    (and (not (string/blank? value))
+         (if-let [condition (:condition option)]
+           (= (js/parseInt value) (:answer-compared-to condition))
+           true))))
 
-(defn- selected-option-followups-are-visible [value]
+(defn- selected-option-checker [value]
   (let [values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                      (set (mapcat identity value))
                      (vector? value)
@@ -52,10 +56,10 @@
 (defn- followups-visibility-checker [field-descriptor answer-value]
   (cond
     (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
-    (selected-option-followups-are-visible answer-value)
+    (selected-option-checker answer-value)
 
     (= "textField" (:fieldType field-descriptor))
-    (non-empty-text-field-followups-are-visible answer-value)
+    (non-blank-answer-with-option-condition-satisfied-checker answer-value)
 
     :else
     (throw (ex-info "Unknown field type for followups visibility checking"

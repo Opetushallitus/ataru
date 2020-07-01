@@ -4,7 +4,7 @@
     [ataru.cljs-util :as util]
     [ataru.virkailija.editor.components.belongs-to-hakukohteet-component :as belongs-to-hakukohteet-component]
     [ataru.virkailija.editor.components.component-content :as component-content]
-    [ataru.virkailija.editor.components.followup-question :refer [followup-question-overlay]]
+    [ataru.virkailija.editor.components.followup-question :as followup-question]
     [ataru.virkailija.editor.components.input-fields-with-lang-component :as input-fields-with-lang-component]
     [ataru.virkailija.editor.components.input-field-component :as input-field-component]
     [ataru.virkailija.editor.components.info-addon-component :as info-addon-component]
@@ -22,68 +22,114 @@
 (defn- get-val [event]
   (-> event .-target .-value))
 
-(defn- decimal-places-selector [component-id path]
-  (let [decimal-places (subscribe [:editor/get-component-value path :params :decimals])
-        component-locked?   (subscribe [:editor/component-locked? path])
-        min-value      (subscribe [:editor/get-range-value component-id :min-value path])
-        max-value      (subscribe [:editor/get-range-value component-id :max-value path])
-        min-invalid?   (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
-        max-invalid?   (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
-        min-id         (util/new-uuid)
-        max-id         (util/new-uuid)
-        format-range   (fn [value]
-                         (string/replace (string/trim (or value "")) "." ","))]
+(defn- numeerisen-kentän-muoto [{:keys [path]}]
+  (let [decimal-places    (subscribe [:editor/get-component-value path :params :decimals])
+        component-locked? (subscribe [:editor/component-locked? path])]
+    (fn [{:keys [component-id path allow-decimals?]}]
+      [:div.editor-form__additional-params-container
+       [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
+       [:select.editor-form__decimal-places-selector
+        {:value     (or @decimal-places "")
+         :disabled  @component-locked?
+         :on-change (fn [e]
+                      (let [new-val (get-val e)
+                            value   (when (not-empty new-val)
+                                      (js/parseInt new-val))]
+                        (dispatch [:editor/set-decimals-value component-id value path])))}
+        [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
+        (doall
+          (for [i (range 1 5)]
+            [:option {:value i :key i :disabled (not allow-decimals?)}
+             (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]])))
+
+(defn- numeerisen-kentän-arvoalueen-rajaus [component-id path]
+  (let [component-locked? (subscribe [:editor/component-locked? path])
+        min-value         (subscribe [:editor/get-range-value component-id :min-value path])
+        max-value         (subscribe [:editor/get-range-value component-id :max-value path])
+        min-invalid?      (subscribe [:state-query [:editor :ui component-id :min-value :invalid?]])
+        max-invalid?      (subscribe [:state-query [:editor :ui component-id :max-value :invalid?]])
+        min-id            (util/new-uuid)
+        max-id            (util/new-uuid)
+        format-range      (fn [value]
+                            (string/replace (string/trim (or value "")) "." ","))]
     (fn [component-id path]
-      [:div
-       [:div.editor-form__additional-params-container
-        [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :shape])]
-        [:select.editor-form__decimal-places-selector
-         {:value     (or @decimal-places "")
-          :disabled  @component-locked?
-          :on-change (fn [e]
-                       (let [new-val (get-val e)
-                             value   (when (not-empty new-val)
-                                       (js/parseInt new-val))]
-                         (dispatch [:editor/set-decimals-value component-id value path])))}
-         [:option {:value "" :key 0} @(subscribe [:editor/virkailija-translation :integer])]
-         (doall
-           (for [i (range 1 5)]
-             [:option {:value i :key i} (str i " " @(subscribe [:editor/virkailija-translation :decimals]))]))]]
-       [:div.editor-form__additional-params-container
-        [:label.editor-form__range-label
-         {:for   min-id
-          :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-         @(subscribe [:editor/virkailija-translation :numeric-range])]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        min-id
-          :class     (when @min-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @min-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
-        [:span "—"]
-        [:input.editor-form__range-input
-         {:type      "text"
-          :id        max-id
-          :class     (when @max-invalid? "editor-form__text-field--invalid")
-          :disabled  @component-locked?
-          :value     @max-value
-          :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
-          :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]]])))
+      [:div.editor-form__additional-params-container
+       [:label.editor-form__range-label
+        {:for   min-id
+         :class (when @component-locked? "editor-form__checkbox-label--disabled")}
+        @(subscribe [:editor/virkailija-translation :numeric-range])]
+       [:input.editor-form__range-input
+        {:type      "text"
+         :id        min-id
+         :class     (when @min-invalid? "editor-form__text-field--invalid")
+         :disabled  @component-locked?
+         :value     @min-value
+         :on-blur   #(dispatch [:editor/set-range-value component-id :min-value (format-range (-> % .-target .-value)) path])
+         :on-change #(dispatch [:editor/set-range-value component-id :min-value (-> % .-target .-value) path])}]
+       [:span "—"]
+       [:input.editor-form__range-input
+        {:type      "text"
+         :id        max-id
+         :class     (when @max-invalid? "editor-form__text-field--invalid")
+         :disabled  @component-locked?
+         :value     @max-value
+         :on-blur   #(dispatch [:editor/set-range-value component-id :max-value (format-range (-> % .-target .-value)) path])
+         :on-change #(dispatch [:editor/set-range-value component-id :max-value (-> % .-target .-value) path])}]])))
+
+(defn- lisäkysymys-arvon-perusteella [_]
+  (let [id        (util/new-uuid)]
+    (fn [{:keys [component-locked?
+                 decimals-in-use?
+                 followups?
+                 options-with-condition?
+                 options-without-condition?
+                 path
+                 repeatable?]}]
+      (let [checked?     options-with-condition?
+            disabled?    (or component-locked?
+                             decimals-in-use?
+                             followups?
+                             options-without-condition?
+                             repeatable?)
+            option-index 0]
+        [:div.editor-form__additional-params-container
+         [:input.editor-form__text-field-checkbox
+          {:id           id
+           :type         "checkbox"
+           :checked      checked?
+           :disabled     disabled?
+           :on-change    (fn [evt]
+                           (when-not disabled?
+                             (.preventDefault evt)
+                             (if (-> evt .-target .-checked)
+                               (dispatch [:editor/lisää-tekstikentän-arvon-perusteella-optio path])
+                               (dispatch [:editor/poista-tekstikentän-arvon-perusteella-optio path :options option-index]))))
+           :data-test-id "tekstikenttä-valinta-lisäkysymys-arvon-perusteella"}]
+         [:label.editor-form__text-field-checkbox-label
+          {:for   id
+           :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
+          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella])]]))))
+
+(defn- kenttään-vain-numeroita [{:keys [component-id path] :as props}]
+  [:div.editor-form__text-field-kenttään-vain-numeroita
+   [numeerisen-kentän-muoto props]
+   [numeerisen-kentän-arvoalueen-rajaus component-id path]
+   (when (not (:adjacent-text-field? props))
+     [lisäkysymys-arvon-perusteella props])])
 
 (defn text-component-type-selector [_ path _]
-  (let [id           (util/new-uuid)
-        checked?     (subscribe [:editor/get-component-value path :params :numeric])
+  (let [id                (util/new-uuid)
+        checked?          (subscribe [:editor/get-component-value path :params :numeric])
         component-locked? (subscribe [:editor/component-locked? path])]
-    (fn [component-id path _]
+    (fn [component-id path props]
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
          {:type      "checkbox"
           :id        id
           :checked   (or @checked? false)
-          :disabled  @component-locked?
+          :disabled  (or @component-locked?
+                         (:cannot-change-type? props))
           :on-change (fn [event]
                        (let [checked-now? (-> event .-target .-checked)]
                          (dispatch [:editor/set-component-value checked-now? path :params :numeric])
@@ -97,7 +143,8 @@
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
          @(subscribe [:editor/virkailija-translation :only-numeric])]]
        (when @checked?
-         [decimal-places-selector component-id path])])))
+         [kenttään-vain-numeroita (merge props {:component-id component-id
+                                                :path         path})])])))
 
 (defn- button-label-class
   [button-name component-locked?]
@@ -107,6 +154,54 @@
                             :else nil)]
     (str (when component-locked? "editor-form__button-label--disabled ") button-class)))
 
+(def ^:private integer-matcher #"([+-]?)(0|[1-9][0-9]*)")
+
+(defn- clean-format [value]
+  (string/replace (string/trim (or value "")) "." ","))
+
+(defn- valid-integer? [value]
+  (let [clean (clean-format value)]
+    (or
+      (empty? clean)
+      (some? (re-matches integer-matcher clean)))))
+
+(defn- text-field-option-condition [_ path]
+  (let [component-locked? (subscribe [:editor/component-locked? path])
+        id                (util/new-uuid)
+        local-state       (r/atom {:focused? false
+                                   :valid?   true
+                                   :value    ""})]
+    (fn [condition path]
+      (when (not (:focused? @local-state))
+        (let [value (str (-> condition :answer-compared-to))]
+          (swap! local-state
+                 assoc
+                 :valid? true
+                 :value value)))
+      [:div.editor-form__text-field-option-condition
+       [:label.editor-form__text-field-option-condition-label
+        {:for   id
+         :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
+        @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+       [:input.editor-form__text-field-option-condition-answer-compared-to
+        {:disabled  @component-locked?
+         :class     (when (not (:valid? @local-state))
+                      "editor-form__text-field-option-condition-answer-compared-to--invalid")
+         :id        id
+         :on-blur   (fn [event]
+                      (swap! local-state
+                             assoc
+                             :focused? false)
+                      (when (:valid? @local-state)
+                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo path (get-val event)])))
+         :on-change (fn [event] (swap! local-state
+                                       assoc
+                                       :focused? true
+                                       :valid? (valid-integer? (get-val event))
+                                       :value (get-val event)))
+         :type      "text"
+         :value     (:value @local-state)}]])))
+
 (defn- text-field-option-followups-wrapper
   [options followups path show-followups]
   (let [option-count (count options)]
@@ -115,31 +210,38 @@
       (reset! show-followups (vec (replicate option-count true))))
     (when (< 0 option-count)
       (let [option-index 0
-            followups    (nth followups option-index)]
+            followups    (nth followups option-index)
+            option       (nth options option-index)]
         [:div.editor-form__text-field-option-followups-wrapper
-         [followup-question-overlay option-index followups path show-followups]]))))
+         (when (:condition option)
+           [:div.editor-form__text-field-option-followups-header
+            [text-field-option-condition (:condition option) path]
+            [followup-question/followup-question option-index followups show-followups]])
+         [followup-question/followup-question-overlay option-index followups path show-followups]]))))
 
 (defn- text-field-has-an-option [_ _ _ _]
   (let [id (util/new-uuid)]
     (fn [value followups path component-locked?]
-      (let [option-index 0
-            has-options? (not (empty? (:options value)))
-            repeatable?  (-> value :params :repeatable boolean)
-            disabled?    (or component-locked?
-                             (not (empty? (first followups)))
-                             repeatable?)]
+      (let [option-index               0
+            options-without-condition? (not (empty? (remove :condition (:options value))))
+            options-with-condition?    (not (empty? (filter :condition (:options value))))
+            repeatable?                (-> value :params :repeatable boolean)
+            disabled?                  (or component-locked?
+                                           options-with-condition?
+                                           (not (empty? (first followups)))
+                                           repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
-          {:id        id
-           :type      "checkbox"
-           :checked   has-options?
-           :disabled  disabled?
-           :on-change (fn [evt]
-                        (when-not disabled?
-                          (.preventDefault evt)
-                          (if (-> evt .-target .-checked)
-                            (dispatch [:editor/add-text-field-option path])
-                            (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
+          {:id           id
+           :type         "checkbox"
+           :checked      options-without-condition?
+           :disabled     disabled?
+           :on-change    (fn [evt]
+                           (when-not disabled?
+                             (.preventDefault evt)
+                             (if (-> evt .-target .-checked)
+                               (dispatch [:editor/add-text-field-option path])
+                               (dispatch [:editor/remove-text-field-option path :options option-index]))))}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
@@ -165,13 +267,13 @@
                             (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?        (= "Tekstialue" header-label)
         component-locked? (subscribe [:editor/component-locked? path])
-        show-followups    (r/atom nil)]                     ; TODO: pitäisikö olla kuten dropdown???
+        show-followups    (r/atom nil)]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
         :sub-header @sub-header]
        [component-content/component-content
-        path;(:id initial-content)
+        path
         [:div
          [:div.editor-form__component-row-wrapper
           [:div.editor-form__text-field-wrapper
@@ -216,7 +318,17 @@
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
-             [text-component-type-selector (:id initial-content) path radio-group-id])]
+             (let [options                 (:options @value)
+                   options-with-condition? (not (empty? (filter :condition options)))
+                   props                   {:allow-decimals?            (not options-with-condition?)
+                                            :cannot-change-type?        options-with-condition?
+                                            :component-locked?          @component-locked?
+                                            :decimals-in-use?           (-> @value :params :decimals pos?)
+                                            :followups?                 (not (empty? (first followups)))
+                                            :options-with-condition?    options-with-condition?
+                                            :options-without-condition? (not (empty? (remove :condition options)))
+                                            :repeatable?                (-> @value :params :repeatable boolean)}]
+               [text-component-type-selector (:id initial-content) path props]))]
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]
          [:div.editor-form__text-field-checkbox-wrapper
           [info-addon-component/info-addon path]

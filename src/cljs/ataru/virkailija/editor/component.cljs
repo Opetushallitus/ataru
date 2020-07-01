@@ -3,7 +3,7 @@
    [ataru.application-common.application-field-common :refer [copy-link]]
    [ataru.cljs-util :as util]
    [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-   [ataru.virkailija.editor.components.followup-question :refer [followup-question followup-question-overlay]]
+   [ataru.virkailija.editor.components.followup-question :as followup-question]
    [ataru.component-data.person-info-module :as pm]
    [ataru.virkailija.editor.components.toolbar :as toolbar]
    [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
@@ -114,11 +114,11 @@
             {:placeholder @(subscribe [:editor/virkailija-translation :selection-limit-input])
              :class       "editor-form__text-field--selection-limit"
              :value-fn    (fn [v] (:selection-limit v))}]])
-        [followup-question option-index followups option-path show-followups parent-key option-value question-group-element?]
+        [followup-question/followup-question option-index followups show-followups]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet-option parent-key option-index option-path]
         (when editable?
           [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
-       [followup-question-overlay option-index followups path show-followups]])))
+       [followup-question/followup-question-overlay option-index followups path show-followups]])))
 
 (defn- select-koodisto-dropdown
   [path]
@@ -503,8 +503,7 @@
                (dispatch [:generate-component component-fn (concat path [:children (count children)])]))])]]]])))
 
 (defn adjacent-text-field [_ _]
-  (let [languages (subscribe [:editor/languages])
-        radio-group-id    (util/new-uuid)]
+  (let [languages (subscribe [:editor/languages])]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :text-field]) path (:metadata content)
@@ -524,7 +523,8 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
-          [text-component/text-component-type-selector (:id content) path radio-group-id]]
+          [text-component/text-component-type-selector (:id content) path {:adjacent-text-field? true
+                                                                           :allow-decimals?      true}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]

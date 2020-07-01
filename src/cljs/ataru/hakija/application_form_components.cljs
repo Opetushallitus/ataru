@@ -152,9 +152,18 @@
           :autoComplete autocomplete-off
           :data-test-id "verify-email-input"}]])]))
 
-(defn- get-first-option-visible-followups [options]
+(defn- option-satisfies-condition [option answer-value]
+  (if-let [condition (:condition option)]
+    (= (js/parseInt answer-value) (:answer-compared-to condition))
+    option))
+
+(defn- options-satisfying-condition [answer-value options]
+  (filter #(option-satisfies-condition % answer-value) options))
+
+(defn- get-first-option-visible-followups [answer-value options]
   (when (not-empty options)
     (->> options
+         (options-satisfying-condition answer-value)
          first
          :followups
          (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))))))
@@ -182,7 +191,7 @@
                     valid
                     errors]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
-            followups        (get-first-option-visible-followups options)
+            followups        (get-first-option-visible-followups value options)
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])

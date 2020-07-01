@@ -41,6 +41,9 @@
 (declare BasicElement)
 (declare WrapperElement)
 
+(s/defschema OptionCondition {:comparison-operator                 (s/enum "=")
+                              (s/optional-key :answer-compared-to) s/Int})
+
 (s/defschema FormField {:fieldClass                                      (s/eq "formField")
                         :id                                              s/Str
                         :fieldType                                       (apply s/enum form-fields)
@@ -70,6 +73,7 @@
                                                                            (s/optional-key :description)     localized-schema/LocalizedStringOptional
                                                                            (s/optional-key :selection-limit) (s/maybe s/Int)
                                                                            (s/optional-key :default-value)   (s/maybe s/Bool)
+                                                                           (s/optional-key :condition)       OptionCondition
                                                                            (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                                                                            (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
                                                                            (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]

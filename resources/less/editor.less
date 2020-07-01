@@ -663,7 +663,41 @@
 }
 
 .editor-form__text-field-option-followups-wrapper {
+  color: @blue-text-color;
+  font-size: 14px;
   width: 100%;
+}
+
+.editor-form__text-field-option-followups-header {
+  align-items: stretch;
+  background-color: @element-list-item-background;
+  display: flex;
+  flex-flow: row wrap;
+  margin-bottom: 12px;
+}
+
+.editor-form__text-field-option-condition {
+  align-items: center;
+  border-radius: 3px;
+  display: flex;
+  flex-flow: row wrap;
+  justify-content: flex-start;
+  margin-right: 2px;
+  padding: 4px 10px;
+}
+
+.editor-form__text-field-option-condition-label {
+  margin-right: 5px;
+}
+
+.editor-form__text-field-option-condition-answer-compared-to {
+  text-align: center;
+  width: 50px;
+}
+
+.editor-form__text-field-option-condition-answer-compared-to--invalid {
+  background: @invalid-input-background-color;
+  border: 1px solid @invalid-input-border-color;
 }
 
 .editor-form__multi-question-wrapper {
