@@ -1,4 +1,4 @@
-import * as tekstikentta from './tekstikentta'
+import * as tekstikentta from './tekstinSyotto'
 import * as dropdown from './dropdown'
 
 import Chainable = Cypress.Chainable
