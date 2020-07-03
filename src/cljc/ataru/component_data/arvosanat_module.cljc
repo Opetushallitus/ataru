@@ -392,15 +392,15 @@
           :child-validator :oppiaine-a1-or-a2-component}))
 
 (s/defn arvosanat
-  [{:keys [type]} :- {:type (s/enum :peruskoulu :2-aste)}
+  [{:keys [type]} :- {:type (s/enum :peruskoulu :lukio)}
    metadata]
   (let [id        (case type
                     :peruskoulu "arvosanat-peruskoulu"
-                    :2-aste "arvosanat-2-aste")
+                    :lukio "arvosanat-lukio")
         label-kwd (case type
                     :peruskoulu :arvosanat-peruskoulu
-                    :2-aste :arvosanat-2-aste)
-        b3-kieli? (= type :2-aste)]
+                    :lukio :arvosanat-lukio)
+        b3-kieli? (= type :lukio)]
     (merge (component/form-section metadata)
            {:id       id
             :label    (label-kwd texts/virkailija-texts)
@@ -434,5 +434,5 @@
 (defn arvosanat-peruskoulu [metadata]
   (arvosanat {:type :peruskoulu} metadata))
 
-(defn arvosanat-2-aste [metadata]
-  (arvosanat {:type :2-aste} metadata))
+(defn arvosanat-lukio [metadata]
+  (arvosanat {:type :lukio} metadata))

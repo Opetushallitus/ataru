@@ -850,9 +850,9 @@
   {:arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
-   :arvosanat-2-aste                                {:fi "Arvosanat (2. aste)"
-                                                     :sv "Arvosanat (2. aste)"
-                                                     :en "Arvosanat (2. aste)"}
+   :arvosanat-lukio                                 {:fi "Arvosanat (lukio)"
+                                                     :sv "Arvosanat (lukio)"
+                                                     :en "Arvosanat (lukio)"}
    :arvosana-aidinkieli-ja-kirjallisuus             {:fi "Äidinkieli ja kirjallisuus"
                                                      :sv "Äidinkieli ja kirjallisuus"
                                                      :en "Äidinkieli ja kirjallisuus"}
