@@ -86,10 +86,12 @@
                                                (:id field-descriptor)
                                                idx])
         unselected-label (-> field-descriptor :unselected-label lang)
-        options          (map (fn [option]
-                                {:label (-> option :label lang)
-                                 :value (:value option)})
-                              (:options field-descriptor))
+        options          (cond->> (map (fn [option]
+                                         {:label (-> option :label lang)
+                                          :value (:value option)})
+                                       (:options field-descriptor))
+                                  (:sort-by-label field-descriptor)
+                                  (sort-by :label))
         data-test-id     (:data-test-id field-descriptor)
         unselected-label-icon           (:unselected-label-icon field-descriptor)]
     [dropdown-component/dropdown

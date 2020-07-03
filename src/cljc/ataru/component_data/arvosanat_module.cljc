@@ -238,6 +238,7 @@
     {:validators      ["required"]
      :rules           {:set-oppiaine-valinnainen-kieli-value nil}
      :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}
+     :sort-by-label   true
      :id              (str "oppimaara-kieli-" oppiaineen-koodi)}))
 
 (defn- valinnaiset-kielet [{:keys [metadata
