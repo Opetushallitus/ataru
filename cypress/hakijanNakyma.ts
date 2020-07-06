@@ -113,6 +113,28 @@ export const arvosanat = {
               .should('have.text', oppimaara)
           : c
       ),
+
+  tarkistaLukunakymanValinnainenKieli: ({
+    oppimaara,
+    arvosana,
+    index,
+  }: {
+    oppimaara: string
+    arvosana: string
+    index: number
+  }) =>
+    cy
+      .get(
+        `[data-test-id=valinnaiset-kielet-readonly-oppiaineen-arvosanat-valinnaiset-kielet-oppimaara-${index}]`
+      )
+      .should('have.text', oppimaara)
+      .then(() =>
+        cy
+          .get(
+            `[data-test-id=valinnaiset-kielet-readonly-oppiaineen-arvosanat-valinnaiset-kielet-arvosana-${index}]`
+          )
+          .should('have.text', arvosana)
+      ),
 }
 
 const syota = <T>(
