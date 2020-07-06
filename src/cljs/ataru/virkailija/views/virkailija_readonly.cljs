@@ -169,13 +169,15 @@
          (for [value values]
            [:td (str value)]))))])
 
+(defn- get-answer-value [application child group-idx]
+  (if (some? group-idx)
+    (get-in application [:answers (keyword (:id child)) :value group-idx])
+    (get-in application [:answers (keyword (:id child)) :value])))
 
 (defn fieldset [field-descriptor application lang children group-idx]
-  (let [fieldset-answers (->> children
-                              (map #(if (some? group-idx)
-                                      (get-in application [:answers (keyword (:id %)) :value group-idx])
-                                      (get-in application [:answers (keyword (:id %)) :value])))
-                              (apply map vector))]
+  (let [fieldset-answers (some->> (not-empty children)
+                                  (map #(get-answer-value application % group-idx))
+                                  (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)
