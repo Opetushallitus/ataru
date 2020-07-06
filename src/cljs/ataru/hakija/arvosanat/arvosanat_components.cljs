@@ -224,6 +224,7 @@
                                                           :oppiaine-valinnainen-kieli
                                                           (dec row-count)])
         lang                        @(re-frame/subscribe [:application/form-language])
+        data-test-id                "valinnaiset-kielet-oppiaine"
         valinnaiset-kielet-rows     (->> (cond-> row-count
                                                  (string/blank? (:value last-oppiaine-answer))
                                                  dec)
@@ -247,14 +248,19 @@
 
                                                      :oppimaara-column
                                                      [valinnainen-kieli-oppimaara
-                                                      {:field-descriptor (if (= oppiaineen-koodi "a")
-                                                                           oppimaara-dropdown
-                                                                           oppiaine-kieli-dropdown)
+                                                      {:field-descriptor (assoc (if (= oppiaineen-koodi "a")
+                                                                                  oppimaara-dropdown
+                                                                                  oppiaine-kieli-dropdown)
+                                                                                :data-test-id (str data-test-id "-oppimaara-" valinnainen-kieli-rivi-idx))
                                                        :render-field     render-field
                                                        :idx              valinnainen-kieli-rivi-idx}]
 
                                                      :arvosana-column
-                                                     [render-field arvosana-dropdown valinnainen-kieli-rivi-idx]
+                                                     [render-field
+                                                      (assoc arvosana-dropdown
+                                                             :data-test-id
+                                                             (str data-test-id "-arvosana-" valinnainen-kieli-rivi-idx))
+                                                      valinnainen-kieli-rivi-idx]
 
                                                      :valinnaisaine-column
                                                      [poista-valinnainen-kieli
@@ -266,7 +272,10 @@
 
                                       :label
                                       [valinnainen-kieli-dropdown
-                                       {:valinnainen-kieli-field-descriptor  oppiaine-dropdown
+                                       {:valinnainen-kieli-field-descriptor  (assoc
+                                                                               oppiaine-dropdown
+                                                                               :data-test-id
+                                                                               (str data-test-id "-dropdown"))
                                         :valinnaiset-kielet-field-descriptor field-descriptor
                                         :render-field                        render-field
                                         :idx                                 (dec row-count)}]}]]
@@ -312,16 +321,20 @@
            dec
            range
            (mapv (fn ->valinnainen-kieli-readonly [valinnainen-kieli-idx]
-                   (let [key              (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-idx)
+                   (let [key                (str "valinnainen-kieli-rivi-" (:id field-descriptor) "-" valinnainen-kieli-idx)
                          [oppiaine
                           oppimaara
                           oppiaine-kieli
                           arvosana] (:children field-descriptor)
-                         oppiaineen-koodi (some-> @(re-frame/subscribe [:application/answer
-                                                                        :oppiaine-valinnainen-kieli
-                                                                        valinnainen-kieli-idx])
-                                                  :value
-                                                  (subs (count "oppiaine-valinnainen-kieli-")))]
+                         oppiaineen-koodi   (some-> @(re-frame/subscribe [:application/answer
+                                                                          :oppiaine-valinnainen-kieli
+                                                                          valinnainen-kieli-idx])
+                                                    :value
+                                                    (subs (count "oppiaine-valinnainen-kieli-")))
+                         data-test-id       (str "valinnaiset-kielet-readonly-" (:id field-descriptor))
+                         oppimaara-dropdown (if (= oppiaineen-koodi "a")
+                                              oppimaara
+                                              oppiaine-kieli)]
                      ^{:key key}
                      [oppiaineen-arvosana-rivi
                       {:pakollinen-oppiaine?
@@ -338,21 +351,23 @@
 
                        :oppimaara-column
                        [valinnainen-kieli-oppimaara
-                        {:field-descriptor (assoc
-                                             (if (= oppiaineen-koodi "a")
-                                               oppimaara
-                                               oppiaine-kieli)
-                                             :readonly-render-options
-                                             {:arvosanat-taulukko? true})
+                        {:field-descriptor (merge
+                                             oppimaara-dropdown
+                                             {:readonly-render-options
+                                              {:arvosanat-taulukko? true}
+                                              :data-test-id
+                                              (str data-test-id "-oppimaara-" valinnainen-kieli-idx)})
                          :render-field     render-field
                          :idx              valinnainen-kieli-idx}]
 
                        :arvosana-column
                        [render-field
-                        (assoc
+                        (merge
                           arvosana
-                          :readonly-render-options
-                          {:arvosanat-taulukko? true})
+                          {:readonly-render-options
+                           {:arvosanat-taulukko? true}
+                           :data-test-id
+                           (str data-test-id "-arvosana-" valinnainen-kieli-idx)})
                         application
                         lang
                         valinnainen-kieli-idx]}])))

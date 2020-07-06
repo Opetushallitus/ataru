@@ -179,7 +179,7 @@
            b3-kieli?]} :- {:metadata  element-metadata-schema/ElementMetadata
                            :b3-kieli? s/Bool}]
   (merge (component/dropdown metadata)
-         {:version               "oppiaineen-arvosanat"
+         {:version               "generic"
           :id                    (str "oppiaine-valinnainen-kieli")
           :label                 (:oppiaine texts/translation-mapping)
           :unselected-label      (:lisaa-kieli texts/translation-mapping)

@@ -60,6 +60,22 @@ export default () => {
           })
         )
         .then(() =>
+          hakijanNakyma.arvosanat.lisaaValinnainenKieli({
+            oppiaine: 'a1',
+            oppimaara: 'JA',
+            arvosana: 'ei-arvosanaa',
+            index: 0,
+          })
+        )
+        .then(() =>
+          hakijanNakyma.arvosanat.lisaaValinnainenKieli({
+            oppiaine: 'a',
+            oppimaara: 'muu-oppilaan-aidinkieli',
+            arvosana: '6',
+            index: 1,
+          })
+        )
+        .then(() =>
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'MA',
             arvosana: '10',
