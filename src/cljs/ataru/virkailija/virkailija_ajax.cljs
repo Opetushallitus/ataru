@@ -98,7 +98,7 @@
                                                  {"Caller-Id" (aget js/config "virkailija-caller-id")}
                                                  (when (util/include-csrf-header? method)
                                                    (when-let [csrf-token (util/csrf-token)]
-                                                     {:headers {"CSRF" csrf-token}})))}
+                                                     {"CSRF" csrf-token})))}
                                      override-args))]
         (dispatch [:store-request-handle-and-abort-ongoing id request-handle])))))
 
