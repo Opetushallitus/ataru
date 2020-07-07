@@ -26,7 +26,7 @@
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
- :redis           {:uri "redis://localhost:6380"}
+ :redis           {:uri "redis://localhost:16380"}
  :cas             {}
  :public-config   {:virkailija-caller-id                "1.2.246.562.10.00000000001.ataru-editori.frontend"
                    :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
@@ -42,7 +42,11 @@
                               :arvosanat true}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
- :urls            {:virkailija-host "virkailija.untuvaopintopolku.fi"
-                   :hakija-host     "oppija.untuvaopintopolku.fi"
+ :urls            {:virkailija-host "toimimaton.virkailija-host-arvo.cypress.edn-tiedostosta"
+                   :hakija-host     "toimimaton.hakija-host-arvo.cypress.edn-tiedostosta"
+                   :valinta-tulos-service-base-url    "http://localhost:55443"
+                   :organisaatio-service-base-url     "http://localhost:55443"
+                   :koodisto-service-base-url         "http://localhost:55443"
+                   :ohjausparametrit-service-base-url "http://localhost:55443"
                    :editor-url      "http://localhost:8354/lomake-editori"
                    :liiteri-url     ""}}

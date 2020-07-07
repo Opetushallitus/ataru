@@ -46,6 +46,14 @@ lint() {
     clj_kondo
 }
 
+start_fake_deps_server() {
+  ./bin/fake-deps-server.sh start
+}
+
+stop_fake_deps_server() {
+  ./bin/fake-deps-server.sh stop
+}
+
 process-resources() {
     echo "Processing resources"
     time ./bin/lein resource
@@ -58,7 +66,9 @@ build-clojurescript() {
 
 test-clojure() {
     echo "Running clojure tests"
+    start_fake_deps_server
     time ./bin/lein spec -t ~ui
+    stop_fake_deps_server
 }
 
 test-clojurescript() {
@@ -67,13 +77,17 @@ test-clojurescript() {
 }
 
 test-browser() {
+  start_fake_deps_server
   time ./bin/lein spec -t ui
   time ./bin/run-cypress-tests-in-travis.sh
+  stop_fake_deps_server
 }
 
 run-migrations() {
     echo "Running migrations"
+    start_fake_deps_server
     time ./bin/lein with-profile dev run -m ataru.db.migrations/migrate "use dummy-audit-logger!"
+    stop_fake_deps_server
 }
 
 nuke-test-db() {

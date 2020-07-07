@@ -1,5 +1,6 @@
 {
   "baseUrl": "http://localhost:8354",
+  "defaultCommandTimeout": 10000,
   "fixturesFolder": "cypress/fixtures",
   "viewportHeight": 2000
 }
