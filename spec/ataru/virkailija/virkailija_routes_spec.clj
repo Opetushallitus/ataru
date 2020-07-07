@@ -1,49 +1,67 @@
 (ns ataru.virkailija.virkailija-routes-spec
-  (:require [ataru.virkailija.virkailija-routes :as v]
-            [ataru.test-utils :refer [login should-have-header virkailija-routes]]
-            [ring.mock.request :as mock]
+  (:require [ataru.applications.application-service :as application-service]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.fixtures.form :as fixtures]
             [ataru.fixtures.application :as application-fixtures]
+            [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
+            [ataru.log.audit-log :as audit-log]
+            [ataru.organization-service.organization-service :as org-service]
+            [ataru.person-service.person-service :as person-service]
+            [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
+            [ataru.test-utils :refer [login should-have-header]]
+            [ataru.virkailija.editor.form-diff :as form-diff]
+            [ataru.virkailija.virkailija-routes :as v]
+            [ring.mock.request :as mock]
             [speclj.core :refer :all]
-            [cheshire.core :as json]
-            [ataru.virkailija.editor.form-diff :as form-diff]))
+            [cheshire.core :as json]))
+
+(def virkailija-routes
+  (delay (->
+          (v/new-handler)
+          (assoc :organization-service (org-service/->FakeOrganizationService))
+          (assoc :tarjonta-service (tarjonta-service/->MockTarjontaService))
+          (assoc :person-service (person-service/->FakePersonService))
+          (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
+          (assoc :application-service (application-service/new-application-service))
+          (assoc :audit-logger (audit-log/new-dummy-audit-logger))
+          .start
+          :routes)))
 
 (defmacro with-static-resource
   [name path]
   `(with ~name (-> (mock/request :get ~path)
-                   (update-in [:headers] assoc "cookie" (login))
-                   virkailija-routes)))
+                   (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+                   ((deref virkailija-routes)))))
 
 (defn- get-form [id]
   (-> (mock/request :get (str "/lomake-editori/api/forms/" id))
-      (update-in [:headers] assoc "cookie" (login))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
-      virkailija-routes
+      ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- post-form [form]
   (-> (mock/request :post "/lomake-editori/api/forms"
         (json/generate-string form))
-      (update-in [:headers] assoc "cookie" (login))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
-      virkailija-routes
+      ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- update-form [id fragments]
   (-> (mock/request :put (str "/lomake-editori/api/forms/" id)
         (json/generate-string fragments))
-      (update-in [:headers] assoc "cookie" (login))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
-      virkailija-routes
+      ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (defn- post-applications-list [query]
   (-> (mock/request :post "/lomake-editori/api/applications/list"
                     (json/generate-string query))
-      (update-in [:headers] assoc "cookie" (login))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
-      virkailija-routes
+      ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (describe "GET /lomake-editori"

@@ -374,8 +374,6 @@
                                  :key       "language"
                                  :value     "fi"}]})
 
-(def audit-logger (audit-log/new-dummy-audit-logger))
-
 (defn create-rajaavat-and-priorisoivat-hakukohderyhmat []
   (hakukohderyhmat/insert-priorisoiva-hakukohderyhma {:haku-oid           "1.2.246.562.29.65950024187"
                                                       :prioriteetit       [["1.2.246.562.20.49028100003"] ["1.2.246.562.20.49028100001"]]
@@ -385,34 +383,35 @@
                                                   :hakukohderyhma-oid "1.2.246.562.28.00000000001"}))
 
 (defn init-db-fixture []
-  (create-rajaavat-and-priorisoivat-hakukohderyhmat)
-  (form-store/create-new-form! form1 (:key form1))
-  (form-store/create-new-form! form2 (:key form2))
-  (form-store/create-new-form! form3 (:key form3))
-  (form-store/create-new-form! form3a (:key form3a))
-  (form-store/create-new-form! form4 (:key form4))
-  (form-store/create-new-form! pohjakoulutus-form (:key pohjakoulutus-form))
-  (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
-                               (:key assosiaatio-hakukohteen-organisaatiosta-form))
-  (form-store/create-new-form! belongs-to-hakukohteet-test-form
-                               (:key belongs-to-hakukohteet-test-form))
-  (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
-                               (:key hakija-hakukohteen-hakuaika-test-form))
-  (application-store/add-application application1 [] form1 {} audit-logger)
-  (application-store/add-application application2 [] form1 {} audit-logger)
-  (application-store/add-application application3 [] form1 {} audit-logger)
-  (application-store/add-application application4
-                                     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
-                                     form3a {}
-                                     audit-logger)
-  (application-store/add-application application5
-                                     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
-                                     form3a {}
-                                     audit-logger))
+  (let [audit-logger (audit-log/new-dummy-audit-logger)]
+    (create-rajaavat-and-priorisoivat-hakukohderyhmat)
+    (form-store/create-new-form! form1 (:key form1))
+    (form-store/create-new-form! form2 (:key form2))
+    (form-store/create-new-form! form3 (:key form3))
+    (form-store/create-new-form! form3a (:key form3a))
+    (form-store/create-new-form! form4 (:key form4))
+    (form-store/create-new-form! pohjakoulutus-form (:key pohjakoulutus-form))
+    (form-store/create-new-form! assosiaatio-hakukohteen-organisaatiosta-form
+                                 (:key assosiaatio-hakukohteen-organisaatiosta-form))
+    (form-store/create-new-form! belongs-to-hakukohteet-test-form
+                                 (:key belongs-to-hakukohteet-test-form))
+    (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
+                                 (:key hakija-hakukohteen-hakuaika-test-form))
+    (application-store/add-application application1 [] form1 {} audit-logger)
+    (application-store/add-application application2 [] form1 {} audit-logger)
+    (application-store/add-application application3 [] form1 {} audit-logger)
+    (application-store/add-application application4
+                                       ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                       form3a {}
+                                       audit-logger)
+    (application-store/add-application application5
+                                       ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
+                                       form3a {}
+                                       audit-logger)))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
-  (migrations/migrate audit-logger)
+  (migrations/migrate (audit-log/new-dummy-audit-logger))
   (when insert-initial-fixtures? (init-db-fixture)))
 
 (defn insert-test-form [form-name]

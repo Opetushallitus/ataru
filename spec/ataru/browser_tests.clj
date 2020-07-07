@@ -1,9 +1,7 @@
 (ns ataru.browser-tests
-  (:require [clojure.string :refer [split join]]
+  (:require [clojure.string :refer [split]]
             [clojure.java.shell :refer [sh]]
-            [environ.core :refer [env]]
             [speclj.core :refer :all]
-            [ataru.config.core :refer [config]]
             [com.stuartsierra.component :as component]
             [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
@@ -12,20 +10,24 @@
             [ataru.log.audit-log :as audit-log])
   (:import (java.util.concurrent TimeUnit)))
 
+(def virkailija-system (atom nil))
+(def hakija-system (atom nil))
+
 (defn- run-specs-with-virkailija-and-hakija-systems [specs]
   (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                 application-email/start-email-edit-confirmation-job   (constantly nil)]
-    (let [dummy-audit-logger (audit-log/new-dummy-audit-logger)
-          virkailija-system  (atom (virkailija-system/new-system dummy-audit-logger))
-          hakija-system      (atom (hakija-system/new-system dummy-audit-logger))]
+    (let [dummy-audit-logger (audit-log/new-dummy-audit-logger)]
       (try
         (ataru.fixtures.db.browser-test-db/reset-test-db true)
-        (reset! virkailija-system (component/start-system @virkailija-system))
-        (reset! hakija-system (component/start-system @hakija-system))
+        (reset! virkailija-system (component/start-system (virkailija-system/new-system dummy-audit-logger)))
+        (reset! hakija-system (component/start-system (hakija-system/new-system dummy-audit-logger)))
         (specs)
         (finally
           (component/stop-system @virkailija-system)
           (component/stop-system @hakija-system))))))
+
+(defn- login []
+  (utils/login (get-in @virkailija-system [:handler :routes])))
 
 (defn- sh-timeout
   [timeout-secs & args]
@@ -49,13 +51,13 @@
 
   (describe "form creation /"
     (it "is created successfully"
-      (run-karma-test "virkailija" (last (split (utils/login) #"="))))
+      (run-karma-test "virkailija" (last (split (login) #"="))))
     (it "is created with a question group successfully"
-      (run-karma-test "virkailija-question-group" (last (split (utils/login) #"="))))
+      (run-karma-test "virkailija-question-group" (last (split (login) #"="))))
     (it "is created with a selection limit successfully"
-        (run-karma-test "virkailija-selection-limit" (last (split (utils/login) #"="))))
+        (run-karma-test "virkailija-selection-limit" (last (split (login) #"="))))
     (it "is able to use lomake with hakukohde organization connection"
-        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (utils/login) #"=")))))
+        (run-karma-test "virkailija-with-hakukohde-organization" (last (split (login) #"=")))))
 
   (describe "applying using a form /"
     (it "is possible to apply using a plain form"
@@ -83,6 +85,6 @@
 
   (describe "application handling /"
     (it "is possible to handle application with a question group"
-      (run-karma-test "virkailija-question-group-application-handling" (last (split (utils/login) #"="))))))
+      (run-karma-test "virkailija-question-group-application-handling" (last (split (login) #"="))))))
 
 (run-specs)

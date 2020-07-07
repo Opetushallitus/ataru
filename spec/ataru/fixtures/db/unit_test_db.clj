@@ -8,8 +8,6 @@
 
 (defqueries "sql/dev-form-queries.sql")
 
-(def audit-logger (audit-log/new-dummy-audit-logger))
-
 (defn- nuke-old-fixture-data [form-id]
   (ataru-db/exec :db yesql-delete-fixture-application-review! {:form_id form-id})
   (ataru-db/exec :db yesql-delete-fixture-application-events! {:form_id form-id})
@@ -30,16 +28,17 @@
   [form-fixture application-fixture application-reviews-fixture]
   (when (or (nil? (:id form-fixture)) (not= (:id form-fixture) (:form application-fixture)))
     (throw (Exception. (str "Incorrect fixture data, application should refer the given form"))))
-  (let [form-id               (init-db-form-fixture form-fixture)
-        application-id        (application-store/add-application
-                                application-fixture
-                                (:hakukohde application-fixture)
-                                form-fixture
-                                {} audit-logger)
-        stored-application    (application-store/get-application application-id)]
+  (let [audit-logger       (audit-log/new-dummy-audit-logger)
+        form-id            (init-db-form-fixture form-fixture)
+        application-id     (application-store/add-application
+                               application-fixture
+                               (:hakukohde application-fixture)
+                               form-fixture
+                               {} audit-logger)
+        stored-application (application-store/get-application application-id)]
     (doseq [{hakukohde :hakukohde review-requirement :review-requirement review-state :review-state} application-reviews-fixture]
       (application-store/save-application-hakukohde-review
-        (:key stored-application) hakukohde review-requirement review-state {} audit-logger))))
+       (:key stored-application) hakukohde review-requirement review-state {} audit-logger))))
 
 (defn init-db-fixture
   ([form-fixture]
