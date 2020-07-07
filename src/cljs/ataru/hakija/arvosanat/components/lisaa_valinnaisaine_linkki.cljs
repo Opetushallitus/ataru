@@ -1,7 +1,7 @@
 (ns ataru.hakija.arvosanat.components.lisaa-valinnaisaine-linkki
   (:require [ataru.schema.lang-schema :as lang-schema]
             [ataru.translations.translation-util :as translations]
-            [ataru.hakija.components.link-component :as link-component]
+            [ataru.application-common.components.link-component :as link-component]
             [clojure.string :as string]
             [re-frame.core :as re-frame]
             [schema.core :as s]))

@@ -1,5 +1,5 @@
 (ns ataru.hakija.arvosanat.components.poista-valinnainen-kieli
-  (:require [ataru.hakija.components.link-component :as link-component]
+  (:require [ataru.application-common.components.link-component :as link-component]
             [ataru.translations.translation-util :as translations]
             [re-frame.core :as re-frame]
             [schema.core :as s]))
