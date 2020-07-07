@@ -58,6 +58,32 @@ export const arvosanat = {
 
   haeOppiaineenArvosanaRivi: ({ oppiaine }: { oppiaine: string }) =>
     cy.get(`[data-test-id=oppiaineen-arvosana-${oppiaine}]`),
+
+  tarkistaLukunakymanOppiaine: ({
+    oppiaine,
+    oppimaara,
+    arvosana,
+    index,
+  }: {
+    oppiaine: string
+    oppimaara?: string
+    arvosana: string
+    index: number
+  }) =>
+    cy
+      .get(
+        `[data-test-id=oppiaineen-arvosana-readonly-${oppiaine}-arvosana-${index}]`
+      )
+      .should('have.text', arvosana)
+      .then((c) =>
+        oppiaine === 'A'
+          ? cy
+              .get(
+                `[data-test-id=oppiaineen-arvosana-readonly-${oppiaine}-oppimaara-${index}]`
+              )
+              .should('have.text', oppimaara)
+          : c
+      ),
 }
 
 const syota = <T>(

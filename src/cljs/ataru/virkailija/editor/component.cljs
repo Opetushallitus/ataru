@@ -317,7 +317,7 @@
        [dnd/drag-n-drop-spacer (conj path :children (count children))]
        (when-not @(subscribe [:editor/component-locked? path])
          (case (:fieldClass content)
-           "wrapperElement" [toolbar/add-component (conj path :children (count children))]
+           "wrapperElement" [toolbar/add-component (conj path :children (count children)) false]
            "questionGroup"  [toolbar/question-group-toolbar path
                              (fn [generate-fn]
                                (dispatch [:generate-component generate-fn (conj path :children (count children))]))]))]]]))

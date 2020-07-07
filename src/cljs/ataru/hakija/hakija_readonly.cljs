@@ -177,7 +177,8 @@
 
 (defn- selectable [content application lang question-group-idx]
   (let [{:keys [arvosanat-taulukko?]} (:readonly-render-options content)
-        {:keys [unselected-label]} content]
+        {:keys [unselected-label
+                data-test-id]} content]
     [:div.application__form-field
      {:class (when arvosanat-taulukko?
                "application__form-field--readonly-arvosanat-taulukko")}
@@ -203,8 +204,9 @@
             ^{:key (:value option)}
             [:div
              [:p.application__text-field-paragraph
-              {:class (when arvosanat-taulukko?
-                        "application__text-field-paragraph--readonly-arvosanat-taulukko")}
+              {:class        (when arvosanat-taulukko?
+                               "application__text-field-paragraph--readonly-arvosanat-taulukko")
+               :data-test-id data-test-id}
               (from-multi-lang (:label option) lang)]
              (when (some #(visible? ui %) (:followups option))
                (into [:div.application-handling__nested-container]
