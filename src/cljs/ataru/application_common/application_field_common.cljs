@@ -201,14 +201,13 @@
          [:span.editor-form__id-fixed
           @(re-frame/subscribe [:editor/virkailija-translation :id-in-shared-use])])])))
 
-(def ^:private field-types-supporting-label-for
-  "These field types can use the <label for=..> syntax, others will use aria-labelled-by"
-  #{"textField" "textArea" "dropdown"})
+(defn form-field-id
+  [field-descriptor idx]
+  (str (when idx (str idx "-")) (:id field-descriptor)))
 
 (defn id-for-label
-  [field-descriptor]
-  (when-not (contains? field-types-supporting-label-for (:fieldType field-descriptor))
-    (str "application-form-field-label-" (:id field-descriptor))))
+  [field-descriptor idx]
+  (str "application-form-field-label-" (form-field-id field-descriptor idx)))
 
 (defn belongs-to-hakukohde-or-ryhma? [field]
   (seq (concat (:belongs-to-hakukohteet field)
