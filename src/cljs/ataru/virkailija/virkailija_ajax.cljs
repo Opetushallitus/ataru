@@ -93,10 +93,12 @@
                                                                    update-cache)
                                                              (if skip-parse-times?
                                                                identity
-                                                               temporal/parse-times))}
-                                     (when (util/include-csrf-header? method)
-                                       (when-let [csrf-token (util/csrf-token)]
-                                         {:headers {"CSRF" csrf-token}}))
+                                                               temporal/parse-times))
+                                      :headers (merge
+                                                 {"Caller-Id" (aget js/config "virkailija-caller-id")}
+                                                 (when (util/include-csrf-header? method)
+                                                   (when-let [csrf-token (util/csrf-token)]
+                                                     {"CSRF" csrf-token})))}
                                      override-args))]
         (dispatch [:store-request-handle-and-abort-ongoing id request-handle])))))
 
