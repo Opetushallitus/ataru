@@ -73,7 +73,7 @@ start-docker: build-docker-images
 start-docker-cypress: build-docker-images
 	$(DOCKER_COMPOSE) up -d $(DOCKER_CONTAINERS_CYPRESS)
 
-start-pm2-all: $(NODE_MODULES) start-docker-all
+start-pm2-all: $(NODE_MODULES) start-docker-all run-fake-deps-server
 	$(PM2) start pm2.config.js
 
 start-pm2: $(NODE_MODULES) start-docker
