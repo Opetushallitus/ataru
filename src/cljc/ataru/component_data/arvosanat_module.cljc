@@ -27,7 +27,8 @@
           "KU"
           "KA"
           "LI"
-          "KO"))
+          "KO"
+          "valinnainen-kieli"))
 
 (s/defschema OppiaineenArvosana
   {:fieldClass                (s/eq "questionGroup")
@@ -39,11 +40,18 @@
    :params                    {}
    (s/optional-key :children) [s/Any]})
 
+(def ArvosanatTaulukkoChildren
+  (s/conditional
+    #(-> % :id (= "oppiaineen-arvosanat-valinnaiset-kielet"))
+    s/Any
+    :else
+    OppiaineenArvosana))
+
 (s/defschema ArvosanatTaulukko
   {:id              s/Str
    :fieldClass      (s/eq "wrapperElement")
    :fieldType       (s/eq "fieldset")
-   :children        [OppiaineenArvosana]
+   :children        [ArvosanatTaulukkoChildren]
    :child-validator (s/eq :oppiaine-a1-or-a2-component)
    :metadata        element-metadata-schema/ElementMetadata
    :label           localized-schema/LocalizedString
@@ -84,83 +92,109 @@
                        (oppiaine-label oppiaineen-koodi))
    :unselected-label (:oppimaara texts/translation-mapping)
    :options          options
-   :metadata         metadata
-   :validators       ["required"]})
+   :metadata         metadata})
 
-(s/defn arvosana-option
-  [{:keys [arvosana-label
-           value]} :- {:arvosana-label localized-schema/LocalizedString
-                       :value          s/Str}]
-  (merge (component/dropdown-option)
-         {:label arvosana-label
+(s/defn dropdown-option
+  [{:keys [label
+           value]} :- {:label localized-schema/LocalizedString
+                       :value s/Str}]
+  (merge (component/dropdown-option value)
+         {:label label
           :value value}))
 
 (s/defn arvosana-dropdown
   [{:keys [oppiaineen-koodi
-           metadata]} :- {:metadata         element-metadata-schema/ElementMetadata
-                          :oppiaineen-koodi OppiaineenKoodi}]
+           metadata
+           label]} :- {:metadata         element-metadata-schema/ElementMetadata
+                       :oppiaineen-koodi OppiaineenKoodi
+                       :label            localized-schema/LocalizedString}]
   (merge (component/dropdown metadata)
          {:version          "generic"
           :id               (str "arvosana-" oppiaineen-koodi)
-          :label            (concat-labels
-                              ": "
-                              (:arvosana texts/translation-mapping)
-                              (oppiaine-label oppiaineen-koodi))
           :unselected-label (:arvosana texts/translation-mapping)
+          :label            label
           :options          (conj (->> (range 4 11)
                                        reverse
                                        (map str)
                                        (mapv (fn [arvosana]
-                                               (arvosana-option
-                                                 {:arvosana-label {:fi arvosana
-                                                                   :sv arvosana
-                                                                   :en arvosana}
-                                                  :value          (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
-                                  (arvosana-option
-                                    {:arvosana-label (:hyvaksytty-suoritettu texts/translation-mapping)
-                                     :value          (str "arvosana-" oppiaineen-koodi "-hyvaksytty-suoritettu")})
-                                  (arvosana-option
-                                    {:arvosana-label (:ei-arvosanaa texts/translation-mapping)
-                                     :value          (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))
+                                               (dropdown-option
+                                                 {:label {:fi arvosana
+                                                          :sv arvosana
+                                                          :en arvosana}
+                                                  :value (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
+                                  (dropdown-option
+                                    {:label (:hyvaksytty-suoritettu texts/translation-mapping)
+                                     :value (str "arvosana-" oppiaineen-koodi "-hyvaksytty-suoritettu")})
+                                  (dropdown-option
+                                    {:label (:ei-arvosanaa texts/translation-mapping)
+                                     :value (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))
           :metadata         metadata
           :validators       ["required"]}))
 
 (s/defn oppimaara-aidinkieli-ja-kirjallisuus
+  [{:keys [metadata
+           oppiaineen-koodi
+           valinnainen-oppiaine?]} :- {:metadata              element-metadata-schema/ElementMetadata
+                                       :oppiaineen-koodi      OppiaineenKoodi
+                                       :valinnainen-oppiaine? s/Bool}]
+  (merge
+    (oppimaara-dropdown
+      {:oppiaineen-koodi oppiaineen-koodi
+       :metadata         metadata
+       :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
+                           :value "suomi-aidinkielena"}
+                          {:label (:suomi-toisena-kielena texts/translation-mapping)
+                           :value "suomi-toisena-kielena"}
+                          {:label (:suomi-viittomakielisille texts/translation-mapping)
+                           :value "suomi-viittomakielisille"}
+                          {:label (:suomi-saamenkielisille texts/translation-mapping)
+                           :value "suomi-saamenkielisille"}
+                          {:label (:ruotsi-aidinkielena texts/translation-mapping)
+                           :value "ruotsi-aidinkielena"}
+                          {:label (:ruotsi-toisena-kielena texts/translation-mapping)
+                           :value "ruotsi-toisena-kielena"}
+                          {:label (:ruotsi-viittomakielisille texts/translation-mapping)
+                           :value "ruotsi-viittomakielisille"}
+                          {:label (:saame-aidinkielena texts/translation-mapping)
+                           :value "saame-aidinkielena"}
+                          {:label (:romani-aidinkielena texts/translation-mapping)
+                           :value "romani-aidinkielena"}
+                          {:label (:viittomakieli-aidinkielena texts/translation-mapping)
+                           :value "viittomakieli-aidinkielena"}
+                          {:label (:muu-oppilaan-aidinkieli texts/translation-mapping)
+                           :value "muu-oppilaan-aidinkieli"}]})
+    (cond-> {:validators [(if valinnainen-oppiaine?
+                            "required-valinnainen-oppimaara"
+                            "required")]}
+            valinnainen-oppiaine?
+            (assoc :rules {:set-oppiaine-valinnainen-kieli-value nil}))))
+
+(s/defn oppiaine-valinnainen-kieli-dropdown
   [{:keys [metadata]} :- {:metadata element-metadata-schema/ElementMetadata}]
-  (oppimaara-dropdown
-    {:oppiaineen-koodi "A"
-     :metadata         metadata
-     :options          [{:label (:suomi-aidinkielena texts/translation-mapping)
-                         :value "suomi-aidinkielena"}
-                        {:label (:suomi-toisena-kielena texts/translation-mapping)
-                         :value "suomi-toisena-kielena"}
-                        {:label (:suomi-viittomakielisille texts/translation-mapping)
-                         :value "suomi-viittomakielisille"}
-                        {:label (:suomi-saamenkielisille texts/translation-mapping)
-                         :value "suomi-saamenkielisille"}
-                        {:label (:ruotsi-aidinkielena texts/translation-mapping)
-                         :value "ruotsi-aidinkielena"}
-                        {:label (:ruotsi-toisena-kielena texts/translation-mapping)
-                         :value "ruotsi-toisena-kielena"}
-                        {:label (:ruotsi-viittomakielisille texts/translation-mapping)
-                         :value "ruotsi-viittomakielisille"}
-                        {:label (:saame-aidinkielena texts/translation-mapping)
-                         :value "saame-aidinkielena"}
-                        {:label (:romani-aidinkielena texts/translation-mapping)
-                         :value "romani-aidinkielena"}
-                        {:label (:viittomakieli-aidinkielena texts/translation-mapping)
-                         :value "viittomakieli-aidinkielena"}
-                        {:label (:muu-oppilaan-aidinkieli texts/translation-mapping)
-                         :value "muu-oppilaan-aidinkieli"}]}))
+  (merge (component/dropdown metadata)
+         {:version               "oppiaineen-arvosanat"
+          :id                    (str "oppiaine-valinnainen-kieli")
+          :label                 (:oppiaine texts/translation-mapping)
+          :unselected-label      (:lisaa-kieli texts/translation-mapping)
+          :unselected-label-icon [:i.zmdi.zmdi-plus-circle-o.arvosana__lisaa-valinnaisaine--ikoni.arvosana__lisaa-valinnainen-kieli--ikoni]
+          :options               [(dropdown-option {:label (:oppiaine-a1 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a1"})
+                                  (dropdown-option {:label (:oppiaine-a2 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a2"})
+                                  (dropdown-option {:label (:oppiaine-b2 texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-b2"})
+                                  (dropdown-option {:label (:oppiaine-a texts/oppiaine-translations)
+                                                    :value "oppiaine-valinnainen-kieli-a"})]
+          :rules                 {:set-oppiaine-valinnainen-kieli-value nil}}))
 
 (s/defn oppiaineen-arvosana :- OppiaineenArvosana
   [{:keys [oppiaineen-koodi
            label
-           oppimaara-dropdown
-           metadata]} :- {:oppiaineen-koodi                    OppiaineenKoodi
-                          :label                               localized-schema/LocalizedString
-                          :metadata                            element-metadata-schema/ElementMetadata
-                          (s/optional-key :oppimaara-dropdown) s/Any}]
+           oppimaara-column
+           metadata]} :- {:oppiaineen-koodi                  OppiaineenKoodi
+                          :label                             localized-schema/LocalizedString
+                          :metadata                          element-metadata-schema/ElementMetadata
+                          (s/optional-key :oppimaara-column) s/Any}]
   (merge (component/question-group metadata)
          {:id       oppiaineen-koodi
           :version  "oppiaineen-arvosanat"
@@ -168,18 +202,40 @@
           :metadata metadata
           :children (as-> [] children
                           (cond-> children
-                                  (some? oppimaara-dropdown)
-                                  (conj oppimaara-dropdown))
+                                  (some? oppimaara-column)
+                                  (conj oppimaara-column))
                           (conj children (arvosana-dropdown
                                            {:metadata         metadata
-                                            :oppiaineen-koodi oppiaineen-koodi})))}))
+                                            :oppiaineen-koodi oppiaineen-koodi
+                                            :label            (concat-labels
+                                                                ": "
+                                                                (:arvosana texts/translation-mapping)
+                                                                (oppiaine-label oppiaineen-koodi))})))}))
+
+(defn- valinnaiset-kielet [{:keys [metadata]}]
+  (merge (component/question-group metadata)
+         {:id       "oppiaineen-arvosanat-valinnaiset-kielet"
+          :version  "oppiaineen-arvosanat"
+          :children [(oppiaine-valinnainen-kieli-dropdown {:metadata metadata})
+                     (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
+                                                            :oppiaineen-koodi      "valinnainen-kieli"
+                                                            :valinnainen-oppiaine? true})
+                     (arvosana-dropdown
+                       {:metadata         metadata
+                        :oppiaineen-koodi "valinnainen-kieli"
+                        :label            (concat-labels
+                                            ": "
+                                            (:arvosana texts/translation-mapping)
+                                            (oppiaine-label "valinnainen-kieli"))})]}))
 
 (defn- arvosana-aidinkieli-ja-kirjallisuus [{:keys [metadata]}]
   (oppiaineen-arvosana
-    {:oppiaineen-koodi   "A"
-     :label              (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
-     :oppimaara-dropdown (oppimaara-aidinkieli-ja-kirjallisuus {:metadata metadata})
-     :metadata           metadata}))
+    {:oppiaineen-koodi "A"
+     :label            (:arvosana-aidinkieli-ja-kirjallisuus texts/virkailija-texts)
+     :oppimaara-column (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
+                                                              :oppiaineen-koodi      "A"
+                                                              :valinnainen-oppiaine? false})
+     :metadata         metadata}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
   (oppiaineen-arvosana
@@ -286,7 +342,7 @@
 (s/defn arvosanat-taulukko :- ArvosanatTaulukko
   [{:keys [metadata
            children]} :- {:metadata element-metadata-schema/ElementMetadata
-                          :children [OppiaineenArvosana]}]
+                          :children [ArvosanatTaulukkoChildren]}]
   (merge (component/form-section metadata)
          {:id              "arvosanat-taulukko"
           :version         "oppiaineen-arvosanat"
@@ -313,6 +369,7 @@
                                      (arvosana-a1-kieli {:metadata metadata})
                                      (arvosana-a2-kieli {:metadata metadata})
                                      (arvosana-b1-kieli {:metadata metadata})
+                                     (valinnaiset-kielet {:metadata metadata})
                                      (arvosana-matematiikka {:metadata metadata})
                                      (arvosana-biologia {:metadata metadata})
                                      (arvosana-maantieto {:metadata metadata})

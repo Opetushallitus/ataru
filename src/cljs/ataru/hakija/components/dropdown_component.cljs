@@ -7,6 +7,7 @@
             [ataru.application-common.components.dropdown-component :as dropdown-component]
             [re-frame.core :as re-frame]
             [schema.core :as s]
+            [schema-tools.core :as st]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
 
 (defn dropdown [field-descriptor idx render-field]
@@ -76,7 +77,10 @@
 
 (s/defn hakija-dropdown
   [{:keys [field-descriptor
-           idx]} :- render-field-schema/RenderFieldArgs]
+           idx
+           on-change]} :- (st/assoc
+                            render-field-schema/RenderFieldArgs
+                            (s/optional-key :on-change) s/Any)]
   (let [lang             @(re-frame/subscribe [:application/form-language])
         answer           @(re-frame/subscribe [:application/answer
                                                (:id field-descriptor)
@@ -86,16 +90,23 @@
                                 {:label (-> option :label lang)
                                  :value (:value option)})
                               (:options field-descriptor))
-        data-test-id     (:data-test-id field-descriptor)]
+        data-test-id     (:data-test-id field-descriptor)
+        unselected-label-icon           (:unselected-label-icon field-descriptor)]
     [dropdown-component/dropdown
-     (cond-> {:options          options
-              :unselected-label unselected-label
-              :selected-value   (:value answer)
-              :on-change        (fn [value]
-                                  (re-frame/dispatch [:application/set-repeatable-application-field
-                                                      field-descriptor
-                                                      idx
-                                                      nil
-                                                      value]))}
+     (cond-> {:options               options
+              :unselected-label      unselected-label
+              :selected-value        (:value answer)
+              :on-change             (fn [value]
+                                       (re-frame/dispatch [:application/set-repeatable-application-field
+                                                           field-descriptor
+                                                           idx
+                                                           nil
+                                                           value])
+                                       (when on-change
+                                         (on-change)))}
+
              data-test-id
-             (assoc :data-test-id data-test-id))]))
+             (assoc :data-test-id data-test-id)
+
+             unselected-label-icon
+             (assoc :unselected-label-icon unselected-label-icon))]))

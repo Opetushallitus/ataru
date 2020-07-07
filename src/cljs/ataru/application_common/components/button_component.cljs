@@ -3,14 +3,13 @@
 
 (s/defschema AriaAttributes
   {:aria-haspopup                  (s/eq "listbox")
-   :aria-labelledby                s/Str
    (s/optional-key :aria-expanded) (s/eq true)})
 
 (s/defn button
   [{:keys [label
            on-click
            aria-attrs
-           data-test-id]} :- {:label                         s/Str
+           data-test-id]} :- {:label                         s/Any
                               :on-click                      s/Any
                               (s/optional-key :aria-attrs)   AriaAttributes
                               (s/optional-key :data-test-id) s/Str}]
@@ -20,6 +19,4 @@
             :data-test-id data-test-id}
            (seq aria-attrs)
            (merge aria-attrs))
-   [:span
-    {:id (:aria-labelledby aria-attrs)}
-    label]])
+   label])

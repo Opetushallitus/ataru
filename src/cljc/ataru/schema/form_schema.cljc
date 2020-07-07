@@ -56,6 +56,7 @@
                         (s/optional-key :label)                          localized-schema/LocalizedString
                         (s/optional-key :label-amendment)                localized-schema/LocalizedString
                         (s/optional-key :unselected-label)               localized-schema/LocalizedString
+                        (s/optional-key :unselected-label-icon)          [(s/one s/Str "icon component")]
                         (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
                         (s/optional-key :params)                         params-schema/Params
                         (s/optional-key :no-blank-option)                s/Bool

@@ -30,13 +30,6 @@
            (when (fc/feature-enabled? :schema-validation)
              (db-validator db)))))
 
-(def db-validator (s/validator schema/Db))
-
-(def check-schema-interceptor
-  (after (fn [db _]
-           (when (fc/feature-enabled? :schema-validation)
-             (db-validator db)))))
-
 (defn initialize-db [_ _]
   {:form        nil
    :application {:attachments-id (random-uuid)

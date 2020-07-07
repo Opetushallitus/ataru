@@ -2,7 +2,10 @@
   (:require [clojure.string :as string]))
 
 (def translation-mapping
-  {:hyvaksytty-suoritettu                       {:fi "Hyväksytty / suoritettu"
+  {:lisaa-kieli                                 {:fi "Lisää kieli"
+                                                 :sv "Lisää kieli"
+                                                 :en "Lisää kieli"}
+   :hyvaksytty-suoritettu                       {:fi "Hyväksytty / suoritettu"
                                                  :sv "Hyväksytty / suoritettu"
                                                  :en "Hyväksytty / suoritettu"}
    :add                                         {:fi "Lisää"
@@ -433,6 +436,9 @@
    :oppiaine-b1 {:fi "B1-kieli"
                  :sv "B1-kieli"
                  :en "B1-kieli"}
+   :oppiaine-b2 {:fi "B2-kieli"
+                 :sv "B2-kieli"
+                 :en "B2-kieli"}
    :oppiaine-ma {:fi "Matematiikka"
                  :sv "Matematiikka"
                  :en "Matematiikka"}
@@ -474,7 +480,10 @@
                  :en "Liikunta"}
    :oppiaine-ko {:fi "Kotitalous"
                  :sv "Kotitalous"
-                 :en "Kotitalous"}})
+                 :en "Kotitalous"}
+   :oppiaine-valinnainen-kieli {:fi "Valinnainen kieli"
+                                :sv "Valinnainen kieli"
+                                :en "Valinnainen kieli"}})
 
 (def general-texts
   {:yes                {:en "Yes"
