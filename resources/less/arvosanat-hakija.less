@@ -35,7 +35,7 @@
 }
 
 .arvosanat-taulukko__lisaa-valinnainen-kieli {
-  .flex-row-left-center();
+  .flex-row(center, flex-start);
 }
 
 .arvosanat-taulukko__lisaa-valinnainen-kieli--teksti {
@@ -44,7 +44,7 @@
 
 @media only screen and (min-width: (@mobile-width + 1)) {
   .arvosanat-taulukko {
-    .flex-column-top-center();
+    .flex-column(center, flex-start);
   }
 
   .arvosanat-taulukko__rivi {
@@ -66,13 +66,13 @@
   }
 
   .arvosana__oppiaine {
-    .flex-row-left-center();
+    .flex-row(center, flex-start);
 
     grid-area: arvosana-oppiaine;
   }
 
   .arvosana__oppimaara {
-    .flex-row-right-center();
+    .flex-row(center, flex-end);
 
     grid-area: arvosana-oppimaara;
   }
@@ -82,13 +82,13 @@
   }
 
   .arvosana__arvosana {
-    .flex-row-right-center();
+    .flex-row(center, flex-end);
 
     grid-area: arvosana-arvosana;
   }
 
   .arvosana__lisaa-valinnaisaine {
-    .flex-row-center-center();
+    .flex-row(center, center);
 
     grid-area: arvosana-lisaa-valinnaisaine;
   }
@@ -126,7 +126,7 @@
 
 @media only screen and (max-width: @mobile-width) {
   .arvosanat-taulukko {
-    .flex-column-top-left();
+    .flex-column(flex-start, flex-start);
   }
 
   .arvosanat-taulukko__rivi {
