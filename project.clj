@@ -84,7 +84,7 @@
                  [cheshire/cheshire "5.10.0"]
                  [selmer "1.12.23"]
                  [metosin/ring-http-response "0.9.1"]
-                 [fi.vm.sade/scala-cas_2.12 "1.2.0-SNAPSHOT"]
+                 [fi.vm.sade/scala-cas_2.12 "1.4.0-SNAPSHOT"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.apache.poi/poi-ooxml "4.1.2"]
                  [org.clojure/core.cache "1.0.207"]
