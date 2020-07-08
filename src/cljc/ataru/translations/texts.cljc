@@ -967,6 +967,9 @@
    :view-applications                               {:fi "Näytä oppijan hakemukset"
                                                      :sv "SV: Näytä oppijan hakemukset"
                                                      :en "Show applications"}
+   :valintojen-toteuttaminen                        {:fi "Valintojen toteuttaminen"
+                                                     :sv "Förverkligandet av antagningar"
+                                                     :en "Valintojen toteuttaminen"}
    :applications-panel                              {:fi "Hakemukset"
                                                      :sv "Ansökningar"
                                                      :en "Applications"}
