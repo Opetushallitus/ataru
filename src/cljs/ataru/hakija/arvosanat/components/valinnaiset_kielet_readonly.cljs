@@ -3,6 +3,7 @@
             [ataru.hakija.arvosanat.components.valinnainen-kieli-label :as vkl]
             [ataru.hakija.arvosanat.components.valinnainen-kieli-oppimaara :as vko]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
+            [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.schema.lang-schema :as lang-schema]
             [re-frame.core :as re-frame]
             [schema.core :as s]
@@ -31,7 +32,7 @@
                                                                                 :oppiaine-valinnainen-kieli
                                                                                 valinnainen-kieli-idx])
                                                           :value
-                                                          (subs (count "oppiaine-valinnainen-kieli-")))
+                                                          (subs vok/valinnainen-kieli-id-oppiaine-koodi-idx))
                                data-test-id       (str "valinnaiset-kielet-readonly-" (:id field-descriptor))
                                oppimaara-dropdown (if (= oppiaineen-koodi "a")
                                                     oppimaara

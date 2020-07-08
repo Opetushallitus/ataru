@@ -3,6 +3,7 @@
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.preferred-name :as pn]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
+            [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             clojure.string
             [clojure.string :as string])
   (:require-macros [cljs.core.match :refer [match]]))
@@ -357,7 +358,7 @@
                                          (map-indexed
                                            (fn [values-idx values']
                                              (mapv (fn [value]
-                                                     (let [oppiaineen-koodi               (some-> db :application :answers :oppiaine-valinnainen-kieli :values (get values-idx) first :value (subs (count "oppiaine-valinnainen-kieli-")))
+                                                     (let [oppiaineen-koodi               (some-> db :application :answers :oppiaine-valinnainen-kieli :values (get values-idx) first :value (subs vok/valinnainen-kieli-id-oppiaine-koodi-idx))
                                                            last-valinnainen-oppiaine-row? (= values-idx last-idx)
                                                            value-not-blank?               (-> value :value string/blank? not)
                                                            valid?                         (match [last-valinnainen-oppiaine-row? value-not-blank? oppiaineen-koodi answer-key]

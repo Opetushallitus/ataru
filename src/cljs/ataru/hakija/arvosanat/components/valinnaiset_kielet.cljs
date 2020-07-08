@@ -8,7 +8,8 @@
             [ataru.hakija.arvosanat.components.valinnainen-kieli-label :as vkl]
             [ataru.hakija.arvosanat.components.valinnainen-kieli-oppimaara :as vko]
             [ataru.hakija.arvosanat.components.poista-valinnainen-kieli :as pvk]
-            [ataru.hakija.arvosanat.components.valinnainen-kieli-dropdown :as vkd]))
+            [ataru.hakija.arvosanat.components.valinnainen-kieli-dropdown :as vkd]
+            [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]))
 
 (s/defn valinnaiset-kielet
         [{:keys [field-descriptor
@@ -35,7 +36,7 @@
                                                                                                             :oppiaine-valinnainen-kieli
                                                                                                             valinnainen-kieli-rivi-idx])
                                                                                       :value
-                                                                                      (subs (count "oppiaine-valinnainen-kieli-")))]
+                                                                                      (subs vok/valinnainen-kieli-id-oppiaine-koodi-idx))]
                                                          ^{:key key}
                                                          [oar/oppiaineen-arvosana-rivi
                                                           {:pakollinen-oppiaine?
