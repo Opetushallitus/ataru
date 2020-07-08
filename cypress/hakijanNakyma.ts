@@ -56,6 +56,35 @@ export const arvosanat = {
       .haeValinnaisaineLinkki({ oppiaine, index: 0, poisKaytosta: false })
       .click(),
 
+  lisaaValinnainenKieli: ({
+    oppiaine,
+    oppimaara,
+    arvosana,
+    index,
+  }: {
+    oppiaine: string
+    oppimaara: string
+    arvosana: string
+    index: number
+  }) =>
+    dropdown
+      .setDropdownValue(
+        'valinnaiset-kielet-oppiaine-dropdown',
+        `oppiaine-valinnainen-kieli-${oppiaine}`
+      )
+      .then(() =>
+        dropdown.setDropdownValue(
+          `valinnaiset-kielet-oppiaine-oppimaara-${index}`,
+          oppimaara
+        )
+      )
+      .then(() =>
+        dropdown.setDropdownValue(
+          `valinnaiset-kielet-oppiaine-arvosana-${index}`,
+          `arvosana-valinnainen-kieli-${arvosana}`
+        )
+      ),
+
   haeOppiaineenArvosanaRivi: ({ oppiaine }: { oppiaine: string }) =>
     cy.get(`[data-test-id=oppiaineen-arvosana-${oppiaine}]`),
 
@@ -83,6 +112,28 @@ export const arvosanat = {
               )
               .should('have.text', oppimaara)
           : c
+      ),
+
+  tarkistaLukunakymanValinnainenKieli: ({
+    oppimaara,
+    arvosana,
+    index,
+  }: {
+    oppimaara: string
+    arvosana: string
+    index: number
+  }) =>
+    cy
+      .get(
+        `[data-test-id=valinnaiset-kielet-readonly-oppiaineen-arvosanat-valinnaiset-kielet-oppimaara-${index}]`
+      )
+      .should('have.text', oppimaara)
+      .then(() =>
+        cy
+          .get(
+            `[data-test-id=valinnaiset-kielet-readonly-oppiaineen-arvosanat-valinnaiset-kielet-arvosana-${index}]`
+          )
+          .should('have.text', arvosana)
       ),
 }
 

@@ -37,6 +37,16 @@ export default () => {
         arvosana: '9',
         index: 0,
       })
+      hakijanNakyma.arvosanat.tarkistaLukunakymanValinnainenKieli({
+        oppimaara: 'japani',
+        arvosana: 'Ei arvosanaa',
+        index: 0,
+      })
+      hakijanNakyma.arvosanat.tarkistaLukunakymanValinnainenKieli({
+        oppimaara: 'Muu oppilaan äidinkieli',
+        arvosana: '6',
+        index: 1,
+      })
       hakijanNakyma.arvosanat.tarkistaLukunakymanOppiaine({
         oppiaine: 'MA',
         arvosana: '10',

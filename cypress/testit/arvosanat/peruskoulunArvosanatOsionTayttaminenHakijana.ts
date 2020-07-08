@@ -47,6 +47,7 @@ export default () => {
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'A1',
             arvosana: '10',
+            oppimaara: 'FI',
             index: 0,
           })
         )
@@ -54,7 +55,24 @@ export default () => {
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'B1',
             arvosana: '9',
+            oppimaara: 'SV',
             index: 0,
+          })
+        )
+        .then(() =>
+          hakijanNakyma.arvosanat.lisaaValinnainenKieli({
+            oppiaine: 'a1',
+            oppimaara: 'JA',
+            arvosana: 'ei-arvosanaa',
+            index: 0,
+          })
+        )
+        .then(() =>
+          hakijanNakyma.arvosanat.lisaaValinnainenKieli({
+            oppiaine: 'a',
+            oppimaara: 'muu-oppilaan-aidinkieli',
+            arvosana: '6',
+            index: 1,
           })
         )
         .then(() =>

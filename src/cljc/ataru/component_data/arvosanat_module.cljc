@@ -82,17 +82,19 @@
                          :metadata         element-metadata-schema/ElementMetadata
                          :options          [{:label localized-schema/LocalizedString
                                              :value s/Str}]}]
-  {:fieldClass       "formField"
-   :fieldType        "dropdown"
-   :version          "generic"
-   :id               (str "oppimaara-" oppiaineen-koodi)
-   :label            (concat-labels
-                       ": "
-                       (:oppimaara texts/translation-mapping)
-                       (oppiaine-label oppiaineen-koodi))
-   :unselected-label (:oppimaara texts/translation-mapping)
-   :options          options
-   :metadata         metadata})
+  (let [label-kwd (if (= oppiaineen-koodi "A")
+                    :oppimaara
+                    :oppiaine)]
+    {:fieldClass       "formField"
+     :fieldType        "dropdown"
+     :version          "generic"
+     :label            (concat-labels
+                         ": "
+                         (label-kwd texts/translation-mapping)
+                         (oppiaine-label oppiaineen-koodi))
+     :unselected-label (label-kwd texts/translation-mapping)
+     :options          options
+     :metadata         metadata}))
 
 (s/defn dropdown-option
   [{:keys [label
@@ -165,7 +167,10 @@
                            :value "muu-oppilaan-aidinkieli"}]})
     (cond-> {:validators [(if valinnainen-oppiaine?
                             "required-valinnainen-oppimaara"
-                            "required")]}
+                            "required")]
+             :id         (cond-> (str "oppimaara-a")
+                                 (= oppiaineen-koodi "valinnainen-kieli")
+                                 (str "-valinnainen-kieli"))}
             valinnainen-oppiaine?
             (assoc :rules {:set-oppiaine-valinnainen-kieli-value nil}))))
 
@@ -174,7 +179,7 @@
            b3-kieli?]} :- {:metadata  element-metadata-schema/ElementMetadata
                            :b3-kieli? s/Bool}]
   (merge (component/dropdown metadata)
-         {:version               "oppiaineen-arvosanat"
+         {:version               "generic"
           :id                    (str "oppiaine-valinnainen-kieli")
           :label                 (:oppiaine texts/translation-mapping)
           :unselected-label      (:lisaa-kieli texts/translation-mapping)
@@ -221,6 +226,21 @@
                                                                 (:arvosana texts/translation-mapping)
                                                                 (oppiaine-label oppiaineen-koodi))})))}))
 
+(s/defn oppiaine-kieli
+  [{:keys [metadata
+           oppiaineen-koodi]} :- {:metadata         element-metadata-schema/ElementMetadata
+                                  :oppiaineen-koodi OppiaineenKoodi}]
+  (merge
+    (oppimaara-dropdown
+      {:oppiaineen-koodi oppiaineen-koodi
+       :metadata         metadata
+       :options          []})
+    {:validators      ["required"]
+     :rules           {:set-oppiaine-valinnainen-kieli-value nil}
+     :koodisto-source {:title "Kielikoodisto, opetushallinto" :uri "kielivalikoima" :version 1}
+     :sort-by-label   true
+     :id              (str "oppimaara-kieli-" oppiaineen-koodi)}))
+
 (defn- valinnaiset-kielet [{:keys [metadata
                                    b3-kieli?]}]
   (merge (component/question-group metadata)
@@ -231,6 +251,8 @@
                      (oppimaara-aidinkieli-ja-kirjallisuus {:metadata              metadata
                                                             :oppiaineen-koodi      "valinnainen-kieli"
                                                             :valinnainen-oppiaine? true})
+                     (oppiaine-kieli {:metadata metadata
+                                      :oppiaineen-koodi "valinnainen-kieli"})
                      (arvosana-dropdown
                        {:metadata         metadata
                         :oppiaineen-koodi "valinnainen-kieli"
@@ -249,22 +271,31 @@
      :metadata         metadata}))
 
 (defn- arvosana-a1-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "A1"
-     :label            (:arvosana-a1-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "A1"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-a1-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-a2-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "A2"
-     :label            (:arvosana-a2-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "A2"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-a2-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-b1-kieli [{:keys [metadata]}]
-  (oppiaineen-arvosana
-    {:oppiaineen-koodi "B1"
-     :label            (:arvosana-b1-kieli texts/virkailija-texts)
-     :metadata         metadata}))
+  (let [oppiaineen-koodi "B1"]
+    (oppiaineen-arvosana
+      {:oppiaineen-koodi oppiaineen-koodi
+       :label            (:arvosana-b1-kieli texts/virkailija-texts)
+       :oppimaara-column (oppiaine-kieli {:metadata         metadata
+                                          :oppiaineen-koodi oppiaineen-koodi})
+       :metadata         metadata})))
 
 (defn- arvosana-matematiikka [{:keys [metadata]}]
   (oppiaineen-arvosana
@@ -361,15 +392,15 @@
           :child-validator :oppiaine-a1-or-a2-component}))
 
 (s/defn arvosanat
-  [{:keys [type]} :- {:type (s/enum :peruskoulu :2-aste)}
+  [{:keys [type]} :- {:type (s/enum :peruskoulu :lukio)}
    metadata]
   (let [id        (case type
                     :peruskoulu "arvosanat-peruskoulu"
-                    :2-aste "arvosanat-2-aste")
+                    :lukio "arvosanat-lukio")
         label-kwd (case type
                     :peruskoulu :arvosanat-peruskoulu
-                    :2-aste :arvosanat-2-aste)
-        b3-kieli? (= type :2-aste)]
+                    :lukio :arvosanat-lukio)
+        b3-kieli? (= type :lukio)]
     (merge (component/form-section metadata)
            {:id       id
             :label    (label-kwd texts/virkailija-texts)
@@ -403,5 +434,5 @@
 (defn arvosanat-peruskoulu [metadata]
   (arvosanat {:type :peruskoulu} metadata))
 
-(defn arvosanat-2-aste [metadata]
-  (arvosanat {:type :2-aste} metadata))
+(defn arvosanat-lukio [metadata]
+  (arvosanat {:type :lukio} metadata))

@@ -64,6 +64,7 @@
                         (s/optional-key :exclude-from-answers-if-hidden) s/Bool
                         (s/optional-key :version)                        s/Str
                         (s/optional-key :koodisto-ordered-by-user)       s/Bool
+                        (s/optional-key :sort-by-label)                  s/Bool
                         (s/optional-key :koodisto-source)                {:uri                             s/Str
                                                                           :version                         s/Int
                                                                           (s/optional-key :default-option) s/Any

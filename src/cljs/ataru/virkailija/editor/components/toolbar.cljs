@@ -119,7 +119,7 @@
                          (and root-level-add-component?
                               (fc/feature-enabled? :arvosanat))
                          (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-                               [:arvosanat-2-aste arvosanat/arvosanat-2-aste]))]
+                               [:arvosanat-lukio arvosanat/arvosanat-lukio]))]
     [custom-add-component elements path
      (fn [generate-fn]
        (dispatch [:generate-component generate-fn path]))]))
