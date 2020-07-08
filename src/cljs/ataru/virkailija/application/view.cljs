@@ -2038,7 +2038,9 @@
         birth-date         (-> application :person :birth-date)
         person-oid         (-> application :person :oid)
         email              (get-in answers [:email :value])
-        applications-count (:applications-count application)]
+        applications-count (:applications-count application)
+        hakemus-oid        (:key application)
+        haku-oid           (:haku application)]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       (when-not loading?
@@ -2048,7 +2050,7 @@
             [:h2.application-handling__review-area-main-heading
              (str last-name ", " pref-name " — " (or ssn birth-date))])]
          [:div.application-handling__review-area-main-heading-application-oid-row
-          [:span (:key application)]]
+          [:span hakemus-oid]]
          [:div.application-handling__review-area-main-heading-person-oid-row
           [:div.application-handling__applicant-links
            (when person-oid
@@ -2075,7 +2077,19 @@
                                            "?term=" (or ssn email))]))}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
-               (str @(subscribe [:editor/virkailija-translation :view-applications]) " (" applications-count ")")]])]]
+               (str @(subscribe [:editor/virkailija-translation :view-applications]) " (" applications-count ")")]])
+           (when (and hakemus-oid
+                      haku-oid)
+             [:a
+              {:href   (apply
+                         gstring/format
+                         (into
+                           ["/valintalaskenta-ui/app/index.html#/haku/%s/henkiloittain/%s/henkilotiedot/id_%s#%s" haku-oid]
+                           (repeatedly 3 (constantly hakemus-oid))))
+               :target "_blank"}
+              [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
+              [:span.application-handling__review-area-main-heading-person-oid
+               (str @(subscribe [:editor/virkailija-translation :valintojen-toteuttaminen]))]])]]
          [notifications-display]])
       (when (not (contains? (:answers application) :hakukohteet))
         [:ul.application-handling__hakukohteet-list
