@@ -15,7 +15,8 @@
                 valinta-tulos-service-base-url
                 organisaatio-service-base-url
                 koodisto-service-base-url
-                ohjausparametrit-service-base-url]} (:urls config)]
+                ohjausparametrit-service-base-url
+                valintalaskenta-ui-service-base-url]} (:urls config)]
     (reset! url-properties
             (doto (OphProperties. (into-array String ["/ataru-oph.properties"]))
               (.addDefault "host-virkailija" virkailija-host)
@@ -26,7 +27,8 @@
               (.addDefault "baseurl-valinta-tulos-service" valinta-tulos-service-base-url)
               (.addDefault "baseurl-organisaatio-service" organisaatio-service-base-url)
               (.addDefault "baseurl-koodisto-service" koodisto-service-base-url)
-              (.addDefault "baseurl-ohjausparametrit-service" ohjausparametrit-service-base-url)))))
+              (.addDefault "baseurl-ohjausparametrit-service" ohjausparametrit-service-base-url)
+              (.addDefault "baseurl-valintalaskenta-ui-service" valintalaskenta-ui-service-base-url)))))
 
 (defn resolve-url
   [key & params]

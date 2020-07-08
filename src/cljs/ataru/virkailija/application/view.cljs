@@ -2081,11 +2081,12 @@
            (when (and hakemus-oid
                       haku-oid)
              [:a
-              {:href   (apply
-                         gstring/format
-                         (into
-                           ["/valintalaskenta-ui/app/index.html#/haku/%s/henkiloittain/%s/henkilotiedot/id_%s#%s" haku-oid]
-                           (repeatedly 3 (constantly hakemus-oid))))
+              {:href   (.url js/window
+                             "valintalaskenta-ui.valintojen-toteuttaminen.hakemus"
+                             haku-oid
+                             hakemus-oid
+                             hakemus-oid
+                             hakemus-oid)
                :target "_blank"}
               [:i.zmdi.zmdi-collection-text.application-handling__review-area-main-heading-person-icon]
               [:span.application-handling__review-area-main-heading-person-oid
