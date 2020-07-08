@@ -41,11 +41,12 @@
                    :features {:arvosanat true}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
- :urls            {:virkailija-host "toimimaton.virkailija-host-arvo.cypress.travis.edn-tiedostosta"
-                   :hakija-host     "toimimaton.hakija-host-arvo.cypress.travis.edn-tiedostosta"
-                   :valinta-tulos-service-base-url    "http://localhost:55443"
-                   :organisaatio-service-base-url     "http://localhost:55443"
-                   :koodisto-service-base-url         "http://localhost:55443"
-                   :ohjausparametrit-service-base-url "http://localhost:55443"
-                   :editor-url      "http://localhost:8354/lomake-editori"
-                   :liiteri-url     ""}}
+ :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.cypress.travis.edn-tiedostosta"
+                   :hakija-host                         "toimimaton.hakija-host-arvo.cypress.travis.edn-tiedostosta"
+                   :valinta-tulos-service-base-url      "http://localhost:55443"
+                   :organisaatio-service-base-url       "http://localhost:55443"
+                   :koodisto-service-base-url           "http://localhost:55443"
+                   :ohjausparametrit-service-base-url   "http://localhost:55443"
+                   :valintalaskenta-ui-service-base-url "http://localhost:55443"
+                   :editor-url                          "http://localhost:8354/lomake-editori"
+                   :liiteri-url                         ""}}

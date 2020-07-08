@@ -48,11 +48,12 @@
  :log {:virkailija-base-path "{{ataru_virkailija_log_path}}"
        :hakija-base-path "{{ataru_hakija_log_path}}"}
  :urls {:virkailija-host "{{ataru_virkailija_host}}"
-        :hakija-host "{{ataru_hakija_host}}"
-        :liiteri-url "{{ataru_liiteri_url}}"
-        :editor-url  "{{ataru_editor_url}}"
-        :valinta-tulos-service-base-url    "{{ataru_valinta_tulos_service_base_url | default('https://' + ataru_virkailija_host) }}"
-        :organisaatio-service-base-url     "{{ataru_organisaatio_service_base_url | default('https://' + ataru_virkailija_host) }}"
-        :koodisto-service-base-url         "{{ataru_koodisto_service_base_url | default('https://' + ataru_virkailija_host) }}"
-        :ohjausparametrit-service-base-url "{{ataru_ohjausparametrit_service_base_url | default('https://' + ataru_virkailija_host) }}"}
+        :hakija-host                         "{{ataru_hakija_host}}"
+        :liiteri-url                         "{{ataru_liiteri_url}}"
+        :editor-url                          "{{ataru_editor_url}}"
+        :valinta-tulos-service-base-url      "{{ataru_valinta_tulos_service_base_url | default('https://' + ataru_virkailija_host) }}"
+        :organisaatio-service-base-url       "{{ataru_organisaatio_service_base_url | default('https://' + ataru_virkailija_host) }}"
+        :koodisto-service-base-url           "{{ataru_koodisto_service_base_url | default('https://' + ataru_virkailija_host) }}"
+        :ohjausparametrit-service-base-url   "{{ataru_ohjausparametrit_service_base_url | default('https://' + ataru_virkailija_host) }}"
+        :valintalaskenta-ui-service-base-url "{{ataru_valintalaskenta_ui_service_base_url | default('https://' + ataru_virkailija_host) }}"}
  :feedback {:application-feedback-flow-token "{{ataru_application_feedback_flow_token}}"}}
