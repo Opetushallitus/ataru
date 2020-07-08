@@ -28,7 +28,9 @@
             [ataru.person-service.person-integration :as person-integration]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.applications.application-service :as application-service])
+            [ataru.applications.application-service :as application-service]
+            [clj-ring-db-session.session.session-store :refer [create-session-store]]
+            [ataru.db.db :as db])
   (:import java.time.Duration
            [java.util.concurrent TimeUnit]))
 
@@ -164,6 +166,8 @@
                             :koodisto-cache
                             :job-runner])
 
+    :session-store (create-session-store (db/get-datasource :db))
+
     :handler (component/using
               (virkailija-routes/new-handler)
               (vec (concat [:login-cas-client
@@ -177,7 +181,8 @@
                             :person-service
                             :kayttooikeus-service
                             :audit-logger
-                            :application-service]
+                            :application-service
+                            :session-store]
                            (map first caches))))
 
     :server-setup {:port      http-port

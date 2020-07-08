@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.db.db :as ataru-db]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.fixtures.form :as fixtures]
             [ataru.fixtures.application :as application-fixtures]
@@ -11,9 +12,10 @@
             [ataru.test-utils :refer [login should-have-header]]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
+            [cheshire.core :as json]
+            [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]
-            [cheshire.core :as json]))
+            [speclj.core :refer [before describe it run-specs should should-not-be-nil should= tags with]]))
 
 (def virkailija-routes
   (delay (->
@@ -24,6 +26,7 @@
           (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
           (assoc :application-service (application-service/new-application-service))
           (assoc :audit-logger (audit-log/new-dummy-audit-logger))
+          (assoc :session-store (create-session-store (ataru-db/get-datasource :db)))
           .start
           :routes)))
 
@@ -63,6 +66,8 @@
       (mock/content-type "application/json")
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
+
+(declare resp)
 
 (describe "GET /lomake-editori"
           (tags :unit)
@@ -163,8 +168,8 @@
                                       (fixtures/create-element "C")))
             form         (:body resp)
             with-updates (-> form
-                             (update-in [:content 0 :label :fi] (fn [e] "AA"))
-                             (update-in [:content 1 :label :fi] (fn [e] "BB")))
+                             (update-in [:content 0 :label :fi] (fn [_] "AA"))
+                             (update-in [:content 1 :label :fi] (fn [_] "BB")))
             operations   (form-diff/as-operations form with-updates)
             new-content  (get-content-from-response (update-and-get-form (:id form) operations))]
         (should= ["AA" "BB" "C"] (fixtures/get-names new-content))))
@@ -175,11 +180,11 @@
                                         (fixtures/create-element "C")))
             form           (:body resp)
             with-updates   (-> form
-                               (update-in [:content 0 :label :fi] (fn [e] "AA")))
+                               (update-in [:content 0 :label :fi] (fn [_] "AA")))
             with-relocate  (-> form
                                (update :content (fn [v] (swap v 0 1))))
-            after-update   (update-form (:id form) (form-diff/as-operations form with-updates))
-            after-relocate (update-form (:id form) (form-diff/as-operations form with-relocate))
+            _              (update-form (:id form) (form-diff/as-operations form with-updates))
+            _              (update-form (:id form) (form-diff/as-operations form with-relocate))
             new-content    (get-content-from-response (get-form (:id form)))]
         (should= ["B" "AA" "C"] (fixtures/get-names new-content))))
 
@@ -207,7 +212,6 @@
                                                        wa2   (assoc wrapper :children [a2])
                                                        new-c (concat [a1 wa2] rest)]
                                                    new-c))))
-            operations  (form-diff/as-operations form with-update)
             new-content (get-content-from-response (update-and-get-form (:id form) (form-diff/as-operations form with-update)))]
         (should= ["A1" ["A2"] "B" "C"] (get-structure-as-names new-content))))
 
@@ -217,9 +221,9 @@
                                                   (fixtures/create-element "C")))
             form                     (:body resp)
             with-updates             (-> form
-                                         (update-in [:content 0 :label :fi] (fn [e] "AA")))
+                                         (update-in [:content 0 :label :fi] (fn [_] "AA")))
             with-conflicting-updates (-> form
-                                         (update-in [:content 0 :label :fi] (fn [e] "ABC")))
+                                         (update-in [:content 0 :label :fi] (fn [_] "ABC")))
             success-response         (update-form (:id form) (form-diff/as-operations form with-updates))
             failure-response         (update-form (:id form) (form-diff/as-operations form with-conflicting-updates))]
         (should= 200 (:status success-response))

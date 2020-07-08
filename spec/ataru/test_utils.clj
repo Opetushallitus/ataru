@@ -1,14 +1,16 @@
 (ns ataru.test-utils
   (:require [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]
+            [speclj.core :refer [should-not-be-nil should-contain should= should-not-contain]]
             [ataru.db.db :as db]
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
             [ataru.forms.form-store :as form-store]
             [ataru.applications.application-store :as application-store]
+            [clojure.string :as clj-string]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
+(declare yesql-upsert-virkailija<!)
 
 (defn login
   "Generate ring-session=abcdefgh cookie"
@@ -18,7 +20,7 @@
       :headers
       (get "Set-Cookie")
       first
-      (clojure.string/split #";")
+      (clj-string/split #";")
       first))
 
 (defn should-have-header

@@ -64,6 +64,9 @@
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.10.1"]
                  [ring "1.8.0"]
+                 [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT"]
+                 [clj-http "3.10.0"]
+                 [ring "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-json "0.5.0"]
                  [ring-ratelimit "0.2.2"]
@@ -313,7 +316,7 @@
              :uberjar        {:aot            :all
                               :resource-paths ["resources"]}
 
-             :opintopolku-local {:local-repo "/m2-home/.m2"}
+             :opintopolku-local {:local-repo "/m2-home/.m2/repository"}
              :opintopolku-local-virkailija {:figwheel {:server-ip "ataru-figwheel-virkailija.kehittajan-oma-kone.testiopintopolku.fi"
                                                        :server-port 3449
                                                        :repl false}}

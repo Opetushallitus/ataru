@@ -22,9 +22,8 @@
             [ataru.information-request.information-request-service :as information-request]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.middleware.cache-control :as cache-control]
-            [ataru.middleware.session-store :refer [create-store]]
             [ataru.middleware.session-timeout :as session-timeout]
-            [ataru.middleware.session-client :as session-client]
+            [clj-ring-db-session.session.session-client :as session-client]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -33,7 +32,6 @@
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.translations.texts :as texts]
             [ataru.util.client-error :as client-error]
-            [ataru.virkailija.authentication.auth-middleware :as auth-middleware]
             [ataru.virkailija.authentication.auth-routes :refer [auth-routes]]
             [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [ataru.organization-service.session-organizations :refer [organization-list] :as session-orgs]
@@ -43,6 +41,8 @@
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [ataru.valintaperusteet.service :as valintaperusteet]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
+            [ataru.virkailija.authentication.auth-utils :as auth-utils]
+            [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
             [cheshire.generate :refer [add-encoder]]
             [clj-access-logging]
@@ -152,11 +152,12 @@
     (selmer/render-file filename {:config (json/generate-string js-config)})
     (not-found "Not found")))
 
-(defn- wrap-database-backed-session [handler]
-  (ring-session/wrap-session handler
-                             {:root         "/lomake-editori"
-                              :cookie-attrs {:secure (not (:dev? env))}
-                              :store        (create-store)}))
+(defn- create-wrap-database-backed-session [session-store]
+  (fn [handler]
+    (ring-session/wrap-session handler
+                               {:root         "/lomake-editori"
+                                :cookie-attrs {:secure (not (:dev? env))}
+                                :store        session-store})))
 
 (api/defroutes test-routes
   (api/undocumented
@@ -1361,18 +1362,19 @@
                                 dashboard-routes
                                 (status-routes this)
                                 (api/middleware [user-feedback/wrap-user-feedback
-                                                 wrap-database-backed-session
+                                                 (create-wrap-database-backed-session (:session-store this))
                                                  clj-access-logging/wrap-session-access-logging
-                                                 auth-middleware/with-authentication]
+                                                 #(crdsa-auth-middleware/with-authentication % (auth-utils/cas-auth-url))]
                                                 (api/middleware [session-client/wrap-session-client-headers
                                                                  session-timeout/wrap-idle-session-timeout]
                                                                 app-routes
                                                   (api-routes this))
-                                  (auth-routes (:login-cas-client this)
-                                               (:kayttooikeus-service this)
-                                               (:person-service this)
-                                               (:organization-service this)
-                                               (:audit-logger this))))
+                                  (auth-routes (select-keys this [:login-cas-client
+                                                                  :kayttooikeus-service
+                                                                  :person-service
+                                                                  :organization-service
+                                                                  :audit-logger
+                                                                  :session-store]))))
                               (api/undocumented
                                 (route/not-found "Not found")))
                             (wrap-defaults (-> site-defaults
