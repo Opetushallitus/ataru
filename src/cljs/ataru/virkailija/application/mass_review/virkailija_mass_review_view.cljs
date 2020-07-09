@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.view.mass-review
+(ns ataru.virkailija.application.mass-review.virkailija-mass-review-view
   (:require
     [ataru.application.review-states :as review-states]
     [ataru.virkailija.application.view.icons :as icons]

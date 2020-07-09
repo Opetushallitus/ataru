@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.view.application-list
+(ns ataru.virkailija.application.application-list.virkailija-application-list-view
   (:require [ataru.application.application-states :as application-states]
               [ataru.application.review-states :as review-states]
               [ataru.cljs-util :as cljs-util]
