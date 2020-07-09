@@ -13,6 +13,7 @@
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as stats]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
+            [ataru.config.core :refer [config]]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [ataru.cas.client :as cas])
@@ -79,7 +80,7 @@
      {:redis-cache :hakukohde-redis-cache})]
 
    [:kouta-internal-cas-client
-    (cas/new-client "/kouta-internal" "auth/login" "session")]
+    (cas/new-client "/kouta-internal" "auth/login" "session" (-> config :public-config :virkailija-caller-id))]
    [:kouta-haku-cache-loader
     (component/using
      (kouta-client/map->CacheLoader {})

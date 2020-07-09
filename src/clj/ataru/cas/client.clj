@@ -7,17 +7,18 @@
 
 (defrecord CasClientState [client params session-cookie-name session-id])
 
-(defn new-cas-client []
+(defn new-cas-client [caller-id]
   (new CasClient
        (resolve-url :cas-client)
-       (.defaultClient org.http4s.client.blaze.package$/MODULE$)))
+       (.defaultClient org.http4s.client.blaze.package$/MODULE$)
+       caller-id))
 
-(defn new-client [service security-uri-suffix session-cookie-name]
+(defn new-client [service security-uri-suffix session-cookie-name caller-id]
   {:pre [(some? (:cas config))]}
   (let [username   (get-in config [:cas :username])
         password   (get-in config [:cas :password])
         cas-params (CasParams/apply service security-uri-suffix username password)
-        cas-client (new-cas-client)]
+        cas-client (new-cas-client caller-id)]
     (map->CasClientState {:client              cas-client
                           :params              cas-params
                           :session-cookie-name session-cookie-name
