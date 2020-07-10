@@ -490,7 +490,7 @@
                                                                       field-deadlines))
         person                     (if (= actor-role :virkailija)
                                      (application-service/get-person application-service application)
-                                     (if application
+                                     (when application
                                        (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
