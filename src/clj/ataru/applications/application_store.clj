@@ -9,7 +9,6 @@
             [ataru.forms.form-store :as forms]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
-            [ataru.schema.form-schema :as schema]
             [ataru.util :refer [answers-by-key] :as util]
             [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
@@ -20,7 +19,6 @@
             [clojure.set]
             [clojure.string]
             [clojure.java.jdbc :as jdbc]
-            [schema.core :as s]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]])
