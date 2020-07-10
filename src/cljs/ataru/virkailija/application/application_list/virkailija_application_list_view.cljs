@@ -500,12 +500,12 @@
               [application-base-education-filters filters-checkboxes @lang]])]
           (when (some? @form-key)
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :attachment])]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
               [question-search/search-input
                @form-key
                question-search-id
-               @(subscribe [:editor/virkailija-translation :name-of-attachment])
+               @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
                (not (empty? @filter-attachments))
                (fn [db form-key]
                  (every-pred (qsh/field-type-filter-predicate "attachment")
