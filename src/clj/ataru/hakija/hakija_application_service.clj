@@ -3,6 +3,7 @@
     [taoensso.timbre :as log]
     [clojure.core.async :as async]
     [clojure.core.match :refer [match]]
+    [clojure.string :as string]
     [ataru.applications.application-service :as application-service]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.field-deadline :as field-deadline]
@@ -16,14 +17,13 @@
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.validator :as validator]
-    [ataru.application.review-states :refer [complete-states]]
     [ataru.applications.application-store :as application-store]
     [ataru.util :as util]
     [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [cheshire.core :as json]
     [clj-time.core :as time]
-    [clj-time.coerce :as t]
     [clojure.java.jdbc :as jdbc]
     [clj-time.format :as f]))
 
@@ -99,7 +99,7 @@
                                 (filter (comp not (partial contains? new-attachments))))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
-    (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
+    (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
   (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
@@ -140,7 +140,7 @@
   (audit-log/log audit-logger
                  {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
                                                      (f/unparse modified-time-format submitted-at)
-                                                     (cheshire.core/generate-string application))}
+                                                     (json/generate-string application))}
                   :operation audit-log/operation-failed
                   :session   session
                   :id        {:email (util/extract-email application)}}))
