@@ -84,7 +84,8 @@
                             (if (contains? old-answers id)
                               (not= (:value (new-answers id))
                                     (:value (old-answers id)))
-                              (not-empty (:value (new-answers id)))))
+                              (not-every? string/blank?
+                                          (flatten (vector (:value (new-answers id)))))))
                    id))))))
 
 (defn- flatten-attachment-keys [application]
