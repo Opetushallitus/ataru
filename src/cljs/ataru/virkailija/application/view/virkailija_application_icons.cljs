@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.view.icons)
+(ns ataru.virkailija.application.view.virkailija-application-icons)
 
 (defn icon-check []
   [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg

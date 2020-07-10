@@ -4,7 +4,7 @@
               [ataru.cljs-util :as cljs-util]
               [ataru.translations.texts :refer [general-texts]]
               [ataru.util :as util]
-              [ataru.virkailija.application.view.names :as names]
+              [ataru.virkailija.application.view.virkailija-application-names :as names]
               [ataru.virkailija.dropdown :as dropdown]
               [ataru.virkailija.question-search.handlers :as qsh]
               [ataru.virkailija.question-search.view :as question-search]

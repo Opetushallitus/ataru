@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.view.names
+(ns ataru.virkailija.application.view.virkailija-application-names
   (:require [re-frame.core :refer [subscribe]]))
 
 (defn hakukohde-and-tarjoaja-name [hakukohde-oid]

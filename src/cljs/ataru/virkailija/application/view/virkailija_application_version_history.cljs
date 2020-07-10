@@ -1,4 +1,4 @@
-(ns ataru.virkailija.application.view.version-history
+(ns ataru.virkailija.application.view.virkailija-application-version-history
   (:require [ataru.util :as util]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.views.modal :as modal]

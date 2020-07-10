@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.mass-review.virkailija-mass-review-view
   (:require
     [ataru.application.review-states :as review-states]
-    [ataru.virkailija.application.view.icons :as icons]
+    [ataru.virkailija.application.view.virkailija-application-icons :as icons]
     [reagent.core :as r]
     [re-frame.core :refer [subscribe dispatch]]))
 
