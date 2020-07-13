@@ -1,7 +1,8 @@
 (ns ataru.virkailija.views
     (:require [re-frame.core :as re-frame]
               [ataru.virkailija.views.banner :refer [snackbar top-banner]]
-              [ataru.virkailija.application.view :refer [application application-version-changes]]
+              [ataru.virkailija.application.view :refer [application]]
+              [ataru.virkailija.application.view.virkailija-application-version-history :refer [application-version-changes]]
               [ataru.virkailija.application.attachments.virkailija-attachment-view :as attachments]
               [ataru.virkailija.views.template-editor :refer [email-template-editor]]
               [ataru.virkailija.editor.view :refer [editor]]
@@ -18,7 +19,7 @@
 (defn some-right-exists-for-user? [rights orgs]
   (boolean (some rights (->> orgs (map :rights) flatten (map keyword)))))
 
-(defn privileged-panel [panel rights]
+(defn privileged-panel [_ _]
   (let [organizations (re-frame/subscribe [:state-query [:editor :user-info :organizations]])]
     (fn [panel rights]
       (if (some-right-exists-for-user? rights @organizations)

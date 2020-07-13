@@ -308,7 +308,8 @@
 
              :virkailija-dev [:dev {:target-path "target-virkailija"
                                     :jvm-opts    ^:replace ["-Duser.home=."
-                                                            "-XX:MaxJavaStackTraceDepth=10"]}]
+                                                            "-XX:MaxJavaStackTraceDepth=10"
+                                                            "-Dclojure.main.report=stderr"]}]
 
              :hakija-dev     [:dev {:target-path "target-hakija"
                                     :jvm-opts    ^:replace ["-Duser.home=."

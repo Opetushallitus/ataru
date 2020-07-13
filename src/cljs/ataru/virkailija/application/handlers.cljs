@@ -1,79 +1,21 @@
 (ns ataru.virkailija.application.handlers
   (:require [ataru.virkailija.virkailija-ajax :as ajax]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync reg-event-db reg-event-fx]]
+            [re-frame.core :refer [subscribe dispatch reg-event-db reg-event-fx]]
             [ataru.virkailija.autosave :as autosave]
-            [ataru.virkailija.virkailija-ajax :refer [http]]
             [ataru.application.review-states :as review-states]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as util]
             [ataru.cljs-util :as cljs-util]
-            [ataru.virkailija.temporal :as temporal]
-            [reagent.core :as r]
-            [ataru.feature-config :as fc]
-            [ataru.url :as url]
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]
+            [clojure.set :as clj-set]
+            [clojure.string :as clj-string]
             [ataru.application.application-states :as application-states]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
-            [re-frame.core :as re-frame]
-            [clojure.core.match :refer [match]]
-            [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]))
-
-(defn- state-filter->query-param
-  [db filter all-states]
-  (when-let [filters (seq (clojure.set/difference
-                           (set (map first all-states))
-                           (set (get-in db [:application filter]))))]
-    (str (name filter) "=" (clojure.string/join "," filters))))
-
-(defn- applications-link
-  [db]
-  (let [selected-form           (get-in db [:application :selected-form-key])
-        selected-haku           (get-in db [:application :selected-haku])
-        selected-hakukohde      (get-in db [:application :selected-hakukohde])
-        selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])
-        term                    (when (= :search-term (get-in db [:application :search-control :show]))
-                                  (when-let [term (get-in db [:application :search-control :search-term :value])]
-                                    (str "term=" term)))
-        application-key         (when-let [application-key (get-in db [:application :selected-key])]
-                                  (str "application-key=" application-key))
-        ensisijaisesti          (when (or (some? selected-hakukohde)
-                                          (some? selected-hakukohderyhma))
-                                  (str "ensisijaisesti=" (get-in db [:application :ensisijaisesti?])))
-        attachment-state-filter (state-filter->query-param
-                                 db
-                                 :attachment-state-filter
-                                 review-states/attachment-hakukohde-review-types-with-no-requirements)
-        processing-state-filter (state-filter->query-param
-                                 db
-                                 :processing-state-filter
-                                 review-states/application-hakukohde-processing-states)
-        selection-state-filter  (state-filter->query-param
-                                 db
-                                 :selection-state-filter
-                                 review-states/application-hakukohde-selection-states)
-        query-params            (when-let [params (->> [term
-                                                        application-key
-                                                        ensisijaisesti
-                                                        attachment-state-filter
-                                                        processing-state-filter
-                                                        selection-state-filter]
-                                                       (filter some?)
-                                                       seq)]
-                                  (str "?" (clojure.string/join "&" params)))]
-    (cond (some? selected-form)
-          (str "/lomake-editori/applications/" selected-form query-params)
-          (some? selected-haku)
-          (str "/lomake-editori/applications/haku/" selected-haku query-params)
-          (some? selected-hakukohde)
-          (str "/lomake-editori/applications/hakukohde/" selected-hakukohde query-params)
-          (some? selected-hakukohderyhma)
-          (str "/lomake-editori/applications/haku/" (first selected-hakukohderyhma)
-               "/hakukohderyhma/" (second selected-hakukohderyhma)
-               query-params))))
+            [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
+            [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
+            [ataru.virkailija.temporal :as temporal]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -132,7 +74,7 @@
                               [:application/fetch-application application-key true]])]
           {:dispatch-n dispatches})))))
 
-(defn close-application [db]
+(defn- close-application [db]
   (cljs-util/update-url-with-query-params {:application-key nil})
   (-> db
       (assoc-in [:application :metadata-not-found] nil)
@@ -149,9 +91,9 @@
      :dispatch [:application/stop-autosave]}))
 
 (defn- map-vals-to-zero [m]
-  (into {} (for [[k v] m] [k 0])))
+  (into {} (for [[k _] m] [k 0])))
 
-(defn attachment-state-counts
+(defn- attachment-state-counts
   [applications included-hakukohde-oid-set]
   (reduce
     (fn [acc application]
@@ -185,7 +127,7 @@
       (assoc application :application-hakukohde-reviews (conj reviews-with-existing-removed new-review)))
     application))
 
-(defn update-review-field [db field value hakukohde-oid]
+(defn- update-review-field [db field value hakukohde-oid]
   (let [selected-key           (get-in db [:application :selected-key])
         application-list       (get-in db [:application :applications])
         is-hakukohde-review?   (-> (map first review-states/hakukohde-review-types)
@@ -255,87 +197,6 @@
           (assoc-in [:application :attachment-state-counts] (attachment-state-counts
                                                               updated-applications
                                                               @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
-
-(reg-event-db
-  :application/toggle-filter
-  (fn [db [_ filter-id state]]
-    (update-in db [:application :filters-checkboxes filter-id state] not)))
-
-(reg-event-fx
-  :application/apply-filters
-  (fn [{:keys [db]} _]
-    {:db       (-> db
-                   (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
-                   (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
-                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value]))
-                   (assoc-in [:application :attachment-review-states] (get-in db [:application :attachment-review-states-value])))
-     :dispatch [:application/reload-applications]}))
-
-(defn- set-rajaus-hakukohteella
-  [db hakukohde-oid]
-  (cljs-util/update-url-with-query-params {:rajaus-hakukohteella hakukohde-oid})
-  (assoc-in db [:application :rajaus-hakukohteella-value] hakukohde-oid))
-
-(defn- set-ensisijaisesti
-  [db ensisijaisesti?]
-  (cljs-util/update-url-with-query-params {:ensisijaisesti ensisijaisesti?})
-  (cond-> (assoc-in db [:application :ensisijaisesti?-checkbox] ensisijaisesti?)
-          (not ensisijaisesti?)
-          (set-rajaus-hakukohteella nil)))
-
-(reg-event-db
-  :application/set-ensisijaisesti
-  (fn [db [_ ensisijaisesti?]] (set-ensisijaisesti db ensisijaisesti?)))
-
-(reg-event-db
-  :application/set-rajaus-hakukohteella
-  (fn [db [_ hakukohde-oid]] (set-rajaus-hakukohteella db hakukohde-oid)))
-
-(defn- undo-filters
-  [db]
-  (-> db
-      (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
-      (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
-      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
-      (assoc-in [:application :attachment-review-states-value] (get-in db [:application :attachment-review-states]))))
-
-(reg-event-db
-  :application/undo-filters
-  (fn [db _] (undo-filters db)))
-
-(reg-event-db
-  :application/toggle-shown-time-column
-  (fn [db _]
-    (update-in db [:application :selected-time-column] #(if (= "created-time" %)
-                                                          "submitted"
-                                                          "created-time"))))
-
-(reg-event-fx
-  :application/remove-filters
-  (fn [{:keys [db]} _]
-    {:db       (-> db
-                   (assoc-in [:application :filters] initial-db/default-filters)
-                   (assoc-in [:application :filters-checkboxes] initial-db/default-filters)
-                   (assoc-in [:application :ensisijaisesti?] false)
-                   (assoc-in [:application :ensisijaisesti?-checkbox] false)
-                   (assoc-in [:application :rajaus-hakukohteella] nil)
-                   (assoc-in [:application :rajaus-hakukohteella-value] nil)
-                   (assoc-in [:application :attachment-review-states] {})
-                   (assoc-in [:application :attachment-review-states-value] {}))
-     :dispatch [:application/reload-applications]}))
-
-(reg-event-fx
-  :application/update-sort
-  (fn [{:keys [db]} [_ column-id]]
-    {:db       (update-in db [:application :sort]
-                          #(if (= column-id (:order-by %))
-                             (update % :order {"desc" "asc" "asc" "desc"})
-                             (assoc % :order-by column-id)))
-     :dispatch [:application/reload-applications]}))
-
-(defn- keys->str
-  [m]
-  (into {} (map (fn [[k v]] [(name k) v]) m)))
 
 (defn- add-review-state-counts
   [counts applications selected-hakukohde-oids review-type]
@@ -445,7 +306,7 @@
   [query-params query-param states]
   (-> query-params
       query-param
-      (clojure.string/split #",")
+      (clj-string/split #",")
       (cljs-util/get-unselected-review-states states)))
 
 (reg-event-db
@@ -474,7 +335,7 @@
           (assoc-in [:application :rajaus-hakukohteella]
                     (when ensisijaisesti? (:rajaus-hakukohteella query-params)))
           (asch/set-search (or (:term query-params) ""))
-          (undo-filters)))))
+          (virkailija-application-list-handlers/undo-filters)))))
 
 (reg-event-db
   :application/handle-fetch-form-contents
@@ -564,7 +425,7 @@
                {}
                notes-by-hakukohde)))
 
-(defn update-application-details [db {:keys [form
+(defn- update-application-details [db {:keys [form
                                              latest-form
                                              application
                                              events
@@ -592,7 +453,7 @@
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
           (let
-            [review-hakukohde-oids-to-keep                 (clojure.set/intersection (set (:hakukohde application))
+            [review-hakukohde-oids-to-keep                 (clj-set/intersection (set (:hakukohde application))
                                                                                      (set current-hakukohde-oids))]
             (cond
               (not-empty review-hakukohde-oids-to-keep)
@@ -606,13 +467,13 @@
               :else
               [(or (first (:hakukohde application)) "form")]))))))
 
-(defn review-autosave-predicate [current prev]
+(defn- review-autosave-predicate [current prev]
   (if (not= (:id current) (:id prev))
     false
     ;timestamp instances for same timestamp fetched via ajax are not equal :(
     (not= (dissoc current :created-time) (dissoc prev :created-time))))
 
-(defn start-application-review-autosave [db]
+(defn- start-application-review-autosave [db]
   (assoc-in
     db
     [:application :review-autosave]
@@ -691,7 +552,7 @@
                               (update-in [:application] dissoc :answers)
                               (update-in [:application] dissoc :tarjonta)
                               (update-in [:form] dissoc :content))
-        with-times        (ataru.virkailija.temporal/parse-times without-huge-data)]
+        with-times        (temporal/parse-times without-huge-data)]
     (-> with-times
         (assoc-in [:application :answers] answers)
         (assoc-in [:application :tarjonta] tarjonta)
@@ -838,12 +699,6 @@
     {:db       db
      :navigate path}))
 
-(reg-event-fx
-  :application/dispatch
-  (fn [{:keys [db]} [_ dispatch-vec]]
-    {:db       db
-     :dispatch dispatch-vec}))
-
 (reg-event-db
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
@@ -852,74 +707,6 @@
                  (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
                    (filter #(not= selected-hakukohde-oid %) hakukohde-oids)
                    (cons selected-hakukohde-oid hakukohde-oids))))))
-
-(reg-event-db
-  :application/set-mass-information-request-form-state
-  (fn [db [_ state]]
-    (assoc-in db [:application :mass-information-request :form-status] state)))
-
-(reg-event-fx
-  :application/cancel-mass-information-request
-  (fn [{:keys [db]} _]
-    (when (= :confirm (get-in db [:application :mass-information-request :form-status]))
-      {:dispatch [:application/set-mass-information-request-form-state :enabled]})))
-
-(reg-event-fx
-  :application/confirm-mass-information-request
-  (fn [_ _]
-    {:dispatch       [:application/set-mass-information-request-form-state :confirm]
-     :dispatch-later [{:dispatch [:application/cancel-mass-information-request]
-                       :ms       3000}]}))
-
-(reg-event-db
-  :application/set-mass-information-request-subject
-  (fn [db [_ subject]]
-    (cond-> (assoc-in db [:application :mass-information-request :subject] subject)
-            (not= :enabled (-> db :application :mass-information-request :form-status))
-            (assoc-in [:application :mass-information-request :form-status] :enabled))))
-
-(reg-event-db
-  :application/set-mass-information-request-message
-  (fn [db [_ message]]
-    (cond-> (assoc-in db [:application :mass-information-request :message] message)
-            (not= :enabled (-> db :application :mass-information-request :form-status))
-            (assoc-in [:application :mass-information-request :form-status] :enabled))))
-
-(reg-event-db
-  :application/set-excel-request-included-ids
-  (fn [db [_ included-ids]]
-    (assoc-in db [:application :excel-request :included-ids] included-ids)))
-
-(reg-event-fx
-  :application/submit-mass-information-request
-  (fn [{:keys [db]} _]
-    (let [message-and-subject (-> db :application :mass-information-request
-                                  (select-keys [:message :subject]))
-          application-keys    (map :key (get-in db [:application :applications]))]
-      {:dispatch [:application/set-mass-information-request-form-state :submitting]
-       :http     {:method              :post
-                  :path                "/lomake-editori/api/applications/mass-information-request"
-                  :params              {:application-keys    application-keys
-                                        :message-and-subject message-and-subject}
-                  :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
-
-(reg-event-fx
-  :application/handle-submit-mass-information-request-response
-  (fn [_ _]
-    {:dispatch       [:application/set-mass-information-request-form-state :submitted]
-     :dispatch-later [{:ms       3000
-                       :dispatch [:application/reset-submit-mass-information-request-state]}]}))
-
-(reg-event-fx
-  :application/reset-submit-mass-information-request-state
-  (fn [{:keys [db]} _]
-    {:dispatch-n [[:application/set-mass-information-request-message ""]
-                  [:application/set-mass-information-request-subject ""]
-                  [:application/set-mass-information-request-form-state :enabled]
-                  (when-let [current-application (-> db :application :selected-key)]
-                    [:application/fetch-application current-application])]
-     :db         (update-in db [:application :applications]
-                            (partial map #(assoc % :new-application-modifications 0)))}))
 
 (reg-event-db
   :application/set-information-request-subject
@@ -947,16 +734,6 @@
   :application/set-information-request-window-visibility
   (fn [db [_ visible?]]
     (assoc-in db [:application :information-request :visible?] visible?)))
-
-(reg-event-db
-  :application/set-mass-information-request-popup-visibility
-  (fn [db [_ visible?]]
-    (assoc-in db [:application :mass-information-request :visible?] visible?)))
-
-(reg-event-db
-  :application/set-mass-update-popup-visibility
-  (fn [db [_ visible?]]
-    (assoc-in db [:application :mass-update :visible?] visible?)))
 
 (reg-event-db
   :application/set-excel-popup-visibility
@@ -990,18 +767,6 @@
   (fn [_ _]
     {:delayed-dispatch {:dispatch-vec [:application/reload-applications]
                         :delay        500}}))
-
-(reg-event-fx
-  :application/mass-update-application-reviews
-  (fn [{:keys [db]} [_ from-state to-state]]
-    {:http {:method              :post
-            :params              {:application-keys (map :key (get-in db [:application :applications]))
-                                  :from-state       from-state
-                                  :to-state         to-state
-                                  :hakukohde-oid    (or (-> db :application :rajaus-hakukohteella)
-                                                        (-> db :application :selected-hakukohde))}
-            :path                "/lomake-editori/api/applications/mass-update"
-            :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 
 (reg-event-fx
   :application/resend-modify-application-link
@@ -1291,13 +1056,3 @@
   :application/add-filter-attachment
   (fn [db [_ field-id]]
     (assoc-in db [:application :attachment-review-states-value field-id] initial-db/default-attachment-review-states)))
-
-(reg-event-db
-  :application/remove-filter-attachment
-  (fn [db [_ field-id]]
-    (update-in db [:application :attachment-review-states-value] dissoc field-id)))
-
-(reg-event-db
-  :application/set-filter-attachment-state
-  (fn [db [_ field-id state value]]
-    (assoc-in db [:application :attachment-review-states-value field-id state] value)))
