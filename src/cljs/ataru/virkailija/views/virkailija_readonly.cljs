@@ -14,6 +14,7 @@
                                                                        scroll-to-anchor
                                                                        copy-link]]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
+            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.set :as set]
@@ -93,7 +94,8 @@
                                                       (get-value (-> application :answers id) group-idx))
                                                     (:options field-descriptor)
                                                     lang)
-        options          (when (not-empty values) (:options field-descriptor))
+        visible?         (option-visibility/visibility-checker field-descriptor values)
+        options          (filter visible? (:options field-descriptor))
         followups?       (some (comp not-empty :followups) options)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
