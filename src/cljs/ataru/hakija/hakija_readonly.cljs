@@ -11,8 +11,8 @@
             [ataru.util :as util]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common :as application-field]
-            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
-            [ataru.hakija.application.option-visibility :as option-visibility]))
+            [ataru.application-common.option-visibility :as option-visibility]
+            [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]))
 
 (declare field)
 
