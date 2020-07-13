@@ -33,12 +33,12 @@
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_am" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge vocational-identifier {:f9340e89-4a1e-4626-9246-2a77a32b22ed {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_am" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge vocational-identifier {:b6fa0257-c1fd-4107-b151-380e02c56fa9 {:value "1"}})))))
 
 (def double-degree-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ammatillinen"]}})
@@ -83,7 +83,7 @@
     ; 1. yhteishaku, nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2098}]
              (select-year-for
-              {:hakukausiVuosi 2098}
+              {:hakukausi-vuosi 2098}
               (merge double-degree-identifier {:22df6790-588f-4c45-8238-3ecfccdf6d93 {:value "1"}})))
     ; 2. yhteishaku, 2017-nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2097}]
@@ -91,7 +91,7 @@
     ; 2. yhteishaku, nyt
     (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2096}]
              (select-year-for
-              {:hakukausiVuosi 2096}
+              {:hakukausi-vuosi 2096}
               (merge double-degree-identifier {:dfeb9d56-4d53-4087-9473-1b2d9437e47f {:value "1"}})))))
 
 (def international-matriculation-fi-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_kansainvalinen_suomessa"]}})
@@ -103,7 +103,7 @@
     ; This is a regression: All these were "0" before 2020 but somewhere along the line the form answers were reordered
     ; causing the values to change
     (let [completion-year-output [{:pohjakoulutuskklomake "pohjakoulutus_yo_kansainvalinen_suomessa" :suoritusvuosi 2020}]
-          application-form       {:hakukausiVuosi 2020}
+          application-form       {:hakukausi-vuosi 2020}
           degrees                {:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year "1"
                                   :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year "1"
                                   :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year "1"
@@ -125,7 +125,7 @@
   (it "applicant will complete degree this year"
     ; Same as above, this is also a regression for the exact same reason.
     (let [completion-year-output [{:pohjakoulutuskklomake "pohjakoulutus_yo_ulkomainen" :suoritusvuosi 2020}]
-          application-form       {:hakukausiVuosi 2020}
+          application-form       {:hakukausi-vuosi 2020}
           degrees                {:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year "1"
                                   :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year "1"
                                   :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year "1"
@@ -148,12 +148,12 @@
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge higher-education-qualification-identifier {:64d82dce-14e6-4261-84b1-d868a265cd54 {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge higher-education-qualification-identifier {:cc4fcbbb-6943-43b4-af9a-0b961bae6bb3 {:value "1"}})))))
 
 (def other-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_ulk"]}})
@@ -165,12 +165,12 @@
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_ulk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge other-qualification-outside-finland-identifier {:beab461b-b743-44ba-b9f0-1a56daa3eece {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_ulk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge other-qualification-outside-finland-identifier {:3fe6e8e1-6622-4fee-950a-7e602b3cccce {:value "1"}})))))
 
 (def higher-qualification-outside-finland-identifier {:higher-completed-base-education {:value ["pohjakoulutus_kk_ulk"]}})
@@ -182,12 +182,12 @@
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge higher-qualification-outside-finland-identifier {:f2b4db5e-7090-4859-b404-4a6334686afe {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge higher-qualification-outside-finland-identifier {:a722150f-d2b5-43eb-bdb6-b2d3ca3a428b {:value "1"}})))))
 
 (def further-vocational-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_amt"]}})
@@ -199,12 +199,12 @@
       ; 1. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_amt" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge further-vocational-qualification-identifier {:718d7f0b-4075-4960-8456-1ec49e147551 {:value "1"}})))
       ; 2. yhteishaku
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_amt" :suoritusvuosi 2020}]
                (select-year-for
-                {:hakukausiVuosi 2020}
+                {:hakukausi-vuosi 2020}
                 (merge further-vocational-qualification-identifier {:1a9c3205-0500-439e-84b9-4bb7b90dabe8 {:value "2"}})))))
 
 (run-specs)
