@@ -1,31 +1,31 @@
 (ns ataru.hakija.hakija-application-service
   (:require
-    [taoensso.timbre :as log]
-    [clojure.core.async :as async]
-    [clojure.core.match :refer [match]]
     [ataru.applications.application-service :as application-service]
+    [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.field-deadline :as field-deadline]
     [ataru.background-job.job :as job]
     [ataru.db.db :as db]
     [ataru.email.application-email-confirmation :as application-email]
+    [ataru.files.file-store :as file-store]
+    [ataru.forms.form-store :as form-store]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
+    [ataru.hakija.validator :as validator]
     [ataru.log.audit-log :as audit-log]
     [ataru.person-service.person-integration :as person-integration]
-    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
-    [ataru.forms.form-store :as form-store]
-    [ataru.hakija.validator :as validator]
-    [ataru.application.review-states :refer [complete-states]]
-    [ataru.applications.application-store :as application-store]
-    [ataru.util :as util]
-    [ataru.files.file-store :as file-store]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
+    [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
+    [cheshire.core :as json]
     [clj-time.core :as time]
-    [clj-time.coerce :as t]
+    [clj-time.format :as f]
+    [clojure.core.async :as async]
+    [clojure.core.match :refer [match]]
     [clojure.java.jdbc :as jdbc]
-    [clj-time.format :as f]))
+    [clojure.string :as string]
+    [taoensso.timbre :as log]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
   {:pre [(boolean? is-modify?)]}
@@ -84,7 +84,8 @@
                             (if (contains? old-answers id)
                               (not= (:value (new-answers id))
                                     (:value (old-answers id)))
-                              (not-empty (:value (new-answers id)))))
+                              (not-every? string/blank?
+                                          (flatten (vector (:value (new-answers id)))))))
                    id))))))
 
 (defn- flatten-attachment-keys [application]
@@ -99,7 +100,7 @@
                                 (filter (comp not (partial contains? new-attachments))))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
-    (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (clojure.string/join ", " orphan-attachments)))))
+    (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
   (when (virkailija-edit/virkailija-update-secret-valid? virkailija-secret)
@@ -140,7 +141,7 @@
   (audit-log/log audit-logger
                  {:new       {:late-submitted-application (format "Hakija yritti palauttaa hakemuksen hakuajan päätyttyä: %s. Hakemus: %s"
                                                      (f/unparse modified-time-format submitted-at)
-                                                     (cheshire.core/generate-string application))}
+                                                     (json/generate-string application))}
                   :operation audit-log/operation-failed
                   :session   session
                   :id        {:email (util/extract-email application)}}))
@@ -490,7 +491,7 @@
                                                                       field-deadlines))
         person                     (if (= actor-role :virkailija)
                                      (application-service/get-person application-service application)
-                                     (if application
+                                     (when application
                                        (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
