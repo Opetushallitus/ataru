@@ -55,7 +55,8 @@
                                (ohjausparametrit-service/new-ohjausparametrit-service)
                                [:ohjausparametrit-cache])
 
-    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check" "JSESSIONID")
+    :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
+                                                      "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -79,7 +80,8 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check" "JSESSIONID")
+    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
+                                                  "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
@@ -95,7 +97,8 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login" "session")
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
+                                                      "session" (-> config :public-config :hakija-caller-id))
 
     :valinta-tulos-service (component/using
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
