@@ -1,5 +1,10 @@
 (ns ataru.hakija.arvosanat.arvosanat-render
-  (:require [ataru.hakija.arvosanat.arvosanat-components :as arvosanat]
+  (:require [ataru.hakija.arvosanat.components.arvosanat-taulukko :as at]
+            [ataru.hakija.arvosanat.components.arvosanat-taulukko-readonly :as atr]
+            [ataru.hakija.arvosanat.components.oppiaineen-arvosana :as oa]
+            [ataru.hakija.arvosanat.components.oppiaineen-arvosana-readonly :as oar]
+            [ataru.hakija.arvosanat.components.valinnaiset-kielet :as vk]
+            [ataru.hakija.arvosanat.components.valinnaiset-kielet-readonly :as vkr]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]
             [ataru.schema.lang-schema :as lang-schema]
             [schema.core :as s])
@@ -11,16 +16,16 @@
   (match field-descriptor
          {:fieldClass "wrapperElement"
           :fieldType  "fieldset"}
-         [arvosanat/arvosanat-taulukko render-field-args]
+         [at/arvosanat-taulukko render-field-args]
 
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"
           :id         "oppiaineen-arvosanat-valinnaiset-kielet"}
-         [arvosanat/valinnaiset-kielet render-field-args]
+         [vk/valinnaiset-kielet render-field-args]
 
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"}
-         [arvosanat/oppiaineen-arvosana render-field-args]))
+         [oa/oppiaineen-arvosana render-field-args]))
 
 (s/defn render-arvosanat-component-readonly
   [{:keys [field-descriptor
@@ -35,7 +40,7 @@
   (match field-descriptor
          {:fieldClass "wrapperElement"
           :fieldType  "fieldset"}
-         [arvosanat/arvosanat-taulukko-readonly
+         [atr/arvosanat-taulukko-readonly
           {:lang             lang
            :application      application
            :render-field     render-field
@@ -45,7 +50,7 @@
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"
           :id         "oppiaineen-arvosanat-valinnaiset-kielet"}
-         [arvosanat/valinnaiset-kielet-readonly
+         [vkr/valinnaiset-kielet-readonly
           {:lang             lang
            :application      application
            :render-field     render-field
@@ -53,7 +58,7 @@
 
          {:fieldClass "questionGroup"
           :fieldType  "fieldset"}
-         [arvosanat/oppiaineen-arvosana-readonly
+         [oar/oppiaineen-arvosana-readonly
           {:field-descriptor field-descriptor
            :application      application
            :render-field     render-field

@@ -93,13 +93,11 @@
                              :id                                         s/Str
                              :fieldType                                  (apply s/enum ["fieldset" "rowcontainer" "adjacentfieldset"])
                              :children                                   [(s/conditional
-                                                                                      ;#(= (:id %) "arvosanat-taulukko")
-                                                                                      ;arvosanat/ArvosanatTaulukko
-                                                                                      #(or (= "wrapperElement" (:fieldClass %))
-                                                                                           (= "questionGroup" (:fieldClass %)))
-                                                                                      (s/recursive #'WrapperElement)
-                                                                                      :else
-                                                                                      BasicElement)]
+                                                                            #(or (= "wrapperElement" (:fieldClass %))
+                                                                                 (= "questionGroup" (:fieldClass %)))
+                                                                            (s/recursive #'WrapperElement)
+                                                                            :else
+                                                                            BasicElement)]
                              :metadata                                   element-metadata-schema/ElementMetadata
                              (s/optional-key :version)                   s/Str
                              (s/optional-key :child-validator)           child-validator-schema/ChildValidator

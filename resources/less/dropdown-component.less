@@ -4,13 +4,13 @@
 @import "component-remove-default-styles";
 
 .a-dropdown {
-  .flex-column-top-left();
+  .flex-column(flex-start, flex-start);
 
   position: relative;
 }
 
 .a-dropdown-button-container {
-  .flex-row-center-center();
+  .flex-row(center, center);
 }
 
 .a-dropdown-button__label:not(:first-child) {
@@ -19,7 +19,7 @@
 }
 
 .a-dropdown-select-container {
-  .flex-row-left-center(space-between);
+  .flex-row(center, space-between);
 
   width: 100%;
 }

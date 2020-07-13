@@ -32,16 +32,26 @@
                 (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value)))))))
 
 (defn- validate-oppiaine-a1-or-a2-component
+  "Validoi pakollinen A1- tai A2 riippuen valitusta äidinkielestä. Kun äidinkielenä ruotsi, validoitava
+   pakollisena kielenä A2, muuten pakollisena kielenä validoitava B1.
+
+   Mikäli ei-pakollisella kielellä ei arvosanaa, ignoorataan se, eli ei vaadita vastausta. Mikäli vastaus
+   on annettu ja validaatiovirhe löytyy, säilytetään validaatiovirhe."
   [answers-by-key failed _]
-  (let [language          (-> answers-by-key :language :value)
-        ignore-answer-key (if (= language "SV")
-                            :arvosana-B1
-                            :arvosana-A2)]
-    (reduce-kv (fn [acc k v]
-                 (cond-> acc
-                         (or (not= k ignore-answer-key)
-                             (-> answers-by-key ignore-answer-key :value seq some?))
-                         (assoc k v)))
+  (let [language                                 (-> answers-by-key :language :value)
+        ignore-answer-key                        (if (= language "SV")
+                                                   :arvosana-B1
+                                                   :arvosana-A2)
+        pakollinen-kielioppiaine?                (fn keep-mandatory-language-validation-errors? [answer-key]
+                                                   (not= answer-key ignore-answer-key))
+        valinnaisella-kielioppiaineella-vastaus? (fn valinnaisella-kielioppiaineella-vastaus? [answer-key]
+                                                   (and (= answer-key ignore-answer-key)
+                                                        (-> answers-by-key ignore-answer-key :value seq some?)))]
+    (reduce-kv (fn [kaikki-validaatiovirheet answer-key v]
+                 (cond-> kaikki-validaatiovirheet
+                         (or (pakollinen-kielioppiaine? answer-key)
+                             (valinnaisella-kielioppiaineella-vastaus? answer-key))
+                         (assoc answer-key v)))
                {}
                failed)))
 

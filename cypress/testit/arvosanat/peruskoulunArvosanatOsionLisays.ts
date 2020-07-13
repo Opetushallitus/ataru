@@ -1,4 +1,5 @@
 import * as lomakkeenMuokkaus from '../../lomakkeenMuokkaus'
+import * as arvosanat from '../../arvosanatOsio'
 import LomakkeenTunnisteet from '../../LomakkeenTunnisteet'
 
 export default (
@@ -21,11 +22,9 @@ export default (
       lomakkeenMuokkaus.komponentinLisays
         .haeLisaaArvosanatLinkki()
         .should('have.text', 'Arvosanat (peruskoulu)')
-      lomakkeenMuokkaus.arvosanat
-        .haeOsionNimi()
-        .should('have.text', 'Arvosanat (peruskoulu)')
-      lomakkeenMuokkaus.arvosanat.haePoistaOsioNappi().should('be.enabled')
-      lomakkeenMuokkaus.arvosanat.haeLeikkaaOsioNappi().should('be.enabled')
+      arvosanat.haeOsionNimi().should('have.text', 'Arvosanat (peruskoulu)')
+      arvosanat.haePoistaOsioNappi().should('be.enabled')
+      arvosanat.haeLeikkaaOsioNappi().should('be.enabled')
     })
 
     testit()
