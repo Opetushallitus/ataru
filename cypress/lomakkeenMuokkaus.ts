@@ -117,6 +117,16 @@ export const komponentinLisays = {
     }),
 }
 
+export const tekstikentta = {
+  haeLisaaLinkki: () => cy.get('[data-test-id=component-toolbar-tekstikenttä]'),
+
+  lisaaTekstikentta: (formId: number) =>
+    teeJaodotaLomakkeenTallennusta(formId, () => {
+      komponentinLisays.hover()
+      return tekstikentta.haeLisaaLinkki().click()
+    }),
+}
+
 export const painikeYksiValittavissa = {
   haeKysymysTeksti: () =>
     cy

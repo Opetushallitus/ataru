@@ -8,6 +8,7 @@
   (.preventDefault event))
 
 (defn input-field [{:keys [class
+                           data-test-id
                            dispatch-fn
                            lang
                            path
@@ -32,9 +33,10 @@
                                   (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
                               [tag
-                               {:class     (str "editor-form__text-field " (when-not (empty? class) class))
-                                :value     @value
-                                :placeholder placeholder
-                                :on-change dispatch-fn
-                                :on-drop   prevent-default
-                                :disabled  @component-locked?}])})))
+                               {:class        (str "editor-form__text-field " (when-not (empty? class) class))
+                                :value        @value
+                                :placeholder  placeholder
+                                :on-change    dispatch-fn
+                                :on-drop      prevent-default
+                                :disabled     @component-locked?
+                                :data-test-id data-test-id}])})))
