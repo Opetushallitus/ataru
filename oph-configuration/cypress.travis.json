@@ -3,5 +3,6 @@
   "fixturesFolder": "cypress/fixtures",
   "pageLoadTimeout": 120000,
   "requestTimeout": 120000,
+  "responseTimeout": 120000,
   "video": true
 }
