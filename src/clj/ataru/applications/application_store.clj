@@ -459,7 +459,12 @@
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (jdbc/query connection (query->db-query connection query sort))))
+                           (let [db-query (query->db-query connection query sort)]
+                             (try
+                               (jdbc/query connection db-query)
+                               (catch Exception e
+                                 (log/error e "Virhe tehtäessä tietokantakyselyä '" db-query "'")
+                                 (throw e))))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
