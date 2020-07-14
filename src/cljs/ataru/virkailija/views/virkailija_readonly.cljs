@@ -116,23 +116,24 @@
 
 (defn- attachment-list [attachments]
   [:div.application-handling__nested-container
-   (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                  (let [text              (str filename " (" (util/size-bytes->str size) ")")
-                        component-key     (str "attachment-div-" idx)
-                        virus-status-elem (case virus-scan-status
-                                            "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
-                                            "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
-                                            "failed"      [:span.application__virkailija-readonly-attachment-virus-status-failed
-                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-scan-failed]))]
-                                            "done" nil
-                                            [:span.application__virkailija-readonly-attachment-virus-status-failed
-                                             (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
-                    [:div.application__virkailija-readonly-attachment
-                     {:key component-key}
-                     [attachment-item file-key virus-scan-status virus-status-elem text]]))
-                (filter identity attachments))])
+   (doall
+     (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+                    (let [text              (str filename " (" (util/size-bytes->str size) ")")
+                          component-key     (str "attachment-div-" idx)
+                          virus-status-elem (case virus-scan-status
+                                              "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
+                                                             (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
+                                              "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                             (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
+                                              "failed" [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                                        (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-scan-failed]))]
+                                              "done" nil
+                                              [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                               (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
+                      [:div.application__virkailija-readonly-attachment
+                       {:key component-key}
+                       [attachment-item file-key virus-scan-status virus-status-elem text]]))
+                  (filter identity attachments)))])
 
 (defn attachment [field-descriptor application lang group-idx]
   (let [id         (:id field-descriptor)
