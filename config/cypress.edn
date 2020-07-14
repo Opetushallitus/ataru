@@ -26,7 +26,7 @@
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
- :redis           {:uri "redis://localhost:16380"}
+ :redis           {:uri "redis://localhost:16381"}
  :cas             {}
  :public-config   {:virkailija-caller-id                "1.2.246.562.10.00000000001.ataru-editori.frontend"
                    :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
