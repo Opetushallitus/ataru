@@ -7,8 +7,14 @@
   [event]
   (.preventDefault event))
 
-(defn input-field [path lang dispatch-fn {:keys [class value-fn tag placeholder]
-                                          :or   {tag :input}}]
+(defn input-field [{:keys [class
+                           dispatch-fn
+                           lang
+                           path
+                           placeholder
+                           tag
+                           value-fn]
+                    :or   {tag :input}}]
   (let [component    (subscribe [:editor/get-component-value path])
         focus?       (subscribe [:state-query [:editor :ui (:id @component) :focus?]])
         value        (or

@@ -350,7 +350,11 @@
             [copy-link (:id initial-content)]]
            (input-fields-with-lang-component/input-fields-with-lang
              (fn [lang]
-               [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
+               [input-field-component/input-field {:path        path
+                                                   :lang        lang
+                                                   :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                 (get-val %)
+                                                                                 path :label lang])}])
              @languages
              :header? true)]
           [:div.editor-form__button-wrapper
