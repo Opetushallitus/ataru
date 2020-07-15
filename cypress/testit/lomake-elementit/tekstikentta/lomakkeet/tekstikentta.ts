@@ -55,7 +55,7 @@ export const tekstikentta = {
       .then(() => tekstikentta.asetaLisäkysymysTekstikenttäKysymys(teksti))
   },
 
-  haeLisäkysymyksenTeksti: () => {
+  haeLisäkysymyksenKysymysteksti: () => {
     return tekstikentta.lisäkysymysListaTekstikenttäKysymys()
   },
 }
