@@ -5,6 +5,7 @@ import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTayttaminen'
 import hakemuksenLahettaminen from '../testit/hakemuksenLahettaminen'
 import tekstikentanLisakysymykseenVastaaminen from '../testit/lomake-elementit/tekstikentta/hakija/tekstikentanLisakysymykseenVastaaminen'
+import tekstikentanLisakysymysEsikatselussa from '../testit/lomake-elementit/tekstikentta/hakija/esikatselu/tekstikentanLisakysymysEsikatselussa'
 
 describe('Tekstikentän lisäkysymys', () => {
   kirjautuminenVirkailijanNakymaan(() => {
@@ -13,7 +14,9 @@ describe('Tekstikentän lisäkysymys', () => {
         hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
           henkilotietoModuulinTayttaminen(() => {
             tekstikentanLisakysymykseenVastaaminen(() => {
-              hakemuksenLahettaminen(() => {})
+              hakemuksenLahettaminen(() => {
+                tekstikentanLisakysymysEsikatselussa()
+              })
             })
           })
         })
