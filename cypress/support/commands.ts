@@ -9,6 +9,9 @@ declare global {
       poistaLomake: (lomakkeenAvain: string) => Chainable<Response>
 
       avaaLomakeHakijanNakymassa: (lomakkeenAvain: string) => Chainable<WaitXHR>
+      avaaLomakkeenHakemuksetVirkailijanNakymassa: (
+        lomakkeenAvain: string
+      ) => Chainable<WaitXHR>
     }
   }
 }
@@ -31,3 +34,13 @@ Cypress.Commands.add('avaaLomakeHakijanNakymassa', (lomakkeenAvain: string) => {
   cy.visit(reitit.hakija.haeHakijanNakymanOsoite(lomakkeenAvain))
   return cy.wait('@getForm')
 })
+
+Cypress.Commands.add(
+  'avaaLomakkeenHakemuksetVirkailijanNakymassa',
+  (lomakkeenAvain: string) =>
+    cy.visit(
+      reitit.virkailija.haeLomakkeenHakemuksetVirkailijanNakymassaOsoite(
+        lomakkeenAvain
+      )
+    )
+)

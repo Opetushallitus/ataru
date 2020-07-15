@@ -9,6 +9,9 @@ export const virkailija = {
 
   haeLomakkeenMuuttamisenOsoite: (lomakkeenId: number) =>
     `/lomake-editori/api/forms/${lomakkeenId}`,
+
+  haeLomakkeenHakemuksetVirkailijanNakymassaOsoite: (lomakkeenAvain: string) =>
+    `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`,
 }
 
 export const hakija = {
