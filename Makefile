@@ -176,7 +176,7 @@ status: $(NODE_MODULES)
 	$(PM2) status
 
 log: $(NODE_MODULES)
-	$(PM2) logs
+	$(PM2) logs --timestamp
 
 # Alias for log
 logs: log
