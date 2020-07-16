@@ -1,5 +1,5 @@
-import * as asetukset from '../../../../asetukset'
-import * as tekstinSyotto from '../../../../tekstinSyotto'
+import * as asetukset from '../../../../../asetukset'
+import * as tekstinSyotto from '../../../../../tekstinSyotto'
 
 export const tekstikentta = {
   kysymysKenttä: () => cy.get('[data-test-id=tekstikenttä-kysymys]'),

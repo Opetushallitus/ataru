@@ -1,5 +1,5 @@
-import LomakkeenTunnisteet from '../../../../LomakkeenTunnisteet'
-import * as lomakkeenMuokkaus from '../../../../lomakkeenMuokkaus'
+import LomakkeenTunnisteet from '../../../../../LomakkeenTunnisteet'
+import * as lomakkeenMuokkaus from '../../../../../lomakkeenMuokkaus'
 import { tekstikentta } from './tekstikentta'
 
 export default (

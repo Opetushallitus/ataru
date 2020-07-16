@@ -1,4 +1,4 @@
-import * as tekstinSyotto from '../../../../tekstinSyotto'
+import * as tekstinSyotto from '../../../../../tekstinSyotto'
 
 export const tekstikentta = {
   kysymysKenttä: () => cy.get('[data-test-id=tekstikenttä-input]'),
