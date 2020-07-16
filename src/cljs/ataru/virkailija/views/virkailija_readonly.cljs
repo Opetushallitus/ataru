@@ -55,6 +55,7 @@
 
 (defn- text-form-field-nested-container [selected-options lang application question-group-idx]
   [:div.application-handling__nested-container--top-level
+   {:data-test-id "tekstikenttä-lisäkysymykset"}
    (doall
      (for [option selected-options]
        ^{:key (:value option)}
@@ -67,6 +68,7 @@
 
 (defn- text-form-field-values [id values]
   [:div.application__form-field-value
+   {:data-test-id "tekstikenttä-vastaus"}
    (cond (and (sequential? values) (< 1 (count values)))
          [:ul.application__form-field-list
           (map-indexed
