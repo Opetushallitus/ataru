@@ -8,7 +8,7 @@ export default (
 ) => {
   describe('Tekstikentän lisäkysymyksen lisäys', () => {
     before(() => {
-      lomakkeenMuokkaus.tekstikentta
+      tekstikentta
         .lisaaTekstikentta(lomakkeenTunnisteet().lomakkeenId)
         .then(() => tekstikentta.asetaKysymys('Kysymys'))
         .then(() => tekstikentta.valitseLisäkysymys())

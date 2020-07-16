@@ -93,7 +93,7 @@ export const henkilotiedot = {
 }
 
 export const komponentinLisays = {
-  hover: () =>
+  avaaValikko: () =>
     cy.get('[data-test-id=component-toolbar]:visible').trigger('mouseover'),
 
   haeLisaaArvosanatLinkki: () =>
@@ -106,24 +106,14 @@ export const komponentinLisays = {
 
   lisaaArvosanat: (formId: number) => {
     return teeJaodotaLomakkeenTallennusta(formId, () => {
-      komponentinLisays.hover()
+      komponentinLisays.avaaValikko()
       return komponentinLisays.haeLisaaArvosanatLinkki().click()
     })
   },
   lisaaElementti: (formId: number, elementinTeksti: string) =>
     teeJaodotaLomakkeenTallennusta(formId, () => {
-      komponentinLisays.hover()
+      komponentinLisays.avaaValikko()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
-    }),
-}
-
-export const tekstikentta = {
-  haeLisaaLinkki: () => cy.get('[data-test-id=component-toolbar-tekstikenttä]'),
-
-  lisaaTekstikentta: (formId: number) =>
-    teeJaodotaLomakkeenTallennusta(formId, () => {
-      komponentinLisays.hover()
-      return tekstikentta.haeLisaaLinkki().click()
     }),
 }
 

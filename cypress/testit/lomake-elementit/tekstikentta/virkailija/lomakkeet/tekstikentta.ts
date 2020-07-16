@@ -1,7 +1,10 @@
 import * as asetukset from '../../../../../asetukset'
 import * as tekstinSyotto from '../../../../../tekstinSyotto'
+import * as lomakkeenMuokkaus from '../../../../../lomakkeenMuokkaus'
 
 export const tekstikentta = {
+  haeLisaaLinkki: () => cy.get('[data-test-id=component-toolbar-tekstikenttä]'),
+
   kysymysKenttä: () => cy.get('[data-test-id=tekstikenttä-kysymys]'),
 
   lisäkysymysValinta: () =>
@@ -22,6 +25,12 @@ export const tekstikentta = {
 
   lisäkysymysListaTekstikenttäKysymys: () =>
     tekstikentta.lisäkysymysLista().find('[data-test-id=tekstikenttä-kysymys]'),
+
+  lisaaTekstikentta: (formId: number) =>
+    lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(formId, () => {
+      lomakkeenMuokkaus.komponentinLisays.avaaValikko()
+      return tekstikentta.haeLisaaLinkki().click()
+    }),
 
   asetaKysymys: (teksti: string) => {
     return tekstikentta
