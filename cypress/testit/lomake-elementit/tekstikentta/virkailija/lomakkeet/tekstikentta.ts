@@ -10,6 +10,12 @@ export const tekstikentta = {
   lisäkysymysValinta: () =>
     cy.get('[data-test-id=tekstikenttä-valinta-lisäkysymys]'),
 
+  kenttäänVainNumeroitaValinta: () =>
+    cy.get('[data-test-id=tekstikenttä-valinta-kenttään-vain-numeroita]'),
+
+  lisäkysymysArvonPerusteellaValinta: () =>
+    cy.get('[data-test-id=tekstikenttä-valinta-lisäkysymys-arvon-perusteella]'),
+
   lisäkysymyksenValintaToolbar: () =>
     cy.get(
       '[data-test-id=tekstikenttä-lisäkysymys-lista] [data-test-id=component-toolbar]'
@@ -25,6 +31,25 @@ export const tekstikentta = {
 
   lisäkysymysListaTekstikenttäKysymys: () =>
     tekstikentta.lisäkysymysLista().find('[data-test-id=tekstikenttä-kysymys]'),
+
+  lisäkysymysListaLisäkysymyksenEhtoOperaattori: () =>
+    tekstikentta
+      .lisäkysymysLista()
+      .find(
+        '[data-test-id=tekstikenttä-lisäkysymys-arvon-perusteella-ehto-operaattori]'
+      ),
+
+  lisäkysymysListaLisäkysymyksenEhtoVertailuarvo: () =>
+    tekstikentta
+      .lisäkysymysLista()
+      .find(
+        '[data-test-id=tekstikenttä-lisäkysymys-arvon-perusteella-ehto-vertailuarvo]'
+      ),
+
+  lisäkysymysListaLisäkysymyksenEhtoLisäkysymykset: () =>
+    tekstikentta
+      .lisäkysymysLista()
+      .find('[data-test-id=followup-question-followups]'),
 
   lisaaTekstikentta: (formId: number) =>
     lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(formId, () => {
@@ -66,5 +91,31 @@ export const tekstikentta = {
 
   haeLisäkysymyksenKysymysteksti: () => {
     return tekstikentta.lisäkysymysListaTekstikenttäKysymys()
+  },
+
+  valitseKenttäänVainNumeroita: () => {
+    return tekstikentta.kenttäänVainNumeroitaValinta().click()
+  },
+
+  valitseLisäkysymysArvonPerusteella: () => {
+    return tekstikentta.lisäkysymysArvonPerusteellaValinta().click()
+  },
+
+  asetaLisäkysymysArvonPerusteellaEhto: (
+    operaattori: string,
+    vertailuarvo: number
+  ) => {
+    tekstikentta
+      .lisäkysymysListaLisäkysymyksenEhtoOperaattori()
+      .select(operaattori)
+    tekstikentta
+      .lisäkysymysListaLisäkysymyksenEhtoVertailuarvo()
+      .type(`${vertailuarvo}`)
+  },
+
+  avaaLisäkysymysArvonPerusteellaEhdonLisäkysymykset: () => {
+    return tekstikentta
+      .lisäkysymysListaLisäkysymyksenEhtoLisäkysymykset()
+      .click()
   },
 }
