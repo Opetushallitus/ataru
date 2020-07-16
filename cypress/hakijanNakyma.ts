@@ -1,5 +1,6 @@
 import * as tekstikentta from './tekstinSyotto'
 import * as dropdown from './dropdown'
+import * as reitit from './reitit'
 
 import Chainable = Cypress.Chainable
 
@@ -177,8 +178,14 @@ export const henkilotiedot = {
 export const klikkaa = (elementinTeksti: string) =>
   cy.get(`label:contains(${elementinTeksti})`).click({ multiple: true })
 
-export const lahetaHakemus = () =>
+export const lahetaHakemus = () => {
+  cy.server()
+  cy.route('POST', reitit.hakija.haeHakemuksenLahettamisenOsoite()).as(
+    'postApplication'
+  )
   cy.get('[data-test-id=send-application-button]').click()
+  return cy.wait('@postApplication')
+}
 
 export const painaOkPalautenakymassa = () =>
   cy.get('[data-test-id=send-feedback-button]').click()

@@ -20,6 +20,8 @@ export const hakija = {
 
   haeLomakkeenHaunOsoite: (lomakkeenAvain: string) =>
     `/hakemus/api/form/${lomakkeenAvain}?role=hakija`,
+
+  haeHakemuksenLahettamisenOsoite: () => `/hakemus/api/application`,
 }
 
 export const cypress = {
