@@ -1,13 +1,13 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
             [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.db.db :as db]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
-            [clojure.java.jdbc :as jdbc]
-            [ataru.db.db :as db]
+            [ataru.forms.form-store :as forms]
             [ataru.util :as util]
-            [speclj.core :refer :all]
-            [ataru.forms.form-store :as forms]))
+            [clojure.java.jdbc :as jdbc]
+            [speclj.core :refer :all]))
 
 (def form-key (:key fixtures/form))
 
