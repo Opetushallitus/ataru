@@ -1,10 +1,23 @@
 (ns ataru.config.url-helper
   (:require [ataru.config.core :refer [config]]
-            [clojure.string :as string])
+            [clojure.pprint :as pprint]
+            [taoensso.timbre :as log])
   (:import (fi.vm.sade.properties OphProperties)))
 
 ; TODO component if not too much work?
 (def ^fi.vm.sade.properties.OphProperties url-properties (atom nil))
+
+(defn- add-default! [oph-properties name value]
+  (if (some? value)
+    (doto oph-properties (.addDefault name value))
+    (throw (ex-info (str "Default value for oph-properties property '" name "' is missing.")
+                    {:property-name name
+                     :error         "missing default value"}))))
+
+(defn- pretty-print [config]
+  (with-out-str
+    (binding [pprint/*print-right-margin* 120]
+      (pprint/pprint config))))
 
 (defn- load-config
   []
@@ -17,18 +30,19 @@
                 koodisto-service-base-url
                 ohjausparametrit-service-base-url
                 valintalaskenta-ui-service-base-url]} (:urls config)]
+    (log/info "load-config: url-properties default values:\n" (pretty-print (:urls config)))
     (reset! url-properties
             (doto (OphProperties. (into-array String ["/ataru-oph.properties"]))
-              (.addDefault "host-virkailija" virkailija-host)
-              (.addDefault "host-hakija" hakija-host)
-              (.addDefault "url-editor" editor-url)
-              (.addDefault "url-liiteri" liiteri-url)
-              (.addDefault "url-liiteri" liiteri-url)
-              (.addDefault "baseurl-valinta-tulos-service" valinta-tulos-service-base-url)
-              (.addDefault "baseurl-organisaatio-service" organisaatio-service-base-url)
-              (.addDefault "baseurl-koodisto-service" koodisto-service-base-url)
-              (.addDefault "baseurl-ohjausparametrit-service" ohjausparametrit-service-base-url)
-              (.addDefault "baseurl-valintalaskenta-ui-service" valintalaskenta-ui-service-base-url)))))
+              (add-default! "host-virkailija" virkailija-host)
+              (add-default! "host-hakija" hakija-host)
+              (add-default! "url-editor" editor-url)
+              (add-default! "url-liiteri" liiteri-url)
+              (add-default! "url-liiteri" liiteri-url)
+              (add-default! "baseurl-valinta-tulos-service" valinta-tulos-service-base-url)
+              (add-default! "baseurl-organisaatio-service" organisaatio-service-base-url)
+              (add-default! "baseurl-koodisto-service" koodisto-service-base-url)
+              (add-default! "baseurl-ohjausparametrit-service" ohjausparametrit-service-base-url)
+              (add-default! "baseurl-valintalaskenta-ui-service" valintalaskenta-ui-service-base-url)))))
 
 (defn resolve-url
   [key & params]
