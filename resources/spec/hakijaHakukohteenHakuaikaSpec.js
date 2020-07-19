@@ -12,7 +12,7 @@
       before(
         wait.until(() => {
           return formSections().length == 2
-        }, 10000),
+        }),
         clickElement(addHakukohdeLink, 'hakukohdeLink'),
         clickElement(() => {
           return nthHakukohdeSearchResultButton(0)
