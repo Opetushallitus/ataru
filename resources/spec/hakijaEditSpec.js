@@ -15,6 +15,9 @@
       before(
         wait.until(() => {
           return formSections().length == 2
+        }),
+        wait.until(() => {
+          return testFrame().find('#postal-office').val() === 'JYVÄSKYLÄ'
         })
       )
       it('with complete form', () => {
