@@ -16,7 +16,7 @@
 
   describe('hakemus as virkailija', () => {
     describe('form loads', () => {
-      before(wait.until(() => formSections().length == 3, 10000))
+      before(wait.until(() => formSections().length == 3))
       it('with complete form and virkailijatäyttö ribbon', () => {
         expect(
           testFrame()

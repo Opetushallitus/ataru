@@ -12,7 +12,7 @@
       before(
         wait.until(() => {
           return formSections().length == 3
-        }, 10000)
+        })
       )
       it('with complete form and default hakukohde selected', () => {
         expect(formFields().length).to.equal(15)

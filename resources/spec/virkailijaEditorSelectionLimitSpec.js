@@ -173,7 +173,7 @@
             flasher.find('span:visible').text() ===
               'Kaikki muutokset tallennettu'
           )
-        }, 5000)
+        })
       )
       it('notification shows success', () => {
         expect(testFrame().find('.top-banner .flasher span').text()).to.equal(
