@@ -88,4 +88,31 @@
                 (let [queried-applications (vec (store/get-application-heading-list query sort))
                       found-application    (first queried-applications)]
                   (should== 1 (count queried-applications))
-                  (should= application-key (:key found-application))))))
+                  (should= application-key (:key found-application)))))
+
+          (it "should delete orphans and preserve reviews"
+                (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
+                      flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
+                      answers-by-key    (-> application :content :answers util/answers-by-key)
+                      fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)
+                      reviews           (store/create-application-attachment-reviews
+                                          (:key application)
+                                          (store/filter-visible-attachments answers-by-key
+                                                                            flat-form-content
+                                                                            fields-by-id)
+                                          answers-by-key
+                                          {:att__1 {:value ["liite-id"]}
+                                           :att__2 {:value ["32131"]}}
+                                          []
+                                          true
+                                          fields-by-id
+                                          #{})]
+                  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                    (let [connection {:connection connection}]
+                      (store/store-reviews reviews connection)
+                      (should== 0 (store/delete-orphan-attachment-reviews (:key application)
+                                    reviews
+                                    connection))
+                      (should== 1 (store/delete-orphan-attachment-reviews (:key application)
+                                    [(first reviews)]
+                                    connection)))))))
