@@ -28,15 +28,35 @@
                             (->> (jdbc/delete! conn :applications ["key = ?" key]))))
 
 (defn- save-reviews-to-db! [reviews]
-  (let [reviews-with-flag (map #(assoc % :updated? true) reviews)]
-    (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                              (store/store-reviews reviews-with-flag {:connection conn}))))
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+                            (store/store-reviews reviews {:connection conn})))
 
 (defn- reset-database! []
   (let [form-with-attachment (update form-fixtures/person-info-form :content concat form-fixtures/attachment-test-form)]
     (println "Tyhjennetään hakemuksia tietokannasta.")
     (delete-application! @test-application-key)
     (reset! form (unit-test-db/init-db-fixture form-with-attachment))))
+
+(def application (-> (filter #(= "attachments" (:key %)) fixtures/applications)
+                     (first)
+                     (assoc :form_id (:id form))))
+
+(defn- create-new-reviews [application application-key]
+  (let [flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
+        answers-by-key    (-> application :content :answers util/answers-by-key)
+        fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)]
+    (store/create-application-attachment-reviews
+      application-key
+      (store/filter-visible-attachments answers-by-key
+                                        flat-form-content
+                                        fields-by-id)
+      answers-by-key
+      {:att__1 {:value ["56756"]}
+       :att__2 {:value ["32131"]}}
+      []
+      true
+      fields-by-id
+      #{})))
 
 (describe "creating application attachment reviews in db"
   (tags :unit :attachments :attachments-db)
@@ -45,13 +65,7 @@
     (reset-database!))
 
   (it "should find attachments with query"
-      (let [application            (-> (filter #(= "attachments" (:key %)) fixtures/applications)
-                                       (first)
-                                       (assoc :form_id (:id form)))
-            flat-form-content      (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
-            answers-by-key         (-> application :content :answers util/answers-by-key)
-            fields-by-id           (util/form-fields-by-id form-fixtures/attachment-test-form)
-            existing-attachment-id "att__1"
+      (let [existing-attachment-id "att__1"
             application-key        (-> (store/add-application
                                          (dissoc application :key)
                                          []
@@ -59,29 +73,19 @@
                                          {}
                                          audit-logger)
                                        (find-application-key-by-id))
-            new-reviews            (store/create-application-attachment-reviews
-                                     application-key
-                                     (store/filter-visible-attachments answers-by-key
-                                                                       flat-form-content
-                                                                       fields-by-id)
-                                     answers-by-key
-                                     nil
-                                     []
-                                     false
-                                     fields-by-id
-                                     #{})
+            new-reviews            (create-new-reviews application application-key)
             query                  {:attachment-review-states [existing-attachment-id '("not-checked")]}
             sort                   {:order-by "applicant-name" :order "asc"}]
         (reset! test-application-key application-key)
         (should== [{:application_key application-key
                     :attachment_key  "att__1"
                     :state           "not-checked"
-                    :updated?        false
+                    :updated?        true
                     :hakukohde       "form"}
                    {:application_key application-key
                     :attachment_key  "att__2"
                     :state           "attachment-missing"
-                    :updated?        false
+                    :updated?        true
                     :hakukohde       "form"}]
                   new-reviews)
         (save-reviews-to-db! new-reviews)
@@ -91,28 +95,13 @@
           (should= application-key (:key found-application)))))
 
   (it "should delete orphans and preserve reviews"
-      (let [application       (first (filter #(= "attachments" (:key %)) fixtures/applications))
-            flat-form-content (util/flatten-form-fields (:content form-fixtures/attachment-test-form))
-            answers-by-key    (-> application :content :answers util/answers-by-key)
-            fields-by-id      (util/form-fields-by-id form-fixtures/attachment-test-form)
-            reviews           (store/create-application-attachment-reviews
-                                (:key application)
-                                (store/filter-visible-attachments answers-by-key
-                                                                  flat-form-content
-                                                                  fields-by-id)
-                                answers-by-key
-                                {:att__1 {:value ["liite-id"]}
-                                 :att__2 {:value ["32131"]}}
-                                []
-                                true
-                                fields-by-id
-                                #{})]
+      (let [new-reviews (create-new-reviews application (:key application))]
         (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                                   (let [connection {:connection connection}]
-                                    (store/store-reviews reviews connection)
+                                    (store/store-reviews new-reviews connection)
                                     (should== 0 (store/delete-orphan-attachment-reviews (:key application)
-                                                                                        reviews
+                                                                                        new-reviews
                                                                                         connection))
                                     (should== 1 (store/delete-orphan-attachment-reviews (:key application)
-                                                                                        [(first reviews)]
+                                                                                        [(first new-reviews)]
                                                                                         connection)))))))
