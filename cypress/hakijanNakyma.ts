@@ -1,4 +1,4 @@
-import * as tekstikentta from './tekstinSyotto'
+import * as tekstinSyotto from './tekstinSyotto'
 import * as dropdown from './dropdown'
 import * as reitit from './reitit'
 
@@ -142,12 +142,12 @@ const syota = <T>(
   elementti: Chainable<T>,
   teksti: string
 ): (() => Chainable<T>) => () =>
-  tekstikentta.syotaTekstiTarkistamatta(elementti, teksti)
+  tekstinSyotto.syotaTekstiTarkistamatta(elementti, teksti)
 
 const syotaTurvallisesti = <T>(
   elementti: Chainable<T>,
   teksti: string
-): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
+): (() => Chainable<T>) => () => tekstinSyotto.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
   etunimi: () => cy.get('[data-test-id=first-name-input]'),
@@ -162,7 +162,7 @@ export const henkilotiedot = {
   kotikunta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {
-    return tekstikentta
+    return tekstinSyotto
       .syotaTekstiTarkistamatta(henkilotiedot.etunimi(), 'Frank Zacharias')
       .then(syota(henkilotiedot.sukunimi(), 'Testerberg'))
       .then(syota(henkilotiedot.henkilotunnus(), '160600A999C'))
