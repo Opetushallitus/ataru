@@ -1,9 +1,9 @@
-import { tekstikentta } from './tekstikentta'
+import { lisakysymys } from './lisakysymys'
 
 export default () => {
   describe('Tekstikentän lisäkysymys hakemusten käsittelyssä', () => {
     it('Lisäkysymyksen vastaus näkyy', () => {
-      tekstikentta
+      lisakysymys
         .haeLisäkysymyksenVastaus()
         .should('have.text', 'Vastaus lisäkysymykseen')
     })

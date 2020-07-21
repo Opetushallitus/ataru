@@ -1,6 +1,7 @@
 import LomakkeenTunnisteet from '../../../../../LomakkeenTunnisteet'
 import * as lomakkeenMuokkaus from '../../../../../lomakkeenMuokkaus'
 import { tekstikentta } from './tekstikentta'
+import { lisakysymys } from './lisakysymys'
 
 export default (
   lomakkeenTunnisteet: () => LomakkeenTunnisteet,
@@ -11,15 +12,15 @@ export default (
       tekstikentta
         .lisaaTekstikentta(lomakkeenTunnisteet().lomakkeenId)
         .then(() => tekstikentta.asetaKysymys('Kysymys'))
-        .then(() => tekstikentta.valitseLisäkysymys())
+        .then(() => lisakysymys.valitseLisäkysymys())
       lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
         lomakkeenTunnisteet().lomakkeenId,
-        () => tekstikentta.lisääLisäkysymys('Lisäkysymys')
+        () => lisakysymys.lisääLisäkysymys('Lisäkysymys')
       )
     })
 
     it('Näyttää lisäkysymyksen kysymystekstin', () => {
-      tekstikentta
+      lisakysymys
         .haeLisäkysymyksenKysymysteksti()
         .should('have.value', 'Lisäkysymys')
     })

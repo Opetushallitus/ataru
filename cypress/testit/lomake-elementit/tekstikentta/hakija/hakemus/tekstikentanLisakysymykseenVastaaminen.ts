@@ -1,17 +1,17 @@
-import { tekstikentta } from './tekstikentta'
+import { lisakysymys } from './lisakysymys'
 
 export default (testit: () => void) => {
   describe('Tekstikentän lisäkysymykseen vastaaminen', () => {
     before(() => {
-      tekstikentta
+      lisakysymys
         .syötäTekstikenttäänVastaus('Vastaus')
         .then(() =>
-          tekstikentta.syötäLisäkysymykseenVastaus('Vastaus lisäkysymykseen')
+          lisakysymys.syötäLisäkysymykseenVastaus('Vastaus lisäkysymykseen')
         )
     })
 
     it('Lisäkysymykseen on syötetty vastaus', () => {
-      tekstikentta
+      lisakysymys
         .haeLisäkysymyksenVastaus()
         .should('have.value', 'Vastaus lisäkysymykseen')
     })

@@ -1,6 +1,7 @@
 import LomakkeenTunnisteet from '../../../../../LomakkeenTunnisteet'
-import { tekstikentta } from './tekstikentta'
 import * as lomakkeenMuokkaus from '../../../../../lomakkeenMuokkaus'
+import { tekstikentta } from './tekstikentta'
+import { lisakysymysArvonPerusteella } from './lisakysymysArvonPerusteella'
 
 export default (
   lomakkeenTunnisteet: () => LomakkeenTunnisteet,
@@ -12,19 +13,26 @@ export default (
         .lisaaTekstikentta(lomakkeenTunnisteet().lomakkeenId)
         .then(() => tekstikentta.asetaKysymys('Kysymys'))
         .then(() => tekstikentta.valitseKenttäänVainNumeroita())
-        .then(() => tekstikentta.valitseLisäkysymysArvonPerusteella())
-        .then(() => tekstikentta.asetaLisäkysymysArvonPerusteellaEhto('>', 1))
         .then(() =>
-          tekstikentta.avaaLisäkysymysArvonPerusteellaEhdonLisäkysymykset()
+          lisakysymysArvonPerusteella.valitseLisäkysymysArvonPerusteella()
+        )
+        .then(() =>
+          lisakysymysArvonPerusteella.asetaLisäkysymysArvonPerusteellaEhto(
+            '>',
+            1
+          )
+        )
+        .then(() =>
+          lisakysymysArvonPerusteella.avaaLisäkysymysArvonPerusteellaEhdonLisäkysymykset()
         )
       lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
         lomakkeenTunnisteet().lomakkeenId,
-        () => tekstikentta.lisääLisäkysymys('Lisäkysymys')
+        () => lisakysymysArvonPerusteella.lisääLisäkysymys('Lisäkysymys')
       )
     })
 
     it('Näyttää lisäkysymyksen kysymystekstin', () => {
-      tekstikentta
+      lisakysymysArvonPerusteella
         .haeLisäkysymyksenKysymysteksti()
         .should('have.value', 'Lisäkysymys')
     })

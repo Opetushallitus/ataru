@@ -1,6 +1,6 @@
 import * as tekstinSyotto from '../../../../../tekstinSyotto'
 
-export const tekstikentta = {
+export const lisakysymys = {
   kysymysKenttä: () => cy.get('[data-test-id=tekstikenttä-input]'),
   lisäkysymyksetTekstikenttä: () =>
     cy.get(
@@ -9,19 +9,19 @@ export const tekstikentta = {
 
   syötäTekstikenttäänVastaus: (teksti: string) => {
     return tekstinSyotto.syotaTekstiTarkistamatta(
-      tekstikentta.kysymysKenttä(),
+      lisakysymys.kysymysKenttä(),
       teksti
     )
   },
 
   syötäLisäkysymykseenVastaus: (teksti: string) => {
     return tekstinSyotto.syotaTekstiTarkistamatta(
-      tekstikentta.lisäkysymyksetTekstikenttä(),
+      lisakysymys.lisäkysymyksetTekstikenttä(),
       teksti
     )
   },
 
   haeLisäkysymyksenVastaus: () => {
-    return tekstikentta.lisäkysymyksetTekstikenttä()
+    return lisakysymys.lisäkysymyksetTekstikenttä()
   },
 }

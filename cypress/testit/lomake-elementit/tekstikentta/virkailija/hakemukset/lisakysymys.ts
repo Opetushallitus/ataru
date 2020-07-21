@@ -1,9 +1,9 @@
-export const tekstikentta = {
+export const lisakysymys = {
   tekstikentänLisäkysymyksetTekstikenttäVastaus: () =>
     cy.get(
       '[data-test-id=tekstikenttä-lisäkysymykset] [data-test-id=tekstikenttä-vastaus]'
     ),
 
   haeLisäkysymyksenVastaus: () =>
-    tekstikentta.tekstikentänLisäkysymyksetTekstikenttäVastaus(),
+    lisakysymys.tekstikentänLisäkysymyksetTekstikenttäVastaus(),
 }
