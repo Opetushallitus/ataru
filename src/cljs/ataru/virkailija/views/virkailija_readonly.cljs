@@ -13,6 +13,7 @@
                                                                        replace-with-option-label
                                                                        scroll-to-anchor
                                                                        copy-link]]
+            [ataru.application-common.option-visibility :as option-visibility]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
@@ -93,7 +94,8 @@
                                                       (get-value (-> application :answers id) group-idx))
                                                     (:options field-descriptor)
                                                     lang)
-        options          (when (not-empty values) (:options field-descriptor))
+        visible?         (option-visibility/visibility-checker field-descriptor values)
+        options          (filter visible? (:options field-descriptor))
         followups?       (some (comp not-empty :followups) options)
         highlight-field? (subscribe [:application/field-highlighted? id])]
     [:div.application__form-field
@@ -114,23 +116,24 @@
 
 (defn- attachment-list [attachments]
   [:div.application-handling__nested-container
-   (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
-                  (let [text              (str filename " (" (util/size-bytes->str size) ")")
-                        component-key     (str "attachment-div-" idx)
-                        virus-status-elem (case virus-scan-status
-                                            "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
-                                                           (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
-                                            "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
-                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
-                                            "failed"      [:span.application__virkailija-readonly-attachment-virus-status-failed
-                                                           (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-scan-failed]))]
-                                            "done" nil
-                                            [:span.application__virkailija-readonly-attachment-virus-status-failed
-                                             (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
-                    [:div.application__virkailija-readonly-attachment
-                     {:key component-key}
-                     [attachment-item file-key virus-scan-status virus-status-elem text]]))
-                (filter identity attachments))])
+   (doall
+     (map-indexed (fn attachment->link [idx {file-key :key filename :filename size :size virus-scan-status :virus-scan-status}]
+                    (let [text              (str filename " (" (util/size-bytes->str size) ")")
+                          component-key     (str "attachment-div-" idx)
+                          virus-status-elem (case virus-scan-status
+                                              "not_started" [:span.application__virkailija-readonly-attachment-virus-status-not-started
+                                                             (s/format "| %s..." @(subscribe [:editor/virkailija-translation :checking]))]
+                                              "virus_found" [:span.application__virkailija-readonly-attachment-virus-status-virus-found
+                                                             (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-found]))]
+                                              "failed" [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                                        (s/format "| %s" @(subscribe [:editor/virkailija-translation :virus-scan-failed]))]
+                                              "done" nil
+                                              [:span.application__virkailija-readonly-attachment-virus-status-failed
+                                               (s/format "| %s" @(subscribe [:editor/virkailija-translation :error]))])]
+                      [:div.application__virkailija-readonly-attachment
+                       {:key component-key}
+                       [attachment-item file-key virus-scan-status virus-status-elem text]]))
+                  (filter identity attachments)))])
 
 (defn attachment [field-descriptor application lang group-idx]
   (let [id         (:id field-descriptor)
@@ -169,13 +172,15 @@
          (for [value values]
            [:td (str value)]))))])
 
+(defn- get-answer-value [application child group-idx]
+  (if (some? group-idx)
+    (get-in application [:answers (keyword (:id child)) :value group-idx])
+    (get-in application [:answers (keyword (:id child)) :value])))
 
 (defn fieldset [field-descriptor application lang children group-idx]
-  (let [fieldset-answers (->> children
-                              (map #(if (some? group-idx)
-                                      (get-in application [:answers (keyword (:id %)) :value group-idx])
-                                      (get-in application [:answers (keyword (:id %)) :value])))
-                              (apply map vector))]
+  (let [fieldset-answers (some->> (not-empty children)
+                                  (map #(get-answer-value application % group-idx))
+                                  (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
       (str (from-multi-lang (:label field-descriptor) lang)

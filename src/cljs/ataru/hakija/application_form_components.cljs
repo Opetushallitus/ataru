@@ -10,6 +10,7 @@
               is-required-field?
               markdown-paragraph
               belongs-to-hakukohde-or-ryhma?]]
+            [ataru.application-common.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]
@@ -22,7 +23,6 @@
             [ataru.hakija.components.generic-label-component :as generic-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
-            [ataru.hakija.application.option-visibility :as option-visibility]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]))
 
