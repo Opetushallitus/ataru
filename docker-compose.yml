@@ -39,7 +39,6 @@ services:
       - ataru-test-network
   ataru-cypress-http-proxy:
     image: nginx
-    container_name: ataru-cypress-http-proxy
     ports:
       - "8354:8354"
     volumes:
@@ -61,9 +60,8 @@ services:
       - ataru-test-network
   ataru-cypress-test-redis:
     image: "redis:latest"
-    container_name: ataru-cypress-test-redis
     ports:
-      - "6380:6379"
+      - "16381:6379"
     networks:
       - ataru-test-network
 networks:

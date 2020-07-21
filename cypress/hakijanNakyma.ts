@@ -1,5 +1,6 @@
-import * as tekstikentta from './tekstikentta'
+import * as tekstinSyotto from './tekstinSyotto'
 import * as dropdown from './dropdown'
+import * as reitit from './reitit'
 
 import Chainable = Cypress.Chainable
 
@@ -141,12 +142,12 @@ const syota = <T>(
   elementti: Chainable<T>,
   teksti: string
 ): (() => Chainable<T>) => () =>
-  tekstikentta.syotaTekstiTarkistamatta(elementti, teksti)
+  tekstinSyotto.syotaTekstiTarkistamatta(elementti, teksti)
 
 const syotaTurvallisesti = <T>(
   elementti: Chainable<T>,
   teksti: string
-): (() => Chainable<T>) => () => tekstikentta.syotaTeksti(elementti, teksti)
+): (() => Chainable<T>) => () => tekstinSyotto.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
   etunimi: () => cy.get('[data-test-id=first-name-input]'),
@@ -161,7 +162,7 @@ export const henkilotiedot = {
   kotikunta: () => cy.get('[data-test-id=home-town-input]'),
 
   taytaTiedot: () => {
-    return tekstikentta
+    return tekstinSyotto
       .syotaTekstiTarkistamatta(henkilotiedot.etunimi(), 'Frank Zacharias')
       .then(syota(henkilotiedot.sukunimi(), 'Testerberg'))
       .then(syota(henkilotiedot.henkilotunnus(), '160600A999C'))
@@ -177,8 +178,14 @@ export const henkilotiedot = {
 export const klikkaa = (elementinTeksti: string) =>
   cy.get(`label:contains(${elementinTeksti})`).click({ multiple: true })
 
-export const lahetaHakemus = () =>
+export const lahetaHakemus = () => {
+  cy.server()
+  cy.route('POST', reitit.hakija.haeHakemuksenLahettamisenOsoite()).as(
+    'postApplication'
+  )
   cy.get('[data-test-id=send-application-button]').click()
+  return cy.wait('@postApplication')
+}
 
 export const painaOkPalautenakymassa = () =>
   cy.get('[data-test-id=send-feedback-button]').click()

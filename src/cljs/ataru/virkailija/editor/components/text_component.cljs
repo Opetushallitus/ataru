@@ -133,19 +133,20 @@
       [:div
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox
-         {:type      "checkbox"
-          :id        id
-          :checked   (or @checked? false)
-          :disabled  (or @component-locked?
-                         (:cannot-change-type? props))
-          :on-change (fn [event]
-                       (let [checked-now? (-> event .-target .-checked)]
-                         (dispatch [:editor/set-component-value checked-now? path :params :numeric])
-                         (dispatch [(if checked-now?
-                                      :editor/add-validator
-                                      :editor/remove-validator) "numeric" path])
-                         (when-not checked-now?
-                           (dispatch [:editor/set-decimals-value component-id nil path]))))}]
+         {:type         "checkbox"
+          :id           id
+          :checked      (or @checked? false)
+          :disabled     (or @component-locked?
+                            (:cannot-change-type? props))
+          :on-change    (fn [event]
+                          (let [checked-now? (-> event .-target .-checked)]
+                            (dispatch [:editor/set-component-value checked-now? path :params :numeric])
+                            (dispatch [(if checked-now?
+                                         :editor/add-validator
+                                         :editor/remove-validator) "numeric" path])
+                            (when-not checked-now?
+                              (dispatch [:editor/set-decimals-value component-id nil path]))))
+          :data-test-id "tekstikenttä-valinta-kenttään-vain-numeroita"}]
         [:label.editor-form__checkbox-label
          {:for   id
           :class (when @component-locked? "editor-form__checkbox-label--disabled")}
@@ -217,25 +218,27 @@
            :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
           @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
          [:select.editor-form__text-field-option-condition-comparison-operator
-          {:disabled  @component-locked?
-           :on-change (fn [event]
-                        (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-operaattori
-                                   path
-                                   option-index
-                                   (get-val event)]))
-           :value     (-> condition :comparison-operator)}
+          {:disabled     @component-locked?
+           :on-change    (fn [event]
+                           (dispatch [:editor/aseta-lisäkysymys-arvon-perusteella-operaattori
+                                      path
+                                      option-index
+                                      (get-val event)]))
+           :value        (-> condition :comparison-operator)
+           :data-test-id "tekstikenttä-lisäkysymys-arvon-perusteella-ehto-operaattori"}
           [:option {:value "<"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-pienempi])]
           [:option {:value "="} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-yhtasuuri])]
           [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
          [:input.editor-form__text-field-option-condition-answer-compared-to
-          {:disabled  @component-locked?
-           :class     (when (not (:valid? @local-state))
-                        "editor-form__text-field-option-condition-answer-compared-to--invalid")
-           :id        id
-           :on-blur   (partial on-blur-fn path)
-           :on-change on-change-fn
-           :type      "text"
-           :value     (:value @local-state)}]]))))
+          {:disabled     @component-locked?
+           :class        (when (not (:valid? @local-state))
+                           "editor-form__text-field-option-condition-answer-compared-to--invalid")
+           :id           id
+           :on-blur      (partial on-blur-fn path)
+           :on-change    on-change-fn
+           :type         "text"
+           :value        (:value @local-state)
+           :data-test-id "tekstikenttä-lisäkysymys-arvon-perusteella-ehto-vertailuarvo"}]]))))
 
 (defn- text-field-option-followups-header [{:keys [component-locked?
                                                    condition
@@ -259,6 +262,7 @@
                                                     path
                                                     show-followups]}]
   [:div.editor-form__text-field-option-followups-wrapper
+   {:data-test-id "tekstikenttä-lisäkysymys-lista"}
    (when condition
      [text-field-option-followups-header {:component-locked? component-locked?
                                           :condition         condition
@@ -307,16 +311,17 @@
                                            repeatable?)]
         [:div.editor-form__text-field-checkbox-container
          [:input.editor-form__text-field-checkbox
-          {:id        id
-           :type      "checkbox"
-           :checked   options-without-condition?
-           :disabled  disabled?
-           :on-change (fn [evt]
-                        (when-not disabled?
-                          (.preventDefault evt)
-                          (if (-> evt .-target .-checked)
-                            (dispatch [:editor/add-text-field-option path])
-                            (dispatch [:editor/remove-text-field-option (conj path :options option-index)]))))}]
+          {:id           id
+           :type         "checkbox"
+           :checked      options-without-condition?
+           :disabled     disabled?
+           :on-change    (fn [evt]
+                           (when-not disabled?
+                             (.preventDefault evt)
+                             (if (-> evt .-target .-checked)
+                               (dispatch [:editor/add-text-field-option path])
+                               (dispatch [:editor/remove-text-field-option (conj path :options option-index)]))))
+           :data-test-id "tekstikenttä-valinta-lisäkysymys"}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
@@ -350,7 +355,12 @@
             [copy-link (:id initial-content)]]
            (input-fields-with-lang-component/input-fields-with-lang
              (fn [lang]
-               [input-field-component/input-field path lang #(dispatch-sync [:editor/set-component-value (get-val %) path :label lang])])
+               [input-field-component/input-field {:path         path
+                                                   :lang         lang
+                                                   :dispatch-fn  #(dispatch-sync [:editor/set-component-value
+                                                                                  (get-val %)
+                                                                                  path :label lang])
+                                                   :data-test-id "tekstikenttä-kysymys"}])
              @languages
              :header? true)]
           [:div.editor-form__button-wrapper

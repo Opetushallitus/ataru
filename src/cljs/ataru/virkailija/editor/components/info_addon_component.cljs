@@ -50,12 +50,12 @@
           (->> (input-fields-with-lang-component/input-fields-with-lang
                  (fn [lang]
                    [input-field-component/input-field
-                    (concat path [:params :info-text])
-                    lang
-                    #(dispatch-sync [:editor/set-component-value
-                                     (-> % .-target .-value)
-                                     path :params :info-text :label lang])
-                    {:tag :textarea}])
+                    {:path        (concat path [:params :info-text])
+                     :lang        lang
+                     :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                   (-> % .-target .-value)
+                                                   path :params :info-text :label lang])
+                     :tag         :textarea}])
                  @languages)
                (map (fn [field]
                       (into field [[:div.editor-form__info-addon-markdown-anchor (markdown-help-component/markdown-help)]])))

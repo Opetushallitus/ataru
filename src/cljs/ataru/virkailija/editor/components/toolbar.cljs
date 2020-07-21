@@ -24,7 +24,7 @@
                                 (assoc (component/multiple-choice metadata)
                                        :koodisto-source {:uri "" :title "" :version 1}
                                        :options []))]
-   [:text-field component/text-field]
+   [:text-field component/text-field {:data-test-id "component-toolbar-tekstikenttä"}]
    [:text-area component/text-area]
    [:adjacent-fieldset component/adjacent-fieldset]
    [:attachment component/attachment]

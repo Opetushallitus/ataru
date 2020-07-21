@@ -34,8 +34,9 @@
               (dispatch [:editor/generate-followup-component generate-fn option-path]))])]]])))
 
 (defn followup-question [option-index followups show-followups]
-  (let [attrs {:on-click #(swap! show-followups
-                                 (fn [v] (update v option-index not)))}]
+  (let [attrs {:on-click     #(swap! show-followups
+                                     (fn [v] (update v option-index not)))
+               :data-test-id "followup-question-followups"}]
     [:div.editor-form__followup-question
      (if (empty? followups)
        [:a attrs @(subscribe [:editor/virkailija-translation :followups])]

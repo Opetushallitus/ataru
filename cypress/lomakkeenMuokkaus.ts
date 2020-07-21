@@ -1,8 +1,7 @@
 import * as httpPaluusanomat from './httpPaluusanomat'
 import * as reitit from './reitit'
 import * as odota from './odota'
-import * as tekstikentta from './tekstikentta'
-import { syotaTeksti } from './tekstikentta'
+import * as tekstinSyotto from './tekstinSyotto'
 
 import Chainable = Cypress.Chainable
 import WaitXHR = Cypress.WaitXHR
@@ -46,7 +45,7 @@ export function teeJaodotaLomakkeenTallennusta<T>(
 
 export const asetaLomakkeenNimi = (name: string, lomakkeenId: number) =>
   teeJaodotaLomakkeenTallennusta(lomakkeenId, () =>
-    syotaTeksti(haeLomakkeenNimenSyote(), name)
+    tekstinSyotto.syotaTeksti(haeLomakkeenNimenSyote(), name)
   )
 
 const koodistonValitsin = () =>
@@ -94,7 +93,7 @@ export const henkilotiedot = {
 }
 
 export const komponentinLisays = {
-  hover: () =>
+  avaaValikko: () =>
     cy.get('[data-test-id=component-toolbar]:visible').trigger('mouseover'),
 
   haeLisaaArvosanatLinkki: () =>
@@ -107,13 +106,13 @@ export const komponentinLisays = {
 
   lisaaArvosanat: (formId: number) => {
     return teeJaodotaLomakkeenTallennusta(formId, () => {
-      komponentinLisays.hover()
+      komponentinLisays.avaaValikko()
       return komponentinLisays.haeLisaaArvosanatLinkki().click()
     })
   },
   lisaaElementti: (formId: number, elementinTeksti: string) =>
     teeJaodotaLomakkeenTallennusta(formId, () => {
-      komponentinLisays.hover()
+      komponentinLisays.avaaValikko()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
     }),
 }
@@ -130,7 +129,7 @@ export const painikeYksiValittavissa = {
       '[data-test-id=editor-form__singleChoice-component-main-label]:visible'
     ),
   syotaKysymysTeksti: (teksti: string) => {
-    return tekstikentta.syotaTeksti(
+    return tekstinSyotto.syotaTeksti(
       painikeYksiValittavissa.haeKysymysTeksti(),
       teksti
     )

@@ -1,6 +1,6 @@
 # Project-specific configuration
 EXECUTABLES = lein docker docker-compose npm lftp
-PORTS=15432 16379 15433 1221 16380 8350 8351
+PORTS=15432 16379 15433 1221 16380 16381 8350 8351 8352 8353
 TOOL_VERSIONS := node:8.11 npm:6 docker-compose:1.21 lein:2.9
 
 VIRKAILIJA_CONFIG ?= ../ataru-secrets/virkailija-local-dev.edn
@@ -17,7 +17,7 @@ DEV_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_BACKEND) $(VIRKAILIJA_BACKEN
 CYPRESS_SERVICES = $(FIGWHEEL) $(CSS_COMPILER) $(HAKIJA_CYPRESS_BACKEND) $(VIRKAILIJA_CYPRESS_BACKEND)
 
 DOCKER_CONTAINERS_DEV = ataru-dev-db ataru-dev-redis ataru-test-db ataru-test-ftpd ataru-test-redis
-DOCKER_CONTAINERS_CYPRESS = ataru-cypress-test-db ataru-test-ftpd ataru-test-redis ataru-cypress-http-proxy
+DOCKER_CONTAINERS_CYPRESS = ataru-cypress-test-db ataru-test-ftpd ataru-test-redis ataru-cypress-test-redis ataru-cypress-http-proxy
 
 # General options
 PM2=npx pm2 --no-autorestart
@@ -176,7 +176,7 @@ status: $(NODE_MODULES)
 	$(PM2) status
 
 log: $(NODE_MODULES)
-	$(PM2) logs
+	$(PM2) logs --timestamp
 
 # Alias for log
 logs: log

@@ -10,7 +10,7 @@ echo "Generating nginx configuration"
 ./bin/generate-nginx-conf.sh || exit 1
 
 echo "Starting Docker containers for Cypress tests"
-docker-compose up -d ataru-cypress-test-db ataru-cypress-http-proxy
+docker-compose up -d ataru-cypress-test-db ataru-cypress-test-redis ataru-cypress-http-proxy
 ./bin/wait-for.sh localhost:8354 -t 10 || exit 1
 
 echo "Running ClojureScript build for Cypress tests"

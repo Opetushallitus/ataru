@@ -9,6 +9,9 @@ export const virkailija = {
 
   haeLomakkeenMuuttamisenOsoite: (lomakkeenId: number) =>
     `/lomake-editori/api/forms/${lomakkeenId}`,
+
+  haeLomakkeenHakemuksetVirkailijanNakymassaOsoite: (lomakkeenAvain: string) =>
+    `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`,
 }
 
 export const hakija = {
@@ -17,6 +20,8 @@ export const hakija = {
 
   haeLomakkeenHaunOsoite: (lomakkeenAvain: string) =>
     `/hakemus/api/form/${lomakkeenAvain}?role=hakija`,
+
+  haeHakemuksenLahettamisenOsoite: () => `/hakemus/api/application`,
 }
 
 export const cypress = {

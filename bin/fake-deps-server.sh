@@ -26,9 +26,11 @@ function start() {
 }
 
 function stop() {
-  echo "Pysäytetään prosessi $AJOSSA_OLEVA_PID ..."
-  kill ${AJOSSA_OLEVA_PID} || true
-  rm ${PIDFILE}
+  if [[ ! -z "$AJOSSA_OLEVA_PID" ]]; then
+    echo "Pysäytetään prosessi $AJOSSA_OLEVA_PID ..."
+    kill ${AJOSSA_OLEVA_PID} || true
+  fi
+  rm -f ${PIDFILE}
 }
 
 command="$1"

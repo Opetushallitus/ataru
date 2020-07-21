@@ -148,7 +148,9 @@
 
   :auto-clean false
 
-  :figwheel {:css-dirs ["resources/public/css"]}
+  :figwheel {:css-dirs ["resources/public/css"]
+             :repl     false
+             :readline false}
 
   :less {:source-paths ["resources/less"]
          :target-path  "resources/public/css/compiled"}
@@ -296,9 +298,7 @@
                                                :config "config/test.edn"}
                               :jvm-opts       ^:replace ["-Durl.valinta-tulos-service.baseUrl=http://localhost:8097"]}
              :figwheel {:nrepl-port  3334
-                        :server-port 3449
-                        :repl false
-                        :readline false}
+                        :server-port 3449}
 
              :virkailija-cypress        {:env {:dev? "true"}
                                          :target-path "target/target-cypess-virkailija"}
