@@ -1186,9 +1186,12 @@
 
 (defn notification [_]
   (fn [{:keys [text link-text href on-click]}]
-    [:div.application__message-display--details-notification @(subscribe [:editor/virkailija-translation text])
+    [:div.application__message-display--details-notification
+     {:id (str "notification-label-" (name text))}
+     @(subscribe [:editor/virkailija-translation text])
      [:a.application-handling__form-outdated--button.application-handling__button
-      {:href     href
+      {:id (str "notification-link-" (name text))
+       :href     href
        :target   "_blank"
        :on-click on-click}
       [:span @(subscribe [:editor/virkailija-translation link-text])]]]))
@@ -1211,6 +1214,7 @@
                 show-not-yksiloity?
                 show-metadata-not-found?)
         [:div.application__message-display.application__message-display--notification
+         {:id "notifications-display"}
          [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
          [:div.application__message-display--details
           (when show-not-latest-form?

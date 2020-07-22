@@ -1,0 +1,117 @@
+{
+  "sort": {
+    "order-by": "applicant-name",
+    "order": "asc"
+  },
+  "applications": [
+    {
+      "haku": "1.2.246.562.29.10000000001",
+      "person": {
+        "oid": "1.2.246.562.24.10000000001",
+        "preferred-name": "Tatu",
+        "last-name": "Tuntematon",
+        "yksiloity": true,
+        "ssn": "010190-123A",
+        "dob": "01.01.1990"
+      },
+      "key": "1.2.246.562.11.00000000000000000001",
+      "eligibility-set-automatically": [],
+      "state": "active",
+      "submitted": "2020-03-28T13:45:09.000Z",
+      "lang": "fi",
+      "new-application-modifications": 0,
+      "id": 766809,
+      "score": null,
+      "hakukohde": ["1.2.246.562.20.10000000001"],
+      "form": 551149,
+      "application-hakukohde-reviews": [{
+        "requirement": "processing-state",
+        "state": "processed",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }, {
+        "requirement": "language-requirement",
+        "state": "fulfilled",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }, {
+        "requirement": "degree-requirement",
+        "state": "unreviewed",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }, {
+        "requirement": "eligibility-state",
+        "state": "eligible",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }, {
+        "requirement": "payment-obligation",
+        "state": "not-obligated",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }, {
+        "requirement": "selection-state",
+        "state": "incomplete",
+        "hakukohde": "1.2.246.562.20.27297264429"
+      }],
+      "created-time": "2020-03-28T13:45:09.000Z",
+      "base-education": ["pohjakoulutus_yo", "pohjakoulutus_am"],
+      "application-attachment-reviews": [{
+        "attachment-key": "f40d9f2a-deb7-4d86-a332-2d9558d8bf1f",
+        "state": "checked",
+        "hakukohde": "1.2.246.562.20.10000000001"
+      }]
+    },
+    {
+      "haku": null,
+      "person": {
+        "oid": "1.2.246.562.24.00000000002",
+        "preferred-name": "Erkki",
+        "last-name": "Esimerkki",
+        "yksiloity": false,
+        "ssn": "101059-425E",
+        "dob": "10.10.1959"
+      },
+      "key": "1.2.246.562.11.00000000000000000002",
+      "eligibility-set-automatically": [],
+      "state": "active",
+      "submitted": "2020-07-22T11:08:22.326Z",
+      "lang": "fi",
+      "new-application-modifications": 0,
+      "id": 903444,
+      "score": null,
+      "hakukohde": [],
+      "form": 555931,
+      "application-hakukohde-reviews": [
+        {
+          "requirement": "processing-state",
+          "state": "unprocessed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "language-requirement",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "degree-requirement",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "eligibility-state",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "payment-obligation",
+          "state": "unreviewed",
+          "hakukohde": "form"
+        },
+        {
+          "requirement": "selection-state",
+          "state": "incomplete",
+          "hakukohde": "form"
+        }
+      ],
+      "created-time": "2020-07-22T11:08:22.326Z",
+      "base-education": [],
+      "application-attachment-reviews": []
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTaytt
 import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 
 describe('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', () => {
-  kirjautuminenVirkailijanNakymaan(() => {
+  kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       painikkeetYksiValittavissaKoodistostaElementinLisays(
         lomakkeenTunnisteet,

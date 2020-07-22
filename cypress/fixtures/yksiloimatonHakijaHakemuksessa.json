@@ -1,0 +1,110 @@
+{
+  "application": {
+    "haku": null,
+    "person": {
+      "preferred-name": "Tatu",
+      "last-name": "Tuntematon",
+      "turvakielto": false,
+      "nationality": [
+        [
+          "246"
+        ]
+      ],
+      "ssn": "010190-123A",
+      "first-name": "Tatu",
+      "birth-date": "01.01.1990",
+      "oid": "1.2.246.562.24.00000000001",
+      "yksiloity": true,
+      "language": "FI",
+      "gender": "1"
+    },
+    "key": "1.2.246.562.11.00000000000000000001",
+    "applications-count": 3,
+    "rights-by-hakukohde": {
+      "form": [
+        "view-applications",
+        "edit-valinta",
+        "edit-applications",
+        "view-valinta",
+        "form-edit"
+      ]
+    },
+    "can-edit?": true,
+    "lang": "fi",
+    "id": 903444,
+    "hakukohde": [],
+    "answers": [
+      {
+        "key": "beb7f478-8fe0-4db3-984b-2a9b06d290f6",
+        "value": "rutkasti",
+        "fieldType": "textField",
+        "label": "Kuinka paljon ajattelit pitää lomaa?"
+      }
+    ],
+    "form": 555931,
+    "created-time": "2020-07-22T11:08:22.326Z"
+  },
+  "events": [
+    {
+      "last-name": null,
+      "time": "2020-07-22T11:08:22.326Z",
+      "first-name": null,
+      "application-key": "1.2.246.562.11.00000000000000000001",
+      "id": 395555,
+      "hakukohde": null,
+      "new-review-state": null,
+      "review-key": null,
+      "event-type": "received-from-applicant"
+    }
+  ],
+  "review-notes": [],
+  "review": {
+    "id": 569195,
+    "application-key": "1.2.246.562.11.00000000000000000001",
+    "modified-time": "2020-07-22T11:08:22.326Z",
+    "state": "active",
+    "score": null
+  },
+  "information-requests": [],
+  "selection-state-used?": true,
+  "hakukohde-reviews": {},
+  "form": {
+    "deleted": null,
+    "key": "3f739980-d693-440b-a9e6-c7e929dfe9bd",
+    "content": [
+      {
+        "label": {
+          "fi": "Kuinka paljon ajattelit pitää lomaa?",
+          "sv": ""
+        },
+        "fieldClass": "formField",
+        "id": "beb7f478-8fe0-4db3-984b-2a9b06d290f6",
+        "params": {},
+        "metadata": {
+          "created-by": {
+            "name": "Esko Suomi",
+            "oid": "1.2.246.562.24.42132694915",
+            "date": "2020-07-22T11:04:31Z"
+          },
+          "modified-by": {
+            "name": "Esko Suomi",
+            "oid": "1.2.246.562.24.42132694915",
+            "date": "2020-07-22T11:04:39Z"
+          }
+        },
+        "fieldType": "textField"
+      }
+    ],
+    "name": {
+      "fi": "Eskon suuri lomakysely"
+    },
+    "organization-oid": "1.2.246.562.10.00000000001",
+    "created-by": "esuomi",
+    "id": 555931,
+    "created-time": "2020-07-22T11:04:41.202Z",
+    "languages": [
+      "fi"
+    ]
+  },
+  "attachment-reviews": {}
+}
