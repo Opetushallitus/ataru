@@ -10,7 +10,7 @@ import tekstikentanLisakysymysHakemustenKasittelyssa from '../testit/lomake-elem
 import tekstikentanLisakysymykseenArvonPerusteellaVastaaminen from '../testit/lomake-elementit/tekstikentta/hakija/hakemus/tekstikentanLisakysymykseenArvonPerusteellaVastaaminen'
 
 describe('Tekstikentän lisäkysymys arvon perusteella', () => {
-  kirjautuminenVirkailijanNakymaan(() => {
+  kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       tekstikentanLisakysymysArvonPerusteellaLisays(lomakkeenTunnisteet, () => {
         hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {

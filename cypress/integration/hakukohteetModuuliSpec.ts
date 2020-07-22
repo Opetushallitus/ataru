@@ -1,8 +1,6 @@
 import * as lomakkeenMuokkaus from '../lomakkeenMuokkaus'
 import kirjautuminenVirkailijanNakymaan from '../testit/kirjautuminenVirkailijanNakymaan'
 import lomakkeenLuonti from '../testit/lomakkeenLuonti'
-import * as reitit from "../reitit";
-import {haeLomakkeenLisaysNappi} from "../lomakkeenMuokkaus";
 
 describe('Hakukohteet -moduuli', () => {
   kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
