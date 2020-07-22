@@ -106,22 +106,31 @@ WHERE la.id IS NULL
 /*~*/
   AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
 /*~ )) ~*/
-/*~ (when (contains? params :attachment-key) */
+/*~ (when (and (contains? params :attachment-key) (contains? params :attachment-states)) */
   AND EXISTS (SELECT 1
               FROM application_hakukohde_attachment_reviews
               WHERE application_key = a.key AND
                     attachment_key = :attachment-key
-/*~ (when (contains? params :attachment-states) */
-                AND states = ANY (:attachment-states)
-/*~ ) */
+                AND state = ANY (:attachment-states))
+/*~ ) ~*/
+/*~ (when (and (contains? params :attachment-key) (not (contains? params :attachment-states))) */
+  AND EXISTS (SELECT 1
+              FROM application_hakukohde_attachment_reviews
+              WHERE application_key = a.key AND
+                    attachment_key = :attachment-key)
+/*~ ) ~*/
+/*~ (when (and (not (contains? params :attachment-key)) (contains? params :attachment-states)) */
+  AND EXISTS (SELECT 1
+              FROM application_hakukohde_attachment_reviews
+              WHERE application_key = a.key
+                AND state = ANY (:attachment-states))
+/*~ ) ~*/
 /*~ (when (contains? params :hakukohde) */
                 AND hakukohde = ANY (:hakukohde)
 /*~ ) */
 /*~ (when (contains? params :ensisijainen-hakukohde) */
                 AND hakukohde = ANY (:ensisijainen-hakukohde)
 /*~ ) */
-             )
-/*~ ) ~*/
 /*~ (when (contains? params :offset-key)
       (case [(:order-by params) (:order params)]
         ["submitted" "asc"] */
