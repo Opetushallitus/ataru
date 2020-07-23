@@ -1052,7 +1052,17 @@
     {:db       (update db :show-hakukierros-paattynyt not)
      :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
 
+(defn- find-filter-options [field] ; TODO: Tässä voisi olla hyvä paikka laittaa kentän tyyppi talteen, liitteiden erikoiskäsittelyä varten. Ks. virkailija-application-list-view / filter-attachment-state-dropdown
+  (case (:fieldType field)
+    "attachment" initial-db/default-attachment-review-states
+    (->> (:options field)
+         (map :value)
+         (mapv (fn [v] [v false]))
+         (into {}))))
+
 (reg-event-db
-  :application/add-filter-attachment
+  :application/add-filter-by-question-answer
   (fn [db [_ field-id]]
-    (assoc-in db [:application :attachment-review-states-value field-id] initial-db/default-attachment-review-states)))
+    (let [selected-form-key (-> db :application :selected-form-key)
+          field (-> db :forms (get selected-form-key) util/form-fields-by-id (get (keyword field-id)))] ; TODO: Tämän voi varmasti tehdä fiksummin.
+      (assoc-in db [:application :question-answer-filtering-options-value field-id] (find-filter-options field)))))

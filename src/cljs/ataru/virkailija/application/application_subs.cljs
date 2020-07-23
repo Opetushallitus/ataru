@@ -257,7 +257,7 @@
         (not= (get-in db [:application :rajaus-hakukohteella])
               (get-in db [:application :rajaus-hakukohteella-value]))
         (not= (get-in db [:application :attachment-review-states])
-              (get-in db [:application :attachment-review-states-value])))))
+              (get-in db [:application :question-answer-filtering-options-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -931,12 +931,12 @@
 (re-frame/reg-sub
   :application/filter-attachments
   (fn [db _]
-    (get-in db [:application :attachment-review-states-value])))
+    (get-in db [:application :question-answer-filtering-options-value])))
 
 (re-frame/reg-sub
-  :application/filter-attachment-states
+  :application/filter-question-answer-states
   (fn [db [_ field-id]]
-    (get-in db [:application :attachment-review-states-value field-id])))
+    (get-in db [:application :question-answer-filtering-options-value field-id])))
 
 (re-frame/reg-sub
   :application/valitun-hakemuksen-hakukohteet
