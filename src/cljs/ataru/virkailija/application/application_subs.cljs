@@ -1,15 +1,15 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [clojure.core.match :refer [match]]
-            [clojure.set :as cs]
-            [cljs-time.core :as t]
-            [re-frame.core :as re-frame]
-            [ataru.application-common.application-field-common :as common]
+  (:require [ataru.application-common.application-field-common :as common]
+            [ataru.cljs-util :as util]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.util :as u]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
-            [ataru.util :as u]
-            [ataru.cljs-util :as util]
-            [clojure.string :as s]))
+            [cljs-time.core :as t]
+            [clojure.core.match :refer [match]]
+            [clojure.set :as set]
+            [clojure.string :as string]
+            [re-frame.core :as re-frame]))
 
 (defn- from-multi-lang [text lang]
   (u/non-blank-val text [lang :fi :sv :en]))
@@ -335,18 +335,18 @@
 
 (defn- sort-by-haku-name
   [application-haut haut fetching-haut lang]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (haku-name haut fetching-haut (:oid %) lang) ""))
            application-haut))
 
 (defn- sort-by-hakukohde-name
   [hakukohteet fetching-hakukohteet lang application-hakukohteet]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (hakukohde-name hakukohteet fetching-hakukohteet (:oid %) lang) ""))
            application-hakukohteet))
 
 (defn- sort-by-form-name [direct-form-haut lang]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
@@ -608,15 +608,15 @@
 (defn- tila-historia->information-request [tila-historia]
   (-> tila-historia
       (select-keys [:luotu :tila])
-      (clojure.set/rename-keys {:luotu :created-time
-                                :tila  :valinnan-tila})
+      (set/rename-keys {:luotu :created-time
+                        :tila  :valinnan-tila})
       (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
 
 (defn- valinnan-tulos->information-request [valinnan-tulos]
   (-> valinnan-tulos
       (select-keys [:valinnantilanViimeisinMuutos :valinnantila])
-      (clojure.set/rename-keys {:valinnantilanViimeisinMuutos :created-time
-                                :valinnantila                 :valinnan-tila})
+      (set/rename-keys {:valinnantilanViimeisinMuutos :created-time
+                        :valinnantila                 :valinnan-tila})
       (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
 
 (re-frame/reg-sub
