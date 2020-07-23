@@ -12,7 +12,7 @@
       before(
         wait.until(() => {
           return formSections().length == 2
-        }, 10000),
+        }),
         clickElement(addHakukohdeLink, 'hakukohdeLink'),
         clickElement(() => {
           return nthHakukohdeSearchResultButton(0)
@@ -61,7 +61,7 @@
         reloadEditPage,
         wait.until(() => {
           return formSections().length == 2
-        }, 10000)
+        })
       )
 
       it('check that components are disabled when hakuaika is over (and enabled when some hakuaika is on going)', () => {
@@ -117,7 +117,7 @@
       before(
         wait.until(() => {
           return addHakukohdeLink().length == 1
-        }, 10000),
+        }),
         clickElement(addHakukohdeLink, 'hakukohdeLink'),
         clickElement(() => {
           return nthHakukohdeSearchResultButton(1)

@@ -15,7 +15,7 @@
 
   describe('hakemus by haku with single hakukohde', () => {
     describe('form loads', () => {
-      before(wait.until(() => formSections().length == 3, 100000))
+      before(wait.until(() => formSections().length == 3))
       it('with complete form and the only hakukohde selected', () => {
         expect(formFields().length).to.equal(15)
         expect(submitButton().prop('disabled')).to.equal(true)
@@ -34,7 +34,7 @@
     describe('with single hakukohde', () => {
       before(
         () => loadInFrame('/hakemus/haku/' + kkHakuOid),
-        wait.until(() => formSections().length == 3, 10000)
+        wait.until(() => formSections().length == 3)
       )
       it('does not show the details', () => {
         expect(selectedHakukohdeTexts()).to.equal(
@@ -45,7 +45,7 @@
     describe('with multiple hakukohde', () => {
       before(
         () => loadInFrame('/hakemus/haku/' + multipleHakukohdeKkHakuOid),
-        wait.until(() => formSections().length == 3, 10000)
+        wait.until(() => formSections().length == 3)
       )
       describe('adding KK hakukohde', () => {
         before(
@@ -103,7 +103,7 @@
           .eq(0)
       before(
         () => loadInFrame('/hakemus/haku/' + hakuWithPohjakoulutusMooduliKk),
-        wait.until(() => formSections().length == 3, 10000),
+        wait.until(() => formSections().length == 3),
         clickElement(firstSegmentLabel),
         clickElement(firstSegmentYesButton),
         setTextFieldValue(firstSegmentInputBox, '2015'),
@@ -126,7 +126,7 @@
     describe('form loads', () => {
       before(
         () => loadInFrame('/hakemus/haku/' + multipleHakukohdeHakuOid),
-        wait.until(() => formSections().length == 3, 10000)
+        wait.until(() => formSections().length == 3)
       )
       it('with complete form and no hakukohde selected', () => {
         expect(formFields().length).to.equal(15)
