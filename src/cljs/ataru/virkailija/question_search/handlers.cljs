@@ -94,9 +94,9 @@
        field))))
 
 (defn field-type-filter-predicate
-  [field-type]
+  [field-types]
   (fn [field]
-    (= field-type (:fieldType field))))
+    (some #(= (:fieldType field) %) field-types)))
 
 (defn belongs-to-selected-filter-predicate
   [db form-key]
