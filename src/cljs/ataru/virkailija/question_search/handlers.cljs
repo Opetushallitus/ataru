@@ -1,5 +1,6 @@
 (ns ataru.virkailija.question-search.handlers
   (:require [ataru.util :as util]
+            [clojure.string :as clj-string]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-event-fx
@@ -23,8 +24,8 @@
 
 (defn- matches-label?
   [field lang search-term]
-  (clojure.string/includes?
-   (clojure.string/lower-case
+  (clj-string/includes?
+   (clj-string/lower-case
     (or (util/non-blank-val (:label field) [lang :fi :sv :en])
         ""))
    search-term))
@@ -34,13 +35,13 @@
   (boolean
    (some (fn [hakukohde-oid]
            (let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-             (or (clojure.string/includes?
-                  (clojure.string/lower-case
+             (or (clj-string/includes?
+                  (clj-string/lower-case
                    (or (util/non-blank-val (:name hakukohde) [lang :fi :sv :en])
                        ""))
                   search-term)
-                 (clojure.string/includes?
-                  (clojure.string/lower-case
+                 (clj-string/includes?
+                  (clj-string/lower-case
                    (or (util/non-blank-val (:tarjoaja-name hakukohde) [lang :fi :sv :en])
                        ""))
                   search-term))))
@@ -50,8 +51,8 @@
   [db field lang search-term]
   (boolean
    (some (fn [hakukohderyhma-oid]
-           (clojure.string/includes?
-            (clojure.string/lower-case
+           (clj-string/includes?
+            (clj-string/lower-case
              (or (util/non-blank-val
                   (get-in db [:hakukohderyhmat hakukohderyhma-oid :name])
                   [lang :fi :sv :en])
@@ -127,13 +128,13 @@
     (let [lang             (or (-> db :editor :user-info :lang keyword) :fi)
           search-input     (get-in db [:question-search form-key id :search-input] "")
           search-terms     (-> search-input
-                               clojure.string/trim
-                               clojure.string/lower-case
-                               (clojure.string/split #"\s+"))
+                               clj-string/trim
+                               clj-string/lower-case
+                               (clj-string/split #"\s+"))
           filter-predicate (filter-predicate db form-key)
           belongs-to?      (belongs-to-virkailijan-hakukohde-or-hakukohderyhma? db form-key)
           searching?       (and (seq search-terms)
-                                (not (clojure.string/blank? (first search-terms))))]
+                                (not (clj-string/blank? (first search-terms))))]
       {:db       (-> db
                      (assoc-in [:question-search form-key id :search-result]
                                cljs.core/PersistentQueue.EMPTY)
