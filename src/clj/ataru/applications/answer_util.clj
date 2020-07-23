@@ -6,7 +6,7 @@
   [application-key s]
   (try
     (let [[_ _ vuosi] (re-matches #"(\d?\d\.\d?\d\.)?([12]\d{3})" s)]
-      (Integer/valueOf vuosi))
+      (Integer/valueOf vuosi 10))
     (catch Exception _
       (log/warn "Failed to parse year of completion" s "in hakemus" application-key)
       nil)))
