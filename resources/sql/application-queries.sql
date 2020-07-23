@@ -65,7 +65,7 @@ FROM ((SELECT t->>'key' AS key,
        FROM jsonb_array_elements(:answers) AS t
        CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(group_value, group_idx)
        WHERE jsonb_typeof(t->'value') = 'array' AND
-             jsonb_typeof(tt.group_value) = 'null')) AS t
+             jsonb_typeof(tt.group_value) = 'null')) AS t;
 
 -- name: yesql-add-application-version<!
 -- Add application version
@@ -650,7 +650,7 @@ SELECT
   lf.organization_oid,
   (SELECT content
    FROM answers_as_content
-   WHERE application_id = a.id) AS content,
+   WHERE application_id = la.id) AS content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -681,7 +681,7 @@ SELECT a.key AS "oid",
                             WHEN '3' THEN 'en'
                         END
                  FROM answers
-                 WHERE key = 'asiointikieli'
+                 WHERE key = 'asiointikieli' AND
                        application_id = a.id),
                 a.lang) AS "asiointikieli",
        a.email AS "email"
@@ -751,15 +751,15 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  coalesce(SELECT CASE value
-                      WHEN '1' THEN 'fi'
-                      WHEN '2' THEN 'sv'
-                      WHEN '3' THEN 'en'
-                  END
-           FROM answers
-           WHERE key = 'asiointikieli'
-                 application_id = a.id,
-           a.lang) AS "lang",
+  coalesce((SELECT CASE value
+                       WHEN '1' THEN 'fi'
+                       WHEN '2' THEN 'sv'
+                       WHEN '3' THEN 'en'
+                   END
+            FROM answers
+            WHERE key = 'asiointikieli' AND
+                  application_id = a.id),
+            a.lang) AS "lang",
   a.email,
   (SELECT content
    FROM answers_as_content
@@ -774,7 +774,7 @@ LEFT JOIN applications AS la
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations,
                           jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
                    FROM application_hakukohde_reviews
-                   WHERE application_key = a.key) AS ahr
+                   WHERE application_key = a.key) AS ahr ON true
 WHERE a.person_oid IS NOT NULL AND
       a.haku IS NOT NULL AND
       (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
@@ -872,7 +872,7 @@ SELECT
   hakukohde AS "hakukohde-oids",
   (SELECT content
    FROM answers_as_content
-   WHERE application_id = a.id) AS "content",
+   WHERE application_id = la.id) AS "content",
   state AS "hakemus-tila"
 FROM latest_applications AS la
 JOIN application_reviews ON application_key = la.key
@@ -892,7 +892,7 @@ SELECT
   hakukohde,
   (SELECT content
    FROM answers_as_content
-   WHERE application_id = a.id) AS content,
+   WHERE application_id = la.id) AS content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
