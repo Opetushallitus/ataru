@@ -508,7 +508,7 @@
                @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
                (not (empty? @filter-attachments))
                (fn [db form-key]
-                 (every-pred (qsh/field-type-filter-predicate "attachment")
+                 (every-pred (qsh/field-type-filter-predicate ["attachment"])
                              (qsh/belongs-to-selected-filter-predicate db form-key)))]]
              (if (seq @filter-attachments)
                [:div.application-handling__filters-attachment-attachments
