@@ -15,7 +15,7 @@
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
                    (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value]))
-                   (assoc-in [:application :attachment-review-states] (get-in db [:application :attachment-review-states-value])))
+                   (assoc-in [:application :attachment-review-states] (get-in db [:application :question-answer-filtering-options-value])))
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
@@ -29,7 +29,7 @@
                    (assoc-in [:application :rajaus-hakukohteella] nil)
                    (assoc-in [:application :rajaus-hakukohteella-value] nil)
                    (assoc-in [:application :attachment-review-states] {})
-                   (assoc-in [:application :attachment-review-states-value] {}))
+                   (assoc-in [:application :question-answer-filtering-options-value] {}))
      :dispatch [:application/reload-applications]}))
 
 (defn- set-rajaus-hakukohteella
@@ -58,7 +58,7 @@
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
       (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
-      (assoc-in [:application :attachment-review-states-value] (get-in db [:application :attachment-review-states]))))
+      (assoc-in [:application :question-answer-filtering-options-value] (get-in db [:application :attachment-review-states]))))
 
 (reg-event-db
   :application/undo-filters
@@ -83,9 +83,9 @@
 (reg-event-db
   :application/remove-filter-attachment
   (fn [db [_ field-id]]
-    (update-in db [:application :attachment-review-states-value] dissoc field-id)))
+    (update-in db [:application :question-answer-filtering-options-value] dissoc field-id)))
 
 (reg-event-db
   :application/set-filter-attachment-state
   (fn [db [_ field-id state value]]
-    (assoc-in db [:application :attachment-review-states-value field-id state] value)))
+    (assoc-in db [:application :question-answer-filtering-options-value field-id state] value)))
