@@ -1186,9 +1186,12 @@
 
 (defn notification [_]
   (fn [{:keys [text link-text href on-click]}]
-    [:div.application__message-display--details-notification @(subscribe [:editor/virkailija-translation text])
+    [:div.application__message-display--details-notification
+     {:id (str "notification-label-" (name text))}
+     @(subscribe [:editor/virkailija-translation text])
      [:a.application-handling__form-outdated--button.application-handling__button
-      {:href     href
+      {:id (str "notification-link-" (name text))
+       :href     href
        :target   "_blank"
        :on-click on-click}
       [:span @(subscribe [:editor/virkailija-translation link-text])]]]))
@@ -1200,14 +1203,18 @@
           selected-review-hakukohde     @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           show-not-latest-form?         (some? @(subscribe [:state-query [:application :latest-form]]))
           show-creating-henkilo-failed? @(subscribe [:application/show-creating-henkilo-failed?])
+          show-henkilo-info-incomplete? (and (some? person-oid)
+                                             (not (-> application :person :language)))
           show-not-yksiloity?           (and (some? person-oid)
                                              (not (-> application :person :yksiloity)))
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])]
       (when (or show-not-latest-form?
                 show-creating-henkilo-failed?
+                show-henkilo-info-incomplete?
                 show-not-yksiloity?
                 show-metadata-not-found?)
         [:div.application__message-display.application__message-display--notification
+         {:id "notifications-display"}
          [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
          [:div.application__message-display--details
           (when show-not-latest-form?
@@ -1216,8 +1223,13 @@
                            :on-click  (fn [evt]
                                         (.preventDefault evt)
                                         (select-application (:key application) selected-review-hakukohde true))}])
-          (when show-creating-henkilo-failed?
+          (when show-creating-henkilo-failed?  ; henkilo details are missing entirely
             [notification {:text :creating-henkilo-failed}])
+          (when show-henkilo-info-incomplete?  ; henkilo is missing some essential information, such as language
+            [notification {:text      :henkilo-info-incomplete
+                           :link-text :review-in-henkilopalvelu
+                           :href      (str "/henkilo-ui/oppija/"
+                                           person-oid)}])
           (when show-not-yksiloity?
             [notification {:text      :person-not-individualized
                            :link-text :individualize-in-henkilopalvelu

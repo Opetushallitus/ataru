@@ -10,7 +10,7 @@ import hakemuksenLahettaminen from '../testit/hakemuksenLahettaminen'
 import peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen from '../testit/arvosanat/peruskoulunArvosanatOsionHakijanLukunakymanTarkistaminen'
 
 describe('Peruskoulun arvosanat -osio', () => {
-  kirjautuminenVirkailijanNakymaan(() => {
+  kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       peruskoulunArvosanatOsionLisays(lomakkeenTunnisteet, () => {
         peruskoulunArvosanatOsionPoistaminen(lomakkeenTunnisteet)

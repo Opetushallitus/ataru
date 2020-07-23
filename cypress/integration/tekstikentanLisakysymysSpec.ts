@@ -10,7 +10,7 @@ import hakemustenKasittelyynSiirtyminen from '../testit/hakemustenKasittelyynSii
 import tekstikentanLisakysymysHakemustenKasittelyssa from '../testit/lomake-elementit/tekstikentta/virkailija/hakemukset/tekstikentanLisakysymysHakemustenKasittelyssa'
 
 describe('Tekstikentän lisäkysymys', () => {
-  kirjautuminenVirkailijanNakymaan(() => {
+  kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       tekstikentanLisakysymyksenLisays(lomakkeenTunnisteet, () => {
         hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {

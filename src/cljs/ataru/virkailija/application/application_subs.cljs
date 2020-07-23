@@ -1,14 +1,15 @@
 (ns ataru.virkailija.application.application-subs
   (:require [clojure.core.match :refer [match]]
+            [clojure.set :as cs]
             [cljs-time.core :as t]
             [re-frame.core :as re-frame]
-            [medley.core :refer [find-first]]
             [ataru.application-common.application-field-common :as common]
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as u]
-            [ataru.cljs-util :as util]))
+            [ataru.cljs-util :as util]
+            [clojure.string :as s]))
 
 (defn- from-multi-lang [text lang]
   (u/non-blank-val text [lang :fi :sv :en]))
@@ -99,20 +100,20 @@
 
 (re-frame/reg-sub
   :application/path-to-haku-search
-  (fn [db [_ haku-oid]]
+  (fn [_ [_ haku-oid]]
     (when haku-oid
       (str "/lomake-editori/applications/haku/" haku-oid))))
 
 (re-frame/reg-sub
   :application/path-to-hakukohderyhma-search
-  (fn [db [_ haku-oid hakukohderyhma-oid]]
+  (fn [_ [_ haku-oid hakukohderyhma-oid]]
     (when (and haku-oid
                hakukohderyhma-oid)
       (str "/lomake-editori/applications/haku/" haku-oid "/hakukohderyhma/" hakukohderyhma-oid))))
 
 (re-frame/reg-sub
   :application/path-to-hakukohde-search
-  (fn [db [_ hakukohde-oid]]
+  (fn [_ [_ hakukohde-oid]]
     (when hakukohde-oid
       (str "/lomake-editori/applications/hakukohde/" hakukohde-oid))))
 
@@ -334,18 +335,18 @@
 
 (defn- sort-by-haku-name
   [application-haut haut fetching-haut lang]
-  (sort-by (comp clojure.string/lower-case
+  (sort-by (comp s/lower-case
                  #(or (haku-name haut fetching-haut (:oid %) lang) ""))
            application-haut))
 
 (defn- sort-by-hakukohde-name
   [hakukohteet fetching-hakukohteet lang application-hakukohteet]
-  (sort-by (comp clojure.string/lower-case
+  (sort-by (comp s/lower-case
                  #(or (hakukohde-name hakukohteet fetching-hakukohteet (:oid %) lang) ""))
            application-hakukohteet))
 
 (defn- sort-by-form-name [direct-form-haut lang]
-  (sort-by (comp clojure.string/lower-case
+  (sort-by (comp s/lower-case
                  #(or (from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
@@ -696,7 +697,7 @@
   :application/review-note-indexes-excluding-eligibility
   (fn [db]
     (->> (-> db :application :review-notes)
-         (keep-indexed (fn [index {:keys [state-name hakukohde]}]
+         (keep-indexed (fn [index {:keys [state-name _]}]
                          (when (not= "eligibility-state" state-name)
                            index))))))
 

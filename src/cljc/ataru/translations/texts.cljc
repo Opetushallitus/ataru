@@ -1462,6 +1462,12 @@
    :creating-henkilo-failed                         {:fi "Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)."
                                                      :sv "Att bilda personen är inte färdig. Kontrollera att namnuppgifterna är korrekta (t.ex. att tilltalsnamnet ingår)"
                                                      :en "EN: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"}
+   :henkilo-info-incomplete                         {:fi "Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."
+                                                     :sv "SV: Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."
+                                                     :en "EN: Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."}
+   :review-in-henkilopalvelu                        {:fi "Tarkasta henkilön tiedot henkilöpalvelussa."
+                                                     :sv "SV: Tarkasta henkilön tiedot henkilöpalvelussa."
+                                                     :en "EN: Tarkasta henkilön tiedot henkilöpalvelussa."}
    :pohjakoulutus_am                                {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                      :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                      :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}

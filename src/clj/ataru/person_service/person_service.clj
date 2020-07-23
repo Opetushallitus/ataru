@@ -1,13 +1,12 @@
 (ns ataru.person-service.person-service
-  (:require [taoensso.timbre :as log]
-            [ataru.cas.client :as cas]
-            [ataru.person-service.person-client :as person-client]
-            [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe]
-            [com.stuartsierra.component :as component]
+  (:require [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
-            [ataru.cache.cache-service :as cache]
+            [ataru.person-service.birth-date-converter :as bd-converter]
+            [ataru.person-service.oppijanumerorekisteri-person-extract :as orpe]
+            [ataru.person-service.person-client :as person-client]
             [ataru.util :as util]
-            [ataru.person-service.birth-date-converter :as bd-converter]))
+            [clojure.string :as cs]
+            [com.stuartsierra.component :as component]))
 
 (defprotocol PersonService
   (create-or-find-person [this person]
@@ -28,23 +27,15 @@
             :last-name      (-> answers :last-name :value)
             :birth-date     (-> answers :birth-date :value)
             :nationality    (-> answers :nationality :value)}
-           (when-not (clojure.string/blank? (-> answers :ssn :value))
+           (when-not (cs/blank? (-> answers :ssn :value))
              {:ssn (-> answers :ssn :value)})
-           (when-not (clojure.string/blank? (-> answers :gender :value))
+           (when-not (cs/blank? (-> answers :gender :value))
              {:gender (-> answers :gender :value)})
-           (when-not (clojure.string/blank? (-> answers :language :value))
+           (when-not (cs/blank? (-> answers :language :value))
              {:language (-> answers :language :value)}))))
 
 (defn- parse-onr-aidinkieli [person]
-  (try
-    (-> person :aidinkieli :kieliKoodi clojure.string/upper-case)
-    (catch Exception e
-      (throw (new RuntimeException
-                  (str "Could not parse aidinkieli "
-                       (:aidinkieli person)
-                       "of person "
-                       (:oidHenkilo person))
-                  e)))))
+  (some-> person :aidinkieli :kieliKoodi cs/upper-case))
 
 (defn- person-info-from-onr-person [person]
   (merge {:first-name     (:etunimet person)
@@ -53,14 +44,14 @@
           :nationality    (->> (-> person :kansalaisuus)
                                (mapv #(vector (get % :kansalaisuusKoodi "999"))))}
          (let [birth-date (:syntymaaika person)]
-           (when-not (clojure.string/blank? birth-date)
+           (when-not (cs/blank? birth-date)
              {:birth-date (bd-converter/convert-to-finnish-format birth-date)}))
-         (when-not (clojure.string/blank? (:hetu person))
+         (when-not (cs/blank? (:hetu person))
            {:ssn (:hetu person)})
-         (when-not (clojure.string/blank? (-> person :sukupuoli))
+         (when-not (cs/blank? (-> person :sukupuoli))
            {:gender (-> person :sukupuoli)})
          (let [aidinkieli (parse-onr-aidinkieli person)]
-           (when-not (clojure.string/blank? aidinkieli)
+           (when-not (cs/blank? aidinkieli)
              {:language aidinkieli}))))
 
 (defn parse-person [application person-from-onr]

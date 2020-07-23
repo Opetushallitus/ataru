@@ -3,7 +3,7 @@ import kirjautuminenVirkailijanNakymaan from '../testit/kirjautuminenVirkailijan
 import lomakkeenLuonti from '../testit/lomakkeenLuonti'
 
 describe('Henkilötietomoduuli', () => {
-  kirjautuminenVirkailijanNakymaan(() => {
+  kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       it('Näyttää henkilötietomoduulin', () => {
         lomakkeenMuokkaus.henkilotiedot

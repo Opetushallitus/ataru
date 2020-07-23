@@ -120,7 +120,6 @@
   [ryhman-hakukohteet
    authorized-organization-oids
    haku-oid
-   hakukohderyhma-oid
    ensisijaisesti
    rajaus-hakukohteella]
   (let [kayttajan-hakukohteet (filter #(some authorized-organization-oids (:tarjoaja-oids %))
@@ -390,7 +389,6 @@
                                ryhman-hakukohteet
                                authorized-organization-oids
                                haku-oid
-                               hakukohderyhma-oid
                                ensisijaisesti
                                rajaus-hakukohteella)
                               (some? hakukohde-oid)
@@ -454,8 +452,8 @@
                                    (person-service/get-person person-service))]
       (person-service/parse-person application person-from-onr)))
 
-  ;; Get application that has human-readable koodisto values populated
-   ;; onto raw koodi values."
+  ;;  Get application that has human-readable koodisto values populated
+  ;;  onto raw koodi values."
   (get-application-with-human-readable-koodis
     [this application-key session with-newest-form?]
     (when-let [application (aac/get-latest-application-by-key
