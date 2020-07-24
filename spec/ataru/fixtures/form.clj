@@ -1,7 +1,8 @@
 (ns ataru.fixtures.form
-  (:require [ataru.db.migrations :as migrations]
+  (:require [ataru.component-data.component :as component]
             [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
-            [ataru.component-data.component :as component]))
+            [ataru.component-data.person-info-module :as person-info-module]
+            [clojure.string :as string]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
                              :date "2018-03-21T15:45:29.23+02:00"
@@ -21,14 +22,14 @@
    :fieldClass "formField"})
 
 (defn create-form [& elements]
-  {:name       {:fi (clojure.string/join "" (get-names elements))}
+  {:name       {:fi (string/join "" (get-names elements))}
    :created-by "1.2.246.562.11.11111111111"
    :locked     nil
    :locked-by  nil
    :content    elements})
 
 (defn create-wrapper-element [& elements]
-  (let [name (str "W" (clojure.string/join "" (get-names elements)))]
+  (let [name (str "W" (string/join "" (get-names elements)))]
     {:id         name
      :label      {:fi name}
      :metadata   metadata
@@ -73,7 +74,7 @@
    :locked           nil
    :locked-by        nil
    :content          [(component/hakukohteet)
-                      (ataru.component-data.person-info-module/person-info-module)
+                      (person-info-module/person-info-module)
                       {:fieldClass "wrapperElement"
                        :metadata   metadata
                        :fieldType  "fieldset"
@@ -107,7 +108,7 @@
    :locked           nil
    :locked-by        nil
    :content          [(component/hakukohteet)
-                      (ataru.component-data.person-info-module/person-info-module)
+                      (person-info-module/person-info-module)
                       (assoc (component/question-group metadata)
                              :children [(assoc (component/single-choice-button metadata)
                                                :id "choice"
@@ -256,7 +257,7 @@
   {:name       {:fi "Attachment and Base Education test form"}
    :created-by "1.2.246.562.11.11111111111"
    :content    [(component/hakukohteet)
-                (ataru.component-data.person-info-module/person-info-module)
+                (person-info-module/person-info-module)
                 (higher-education-base-education-module/module metadata)
                 {:id         "att__1"
                  :fieldClass "formField"
