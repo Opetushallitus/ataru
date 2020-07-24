@@ -302,30 +302,41 @@
 
 (defn- remove-null-bytes-from-value
   [value]
+  (clojure.string/replace value "\u0000" ""))
+
+(defn- clean-up-value [value]
+  [value]
   (cond (string? value)
-        (clojure.string/replace value "\u0000" "")
+        (remove-null-bytes-from-value value)
+        (and (sequential? value)
+             (empty? value))
+        [nil]
         (sequential? value)
-        (mapv remove-null-bytes-from-value value)
+        (mapv clean-up-value value)
         :else
         value))
 
-(defn- remove-null-bytes-from-answer
+(defn- clean-up-answer-value
   [answer]
-  (update answer :value remove-null-bytes-from-value))
+  (update answer :value clean-up-value))
+
+(defn- clean-up-answers
+  [application]
+  (update application :answers (partial mapv clean-up-answer-value)))
 
 (defn add-application [new-application applied-hakukohteet form session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [selection-id                         (:selection-id new-application)
           virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
-                           (get-virkailija-oid-for-create-secret conn secret))
+                                                 (get-virkailija-oid-for-create-secret conn secret))
           {:keys [id key] :as new-application} (add-new-application-version
-                                                (update new-application :answers (partial mapv remove-null-bytes-from-answer))
-                                                true
-                                                applied-hakukohteet
-                                                nil
-                                                form
-                                                false
-                                                conn)
+                                                 (clean-up-answers new-application)
+                                                 true
+                                                 applied-hakukohteet
+                                                 nil
+                                                 form
+                                                 false
+                                                 conn)
           connection                           {:connection conn}]
       (audit-log/log audit-logger
                      {:new       new-application
