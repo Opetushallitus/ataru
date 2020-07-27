@@ -427,44 +427,70 @@
 (defn- to-sql-array [s connection type]
   (.createArrayOf (:connection connection) type (to-array s)))
 
+(defn- query->ensisijainen-hakukohde-snip
+  [connection query]
+  (queries/ensisijainen-hakukohde-snip
+   (cond-> {:ensisijainen-hakukohde
+            (to-sql-array (:ensisijainen-hakukohde query) connection "varchar")}
+           (seq (:ensisijaisesti-hakukohteissa query))
+           (assoc :ensisijaisesti-hakukohteissa
+                  (to-sql-array (:ensisijaisesti-hakukohteissa query) connection "varchar")))))
+
+(defn- query->attachment-snip
+  [connection query]
+  (queries/attachment-snip
+   (cond-> {:attachment-key (first (:attachment-review-states query))}
+
+           (seq (second (:attachment-review-states query)))
+           (assoc :states (to-sql-array (second (:attachment-review-states query)) connection "varchar"))
+
+           (or (seq (:ensisijainen-hakukohde query))
+               (seq (:hakukohde query)))
+           (assoc :hakukohde (to-sql-array
+                              (or (seq (:ensisijainen-hakukohde query))
+                                  (seq (:hakukohde query)))
+                              connection
+                              "varchar")))))
+
+(defn- sort->offset-snip
+  [sort]
+  (queries/offset-snip
+   (merge {:order-by (:order-by sort)
+           :order    (if (= "asc" (:order sort)) ">" "<")}
+          (:offset sort))))
+
+(defn- sort->order-by-snip
+  [sort]
+  (queries/order-by-snip
+   {:order-by (:order-by sort)
+    :order    (if (= "asc" (:order sort)) "ASC" "DESC")}))
+
 (defn query->db-query
   [connection query sort]
-  (let [query (cond-> (assoc query
-                             :order-by (:order-by sort)
-                             :order (:order sort))
+  (let [query (cond-> (assoc query :order-by-snip (sort->order-by-snip sort))
 
                       (seq (:hakukohde query))
                       (update :hakukohde to-sql-array connection "varchar")
 
                       (seq (:ensisijainen-hakukohde query))
-                      (update :ensisijainen-hakukohde to-sql-array connection "varchar")
-
-                      (seq (:ensisijaisesti-hakukohteissa query))
-                      (update :ensisijaisesti-hakukohteissa to-sql-array connection "varchar")
+                      (assoc :ensisijainen-hakukohde-snip (query->ensisijainen-hakukohde-snip connection query))
 
                       (contains? query :attachment-review-states)
-                      (assoc :attachment-key (first (:attachment-review-states query)))
-
-                      (seq (second (:attachment-review-states query)))
-                      (assoc :attachment-states (to-sql-array (second (:attachment-review-states query)) connection "varchar"))
+                      (assoc :attachment-snip (query->attachment-snip connection query))
 
                       (contains? sort :offset)
-                      (assoc :offset-key (:key (:offset sort))
-                             :offset-submitted (:submitted (:offset sort))
-                             :offset-created-time (:created-time (:offset sort))
-                             :offset-last-name (:last-name (:offset sort))
-                             :offset-preferred-name (:preferred-name (:offset sort))))]
+                      (assoc :offset-snip (sort->offset-snip sort)))]
     (queries/get-application-list-sqlvec query)))
 
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                           (let [db-query (query->db-query connection query sort)]
-                             (try
-                               (jdbc/query connection db-query)
-                               (catch Exception e
-                                 (log/error e "Virhe tehtäessä tietokantakyselyä '" db-query "'")
-                                 (throw e))))))
+    (let [db-query (query->db-query connection query sort)]
+      (try
+        (jdbc/query connection db-query)
+        (catch Exception e
+          (log/error e "Virhe suoritettaessa tietokantakyselyä '" db-query "'")
+          (throw e))))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
