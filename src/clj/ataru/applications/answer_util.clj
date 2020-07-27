@@ -159,7 +159,8 @@
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
-                                                  [:pohjakoulutus_kk_ulk--year-of-completion]))
+                                                  [:pohjakoulutus_kk_ulk--year-of-completion
+                                                   :646f41a3-cac6-496b-a2cc-8c09dc4de1a8]))
     "pohjakoulutus_ulk"                        (if (any-answers-match?
                                                     answers
                                                     "1"

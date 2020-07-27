@@ -172,7 +172,12 @@
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2020}]
                (select-year-for
                 {:hakukausi-vuosi 2020}
-                (merge higher-qualification-outside-finland-identifier {:a722150f-d2b5-43eb-bdb6-b2d3ca3a428b {:value "1"}})))))
+                (merge higher-qualification-outside-finland-identifier {:a722150f-d2b5-43eb-bdb6-b2d3ca3a428b {:value "1"}})))
+
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_kk_ulk" :suoritusvuosi 2021}]
+               (select-year-for
+                 {:hakukausi-vuosi 2021}
+                 (merge higher-qualification-outside-finland-identifier {:646f41a3-cac6-496b-a2cc-8c09dc4de1a8 {:value "2021"}})))))
 
 (def further-vocational-qualification-identifier {:higher-completed-base-education {:value ["pohjakoulutus_amt"]}})
 
