@@ -1,3 +1,6 @@
+--This is meant to be run only once manually, at installation. This is not needed once the relevant values have
+--been added to jobs and job_iterations.
+
 BEGIN;
 
 DO $$
