@@ -465,6 +465,18 @@
      [lang :fi :sv :en])))
 
 (re-frame/reg-sub
+  :application/form-field-options-labels
+  (fn [[_ form-key _] _]
+    [(re-frame/subscribe [:application/form-fields-by-id form-key])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[fields-by-id lang] [_ _ field-id]]
+    (let [options (get-in fields-by-id [(keyword field-id) :options])]
+      (mapv (fn [{:keys [value label]}]
+              {:label (from-multi-lang label lang)
+               :value value})
+            options))))
+
+(re-frame/reg-sub
   :application/hakukohde-options-by-oid
   (fn [_ _]
     (re-frame/subscribe [:application/hakukohteet-field]))
