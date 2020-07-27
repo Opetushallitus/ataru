@@ -400,6 +400,36 @@
       (fn [[state checked?]]
         (dispatch [:application/set-filter-attachment-state field-id state (not checked?)]))]]))
 
+(defn- filter-question-answer-dropdown
+  [field-id _]
+  (let [form-key         @(subscribe [:application/selected-form-key])
+        filtering        @(subscribe [:application/filter-question-answer-states field-id])
+        field-options    @(subscribe [:application/form-field-options-labels form-key field-id])
+        options          (mapv (fn [{:keys [value label]}]
+                                 (let [checked? (get filtering value false)]
+                                   [checked?
+                                    label
+                                    [value checked?]]))
+                               field-options)
+        selected-options (filter first options)]
+    [:div.application-handling__filters-attachment-attachments__dropdown
+     [dropdown/multi-option
+      (cond (seq (rest selected-options))
+            @(subscribe [:editor/virkailija-translation :states-selected])
+            (seq selected-options)
+            (str @(subscribe [:editor/virkailija-translation :state])
+                 ": "
+                 (second (first selected-options)))
+            :else
+            @(subscribe [:editor/virkailija-translation :filter-by-state]))
+      options
+      (fn [[option-value checked?]]
+        (dispatch [:application/set-filter-attachment-state field-id option-value (not checked?)]))]]))
+
+(defn- filter-attachment-state-or-question-answer-dropdown
+  [field-id option-list]
+  [filter-question-answer-dropdown field-id option-list])   ; TODO: näytä liitteiden tai kysymysten vastauksiin perustuva suodatus
+
 (defn- application-filters
   []
   (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
@@ -523,7 +553,7 @@
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
-                              [filter-attachment-state-dropdown field-id options]])
+                              [filter-attachment-state-or-question-answer-dropdown field-id options]])
                            @filter-attachments))]
                [:div.application-handling__filters-attachment-search-results
                 [question-search/search-results
