@@ -42,39 +42,23 @@
                 (merge vocational-identifier {:b6fa0257-c1fd-4107-b151-380e02c56fa9 {:value "1"}})))))
 
 (def double-degree-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ammatillinen"]}})
-(def double-degree-matriculation-completed {:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion {:value "2008"}})
-(def double-degree-matriculation-completed-odw {:487bea81-a6bc-43a2-8802-d6d57bbbe8cb {:value "2012"}})
 (def double-degree-vocational-completed {:pohjakoulutus_yo_ammatillinen--vocational-completion-year {:value "2009"}})
 (def double-degree-vocational-completed-odw {:60ce79f9-b37a-4b7e-a7e0-f25ba430f055 {:value "2010"}})
 
-(describe "secondary level double degree (kaksoistutkinto) / pohjakoulutus_yo_ammatillinen completion year selection when"
+(describe "secondary level double degree (kaksoistutkinto) / pohjakoulutus_yo_ammatillinen completion year selection"
   (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
 
-  (it "both matriculation and vocational parts have been completed"
+  (it "uses completion year of vocational education with hard-coded static answer id"
     (let [answers (merge double-degree-identifier
-                         double-degree-matriculation-completed
                          double-degree-vocational-completed)]
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2009}]
                (select-year-for answers))))
 
-  (it "both matriculation and vocational parts have been completed (ODW hardcodings)"
+  (it "uses completion year of vocational education with random-uuid looking answer id"
     (let [answers (merge double-degree-identifier
-                         double-degree-matriculation-completed-odw
                          double-degree-vocational-completed-odw)]
-      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2012}]
+      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2010}]
                (select-year-for answers))))
-
-  (it "only matriculation part has been completed"
-    (let [answers     (merge double-degree-identifier double-degree-matriculation-completed)
-          odw-answers (merge double-degree-identifier double-degree-matriculation-completed-odw)]
-      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen"}] (select-year-for answers))
-      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen"}] (select-year-for odw-answers))))
-
-  (it "only vocational part has been completed"
-    (let [answers     (merge double-degree-identifier double-degree-vocational-completed)
-          odw-answers (merge double-degree-identifier double-degree-vocational-completed-odw)]
-      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen"}] (select-year-for answers))
-      (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen"}] (select-year-for odw-answers))))
 
   (it "applicant should complete education in future (ODW hardcodings)"
     ; 1. yhteishaku, 2017-nyt

@@ -51,18 +51,12 @@
           upcoming-completion-year (suoritusvuosi-one-of application-key answers expected-completion-years true)]
       (if-not (empty? (remove nil? upcoming-completion-year))
         upcoming-completion-year
-        (mapv #(when (and (some? %1) (some? %2))
-                (max %1 %2))
-              (suoritusvuosi-one-of
+        (->> [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
+              :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]
+             (suoritusvuosi-one-of
                application-key
-               answers
-               [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion
-                :487bea81-a6bc-43a2-8802-d6d57bbbe8cb])
-              (suoritusvuosi-one-of
-               application-key
-               answers
-               [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
-                :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]))))))
+               answers)
+             (filter some?))))))
 
 (defn- kk-pohjakoulutus-suoritusvuosi
   [haku answers pohjakoulutus application-key]
