@@ -12,7 +12,6 @@
             [ataru.util :refer [answers-by-key] :as util]
             [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
-            [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
@@ -49,10 +48,7 @@
   (when application
     (assoc (->kebab-case-kw (dissoc application :content))
            :answers
-           (mapv (fn [answer]
-                   (update answer :label (fn [label]
-                                           (label/get-language-label-in-preferred-order label))))
-                 (-> application :content :answers)))))
+           (-> application :content :answers))))
 
 (defn- application-exists-with-secret-tx?
   "NB: takes into account also expired secrets"
