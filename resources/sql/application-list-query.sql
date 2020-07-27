@@ -1,3 +1,48 @@
+-- :snip ensisijainen-hakukohde-snip
+/*~ (if (contains? params :ensisijaisesti-hakukohteissa) */
+AND (SELECT t.h
+     FROM unnest(a.hakukohde) WITH ORDINALITY t(h, i)
+     WHERE t.h = ANY (:ensisijaisesti-hakukohteissa)
+     ORDER BY t.i ASC
+     LIMIT 1) = ANY (:ensisijainen-hakukohde)
+/*~*/
+AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
+/*~   ) ~*/
+
+-- :snip attachment-snip
+AND EXISTS (SELECT 1
+            FROM application_hakukohde_attachment_reviews
+            WHERE application_key = a.key
+              AND attachment_key = :attachment-key
+/*~ (when (contains? params :states) */
+              AND state = ANY (:states)
+/*~   ) ~*/
+/*~ (when (contains? params :hakukohde) */
+              AND hakukohde = ANY (:hakukohde)
+/*~   ) ~*/
+           )
+
+-- :snip offset-snip
+/*~ (case (:order-by params)
+      "submitted" */
+AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) :sql:order (date_trunc('second', :submitted AT TIME ZONE 'Europe/Helsinki'), :key)
+/*~   "created-time" */
+AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) :sql:order (date_trunc('second', :created-time AT TIME ZONE 'Europe/Helsinki'), :key)
+/*~   "applicant-name" */
+AND (a.last_name, a.preferred_name, a.key) :sql:order (:last-name COLLATE "fi_FI", :preferred-name COLLATE "fi_FI", :key)
+/*~   ) ~*/
+
+-- :snip order-by-snip
+ORDER BY
+/*~ (case (:order-by params)
+      "submitted" */
+  date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') :sql:order, a.key :sql:order
+/*~   "created-time" */
+  date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') :sql:order, a.key :sql:order
+/*~   "applicant-name" */
+  a.last_name COLLATE "fi_FI" :sql:order, a.preferred_name COLLATE "fi_FI" :sql:order, a.key :sql:order
+/*~   ) ~*/
+
 -- :name get-application-list :? :*
 SELECT a.id,
        a.person_oid AS "person-oid",
@@ -96,67 +141,8 @@ WHERE la.id IS NULL
 /*~ (when (contains? params :hakukohde) */
   AND a.hakukohde && :hakukohde
 /*~ ) ~*/
-/*~ (when (contains? params :ensisijainen-hakukohde)
-      (if (contains? params :ensisijaisesti-hakukohteissa) */
-  AND (SELECT t.h
-       FROM unnest(a.hakukohde) WITH ORDINALITY t(h, i)
-       WHERE t.h = ANY (:ensisijaisesti-hakukohteissa)
-       ORDER BY t.i ASC
-       LIMIT 1) = ANY (:ensisijainen-hakukohde)
-/*~*/
-  AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
-/*~ )) ~*/
-/*~ (if (and (contains? params :attachment-key) (contains? params :attachment-states)) */
-  AND EXISTS (SELECT 1
-              FROM application_hakukohde_attachment_reviews
-              WHERE application_key = a.key AND
-                    attachment_key = :attachment-key
-                AND state = ANY (:attachment-states))
-/*~   (if (contains? params :attachment-key) */
-  AND EXISTS (SELECT 1
-              FROM application_hakukohde_attachment_reviews
-              WHERE application_key = a.key AND
-                    attachment_key = :attachment-key)
-/*~     (when (contains? params :attachment-states) */
-  AND EXISTS (SELECT 1
-              FROM application_hakukohde_attachment_reviews
-              WHERE application_key = a.key
-                AND state = ANY (:attachment-states))
-/*~     ))) ~*/
-/*~ (when (contains? params :hakukohde) */
-                AND hakukohde = ANY (:hakukohde)
-/*~ ) */
-/*~ (when (contains? params :ensisijainen-hakukohde) */
-                AND hakukohde = ANY (:ensisijainen-hakukohde)
-/*~ ) */
-/*~ (when (contains? params :offset-key)
-      (case [(:order-by params) (:order params)]
-        ["submitted" "asc"] */
-  AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset-submitted AT TIME ZONE 'Europe/Helsinki'), :offset-key)
-/*~     ["submitted" "desc"] */
-  AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset-submitted AT TIME ZONE 'Europe/Helsinki'), :offset-key)
-/*~     ["created-time" "asc"] */
-  AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) > (date_trunc('second', :offset-created-time AT TIME ZONE 'Europe/Helsinki'), :offset-key)
-/*~     ["created-time" "desc"] */
-  AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) < (date_trunc('second', :offset-created-time AT TIME ZONE 'Europe/Helsinki'), :offset-key)
-/*~     ["applicant-name" "asc"] */
-  AND (a.last_name, a.preferred_name, a.key) > (:offset-last-name COLLATE "fi_FI", :offset-preferred_name COLLATE "fi_FI", :offset-key)
-/*~     ["applicant-name" "desc"] */
-  AND (a.last_name, a.preferred_name, a.key) < (:offset-last-name COLLATE "fi_FI", :offset-preferred_name COLLATE "fi_FI", :offset-key)
-/*~ )) ~*/
-ORDER BY
-/*~   (case [(:order-by params) (:order params)]
-        ["submitted" "asc"] */
-  date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') ASC, a.key ASC
-/*~     ["submitted" "desc"] */
-  date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') DESC, a.key DESC
-/*~     ["created-time" "asc"] */
-  date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') ASC , a.key ASC
-/*~     ["created-time" "desc"] */
-  date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') DESC, a.key DESC
-/*~     ["applicant-name" "asc"] */
-  a.last_name COLLATE "fi_FI" ASC, a.preferred_name COLLATE "fi_FI" ASC, a.key ASC
-/*~     ["applicant-name" "desc"] */
-  a.last_name COLLATE "fi_FI" DESC, a.preferred_name COLLATE "fi_FI" DESC, a.key DESC
-/*~ ) ~*/
+--~ (when (contains? params :ensisijainen-hakukohde-snip) ":snip:ensisijainen-hakukohde-snip")
+--~ (when (contains? params :attachment-snip) ":snip:attachment-snip")
+--~ (when (contains? params :offset-snip) ":snip:offset-snip")
+:snip:order-by-snip
 LIMIT 1000
