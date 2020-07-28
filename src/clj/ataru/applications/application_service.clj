@@ -169,10 +169,14 @@
 
 (defn ->attachment-review-states-query
   [attachment-review-states-query]
-  (when-let [[attachment-field-id states] (first attachment-review-states-query)]
+  (when (seq attachment-review-states-query)
     {:attachment-review-states
-     [(name attachment-field-id)
-      (keep #(when (second %) (name (first %))) states)]}))
+     (into
+      {}
+      (map (fn [[field-id states]]
+             [(name field-id)
+              (keep #(when (second %) (name (first %))) states)])
+           attachment-review-states-query))}))
 
 (defn ->option-answers-query
   [option-answers]
