@@ -44,7 +44,7 @@ if [ -x "$(command -v artifacts)" ]; then
     cypress/screenshots/ \
     cypress/videos \
     logs/pm2/
-  echo "The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-travis-artifacts/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER"
+  echo "The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-travis-artifacts/artifacts/$TRAVIS_REPO_SLUG/$TRAVIS_BUILD_NUMBER/$TRAVIS_JOB_NUMBER/"
 else
   echo "Not uploading screenshots to S3"
 fi
