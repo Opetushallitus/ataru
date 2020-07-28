@@ -153,7 +153,7 @@
 
 (defn ->name-query
   [name]
-  {:name (application-store/->name-query-value name)})
+  {:name name})
 
 (defn ->person-oid-query
   [person-oid]
