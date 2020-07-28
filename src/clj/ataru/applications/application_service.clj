@@ -174,6 +174,16 @@
      [(name attachment-field-id)
       (keep #(when (second %) (name (first %))) states)]}))
 
+(defn ->option-answers-query
+  [option-answers]
+  (when (seq option-answers)
+    {:option-answers
+     (into
+      {}
+      (map (fn [[field-id options]]
+             [(name field-id) options])
+           option-answers))}))
+
 (defn ->empty-query
   []
   {})
@@ -367,6 +377,7 @@
                   person-oid
                   application-oid
                   attachment-review-states
+                  option-answers
                   sort
                   states-and-filters]} params
           ensisijaisesti               (boolean ensisijaisesti)
@@ -409,7 +420,8 @@
                               (->person-oid-query person-oid)
                               (some? application-oid)
                               (->application-oid-query application-oid))
-                        (->attachment-review-states-query attachment-review-states))]
+                        (->attachment-review-states-query attachment-review-states)
+                        (->option-answers-query option-answers))]
         (get-application-list-by-query
          person-service
          tarjonta-service

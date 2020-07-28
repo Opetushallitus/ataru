@@ -683,6 +683,9 @@
     (map (fn [[state _]] [(keyword state) s/Bool])
          review-states/attachment-hakukohde-review-types))})
 
+(s/defschema OptionAnswers
+  {s/Keyword [(s/maybe s/Str)]})
+
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str
    (s/optional-key :hakukohde-oid)        s/Str
@@ -697,6 +700,7 @@
    (s/optional-key :person-oid)           s/Str
    (s/optional-key :application-oid)      s/Str
    :attachment-review-states              QueryAttachmentReviewStates
+   (s/optional-key :option-answers)       OptionAnswers
    :sort                                  Sort
    (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
                                            :attachment-states-to-include [s/Str]
