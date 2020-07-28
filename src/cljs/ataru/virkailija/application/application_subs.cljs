@@ -257,6 +257,8 @@
         (not= (get-in db [:application :rajaus-hakukohteella])
               (get-in db [:application :rajaus-hakukohteella-value]))
         (not= (get-in db [:application :attachment-review-states])
+              (get-in db [:application :attachment-review-states-value]))
+        (not= (get-in db [:application :question-answer-filtering-options])
               (get-in db [:application :question-answer-filtering-options-value])))))
 
 (re-frame/reg-sub
@@ -453,6 +455,13 @@
     (re-frame/subscribe [:application/form form-key]))
   (fn [form _]
     (:form-fields-by-id form)))
+
+(re-frame/reg-sub
+  :application/form-field
+  (fn [[_ form-key _] _]
+    (re-frame/subscribe [:application/form-fields-by-id form-key]))
+  (fn [fields-by-id [_ _ field-id]]
+    (get fields-by-id (keyword field-id))))
 
 (re-frame/reg-sub
   :application/form-field-label
@@ -941,12 +950,19 @@
          (nil? (get-in application [:person :oid])))))
 
 (re-frame/reg-sub
-  :application/filter-attachments
+  :application/filter-questions
   (fn [db _]
-    (get-in db [:application :question-answer-filtering-options-value])))
+    (merge
+      (get-in db [:application :attachment-review-states-value])
+      (get-in db [:application :question-answer-filtering-options-value]))))
 
 (re-frame/reg-sub
-  :application/filter-question-answer-states
+  :application/filter-attachment-review-states
+  (fn [db [_ field-id]]
+    (get-in db [:application :attachment-review-states-value field-id])))
+
+(re-frame/reg-sub
+  :application/filter-question-answers-filtering-options
   (fn [db [_ field-id]]
     (get-in db [:application :question-answer-filtering-options-value field-id])))
 
