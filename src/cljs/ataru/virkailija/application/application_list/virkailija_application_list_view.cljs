@@ -376,15 +376,15 @@
           (doall))]))
 
 (defn- filter-attachment-state-dropdown
-  [field-id option-list]
+  [field-id]
   (let [lang             @(subscribe [:editor/virkailija-lang])
-        states           @(subscribe [:application/filter-question-answer-states field-id])
+        states           @(subscribe [:application/filter-attachment-review-states field-id])
         options          (map (fn [[state label]]
                                 (let [checked? (get states state false)]
                                   [checked?
                                    (util/non-blank-val label [lang :fi :sv :en])
                                    [state checked?]]))
-                              option-list)  ; TODO Tässä tarvitsisi saada siirtymään tieto siitä, minkätyyppisistä kentistä on kysymys. Nyt liitteiden käsittelytilojen nimet eivät näy.
+                              review-states/attachment-hakukohde-review-types)
         selected-options (filter first options)]
     [:div.application-handling__filters-attachment-attachments__dropdown
      [dropdown/multi-option
@@ -401,9 +401,9 @@
         (dispatch [:application/set-filter-attachment-state field-id state (not checked?)]))]]))
 
 (defn- filter-question-answer-dropdown
-  [field-id _]
+  [field-id]
   (let [form-key         @(subscribe [:application/selected-form-key])
-        filtering        @(subscribe [:application/filter-question-answer-states field-id])
+        filtering        @(subscribe [:application/filter-question-answers-filtering-options field-id])
         field-options    @(subscribe [:application/form-field-options-labels form-key field-id])
         options          (mapv (fn [{:keys [value label]}]
                                  (let [checked? (get filtering value false)]
@@ -424,11 +424,14 @@
             @(subscribe [:editor/virkailija-translation :filter-by-state]))
       options
       (fn [[option-value checked?]]
-        (dispatch [:application/set-filter-attachment-state field-id option-value (not checked?)]))]]))
+        (dispatch [:application/set-question-answer-filtering-options field-id option-value (not checked?)]))]]))
 
-(defn- filter-attachment-state-or-question-answer-dropdown
-  [field-id option-list]
-  [filter-question-answer-dropdown field-id option-list])   ; TODO: näytä liitteiden tai kysymysten vastauksiin perustuva suodatus
+(defn- question-filter-dropdown
+  [form-key field-id]
+  (let [field @(subscribe [:application/form-field form-key field-id])]
+    (if (= (:fieldType field) "attachment")
+      [filter-attachment-state-dropdown field-id]
+      [filter-question-answer-dropdown field-id])))
 
 (defn- application-filters
   []
@@ -444,7 +447,7 @@
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
-        filter-attachments                        (subscribe [:application/filter-attachments])
+        filter-questions                          (subscribe [:application/filter-questions])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -536,31 +539,31 @@
                @form-key
                question-search-id
                @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
-               (not (empty? @filter-attachments))
+               (not (empty? @filter-questions))
                (fn [db form-key]
                  (every-pred (qsh/field-type-filter-predicate ["attachment"
                                                                "dropdown"
                                                                "multipleChoice"
                                                                "singleChoice"])
                              (qsh/belongs-to-selected-filter-predicate db form-key)))]]
-             (if (seq @filter-attachments)
+             (if (seq @filter-questions)
                [:div.application-handling__filters-attachment-attachments
                 (into [:ul.application-handling__filters-attachment-attachments__list]
-                      (map (fn [[field-id options]]
+                      (map (fn [[field-id _]]
                              [:li.application-handling__filters-attachment-attachments__list-item
                               [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-filter-attachment field-id])}
+                               {:on-click #(dispatch [:application/remove-question-filter @form-key field-id])}
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
-                              [filter-attachment-state-or-question-answer-dropdown field-id options]])
-                           @filter-attachments))]
+                              [question-filter-dropdown @form-key field-id]])
+                           @filter-questions))]
                [:div.application-handling__filters-attachment-search-results
                 [question-search/search-results
                  @form-key
                  question-search-id
                  #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
-                      (dispatch [:application/add-filter-by-question-answer %]))]])])
+                      (dispatch [:application/add-question-filter @form-key %]))]])])
           [:div.application-handling__filters-popup-apply-button-container
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?
