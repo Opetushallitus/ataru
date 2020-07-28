@@ -415,7 +415,7 @@
                       :id        {:applicationOid key}})
       id)))
 
-(defn ->name-query-value
+(defn- str->name-query-value
   [name]
   (->> (-> name
            (clojure.string/replace #"[&\|!<>:*]" "")
@@ -478,6 +478,9 @@
 (defn query->db-query
   [connection query sort]
   (let [query (cond-> (assoc query :order-by-snip (sort->order-by-snip sort))
+
+                      (contains? query :name)
+                      (update :name str->name-query-value)
 
                       (seq (:hakukohde query))
                       (update :hakukohde to-sql-array connection "varchar")
