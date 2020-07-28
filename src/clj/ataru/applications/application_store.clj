@@ -452,6 +452,15 @@
                               connection
                               "varchar")))))
 
+(defn- query->option-answers-snip
+  [connection query]
+  (let [[field-key options] (first (:option-answers query))]
+    (queries/option-answers-snip
+     (cond-> {:key field-key}
+
+             (seq options)
+             (assoc :options (to-sql-array options connection "varchar"))))))
+
 (defn- sort->offset-snip
   [sort]
   (queries/offset-snip
@@ -477,6 +486,9 @@
 
                       (contains? query :attachment-review-states)
                       (assoc :attachment-snip (query->attachment-snip connection query))
+
+                      (contains? query :option-answers)
+                      (assoc :option-answers-snip (query->option-answers-snip connection query))
 
                       (contains? sort :offset)
                       (assoc :offset-snip (sort->offset-snip sort)))]

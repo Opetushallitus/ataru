@@ -22,6 +22,56 @@ AND EXISTS (SELECT 1
 /*~   ) ~*/
            )
 
+-- :snip option-answers-snip
+AND ((EXISTS (SELECT 1
+              FROM answers
+              WHERE application_id = a.id
+                AND key = :key
+                AND (value IS NULL OR char_length(value) < 1000)
+/*~ (if (contains? params :options) */
+                AND value = ANY (:options)))
+/*~*/
+                AND (value IS NULL OR value = '')))
+/*~   ) ~*/
+     OR
+/*~ (if (contains? params :options) */
+     (EXISTS (SELECT 1
+              FROM multi_answer_values
+              WHERE application_id = a.id
+                AND key = :key
+                AND char_length(value) < 1000
+                AND value = ANY (:options)))
+/*~*/
+     ((EXISTS (SELECT 1
+               FROM multi_answers
+               WHERE application_id = a.id
+                 AND key = :key)) AND
+      (NOT EXISTS (SELECT 1
+                   FROM multi_answer_values
+                   WHERE application_id = a.id
+                     AND key = :key)))
+/*~   ) ~*/
+     OR
+/*~ (if (contains? params :options) */
+     (EXISTS (SELECT 1
+              FROM group_answer_values
+              WHERE application_id = a.id
+                AND key = :key
+                AND (value IS NULL OR char_length(value) < 1000)
+                AND value = ANY (:options))))
+/*~*/
+     ((EXISTS (SELECT 1
+               FROM group_answers
+               WHERE application_id = a.id
+                 AND key = :key)) AND
+      (NOT EXISTS (SELECT 1
+                   FROM group_answer_values
+                   WHERE application_id = a.id
+                     AND key = :key
+                     AND value IS NOT NULL
+                     AND value != ''))))
+/*~   ) ~*/
+
 -- :snip offset-snip
 /*~ (case (:order-by params)
       "submitted" */
@@ -143,6 +193,7 @@ WHERE la.id IS NULL
 /*~ ) ~*/
 --~ (when (contains? params :ensisijainen-hakukohde-snip) ":snip:ensisijainen-hakukohde-snip")
 --~ (when (contains? params :attachment-snip) ":snip:attachment-snip")
+--~ (when (contains? params :option-answers-snip) ":snip:option-answers-snip")
 --~ (when (contains? params :offset-snip) ":snip:offset-snip")
 :snip:order-by-snip
 LIMIT 1000
