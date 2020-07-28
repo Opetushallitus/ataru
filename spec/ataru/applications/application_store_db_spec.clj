@@ -91,7 +91,7 @@
                                   audit-logger)
           application-key        (find-application-key-by-id application-id)
           new-reviews            (create-new-reviews application application-key)
-          query                  {:attachment-review-states [existing-attachment-id '("not-checked")]}
+          query                  {:attachment-review-states {existing-attachment-id ["not-checked"]}}
           sort                   {:order-by "applicant-name" :order "asc"}]
       (reset! test-application-id application-id)
       (should== [{:application_key application-key

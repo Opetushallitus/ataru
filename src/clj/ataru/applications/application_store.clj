@@ -438,19 +438,20 @@
 
 (defn- query->attachment-snip
   [connection query]
-  (queries/attachment-snip
-   (cond-> {:attachment-key (first (:attachment-review-states query))}
+  (let [[field-key states] (first (:attachment-review-states query))]
+    (queries/attachment-snip
+     (cond-> {:attachment-key field-key}
 
-           (seq (second (:attachment-review-states query)))
-           (assoc :states (to-sql-array (second (:attachment-review-states query)) connection "varchar"))
+             (seq states)
+             (assoc :states (to-sql-array states connection "varchar"))
 
-           (or (seq (:ensisijainen-hakukohde query))
-               (seq (:hakukohde query)))
-           (assoc :hakukohde (to-sql-array
-                              (or (seq (:ensisijainen-hakukohde query))
-                                  (seq (:hakukohde query)))
-                              connection
-                              "varchar")))))
+             (or (seq (:ensisijainen-hakukohde query))
+                 (seq (:hakukohde query)))
+             (assoc :hakukohde (to-sql-array
+                                (or (seq (:ensisijainen-hakukohde query))
+                                    (seq (:hakukohde query)))
+                                connection
+                                "varchar"))))))
 
 (defn- query->option-answers-snip
   [connection query]
