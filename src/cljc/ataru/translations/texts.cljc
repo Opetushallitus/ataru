@@ -994,12 +994,12 @@
    :attachments                                     {:fi "Liitepyynnöt"
                                                      :sv "Begäran om bilagor"
                                                      :en "Attachments"}
-   :submitted-content-search-placeholder            {:fi "Hae liitepyynnöllä, kysymyksellä tai vastauksella..."
-                                                     :sv "SV: Hae liitepyynnöllä, kysymyksellä tai vastauksella..."
-                                                     :en "EN: Hae liitepyynnöllä, kysymyksellä tai vastauksella..."}
-   :submitted-content-search-label                  {:fi "Vastaus / liitepyyntö"
-                                                     :sv "SV: Vastaus / liitepyyntö"
-                                                     :en "EN: Vastaus / liitepyyntö"}
+   :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
+                                                     :sv "SV: Hae kysymyksellä tai liitepyynnöllä..."
+                                                     :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
+   :submitted-content-search-label                  {:fi "Kysymys / liitepyyntö"
+                                                     :sv "SV: Kysymys / liitepyyntö"
+                                                     :en "EN: Kysymys / liitepyyntö"}
    :base-education                                  {:fi "Pohjakoulutus"
                                                      :sv "Grundutbildning"
                                                      :en "Education background"}
