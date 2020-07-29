@@ -55,7 +55,7 @@
 (defn- ancestors-label
   [lang ancestors]
   (string/join
-   " "
+   "\u00a0/ "
    (map (fn [field followup]
           (let [label        (util/non-blank-val (:label field) [lang :fi :sv :en])
                 option-label (some #(when (= (:option-value followup) (:value %))
@@ -67,10 +67,9 @@
                             (not (string/blank? option-label)))
                    ": ")
                  (when (not (string/blank? option-label))
-                   option-label)
-                 "\u00a0/")))
+                   option-label))))
         ancestors
-        (rest ancestors))))
+        (concat (rest ancestors) [{}]))))
 
 (defn- place-in-form
   [fields-by-id lang field]
