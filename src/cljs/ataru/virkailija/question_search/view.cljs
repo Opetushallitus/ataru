@@ -2,6 +2,7 @@
   (:require ataru.virkailija.question-search.subs
             ataru.virkailija.question-search.handlers
             [ataru.util :as util]
+            [clojure.string :as string]
             [re-frame.core :as re-frame]))
 
 (defn search-input
@@ -27,7 +28,7 @@
   (when-let [hakukohteet (some->> (seq (:belongs-to-hakukohteet field))
                                   (map (fn [oid] @(re-frame/subscribe [:application/hakukohde-and-tarjoaja-name oid])))
                                   sort
-                                  (clojure.string/join ", "))]
+                                  (string/join ", "))]
     [:div.question-search-results__result-hakukohteet
      [:span.question-search-results__result-hakukohteet-description
       (str @(re-frame/subscribe [:editor/virkailija-translation :hakukohteet]) ": ")]
@@ -38,7 +39,7 @@
   (when-let [hakukohderyhmat (some->> (seq (:belongs-to-hakukohderyhma field))
                                       (map (fn [oid] @(re-frame/subscribe [:application/hakukohderyhma-name oid])))
                                       sort
-                                      (clojure.string/join ", "))]
+                                      (string/join ", "))]
     [:div.question-search-results__result-hakukohderyhmat
      [:span.question-search-results__result-hakukohderyhmat-description
       (str @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat]) ": ")]
@@ -53,19 +54,19 @@
 
 (defn- ancestors-label
   [lang ancestors]
-  (clojure.string/join
+  (string/join
    " "
    (map (fn [field followup]
           (let [label        (util/non-blank-val (:label field) [lang :fi :sv :en])
                 option-label (some #(when (= (:option-value followup) (:value %))
                                       (util/non-blank-val (:label %) [lang :fi :sv :en]))
                                    (:options field))]
-            (str (when (not (clojure.string/blank? label))
+            (str (when (not (string/blank? label))
                    label)
-                 (when (and (not (clojure.string/blank? label))
-                            (not (clojure.string/blank? option-label)))
+                 (when (and (not (string/blank? label))
+                            (not (string/blank? option-label)))
                    ": ")
-                 (when (not (clojure.string/blank? option-label))
+                 (when (not (string/blank? option-label))
                    option-label)
                  "\u00a0/")))
         ancestors
