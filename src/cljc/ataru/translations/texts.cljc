@@ -1847,7 +1847,16 @@
                                                      :en "EN: equal to"}
    :lisakysymys-arvon-perusteella-lisaa-ehto        {:fi "Lisää ehto"
                                                      :sv "SV: Lisää ehto"
-                                                     :en "EN: Lisää ehto"}})
+                                                     :en "EN: Lisää ehto"}
+   :filter-by-question-answer                       {:fi "Rajaa vastauksen mukaan"
+                                                     :sv "SV: Rajaa vastauksen mukaan"
+                                                     :en "EN: Rajaa vastauksen mukaan"}
+   :question-answer                                 {:fi "Vastaus"
+                                                     :sv "SV: Vastaus"
+                                                     :en "EN: Vastaus"}
+   :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
+                                                     :sv "SV: vastausvaihtoehtoa valittu"
+                                                     :en "EN: vastausvaihtoehtoa valittu"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

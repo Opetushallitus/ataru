@@ -415,13 +415,13 @@
     [:div.application-handling__filters-attachment-attachments__dropdown
      [dropdown/multi-option
       (cond (seq (rest selected-options))
-            @(subscribe [:editor/virkailija-translation :states-selected])
+            @(subscribe [:editor/virkailija-translation :question-answers-selected])
             (seq selected-options)
-            (str @(subscribe [:editor/virkailija-translation :state])
+            (str @(subscribe [:editor/virkailija-translation :question-answer])
                  ": "
                  (second (first selected-options)))
             :else
-            @(subscribe [:editor/virkailija-translation :filter-by-state]))
+            @(subscribe [:editor/virkailija-translation :filter-by-question-answer]))
       options
       (fn [[option-value checked?]]
         (dispatch [:application/set-question-answer-filtering-options field-id option-value (not checked?)]))]]))
