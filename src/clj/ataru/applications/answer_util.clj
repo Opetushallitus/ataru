@@ -6,7 +6,7 @@
   [application-key s]
   (try
     (let [[_ _ vuosi] (re-matches #"(\d?\d\.\d?\d\.)?([12]\d{3})" s)]
-      (Integer/valueOf vuosi))
+      (Integer/valueOf vuosi 10))
     (catch Exception _
       (log/warn "Failed to parse year of completion" s "in hakemus" application-key)
       nil)))
@@ -45,24 +45,18 @@
   [haku answers application-key]
   (if (any-answers-match? answers "1" [:22df6790-588f-4c45-8238-3ecfccdf6d93    ; 1. yhteishaun tunniste, nyt
                                        :dfeb9d56-4d53-4087-9473-1b2d9437e47f])  ; 2. yhteishaun tunniste, nyt
-    [(:hakukausiVuosi haku)]
+    [(:hakukausi-vuosi haku)]
     (let [expected-completion-years [:0a6ba6b1-616c-492b-a501-8b6656900ebd   ; 1. yhteishaun tunniste, 2017-nyt
                                      :86c7cc27-e1b3-4b3a-863c-1719b424370f]  ; 2. yhteishaun tunniste, 2017-nyt
           upcoming-completion-year (suoritusvuosi-one-of application-key answers expected-completion-years true)]
       (if-not (empty? (remove nil? upcoming-completion-year))
         upcoming-completion-year
-        (mapv #(when (and (some? %1) (some? %2))
-                (max %1 %2))
-              (suoritusvuosi-one-of
+        (->> [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
+              :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]
+             (suoritusvuosi-one-of
                application-key
-               answers
-               [:pohjakoulutus_yo_ammatillinen--marticulation-year-of-completion
-                :487bea81-a6bc-43a2-8802-d6d57bbbe8cb])
-              (suoritusvuosi-one-of
-               application-key
-               answers
-               [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
-                :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]))))))
+               answers)
+             (filter some?))))))
 
 (defn- kk-pohjakoulutus-suoritusvuosi
   [haku answers pohjakoulutus application-key]
@@ -89,7 +83,7 @@
                                                         [:pohjakoulutus_yo_kansainvalinen_suomessa--ib--year-of-completion-this-year
                                                           :pohjakoulutus_yo_kansainvalinen_suomessa--eb--year-of-completion-this-year
                                                           :pohjakoulutus_yo_kansainvalinen_suomessa--rb--year-of-completion-this-year]))
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -106,7 +100,7 @@
                                                     "1"
                                                     [:f9340e89-4a1e-4626-9246-2a77a32b22ed
                                                      :b6fa0257-c1fd-4107-b151-380e02c56fa9])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -116,7 +110,7 @@
                                                     :75d3d13c-5865-4924-8a69-d22b8a8aea65]))
     "pohjakoulutus_amt"                        (if (or (any-answers-match? answers "1" [:718d7f0b-4075-4960-8456-1ec49e147551])
                                                        (any-answers-match? answers "2" [:1a9c3205-0500-439e-84b9-4bb7b90dabe8]))
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -127,7 +121,7 @@
                                                     "1"
                                                     [:64d82dce-14e6-4261-84b1-d868a265cd54
                                                      :cc4fcbbb-6943-43b4-af9a-0b961bae6bb3])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -145,7 +139,7 @@
                                                         [:pohjakoulutus_yo_ulkomainen--ib--year-of-completion-this-year
                                                           :pohjakoulutus_yo_ulkomainen--eb--year-of-completion-this-year
                                                           :pohjakoulutus_yo_ulkomainen--rb--year-of-completion-this-year]))
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
@@ -161,17 +155,18 @@
                                                     "1"
                                                     [:f2b4db5e-7090-4859-b404-4a6334686afe
                                                      :a722150f-d2b5-43eb-bdb6-b2d3ca3a428b])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers
-                                                  [:pohjakoulutus_kk_ulk--year-of-completion]))
+                                                  [:pohjakoulutus_kk_ulk--year-of-completion
+                                                   :646f41a3-cac6-496b-a2cc-8c09dc4de1a8]))
     "pohjakoulutus_ulk"                        (if (any-answers-match?
                                                     answers
                                                     "1"
                                                     [:beab461b-b743-44ba-b9f0-1a56daa3eece
                                                      :3fe6e8e1-6622-4fee-950a-7e602b3cccce])
-                                                 [(:hakukausiVuosi haku)]
+                                                 [(:hakukausi-vuosi haku)]
                                                  (suoritusvuosi-one-of
                                                   application-key
                                                   answers

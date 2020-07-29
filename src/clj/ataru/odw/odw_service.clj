@@ -22,8 +22,10 @@
     "obligated"     "REQUIRED"
     "not-obligated" "NOT_REQUIRED"))
 
-(defn get-applications-for-odw [person-service tarjonta-service date limit offset]
-  (let [applications (application-store/get-applications-newer-than date limit offset)
+(defn get-applications-for-odw [person-service tarjonta-service date limit offset application-key]
+  (let [applications (if application-key
+                       [(application-store/get-latest-application-by-key application-key)]
+                       (application-store/get-applications-newer-than date limit offset))
         haut         (->> (keep :haku applications)
                           distinct
                           (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
@@ -31,7 +33,9 @@
         persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))
         results      (map (fn [application]
                             (try
-                              [nil (let [answers     (-> application :content :answers util/answers-by-key)
+                              [nil (let [answers     (if application-key
+                                                       (-> application :answers util/answers-by-key)
+                                                       (-> application :content :answers util/answers-by-key))
                                          hakukohteet (:hakukohde application)
                                          person-oid  (:person_oid application)
                                          person      (get persons person-oid)
