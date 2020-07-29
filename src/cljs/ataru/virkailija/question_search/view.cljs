@@ -61,13 +61,9 @@
                 option-label (some #(when (= (:option-value followup) (:value %))
                                       (util/non-blank-val (:label %) [lang :fi :sv :en]))
                                    (:options field))]
-            (str (when (not (string/blank? label))
-                   label)
-                 (when (and (not (string/blank? label))
-                            (not (string/blank? option-label)))
-                   ": ")
-                 (when (not (string/blank? option-label))
-                   option-label))))
+            (string/join
+              ": "
+              (remove string/blank? [label option-label]))))
         ancestors
         (concat (rest ancestors) [{}]))))
 
