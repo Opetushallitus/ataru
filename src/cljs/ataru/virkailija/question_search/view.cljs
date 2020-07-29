@@ -70,10 +70,13 @@
 (defn- place-in-form
   [fields-by-id lang field]
   (when-let [ancestors (seq (ancestor-fields fields-by-id field))]
-    [:div.question-search-results__result-ancestors
-     [:span.question-search-results__result-ancestors-description
-      (str @(re-frame/subscribe [:editor/virkailija-translation :question]) ": ")]
-     (ancestors-label lang ancestors)]))
+    (let [key (if (= (:fieldType field) "attachment")
+                :attachment
+                :question)]
+      [:div.question-search-results__result-ancestors
+       [:span.question-search-results__result-ancestors-description
+        (str @(re-frame/subscribe [:editor/virkailija-translation key]) ": ")]
+       (ancestors-label lang ancestors)])))
 
 (defn- result
   [form-key id on-click]
