@@ -51,17 +51,7 @@
                                                           [hakemus-oid hakukohde-oid]
                                                           valinnan-tulos)))
                                             valinta-tulos-service-db)))))
-          dispatch-vec (->> response
-                            (filter (fn [valinnan-tulos]
-                                      (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
-                                        (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
-                            (map (fn [valinnan-tulos]
-                                   (let [hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                     [:virkailija-kevyt-valinta/change-kevyt-valinta-property
-                                      :kevyt-valinta/valinnan-tila
-                                      hakukohde-oid
-                                      application-key
-                                      "PERUUNTUNUT"]))))]
+          dispatch-vec []]
       (cond-> {:db db}
               (not-empty dispatch-vec)
               (assoc :dispatch-n dispatch-vec)))))
