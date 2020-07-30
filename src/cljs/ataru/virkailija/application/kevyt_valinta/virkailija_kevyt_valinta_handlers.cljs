@@ -38,33 +38,43 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
   (fn [{db :db} [_ response {application-key :application-key}]]
-    (let [db           (-> db
-                           (assoc-in [:valinta-tulos-service application-key] {})
-                           (update
-                             :valinta-tulos-service
-                             (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                               (->> response
-                                    (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
-                                              (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                                    hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                                (assoc-in acc
-                                                          [hakemus-oid hakukohde-oid]
-                                                          valinnan-tulos)))
-                                            valinta-tulos-service-db)))))
-          dispatch-vec (->> response
-                            (filter (fn [valinnan-tulos]
-                                      (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)]
-                                        (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN"))))
-                            (map (fn [valinnan-tulos]
-                                   (let [hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                     [:virkailija-kevyt-valinta/change-kevyt-valinta-property
-                                      :kevyt-valinta/valinnan-tila
-                                      hakukohde-oid
-                                      application-key
-                                      "PERUUNTUNUT"]))))]
-      (cond-> {:db db}
-              (not-empty dispatch-vec)
-              (assoc :dispatch-n dispatch-vec)))))
+    {:db       (-> db
+                   (assoc-in [:valinta-tulos-service application-key] {})
+                   (update
+                    :valinta-tulos-service
+                    (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                      (->> response
+                           (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                     (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                           hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                       (assoc-in acc
+                                                 [hakemus-oid hakukohde-oid]
+                                                 valinnan-tulos)))
+                                   valinta-tulos-service-db)))))
+     :dispatch [:virkailija-kevyt-valinta/peruunnuta-jos-ottanut-vastaan-toisen-paikan application-key]}))
+
+(re-frame/reg-event-fx
+  :virkailija-kevyt-valinta/peruunnuta-jos-ottanut-vastaan-toisen-paikan
+  (fn [{db :db} [_ application-key]]
+    (let [haku-oid                     (get-in db [:application :selected-application-and-form :application :haku])
+          sijoittelu?                  (get-in db [:haut haku-oid :sijoittelu])
+          valintalaskentakoostepalvelu (get-in db [:application :valintalaskentakoostepalvelu])]
+      (when-let [dispatch-vec (->> (get-in db [:valinta-tulos-service application-key])
+                                   (filter (fn [[hakukohde-oid valinnan-tulos]]
+                                             (let [vastaanotto-tila (-> valinnan-tulos :valinnantulos :vastaanottotila)
+                                                   valinnan-tila    (-> valinnan-tulos :valinnantulos :valinnantila)]
+                                               (and (not sijoittelu?)
+                                                    (false? (get-in valintalaskentakoostepalvelu [hakukohde-oid :valintalaskenta]))
+                                                    (= vastaanotto-tila "OTTANUT_VASTAAN_TOISEN_PAIKAN")
+                                                    (not= valinnan-tila "PERUUNTUNUT")))))
+                                   (map (fn [[hakukohde-oid _]]
+                                          [:virkailija-kevyt-valinta/change-kevyt-valinta-property
+                                           :kevyt-valinta/valinnan-tila
+                                           hakukohde-oid
+                                           application-key
+                                           "PERUUNTUNUT"]))
+                                   seq)]
+        {:dispatch-n dispatch-vec}))))
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown
