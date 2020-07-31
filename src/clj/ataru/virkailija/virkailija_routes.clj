@@ -225,7 +225,8 @@
       :path-params [key :- s/Str]
       :return ataru-schema/FormWithContent
       :summary "Get content for latest version of form"
-      (ok (form-store/fetch-by-key key)))
+      (ok (->> (form-store/fetch-by-key key)
+               (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
