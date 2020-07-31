@@ -477,10 +477,13 @@
     [(re-frame/subscribe [:application/form-field form-key field-id])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn [[field lang] _]
-    (mapv (fn [{:keys [value label]}]
-            {:label (from-multi-lang label lang)
-             :value value})
-          (:options field))))
+    (cond->> (mapv (fn [{:keys [value label]}]
+                     {:label (from-multi-lang label lang)
+                      :value value})
+                   (:options field))
+             (and (:koodisto-source field)
+                  (not (:koodisto-ordered-by-user field)))
+             (sort-by :label))))
 
 (re-frame/reg-sub
   :application/hakukohde-options-by-oid
