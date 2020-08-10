@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.application-list.virkailija-application-list-handlers
   (:require [ataru.cljs-util :as cljs-util]
-            [ataru.util :as util]
             [ataru.virkailija.db :as initial-db]
             [re-frame.core :refer [reg-event-db reg-event-fx]]))
 
@@ -91,9 +90,6 @@
        (mapv (fn [v] [v false]))
        (into {})))
 
-(defn- form-field [db form-key field-id]
-  (-> db :forms (get form-key) util/form-fields-by-id (get (keyword field-id))))  ; TODO: Tämän voi varmasti tehdä fiksummin.
-
 (reg-event-db
   :application/add-question-filter
   (fn [db [_ field]]
@@ -104,8 +100,8 @@
 
 (reg-event-db
   :application/remove-question-filter
-  (fn [db [_ form-key field-id]]
-    (let [field (form-field db form-key field-id)]
+  (fn [db [_ field]]
+    (let [field-id (:id field)]
       (if (= (:fieldType field) "attachment")
         (update-in db [:application :attachment-review-states-value] dissoc field-id)
         (update-in db [:application :question-answer-filtering-options-value] dissoc field-id)))))
