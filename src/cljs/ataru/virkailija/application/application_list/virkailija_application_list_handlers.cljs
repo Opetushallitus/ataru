@@ -96,8 +96,8 @@
 
 (reg-event-db
   :application/add-question-filter
-  (fn [db [_ form-key field-id]]
-    (let [field (form-field db form-key field-id)]
+  (fn [db [_ field]]
+    (let [field-id (:id field)]
       (if (= (:fieldType field) "attachment")
         (assoc-in db [:application :attachment-review-states-value field-id] initial-db/default-attachment-review-states)
         (assoc-in db [:application :question-answer-filtering-options-value field-id] (init-question-answer-filtering-options field))))))

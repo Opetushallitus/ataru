@@ -84,12 +84,12 @@
         fields-by-id @(re-frame/subscribe [:application/form-fields-by-id form-key])
         field        (get fields-by-id id)]
     [:li.question-search-results__result
-     {:on-click    #(on-click (:id field))
+     {:on-click    #(on-click field)
       :on-key-down (fn [e]
                      (when (or (= " " (.-key e))
                                (= "Enter" (.-key e)))
                        (.preventDefault e)
-                       (on-click (:id field))))
+                       (on-click field)))
       :tab-index   0
       :role        "button"}
      [:div.question-search-results__result-label
