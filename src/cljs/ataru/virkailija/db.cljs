@@ -8,39 +8,41 @@
    (map (fn [[state _]] [state false])
         review-states/attachment-hakukohde-review-types)))
 
-(def default-filters {:language-requirement          {:unreviewed  true
-                                                      :fulfilled   true
-                                                      :unfulfilled true}
-                      :degree-requirement            {:unreviewed  true
-                                                      :fulfilled   true
-                                                      :unfulfilled true}
-                      :eligibility-state             {:unreviewed             true
-                                                      :eligible               true
-                                                      :uneligible             true
-                                                      :conditionally-eligible true}
-                      :eligibility-set-automatically {:yes true
-                                                      :no  true}
-                      :payment-obligation            {:unreviewed    true
-                                                      :obligated     true
-                                                      :not-obligated true}
-                      :only-identified               {:identified   true
-                                                      :unidentified true}
-                      :only-ssn                      {:with-ssn    true
-                                                      :without-ssn true}
-                      :active-status                 {:active  true
-                                                      :passive false}
-                      :base-education                {:pohjakoulutus_kk_ulk                     true
-                                                      :pohjakoulutus_lk                         true
-                                                      :pohjakoulutus_kk                         true
-                                                      :pohjakoulutus_amt                        true
-                                                      :pohjakoulutus_ulk                        true
-                                                      :pohjakoulutus_muu                        true
-                                                      :pohjakoulutus_avoin                      true
-                                                      :pohjakoulutus_yo_ammatillinen            true
-                                                      :pohjakoulutus_am                         true
-                                                      :pohjakoulutus_yo_ulkomainen              true
-                                                      :pohjakoulutus_yo                         true
-                                                      :pohjakoulutus_yo_kansainvalinen_suomessa true}})
+(def default-filters {:language-requirement              {:unreviewed  true
+                                                          :fulfilled   true
+                                                          :unfulfilled true}
+                      :degree-requirement                {:unreviewed  true
+                                                          :fulfilled   true
+                                                          :unfulfilled true}
+                      :eligibility-state                 {:unreviewed             true
+                                                          :eligible               true
+                                                          :uneligible             true
+                                                          :conditionally-eligible true}
+                      :eligibility-set-automatically     {:yes true
+                                                          :no  true}
+                      :payment-obligation                {:unreviewed    true
+                                                          :obligated     true
+                                                          :not-obligated true}
+                      :only-identified                   {:identified   true
+                                                          :unidentified true}
+                      :only-ssn                          {:with-ssn    true
+                                                          :without-ssn true}
+                      :active-status                     {:active  true
+                                                          :passive false}
+                      :base-education                    {:pohjakoulutus_kk_ulk                     true
+                                                          :pohjakoulutus_lk                         true
+                                                          :pohjakoulutus_kk                         true
+                                                          :pohjakoulutus_amt                        true
+                                                          :pohjakoulutus_ulk                        true
+                                                          :pohjakoulutus_muu                        true
+                                                          :pohjakoulutus_avoin                      true
+                                                          :pohjakoulutus_yo_ammatillinen            true
+                                                          :pohjakoulutus_am                         true
+                                                          :pohjakoulutus_yo_ulkomainen              true
+                                                          :pohjakoulutus_yo                         true
+                                                          :pohjakoulutus_yo_kansainvalinen_suomessa true}
+                      :attachment-review-states          {}
+                      :question-answer-filtering-options {}})
 
 (def default-db
   {:editor                     {:forms               nil
@@ -63,8 +65,6 @@
                                 :attachment-state-filter           (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :processing-state-filter           (set (mapv first review-states/application-hakukohde-processing-states))
                                 :selection-state-filter            (set (mapv first review-states/application-hakukohde-selection-states))
-                                :attachment-review-states          {} ; TODO : Tämä nimi kannattaisi muuttaa kuvaamaan, että kyse on filtteröintiehdosta. Tai koota filterit omaan alidokumenttiinsa
-                                :question-answer-filtering-options {}
                                 :fetching-applications?            false
                                 :sort                              {:order-by "applicant-name"
                                                                     :order    "asc"}
