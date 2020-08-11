@@ -240,8 +240,8 @@
                                               :hakukohderyhma-oid hakukohderyhma-oid}
                                              (some? (get-in db [:application :rajaus-hakukohteella]))
                                              (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
-          attachment-review-states (get-in db [:application :attachment-review-states])
-          question-answer-filter   (get-in db [:application :question-answer-filtering-options])]
+          attachment-review-states (get-in db [:application :filters :attachment-review-states])
+          question-answer-filter   (get-in db [:application :filters :question-answer-filtering-options])]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
         {:db   (assoc-in db [:application :fetching-applications?] true)
          :http {:id                  :applications-list

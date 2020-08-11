@@ -255,11 +255,7 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value]))
-        (not= (get-in db [:application :attachment-review-states])
-              (get-in db [:application :attachment-review-states-value]))
-        (not= (get-in db [:application :question-answer-filtering-options])
-              (get-in db [:application :question-answer-filtering-options-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -953,18 +949,18 @@
   :application/filter-questions
   (fn [db _]
     (merge
-      (get-in db [:application :attachment-review-states-value])
-      (get-in db [:application :question-answer-filtering-options-value]))))
+      (get-in db [:application :filters-checkboxes :attachment-review-states])
+      (get-in db [:application :filters-checkboxes :question-answer-filtering-options]))))
 
 (re-frame/reg-sub
   :application/filter-attachment-review-states
   (fn [db [_ field-id]]
-    (get-in db [:application :attachment-review-states-value field-id])))
+    (get-in db [:application :filters-checkboxes :attachment-review-states field-id])))
 
 (re-frame/reg-sub
   :application/filter-question-answers-filtering-options
   (fn [db [_ field-id]]
-    (get-in db [:application :question-answer-filtering-options-value field-id])))
+    (get-in db [:application :filters-checkboxes :question-answer-filtering-options field-id])))
 
 (re-frame/reg-sub
   :application/valitun-hakemuksen-hakukohteet
