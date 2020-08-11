@@ -877,18 +877,9 @@ SELECT
   payment_obligations.states AS "payment-obligations",
   eligibilities.states AS eligibilities
 FROM applications AS a
-JOIN ((SELECT key
-       FROM applications
-       WHERE created_time > :date::DATE)
-      UNION
-      (SELECT application_key AS key
-       FROM application_reviews
-       WHERE modified_time > :date::DATE)
-      UNION
-      (SELECT application_key AS key
-       FROM application_hakukohde_reviews
-       WHERE modified_time > :date::DATE)) AS modified
-  ON modified.key = a.key
+LEFT JOIN applications AS la
+  ON la.key = a.key AND
+     la.id > a.id
 JOIN application_reviews
   ON application_reviews.application_key = a.key
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
@@ -904,10 +895,13 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
                    GROUP BY application_key) AS eligibilities
   ON true
 WHERE a.person_oid IS NOT NULL AND
-      NOT EXISTS (SELECT 1
-                  FROM applications AS a2
-                  WHERE a2.key = a.key AND
-                        a2.id > a.id)
+      la.id IS NULL AND
+      (a.created_time > :date::DATE OR
+       application_reviews.modified_time > :date::DATE OR
+       EXISTS (SELECT 1
+               FROM application_hakukohde_reviews
+               WHERE application_key = a.key AND
+                     modified_time > :date::DATE))
 ORDER BY a.created_time DESC
 LIMIT :limit
 OFFSET :offset;
