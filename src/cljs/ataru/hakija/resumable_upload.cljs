@@ -2,9 +2,11 @@
   (:require [ajax.core :refer [GET POST]]
             [re-frame.core :refer [dispatch reg-event-fx reg-event-db]]
             [goog.crypt :as crypt]
-            [goog.crypt.Md5 :as Md5]
+            [goog.crypt.Md5]
             [cljs-time.core :as c]
-            [string-normalizer.filename-normalizer :as normalizer]))
+            [string-normalizer.filename-normalizer :as normalizer]
+            [ataru.cljs-util :as util]
+            [clojure.string]))
 
 (def ^:private json-params {:format :json :response-format :json :keywords? true})
 (def max-part-size
@@ -61,6 +63,8 @@
                                                           (if next-is-last
                                                             (dispatch last-file-dispatch)
                                                             (dispatch have-file-dispatch)))
+                                         :headers          {"Caller-Id" (aget js/config "hakija-caller-id")
+                                                            "CSRF"      (util/csrf-token)}
                                          :error-handler (fn [{:keys [status]}]
                                                           (if (= status 404)
                                                             (dispatch not-have-file-dispatch)
@@ -88,6 +92,8 @@
           params                  (merge json-params
                                          {:response-format  {:read        identity
                                                              :description "raw"}
+                                          :headers          {"Caller-Id" (aget js/config "hakija-caller-id")
+                                                             "CSRF"      (util/csrf-token)}
                                           :handler          response-handler
                                           :error-handler    response-handler
                                           :progress-handler #(dispatch (conj progress-handler % file-part-number))
@@ -116,7 +122,7 @@
                             (* 1000
                                (/ (- uploaded-size prev-uploaded)
                                   (if last-progress
-                                    (c/in-millis (c/interval last-progress now)))))
+                                    (c/in-millis (c/interval last-progress now)) nil)))
                             0)]
         (-> db
             (assoc-in (conj path :uploaded-size) uploaded-size)
