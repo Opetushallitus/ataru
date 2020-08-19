@@ -1135,16 +1135,12 @@
                 (update-in path merge {:status :deleting
                                        :valid  false})
                 (set-repeatable-application-field-top-level-valid id true))}
-       (if (some? key)
-         {:http {:method  :delete
-                 :url     (str "/hakemus/api/files/" key)
-                 :handler [:application/handle-attachment-delete field-descriptor question-group-idx nil key]}}
-         {:dispatch [:application/handle-attachment-delete
-                     field-descriptor
-                     question-group-idx
-                     attachment-idx
-                     nil
-                     nil]})))))
+       {:dispatch [:application/handle-attachment-delete
+                   field-descriptor
+                   question-group-idx
+                   attachment-idx
+                   key
+                   nil]}))))
 
 (reg-event-fx
   :application/cancel-attachment-upload
