@@ -897,7 +897,10 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
 WHERE a.person_oid IS NOT NULL AND
       la.id IS NULL AND
       (a.created_time > :date::DATE OR
-       application_reviews.modified_time > :date::DATE OR
+       EXISTS (SELECT 1
+               FROM application_reviews
+               WHERE application_key = a.key AND
+                     modified_time > :date::DATE) OR
        EXISTS (SELECT 1
                FROM application_hakukohde_reviews
                WHERE application_key = a.key AND
