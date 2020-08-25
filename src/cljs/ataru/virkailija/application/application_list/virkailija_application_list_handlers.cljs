@@ -14,8 +14,7 @@
     {:db       (-> db
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
-                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value]))
-                   (assoc-in [:application :attachment-review-states] (get-in db [:application :attachment-review-states-value])))
+                   (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
@@ -27,9 +26,7 @@
                    (assoc-in [:application :ensisijaisesti?] false)
                    (assoc-in [:application :ensisijaisesti?-checkbox] false)
                    (assoc-in [:application :rajaus-hakukohteella] nil)
-                   (assoc-in [:application :rajaus-hakukohteella-value] nil)
-                   (assoc-in [:application :attachment-review-states] {})
-                   (assoc-in [:application :attachment-review-states-value] {}))
+                   (assoc-in [:application :rajaus-hakukohteella-value] nil))
      :dispatch [:application/reload-applications]}))
 
 (defn- set-rajaus-hakukohteella
@@ -57,8 +54,7 @@
   (-> db
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
-      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
-      (assoc-in [:application :attachment-review-states-value] (get-in db [:application :attachment-review-states]))))
+      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
 
 (reg-event-db
   :application/undo-filters
@@ -80,12 +76,34 @@
                              (assoc % :order-by column-id)))
      :dispatch [:application/reload-applications]}))
 
+(defn- init-question-answer-filtering-options [field]
+  (->> (:options field)
+       (map :value)
+       (mapv (fn [v] [v false]))
+       (into {})))
+
 (reg-event-db
-  :application/remove-filter-attachment
-  (fn [db [_ field-id]]
-    (update-in db [:application :attachment-review-states-value] dissoc field-id)))
+  :application/add-question-filter
+  (fn [db [_ field]]
+    (let [field-id (:id field)]
+      (if (= (:fieldType field) "attachment")
+        (assoc-in db [:application :filters-checkboxes :attachment-review-states field-id] initial-db/default-attachment-review-states)
+        (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id] (init-question-answer-filtering-options field))))))
+
+(reg-event-db
+  :application/remove-question-filter
+  (fn [db [_ field]]
+    (let [field-id (:id field)]
+      (if (= (:fieldType field) "attachment")
+        (update-in db [:application :filters-checkboxes :attachment-review-states] dissoc field-id)
+        (update-in db [:application :filters-checkboxes :question-answer-filtering-options] dissoc field-id)))))
 
 (reg-event-db
   :application/set-filter-attachment-state
   (fn [db [_ field-id state value]]
-    (assoc-in db [:application :attachment-review-states-value field-id state] value)))
+    (assoc-in db [:application :filters-checkboxes :attachment-review-states field-id state] value)))
+
+(reg-event-db
+  :application/set-question-answer-filtering-options
+  (fn [db [_ field-id option value]]
+    (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id option] value)))

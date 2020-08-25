@@ -378,7 +378,7 @@
 (defn- filter-attachment-state-dropdown
   [field-id]
   (let [lang             @(subscribe [:editor/virkailija-lang])
-        states           @(subscribe [:application/filter-attachment-states field-id])
+        states           @(subscribe [:application/filter-attachment-review-states field-id])
         options          (map (fn [[state label]]
                                 (let [checked? (get states state false)]
                                   [checked?
@@ -400,6 +400,39 @@
       (fn [[state checked?]]
         (dispatch [:application/set-filter-attachment-state field-id state (not checked?)]))]]))
 
+(defn- filter-question-answer-dropdown
+  [field-id]
+  (let [form-key         @(subscribe [:application/selected-form-key])
+        filtering        @(subscribe [:application/filter-question-answers-filtering-options field-id])
+        field-options    @(subscribe [:application/form-field-options-labels form-key field-id])
+        options          (mapv (fn [{:keys [value label]}]
+                                 (let [checked? (get filtering value false)]
+                                   [checked?
+                                    label
+                                    [value checked?]]))
+                               field-options)
+        selected-options (filter first options)]
+    [:div.application-handling__filters-attachment-attachments__dropdown
+     [dropdown/multi-option
+      (cond (seq (rest selected-options))
+            @(subscribe [:editor/virkailija-translation :question-answers-selected])
+            (seq selected-options)
+            (str @(subscribe [:editor/virkailija-translation :question-answer])
+                 ": "
+                 (second (first selected-options)))
+            :else
+            @(subscribe [:editor/virkailija-translation :filter-by-question-answer]))
+      options
+      (fn [[option-value checked?]]
+        (dispatch [:application/set-question-answer-filtering-options field-id option-value (not checked?)]))]]))
+
+(defn- question-filter-dropdown
+  [form-key field-id]
+  (let [field @(subscribe [:application/form-field form-key field-id])]
+    (if (= (:fieldType field) "attachment")
+      [filter-attachment-state-dropdown field-id]
+      [filter-question-answer-dropdown field-id])))
+
 (defn- application-filters
   []
   (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
@@ -414,7 +447,8 @@
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
-        filter-attachments                        (subscribe [:application/filter-attachments])
+        form-fields-by-id                         (subscribe [:application/form-fields-by-id @form-key])
+        filter-questions                          (subscribe [:application/filter-questions])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -500,34 +534,37 @@
               [application-base-education-filters filters-checkboxes @lang]])]
           (when (some? @form-key)
             [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :attachment])]
+             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
               [question-search/search-input
                @form-key
                question-search-id
-               @(subscribe [:editor/virkailija-translation :name-of-attachment])
-               (not (empty? @filter-attachments))
+               @(subscribe [:editor/virkailija-translation :submitted-content-search-placeholder])
+               (not (empty? @filter-questions))
                (fn [db form-key]
-                 (every-pred (qsh/field-type-filter-predicate "attachment")
+                 (every-pred (qsh/field-type-filter-predicate ["attachment"
+                                                               "dropdown"
+                                                               "multipleChoice"
+                                                               "singleChoice"])
                              (qsh/belongs-to-selected-filter-predicate db form-key)))]]
-             (if (seq @filter-attachments)
+             (if (seq @filter-questions)
                [:div.application-handling__filters-attachment-attachments
                 (into [:ul.application-handling__filters-attachment-attachments__list]
                       (map (fn [[field-id _]]
                              [:li.application-handling__filters-attachment-attachments__list-item
                               [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-filter-attachment field-id])}
+                               {:on-click #(dispatch [:application/remove-question-filter (get @form-fields-by-id (keyword field-id))])}
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
-                              [filter-attachment-state-dropdown field-id]])
-                           @filter-attachments))]
+                              [question-filter-dropdown @form-key field-id]])
+                           @filter-questions))]
                [:div.application-handling__filters-attachment-search-results
                 [question-search/search-results
                  @form-key
                  question-search-id
                  #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
-                      (dispatch [:application/add-filter-attachment %]))]])])
+                      (dispatch [:application/add-question-filter %]))]])])
           [:div.application-handling__filters-popup-apply-button-container
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?

@@ -69,8 +69,7 @@
     (update new-application :answers
             (partial keep (fn [answer]
                             (if (:cannot-view (fields-by-key (:key answer)))
-                              (when-let [old-answer (old-answers-by-key (:key answer))]
-                                (assoc old-answer :label (:label answer)))
+                              (old-answers-by-key (:key answer))
                               answer))))))
 
 (defn- edited-cannot-edit-questions

@@ -1,5 +1,6 @@
 (ns ataru.fixtures.application
-  (:require [clj-time.core :as c]))
+  (:require [clj-time.core :as c]
+            [ataru.application.review-states :as review-states]))
 
 (def metadata {:created-by  {:oid  "1.2.246.562.24.1000000"
                              :date "2018-03-21T15:45:29.23+02:00"
@@ -342,10 +343,7 @@
       (assoc :haku      "1.2.246.562.29.65950024186"
              :hakukohde ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"])
       (update :answers (comp vec concat)
-              [{:key       "more-answers-dropdown-id"
-                :value     ""
-                :fieldType "dropdown"}
-               {:key       "hakukohteet"
+              [{:key       "hakukohteet"
                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                 :fieldType "hakukohteet"
                 :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}])))
@@ -519,3 +517,8 @@
                                :payment-obligation
                                                               {:unreviewed true, :obligated true, :not-obligated true}}},
    :haku-oid                 "1.2.246.562.29.93102260101"})
+
+(def applications-list-query-matching-everything
+  (-> applications-list-query
+      (assoc-in [:states-and-filters :processing-states-to-include]
+                (mapv first review-states/application-hakukohde-processing-states))))

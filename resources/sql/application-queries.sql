@@ -28,6 +28,59 @@ INSERT INTO applications (
   now()
 );
 
+-- name: yesql-add-application-answers!
+INSERT INTO answers (application_id, key, field_type, value)
+SELECT :application_id, t->>'key', t->>'fieldType', t->>'value'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'string' OR
+      jsonb_typeof(t->'value') = 'null';
+
+-- name: yesql-add-application-multi-answers!
+INSERT INTO multi_answers (application_id, key, field_type)
+SELECT :application_id, t->>'key', t->>'fieldType'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_array_length(t->'value') = 0 OR
+       jsonb_typeof(t->'value'->0) = 'string');
+
+-- name: yesql-add-application-multi-answer-values!
+INSERT INTO multi_answer_values (application_id, key, data_idx, value)
+SELECT :application_id, t->>'key', tt.data_idx, tt.value->>0
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(value, data_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      jsonb_typeof(t->'value'->0) = 'string';
+
+-- name: yesql-add-application-group-answers!
+INSERT INTO group_answers (application_id, key, field_type)
+SELECT :application_id, t->>'key', t->>'fieldType'
+FROM jsonb_array_elements(:answers) AS t
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
+-- name: yesql-add-application-group-answer-groups!
+INSERT INTO group_answer_groups (application_id, key, group_idx, is_null)
+SELECT :application_id, t->>'key', tt.group_idx, jsonb_typeof(tt.value) = 'null'
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(value, group_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
+-- name: yesql-add-application-group-answer-values!
+INSERT INTO group_answer_values (application_id, key, group_idx, data_idx, value)
+SELECT :application_id, t->>'key', tt.group_idx, ttt.data_idx, ttt.value->>0
+FROM jsonb_array_elements(:answers) AS t
+CROSS JOIN jsonb_array_elements(t->'value') WITH ORDINALITY AS tt(group_value, group_idx)
+CROSS JOIN jsonb_array_elements(CASE jsonb_typeof(tt.group_value)
+                                    WHEN 'array' THEN tt.group_value
+                                    ELSE '[]'::jsonb
+                                END) WITH ORDINALITY AS ttt(value, data_idx)
+WHERE jsonb_typeof(t->'value') = 'array' AND
+      (jsonb_typeof(t->'value'->0) = 'array' OR
+       jsonb_typeof(t->'value'->0) = 'null');
+
 -- name: yesql-add-application-version<!
 -- Add application version
 INSERT INTO applications (
@@ -164,7 +217,9 @@ SELECT
   a.lang,
   a.form_id                           AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.person_oid,
   a.hakukohde,
   a.haku,
@@ -186,71 +241,9 @@ SELECT
          ae.event_type = 'eligibility-state-automatically-changed' AND
          ae.review_key = 'eligibility-state') AS "eligibility-set-automatically"
 FROM latest_applications AS a
-  JOIN application_reviews AS ar ON a.key = ar.application_key
-  JOIN forms AS f ON a.form_id = f.id
+JOIN application_reviews AS ar ON a.key = ar.application_key
+JOIN forms AS f ON a.form_id = f.id
 WHERE a.key IN (:application_keys)
-ORDER BY a.created_time DESC;
-
--- name: yesql-get-applications-for-form
--- Gets applications only for forms (omits hakukohde applications)
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id AS form,
-  a.created_time,
-  a.content,
-  a.person_oid,
-  ar.state  AS state
-FROM latest_applications AS a
-JOIN forms AS f ON f.id = a.form_id
-JOIN application_reviews AS ar ON a.key = ar.application_key
-WHERE a.haku IS NULL
-  AND state IN (:filtered_states)
-  AND f.key = :form_key
-ORDER BY a.created_time DESC;
-
--- name: yesql-get-applications-for-hakukohde
--- Get applications for form-key/hakukohde
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id AS form,
-  a.created_time,
-  a.content,
-  a.haku,
-  a.hakukohde,
-  a.person_oid,
-  ar.state  AS state,
-  f.key     AS form_key
-FROM latest_applications AS a
-JOIN application_reviews AS ar ON a.key = ar.application_key
-JOIN forms AS f ON a.form_id = f.id
-WHERE state IN (:filtered_states)
-      AND :hakukohde_oid = ANY (a.hakukohde)
-ORDER BY a.created_time DESC;
-
--- name: yesql-get-applications-for-haku
--- Get applications for form-key/haku
-SELECT
-  a.id,
-  a.key,
-  a.person_oid,
-  a.lang,
-  a.form_id AS form,
-  a.created_time,
-  a.content,
-  a.hakukohde,
-  a.haku,
-  a.person_oid,
-  ar.state  AS state,
-  f.key     AS form_key
-FROM latest_applications AS a
-JOIN application_reviews AS ar ON a.key = ar.application_key
-JOIN forms AS f ON a.form_id = f.id
-WHERE state IN (:filtered_states)
-  AND a.haku = :haku_oid
 ORDER BY a.created_time DESC;
 
 -- name: yesql-get-application-by-id
@@ -260,7 +253,10 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  a.submitted,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
   a.person_oid,
@@ -300,10 +296,13 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.hakukohde,
   a.haku,
   a.person_oid,
+  las.secret,
   (SELECT organization_oid
    FROM forms
    WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
@@ -315,8 +314,14 @@ SELECT
      ON la.key = oa.key AND la.id > oa.id
    WHERE la.id IS NULL AND
          ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
-          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count
+          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count,
+  (SELECT json_agg(json_build_object('requirement', requirement,
+                                     'state', state,
+                                     'hakukohde', hakukohde))
+   FROM application_hakukohde_reviews ahr
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
 FROM latest_applications AS a
+JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;
 
 -- name: yesql-applications-authorization-data
@@ -344,34 +349,6 @@ WHERE a.person_oid IN (:person_oids) AND
       a.id = (SELECT max(id) FROM applications WHERE key = a.key) AND
       f.id = (SELECT max(id) FROM forms WHERE key = (SELECT key FROM forms WHERE id = a.form_id));
 
--- name: yesql-get-latest-application-by-key-with-hakukohde-reviews
-SELECT
-  a.id,
-  a.key,
-  a.lang,
-  a.form_id                           AS form,
-  a.created_time,
-  a.content,
-  a.hakukohde,
-  a.haku,
-  a.person_oid,
-  las.secret,
-  (SELECT count(*)
-   FROM applications AS oa
-   LEFT JOIN applications AS la
-     ON la.key = oa.key AND la.id > oa.id
-   WHERE la.id IS NULL AND
-         ((a.ssn IS NOT NULL AND oa.ssn = a.ssn) OR
-          (a.email IS NOT NULL AND oa.email = a.email))) AS applications_count,
-  (SELECT json_agg(json_build_object('requirement', requirement,
-                                     'state', state,
-                                     'hakukohde', hakukohde))
-   FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
-FROM latest_applications AS a
-  JOIN latest_application_secrets las ON a.key = las.application_key
-WHERE a.key = :application_key;
-
 -- name: yesql-get-latest-application-by-secret
 SELECT
   a.id,
@@ -380,7 +357,9 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
   f.key     AS form_key
@@ -406,7 +385,9 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
   f.key     AS form_key
@@ -422,7 +403,9 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
   f.key     AS form_key
@@ -432,26 +415,27 @@ JOIN virkailija_rewrite_secrets AS vus ON vus.application_key = a.key
 WHERE vus.secret = :virkailija_secret;
 
 -- name: yesql-get-latest-version-by-secret-lock-for-update
-WITH application_secret AS (SELECT
-                              application_key,
-                              id
-                            FROM application_secrets
-                            WHERE secret = :secret),
-    latest_secret AS (SELECT
-                        application_key,
-                        id
-                      FROM application_secrets
-                      WHERE application_key = (SELECT application_key
-                                               FROM application_secret)
-                      ORDER BY id DESC
-                      LIMIT 1)
-SELECT *
-FROM applications a
-  JOIN application_secret ON application_secret.application_key = a.key
-  JOIN latest_secret ON latest_secret.application_key = a.key
-WHERE application_secret.id = latest_secret.id
-ORDER BY a.id DESC
-LIMIT 1
+SELECT a.id,
+       a.key,
+       a.lang,
+       a.form_id AS form,
+       a.created_time,
+       (SELECT content
+        FROM answers_as_content
+        WHERE application_id = a.id) AS content,
+       a.haku,
+       a.hakukohde,
+       a.person_oid
+FROM applications AS a
+WHERE id = (SELECT max(a.id)
+            FROM applications AS a
+            JOIN application_secrets
+              ON application_secrets.application_key = a.key
+            LEFT JOIN application_secrets AS las
+              ON las.application_key = application_secrets.application_key AND
+                 las.id > application_secrets.id
+            WHERE las.id IS NULL AND
+                  application_secrets.secret = :secret)
 FOR UPDATE;
 
 -- name: yesql-get-application-count-for-secret
@@ -480,7 +464,9 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde,
   a.person_oid
@@ -499,7 +485,9 @@ SELECT
   a.lang,
   a.form_id AS form,
   a.created_time,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.haku,
   a.hakukohde
 FROM applications a
@@ -674,7 +662,9 @@ SELECT
   ssn,
   hakukohde,
   lf.organization_oid,
-  la.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = la.id) AS content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -699,19 +689,19 @@ SELECT a.key AS "oid",
        a.haku AS "haku",
        a.hakukohde AS "hakukohde",
        a.person_oid AS "person-oid",
-       coalesce(asiointikieli.value, a.lang) AS "asiointikieli",
+       coalesce((SELECT CASE value
+                            WHEN '1' THEN 'fi'
+                            WHEN '2' THEN 'sv'
+                            WHEN '3' THEN 'en'
+                        END
+                 FROM answers
+                 WHERE key = 'asiointikieli' AND
+                       application_id = a.id),
+                a.lang) AS "asiointikieli",
        a.email AS "email"
 FROM applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
-LEFT JOIN LATERAL (SELECT CASE value->>'value'
-                            WHEN '1' THEN 'fi'
-                            WHEN '2' THEN 'sv'
-                            WHEN '3' THEN 'en'
-                          END AS value
-                   FROM jsonb_array_elements(a.content->'answers')
-                   WHERE value->>'key' = 'asiointikieli'
-                   LIMIT 1) AS asiointikieli ON true
 WHERE la.id IS NULL AND
       a.person_oid IS NOT NULL AND
       a.haku IS NOT NULL AND
@@ -732,20 +722,25 @@ SELECT
   haku AS haku_oid,
   person_oid AS person_oid,
   hakukohde AS hakukohde,
-  (a.content->'answers') AS answers,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'address') AS lahiosoite,
-  (SELECT answers->>'value'
-   FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'postal-code') AS postinumero,
-  (SELECT CASE answers->>'value'
+  (SELECT content->'answers'
+   FROM answers_as_content
+   WHERE application_id = a.id) AS answers,
+  (SELECT value
+   FROM answers
+   WHERE key = 'address' AND
+         application_id = a.id) AS lahiosoite,
+  (SELECT value
+   FROM answers
+   WHERE key = 'postal-code' AND
+         application_id = a.id) AS postinumero,
+  (SELECT CASE value
               WHEN '1' THEN 'fi'
               WHEN '2' THEN 'sv'
               WHEN '3' THEN 'en'
               END AS value
-  FROM jsonb_array_elements(a.content->'answers') AS answers
-   WHERE answers->>'key' = 'asiointikieli') AS asiointikieli,
+   FROM answers
+   WHERE key = 'asiointikieli' AND
+         application_id = a.id) AS asiointikieli,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -764,67 +759,25 @@ WHERE
   AND (:hakukohde::text IS NULL OR a.hakukohde && :hakukohde)
 ORDER BY a.created_time DESC;
 
---name: yesql-applications-for-hakurekisteri
-SELECT
-  a.key,
-  a.haku,
-  a.hakukohde,
-  a.person_oid,
-  a.lang,
-  a.email,
-  a.content,
-  coalesce(payment_obligations.states, '{}') AS "payment-obligations",
-  coalesce(eligibilities.states, '{}') AS eligibilities
-FROM applications AS a
-JOIN application_reviews AS ar
-  ON ar.application_key = a.key
-LEFT JOIN ((SELECT key
-            FROM applications
-            WHERE created_time > :modified_after)
-           UNION
-           (SELECT application_key AS key
-            FROM application_reviews
-            WHERE modified_time > :modified_after)
-           UNION
-           (SELECT application_key AS key
-            FROM application_hakukohde_reviews
-            WHERE modified_time > :modified_after)) AS modified
-  ON modified.key = a.key
-LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                   FROM application_hakukohde_reviews AS payment_obligations
-                   WHERE payment_obligations.requirement = 'payment-obligation' AND
-                         application_key = a.key
-                   GROUP BY application_key) AS payment_obligations
-  ON true
-LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
-                   FROM application_hakukohde_reviews AS payment_obligations
-                   WHERE payment_obligations.requirement = 'eligibility-state' AND
-                         application_key = a.key
-                   GROUP BY application_key) AS eligibilities
-  ON true
-WHERE a.person_oid IS NOT NULL AND
-      a.haku IS NOT NULL AND
-      (NOT :has_haku_oid OR a.haku = :haku_oid) AND
-      -- Parameter list contains empty string to avoid empty lists
-      (NOT :has_hakukohde_oids OR a.hakukohde && :hakukohde_oids) AND
-      (NOT :has_person_oids OR a.person_oid = ANY(:person_oids)) AND
-      ar.state <> 'inactivated' AND
-      (NOT :has_modified_after OR modified.key IS NOT NULL) AND
-      NOT EXISTS (SELECT 1
-                  FROM applications AS a2
-                  WHERE a2.key = a.key AND
-                        a2.id > a.id)
-ORDER BY a.created_time DESC;
-
 --name: yesql-suoritusrekisteri-applications
 SELECT
   a.key,
   a.haku,
   a.hakukohde,
   a.person_oid,
-  coalesce(asiointikieli.value, a.lang) AS "lang",
+  coalesce((SELECT CASE value
+                       WHEN '1' THEN 'fi'
+                       WHEN '2' THEN 'sv'
+                       WHEN '3' THEN 'en'
+                   END
+            FROM answers
+            WHERE key = 'asiointikieli' AND
+                  application_id = a.id),
+            a.lang) AS "lang",
   a.email,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   coalesce(ahr.payment_obligations, '{}') AS "payment-obligations",
   coalesce(ahr.eligibilities, '{}') AS eligibilities
 FROM applications AS a
@@ -835,16 +788,7 @@ LEFT JOIN applications AS la
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations,
                           jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
                    FROM application_hakukohde_reviews
-                   WHERE application_key = a.key) AS ahr
-LEFT JOIN LATERAL (SELECT CASE value->>'value'
-                              WHEN '1' THEN 'fi'
-                              WHEN '2' THEN 'sv'
-                              WHEN '3' THEN 'en'
-                              END AS value
-                   FROM jsonb_array_elements(a.content->'answers')
-                   WHERE value->>'key' = 'asiointikieli'
-                   LIMIT 1) AS asiointikieli ON true
-          ON true
+                   WHERE application_key = a.key) AS ahr ON true
 WHERE a.person_oid IS NOT NULL AND
       a.haku IS NOT NULL AND
       (:haku_oid::text IS NULL OR a.haku = :haku_oid) AND
@@ -872,7 +816,9 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   application_reviews.state,
   payment_obligations.states AS "payment-obligations",
   eligibilities.states AS eligibilities
@@ -911,7 +857,9 @@ SELECT a.key AS key,
        a.haku AS haku,
        f.key AS form,
        a.email AS email,
-       a.content AS content
+       (SELECT content
+        FROM answers_as_content
+        WHERE application_id = a.id) AS content
 FROM latest_applications AS a
 JOIN forms AS f ON f.id = a.form_id
 WHERE a.person_oid = :person_oid
@@ -930,10 +878,12 @@ SELECT
   key AS "hakemus-oid",
   person_oid "henkilo-oid",
   hakukohde AS "hakukohde-oids",
-  content AS "content",
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = la.id) AS "content",
   state AS "hakemus-tila"
-FROM latest_applications
-  JOIN application_reviews ON application_key = key
+FROM latest_applications AS la
+JOIN application_reviews ON application_key = la.key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND haku = :haku_oid
@@ -948,7 +898,9 @@ SELECT
   person_oid,
   haku,
   hakukohde,
-  content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = la.id) AS content,
   (SELECT json_agg(json_build_object('requirement', requirement,
                                      'state', state,
                                      'hakukohde', hakukohde))
@@ -958,8 +910,8 @@ SELECT
             FROM application_hakukohde_reviews AS ahr
             WHERE ahr.application_key = key AND
                   ahr.requirement = 'payment-obligation'), '{}') AS maksuvelvollisuus
-FROM latest_applications
-  JOIN application_reviews ON application_key = key
+FROM latest_applications AS la
+JOIN application_reviews ON application_key = la.key
 WHERE person_oid IS NOT NULL
   AND haku IS NOT NULL
   AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
@@ -972,7 +924,9 @@ SELECT
   a.person_oid AS "person-oid",
   a.haku,
   a.hakukohde AS hakutoiveet,
-  a.content,
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = a.id) AS content,
   a.lang,
   lf.organization_oid AS "organization-oid"
 FROM latest_applications AS a
@@ -1002,12 +956,38 @@ LIMIT 1;
 UPDATE applications
 SET hakukohde = ARRAY [:hakukohde] :: CHARACTER VARYING(127) [],
     content = :content
-FROM application_secrets
-WHERE application_secrets.secret = :secret AND
-      application_secrets.application_key = applications.key;
+WHERE id = (SELECT max(id)
+            FROM applications
+            WHERE key = (SELECT application_key
+                         FROM application_secrets
+                         WHERE secret = :secret));
+
+--name: yesql-delete-application-hakukohteet-answer-values-by-secret!
+DELETE FROM multi_answer_values
+WHERE application_id = (SELECT max(id)
+                        FROM applications
+                        WHERE key = (SELECT application_key
+                                     FROM application_secrets
+                                     WHERE secret = :secret)) AND
+      key = 'hakukohteet';
+
+--name: yesql-insert-application-hakukohteet-answer-values-by-secret!
+INSERT INTO multi_answer_values (application_id, key, data_idx, value)
+SELECT (SELECT max(id)
+        FROM applications
+        WHERE key = (SELECT application_key
+                     FROM application_secrets
+                     WHERE secret = :secret)),
+       'hakukohteet',
+       t.data_idx,
+       t.value->>0
+FROM jsonb_array_elements(:hakukohteet) WITH ORDINALITY AS t(value, data_idx);
 
 --name: yesql-get-application-versions
-SELECT content, form_id
-FROM applications
-WHERE key = :application_key
-ORDER BY id ASC;
+SELECT (SELECT content
+        FROM answers_as_content
+        WHERE application_id = a.id) AS content,
+        a.form_id
+FROM applications AS a
+WHERE a.key = :application_key
+ORDER BY a.id ASC;

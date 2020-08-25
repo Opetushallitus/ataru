@@ -270,7 +270,48 @@
             body             (:body resp)
             applications     (:applications body)]
         (should= 200 status)
-        (should= 1 (count applications)))))
+        (should= 1 (count applications))))
+
+  (it "Should fetch nothing when answer to a question does not match"
+        (let [query (-> application-fixtures/applications-list-query-matching-everything
+                        (assoc :option-answers {"country-of-residence" ["123"]}))]
+          (db/init-db-fixture
+            fixtures/person-info-form-with-more-questions
+            (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))
+            [])
+          (let [resp         (post-applications-list query)
+                status       (:status resp)
+                body         (:body resp)
+                applications (:applications body)]
+            (should= 200 status)
+            (should= 0 (count applications)))))
+
+  (it "Should fetch an application when answer to a question matches"
+      (let [query (-> application-fixtures/applications-list-query-matching-everything
+                      (assoc :option-answers {"country-of-residence" ["246"]}))]
+        (db/init-db-fixture
+          fixtures/person-info-form-with-more-questions
+          (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))
+          [])
+        (let [resp         (post-applications-list query)
+              status       (:status resp)
+              body         (:body resp)
+              applications (:applications body)]
+          (should= 200 status)
+          (should= 1 (count applications)))))
+
+  (it "Should fetch an application when answer to a question with multiple answers matches"
+        (let [query (-> application-fixtures/applications-list-query-matching-everything
+                        (assoc :option-answers {"nationality" ["246"]}))]
+          (db/init-db-fixture
+            fixtures/person-info-form-with-more-questions
+            (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))
+            [])
+          (let [resp         (post-applications-list query)
+                status       (:status resp)
+                body         (:body resp)
+                applications (:applications body)]
+            (should= 200 status)
+            (should= 1 (count applications))))))
 
 (run-specs)
-

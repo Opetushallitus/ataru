@@ -1,15 +1,15 @@
 (ns ataru.virkailija.application.application-subs
-  (:require [clojure.core.match :refer [match]]
-            [clojure.set :as cs]
-            [cljs-time.core :as t]
-            [re-frame.core :as re-frame]
-            [ataru.application-common.application-field-common :as common]
+  (:require [ataru.application-common.application-field-common :as common]
+            [ataru.cljs-util :as util]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.util :as u]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
-            [ataru.util :as u]
-            [ataru.cljs-util :as util]
-            [clojure.string :as s]))
+            [cljs-time.core :as t]
+            [clojure.core.match :refer [match]]
+            [clojure.set :as set]
+            [clojure.string :as string]
+            [re-frame.core :as re-frame]))
 
 (defn- from-multi-lang [text lang]
   (u/non-blank-val text [lang :fi :sv :en]))
@@ -255,9 +255,7 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value]))
-        (not= (get-in db [:application :attachment-review-states])
-              (get-in db [:application :attachment-review-states-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -335,18 +333,18 @@
 
 (defn- sort-by-haku-name
   [application-haut haut fetching-haut lang]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (haku-name haut fetching-haut (:oid %) lang) ""))
            application-haut))
 
 (defn- sort-by-hakukohde-name
   [hakukohteet fetching-hakukohteet lang application-hakukohteet]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (hakukohde-name hakukohteet fetching-hakukohteet (:oid %) lang) ""))
            application-hakukohteet))
 
 (defn- sort-by-form-name [direct-form-haut lang]
-  (sort-by (comp s/lower-case
+  (sort-by (comp string/lower-case
                  #(or (from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
@@ -455,14 +453,33 @@
     (:form-fields-by-id form)))
 
 (re-frame/reg-sub
-  :application/form-field-label
+  :application/form-field
   (fn [[_ form-key _] _]
-    [(re-frame/subscribe [:application/form-fields-by-id form-key])
+    (re-frame/subscribe [:application/form-fields-by-id form-key]))
+  (fn [fields-by-id [_ _ field-id]]
+    (get fields-by-id (keyword field-id))))
+
+(re-frame/reg-sub
+  :application/form-field-label
+  (fn [[_ form-key field-id] _]
+    [(re-frame/subscribe [:application/form-field form-key field-id])
      (re-frame/subscribe [:editor/virkailija-lang])])
-  (fn [[fields-by-id lang] [_ _ field-id]]
-    (u/non-blank-val
-     (get-in fields-by-id [(keyword field-id) :label])
-     [lang :fi :sv :en])))
+  (fn [[field lang] _]
+    (from-multi-lang (:label field) lang)))
+
+(re-frame/reg-sub
+  :application/form-field-options-labels
+  (fn [[_ form-key field-id] _]
+    [(re-frame/subscribe [:application/form-field form-key field-id])
+     (re-frame/subscribe [:editor/virkailija-lang])])
+  (fn [[field lang] _]
+    (cond->> (mapv (fn [{:keys [value label]}]
+                     {:label (from-multi-lang label lang)
+                      :value value})
+                   (:options field))
+             (and (:koodisto-source field)
+                  (not (:koodisto-ordered-by-user field)))
+             (sort-by :label))))
 
 (re-frame/reg-sub
   :application/hakukohde-options-by-oid
@@ -608,15 +625,15 @@
 (defn- tila-historia->information-request [tila-historia]
   (-> tila-historia
       (select-keys [:luotu :tila])
-      (clojure.set/rename-keys {:luotu :created-time
-                                :tila  :valinnan-tila})
+      (set/rename-keys {:luotu :created-time
+                        :tila  :valinnan-tila})
       (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
 
 (defn- valinnan-tulos->information-request [valinnan-tulos]
   (-> valinnan-tulos
       (select-keys [:valinnantilanViimeisinMuutos :valinnantila])
-      (clojure.set/rename-keys {:valinnantilanViimeisinMuutos :created-time
-                                :valinnantila                 :valinnan-tila})
+      (set/rename-keys {:valinnantilanViimeisinMuutos :created-time
+                        :valinnantila                 :valinnan-tila})
       (assoc :event-type "kevyt-valinta-valinnan-tila-change")))
 
 (re-frame/reg-sub
@@ -929,14 +946,21 @@
          (nil? (get-in application [:person :oid])))))
 
 (re-frame/reg-sub
-  :application/filter-attachments
+  :application/filter-questions
   (fn [db _]
-    (get-in db [:application :attachment-review-states-value])))
+    (merge
+      (get-in db [:application :filters-checkboxes :attachment-review-states])
+      (get-in db [:application :filters-checkboxes :question-answer-filtering-options]))))
 
 (re-frame/reg-sub
-  :application/filter-attachment-states
+  :application/filter-attachment-review-states
   (fn [db [_ field-id]]
-    (get-in db [:application :attachment-review-states-value field-id])))
+    (get-in db [:application :filters-checkboxes :attachment-review-states field-id])))
+
+(re-frame/reg-sub
+  :application/filter-question-answers-filtering-options
+  (fn [db [_ field-id]]
+    (get-in db [:application :filters-checkboxes :question-answer-filtering-options field-id])))
 
 (re-frame/reg-sub
   :application/valitun-hakemuksen-hakukohteet

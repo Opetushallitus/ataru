@@ -240,7 +240,8 @@
                                               :hakukohderyhma-oid hakukohderyhma-oid}
                                              (some? (get-in db [:application :rajaus-hakukohteella]))
                                              (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
-          attachment-review-states (get-in db [:application :attachment-review-states])]
+          attachment-review-states (get-in db [:application :filters :attachment-review-states])
+          question-answer-filter   (get-in db [:application :filters :question-answer-filtering-options])]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
         {:db   (assoc-in db [:application :fetching-applications?] true)
          :http {:id                  :applications-list
@@ -249,6 +250,10 @@
                 :params              (merge {:sort                     (get-in db [:application :sort] {:order-by "applicant-name"
                                                                                                         :order    "asc"})
                                              :attachment-review-states attachment-review-states
+                                             :option-answers           (into {}
+                                                                             (map (fn [[field-id states]]
+                                                                                    [field-id (keep #(when (second %) (first %)) states)])
+                                                                                  question-answer-filter))
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
                                                                         :selection-states-to-include  (get-in db [:application :selection-state-filter])
@@ -1051,8 +1056,3 @@
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
      :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
-
-(reg-event-db
-  :application/add-filter-attachment
-  (fn [db [_ field-id]]
-    (assoc-in db [:application :attachment-review-states-value field-id] initial-db/default-attachment-review-states)))

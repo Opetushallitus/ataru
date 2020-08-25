@@ -9,28 +9,25 @@
             [ataru.forms.form-store :as forms]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
-            [ataru.schema.form-schema :as schema]
             [ataru.util :refer [answers-by-key] :as util]
             [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
-            [ataru.util.language-label :as label]
             [ataru.util.random :as crypto]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.set]
             [clojure.string]
             [clojure.java.jdbc :as jdbc]
-            [schema.core :as s]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]])
   (:import [java.time
             LocalDateTime
             ZoneId]
-           org.postgresql.util.PSQLException
+           [org.postgresql.util
+            PGobject
+            PSQLException]
            java.time.format.DateTimeFormatter))
-
-
 
 (defn- exec-db
   [ds-key query params]
@@ -51,10 +48,7 @@
   (when application
     (assoc (->kebab-case-kw (dissoc application :content))
            :answers
-           (mapv (fn [answer]
-                   (update answer :label (fn [label]
-                                           (label/get-language-label-in-preferred-order label))))
-                 (-> application :content :answers)))))
+           (-> application :content :answers))))
 
 (defn- application-exists-with-secret-tx?
   "NB: takes into account also expired secrets"
@@ -247,7 +241,17 @@
                               :person_oid     (:person-oid application)}
         new-application      (if (contains? application :key)
                                (queries/yesql-add-application-version<! application-to-store connection)
-                               (queries/yesql-add-application<! application-to-store connection))]
+                               (queries/yesql-add-application<! application-to-store connection))
+        add-answers-args     {:application_id (:id new-application)
+                              :answers        (doto (new PGobject)
+                                                (.setType "jsonb")
+                                                (.setValue (json/generate-string answers)))}]
+    (queries/yesql-add-application-answers! add-answers-args connection)
+    (queries/yesql-add-application-multi-answers! add-answers-args connection)
+    (queries/yesql-add-application-multi-answer-values! add-answers-args connection)
+    (queries/yesql-add-application-group-answers! add-answers-args connection)
+    (queries/yesql-add-application-group-answer-groups! add-answers-args connection)
+    (queries/yesql-add-application-group-answer-values! add-answers-args connection)
     (create-attachment-hakukohde-reviews-for-application new-application applied-hakukohteet old-answers form update? {:connection conn})
     (when create-new-secret?
       (add-new-secret-to-application-in-tx conn (:key new-application)))
@@ -411,7 +415,7 @@
                       :id        {:applicationOid key}})
       id)))
 
-(defn ->name-query-value
+(defn- str->name-query-value
   [name]
   (->> (-> name
            (clojure.string/replace #"[&\|!<>:*]" "")
@@ -420,182 +424,89 @@
        (map #(str % ":*"))
        (clojure.string/join " & ")))
 
-(defn- query->db-query
+(defn- to-sql-array [s connection type]
+  (.createArrayOf (:connection connection) type (to-array s)))
+
+(defn- query->ensisijainen-hakukohde-snip
+  [connection query]
+  (queries/ensisijainen-hakukohde-snip
+   (cond-> {:ensisijainen-hakukohde
+            (to-sql-array (:ensisijainen-hakukohde query) connection "varchar")}
+           (seq (:ensisijaisesti-hakukohteissa query))
+           (assoc :ensisijaisesti-hakukohteissa
+                  (to-sql-array (:ensisijaisesti-hakukohteissa query) connection "varchar")))))
+
+(defn- query->attachment-snip
+  [connection query]
+  (let [[field-key states] (first (:attachment-review-states query))]
+    (queries/attachment-snip
+     (cond-> {:attachment-key field-key}
+
+             (seq states)
+             (assoc :states (to-sql-array states connection "varchar"))
+
+             (or (seq (:ensisijainen-hakukohde query))
+                 (seq (:hakukohde query)))
+             (assoc :hakukohde (to-sql-array
+                                (or (seq (:ensisijainen-hakukohde query))
+                                    (seq (:hakukohde query)))
+                                connection
+                                "varchar"))))))
+
+(defn- query->option-answers-snip
+  [connection query]
+  (let [[field-key options] (first (:option-answers query))]
+    (queries/option-answers-snip
+     (cond-> {:key field-key}
+
+             (seq options)
+             (assoc :options (to-sql-array options connection "varchar"))))))
+
+(defn- sort->offset-snip
+  [sort]
+  (queries/offset-snip
+   (merge {:order-by (:order-by sort)
+           :order    (if (= "asc" (:order sort)) ">" "<")}
+          (:offset sort))))
+
+(defn- sort->order-by-snip
+  [sort]
+  (queries/order-by-snip
+   {:order-by (:order-by sort)
+    :order    (if (= "asc" (:order sort)) "ASC" "DESC")}))
+
+(defn query->db-query
   [connection query sort]
-  (let [query (cond-> query
-                      (contains? query :hakukohde)
-                      (update :hakukohde
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
-                      (contains? query :ensisijainen-hakukohde)
-                      (update :ensisijainen-hakukohde
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
-                      (contains? query :ensisijaisesti-hakukohteissa)
-                      (update :ensisijaisesti-hakukohteissa
-                              #(some->> (seq %)
-                                        to-array
-                                        (.createArrayOf (:connection connection) "varchar")))
+  (let [query (cond-> (assoc query :order-by-snip (sort->order-by-snip sort))
+
+                      (contains? query :name)
+                      (update :name str->name-query-value)
+
+                      (seq (:hakukohde query))
+                      (update :hakukohde to-sql-array connection "varchar")
+
+                      (seq (:ensisijainen-hakukohde query))
+                      (assoc :ensisijainen-hakukohde-snip (query->ensisijainen-hakukohde-snip connection query))
+
                       (contains? query :attachment-review-states)
-                      (update :attachment-review-states
-                              (fn [[attachment-field-id states]]
-                                [attachment-field-id
-                                 (some->> (seq states)
-                                          to-array
-                                          (.createArrayOf (:connection connection) "varchar"))])))
-        comp  (if (= "asc" (:order sort)) ">" "<")
-        order (if (= "asc" (:order sort)) "ASC" "DESC")]
-    (cons
-     (str "SELECT a.id,
-       a.person_oid                     AS \"person-oid\",
-       a.key,
-       a.lang,
-       a.preferred_name                 AS \"preferred-name\",
-       a.last_name                      AS \"last-name\",
-       a.created_time                   AS \"created-time\",
-       a.haku,
-       a.hakukohde,
-       a.ssn,
-       to_char(a.dob, 'dd.MM.YYYY')     AS \"dob\",
-       (SELECT value->'value' AS value
-        FROM jsonb_array_elements(a.content->'answers')
-        WHERE value->>'key' = 'higher-completed-base-education'
-        LIMIT 1)                        AS \"base-education\",
-       (SELECT state
-        FROM application_reviews
-        WHERE application_key = a.key)  AS state,
-       (SELECT score
-        FROM application_reviews
-        WHERE application_key = a.key)  AS score,
-       a.form_id                        AS form,
-       (SELECT coalesce(array_agg(ae.hakukohde) FILTER (WHERE ae.event_type = 'eligibility-state-automatically-changed'), '{}')
-        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, event_type
-              FROM application_events
-              WHERE application_key = a.key AND
-                    review_key = 'eligibility-state'
-              ORDER BY hakukohde, id DESC) AS ae) AS \"eligibility-set-automatically\",
-       (SELECT count(*) FILTER (WHERE ae.new_review_state = 'information-request' AND
-                                      ae.time < a.created_time)
-        FROM (SELECT DISTINCT ON (hakukohde) hakukohde, time, new_review_state
-              FROM application_events
-              WHERE application_key = a.key AND
-                    review_key = 'processing-state'
-              ORDER BY hakukohde, id DESC) AS ae) AS \"new-application-modifications\",
-       a.submitted,
-       (SELECT organization_oid
-        FROM forms
-        WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
-        ORDER BY id DESC
-        LIMIT 1)                        AS \"organization-oid\",
-       (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
-                                            'state', state,
-                                            'hakukohde', hakukohde))
-        FROM application_hakukohde_reviews ahr
-        WHERE ahr.application_key = a.key) AS \"application-hakukohde-reviews\",
-       ahar.agg                            AS \"application-attachment-reviews\"
-FROM applications AS a
-LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
-          (str "JOIN LATERAL (SELECT "
-               (if-let [[_ states] (:attachment-review-states query)]
-                 (str "count(*) FILTER (WHERE attachment_key = ?"
-                      (when (some? states)
-                        "\n                                        AND state = ANY(?)")
-                      (when (or (contains? query :hakukohde)
-                                (contains? query :ensisijainen-hakukohde))
-                        "\n                                        AND hakukohde = ANY(?)")
-                      ") > 0 AS found,")
-                 "true AS found,")
-               "\n                     jsonb_agg(jsonb_build_object('attachment-key', attachment_key,
-                                                  'state', state,
-                                                  'hakukohde', hakukohde)) AS agg
-              FROM application_hakukohde_attachment_reviews
-              WHERE application_key = a.key) AS ahar ON ahar.found\n")
-          "WHERE la.key IS NULL\n"
-          (when (contains? query :form)
-            "      AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = ?\n")
-          (when (contains? query :application-oid)
-            "      AND a.key = ?\n")
-          (when (contains? query :person-oid)
-            "      AND a.person_oid = ?\n")
-          (when (contains? query :name)
-            "      AND to_tsvector('unaccent_simple', a.preferred_name || ' ' || a.last_name) @@ to_tsquery('unaccent_simple', ?)\n")
-          (when (contains? query :email)
-            "      AND lower(a.email) = lower(?)\n")
-          (when (contains? query :dob)
-            "      AND a.dob = to_date(?, 'DD.MM.YYYY')\n")
-          (when (contains? query :ssn)
-            "      AND a.ssn = ?\n")
-          (when (contains? query :haku)
-            "      AND a.haku = ?\n")
-          (when (contains? query :hakukohde)
-            "      AND a.hakukohde && ?\n")
-          (when (contains? query :ensisijainen-hakukohde)
-            (if (contains? query :ensisijaisesti-hakukohteissa)
-              "      AND (SELECT t.h
-           FROM unnest(a.hakukohde) WITH ORDINALITY AS t(h, i)
-           WHERE t.h = ANY(?)
-           ORDER BY t.i ASC
-           LIMIT 1) = ANY(?)\n"
-              "      AND a.hakukohde[1] = ANY(?)\n"))
-          (when (contains? sort :offset)
-            (case (:order-by sort)
-              "submitted"
-              (str "      AND (date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki'), a.key) "
-                   comp
-                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
-              "created-time"
-              (str "      AND (date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki'), a.key) "
-                   comp
-                   " (date_trunc('second', ? AT TIME ZONE 'Europe/Helsinki'), ?)\n")
-              "applicant-name"
-              (str "      AND (a.last_name, a.preferred_name, a.key) "
-                   comp
-                   " (? COLLATE \"fi_FI\", ? COLLATE \"fi_FI\", ?)\n")))
-          (case (:order-by sort)
-            "submitted"
-            (str "ORDER BY date_trunc('second', a.submitted AT TIME ZONE 'Europe/Helsinki') " order ",\n"
-                 "         a.key " order "\n")
-            "created-time"
-            (str "ORDER BY date_trunc('second', a.created_time AT TIME ZONE 'Europe/Helsinki') " order ",\n"
-                 "         a.key " order "\n")
-            "applicant-name"
-            (str "ORDER BY a.last_name COLLATE \"fi_FI\" " order ",\n"
-                 "         a.preferred_name COLLATE \"fi_FI\" " order ",\n"
-                 "         a.key " order "\n"))
-          "LIMIT 1000;")
-     (concat (when-let [[attachment-field-id states] (:attachment-review-states query)]
-               (cond-> [attachment-field-id]
-                       (some? states)
-                       (conj states)
-                       (or (contains? query :hakukohde)
-                           (contains? query :ensisijainen-hakukohde))
-                       (conj (or (:ensisijainen-hakukohde query) (:hakukohde query)))))
-             (keep #(get query %) [:form
-                                   :application-oid
-                                   :person-oid
-                                   :name
-                                   :email
-                                   :dob
-                                   :ssn
-                                   :haku
-                                   :hakukohde
-                                   :ensisijaisesti-hakukohteissa
-                                   :ensisijainen-hakukohde])
-             (when (contains? sort :offset)
-               (case (:order-by sort)
-                 "submitted"
-                 [(:submitted (:offset sort)) (:key (:offset sort))]
-                 "created-time"
-                 [(:created-time (:offset sort)) (:key (:offset sort))]
-                 "applicant-name"
-                 [(:last-name (:offset sort)) (:preferred-name (:offset sort)) (:key (:offset sort))]))))))
+                      (assoc :attachment-snip (query->attachment-snip connection query))
+
+                      (contains? query :option-answers)
+                      (assoc :option-answers-snip (query->option-answers-snip connection query))
+
+                      (contains? sort :offset)
+                      (assoc :offset-snip (sort->offset-snip sort)))]
+    (queries/get-application-list-sqlvec query)))
 
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-    (jdbc/query connection (query->db-query connection query sort))))
+    (let [db-query (query->db-query connection query sort)]
+      (try
+        (jdbc/query connection db-query)
+        (catch Exception e
+          (log/error e "Virhe suoritettaessa tietokantakyselyä '" db-query "'")
+          (throw e))))))
 
 (defn get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
   [person-oid]
@@ -675,7 +586,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 
 (defn get-latest-application-by-key [application-key]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (get-latest-application-by-key-in-tx connection application-key)))
+    (dissoc (get-latest-application-by-key-in-tx connection application-key)
+            :secret
+            :application-hakukohde-reviews)))
 
 (defn get-application-hakukohde-reviews
   [application-key]
@@ -723,11 +636,22 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
   (:secret (first (->> (exec-db :db queries/yesql-get-latest-application-secret {})))))
 
 (defn alter-application-hakukohteet-with-secret
-  [secret hakukohde answers]
-  (exec-db :db queries/yesql-set-application-hakukohteet-by-secret!
-           {:secret    secret
-            :hakukohde hakukohde
-            :content   {:answers answers}}))
+  [secret hakukohteet answers]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+    (queries/yesql-set-application-hakukohteet-by-secret!
+     {:secret    secret
+      :hakukohde hakukohteet
+      :content   {:answers answers}}
+     {:connection connection})
+    (queries/yesql-delete-application-hakukohteet-answer-values-by-secret!
+     {:secret secret}
+     {:connection connection})
+    (queries/yesql-insert-application-hakukohteet-answer-values-by-secret!
+     {:secret      secret
+      :hakukohteet (doto (new PGobject)
+                     (.setType "jsonb")
+                     (.setValue (json/generate-string hakukohteet)))}
+     {:connection connection})))
 
 (defn add-new-secret-to-application
   [application-key]
@@ -869,32 +793,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
             (queries/yesql-add-application-event<! event connection)))
         (throw (new IllegalStateException (str "No existing attahcment review found for " review-to-store)))))))
 
-(s/defn get-applications-for-form :- [schema/Application]
-  [form-key :- s/Str filtered-states :- [s/Str]]
-  (->> {:form_key form-key :filtered_states filtered-states}
-       (exec-db :db queries/yesql-get-applications-for-form)
-       (mapv unwrap-application)))
-
 (defn get-applications-by-keys
   [application-keys]
   (mapv unwrap-application
         (exec-db :db queries/yesql-get-applications-by-keys {:application_keys application-keys})))
-
-(s/defn get-applications-for-hakukohde :- [schema/Application]
-  [filtered-states :- [s/Str]
-   hakukohde-oid :- s/Str]
-  (mapv unwrap-application
-        (exec-db :db queries/yesql-get-applications-for-hakukohde
-                 {:filtered_states filtered-states
-                  :hakukohde_oid   hakukohde-oid})))
-
-(s/defn get-applications-for-haku :- [schema/Application]
-  [haku-oid :- s/Str
-   filtered-states :- [s/Str]]
-  (mapv unwrap-application
-        (exec-db :db queries/yesql-get-applications-for-haku
-                 {:filtered_states filtered-states
-                  :haku_oid        haku-oid})))
 
 (defn add-person-oid
   "Add person OID to an application"
@@ -981,28 +883,6 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
      :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)
      :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
-
-(defn get-hakurekisteri-applications ;; deprecated, use suoritusrekisteri-applications
-  [haku-oid hakukohde-oids person-oids modified-after]
-  (->> (jdbc/with-db-connection [conn {:datasource (db/get-datasource :db)}]
-         (queries/yesql-applications-for-hakurekisteri
-          {:has_haku_oid       (some? haku-oid)
-           :haku_oid           haku-oid
-           :has_hakukohde_oids (not (empty? hakukohde-oids))
-           :has_person_oids    (not (empty? person-oids))
-           :hakukohde_oids     (->> hakukohde-oids
-                                    (to-array)
-                                    (.createArrayOf (:connection conn) "varchar"))
-           :person_oids        (->> person-oids
-                                    to-array
-                                    (.createArrayOf (:connection conn) "text"))
-           :has_modified_after (some? modified-after)
-           :modified_after     (some-> modified-after
-                                       (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
-                                       (.atZone (ZoneId/of "Europe/Helsinki"))
-                                       .toOffsetDateTime)}
-          {:connection conn}))
-       (map unwrap-hakurekisteri-application)))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
@@ -1178,19 +1058,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
        (map unwrap-person-and-hakemus-oid)
        (into {})))
 
-(defn- get-latest-application-by-key-with-hakukohde-reviews
-  [connection application-key]
-  (-> (queries/yesql-get-latest-application-by-key-with-hakukohde-reviews
-       {:application_key application-key}
-       connection)
-      (first)
-      (unwrap-application)))
-
 (defn- update-hakukohde-process-state!
   [connection session hakukohde-oid from-state to-state application-key]
-  (let [application      (get-latest-application-by-key-with-hakukohde-reviews
-                          connection
-                          application-key)
+  (let [application      (get-latest-application-by-key-in-tx connection
+                                                              application-key)
         existing-reviews (filter
                           #(= (:state %) from-state)
                           (application-states/get-all-reviews-for-requirement "processing-state" application (when hakukohde-oid [hakukohde-oid])))
@@ -1208,9 +1079,9 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
     (doseq [new-review new-reviews]
-      (queries/yesql-upsert-application-hakukohde-review! new-review connection)
+      (queries/yesql-upsert-application-hakukohde-review! new-review {:connection connection})
       (queries/yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
-                                             connection))
+                                             {:connection connection}))
     (when new-reviews
       {:new       new-event
        :id        {:applicationOid application-key
@@ -1232,11 +1103,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
 (defn mass-update-application-states
   [session application-keys hakukohde-oid from-state to-state audit-logger]
   (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
-  (let [audit-log-entries (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-                            (let [connection {:connection conn}]
-                              (mapv
-                               (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
-                               application-keys)))]
+  (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                            (mapv
+                             (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
+                             application-keys))]
     (doseq [audit-log-entry (filter some? audit-log-entries)]
       (audit-log/log audit-logger audit-log-entry))
     true))

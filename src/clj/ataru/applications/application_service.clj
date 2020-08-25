@@ -153,7 +153,7 @@
 
 (defn ->name-query
   [name]
-  {:name (application-store/->name-query-value name)})
+  {:name name})
 
 (defn ->person-oid-query
   [person-oid]
@@ -169,10 +169,24 @@
 
 (defn ->attachment-review-states-query
   [attachment-review-states-query]
-  (when-let [[attachment-field-id states] (first attachment-review-states-query)]
+  (when (seq attachment-review-states-query)
     {:attachment-review-states
-     [(name attachment-field-id)
-      (keep #(when (second %) (name (first %))) states)]}))
+     (into
+      {}
+      (map (fn [[field-id states]]
+             [(name field-id)
+              (keep #(when (second %) (name (first %))) states)])
+           attachment-review-states-query))}))
+
+(defn ->option-answers-query
+  [option-answers]
+  (when (seq option-answers)
+    {:option-answers
+     (into
+      {}
+      (map (fn [[field-id options]]
+             [(name field-id) options])
+           option-answers))}))
 
 (defn ->empty-query
   []
@@ -367,6 +381,7 @@
                   person-oid
                   application-oid
                   attachment-review-states
+                  option-answers
                   sort
                   states-and-filters]} params
           ensisijaisesti               (boolean ensisijaisesti)
@@ -409,7 +424,8 @@
                               (->person-oid-query person-oid)
                               (some? application-oid)
                               (->application-oid-query application-oid))
-                        (->attachment-review-states-query attachment-review-states))]
+                        (->attachment-review-states-query attachment-review-states)
+                        (->option-answers-query option-answers))]
         (get-application-list-by-query
          person-service
          tarjonta-service

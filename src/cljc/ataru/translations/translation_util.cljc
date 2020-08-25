@@ -1,15 +1,16 @@
 (ns ataru.translations.translation-util
   (:require [ataru.translations.texts :refer [translation-mapping]]
+            [clojure.walk :as walk]
             #?@(:cljs [[goog.string :as gstring]
                        [goog.string.format]])))
 
 (defn get-translations [lang]
-  (clojure.walk/prewalk (fn [x]
-                          (cond-> x
-                            (and (map? x)
-                                 (contains? x lang))
-                            (get lang)))
-                        translation-mapping))
+  (walk/prewalk (fn [x]
+                  (cond-> x
+                          (and (map? x)
+                               (contains? x lang))
+                          (get lang)))
+                translation-mapping))
 
 (def not-found-translations {:fi "Käännöstä ei ole saatavilla. Ole hyvä ja ota yhteyttä ylläpitoon."
                              :sv "Översättning inte tillgänglig. Var vänlig och kontakta administrationen."
