@@ -44,7 +44,7 @@ EOF
 
 columns="content, key, languages, organization_oid, deleted, name, locked, locked_by"
 form_to_stdout="COPY \
-(SELECT $columns, current_timestamp, 'oy-400-patch' FROM forms WHERE key = '6838d6a4-c847-45ab-9af8-d2b590475ead' order by created_time desc limit 1)\
+(SELECT $columns, current_timestamp, 'oy-400-patch' FROM forms WHERE key = '6838d6a4-c847-45ab-9af8-d2b590475ead' ORDER BY id DESC LIMIT 1)\
  TO STDOUT"
 stdin_to_form="COPY forms($columns, created_time, created_by) FROM STDIN"
 
