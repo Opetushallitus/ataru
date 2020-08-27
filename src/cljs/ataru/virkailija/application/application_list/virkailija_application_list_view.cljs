@@ -433,6 +433,10 @@
       [filter-attachment-state-dropdown field-id]
       [filter-question-answer-dropdown field-id])))
 
+(defn- form-fields-by-id []
+  (let [form-key (subscribe [:application/selected-form-key])]
+    (subscribe [:application/form-fields-by-id @form-key])))
+
 (defn- application-filters
   []
   (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
@@ -447,7 +451,6 @@
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
-        form-fields-by-id                         (subscribe [:application/form-fields-by-id @form-key])
         filter-questions                          (subscribe [:application/filter-questions])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
@@ -553,7 +556,7 @@
                       (map (fn [[field-id _]]
                              [:li.application-handling__filters-attachment-attachments__list-item
                               [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-question-filter (get @form-fields-by-id (keyword field-id))])}
+                               {:on-click #(dispatch [:application/remove-question-filter (get @(form-fields-by-id) (keyword field-id))])}
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
