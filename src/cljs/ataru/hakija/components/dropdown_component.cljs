@@ -26,7 +26,7 @@
                            (filter #(= (:value answer) (:value %)))
                            first
                            :followups
-                           (filter #(deref (re-frame/subscribe [:application/visible? (keyword (:id %))]))))
+                           (filter #(deref (re-frame/subscribe [:application/visible? (:id %)]))))
         form-field-id (application-field/form-field-id field-descriptor idx)
         data-test-id  (when (some #{id} [:home-town
                                          :language])

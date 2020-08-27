@@ -206,7 +206,7 @@
          (answers->valid-status {:one   {:valid false :label {:fi "invaliidi"}}
                                  :two   {:valid true}
                                  :three {:valid true}}
-                                nil
+                                #{"one" "two" "three"}
                                 [{:id "one"}
                                  {:id "two"}
                                  {:id "three"}]))))
@@ -216,7 +216,7 @@
          (answers->valid-status {:one   {:valid true}
                                  :two   {:valid true}
                                  :three {:valid true}}
-                                nil
+                                #{"one" "two" "three"}
                                 [{:id "one"}
                                  {:id "two"}
                                  {:id "three"}]))))
@@ -227,7 +227,7 @@
                                  :two   {:valid true}
                                  :three {:valid true}
                                  :four  {:valid false}}
-                                nil
+                                #{"one" "two" "three"}
                                 [{:id "one"}
                                  {:id "two"}
                                  {:id "three"}]))))

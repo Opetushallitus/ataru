@@ -151,7 +151,7 @@
        (options-satisfying-condition field-descriptor answer-value)
        (map :followups)
        flatten
-       (filterv #(deref (subscribe [:application/visible? (keyword (:id %))])))))
+       (filterv #(deref (subscribe [:application/visible? (:id %)])))))
 
 (defn- text-field-followups-container [field-descriptor options answer-value question-group-idx]
   (let [followups (get-visible-followups field-descriptor answer-value options)]
@@ -398,7 +398,7 @@
       [scroll-to-anchor field-descriptor]]
      (into [:div.application__wrapper-contents]
            (for [child (:children field-descriptor)
-                 :when @(subscribe [:application/visible? (keyword (:id child))])]
+                 :when @(subscribe [:application/visible? (:id child)])]
              ^{:key (:id child)}
              [render-field child nil]))]))
 
@@ -435,7 +435,7 @@
        :div.application__question-group-row)
      (into [:div.application__question-group-row-content]
            (for [child (:children field-descriptor)
-                 :when @(subscribe [:application/visible? (keyword (:id child))])]
+                 :when @(subscribe [:application/visible? (:id child)])]
              ^{:key (str (:id child) "-" idx)}
              [render-field child idx]))
      (when can-remove?
@@ -472,7 +472,7 @@
 (defn row-wrapper [field-descriptor _]
   (into [:div.application__row-field-wrapper]
         (for [child (:children field-descriptor)
-              :when @(subscribe [:application/visible? (keyword (:id child))])]
+              :when @(subscribe [:application/visible? (:id child)])]
           ^{:key (:id child)}
           [render-field child nil])))
 
@@ -494,7 +494,7 @@
       (let [on-change (fn [_]
                         (dispatch [:application/toggle-multiple-choice-option field-descriptor question-group-idx option]))
             checked?  (subscribe [:application/multiple-choice-option-checked? parent-id value question-group-idx])
-            followups (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+            followups (filterv #(deref (subscribe [:application/visible? (:id %)]))
                                (:followups option))]
         [:div {:key option-id}
          [:input.application__form-checkbox
@@ -549,7 +549,7 @@
         lang           (subscribe [:application/form-language])]
     (fn [option parent-id field-descriptor question-group-idx _ use-multi-choice-style? verifying?]
       (let [checked?             @(subscribe [:application/single-choice-option-checked? parent-id option-value question-group-idx])
-            followups            (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
+            followups            (filterv #(deref (subscribe [:application/visible? (:id %)]))
                                           (:followups option))
             unselectable?        (and (or (not checked?)
                                           (not @valid?))
@@ -950,7 +950,7 @@
                       "generic" generic-component/render-generic-component
                       "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
                       render-component)
-          visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
+          visible?  @(subscribe [:application/visible? (:id field-descriptor)])]
       (when visible?
         [render-fn
          {:field-descriptor field-descriptor
@@ -963,6 +963,6 @@
     :reagent-render      (fn [form-data]
                            (into [:div.application__editable-content.animated.fadeIn]
                                  (for [field (:content form-data)
-                                       :when @(subscribe [:application/visible? (keyword (:id field))])]
+                                       :when @(subscribe [:application/visible? (:id field)])]
                                    ^{:key (:id field)}
                                    [render-field field nil])))}))

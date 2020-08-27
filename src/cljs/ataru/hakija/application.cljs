@@ -201,17 +201,17 @@
            (filter some?)
            first))))
 
-(defn answers->valid-status [all-answers ui flat-form-content]
+(defn answers->valid-status [all-answers visible-fields flat-form-content]
   {:invalid-fields (for [field flat-form-content
                          :let  [key (keyword (:id field))
                                 answer (get all-answers key)]
                          :when (and (some? answer)
                                     (not (:valid answer))
-                                    (get-in ui [key :visible?] true))]
+                                    (contains? visible-fields (:id field)))]
                      {:key   key
                       :label (:label answer)})})
 
-(defn- create-answers-to-submit [answers form ui]
+(defn- create-answers-to-submit [answers form visible-fields]
   (let [flat-form-map (util/form-fields-by-id form)]
     (for [[ans-key {:keys [value]}] answers
           :let
@@ -219,7 +219,7 @@
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
-                   (get-in ui [ans-key :visible?] true))
+                   (contains? visible-fields (:id field-descriptor)))
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
        :value     value
@@ -233,7 +233,7 @@
              :haku      (-> form :tarjonta :haku-oid)
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
-             :answers   (create-answers-to-submit (:answers application) form (:ui application))}
+             :answers   (create-answers-to-submit (:answers application) form (:visible-fields application))}
 
             (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 

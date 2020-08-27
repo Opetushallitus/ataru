@@ -35,7 +35,7 @@
    (if-let [_ (some #(when (= id (keyword (:id %))) %)
                     (:flat-form-content db))]
      (as-> db db'
-           (assoc-in db' [:application :ui id :visible?] false)
+           (update db' :visible-fields (fnil disj #{}) (name id))
            (cond-> db'
                    (-> db' :application :answers id)
                    (update-in [:application :answers id]
@@ -53,7 +53,7 @@
    (if-let [field (some #(when (= id (keyword (:id %))) %)
                         (:flat-form-content db))]
      (as-> db db'
-           (assoc-in db' [:application :ui id :visible?] true)
+           (update db' :visible-fields (fnil conj #{}) (name id))
            (let [cannot-view? (and (get-in db [:application :editing?])
                                    (:cannot-view field))]
              (cond-> db'
@@ -76,7 +76,7 @@
                              (update :values merge {:valid true
                                                     :value "true"}))
                          a)))
-          (assoc-in [:application :ui :have-finnish-ssn :visible?] true))
+          (update :visible-fields (fnil conj #{}) "have-finnish-ssn"))
       (hide-field db :have-finnish-ssn "true"))))
 
 (defn- ssn
@@ -239,7 +239,7 @@
         (update-in [:application :answers :postal-office :values]
                    merge {:valid (not is-finland?)
                           :value ""})
-        (assoc-in [:application :ui :postal-office :visible?] is-finland?)
+        (update :visible-fields (fnil (if is-finland? conj disj) #{}) "postal-office")
         (assoc-in [:application :ui :postal-office :disabled?] auto-input?))))
 
 (defn- home-town-and-city
@@ -293,8 +293,8 @@
 (defn- pohjakoulutusristiriita
   [db _]
   (if (empty? (pohjakoulutusristiriita/hakukohteet-wo-applicable-base-education db))
-    (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] false)
-    (assoc-in db [:application :ui :pohjakoulutusristiriita :visible?] true)))
+    (update db :visible-fields (fnil disj #{}) "pohjakoulutusristiriita")
+    (update db :visible-fields (fnil conj #{}) "pohjakoulutusristiriita")))
 
 (defn- swedish-nationality? [db]
   (-> db

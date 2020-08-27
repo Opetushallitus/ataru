@@ -206,7 +206,7 @@
 (defn set-field-visibilities
   [db]
   (rules/run-all-rules
-   (reduce field-visibility/set-field-visibility db (get-in db [:form :content]))
+   (time (reduce field-visibility/set-field-visibility db (get-in db [:form :content])))
    (:flat-form-content db)))
 
 (defn- set-have-finnish-ssn

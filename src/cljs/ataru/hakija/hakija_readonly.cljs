@@ -24,26 +24,19 @@
     (string/split s #"\s*,\s*")
     s))
 
-(defn- visible? [ui field-descriptor]
-  (and (get-in @ui [(keyword (:id field-descriptor)) :visible?] true)
-       (or (empty? (:children field-descriptor))
-           (some #(and (visible? ui %)
-                       (not= "infoElement" (:fieldClass %)))
-                 (:children field-descriptor)))))
-
 (declare child-fields)
 
 (defn- text-nested-container [selected-options application lang group-idx]
   [:div.application-handling__nested-container.application-handling__nested-container--top-level
    {:data-test-id "tekstikenttä-lisäkysymykset"}
-   (let [ui (subscribe [:state-query [:application :ui]])]
-     (doall
-       (for [option selected-options]
-         ^{:key (:value option)}
-         [:div.application-handling__nested-container-option
-          (when (some #(visible? ui %) (:followups option))
-            (into [:div.application-handling__nested-container]
-                  (child-fields (:followups option) application lang ui group-idx)))])))])
+   (doall
+    (for [option selected-options]
+      ^{:key (:value option)}
+      [:div.application-handling__nested-container-option
+       (when (some #(deref (subscribe [:application/visible? (:id %)]))
+                   (:followups option))
+         (into [:div.application-handling__nested-container]
+               (child-fields (:followups option) application lang group-idx)))]))])
 
 (defn- text-readonly-text [field-descriptor values group-idx]
   [:div.application__readonly-text
@@ -108,42 +101,36 @@
            (application-field/required-hint field-descriptor))]
      [attachment-list values]]))
 
-(defn child-fields [children application lang ui question-group-id]
+(defn child-fields [children application lang question-group-id]
   (for [child children
-        :when (visible? ui child)]
+        :when @(subscribe [:application/visible? (:id child)])]
     ^{:key (str (:id child)
                 (when question-group-id
                   (str "-" question-group-id)))}
     [field child application lang question-group-id]))
 
-(defn wrapper [_ _ _ _]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application lang children]
-      [:div.application__wrapper-element
-       [:div.application__wrapper-heading
-        [:h2 (from-multi-lang (:label content) lang)]
-        [application-field/scroll-to-anchor content]]
-       (into [:div.application__wrapper-contents]
-             (child-fields children application lang ui nil))])))
+(defn wrapper [content application lang children]
+  [:div.application__wrapper-element
+   [:div.application__wrapper-heading
+    [:h2 (from-multi-lang (:label content) lang)]
+    [application-field/scroll-to-anchor content]]
+   (into [:div.application__wrapper-contents]
+         (child-fields children application lang nil))])
 
-(defn question-group [_ _ _ _]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [content application lang children]
-      (let [groups-amount (->> content :id keyword (get @ui) :count)]
-        [:div.application__question-group.application__read-only
-         [:p.application__read-only-heading-text
-          (from-multi-lang (:label content) lang)]
-         (into [:div]
-               (for [idx (range groups-amount)]
-                 ^{:key (str (:id content) "-" idx)}
-                 [:div.application__question-group-row
-                  (into [:div.application__question-group-row-content.application__form-field]
-                        (child-fields children application lang ui idx))]))]))))
+(defn question-group [content application lang children]
+  (let [groups-amount (->> content :id keyword (get @ui) :count)]
+    [:div.application__question-group.application__read-only
+     [:p.application__read-only-heading-text
+      (from-multi-lang (:label content) lang)]
+     (into [:div]
+           (for [idx (range groups-amount)]
+             ^{:key (str (:id content) "-" idx)}
+             [:div.application__question-group-row
+              (into [:div.application__question-group-row-content.application__form-field]
+                    (child-fields children application lang idx))]))]))
 
-(defn row-container [_ _ _ _]
-  (let [ui (subscribe [:state-query [:application :ui]])]
-    (fn [application lang children question-group-index]
-      (into [:div] (child-fields children application lang ui question-group-index)))))
+(defn row-container [application lang children question-group-index]
+  (into [:div] (child-fields children application lang question-group-index)))
 
 (defn- fieldset-answer-table [answers]
   [:tbody
@@ -195,8 +182,7 @@
                                  vector
                                  flatten
                                  set)
-            selected-options (filter #(contains? values (:value %)) (:options content))
-            ui               (subscribe [:state-query [:application :ui]])]
+            selected-options (filter #(contains? values (:value %)) (:options content))]
         (doall
           (for [option selected-options]
             ^{:key (:value option)}
@@ -206,9 +192,10 @@
                                "application__text-field-paragraph--readonly-arvosanat-taulukko")
                :data-test-id data-test-id}
               (from-multi-lang (:label option) lang)]
-             (when (some #(visible? ui %) (:followups option))
+             (when (some #(deref (subscribe [:application/visible? (:id %)]))
+                         (:followups option))
                (into [:div.application-handling__nested-container]
-                     (child-fields (:followups option) application lang ui question-group-idx)))])))]]))
+                     (child-fields (:followups option) application lang question-group-idx)))])))]]))
 
 (defn- multiple-choice [content application lang question-group-idx]
   [:div.application__form-field
@@ -216,17 +203,17 @@
     (from-multi-lang (:label content) lang)]
    [:div.application-handling__nested-container
     (let [selected-options (filterv #(deref (subscribe [:application/multiple-choice-option-checked? (keyword (:id content)) (:value %) question-group-idx]))
-                                    (:options content))
-          ui               (subscribe [:state-query [:application :ui]])]
+                                    (:options content))]
       (doall
        (for [option selected-options]
          ^{:key (:value option)}
          [:div
           [:p.application__text-field-paragraph
            (from-multi-lang (:label option) lang)]
-          (when (some #(visible? ui %) (:followups option))
+          (when (some #(deref (subscribe [:application/visible? (:id %)]))
+                      (:followups option))
             (into [:div.application-handling__nested-container]
-                  (child-fields (:followups option) application lang ui question-group-idx)))])))]])
+                  (child-fields (:followups option) application lang question-group-idx)))])))]])
 
 (defn- selected-hakukohde-row
   [hakukohde-oid]
@@ -297,7 +284,6 @@
   (when form
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
-                   :fi)
-          ui   (subscribe [:state-query [:application :ui]])]
+                   :fi)]
       (into [:div.application__readonly-container.animated.fadeIn]
-            (child-fields (:content form) application lang ui nil)))))
+            (child-fields (:content form) application lang nil)))))

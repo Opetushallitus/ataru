@@ -79,20 +79,15 @@
 
 (re-frame/reg-sub
   :application/visible-options
-  (fn [[_ field-description] _]
-    (re-frame/subscribe [:application/ui-of (keyword (:id field-description))]))
-  (fn [ui-of [_ field-description]]
-    (keep-indexed (fn [index option]
-                    (when (get-in ui-of [index :visible?] true)
-                      option))
-                  (:options field-description))))
+  (fn [db [_ field-description]]
+    (let [visible-options (get-in db [:visible-options (:id field-description)])]
+      (filter #(contains? visible-options (:value %))
+              (:options field-description)))))
 
 (re-frame/reg-sub
   :application/visible?
-  (fn [[_ id] _]
-    (re-frame/subscribe [:application/ui-of id]))
-  (fn [ui _]
-    (:visible? ui true)))
+  (fn [db [_ id]]
+    (contains? (:visible-fields db) id)))
 
 (re-frame/reg-sub
   :application/answer
@@ -186,6 +181,13 @@
     (:ui application)))
 
 (re-frame/reg-sub
+  :application/visible-fields
+  (fn [_ _]
+    (re-frame/subscribe [:application/application]))
+  (fn [application _]
+    (:visible-fields application)))
+
+(re-frame/reg-sub
   :application/ui-of
   (fn [_ _]
     (re-frame/subscribe [:application/ui]))
@@ -201,10 +203,10 @@
   :application/valid-status
   (fn [_ _]
     [(re-frame/subscribe [:application/answers])
-     (re-frame/subscribe [:application/ui])
+     (re-frame/subscribe [:application/visible-fields])
      (re-frame/subscribe [:application/flat-form-content])])
   (fn [[answers ui flat-form-content] _]
-    (autil/answers->valid-status answers ui flat-form-content)))
+    (autil/answers->valid-status answers visible-fields flat-form-content)))
 
 (re-frame/reg-sub
   :application/invalid-fields?
