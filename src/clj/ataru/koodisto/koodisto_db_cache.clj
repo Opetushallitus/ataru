@@ -13,7 +13,7 @@
 (def koodisto-checker (s/checker [schema/Koodi]))
 
 (defn- do-get [url]
-  (let [{:keys [status headers body error] :as resp} (http-util/do-get url)]
+  (let [{:keys [status headers body error]} (http-util/do-get url)]
     (if (= 200 status)
       (cheshire/parse-string body true)
       (throw (ex-info "Error when fetching doing HTTP GET" {:status  status
@@ -83,6 +83,10 @@
        (add-within "koulutus")
        (mapcat :within)))
 
+(defn- distinct-by [f coll]
+  (map #(first (second %))
+       (group-by f coll)))
+
 (defn- get-vocational-institutions [version]
   (->> institution-type-codes
        (map (fn [type]
@@ -90,6 +94,7 @@
                :version version}))
        (add-within "oppilaitosnumero")
        (mapcat :within)
+       (distinct-by :uri)
        (map #(assoc % :label (or (-> (:value %) (organization-client/get-organization-by-oid-or-number) :nimi)
                                  (:label %))))))
 
