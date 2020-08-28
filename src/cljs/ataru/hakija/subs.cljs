@@ -567,26 +567,17 @@
     (:validators-processing application)))
 
 (re-frame/reg-sub
-  :application/validator-processing?
-  (fn [_ _]
-    (re-frame/subscribe [:application/validators-processing]))
-  (fn [validators-processing [_ id]]
-    (contains? validators-processing (keyword id))))
-
-(re-frame/reg-sub
   :application/show-validation-error-class?
   (fn [[_ id question-group-idx repeatable-idx] _]
     [(re-frame/subscribe [:application/form-field id])
-     (re-frame/subscribe [:application/answer id question-group-idx repeatable-idx])
-     (re-frame/subscribe [:application/validator-processing? id])])
-  (fn [[field {:keys [value valid]} validator-processing?] _]
+     (re-frame/subscribe [:application/answer id question-group-idx repeatable-idx])])
+  (fn [[field {:keys [value valid]}] _]
     (and (not valid)
          (or (afc/is-required-field? field)
              (-> field :params :numeric))
          (if (string? value)
            (not (clojure.string/blank? value))
-           (not (empty? value)))
-         (not validator-processing?))))
+           (not (empty? value))))))
 
 (re-frame/reg-sub
   :application/attachments-uploading?
