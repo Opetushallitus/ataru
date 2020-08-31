@@ -833,9 +833,10 @@ LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id\n"
                                            :event_type
                                            (= "payment-obligation-automatically-changed"))
           existing-requirement-review (first (queries/yesql-get-existing-requirement-review review-to-store connection))]
-      (when (and (not= (:state review-to-store) (:state existing-requirement-review))
-                 (or (nil? (:state existing-requirement-review))
-                     (= "unreviewed" (:state existing-requirement-review))
+      (when (or (and (= "not-obligated" (:state review-to-store))
+                     (= "unreviewed" (:state existing-requirement-review "unreviewed")))
+                (and (= "unreviewed" (:state review-to-store))
+                     (= "not-obligated" (:state existing-requirement-review))
                      automatically-changed?))
         (queries/yesql-upsert-application-hakukohde-review! review-to-store connection)
         (let [event {:application_key          application-key
