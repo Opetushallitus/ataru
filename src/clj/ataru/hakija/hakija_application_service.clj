@@ -106,7 +106,7 @@
                                 flatten-attachment-keys
                                 (remove new-attachments))]
     (doseq [attachment-key orphan-attachments]
-      (file-store/delete-file (name attachment-key)))
+      (file-store/delete-file attachment-key))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
