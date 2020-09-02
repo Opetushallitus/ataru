@@ -10,6 +10,7 @@
               [ataru.virkailija.question-search.view :as question-search]
               [ataru.virkailija.temporal :as temporal]
               [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+              [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
               [clojure.string :as string]
               [goog.string :as gstring]
               [reagent.core :as r]
@@ -136,12 +137,18 @@
                 [:span.application-handling__hakukohde-selection.application-handling__count-tag
                  [:span.application-handling__state-label
                   {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
-                 (or
-                   (application-states/get-review-state-label-by-name
-                     review-states/application-hakukohde-selection-states
-                     selection-state
-                     @lang)
-                   @(subscribe [:editor/virkailija-translation :incomplete]))]])]))
+                 (if @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde? (:key application) hakukohde-oid])
+                   (let [kevyt-valinta-property-value @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value :kevyt-valinta/valinnan-tila (:key application) hakukohde-oid])
+                         translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
+                                                        :kevyt-valinta/valinnan-tila
+                                                        kevyt-valinta-property-value)]
+                     @(subscribe [:editor/virkailija-translation translation-key]))
+                   (or
+                     (application-states/get-review-state-label-by-name
+                       review-states/application-hakukohde-selection-states
+                       selection-state
+                       @lang)
+                     @(subscribe [:editor/virkailija-translation :incomplete])))]])]))
         application-hakukohde-oids))))
 
 (defn- application-list-row [application selected? select-application]

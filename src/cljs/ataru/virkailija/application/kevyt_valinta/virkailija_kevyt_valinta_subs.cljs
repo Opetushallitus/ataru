@@ -7,6 +7,49 @@
   (:require-macros [cljs.core.match :refer [match]]))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/get-application-by-key
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :applications]])])
+  (fn [[applications] [_ application-key]]
+    (->> applications
+         (filter (fn [{:keys [key]}]
+                   (= key application-key)))
+         first)))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/get-haku-by-application-key
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:state-query [:haut]])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/get-application-by-key application-key])])
+  (fn [[haut application]]
+    (->> application
+         :haku
+         (get haut))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/sijoittelu-enabled-for-application?
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/get-haku-by-application-key application-key])])
+  (fn [[haku]]
+    (:sijoittelu haku)))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/valintalaskenta-in-hakukohde?
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:state-query [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta]])])
+  (fn [[valintalaskenta-in-hakukohde?]]
+    (true? valintalaskenta-in-hakukohde?)))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
+  (fn [[_ application-key hakukohde-oid]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu-enabled-for-application? application-key])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohde? hakukohde-oid])])
+  (fn [[sijoittelu-enabled-for-application? valintalaskenta-in-hakukohde?]]
+    (and (not sijoittelu-enabled-for-application?)
+         (false? valintalaskenta-in-hakukohde?))))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet
   (fn []
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
@@ -82,9 +125,9 @@
   (fn [[_ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/hakukohde-oid])
      (re-frame/subscribe [:state-query [:valinta-tulos-service application-key]])])
-  (fn [[hakukohde-oid valinnan-tulokset-for-application]]
+  (fn [[selected-hakukohde-oid valinnan-tulokset-for-application] [_ _ hakukohde-oid]]
     (-> valinnan-tulokset-for-application
-        (get hakukohde-oid)
+        (get (or hakukohde-oid selected-hakukohde-oid))
         :valinnantulos)))
 
 (re-frame/reg-sub
@@ -116,8 +159,8 @@
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value
-  (fn [[_ _ application-key]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
+  (fn [[_ _ application-key hakukohde-oid]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid])
      (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
   (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
     (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
