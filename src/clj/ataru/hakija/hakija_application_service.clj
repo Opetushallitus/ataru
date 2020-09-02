@@ -99,9 +99,12 @@
                      value))))))
 
 (defn- remove-orphan-attachments [new-application old-application]
-  (let [new-attachments    (set (flatten-attachment-keys new-application))
-        orphan-attachments (->> (flatten-attachment-keys old-application)
-                                (filter (comp not (partial contains? new-attachments))))]
+  (let [new-attachments    (->> new-application
+                                flatten-attachment-keys
+                                set)
+        orphan-attachments (->> old-application
+                                flatten-attachment-keys
+                                (remove new-attachments))]
     (doseq [attachment-key orphan-attachments]
       (file-store/delete-file (name attachment-key)))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
