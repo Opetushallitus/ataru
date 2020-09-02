@@ -227,7 +227,7 @@
 
 (reg-event-fx
   :application/fetch-applications
-  (fn [{db :db} _]
+  (fn [{db :db} [_ {:keys [fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?]}]]
     (let [search-term              (get-in db [:application :search-control :search-term :parsed])
           form                     (when-let [form-key (get-in db [:application :selected-form-key])]
                                      {:form-key form-key})
@@ -267,12 +267,14 @@
                                               {:ensisijaisesti true}))
                 :skip-parse-times?   true
                 :skip-flasher?       true
-                :handler-or-dispatch :application/handle-fetch-applications-response}}
+                :handler-or-dispatch :application/handle-fetch-applications-response
+                :handler-args        {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
+                                      fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?}}}
         {:db (assoc-in db [:application :fetching-applications?] false)}))))
 
 (reg-event-fx
   :application/handle-fetch-applications-response
-  (fn [{:keys [db]} [_ {:keys [applications sort]}]]
+  (fn [{:keys [db]} [_ {:keys [applications sort]} {:keys [fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?]}]]
     (let [selected-hakukohde-oids @(subscribe [:application/selected-hakukohde-oid-set])
           all-applications        (let [loaded   (get-in db [:application :applications])
                                         new-keys (set (map :key applications))]
@@ -298,14 +300,35 @@
                                    (-> (filter #(or (= (:key %) selected-key)
                                                     (= (:key %) application-key-param)) all-applications)
                                        (first)
-                                       :key))]
-      (if fetch-more?
-        {:db       db
-         :dispatch [:application/fetch-applications]}
-        {:db       db
-         :dispatch (if application-key
-                     [:application/select-application application-key nil false]
-                     [:application/close-application])}))))
+                                       :key))
+          dispatches               (as-> [] dispatches'
+
+                                         (cond-> dispatches'
+                                                 fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
+                                                 (into (->> applications
+                                                            (filter (fn [{haku-oid :haku}]
+                                                                      (some-> db
+                                                                              :haut
+                                                                              (get haku-oid)
+                                                                              :sijoittelu
+                                                                              not)))
+                                                            (mapcat (fn [{hakukohde-oids  :hakukohde
+                                                                          application-key :key}]
+                                                                      (->> hakukohde-oids
+                                                                           (map (fn [hakukohde-oid]
+                                                                                  [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+                                                                                   hakukohde-oid]))
+                                                                           (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
+                                                                                   application-key]]))))
+                                                            (into []))))
+
+                                         (if fetch-more?
+                                           (conj dispatches' [:application/fetch-applications])
+                                           (conj dispatches' (if application-key
+                                                               [:application/select-application application-key nil false]
+                                                               [:application/close-application]))))]
+      {:db db
+       :dispatch-n dispatches})))
 
 (defn- extract-unselected-review-states-from-query
   [query-params query-param states]
@@ -377,7 +400,8 @@
                              (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                              (update-in [:application :sort] dissoc :offset)
                              (assoc-in [:application :fetching-applications?] true))
-               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications]
+               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications
+                                                                                             {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
                                                                                             [:application/fetch-form-contents]]]}
               (some? (get-in db [:request-handles :applications-list]))
               (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
