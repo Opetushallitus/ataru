@@ -91,8 +91,12 @@
 (defn- flatten-attachment-keys [application]
   (->> (:answers application)
        (filter (comp (partial = "attachment") :fieldType))
-       (map :value)
-       (flatten)))
+       (mapcat (fn [answer]
+                 (let [value (:value answer)]
+                   (if (or (vector? (first value))
+                           (nil? (first value)))
+                     (mapcat identity value)
+                     value))))))
 
 (defn- remove-orphan-attachments [new-application old-application]
   (let [new-attachments    (set (flatten-attachment-keys new-application))
