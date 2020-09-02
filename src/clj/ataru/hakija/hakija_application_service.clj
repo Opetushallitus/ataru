@@ -91,15 +91,22 @@
 (defn- flatten-attachment-keys [application]
   (->> (:answers application)
        (filter (comp (partial = "attachment") :fieldType))
-       (map :value)
-       (flatten)))
+       (mapcat (fn [answer]
+                 (let [value (:value answer)]
+                   (if (or (vector? (first value))
+                           (nil? (first value)))
+                     (mapcat identity value)
+                     value))))))
 
 (defn- remove-orphan-attachments [new-application old-application]
-  (let [new-attachments    (set (flatten-attachment-keys new-application))
-        orphan-attachments (->> (flatten-attachment-keys old-application)
-                                (filter (comp not (partial contains? new-attachments))))]
+  (let [new-attachments    (->> new-application
+                                flatten-attachment-keys
+                                set)
+        orphan-attachments (->> old-application
+                                flatten-attachment-keys
+                                (remove new-attachments))]
     (doseq [attachment-key orphan-attachments]
-      (file-store/delete-file (name attachment-key)))
+      (file-store/delete-file attachment-key))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
