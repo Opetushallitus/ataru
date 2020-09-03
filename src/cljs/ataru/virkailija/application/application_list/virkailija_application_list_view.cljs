@@ -91,14 +91,23 @@
       [:span.application-handling__state-label
        {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
       (if kevyt-valinta-enabled-for-application-and-hakukohde?
-        (let [kevyt-valinta-property-value @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+        (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
+              kevyt-valinta-property-value @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                         :kevyt-valinta/valinnan-tila
                                                         application-key
                                                         hakukohde-oid])
               translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
                                              :kevyt-valinta/valinnan-tila
                                              kevyt-valinta-property-value)]
-          @(subscribe [:editor/virkailija-translation translation-key]))
+          [:<>
+           @(subscribe [:editor/virkailija-translation translation-key])
+           [:i.zmdi.zmdi-info.application-handling__valinnan-tila-info-ikoni
+            {:class (if kevyt-valinta-property-exists?
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista"
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
+             :title (if kevyt-valinta-property-exists?
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]])
         (or
           (application-states/get-review-state-label-by-name
             review-states/application-hakukohde-selection-states

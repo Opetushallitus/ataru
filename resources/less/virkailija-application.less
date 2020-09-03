@@ -2905,6 +2905,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__hakukohde-selection-cell {
   flex: 0 0 105px;
+  position: relative;
 }
 
 .application-handling__count-tag {
@@ -2928,6 +2929,7 @@ th.application__readonly-adjacent--header {
   margin-top: 3px;
   color: @text-color;
   font-weight: normal;
+  position: relative;
 }
 
 .application-handling__count-tag--haku-list {
@@ -2959,6 +2961,48 @@ th.application__readonly-adjacent--header {
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {
   float: left;
+}
+
+.application-handling__valinnan-tila-info-ikoni {
+  font-size: 16px;
+  position: absolute;
+  top: -6px;
+  left: 93px;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista {
+  color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista:hover {
+  color: @link-color;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta {
+  color: @gray-of-the-beast;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta:hover {
+  color: #aaa;
+}
+
+.application-handling__valinnan-tila-info-teksti {
+  display: none;
+  position: absolute;
+}
+
+.application-handling__valinnan-tila-info-ikoni:hover + .application-handling__valinnan-tila-info-teksti {
+  display: block;
+  background-color: #00526c;
+  color: #ffffff;
+  left: -26px;
+  padding: 15px;
+  top: -67px;
+  user-select: none;
+  width: 252px;
+  z-index: 20;
+  text-transform: none;
+  font-size: 16px;
 }
 
 .application__text-field-paragraph {
