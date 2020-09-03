@@ -87,7 +87,7 @@
                                                                           application-key
                                                                           hakukohde-oid])]
     [:span.application-handling__hakukohde-selection-cell
-     [:span.application-handling__hakukohde-selection.application-handling__count-tag
+     [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
       [:span.application-handling__state-label
        {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
       (if kevyt-valinta-enabled-for-application-and-hakukohde?
@@ -151,7 +151,7 @@
                         (:attachment-handling review-settings true))
                [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state.application-handling__count-tag
+              [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
                [:span.application-handling__state-label
                 {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
                (or
