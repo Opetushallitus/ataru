@@ -683,6 +683,12 @@
     (map (fn [[state _]] [(keyword state) s/Bool])
          review-states/attachment-hakukohde-review-types))})
 
+(defn- length-less-than-1000 [s]
+  (< (count s) 1000))
+
+(s/defschema OptionAnswers
+  {s/Keyword [(s/maybe (s/constrained s/Str length-less-than-1000))]})
+
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str
    (s/optional-key :hakukohde-oid)        s/Str
@@ -697,8 +703,9 @@
    (s/optional-key :person-oid)           s/Str
    (s/optional-key :application-oid)      s/Str
    :attachment-review-states              QueryAttachmentReviewStates
+   (s/optional-key :option-answers)       OptionAnswers
    :sort                                  Sort
-   (s/optional-key :states-and-filters)   {:filters                      {s/Keyword {s/Keyword s/Bool}}
+   (s/optional-key :states-and-filters)   {:filters                      {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
                                            :attachment-states-to-include [s/Str]
                                            :processing-states-to-include [s/Str]
                                            :selection-states-to-include  [s/Str]}})
