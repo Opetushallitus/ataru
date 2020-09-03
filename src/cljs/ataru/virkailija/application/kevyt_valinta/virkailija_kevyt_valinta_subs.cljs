@@ -45,8 +45,9 @@
   (fn [[_ application-key hakukohde-oid]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu-enabled-for-application? application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohde? hakukohde-oid])])
-  (fn [[sijoittelu-enabled-for-application? valintalaskenta-in-hakukohde?]]
-    (and (not sijoittelu-enabled-for-application?)
+  (fn [[sijoittelu-enabled-for-application? valintalaskenta-in-hakukohde?] [_ _ hakukohde-oid]]
+    (and (not= hakukohde-oid "form")
+         (not sijoittelu-enabled-for-application?)
          (false? valintalaskenta-in-hakukohde?))))
 
 (re-frame/reg-sub
