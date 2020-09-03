@@ -196,4 +196,14 @@
                 {:hakukausi-vuosi 2020}
                 (merge further-vocational-qualification-identifier {:1a9c3205-0500-439e-84b9-4bb7b90dabe8 {:value "2"}})))))
 
+(def open-higher-education-identifier {:higher-completed-base-education {:value ["pohjakoulutus_avoin"]}})
+
+(describe "Open higher education qualification completion / pohjakoulutus_avoin completion year selection when"
+          (tags :unit :odw :tilastokeskus :OY-406)
+
+          (it "open higher education completion year is picked correctly (ODW special hardcoding)"
+              (should= [{:pohjakoulutuskklomake "pohjakoulutus_avoin" :suoritusvuosi 2033}]
+                       (select-year-for
+                         (merge open-higher-education-identifier {:pohjakoulutus_avoin--year-of-completion {:value "2033"}})))))
+
 (run-specs)
