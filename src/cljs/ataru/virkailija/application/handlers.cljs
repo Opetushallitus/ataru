@@ -26,7 +26,8 @@
        (transduce (comp (filter (fn [hakukohde-oid]
                                   (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta nil?)))
                         (map (fn [hakukohde-oid]
-                               [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use? hakukohde-oid])))
+                               [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+                                {:hakukohde-oid hakukohde-oid}])))
                   conj)))
 
 (defn- hyvaksynnan-ehto-dispatch-vec [db]
@@ -317,9 +318,11 @@
                                                                       (->> hakukohde-oids
                                                                            (map (fn [hakukohde-oid]
                                                                                   [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                                                   hakukohde-oid]))
+                                                                                   {:hakukohde-oid hakukohde-oid
+                                                                                    :memoize       true}]))
                                                                            (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                                                   application-key]]))))
+                                                                                   {:application-key application-key
+                                                                                    :memoize         true}]]))))
                                                             (into []))))
 
                                          (if fetch-more?
@@ -604,7 +607,7 @@
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                        (hyvaksynnan-ehto-dispatch-vec db)
-                                       [[:virkailija-kevyt-valinta/fetch-valinnan-tulos application-key]]))]
+                                       [[:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key application-key}]]))]
       {:db         db
        :dispatch-n dispatches})))
 

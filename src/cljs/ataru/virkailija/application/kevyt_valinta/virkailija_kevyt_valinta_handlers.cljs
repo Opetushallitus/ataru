@@ -8,13 +8,18 @@
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-  (fn [_ [_ hakukohde-oid]]
-    {:http {:method              :get
-            :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/valintaperusteet/hakukohde/"
-                                      hakukohde-oid
-                                      "/kayttaa-valintalaskentaa")
-            :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-            :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-application-error])}}}))
+  (fn [{db :db}
+       [_ {:keys [hakukohde-oid
+                  memoize]}]]
+    (if (and memoize
+             (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta some?))
+      {}
+      {:http {:method              :get
+              :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/valintaperusteet/hakukohde/"
+                                        hakukohde-oid
+                                        "/kayttaa-valintalaskentaa")
+              :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+              :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-application-error])}}})))
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/handle-fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
@@ -28,12 +33,16 @@
   [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
                                                   :target-key :valinta-tulos-service-url})]
   (fn [{db                        :db
-        valinta-tulos-service-url :valinta-tulos-service-url} [_ application-key]]
-    {:db   (update db :valinta-tulos-service dissoc application-key)
-     :http {:method              :get
-            :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
-            :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
-            :handler-args        {:application-key application-key}}}))
+        valinta-tulos-service-url :valinta-tulos-service-url} [_ {:keys [application-key
+                                                                         memoize]}]]
+    (if (and memoize
+             (-> db :valinta-tulos-service (get application-key) not-empty))
+      {}
+      {:db   (update db :valinta-tulos-service dissoc application-key)
+       :http {:method              :get
+              :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
+              :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
+              :handler-args        {:application-key application-key}}})))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
@@ -224,4 +233,4 @@
                           [:application :kevyt-valinta]
                           dissoc
                           :kevyt-valinta-ui/ongoing-request-for-property)
-     :dispatch [:virkailija-kevyt-valinta/fetch-valinnan-tulos application-key]}))
+     :dispatch [:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key application-key}]}))
