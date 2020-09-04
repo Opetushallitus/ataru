@@ -135,13 +135,12 @@
          (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp))))
 
 (defn- followup-option-selected?
-  [field answers]
-  (let [parent-answer-key (-> field :followup-of keyword)
-        option            (:option-value field)
-        answers           (-> answers
-                              parent-answer-key
-                              :value)]
-    ((visibility-checker field answers) option)))
+  [field parent-field answers]
+  (let [parent-value (get-in answers [(keyword (:id parent-field)) :value])]
+    (->> (:options parent-field)
+         (filter (visibility-checker parent-field parent-value))
+         (some #(= (:option-value field) (:value %)))
+         boolean)))
 
 (defn filter-visible-attachments
   [answers fields fields-by-id]
@@ -152,7 +151,9 @@
                    (cond (:children-of followup)
                          (recur (get fields-by-id (keyword (:children-of followup))))
                          (:followup-of followup)
-                         (followup-option-selected? followup answers)
+                         (followup-option-selected? followup
+                                                    (get fields-by-id (keyword (:followup-of followup)))
+                                                    answers)
                          :else
                          true))))
           fields))
