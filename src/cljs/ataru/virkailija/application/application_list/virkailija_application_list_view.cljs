@@ -243,6 +243,14 @@
     (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
     (dispatch [:application/reload-applications])))
 
+(defn- hakukohde-state-filter-controls-title
+  [{:keys [title on-click all-filters-selected?]}]
+  [:a.application-handling__basic-list-basic-column-header
+   {:on-click on-click}
+   title
+   [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+    {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]])
+
 (defn- hakukohde-state-filter-controls
   [filter-kw title states state-counts-sub]
   (let [filter-sub           (subscribe [:state-query [:application filter-kw]])
@@ -255,11 +263,10 @@
       (let [all-filters-selected? (= (count @filter-sub)
                                      (count states))]
         [:span.application-handling__filter-state.application-handling__filter-state--application-state
-         [:a.application-handling__basic-list-basic-column-header
-          {:on-click toggle-filter-opened}
-          title
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
-           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
+         [hakukohde-state-filter-controls-title
+          {:title title
+           :on-click toggle-filter-opened
+           :all-filters-selected? all-filters-selected?}]
          (when @filter-opened
            (into [:div.application-handling__filter-state-selection
                   [:div.application-handling__filter-state-selection-close-button-container
