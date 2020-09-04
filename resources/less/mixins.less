@@ -124,6 +124,29 @@ span, p {
   }
 }
 
+.arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = top-right) {
+  &:after {
+    bottom: 100%;
+    right: @offset;
+    margin-left: -@size;
+
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-bottom: @size solid @color;
+  }
+
+  &:before {
+    bottom: 100%;
+    right: @offset;
+    margin-left: -@size;
+
+    border-left: @size solid transparent;
+    border-right: @size solid transparent;
+    border-bottom: @size solid;
+    border-bottom-color: @color;
+  }
+}
+
 .arrow(@direction, @color, @size: 8px, @offset: 50%) when (@direction = top) {
   &:after {
     bottom: 100%;

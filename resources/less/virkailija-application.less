@@ -206,7 +206,6 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state {
   position: relative;
-  float: left;
 }
 
 .application-handling__filter-state-link {
@@ -226,19 +225,27 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection {
-  .arrow(top, white, 8px, 70px);
+  .arrow(top-right, white, 8px, 95px);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   border-radius: 3px;
   position: absolute;
   z-index: 10;
   top: 36px;
-  left: -36px;
+  right: -36px;
   text-align: start;
   background-color: white;
   min-width: 240px;
   padding: 11px 0 12px 1px;
   font-size: 13px;
   line-height: 21px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.application-handling__filter-state-selection-column {
+  width: 100%;
+  min-width: 160px;
 }
 
 .application-handling__filter-state-selection-close-button-container {
