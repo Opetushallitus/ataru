@@ -13,7 +13,7 @@
                                                                        replace-with-option-label
                                                                        scroll-to-anchor
                                                                        copy-link]]
-            [ataru.application-common.option-visibility :as option-visibility]
+            [ataru.application.option-visibility :as option-visibility]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]

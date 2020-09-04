@@ -1,4 +1,4 @@
-(ns ataru.application-common.option-visibility
+(ns ataru.application.option-visibility
   (:require [clojure.string :as string]
             [ataru.number :as number]))
 

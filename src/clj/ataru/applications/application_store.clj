@@ -1,6 +1,7 @@
 (ns ataru.applications.application-store
   (:require [ataru.application.application-states :as application-states]
             [cheshire.core :as json]
+            [ataru.application.option-visibility :refer [visibility-checker]]
             [ataru.application.review-states :as application-review-states]
             [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.db.db :as db]
@@ -133,17 +134,6 @@
     (map #(assoc review-base :hakukohde %)
          (hakukohde-oids-for-attachment-review attachment-field hakutoiveet fields-by-id ylioppilastutkinto? excluded-attachment-ids-when-yo-and-jyemp))))
 
-(defn- followup-option-selected?
-  [field answers]
-  (let [parent-answer-key (-> field :followup-of keyword)
-        answers           (-> answers
-                       parent-answer-key
-                       :value
-                       vector ; Make sure we won't flatten a string answer to ()
-                       flatten
-                       set)]
-    (contains? answers (:option-value field))))
-
 (defn filter-visible-attachments
   [answers fields fields-by-id]
   (filter (fn [field]
@@ -153,7 +143,7 @@
                    (cond (:children-of followup)
                          (recur (get fields-by-id (keyword (:children-of followup))))
                          (:followup-of followup)
-                         (followup-option-selected? followup answers)
+                         (visibility-checker followup answers)
                          :else
                          true))))
           fields))

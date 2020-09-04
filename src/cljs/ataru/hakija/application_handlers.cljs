@@ -2,7 +2,7 @@
   (:require [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
             [schema.core :as s]
-            [ataru.application-common.option-visibility :as option-visibility]
+            [ataru.application.option-visibility :as option-visibility]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
             [ataru.component-data.higher-education-base-education-module :as hebem]

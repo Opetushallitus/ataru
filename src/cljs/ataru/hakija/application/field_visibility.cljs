@@ -1,6 +1,6 @@
 (ns ataru.hakija.application.field-visibility
   (:require [clojure.set :as set]
-            [ataru.application-common.option-visibility :as option-visibility]))
+            [ataru.application.option-visibility :as option-visibility]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
