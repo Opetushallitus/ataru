@@ -607,7 +607,9 @@
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                        (hyvaksynnan-ehto-dispatch-vec db)
-                                       [[:virkailija-kevyt-valinta/fetch-valinnan-tulos {:application-key application-key}]]))]
+                                       [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
+                                         {:application-key application-key
+                                          :memoize         true}]]))]
       {:db         db
        :dispatch-n dispatches})))
 
