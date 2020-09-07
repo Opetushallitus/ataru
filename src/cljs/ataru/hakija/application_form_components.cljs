@@ -10,7 +10,7 @@
               is-required-field?
               markdown-paragraph
               belongs-to-hakukohde-or-ryhma?]]
-            [ataru.application-common.option-visibility :as option-visibility]
+            [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.application-hakukohde-component :as hakukohde]
             [ataru.hakija.pohjakoulutusristiriita :as pohjakoulutusristiriita]
             [ataru.util :as util]

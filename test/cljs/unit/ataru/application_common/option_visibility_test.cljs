@@ -1,6 +1,6 @@
 (ns ataru.application-common.option-visibility-test
   (:require [cljs.test :refer-macros [are deftest is testing]]
-            [ataru.application-common.option-visibility :as option-visibility]))
+            [ataru.application.option-visibility :as option-visibility]))
 
 (defn- build-option [props]
   (merge {:value "0"}
