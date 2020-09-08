@@ -2,6 +2,7 @@
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
+            [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
             [ataru.applications.application-store :as application-store]
@@ -649,6 +650,20 @@
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key
                                               " käsittely ei ole sallittu")}))))
+
+    (api/context "/post-process-attachments" []
+      (api/POST "/application/:application-key" {session :session}
+        :summary "Post process application attachments"
+        :path-params [application-key :- s/Str]
+        {:status 200
+         :body   (if (get-in session [:identity :superuser])
+                   (do
+                     (hakija-application-service/handle-application-attachment-post-process
+                       application-key
+                       audit-logger
+                       session)
+                     (response/ok {}))
+                   (response/unauthorized {}))}))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}

@@ -312,6 +312,21 @@
   [answer]
   (update answer :value remove-null-bytes-from-value))
 
+(defn post-process-application-attachments [application audit-logger session]
+  (jdbc/with-db-transaction
+    [conn {:datasource (db/get-datasource :db)}]
+    (let [old-answers         nil
+          update?             false
+          applied-hakukohteet []
+          form                (forms/get-form-by-application application)]
+      (audit-log/log audit-logger
+                     {:new       application
+                      :operation audit-log/operation-modify
+                      :session   session
+                      :id        {:email (util/extract-email application)}})
+      (create-attachment-hakukohde-reviews-for-application
+        application applied-hakukohteet old-answers form update? {:connection conn}))))
+
 (defn add-application [new-application applied-hakukohteet form session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [selection-id                         (:selection-id new-application)

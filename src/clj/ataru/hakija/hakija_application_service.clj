@@ -406,6 +406,13 @@
         (log/warn "Application" (:key application) "edit failed verification" result)))
     result))
 
+(defn handle-application-attachment-post-process
+  [application-key
+   audit-logger
+   session]
+  (let [application (application-store/get-latest-application-by-key application-key)]
+    (application-store/post-process-application-attachments application audit-logger session)))
+
 (defn save-application-feedback
   [feedback]
   (log/info "Saving feedback" feedback)
