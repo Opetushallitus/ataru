@@ -1,17 +1,136 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers
   (:require [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids :as valintatapajono-oids]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
+            [ataru.application.filtering :as application-filtering]
             [cljs-time.core :as t]
             [cljs-time.format :as format]
             [re-frame.core :as re-frame])
   (:require-macros [cljs.core.match :refer [match]]))
+
+(defn- kevyt-valinta-enabled-for-application-and-hakukohde? [db
+                                                             application
+                                                             hakukohde-oid]
+  (let [haut                                    (:haut db)
+        valid-hakukohde?                        (not (= hakukohde-oid "form"))
+        sijoittelu-not-enabled-for-application? (not (->> application
+                                                          :haku
+                                                          (get haut)
+                                                          :sijoittelu))
+        valintalaskenta-not-in-hakukohde?       (-> db
+                                                    :application
+                                                    :valintalaskentakoostepalvelu
+                                                    (get hakukohde-oid)
+                                                    :valintalaskenta
+                                                    true?
+                                                    not)
+        selection-state-not-used-in-hakukohde?  (-> db
+                                                    :hakukohteet
+                                                    (get hakukohde-oid)
+                                                    :selection-state-used
+                                                    not)]
+    (and valid-hakukohde?
+         sijoittelu-not-enabled-for-application?
+         valintalaskenta-not-in-hakukohde?
+         selection-state-not-used-in-hakukohde?)))
+
+(re-frame/reg-event-db
+  :virkailija-kevyt-valinta/filter-applications
+  (fn [db]
+    (let [{:keys [kevyt-valinta-hakukohde-oids
+                  valintakasittelymerkinta-hakukohde-oids]}
+          (->> db
+               :application
+               :applications
+               (mapcat (fn [{hakukohde-oids :hakukohde
+                             :as            application}]
+                         (map (fn [hakukohde-oid]
+                                {:application   application
+                                 :hakukohde-oid hakukohde-oid})
+                              (if (empty? hakukohde-oids)
+                                ["form"]
+                                hakukohde-oids))))
+               (reduce (fn [acc {:keys [hakukohde-oid
+                                        application]}]
+                         (let [kw (if (kevyt-valinta-enabled-for-application-and-hakukohde?
+                                        db
+                                        application
+                                        hakukohde-oid)
+                                    :kevyt-valinta-hakukohde-oids
+                                    :valintakasittelymerkinta-hakukohde-oids)]
+                           (update-in acc
+                                      [kw hakukohde-oid]
+                                      (fnil conj #{})
+                                      (:key application))))
+                       {:kevyt-valinta-hakukohde-oids            {}
+                        :valintakasittelymerkinta-hakukohde-oids {}}))
+          selection-state-filter
+          (-> db :application :selection-state-filter set)
+          applications
+          (-> db :application :applications)]
+      (as-> db db'
+            (update-in
+              db'
+              [:application :applications]
+              (fn [applications]
+                (filter (fn [{application-key :key
+                              hakukohde-oids  :hakukohde
+                              :as             application}]
+                          (let [{:keys [kevyt-valinta-hakukohde-oids'
+                                        valintakasittelymerkinta-hakukohde-oids']}
+                                (reduce (fn [acc hakukohde-oid]
+                                          (let [kw (if (-> kevyt-valinta-hakukohde-oids
+                                                           (get hakukohde-oid)
+                                                           (contains? application-key))
+                                                     :kevyt-valinta-hakukohde-oids'
+                                                     :valintakasittelymerkinta-hakukohde-oids')]
+                                            (update acc kw conj hakukohde-oid)))
+                                        {:kevyt-valinta-hakukohde-oids'            #{}
+                                         :valintakasittelymerkinta-hakukohde-oids' #{}}
+                                        (if (empty? hakukohde-oids)
+                                          ["form"]
+                                          hakukohde-oids))]
+                            (and (or (empty? kevyt-valinta-hakukohde-oids')
+                                     (application-filtering/filter-by-kevyt-valinta-selection-state
+                                       db
+                                       application-key
+                                       kevyt-valinta-hakukohde-oids'))
+                                 (or (empty? valintakasittelymerkinta-hakukohde-oids')
+                                     (application-filtering/filter-by-hakukohde-review
+                                       application
+                                       valintakasittelymerkinta-hakukohde-oids'
+                                       "selection-state"
+                                       selection-state-filter)))))
+                        applications)))
+            (update-in
+              db'
+              [:application :selection-state-counts]
+              application-filtering/add-review-state-counts
+              applications
+              valintakasittelymerkinta-hakukohde-oids
+              "selection-state")
+            (update-in
+              db'
+              [:application :kevyt-valinta-selection-state-counts]
+              application-filtering/add-kevyt-valinta-selection-state-counts
+              db
+              applications
+              kevyt-valinta-hakukohde-oids)))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
   (fn [{db :db}
        [_ {:keys [hakukohde-oid]}]]
     (if (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta some?)
-      {}
+      (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+        (cond-> {}
+                (= new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (update db :kevyt-valinta dissoc :multiple-requests-count))
+                (> new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count))))
       {:http {:method              :get
               :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/valintaperusteet/hakukohde/"
                                         hakukohde-oid
@@ -19,12 +138,24 @@
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
               :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-application-error])}}})))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-  (fn [db [_ {hakukohde-oid :hakukohde-oid valintalaskenta :valintalaskenta}]]
-    (assoc-in db
-              [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta]
-              valintalaskenta)))
+  (fn [{db :db}
+       [_
+        {:keys [hakukohde-oid
+                valintalaskenta]}]]
+    (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+      (cond-> {:db (as-> db db'
+                         (assoc-in db'
+                                   [:application :valintalaskentakoostepalvelu hakukohde-oid :valintalaskenta]
+                                   valintalaskenta)
+                         (cond-> db'
+                                 (= new-multiple-requests-count 0)
+                                 (update :kevyt-valinta dissoc :multiple-requests-count)
+                                 (> new-multiple-requests-count 0)
+                                 (assoc-in [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))}
+              (= new-multiple-requests-count 0)
+              (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valinnan-tulos
@@ -35,7 +166,16 @@
                                                                          memoize]}]]
     (if (and memoize
              (-> db :valinta-tulos-service (get application-key) not-empty))
-      {}
+      (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+        (cond-> {}
+                (= new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (update db :kevyt-valinta dissoc :multiple-requests-count))
+                (> new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count))))
       {:db   (update db :valinta-tulos-service dissoc application-key)
        :http {:method              :get
               :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
@@ -45,23 +185,30 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
   (fn [{db :db} [_ response {application-key :application-key}]]
-    (let [db           (-> db
-                           (assoc-in [:valinta-tulos-service application-key] {})
-                           (update
-                             :valinta-tulos-service
-                             (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                               (->> response
-                                    (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
-                                              (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                                    hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
-                                                (assoc-in acc
-                                                          [hakemus-oid hakukohde-oid]
-                                                          valinnan-tulos)))
-                                            valinta-tulos-service-db)))))
-          dispatch-vec []]
-      (cond-> {:db db}
-              (not-empty dispatch-vec)
-              (assoc :dispatch-n dispatch-vec)))))
+    (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+      (cond-> {:db (as-> db db'
+
+                         (-> db'
+                             (assoc-in [:valinta-tulos-service application-key] {})
+                             (update
+                               :valinta-tulos-service
+                               (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                                 (->> response
+                                      (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                                (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                  (assoc-in acc
+                                                            [hakemus-oid hakukohde-oid]
+                                                            valinnan-tulos)))
+                                              valinta-tulos-service-db)))))
+
+                         (cond-> db'
+                                 (= new-multiple-requests-count 0)
+                                 (update :kevyt-valinta dissoc :multiple-requests-count)
+                                 (> new-multiple-requests-count 0)
+                                 (assoc-in [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))}
+              (= new-multiple-requests-count 0)
+              (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-db
   :virkailija-kevyt-valinta/toggle-kevyt-valinta-dropdown

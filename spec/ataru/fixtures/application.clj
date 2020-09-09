@@ -485,8 +485,6 @@
                                "no-requirements"],
                               :processing-states-to-include
                               ["information-request"],
-                              :selection-states-to-include
-                              ["incomplete" "selection-proposal" "reserve" "selected" "rejected"],
                               :filters
                               {:language-requirement
                                                               {:unreviewed true, :fulfilled true, :unfulfilled true},

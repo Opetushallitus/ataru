@@ -109,14 +109,12 @@
       (-> filters :only-identified :unidentified))))
 
 (defn filter-applications
-  [applications {:keys [selected-hakukohteet attachment-states-to-include processing-states-to-include
-                        selection-states-to-include filters]}]
+  [applications {:keys [selected-hakukohteet attachment-states-to-include processing-states-to-include filters]}]
   (let [selected-hakukohteet-set         (when selected-hakukohteet (set selected-hakukohteet))
         applications-with-requirements   (map
                                            #(assoc % :application-hakukohde-reviews (application-states/get-all-reviews-for-all-requirements %))
                                            applications)
         processing-states-to-include-set (set processing-states-to-include)
-        selection-states-to-include-set  (set selection-states-to-include)
         attachment-states-to-include-set (set attachment-states-to-include)
         with-ssn?                        (-> filters :only-ssn :with-ssn)
         without-ssn?                     (-> filters :only-ssn :without-ssn)
@@ -137,7 +135,6 @@
             all-base-educations-enabled?
             (filter-by-base-education application (:base-education filters)))
           (filter-by-hakukohde-review application selected-hakukohteet-set "processing-state" processing-states-to-include-set)
-          (filter-by-hakukohde-review application selected-hakukohteet-set "selection-state" selection-states-to-include-set)
           (filter-by-hakukohde-review application selected-hakukohteet-set "language-requirement" (parse-enabled-filters filters :language-requirement))
           (filter-by-hakukohde-review application selected-hakukohteet-set "degree-requirement" (parse-enabled-filters filters :degree-requirement))
           (filter-by-hakukohde-review application selected-hakukohteet-set "eligibility-state" (parse-enabled-filters filters :eligibility-state))

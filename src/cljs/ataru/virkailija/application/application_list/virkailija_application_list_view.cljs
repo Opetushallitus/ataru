@@ -258,7 +258,8 @@
         get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
     (fn [{:keys [title
                  states
-                 state-counts-subs]}]
+                 state-counts-subs
+                 filter-titles]}]
       (let [lang                  @(subscribe [:editor/virkailija-lang])
             has-more?             @(subscribe [:application/has-more-applications?])
             all-filters-selected? (->> (keys states)
@@ -282,6 +283,9 @@
                               state-counts-sub               (some-> state-counts-subs filter-kw)]
                           (into ^{:key (str "filter-state-column-" filter-kw)}
                                 [:div.application-handling__filter-state-selection-column
+                                 (when-let [translation-key (filter-kw filter-titles)]
+                                   [:div.application-handling__filter-state-selection-row-header
+                                    @(subscribe [:editor/virkailija-translation translation-key])])
                                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
                                   {:class (when all-filters-of-state-selected? "application-handling__filter-state-selected-row")}
                                   [:label
@@ -674,9 +678,18 @@
         [hakukohde-state-filter-controls
          {:title
           @(subscribe [:editor/virkailija-translation :selection])
+          :filter-titles
+          {:selection-state-filter
+           :valintakasittelymerkinta
+           :kevyt-valinta-selection-state-filter
+           :valinnan-tila}
           :states
           {:selection-state-filter
-           review-states/application-hakukohde-selection-states}
+           review-states/application-hakukohde-selection-states
+           :kevyt-valinta-selection-state-filter
+           review-states/kevyt-valinta-valinnan-tila-selection-states}
           :state-counts-subs
           {:selection-state-filter
-           @(subscribe [:state-query [:application :selection-state-counts]])}}]])]))
+           @(subscribe [:state-query [:application :selection-state-counts]])
+           :kevyt-valinta-selection-state-filter
+           @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])]))

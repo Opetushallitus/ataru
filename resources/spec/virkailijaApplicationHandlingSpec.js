@@ -132,7 +132,7 @@
 
   const includedSelectionStateFilters = () => {
     return testFrame().find(
-      '.application-handling__filter-state:eq(2) .application-handling__filter-state-selected-row'
+      '.application-handling__filter-state:eq(2) .application-handling__filter-state-selection-column:eq(0) .application-handling__filter-state-selected-row'
     ).length
   }
 
@@ -679,7 +679,7 @@
             // clickElement doesn't work here..?
             testFrame()
               .find(
-                '.application-handling__list-row--selection .application-handling__filter-state-selected-row span:contains("Kesken")'
+                '.application-handling__list-row--selection .application-handling__filter-state-selection-column:eq(0) .application-handling__filter-state-selected-row span:contains("Kesken")'
               )
               .click()
           },
@@ -705,7 +705,7 @@
             // clickElement doesn't work here either..?
             testFrame()
               .find(
-                '.application-handling__list-row--selection .application-handling__filter-state-selection-row span:contains("Kaikki")'
+                '.application-handling__list-row--selection .application-handling__filter-state-selection-column:eq(0) .application-handling__filter-state-selection-row span:contains("Kaikki")'
               )
               .click()
           },

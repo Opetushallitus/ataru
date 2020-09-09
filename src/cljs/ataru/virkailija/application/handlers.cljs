@@ -5,6 +5,7 @@
             [ataru.application.review-states :as review-states]
             [ataru.virkailija.db :as initial-db]
             [ataru.util :as util]
+            [ataru.application.filtering :as application-filtering]
             [ataru.cljs-util :as cljs-util]
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
@@ -199,19 +200,6 @@
                                                               updated-applications
                                                               @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
 
-(defn- add-review-state-counts
-  [counts applications selected-hakukohde-oids review-type]
-  (reduce (fn [counts application]
-            (->> (:application-hakukohde-reviews application)
-                 (filter #(and (or (empty? selected-hakukohde-oids)
-                                   (contains? selected-hakukohde-oids (:hakukohde %)))
-                               (= review-type (:requirement %))))
-                 (map :state)
-                 distinct
-                 (reduce #(update %1 %2 inc) counts)))
-          counts
-          applications))
-
 (defn- add-attachment-state-counts
   [counts applications selected-hakukohde-oids]
   (reduce (fn [counts application]
@@ -257,7 +245,6 @@
                                                                                   question-answer-filter))
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                        :selection-states-to-include  (get-in db [:application :selection-state-filter])
                                                                         :filters                      (get-in db [:application :filters])}}
                                             search-term
                                             form
@@ -285,51 +272,55 @@
                                        (get-in db [:application :fetching-applications?]))
           db                      (-> db
                                       (assoc-in [:application :applications] all-applications)
-                                      (update-in [:application :review-state-counts] add-review-state-counts applications selected-hakukohde-oids "processing-state")
-                                      (update-in [:application :selection-state-counts] add-review-state-counts applications selected-hakukohde-oids "selection-state")
+                                      (update-in [:application :review-state-counts] application-filtering/add-review-state-counts applications selected-hakukohde-oids "processing-state")
                                       (update-in [:application :attachment-state-counts] add-attachment-state-counts applications selected-hakukohde-oids)
                                       (assoc-in [:application :sort] sort)
                                       (assoc-in [:application :fetching-applications?] false))
           application-key-param   (:application-key (cljs-util/extract-query-params))
           selected-key            (-> db :application :selected-key)
           application-key         (cond
-                                   (= 1 (count all-applications))
-                                   (-> all-applications first :key)
+                                    (= 1 (count all-applications))
+                                    (-> all-applications first :key)
 
-                                   (or selected-key
-                                       application-key-param)
-                                   (-> (filter #(or (= (:key %) selected-key)
-                                                    (= (:key %) application-key-param)) all-applications)
-                                       (first)
-                                       :key))
-          dispatches               (as-> [] dispatches'
+                                    (or selected-key
+                                        application-key-param)
+                                    (-> (filter #(or (= (:key %) selected-key)
+                                                     (= (:key %) application-key-param)) all-applications)
+                                        (first)
+                                        :key))
+          fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches
+                                  (->> applications
+                                       (filter (fn [{haku-oid :haku}]
+                                                 (some-> db
+                                                         :haut
+                                                         (get haku-oid)
+                                                         :sijoittelu
+                                                         not)))
+                                       (mapcat (fn [{hakukohde-oids  :hakukohde
+                                                     application-key :key}]
+                                                 (->> hakukohde-oids
+                                                      (map (fn [hakukohde-oid]
+                                                             [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+                                                              {:hakukohde-oid hakukohde-oid}]))
+                                                      (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
+                                                              {:application-key    application-key
+                                                               :memoize            true}]]))))
+                                       (into []))
+          dispatches              (as-> [] dispatches'
 
-                                         (cond-> dispatches'
-                                                 fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
-                                                 (into (->> applications
-                                                            (filter (fn [{haku-oid :haku}]
-                                                                      (some-> db
-                                                                              :haut
-                                                                              (get haku-oid)
-                                                                              :sijoittelu
-                                                                              not)))
-                                                            (mapcat (fn [{hakukohde-oids  :hakukohde
-                                                                          application-key :key}]
-                                                                      (->> hakukohde-oids
-                                                                           (map (fn [hakukohde-oid]
-                                                                                  [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                                                   {:hakukohde-oid hakukohde-oid}]))
-                                                                           (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                                                   {:application-key application-key
-                                                                                    :memoize         true}]]))))
-                                                            (into []))))
+                                        (if (and fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
+                                                 (not-empty fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches))
+                                          (into dispatches' fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches)
+                                          (conj dispatches' [:virkailija-kevyt-valinta/filter-applications]))
 
-                                         (if fetch-more?
-                                           (conj dispatches' [:application/fetch-applications])
-                                           (conj dispatches' (if application-key
-                                                               [:application/select-application application-key nil false]
-                                                               [:application/close-application]))))]
-      {:db db
+                                        (if fetch-more?
+                                          (conj dispatches' [:application/fetch-applications])
+                                          (conj dispatches' (if application-key
+                                                              [:application/select-application application-key nil false]
+                                                              [:application/close-application]))))]
+      {:db         (assoc-in db
+                             [:kevyt-valinta :multiple-requests-count]
+                             (count fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches))
        :dispatch-n dispatches})))
 
 (defn- extract-unselected-review-states-from-query
@@ -399,6 +390,7 @@
                              (assoc-in [:application :applications] [])
                              (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
                              (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
+                             (assoc-in [:application :kevyt-valinta-selection-state-counts] (get-in initial-db/default-db [:application :kevyt-valinta-selection-state-counts]))
                              (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                              (update-in [:application :sort] dissoc :offset)
                              (assoc-in [:application :fetching-applications?] true))

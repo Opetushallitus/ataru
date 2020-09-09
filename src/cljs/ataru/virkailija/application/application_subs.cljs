@@ -920,7 +920,6 @@
         {:states-and-filters
          {:attachment-states-to-include (:attachment-states previous-fetch)
           :processing-states-to-include (:processing-states previous-fetch)
-          :selection-states-to-include  (:selection-states previous-fetch)
           :selected-hakukohteet         (selected-hakukohde-oid-set db)
           :filters                      (:filters previous-fetch)}}
         (:params previous-fetch)))))
