@@ -9,10 +9,8 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
   (fn [{db :db}
-       [_ {:keys [hakukohde-oid
-                  memoize]}]]
-    (if (and memoize
-             (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta some?))
+       [_ {:keys [hakukohde-oid]}]]
+    (if (-> db :application :valintalaskentakoostepalvelu (get hakukohde-oid) :valintalaskenta some?)
       {}
       {:http {:method              :get
               :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/valintaperusteet/hakukohde/"

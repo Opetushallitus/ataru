@@ -318,8 +318,7 @@
                                                                       (->> hakukohde-oids
                                                                            (map (fn [hakukohde-oid]
                                                                                   [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                                                   {:hakukohde-oid hakukohde-oid
-                                                                                    :memoize       true}]))
+                                                                                   {:hakukohde-oid hakukohde-oid}]))
                                                                            (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                                                                    {:application-key application-key
                                                                                     :memoize         true}]]))))
