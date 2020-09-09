@@ -402,8 +402,7 @@
                  :hakukohde-reviews            ataru-schema/HakukohdeReviews
                  :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) form-schema/Form
-                 :information-requests         [ataru-schema/InformationRequest]
-                 :selection-state-used?        s/Bool}
+                 :information-requests         [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key

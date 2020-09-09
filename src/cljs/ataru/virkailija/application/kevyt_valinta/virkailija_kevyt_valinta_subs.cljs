@@ -65,11 +65,22 @@
                hakukohde-oids)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta/selection-state-used-in-selected-hakukohteet?
+  (fn []
+    [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+     (re-frame/subscribe [:state-query [:hakukohteet]])])
+  (fn [[hakukohde-oids hakukohteet]]
+    (->> hakukohde-oids
+         (map (fn [hakukohde-oid]
+                (-> hakukohteet (get hakukohde-oid) :selection-state-used)))
+         (some true?))))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/show-selection-state-dropdown?
   (fn []
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
      (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])
-     (re-frame/subscribe [:state-query [:application :selection-state-used?]])])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/selection-state-used-in-selected-hakukohteet?])])
   (fn [[valintalaskenta-in-hakukohteet sijoittelu? selection-state-used?]]
     (or (not (fc/feature-enabled? :kevyt-valinta))
         sijoittelu?
@@ -95,7 +106,7 @@
      (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
      (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])
-     (re-frame/subscribe [:state-query [:application :selection-state-used?]])])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/selection-state-used-in-selected-hakukohteet?])])
   (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu? selection-state-used?]]
     (and (fc/feature-enabled? :kevyt-valinta)
          ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi
