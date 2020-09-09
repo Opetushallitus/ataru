@@ -98,8 +98,9 @@
                                                  {"Caller-Id" (aget js/config "virkailija-caller-id")}
                                                  (when (util/include-csrf-header? method)
                                                    (when-let [csrf-token (util/csrf-token)]
-                                                     {"CSRF" csrf-token})))}
-                                     override-args))]
+                                                     {"CSRF" csrf-token}))
+                                                 (:headers override-args))}
+                                     (dissoc override-args :headers)))]
         (dispatch [:store-request-handle-and-abort-ongoing id request-handle])))))
 
 (defn post [path params handler-or-dispatch & {:keys [override-args handler-args skip-parse-times? cache-ttl skip-flasher? id]}]
