@@ -44,11 +44,16 @@
   :virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
   (fn [[_ application-key hakukohde-oid]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu-enabled-for-application? application-key])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohde? hakukohde-oid])])
-  (fn [[sijoittelu-enabled-for-application? valintalaskenta-in-hakukohde?] [_ _ hakukohde-oid]]
+     (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohde? hakukohde-oid])
+     (re-frame/subscribe [:state-query [:hakukohteet hakukohde-oid :selection-state-used]])])
+  (fn [[sijoittelu-enabled-for-application?
+        valintalaskenta-in-hakukohde?
+        selection-state-used?]
+       [_ _ hakukohde-oid]]
     (and (not= hakukohde-oid "form")
          (not sijoittelu-enabled-for-application?)
-         (false? valintalaskenta-in-hakukohde?))))
+         (false? valintalaskenta-in-hakukohde?)
+         (not selection-state-used?))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet
