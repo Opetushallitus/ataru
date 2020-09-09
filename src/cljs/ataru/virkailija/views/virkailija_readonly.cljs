@@ -42,8 +42,17 @@
   (not-empty (set/intersection (set (:belongs-to-hakukohteet field))
                                (set (:hakukohde application)))))
 
+(defn- ylioppilastutkinto? [application]
+  (boolean (some #(or (= "pohjakoulutus_yo" %)
+                      (= "pohjakoulutus_yo_ammatillinen" %)
+                      (= "pohjakoulutus_yo_kansainvalinen_suomessa" %)
+                      (= "pohjakoulutus_yo_ulkomainen" %))
+                 (get-in application [:answers :higher-completed-base-education :value]))))
+
 (defn- visible? [field-descriptor application]
   (and (not (get-in field-descriptor [:params :hidden] false))
+       (not (and (ylioppilastutkinto? application)
+                 (contains? (:excluded-attachment-ids-when-yo-and-jyemp application) (:id field-descriptor))))
        (not= "infoElement" (:fieldClass field-descriptor))
        (not (:exclude-from-answers field-descriptor))
        (or (and (empty? (:belongs-to-hakukohteet field-descriptor))

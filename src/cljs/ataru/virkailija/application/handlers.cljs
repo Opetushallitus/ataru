@@ -12,6 +12,7 @@
             [cljs-time.core :as t]
             [clojure.set :as clj-set]
             [clojure.string :as clj-string]
+            [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.application.application-states :as application-states]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
@@ -445,6 +446,12 @@
                          [(name key) (set (map keyword rights))])
                        (:rights-by-hakukohde application)))))
 
+(defn- add-non-yo-attachment-ids
+  [application form]
+  (assoc application
+    :excluded-attachment-ids-when-yo-and-jyemp
+    (hebem/non-yo-attachment-ids form)))
+
 (defn- review-notes-by-hakukohde-and-state-name
   [review-notes]
   (let [notes-by-hakukohde (->> review-notes
@@ -475,7 +482,8 @@
         {:form        form
          :application (-> application
                           answers-indexed
-                          parse-rights-by-hakukohde)})
+                          parse-rights-by-hakukohde
+                          (add-non-yo-attachment-ids form))})
       (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
