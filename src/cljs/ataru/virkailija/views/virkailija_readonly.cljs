@@ -29,19 +29,6 @@
 (defn- from-multi-lang [text lang]
   (util/non-blank-val text [lang :fi :sv :en]))
 
-(defn- belongs-to-hakukohderyhma? [field application]
-  (let [hakukohteet             (-> application :hakukohde set)
-        applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
-                                     (filter #(contains? hakukohteet (:oid %)))
-                                     (mapcat :hakukohderyhmat)
-                                     set)]
-    (not-empty (set/intersection (-> field :belongs-to-hakukohderyhma set)
-                                 applied-hakukohderyhmat))))
-
-(defn- belongs-to-hakukohde? [field application]
-  (not-empty (set/intersection (set (:belongs-to-hakukohteet field))
-                               (set (:hakukohde application)))))
-
 (defn- ylioppilastutkinto? [application]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
                       (= "pohjakoulutus_yo_ammatillinen" %)
@@ -49,31 +36,53 @@
                       (= "pohjakoulutus_yo_ulkomainen" %))
                  (get-in application [:answers :higher-completed-base-education :value]))))
 
-(defn- visible? [field-descriptor application]
+(defn- selected-hakukohteet [application]
+  (get-in application [:answers :hakukohteet :value]))
+
+(defn- selected-hakukohteet-and-ryhmat-from-application [form application]
+  (let [selected-hakukohteet                   (set (selected-hakukohteet application))
+        selected-hakukohteet-tarjonta          (when (not-empty selected-hakukohteet)
+                                                 (filter #(contains? selected-hakukohteet (:oid %))
+                                                         (get-in form [:tarjonta :hakukohteet])))
+        selected-hakukohderyhmat               (set (mapcat :hakukohderyhmat selected-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohteet-tarjonta (set (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?
+                                                            selected-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohteet          (set (map :oid selected-ei-jyemp-hakukohteet-tarjonta))]
+    [(set/union selected-hakukohteet selected-hakukohderyhmat)
+     (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
+
+(defn- visible? [field-descriptor application hakukohteet-and-ryhmat]
+  (let [[selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] hakukohteet-and-ryhmat
+        jyemp? (and (ylioppilastutkinto? application)
+                    (contains? (:excluded-attachment-ids-when-yo-and-jyemp application) (:id field-descriptor)))
+        belongs-to             (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+                                            (:belongs-to-hakukohteet field-descriptor)))]
   (and (not (get-in field-descriptor [:params :hidden] false))
-       (not (and (ylioppilastutkinto? application)
-                 (contains? (:excluded-attachment-ids-when-yo-and-jyemp application) (:id field-descriptor))))
        (not= "infoElement" (:fieldClass field-descriptor))
        (not (:exclude-from-answers field-descriptor))
-       (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
-                (empty? (:belongs-to-hakukohderyhma field-descriptor)))
-           (belongs-to-hakukohde? field-descriptor application)
-           (belongs-to-hakukohderyhma? field-descriptor application))
+       (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
+       (or (empty? belongs-to)
+           (not (empty? (set/intersection
+                          belongs-to
+                          (if jyemp?
+                            selected-ei-jyemp-hakukohteet-and-ryhmat
+                            selected-hakukohteet-and-ryhmat)))))
        (or (empty? (:children field-descriptor))
-           (some #(visible? % application) (:children field-descriptor)))))
+           (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor))))))
 
-(defn- text-form-field-nested-container [selected-options lang application question-group-idx]
+(defn- text-form-field-nested-container [selected-options lang application hakukohteet-and-ryhmat question-group-idx]
   [:div.application-handling__nested-container--top-level
    {:data-test-id "tekstikenttä-lisäkysymykset"}
    (doall
      (for [option selected-options]
        ^{:key (:value option)}
        [:div.application-handling__nested-container-option
-        (when (some #(visible? % application) (:followups option))
+        (when (some #(visible? % application hakukohteet-and-ryhmat) (:followups option))
           [:div.application-handling__nested-container
            (for [followup (:followups option)]
              ^{:key (:id followup)}
-             [field followup application lang question-group-idx false])])]))])
+             [field followup application hakukohteet-and-ryhmat lang question-group-idx false])])]))])
 
 (defn- text-form-field-values [id values]
   [:div.application__form-field-value
@@ -97,7 +106,7 @@
          (required-hint field-descriptor))
     [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
 
-(defn text [field-descriptor application lang group-idx]
+(defn text [field-descriptor application hakukohteet-and-ryhmat lang group-idx]
   (let [id               (keyword (:id field-descriptor))
         use-onr-info?    (contains? (:person application) id)
         values           (replace-with-option-label (if use-onr-info?
@@ -115,7 +124,7 @@
      [text-form-field-label id field-descriptor lang]
      [text-form-field-values id values]
      (when followups?
-      [text-form-field-nested-container options lang application group-idx])]))
+      [text-form-field-nested-container options lang application hakukohteet-and-ryhmat group-idx])]))
 
 (defn- attachment-item [file-key virus-scan-status virus-status-elem text]
   [:div.application__virkailija-readonly-attachment-area
@@ -160,19 +169,19 @@
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
-(defn wrapper [content application lang children]
+(defn wrapper [content application hakukohteet-and-ryhmat lang children]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
     [:h2 (from-multi-lang (:label content) lang)]
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
-           [field child application lang nil false]))])
+           [field child application hakukohteet-and-ryhmat lang nil false]))])
 
-(defn row-container [_ _ _ group-idx person-info-field?]
-  (fn [application lang children]
+(defn row-container [_ _ _ _ group-idx person-info-field?]
+  (fn [application hakukohteet-and-ryhmat lang children]
     (into [:div] (for [child children]
-                   [field child application lang group-idx person-info-field?]))))
+                   [field child application hakukohteet-and-ryhmat lang group-idx person-info-field?]))))
 
 (defn- fieldset-answer-table [answers]
   [:tbody
@@ -205,7 +214,7 @@
                      (required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
-(defn- selectable [content application lang question-group-idx]
+(defn- selectable [content application hakukohteet-and-ryhmat lang question-group-idx]
   [:div.application__form-field
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
@@ -231,11 +240,11 @@
           [:div
            [:p.application__text-field-paragraph
             (from-multi-lang (:label option) lang)]
-           (when (some #(visible? % application) (:followups option))
+           (when (some #(visible? % application hakukohteet-and-ryhmat) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
                 ^{:key (:id followup)}
-                [field followup application lang question-group-idx false])])]))
+                [field followup application hakukohteet-and-ryhmat lang question-group-idx false])])]))
        (doall
         (for [value values-wo-option]
           ^{:key (str "unknown-option-" value)}
@@ -293,7 +302,7 @@
         ^{:key (str "hakukohteet-list-row-" hakukohde-oid)}
         [hakukohteet-list-row hakukohde-oid])]]))
 
-(defn- person-info-module [content application lang]
+(defn- person-info-module [content application hakukohteet-and-ryhmat lang]
   [:div.application__person-info-wrapper.application__wrapper-element
    [:div.application__wrapper-element.application__wrapper-element--border
     [:div.application__wrapper-heading
@@ -306,7 +315,7 @@
     (into [:div.application__wrapper-contents]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
-            [field child application lang nil true]))]])
+            [field child application hakukohteet-and-ryhmat lang nil true]))]])
 
 (defn- repeat-count
   [application question-group-children]
@@ -317,7 +326,7 @@
    0
    question-group-children))
 
-(defn- question-group [content application lang children]
+(defn- question-group [content application hakukohteet-and-ryhmat lang children]
   [:div.application__question-group
    [:h3.application__question-group-heading
     (from-multi-lang (:label content) lang)]
@@ -326,7 +335,7 @@
      [:div.application__question-group-repeat
       (for [child children]
         ^{:key (str "question-group-" (:id content) "-" idx "-" (:id child))}
-        [field child application lang idx false])])])
+        [field child application hakukohteet-and-ryhmat lang idx false])])])
 
 (defn- nationality-field [field-descriptor application lang children]
   (let [field            (first children)
@@ -346,22 +355,22 @@
        (string/join ", " values)]]]))
 
 (defn field
-  [content application lang group-idx person-info-field?]
-  (when (visible? content application)
+  [content application hakukohteet-and-ryhmat lang group-idx person-info-field?]
+  (when (visible? content application hakukohteet-and-ryhmat)
     (match content
-      {:module "person-info"} [person-info-module content application lang]
-      {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application lang children]
+      {:module "person-info"} [person-info-module content application hakukohteet-and-ryhmat lang]
+      {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application hakukohteet-and-ryhmat lang children]
       {:fieldClass "questionGroup" :fieldType "fieldset" :children children}
            (if person-info-field?
              (nationality-field content application lang children)
-             [question-group content application lang children])
-      {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application lang children group-idx person-info-field?]
+             [question-group content application hakukohteet-and-ryhmat lang children])
+      {:fieldClass "wrapperElement" :fieldType "rowcontainer" :children children} [row-container application hakukohteet-and-ryhmat lang children group-idx person-info-field?]
       {:fieldClass "wrapperElement" :fieldType "adjacentfieldset" :children children} [fieldset content application lang children group-idx]
       {:fieldClass "formField" :fieldType (:or "dropdown" "multipleChoice" "singleChoice")}
       (if person-info-field?
-        (text content application lang group-idx)
-        [selectable content application lang group-idx])
-      {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application lang group-idx)
+        (text content application hakukohteet-and-ryhmat lang group-idx)
+        [selectable content application hakukohteet-and-ryhmat lang group-idx])
+      {:fieldClass "formField" :fieldType (:or "textField" "textArea")} (text content application hakukohteet-and-ryhmat lang group-idx)
       {:fieldClass "formField" :fieldType "attachment"} [attachment content application lang group-idx]
       {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet content]
       {:fieldClass "pohjakoulutusristiriita"} nil)))
@@ -376,7 +385,9 @@
   (when form
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
-                   :fi)]
+                   :fi)
+          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application form application)]
+      (prn hakukohteet-and-ryhmat)
       (into [:div.application__readonly-container]
         (for [content (:content form)]
-          [field content application lang nil])))))
+          [field content application hakukohteet-and-ryhmat lang nil])))))
