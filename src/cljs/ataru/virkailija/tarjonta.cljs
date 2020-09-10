@@ -22,7 +22,8 @@
                                     (fn [_] (async/close! c)))
         :response-format :json
         :keywords? true
-        :timeout 15000}))
+        :timeout 15000
+        :headers {"Caller-Id" (aget js/config "virkailija-caller-id")}}))
 
 (defn- fetch-haku
   [haku-oid c]
@@ -33,7 +34,8 @@
                                     (fn [_] (async/close! c)))
         :response-format :json
         :keywords? true
-        :timeout 15000}))
+        :timeout 15000
+        :headers {"Caller-Id" (aget js/config "virkailija-caller-id")}}))
 
 (defn- fetch-haku-with-hakukohteet
   [organization-oids haku-oid c]
