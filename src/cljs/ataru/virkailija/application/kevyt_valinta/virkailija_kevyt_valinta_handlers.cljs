@@ -101,20 +101,21 @@
                                        "selection-state"
                                        selection-state-filter)))))
                         applications)))
-            (update-in
-              db'
-              [:application :selection-state-counts]
-              application-filtering/add-review-state-counts
-              applications
-              valintakasittelymerkinta-hakukohde-oids
-              "selection-state")
-            (update-in
-              db'
-              [:application :kevyt-valinta-selection-state-counts]
-              application-filtering/add-kevyt-valinta-selection-state-counts
-              db
-              applications
-              kevyt-valinta-hakukohde-oids)))))
+            (cond-> db'
+                    (not-empty valintakasittelymerkinta-hakukohde-oids)
+                    (update-in
+                      [:application :selection-state-counts]
+                      application-filtering/add-review-state-counts
+                      applications
+                      valintakasittelymerkinta-hakukohde-oids
+                      "selection-state")
+                    (not-empty kevyt-valinta-hakukohde-oids)
+                    (update-in
+                      [:application :kevyt-valinta-selection-state-counts]
+                      application-filtering/add-kevyt-valinta-selection-state-counts
+                      db
+                      applications
+                      kevyt-valinta-hakukohde-oids))))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?

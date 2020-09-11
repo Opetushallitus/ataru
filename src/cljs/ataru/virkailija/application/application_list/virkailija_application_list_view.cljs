@@ -276,6 +276,12 @@
          (when @filter-opened
            [:div.application-handling__filter-state-selection
             (->> (keys states)
+                 (filter (fn [filter-kw]
+                           (let [state-counts-sub (some-> state-counts-subs filter-kw)]
+                             (or (not state-counts-sub)
+                                 (some (fn [[review-state-id]]
+                                         (< 0 (get-state-count state-counts-sub review-state-id)))
+                                       (filter-kw states))))))
                  (map (fn [filter-kw]
                         (let [filter-sub                     @(subscribe [:state-query [:application filter-kw]])
                               all-filters-of-state-selected? (= (count filter-sub)
