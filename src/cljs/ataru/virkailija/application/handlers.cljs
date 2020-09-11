@@ -296,15 +296,28 @@
                                                          (get haku-oid)
                                                          :sijoittelu
                                                          not)))
-                                       (mapcat (fn [{hakukohde-oids  :hakukohde
-                                                     application-key :key}]
-                                                 (->> hakukohde-oids
-                                                      (map (fn [hakukohde-oid]
-                                                             [:virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                              {:hakukohde-oid hakukohde-oid}]))
-                                                      (into [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                              {:application-key    application-key
-                                                               :memoize            true}]]))))
+                                       (reduce (fn [acc {hakukohde-oids  :hakukohde
+                                                         application-key :key}]
+                                                 (-> acc
+                                                     (update
+                                                       :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+                                                       (fnil into #{})
+                                                       hakukohde-oids)
+                                                     (update
+                                                       :virkailija-kevyt-valinta/fetch-valinnan-tulos
+                                                       (fnil conj #{})
+                                                       application-key)))
+                                               {})
+                                       (mapcat (fn [[event args]]
+                                                 (map (fn [arg]
+                                                        [event
+                                                         (case event
+                                                           :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
+                                                           {:hakukohde-oid arg}
+                                                           :virkailija-kevyt-valinta/fetch-valinnan-tulos
+                                                           {:application-key arg
+                                                            :memoize         true})])
+                                                      args)))
                                        (into []))
           dispatches              (as-> [] dispatches'
 
