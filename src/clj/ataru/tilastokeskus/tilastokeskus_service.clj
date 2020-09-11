@@ -14,6 +14,12 @@
    (range 1 7)
    hakukohteet))
 
+(defn- first-string [v]
+  (cond
+    (string? v) v
+    (not (vector? v)) nil
+    :else (first-string (first v))))
+
 (defn- enrich-application-data
   [haku application]
   (let [answers (-> application :content :answers util/answers-by-key)]
@@ -21,7 +27,7 @@
            {:pohjakoulutus_kk             (answer-util/get-kk-pohjakoulutus haku answers (:hakemus_oid application))
                                           ; This is a vector of vectors where index determines the country for each specific foreign base education
                                           ; This isn't the pretties way to implement this, but it is the easiest for now.
-            :pohjakoulutus_kk_ulk_country (some-> (get-in answers [:pohjakoulutus_kk_ulk--country :value]) first first)
+            :pohjakoulutus_kk_ulk_country (some-> (get-in answers [:pohjakoulutus_kk_ulk--country :value]) first-string)
             :hakutoiveet                  (hakutoiveet (:hakukohde_oids application))})))
 
 (defn get-application-info-for-tilastokeskus
