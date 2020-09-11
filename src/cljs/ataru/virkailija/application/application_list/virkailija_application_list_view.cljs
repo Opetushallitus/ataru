@@ -85,17 +85,27 @@
                                                                "selection-state")
         kevyt-valinta-enabled-for-application-and-hakukohde? @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
                                                                           application-key
-                                                                          hakukohde-oid])]
+                                                                          hakukohde-oid])
+        kevyt-valinta-property-value                         (when kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                               @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+                                                                            :kevyt-valinta/valinnan-tila
+                                                                            application-key
+                                                                            hakukohde-oid]))]
     [:span.application-handling__hakukohde-selection-cell
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
-      [:span.application-handling__state-label
-       {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
+      (let [css-modifier-prefix (cond (and kevyt-valinta-enabled-for-application-and-hakukohde?
+                                           (= "KESKEN" kevyt-valinta-property-value))
+                                      "incomplete"
+
+                                      kevyt-valinta-enabled-for-application-and-hakukohde?
+                                      "processed"
+
+                                      :else
+                                      (or selection-state "incomplete"))]
+        [:span.application-handling__state-label
+         {:class (str "application-handling__state-label--" css-modifier-prefix)}])
       (if kevyt-valinta-enabled-for-application-and-hakukohde?
         (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
-              kevyt-valinta-property-value @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
-                                                        :kevyt-valinta/valinnan-tila
-                                                        application-key
-                                                        hakukohde-oid])
               translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
                                              :kevyt-valinta/valinnan-tila
                                              kevyt-valinta-property-value)]
