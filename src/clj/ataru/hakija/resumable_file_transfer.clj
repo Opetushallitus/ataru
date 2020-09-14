@@ -1,8 +1,8 @@
 (ns ataru.hakija.resumable-file-transfer
-  (:require [clj-http.client :as http-client]
-            [cheshire.core :as json]
+  (:require [cheshire.core :as json]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.util.http-util :as http]
             [clojure.java.io :as io]
             [pandect.algo.md5 :refer [md5]]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
@@ -93,12 +93,11 @@
   (log/info "Uploading to liiteri:" file-name (.length file) "bytes")
   (let [url                         (resolve-url :liiteri.files)
         start-time                  (System/currentTimeMillis)
-        {:keys [status body error]} (http-client/post url {:throw-exceptions false
-                                                           :socket-timeout   (* 1000 60 10)
-                                                           :cookie-policy    :standard
-                                                           :multipart        [{:part-name "file"
-                                                                               :content   (FileInputStream. file)
-                                                                               :name      (normalizer/normalize-filename file-name)}]})]
+        {:keys [status body error]} (http/do-post url {:socket-timeout (* 1000 60 10)
+                                                       :cookie-policy  :standard
+                                                       :multipart      [{:part-name "file"
+                                                                         :content   (FileInputStream. file)
+                                                                         :name      (normalizer/normalize-filename file-name)}]})]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)

@@ -38,6 +38,7 @@
             [ataru.organization-service.organization-selection :as organization-selection]
             [ataru.organization-service.organization-client :as organization-client]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.util.http-util :as http]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [ataru.valintaperusteet.service :as valintaperusteet]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
@@ -58,7 +59,6 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [manifold.deferred]                             ;; DO NOT REMOVE! extend-protocol below breaks otherwise!
-            [clj-http.client :as http]
             [ataru.lokalisointi-service.lokalisointi-service :refer [get-virkailija-texts]]
             [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
             [ring.middleware.gzip :refer [wrap-gzip]]
@@ -1259,8 +1259,9 @@
 (defn- proxy-request [service-path request]
   (let [prefix   (str "https://" (get-in config [:urls :virkailija-host]) service-path)
         path     (-> request :params :*)
-        response (http/get (str prefix path) {:headers          (dissoc (:headers request) "host")
-                                              :throw-exceptions false})]
+        response (http/do-request {:url     (str prefix path)
+                                   :method  :get
+                                   :headers (dissoc (:headers request) "host")})]
     {:status  (:status response)
      :body    (:body response)
      :headers (:headers response)}))
