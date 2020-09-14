@@ -25,9 +25,11 @@
 (defn- parse-haku
   [haku hakukohteet]
   (let [hakuajat (mapv (fn [hakuaika]
-                         {:hakuaika-id "kouta-hakuaika-id"
-                          :start       (parse-date-time (:alkaa hakuaika))
-                          :end         (parse-date-time (:paattyy hakuaika))})
+                         (merge
+                           {:hakuaika-id "kouta-hakuaika-id"
+                            :start (parse-date-time (:alkaa hakuaika))}
+                           (when-let [paattyy (:paattyy hakuaika)]
+                             {:end (parse-date-time paattyy)})))
                        (:hakuajat haku))]
     (merge
      {:can-submit-multiple-applications           true
