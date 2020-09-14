@@ -66,11 +66,8 @@
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/remove-error
   (fn [db [_ application-key hakukohde-oid]]
-    (-> db
-        (update-in [:hyvaksynnan-ehto application-key hakukohde-oid]
-                   dissoc :error)
-        (update-in [:hyvaksynnan-ehto application-key hakukohde-oid]
-                   dissoc :retry-delay))))
+    (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
+               dissoc :error)))
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/flash-error
@@ -229,7 +226,8 @@
                                            :sv (:sv text "")
                                            :en (:en text "")}})
         (assoc :last-modified (get-in response [:headers "last-modified"]))
-        (dissoc :request-in-flight?))))
+        (dissoc :request-in-flight?)
+        (dissoc :retry-delay))))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
 
@@ -292,7 +290,8 @@
                                        :en (:en ehto "")}}]))
                   (into {})))
       (dissoc :last-modified)
-      (dissoc :request-in-flight?)))
+      (dissoc :request-in-flight?)
+      (dissoc :retry-delay)))
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/set-ehto-valintatapajonoissa
