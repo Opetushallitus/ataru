@@ -853,12 +853,12 @@
    :valinnan-tila                                   {:fi "Valinnan tila"
                                                      :sv "Valinnan tila"
                                                      :en "Valinnan tila"}
-   :valinnan-tila-ladattu-valinnoista               {:fi "Valinnan tilan arvo on ladattu Opintopolun valinnoista"
-                                                     :sv "Valinnan tilan arvo on ladattu Opintopolun valinnoista"
-                                                     :en "Valinnan tilan arvo on ladattu Opintopolun valinnoista"}
-   :valinnan-tila-ladataan-valinnoista              {:fi "Valinnan tilan arvo tullaan lataamaan Opintopolun valinnoista, mutta sitä ei ole tällä hetkellä määritettynä"
-                                                     :sv "Valinnan tilan arvo tullaan lataamaan Opintopolun valinnoista, mutta sitä ei ole tällä hetkellä määritettynä"
-                                                     :en "Valinnan tilan arvo tullaan lataamaan Opintopolun valinnoista, mutta sitä ei ole tällä hetkellä määritettynä"}
+   :valinnan-tila-ladattu-valinnoista               {:fi "Valintatieto tuotu valintarekisteristä"
+                                                     :sv "Antagningsuppgiften inhämtad från antagningsregistret"
+                                                     :en "Valintatieto tuotu valintarekisteristä"}
+   :valinnan-tila-ladataan-valinnoista              {:fi "Valintatieto tuotu valintarekisteristä"
+                                                     :sv "Antagningsuppgiften inhämtad från antagningsregistret"
+                                                     :en "Valintatieto tuotu valintarekisteristä"}
    :arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
