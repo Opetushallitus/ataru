@@ -406,6 +406,23 @@
         (log/warn "Application" (:key application) "edit failed verification" result)))
     result))
 
+(defn handle-application-attachment-post-process
+  [koodisto-cache
+   tarjonta-service
+   organization-service
+   ohjausparametrit-service
+   application-key
+   audit-logger
+   session]
+  (application-store/post-process-application-attachments
+    koodisto-cache
+    tarjonta-service
+    organization-service
+    ohjausparametrit-service
+    application-key
+    audit-logger
+    session))
+
 (defn save-application-feedback
   [feedback]
   (log/info "Saving feedback" feedback)

@@ -14,6 +14,7 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [ataru.util.random :as crypto]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [camel-snake-kebab.core :as t :refer [->snake_case ->kebab-case-keyword ->camelCase]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.set]
@@ -589,6 +590,49 @@
     (dissoc (get-latest-application-by-key-in-tx connection application-key)
             :secret
             :application-hakukohde-reviews)))
+
+(defn post-process-application-attachments [koodisto-cache
+                                            tarjonta-service
+                                            organization-service
+                                            ohjausparametrit-service
+                                            application-key
+                                            audit-logger
+                                            session]
+  (jdbc/with-db-transaction
+    [conn {:datasource (db/get-datasource :db)}]
+    (let [application (get-latest-application-by-key-in-tx conn application-key)
+          answers              (:answers application)
+          application-to-store {:form_id        (:form application)
+                                :key            (:key application)
+                                :lang           (:lang application)
+                                :preferred_name (find-value-from-answers "preferred-name" answers)
+                                :last_name      (find-value-from-answers "last-name" answers)
+                                :ssn            (find-value-from-answers "ssn" answers)
+                                :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
+                                :email          (find-value-from-answers "email" answers)
+                                :hakukohde      (or (:hakukohde application) [])
+                                :haku           (:haku application)
+                                :content        {:answers answers}
+                                :person_oid     (:person-oid application)}
+          old-answers         nil
+          update?             false
+          form                (forms/get-form-by-application application-to-store)
+          tarjonta-info       (when (:haku application)
+                                (tarjonta-parser/parse-tarjonta-info-by-haku
+                                  koodisto-cache
+                                  tarjonta-service
+                                  organization-service
+                                  ohjausparametrit-service
+                                  (:haku application)))
+          hakukohteet         (get-in tarjonta-info [:tarjonta :hakukohteet])
+          applied-hakukohteet (filter #(contains? (set (:hakukohde application)) (:oid %)) hakukohteet)]
+      (audit-log/log audit-logger
+                     {:new       application
+                      :operation audit-log/operation-modify
+                      :session   session
+                      :id        {:email (util/extract-email application)}})
+      (create-attachment-hakukohde-reviews-for-application
+        application-to-store applied-hakukohteet old-answers form update? {:connection conn}))))
 
 (defn get-application-hakukohde-reviews
   [application-key]

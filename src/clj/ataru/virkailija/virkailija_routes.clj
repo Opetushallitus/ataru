@@ -2,6 +2,7 @@
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
+            [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
             [ataru.applications.application-store :as application-store]
@@ -320,6 +321,24 @@
                 job-runner
                 person-oid)
               (response/ok {}))
+          (response/unauthorized {}))))
+
+    (api/context "/post-process" []
+      :tags ["post-process-api"]
+      (api/POST "/application-attachments/:application-key" {session :session}
+        :summary "Post process application attachments"
+        :path-params [application-key :- s/Str]
+        (if (get-in session [:identity :superuser])
+          (do
+            (hakija-application-service/handle-application-attachment-post-process
+              koodisto-cache
+              tarjonta-service
+              organization-service
+              ohjausparametrit-service
+              application-key
+              audit-logger
+              session)
+            (response/ok {}))
           (response/unauthorized {}))))
 
     (api/context "/applications" []
