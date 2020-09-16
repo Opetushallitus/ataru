@@ -407,11 +407,21 @@
     result))
 
 (defn handle-application-attachment-post-process
-  [application-key
+  [koodisto-cache
+   tarjonta-service
+   organization-service
+   ohjausparametrit-service
+   application-key
    audit-logger
    session]
-  (let [application (application-store/get-latest-application-by-key application-key)]
-    (application-store/post-process-application-attachments application audit-logger session)))
+  (application-store/post-process-application-attachments
+    koodisto-cache
+    tarjonta-service
+    organization-service
+    ohjausparametrit-service
+    application-key
+    audit-logger
+    session))
 
 (defn save-application-feedback
   [feedback]

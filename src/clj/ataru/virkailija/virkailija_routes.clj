@@ -323,6 +323,24 @@
               (response/ok {}))
           (response/unauthorized {}))))
 
+    (api/context "/post-process" []
+      :tags ["post-process-api"]
+      (api/POST "/application-attachments/:application-key" {session :session}
+        :summary "Post process application attachments"
+        :path-params [application-key :- s/Str]
+        (if (get-in session [:identity :superuser])
+          (do
+            (hakija-application-service/handle-application-attachment-post-process
+              koodisto-cache
+              tarjonta-service
+              organization-service
+              ohjausparametrit-service
+              application-key
+              audit-logger
+              session)
+            (response/ok {}))
+          (response/unauthorized {}))))
+
     (api/context "/applications" []
       :tags ["applications-api"]
 
@@ -650,20 +668,6 @@
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key
                                               " käsittely ei ole sallittu")}))))
-
-    (api/context "/post-process-attachments" []
-      (api/POST "/application/:application-key" {session :session}
-        :summary "Post process application attachments"
-        :path-params [application-key :- s/Str]
-        {:status 200
-         :body   (if (get-in session [:identity :superuser])
-                   (do
-                     (hakija-application-service/handle-application-attachment-post-process
-                       application-key
-                       audit-logger
-                       session)
-                     (response/ok {}))
-                   (response/unauthorized {}))}))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
