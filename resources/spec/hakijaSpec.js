@@ -32,20 +32,20 @@
             return $(e).text()
           })
           const expectedLabels = [
-            'Etunimet *.',
-            'Kutsumanimi *.',
-            'Sukunimi *.',
-            'Kansalaisuus *.',
-            'Henkilötunnus *.',
-            'Sähköpostiosoite *.',
-            'Varmista sähköpostiosoite *.',
-            'Matkapuhelin *.',
-            'Asuinmaa *.',
-            'Katuosoite *.',
-            'Postinumero *.',
-            'Postitoimipaikka *.',
-            'Kotikunta *.',
-            'Äidinkieli *.',
+            'Etunimet *',
+            'Kutsumanimi *',
+            'Sukunimi *',
+            'Kansalaisuus *',
+            'Henkilötunnus *',
+            'Sähköpostiosoite *',
+            'Varmista sähköpostiosoite *',
+            'Matkapuhelin *',
+            'Asuinmaa *',
+            'Katuosoite *',
+            'Postinumero *',
+            'Postitoimipaikka *',
+            'Kotikunta *',
+            'Äidinkieli *',
           ]
 
           expect(
