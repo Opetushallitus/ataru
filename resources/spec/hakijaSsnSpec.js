@@ -109,12 +109,12 @@
         wait.until(() => {
           return (
             formFields().eq(4).find('label').text() ===
-            'Onko sinulla suomalainen henkilötunnus?.'
+            'Onko sinulla suomalainen henkilötunnus?'
           )
         }),
         setNthFieldOption(4, 'false'),
         wait.until(() => {
-          return formFields().eq(5).find('label').text() === 'Syntymäaika *.'
+          return formFields().eq(5).find('label').text() === 'Syntymäaika *'
         }),
         setNthFieldInputValue(5, '1.1.1990'),
         setNthFieldOption(6, '1'),
