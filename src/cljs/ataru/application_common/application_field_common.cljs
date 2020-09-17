@@ -177,7 +177,7 @@
 
 (defn scroll-to-anchor
   [field-descriptor]
-  [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} "."])
+  [:span.application__scroll-to-anchor {:id (str "scroll-to-" (:id field-descriptor))} ""])
 
 (defn copy [id]
   (let [copy-container (.getElementById js/document "editor-form__copy-question-id-container")]
