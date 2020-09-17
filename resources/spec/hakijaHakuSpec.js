@@ -116,7 +116,7 @@
               '#application-form-field-label-attachment-out-of-pohjakoulutus'
             )
             .text()
-        ).to.equal('Random liite.')
+        ).to.equal('Random liite')
         expect(thirdSegmentUploadButton().length).to.equal(0)
       })
     })
