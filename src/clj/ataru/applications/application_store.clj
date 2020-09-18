@@ -128,7 +128,9 @@
                             (not= old-answer answer))
         review-base    {:application_key application-key
                         :attachment_key  (:id attachment-field)
-                        :state           (if (empty? answer)
+                        :state           (if (or (empty? answer)
+                                                 (and (or (vector? (first answer)) (nil? (first answer)))
+                                                      (every? empty? answer)))
                                            "attachment-missing"
                                            "not-checked")
                         :updated?        value-changed?}]
