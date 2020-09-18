@@ -10,6 +10,7 @@
               [ataru.virkailija.question-search.view :as question-search]
               [ataru.virkailija.temporal :as temporal]
               [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+              [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
               [clojure.string :as string]
               [goog.string :as gstring]
               [reagent.core :as r]
@@ -74,6 +75,56 @@
   [hakukohde-reviews hakukohde-oid requirement]
   (:state (first (get hakukohde-reviews [hakukohde-oid requirement]))))
 
+(defn- hakemuksen-valinnan-tila-sarake [{:keys [application-key
+                                                application-hakukohde-reviews
+                                                hakukohde-oid
+                                                lang]}]
+  (let [selection-state                                      (hakukohde-review-state
+                                                               application-hakukohde-reviews
+                                                               hakukohde-oid
+                                                               "selection-state")
+        kevyt-valinta-enabled-for-application-and-hakukohde? @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                                          application-key
+                                                                          hakukohde-oid])
+        kevyt-valinta-property-value                         (when kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                               @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+                                                                            :kevyt-valinta/valinnan-tila
+                                                                            application-key
+                                                                            hakukohde-oid]))]
+    [:span.application-handling__hakukohde-selection-cell
+     [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
+      (let [css-modifier-prefix (cond (and kevyt-valinta-enabled-for-application-and-hakukohde?
+                                           (= "KESKEN" kevyt-valinta-property-value))
+                                      "incomplete"
+
+                                      kevyt-valinta-enabled-for-application-and-hakukohde?
+                                      "processed"
+
+                                      :else
+                                      (or selection-state "incomplete"))]
+        [:span.application-handling__state-label
+         {:class (str "application-handling__state-label--" css-modifier-prefix)}])
+      (if kevyt-valinta-enabled-for-application-and-hakukohde?
+        (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
+              translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
+                                             :kevyt-valinta/valinnan-tila
+                                             kevyt-valinta-property-value)]
+          [:<>
+           @(subscribe [:editor/virkailija-translation translation-key])
+           [:i.zmdi.zmdi-info.application-handling__valinnan-tila-info-ikoni
+            {:class (if kevyt-valinta-property-exists?
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista"
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
+             :title (if kevyt-valinta-property-exists?
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]])
+        (or
+          (application-states/get-review-state-label-by-name
+            review-states/application-hakukohde-selection-states
+            selection-state
+            lang)
+          @(subscribe [:editor/virkailija-translation :incomplete])))]]))
+
 (defn- applications-hakukohde-rows
   [review-settings
    application
@@ -94,7 +145,6 @@
       (map
         (fn [hakukohde-oid]
           (let [processing-state       (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "processing-state")
-                selection-state        (hakukohde-review-state application-hakukohde-reviews hakukohde-oid "selection-state")
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
                                          (= "information-request" processing-state))
@@ -120,7 +170,7 @@
                         (:attachment-handling review-settings true))
                [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state.application-handling__count-tag
+              [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
                [:span.application-handling__state-label
                 {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
                (or
@@ -132,16 +182,10 @@
                (when show-state-email-icon?
                  [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
              (when (:selection-state review-settings true)
-               [:span.application-handling__hakukohde-selection-cell
-                [:span.application-handling__hakukohde-selection.application-handling__count-tag
-                 [:span.application-handling__state-label
-                  {:class (str "application-handling__state-label--" (or selection-state "incomplete"))}]
-                 (or
-                   (application-states/get-review-state-label-by-name
-                     review-states/application-hakukohde-selection-states
-                     selection-state
-                     @lang)
-                   @(subscribe [:editor/virkailija-translation :incomplete]))]])]))
+               [hakemuksen-valinnan-tila-sarake {:application-key               (:key application)
+                                                 :hakukohde-oid                 hakukohde-oid
+                                                 :application-hakukohde-reviews application-hakukohde-reviews
+                                                 :lang                          @lang}])]))
         application-hakukohde-oids))))
 
 (defn- application-list-row [application selected? select-application]
@@ -209,63 +253,94 @@
     (dispatch [:state-update #(assoc-in % [:application filter-kw] new-filter)])
     (dispatch [:application/reload-applications])))
 
+(defn- hakukohde-state-filter-controls-title
+  [{:keys [title on-click all-filters-selected?]}]
+  [:a.application-handling__basic-list-basic-column-header
+   {:on-click on-click}
+   title
+   [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
+    {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]])
+
 (defn- hakukohde-state-filter-controls
-  [filter-kw title states state-counts-sub]
-  (let [filter-sub           (subscribe [:state-query [:application filter-kw]])
-        filter-opened        (r/atom false)
+  []
+  (let [filter-opened        (r/atom false)
         toggle-filter-opened #(swap! filter-opened not)
-        get-state-count      (fn [counts state-id] (or (get counts state-id) 0))
-        lang                 (subscribe [:editor/virkailija-lang])
-        has-more?            (subscribe [:application/has-more-applications?])]
-    (fn []
-      (let [all-filters-selected? (= (count @filter-sub)
-                                     (count states))]
-        [:span.application-handling__filter-state.application-handling__filter-state--application-state
-         [:a.application-handling__basic-list-basic-column-header
-          {:on-click toggle-filter-opened}
-          title
-          [:i.zmdi.zmdi-assignment-check.application-handling__filter-state-link-icon
-           {:class (when-not all-filters-selected? "application-handling__filter-state-link-icon--enabled")}]]
+        get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
+    (fn [{:keys [title
+                 states
+                 state-counts-subs
+                 filter-titles]}]
+      (let [lang                  @(subscribe [:editor/virkailija-lang])
+            has-more?             @(subscribe [:application/has-more-applications?])
+            all-filters-selected? (->> (keys states)
+                                       (map (fn [filter-kw]
+                                              [filter-kw @(subscribe [:state-query [:application filter-kw]])]))
+                                       (every? (fn [[filter-kw filter-sub]]
+                                                 (= (count filter-sub)
+                                                    (-> states filter-kw count)))))]
+        [:div.application-handling__filter-state.application-handling__filter-state--application-state
+         [hakukohde-state-filter-controls-title
+          {:title                 title
+           :on-click              toggle-filter-opened
+           :all-filters-selected? all-filters-selected?}]
          (when @filter-opened
-           (into [:div.application-handling__filter-state-selection
-                  [:div.application-handling__filter-state-selection-close-button-container
-                   [:button.virkailija-close-button.application-handling__filter-state-selection-close-button
-                    {:on-click #(reset! filter-opened false)}
-                    [:i.zmdi.zmdi-close]]]
-                  [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
-                   {:class (when all-filters-selected? "application-handling__filter-state-selected-row")}
-                   [:label
-                    [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                             :type      "checkbox"
-                             :checked   all-filters-selected?
-                             :on-change (fn [_]
-                                          (cljs-util/update-url-with-query-params
-                                            {filter-kw (if all-filters-selected?
-                                                         (string/join "," (map first states))
-                                                         nil)})
-                                          (dispatch [:state-update #(assoc-in % [:application filter-kw]
-                                                                              (if all-filters-selected?
-                                                                                []
-                                                                                (map first states)))])
-                                          (dispatch [:application/reload-applications]))}]
-                    [:span @(subscribe [:editor/virkailija-translation :all])]]]]
-                 (mapv
-                   (fn [[review-state-id review-state-label]]
-                     (let [filter-selected? (contains? (set @filter-sub) review-state-id)]
-                       [:div.application-handling__filter-state-selection-row
-                        {:class (if filter-selected? "application-handling__filter-state-selected-row" "")}
-                        [:label
-                         [:input {:class     "application-handling__filter-state-selection-row-checkbox"
-                                  :type      "checkbox"
-                                  :checked   filter-selected?
-                                  :on-change #(toggle-state-filter! @filter-sub states filter-kw review-state-id filter-selected?)}]
-                         [:span (str (get review-state-label @lang)
-                                     (when state-counts-sub
-                                       (str " ("
-                                            (get-state-count @state-counts-sub review-state-id)
-                                            (when @has-more? "+")
-                                            ")")))]]]))
-                   states)))]))))
+           [:div.application-handling__filter-state-selection
+            (->> (keys states)
+                 (filter (fn [filter-kw]
+                           (let [state-counts-sub (some-> state-counts-subs filter-kw)]
+                             (or (not state-counts-sub)
+                                 (some (fn [[review-state-id]]
+                                         (< 0 (get-state-count state-counts-sub review-state-id)))
+                                       (filter-kw states))))))
+                 (map (fn [filter-kw]
+                        (let [filter-sub                     @(subscribe [:state-query [:application filter-kw]])
+                              all-filters-of-state-selected? (= (count filter-sub)
+                                                                (-> states filter-kw count))
+                              state-counts-sub               (some-> state-counts-subs filter-kw)]
+                          (into ^{:key (str "filter-state-column-" filter-kw)}
+                                [:div.application-handling__filter-state-selection-column
+                                 (when-let [translation-key (filter-kw filter-titles)]
+                                   [:div.application-handling__filter-state-selection-row-header
+                                    @(subscribe [:editor/virkailija-translation translation-key])])
+                                 [:div.application-handling__filter-state-selection-row.application-handling__filter-state-selection-row--all
+                                  {:class (when all-filters-of-state-selected? "application-handling__filter-state-selected-row")}
+                                  [:label
+                                   [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                            :type      "checkbox"
+                                            :checked   all-filters-of-state-selected?
+                                            :on-change (fn [_]
+                                                         (cljs-util/update-url-with-query-params
+                                                           {filter-kw (if all-filters-of-state-selected?
+                                                                        (string/join "," (->> states filter-kw (map first)))
+                                                                        nil)})
+                                                         (dispatch [:state-update #(assoc-in % [:application filter-kw]
+                                                                                             (if all-filters-of-state-selected?
+                                                                                               []
+                                                                                               (->> states filter-kw (map first))))])
+                                                         (dispatch [:application/reload-applications]))}]
+                                   [:span @(subscribe [:editor/virkailija-translation :all])]]]]
+                                (mapv
+                                  (fn [[review-state-id review-state-label]]
+                                    (let [filter-selected? (contains? (set filter-sub) review-state-id)]
+                                      [:div.application-handling__filter-state-selection-row
+                                       {:class (if filter-selected? "application-handling__filter-state-selected-row" "")}
+                                       [:label
+                                        [:input {:class     "application-handling__filter-state-selection-row-checkbox"
+                                                 :type      "checkbox"
+                                                 :checked   filter-selected?
+                                                 :on-change #(toggle-state-filter! filter-sub (filter-kw states) filter-kw review-state-id filter-selected?)}]
+                                        [:span (str (get review-state-label lang)
+                                                    (when state-counts-sub
+                                                      (str " ("
+                                                           (get-state-count state-counts-sub review-state-id)
+                                                           (when has-more? "+")
+                                                           ")")))]]]))
+                                  (filter-kw states))))))
+                 doall)
+            [:div.application-handling__filter-state-selection-close-button-container
+             [:button.virkailija-close-button.application-handling__filter-state-selection-close-button
+              {:on-click #(reset! filter-opened false)}
+              [:i.zmdi.zmdi-close]]]])]))))
 
 (defn- select-rajaava-hakukohde [opened?]
   (let [ryhman-ensisijainen-hakukohde @(subscribe [:state-query [:application :rajaus-hakukohteella-value]])]
@@ -594,22 +669,43 @@
       [application-filters]]
      [created-time-column-header]
      (when (:attachment-handling @review-settings true)
-       [:span.application-handling__list-row--attachment-state
+       [:div.application-handling__list-row--attachment-state
         [hakukohde-state-filter-controls
-         :attachment-state-filter
-         @(subscribe [:editor/virkailija-translation :attachments])
-         review-states/attachment-hakukohde-review-types-with-no-requirements
-         (subscribe [:state-query [:application :attachment-state-counts]])]])
-     [:span.application-handling__list-row--state
+         {:title
+          @(subscribe [:editor/virkailija-translation :attachments])
+          :states
+          {:attachment-state-filter
+           review-states/attachment-hakukohde-review-types-with-no-requirements}
+          :state-counts-subs
+          {:attachment-state-filter
+           @(subscribe [:state-query [:application :attachment-state-counts]])}}]])
+     [:div.application-handling__list-row--state
       [hakukohde-state-filter-controls
-       :processing-state-filter
-       @(subscribe [:editor/virkailija-translation :processing-state])
-       review-states/application-hakukohde-processing-states
-       (subscribe [:state-query [:application :review-state-counts]])]]
+       {:title
+        @(subscribe [:editor/virkailija-translation :processing-state])
+        :states
+        {:processing-state-filter
+         review-states/application-hakukohde-processing-states}
+        :state-counts-subs
+        {:processing-state-filter
+         @(subscribe [:state-query [:application :review-state-counts]])}}]]
      (when (:selection-state @review-settings true)
-       [:span.application-handling__list-row--selection
+       [:div.application-handling__list-row--selection
         [hakukohde-state-filter-controls
-         :selection-state-filter
-         @(subscribe [:editor/virkailija-translation :selection])
-         review-states/application-hakukohde-selection-states
-         (subscribe [:state-query [:application :selection-state-counts]])]])]))
+         {:title
+          @(subscribe [:editor/virkailija-translation :selection])
+          :filter-titles
+          {:selection-state-filter
+           :valintakasittelymerkinta
+           :kevyt-valinta-selection-state-filter
+           :valinnan-tila}
+          :states
+          {:selection-state-filter
+           review-states/application-hakukohde-selection-states
+           :kevyt-valinta-selection-state-filter
+           review-states/kevyt-valinta-valinnan-tila-selection-states}
+          :state-counts-subs
+          {:selection-state-filter
+           @(subscribe [:state-query [:application :selection-state-counts]])
+           :kevyt-valinta-selection-state-filter
+           @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])]))

@@ -206,7 +206,6 @@ and (max-width: 1000px) {
 
 .application-handling__filter-state {
   position: relative;
-  float: left;
 }
 
 .application-handling__filter-state-link {
@@ -226,19 +225,27 @@ and (max-width: 1000px) {
 }
 
 .application-handling__filter-state-selection {
-  .arrow(top, white, 8px, 70px);
+  .arrow(top-right, white, 8px, 95px);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.30));
   border-radius: 3px;
   position: absolute;
   z-index: 10;
   top: 36px;
-  left: -36px;
+  right: -36px;
   text-align: start;
   background-color: white;
   min-width: 240px;
   padding: 11px 0 12px 1px;
   font-size: 13px;
   line-height: 21px;
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: space-between;
+}
+
+.application-handling__filter-state-selection-column {
+  width: 100%;
+  min-width: 160px;
 }
 
 .application-handling__filter-state-selection-close-button-container {
@@ -2905,6 +2912,7 @@ th.application__readonly-adjacent--header {
 
 .application-handling__hakukohde-selection-cell {
   flex: 0 0 105px;
+  position: relative;
 }
 
 .application-handling__count-tag {
@@ -2917,6 +2925,18 @@ th.application__readonly-adjacent--header {
   margin-top: 3px;
   color: @text-color;
   font-weight: normal;
+}
+
+.application-handling__application-list-view-cell {
+  font-size: 11px;
+  line-height: 13px;
+  border-radius: 4px;
+  padding: 1px 8px;
+  text-transform: uppercase;
+  margin-top: 3px;
+  color: @text-color;
+  font-weight: normal;
+  position: relative;
 }
 
 .application-handling__count-tag--haku-list {
@@ -2948,6 +2968,48 @@ th.application__readonly-adjacent--header {
 
 .application-handling__hakukohde-state, .application-handling__hakukohde-selection {
   float: left;
+}
+
+.application-handling__valinnan-tila-info-ikoni {
+  font-size: 16px;
+  position: absolute;
+  top: -6px;
+  left: 93px;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista {
+  color: @kevyt-valinta-unchecked-color;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista:hover {
+  color: @link-color;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta {
+  color: @gray-of-the-beast;
+}
+
+.application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta:hover {
+  color: #aaa;
+}
+
+.application-handling__valinnan-tila-info-teksti {
+  display: none;
+  position: absolute;
+}
+
+.application-handling__valinnan-tila-info-ikoni:hover + .application-handling__valinnan-tila-info-teksti {
+  display: block;
+  background-color: #00526c;
+  color: #ffffff;
+  left: -26px;
+  padding: 15px;
+  top: -67px;
+  user-select: none;
+  width: 252px;
+  z-index: 20;
+  text-transform: none;
+  font-size: 16px;
 }
 
 .application__text-field-paragraph {
@@ -3222,5 +3284,8 @@ th.application__readonly-adjacent--header {
   .application__message-display--exclamation {
     background-color: @application-notification-display-border-color;
   }
+}
+.application-handling__filter-state-selection-row-header {
+  margin-left: 14px;
 }
 

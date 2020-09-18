@@ -571,9 +571,6 @@
   (map ->kebab-case-kw
        (exec-db :db queries/yesql-get-application-review-notes-by-keys {:application_keys application-keys})))
 
-(defn selection-state-used? [haku-oid]
-  (:exists (first (exec-db :db queries/yesql-selection-state-used {:haku_oid haku-oid}))))
-
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db queries/yesql-get-application-by-id {:application_id application-id}))))
 

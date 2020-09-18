@@ -83,16 +83,17 @@
                                                                                       kevyt-valinta-property-value)]
                                                                 @(re-frame/subscribe [:editor/virkailija-translation translation-key]))})
                                                     kevyt-valinta-property-values)
+        ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
+        hakukohde-oid                          (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]]))
         kevyt-valinta-property-value           @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                      kevyt-valinta-property
-                                                                     application-key])
+                                                                     application-key
+                                                                     hakukohde-oid])
         kevyt-valinta-dropdown-label           (->> kevyt-valinta-dropdown-values
                                                     (filter (comp (partial = kevyt-valinta-property-value)
                                                                   :value))
                                                     (map :label)
                                                     (first))
-        ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
-        hakukohde-oid                          (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]]))
         kevyt-valinta-on-dropdown-value-change (partial on-kevyt-valinta-property-change
                                                         kevyt-valinta-property
                                                         hakukohde-oid
@@ -132,17 +133,17 @@
                                                                                                      kevyt-valinta-property-value)]
                                                                                @(re-frame/subscribe [:editor/virkailija-translation translation-key]))})
                                                                    @kevyt-valinta-property-values))
+        ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
+        hakukohde-oid                               (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
         kevyt-valinta-slider-toggle-value           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
                                                                                     kevyt-valinta-property
-                                                                                    @application-key]))
+                                                                                    @application-key
+                                                                                    @hakukohde-oid]))
         kevyt-valinta-slider-toggle-label           (reaction (->> @kevyt-valinta-slider-toggle-values
                                                                    (filter (comp (partial = @kevyt-valinta-slider-toggle-value)
                                                                                  :value))
                                                                    (map :label)
                                                                    (first)))
-        ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?
-        hakukohde-oid                               (reaction (first @(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])))
-
         kevyt-valinta-on-slider-toggle-value-change (reaction (partial on-kevyt-valinta-property-change
                                                                        kevyt-valinta-property
                                                                        @hakukohde-oid

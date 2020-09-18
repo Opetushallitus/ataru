@@ -199,16 +199,6 @@ FROM application_review_notes rn
 WHERE rn.application_key IN (:application_keys) AND (rn.removed IS NULL OR rn.removed > NOW())
 ORDER BY rn.created_time DESC;
 
--- name: yesql-selection-state-used
-SELECT EXISTS(SELECT true
-              FROM applications AS a
-              JOIN LATERAL (SELECT true
-                            FROM application_hakukohde_reviews AS ahr
-                            WHERE ahr.application_key = a.key AND
-                                  ahr.requirement = 'selection-state'
-                            LIMIT 1) AS t ON true
-              WHERE a.haku = :haku_oid) AS "exists";
-
 -- name: yesql-get-applications-by-keys
 -- Get list of applications by their keys
 SELECT

@@ -251,6 +251,9 @@
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))
 
+(s/defschema HakukohdeSearchResultWithSelectionStateInfo
+  (assoc HakukohdeSearchResult :selection-state-used s/Bool))
+
 (s/defschema Koodi
   {:uri                     s/Str
    :version                 s/Int
@@ -607,7 +610,7 @@
 (s/defschema Haut {:tarjonta-haut    {s/Str TarjontaHaku}
                    :direct-form-haut {s/Str DirectFormHaku}
                    :haut             {s/Str Haku}
-                   :hakukohteet      {s/Str HakukohdeSearchResult}
+                   :hakukohteet      {s/Str HakukohdeSearchResultWithSelectionStateInfo}
                    :hakukohderyhmat  {s/Str Hakukohderyhma}})
 
 (s/defschema ApplicationFeedback {:form-key   s/Str
@@ -707,8 +710,7 @@
    :sort                                  Sort
    (s/optional-key :states-and-filters)   {:filters                      {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
                                            :attachment-states-to-include [s/Str]
-                                           :processing-states-to-include [s/Str]
-                                           :selection-states-to-include  [s/Str]}})
+                                           :processing-states-to-include [s/Str]}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort

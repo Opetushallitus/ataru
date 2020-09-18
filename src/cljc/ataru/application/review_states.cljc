@@ -1,5 +1,6 @@
 (ns ataru.application.review-states
-  (:require [ataru.translations.texts :refer [state-translations]]
+  (:require [ataru.translations.texts :refer [state-translations
+                                              virkailija-texts]]
             [ataru.util :as util]))
 
 (def application-review-states
@@ -36,6 +37,12 @@
    "PERUNUT"                :perunut
    "PERUUTETTU"             :peruutettu
    "KESKEN"                 :kesken})
+
+(def kevyt-valinta-valinnan-tila-selection-states
+  (map (fn [[value key]]
+         [value
+          (key virkailija-texts)])
+       valinnan-tila-translation-key-mapping))
 
 (def julkaisun-tila-translation-key-mapping
   {true  :julkaistu

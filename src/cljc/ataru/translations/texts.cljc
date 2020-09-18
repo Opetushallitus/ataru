@@ -847,7 +847,19 @@
                                  :en "If you wish to edit your application, you can use the link above and make the changes within the application period. Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application.\n\nIf you have Finnish online banking credentials, an electronic\nID-card or mobile certificate, you can also log in\nat [Studyinfo.fi](https://www.studyinfo.fi) and make the\nchanges in the My Studyinfo -service within the application period. In addition to making changes to your application, if you have access to the My Studyinfo -service you can also view the admission results and confirm the study place.\n\nThis is an automatically generated email, please do not reply.\n\nBest regards, <br/>\nStudyinfo\n"}}})
 
 (def virkailija-texts
-  {:arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
+  {:valintakasittelymerkinta                        {:fi "Valintakäsittelymerkintä"
+                                                     :sv "Valintakäsittelymerkintä"
+                                                     :en "Valintakäsittelymerkintä"}
+   :valinnan-tila                                   {:fi "Valinnan tila"
+                                                     :sv "Valinnan tila"
+                                                     :en "Valinnan tila"}
+   :valinnan-tila-ladattu-valinnoista               {:fi "Valintatieto tuotu valintarekisteristä"
+                                                     :sv "Antagningsuppgiften inhämtad från antagningsregistret"
+                                                     :en "Valintatieto tuotu valintarekisteristä"}
+   :valinnan-tila-ladataan-valinnoista              {:fi "Valintatieto tuotu valintarekisteristä"
+                                                     :sv "Antagningsuppgiften inhämtad från antagningsregistret"
+                                                     :en "Valintatieto tuotu valintarekisteristä"}
+   :arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
                                                      :sv "Arvosanat (peruskoulu)"
                                                      :en "Arvosanat (peruskoulu)"}
    :arvosanat-lukio                                 {:fi "Arvosanat (lukio)"

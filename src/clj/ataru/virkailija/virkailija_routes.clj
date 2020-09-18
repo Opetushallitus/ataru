@@ -8,6 +8,7 @@
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
             [ataru.applications.excel-export :as excel]
+            [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
             [ataru.background-job.job :as job]
             [ataru.email.application-email-confirmation :as email]
@@ -401,8 +402,7 @@
                  :hakukohde-reviews            ataru-schema/HakukohdeReviews
                  :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) form-schema/Form
-                 :information-requests         [ataru-schema/InformationRequest]
-                 :selection-state-used?        s/Bool}
+                 :information-requests         [ataru-schema/InformationRequest]}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key
@@ -713,11 +713,16 @@
           (-> {:tarjonta-haut    {}
                :direct-form-haut {}
                :haut             {haku-oid (tarjonta/get-haku tarjonta-service haku-oid)}
-               :hakukohteet      (util/group-by-first :oid
-                                                      (tarjonta/hakukohde-search
-                                                        tarjonta-service
-                                                        haku-oid
-                                                        nil))
+               :hakukohteet      (->> (tarjonta/hakukohde-search
+                                        tarjonta-service
+                                        haku-oid
+                                        nil)
+                                      (map (fn [{hakukohde-oid :oid :as hakukohde}]
+                                             (assoc
+                                               hakukohde
+                                               :selection-state-used
+                                               (hakukohde-store/selection-state-used-in-hakukohde? hakukohde-oid))))
+                                      (util/group-by-first :oid))
                :hakukohderyhmat  (util/group-by-first :oid (organization-service/get-hakukohde-groups organization-service))}
               response/ok
               (response/header "Cache-Control" "public, max-age=300"))
