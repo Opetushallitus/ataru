@@ -240,18 +240,21 @@
            (nil? virkailija-secret))
       {:passed? false
        :failures ["Tried to edit application with invalid virkailija secret."]
+       :key  nil
        :code :internal-server-error}
 
       (and (:secret application)
            virkailija-secret)
       {:passed? false
        :failures ["Tried to edit hakemus with both virkailija and hakija secret."]
+       :key  (:key latest-application)
        :code :internal-server-error}
 
       (and (:haku application)
            (empty? (:hakukohde application)))
       {:passed? false
        :failures ["Hakukohde must be specified"]
+       :key  (:key latest-application)
        :code :internal-server-error}
 
       (and (not is-modify?)
@@ -261,21 +264,24 @@
         (log-late-submitted-application application now session audit-logger)
         {:passed? false
          :failures ["Application period is not open."]
+         :key  (:key latest-application)
          :code :application-period-closed})
 
       (not-empty edited-cannot-edit-questions)
       {:passed?  false
        :failures (into {} (map #(vector % "Cannot edit answer to question")
                                edited-cannot-edit-questions))
+       :key  (:key latest-application)
        :code :internal-server-error}
 
       (not (:passed? validation-result))
-      validation-result
+      (assoc validation-result :key (:key latest-application))
 
       :else
       (do
         (remove-orphan-attachments final-application latest-application)
-        (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)))))
+        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)
+          :key (:key latest-application))))))
 
 (defn- start-person-creation-job [job-runner application-id]
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -378,7 +384,7 @@
    input-application
    session]
   (log/info "Application edited:" input-application)
-  (let [{:keys [passed? id application]
+  (let [{:keys [passed? id application key]
          :as   result}
         (validate-and-store form-by-id-cache
                             koodisto-cache
@@ -402,8 +408,8 @@
                        {:new       input-application
                         :operation audit-log/operation-failed
                         :session   session
-                        :id        {:applicationOid (:key application)}})
-        (log/warn "Application" (:key application) "edit failed verification" result)))
+                        :id        {:applicationOid key}})
+        (log/warn "Application" key "edit failed verification" result)))
     result))
 
 (defn handle-application-attachment-post-process
