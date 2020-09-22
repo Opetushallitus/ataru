@@ -1233,23 +1233,25 @@
   :application/remove-question-group-row
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor idx]]
-    (let [id                     (keyword (:id field-descriptor))
-          with-decremented-count (-> db
-                                     (update-in [:application :ui id :count] dec)
-                                     (update-in [:application :ui id] dissoc :mouse-over-remove-button))
-          descendants            (->> (:children field-descriptor)
-                                      autil/flatten-form-fields
-                                      (filter autil/answerable?)
-                                      reverse)]
-      {:db         (reduce (fn [db child]
-                             (let [id (keyword (:id child))]
-                               (-> db
-                                   (update-in [:application :answers id :values] autil/remove-nth idx)
-                                   (set-repeatable-field-value id)
-                                   (set-repeatable-application-field-top-level-valid id true)
-                                   (field-visibility/set-field-visibility child))))
-                           with-decremented-count
-                           descendants)
+    (let [id                   (keyword (:id field-descriptor))
+          descendants          (->> (:children field-descriptor)
+                                    autil/flatten-form-fields
+                                    (filter autil/answerable?))
+          count-decremented    (-> db
+                                   (update-in [:application :ui id :count] dec)
+                                   (update-in [:application :ui id] dissoc :mouse-over-remove-button))
+          descendants-modified (reduce (fn [db child]
+                                         (let [id (keyword (:id child))]
+                                           (-> db
+                                               (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
+                                               (update-in [:application :answers id :values] autil/remove-nth idx)
+                                               (set-repeatable-field-value id)
+                                               (set-repeatable-application-field-top-level-valid id true))))
+                                       count-decremented
+                                       descendants)]
+      {:db         (field-visibility/set-field-visibility
+                    descendants-modified
+                    field-descriptor)
        :dispatch-n (mapv (fn [descendant]
                            [:application/run-rules (:rules descendant)])
                          descendants)})))
