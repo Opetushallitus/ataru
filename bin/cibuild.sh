@@ -83,6 +83,18 @@ test-browser() {
   stop_fake_deps_server
 }
 
+test-browser-mocha() {
+  start_fake_deps_server
+  time ./bin/lein spec -t ui
+  stop_fake_deps_server
+}
+
+test-browser-cypress() {
+  start_fake_deps_server
+  time ./bin/run-cypress-tests-in-travis.sh
+  stop_fake_deps_server
+}
+
 run-migrations() {
     echo "Running migrations"
     start_fake_deps_server
@@ -169,6 +181,28 @@ run-browser-tests() {
     test-browser
 }
 
+run-browser-tests-mocha() {
+    echo "Starting mocha browser test run"
+    clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript
+    test-browser
+}
+
+run-browser-tests-cypress() {
+    echo "Starting cypress browser test run"
+    clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript
+    test-browser
+}
+
 command="$1"
 
 case "$command" in
@@ -223,6 +257,12 @@ case "$command" in
     "run-browser-tests" )
         run-browser-tests
         ;;
+    "run-browser-tests-cypress" )
+        run-browser-tests-cypress
+        ;;
+    "run-browser-tests-mocha" )
+        run-browser-tests-mocha
+        ;;
     "run-clojure-tests" )
         run-clojure-tests
         ;;
@@ -260,5 +300,7 @@ case "$command" in
 * run-tests
 * run-tests-and-create-uberjar
 * run-clojure-tests
-* run-browser-tests"
+* run-browser-tests
+* run-browser-tests-cypress
+* run-browser-tests-mocha"
 esac
