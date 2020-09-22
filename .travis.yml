@@ -15,24 +15,24 @@ env:
 matrix:
   include:
     - stage: test
-        language: java
-        jdk:
-          - openjdk11
-        services:
-          - docker
+      language: java
+      jdk:
+        - openjdk11
+      services:
+        - docker
 
-        cache:
-          directories:
-            - $HOME/.m2
+      cache:
+        directories:
+          - $HOME/.m2
 
-        install:
-          - git clone https://github.com/Opetushallitus/ci-tools.git
-          - source ci-tools/common/setup-tools.sh
+      install:
+        - git clone https://github.com/Opetushallitus/ci-tools.git
+        - source ci-tools/common/setup-tools.sh
 
-        script: >-
-          nvm install &&
-          nvm use &&
-          ./bin/cibuild.sh run-tests
+      script: >-
+        nvm install &&
+        nvm use &&
+        ./bin/cibuild.sh run-tests
 
     - stage: test
       language: java
