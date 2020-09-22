@@ -83,6 +83,18 @@ test-browser() {
   stop_fake_deps_server
 }
 
+test-browser-mocha() {
+  start_fake_deps_server
+  time ./bin/lein spec -t ui
+  stop_fake_deps_server
+}
+
+test-browser-cypress() {
+  start_fake_deps_server
+  time ./bin/run-cypress-tests-in-travis.sh
+  stop_fake_deps_server
+}
+
 run-migrations() {
     echo "Running migrations"
     start_fake_deps_server
@@ -141,6 +153,17 @@ run-tests() {
     test-browser
 }
 
+run-clojure-tests() {
+    echo "Starting clojure test run"
+    clean
+    npm-dependencies
+    lint
+    test-clojurescript
+    nuke-test-db
+    run-migrations
+    test-clojure
+}
+
 run-tests-and-create-uberjar() {
     run-tests
     process-resources
@@ -156,6 +179,31 @@ run-browser-tests() {
     compile-less
     build-clojurescript
     test-browser
+}
+
+run-spec-and-mocha-tests() {
+    echo "Starting spec and mocha test run"
+    clean
+    npm-dependencies
+    lint
+    test-clojurescript
+    nuke-test-db
+    run-migrations
+    test-clojure
+    compile-less
+    build-clojurescript
+    test-browser-mocha
+}
+
+run-browser-tests-cypress() {
+    echo "Starting cypress browser test run"
+    clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript
+    test-browser-cypress
 }
 
 command="$1"
@@ -209,6 +257,18 @@ case "$command" in
     "run-tests-and-create-uberjar" )
         run-tests-and-create-uberjar
         ;;
+    "run-browser-tests" )
+        run-browser-tests
+        ;;
+    "run-browser-tests-cypress" )
+        run-browser-tests-cypress
+        ;;
+    "run-spec-and-mocha-tests" )
+        run-spec-and-mocha-tests
+        ;;
+    "run-clojure-tests" )
+        run-clojure-tests
+        ;;
     "nuke-test-db" )
         nuke-test-db
         ;;
@@ -241,5 +301,9 @@ case "$command" in
 * prepare-ui-tests
 * create-uberjar
 * run-tests
-* run-tests-and-create-uberjar"
+* run-tests-and-create-uberjar
+* run-clojure-tests
+* run-browser-tests
+* run-browser-tests-cypress
+* run-spec-and-mocha-tests"
 esac
