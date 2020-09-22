@@ -181,12 +181,15 @@ run-browser-tests() {
     test-browser
 }
 
-run-browser-tests-mocha() {
-    echo "Starting mocha browser test run"
+run-spec-and-mocha-tests() {
+    echo "Starting spec and mocha test run"
     clean
     npm-dependencies
+    lint
+    test-clojurescript
     nuke-test-db
     run-migrations
+    test-clojure
     compile-less
     build-clojurescript
     test-browser-mocha
@@ -260,8 +263,8 @@ case "$command" in
     "run-browser-tests-cypress" )
         run-browser-tests-cypress
         ;;
-    "run-browser-tests-mocha" )
-        run-browser-tests-mocha
+    "run-spec-and-mocha-tests" )
+        run-spec-and-mocha-tests
         ;;
     "run-clojure-tests" )
         run-clojure-tests
@@ -302,5 +305,5 @@ case "$command" in
 * run-clojure-tests
 * run-browser-tests
 * run-browser-tests-cypress
-* run-browser-tests-mocha"
+* run-spec-and-mocha-tests"
 esac
