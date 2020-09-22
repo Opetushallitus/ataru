@@ -11,36 +11,42 @@ env:
     - secure: "Ct/S7znCDJhmG7dvQxifdeqzUCe+MH8o/iMQLSwi+8NaE/xnSJLg9PzpHdaDm4zC5XQI8hNlFmaP/b2UuDoWdgwk+S3GUXd1Y4zCcyS5O7hW+DnI8xjJ5JGIS3R6J67dZfhkWRBr36UbAgWv+KxGIJ1wjZlGyY7SdnaUYr1H+pCfI90jMiJ8FK9EoSw2GXKnk+RQR1Gwup9b5xsMhWhCubGQiRPPQi7KpdU4JwvPF69LoXozCbj4VsvGx1kNsobEVPiwt/V53T3gOyK4E4XTnbyAvVNMQDBjwFUToGxA8LjHIKiVL/BPcu7oSXPeZLO2JLSCIAOUi6aDAvvzPu5xA59lqIgt2rLnF2I+81xngejn0hpeuOktdFVXKVz6WGBv/7lASJxV9FI73yTk9fN6/FztKEkeV8h8DN01Atab3sWoHPTqY5VEhRAm9C5eGbE1WDv1qTogNoyUwBR01Qv4JTo2Lh9BjGu5gsu7t5epF2+ArHEvpRxklTWDjKdPuiPFSy1HucHLSgea3Bm8Xs/Vl2NsUlD7ZFnNJQy6vcFl58JUD4u2GilfBQcvNRs2c3BlEA5Vk5/uuFpl2up+3kyLXqQvX9hKUM8q1BbpvlzVjGqQ09IahNfm8Ufi+sxQeIrTxK84ukEIlj8wOq8rgJh+ta7NQU8iSS+96rum4rjXJ9o="
     # AWS_SECRET_ACCESS_KEY
     - secure: "la8MQBP3bIr9jyqOk9J9Zyhujx6kCojngJFbe7iPRFfhXrK6tHzejnXuprGPyB9gvKocLzYxFGoOFeT5YTVM5kv0P6j7zpqhBO6shIVzDGWiqThB4iAq2oTUn0LO/Rs3ByvEDmuyy7BeFa7JY6KiXK3F9gWnOGMyCw1bM1of130bD0eHaxh9jlPATZZFY/IPKCzxm6ABXhYeXhBalF4Qizuisbgw0FvlLo91BhAqZJDM6zha0ovOxF3BIzjkDuunVJcUzaLDHDwV6nTWxWMu2DRH5k6b4ut69vVBXzX9r9KhIezLWilyDkqg5jmQCUG5luqHonvOjhdG3qn3g+64dn0QAq5vqGu88Bt/uNpxyR8Y9erHK6ItlHzNvKfp/ZFRqu0PJLbHzFpRxmqjJpRz0H2e2Z0boxUrmxjhpoC2HbOKiqyFwsZqElHtTTfmZ9A44+7CdOXd3TSVNajamPuJIfhhjy1DdaCMOISGFH9vO3DPOysDe0oSeeeX9qUGEk/BohvSF8EYFGEm1h+zS2XxVLydINdgnvIHmeQ4+uAbs+yMN5t3yL4IaXPZI437lcRgnNEHxKubnujHJOlJbVKYRP9EH6jmQPbUVJVvIQE69Aq+UDQgw7vogTHjsNSzdXSKC+l0vjed8N1jyL3XiMZukH0Tp1RMckS3WkgPzL/Ewr0="
-cache:
-  directories:
-    - $HOME/.m2
-before_install:
-  - sudo apt-get update
-  - sudo apt-get install -y lftp
-install:
-  - git clone https://github.com/Opetushallitus/ci-tools.git
-  - source ci-tools/common/setup-tools.sh
-before_script:
-  - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-  - docker run -d --name ataru-test-redis -p 6380:6379 redis
-  - docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
-script: >-
-  nvm install &&
-  nvm use &&
-  ./bin/cibuild.sh run-tests-and-create-uberjar &&
-  export BASE_IMAGE="baseimage-fatjar-openjdk11:master" &&
-  ./ci-tools/common/pull-image.sh &&
-  cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-editori.jar &&
-  cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/ &&
-  ./ci-tools/build/build-fatjar.sh ataru-editori &&
-  ./ci-tools/common/clean-docker-build-dir.sh &&
-  cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-hakija.jar &&
-  cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/ &&
-  ./ci-tools/build/build-fatjar.sh ataru-hakija
-deploy:
-  provider: script
-  script: >-
-    ./ci-tools/build/upload-image.sh ataru-editori &&
-    ./ci-tools/build/upload-image.sh ataru-hakija
-  on:
-    all_branches: true
+
+matrix:
+  include:
+    - stage: test
+      language: java
+      jdk:
+        - openjdk11
+      services:
+        - docker
+
+      cache:
+        directories:
+          - $HOME/.m2
+
+      install:
+        - git clone https://github.com/Opetushallitus/ci-tools.git
+        - source ci-tools/common/setup-tools.sh
+
+      script: >-
+        ./bin/cibuild.sh create-uberjar &&
+        export BASE_IMAGE="baseimage-fatjar-openjdk11:master" &&
+        ./ci-tools/common/pull-image.sh &&
+        cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-editori.jar &&
+        cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/ &&
+        ./ci-tools/build/build-fatjar.sh ataru-editori &&
+        ./ci-tools/build/upload-image.sh ataru-editori --skip-dynamo-write &&
+        ./ci-tools/common/clean-docker-build-dir.sh &&
+        cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-hakija.jar &&
+        cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/ &&
+        ./ci-tools/build/build-fatjar.sh ataru-hakija &&
+        ./ci-tools/build/upload-image.sh ataru-hakija --skip-dynamo-write
+
+    - stage: deploy
+      script:
+        - git clone https://github.com/Opetushallitus/ci-tools.git
+        - source ci-tools/common/setup-tools.sh
+        - export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
+        - ./ci-tools/build/upload-image.sh ataru-editori --dynamo-write
+        - ./ci-tools/build/upload-image.sh ataru-hakija --dynamo-write
