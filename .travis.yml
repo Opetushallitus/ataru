@@ -29,10 +29,15 @@ matrix:
         - git clone https://github.com/Opetushallitus/ci-tools.git
         - source ci-tools/common/setup-tools.sh
 
+      before_script:
+        - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
+        - docker run -d --name ataru-test-redis -p 6380:6379 redis
+        - docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
+
       script: >-
         nvm install &&
         nvm use &&
-        ./bin/cibuild.sh run-tests
+        ./bin/cibuild.sh run-browser-tests
 
     - stage: test
       language: java

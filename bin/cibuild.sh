@@ -141,6 +141,17 @@ run-tests() {
     test-browser
 }
 
+run-clojure-tests() {
+    echo "Starting clojure test run"
+    clean
+    npm-dependencies
+    lint
+    test-clojurescript
+    nuke-test-db
+    run-migrations
+    test-clojure
+}
+
 run-tests-and-create-uberjar() {
     run-tests
     process-resources
