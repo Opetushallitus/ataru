@@ -80,7 +80,8 @@
          util/flatten-form-fields
          (keep (fn [{:keys [id cannot-edit]}]
                  (when (and cannot-edit
-                            (if (contains? old-answers id)
+                            (if (and (contains? old-answers id)
+                                     (not= [nil] (:value (old-answers id))))
                               (not= (:value (new-answers id))
                                     (:value (old-answers id)))
                               (not-every? string/blank?
