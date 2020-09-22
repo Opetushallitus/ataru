@@ -1243,6 +1243,7 @@
           descendants-modified (reduce (fn [db child]
                                          (let [id (keyword (:id child))]
                                            (-> db
+                                               (update-in [:application :answers id :values] (util/vector-of-length (inc idx)))
                                                (update-in [:application :answers id :values] autil/remove-nth idx)
                                                (set-repeatable-field-value id)
                                                (set-repeatable-application-field-top-level-valid id true))))
