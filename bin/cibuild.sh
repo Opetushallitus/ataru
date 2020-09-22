@@ -189,7 +189,7 @@ run-browser-tests-mocha() {
     run-migrations
     compile-less
     build-clojurescript
-    test-browser
+    test-browser-mocha
 }
 
 run-browser-tests-cypress() {
@@ -200,7 +200,7 @@ run-browser-tests-cypress() {
     run-migrations
     compile-less
     build-clojurescript
-    test-browser
+    test-browser-cypress
 }
 
 command="$1"
