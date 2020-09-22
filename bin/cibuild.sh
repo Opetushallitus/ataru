@@ -220,6 +220,12 @@ case "$command" in
     "run-tests-and-create-uberjar" )
         run-tests-and-create-uberjar
         ;;
+    "run-browser-tests" )
+        run-browser-tests
+        ;;
+    "run-clojure-tests" )
+        run-clojure-tests
+        ;;
     "nuke-test-db" )
         nuke-test-db
         ;;
@@ -252,5 +258,7 @@ case "$command" in
 * prepare-ui-tests
 * create-uberjar
 * run-tests
-* run-tests-and-create-uberjar"
+* run-tests-and-create-uberjar
+* run-clojure-tests
+* run-browser-tests"
 esac
