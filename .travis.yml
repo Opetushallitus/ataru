@@ -37,7 +37,7 @@ matrix:
       script: >-
         nvm install &&
         nvm use &&
-        ./bin/cibuild.sh run-browser-tests-mocha
+        ./bin/cibuild.sh run-spec-and-mocha-tests
 
     - stage: test
       language: java
