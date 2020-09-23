@@ -80,8 +80,7 @@
          util/flatten-form-fields
          (keep (fn [{:keys [id cannot-edit]}]
                  (when (and cannot-edit
-                            (if (and (contains? old-answers id)
-                                     (not= [nil] (:value (old-answers id))))
+                            (if (contains? old-answers id)
                               (not= (:value (new-answers id))
                                     (:value (old-answers id)))
                               (not-every? string/blank?
@@ -236,6 +235,8 @@
                                          final-application
                                          latest-application
                                          form))]
+    (when (not-empty edited-cannot-edit-questions)
+      (log/warn "Application " (:key latest-application) " had uneditable answers: " edited-cannot-edit-questions))
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
@@ -267,13 +268,6 @@
          :failures ["Application period is not open."]
          :key  (:key latest-application)
          :code :application-period-closed})
-
-      (not-empty edited-cannot-edit-questions)
-      {:passed?  false
-       :failures (into {} (map #(vector % "Cannot edit answer to question")
-                               edited-cannot-edit-questions))
-       :key  (:key latest-application)
-       :code :internal-server-error}
 
       (not (:passed? validation-result))
       (assoc validation-result :key (:key latest-application))
