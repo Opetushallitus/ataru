@@ -1,11 +1,14 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
+            [ataru.applications.application-store-queries :as queries]
             [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.db.db :as db]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.forms.form-store :as forms]
             [ataru.util :as util]
-            [speclj.core :refer :all]))
+            [speclj.core :refer :all])
+  (:import [java.util UUID]))
 
 (def form-key (:key fixtures/form))
 
@@ -266,3 +269,35 @@
                 "pohjakoulutus_muu--attachment"}
               (hebem/non-yo-attachment-ids
                form-fixtures/base-education-attachment-test-form))))
+
+(defn- do-payment-obligation-review
+  "Emulates automation by performing a review."
+  [application-key new-review-state]
+  (let [connection           {:connection {:datasource (db/get-datasource :db)}}]
+    (store/save-payment-obligation-automatically-changed application-key hakukohde-oid "payment-obligation" new-review-state)
+    (-> (queries/yesql-get-application-events {:application_key application-key} connection)
+        last
+        (select-keys [:id :application_key :new_review_state :review_key :event_type]))))
+
+(defn- submap?
+  "Returns truthiness for `a-map` containing all key value pairs of `b-map`."
+  [a-map b-map]
+  (and (every? (set (keys a-map)) (keys b-map))
+       (every? #(= (a-map %) (b-map %)) (keys b-map))))
+
+(describe "automatic payment obligation for application"
+          (tags :unit :BUG-2110)
+          (it "switches between not-obligated and unreviewed when called multiple times"
+              (let [application-key      (str (UUID/randomUUID))
+                    first-event          (do-payment-obligation-review application-key "not-obligated")
+                    second-event         (do-payment-obligation-review application-key "unreviewed")]
+                (should (submap? first-event
+                                 {:new_review_state "not-obligated"
+                                  :review_key "payment-obligation"
+                                  :application_key application-key
+                                  :event_type "payment-obligation-automatically-changed"}))
+                (should (submap? second-event
+                                 {:new_review_state "unreviewed"
+                                  :review_key "payment-obligation"
+                                  :application_key application-key
+                                  :event_type "payment-obligation-automatically-changed"})))))
