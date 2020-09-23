@@ -16,6 +16,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.cache.cache-service :as cache-service]
             [ataru.hakija.hakija-routes :as routes]
+            [ataru.log.audit-log :as audit-log]
             [ataru.hakija.hakija-application-service :as application-service]
             [ataru.applications.application-service :as common-application-service]
             [ataru.config.core :refer [config]]
@@ -63,7 +64,7 @@
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
-        audit-logger                         (ataru.log.audit-log/new-dummy-audit-logger)
+        audit-logger                         (audit-log/new-dummy-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
@@ -586,12 +587,6 @@
             (should= ["57af9386-d80c-4321-ab4a-d53619c14a74_edited"]
                      (get-answer application "164954b5-7b23-4774-bd44-dee14071316b"))))))
 
-    (it "should disallow application edit after grace period to attachments"
-      (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    crypto/url-part (constantly "0000000023")]
-        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
-          (should= 400 (:status resp)))))
-
     (it "should disallow application edit after grace period to attachment with extended field deadline that has passed"
       (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
                     field-deadline/get-field-deadlines (fn [_]
@@ -600,21 +595,7 @@
                                                            :last-modified (DateTime/now)}])
                     crypto/url-part                    (constantly "0000000023")]
         (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
-          (should= 400 (:status resp)))))
-
-    (it "should allow application edit after grace period to attachment with extended field deadline"
-      (with-redefs [hakuaika/hakukohteen-hakuaika      hakuaika-ended-grace-period-passed-hakukierros-ongoing
-                    field-deadline/get-field-deadlines (fn [_]
-                                                         [{:field-id      "164954b5-7b23-4774-bd44-dee14071316b"
-                                                           :deadline      (.plusDays (DateTime/now) 1)
-                                                           :last-modified (DateTime/now)}])
-                    crypto/url-part                    (constantly "0000000023")]
-        (with-response :put resp (merge application-fixtures/person-info-form-application-for-hakukohde {:secret "0000000022"})
-          (should= 200 (:status resp))
-          (let [id          (-> resp :body :id)
-                application (get-application-by-id id)]
-            (should= ["57af9386-d80c-4321-ab4a-d53619c14a74"]
-                     (get-answer application "164954b5-7b23-4774-bd44-dee14071316b")))))))
+          (should= 400 (:status resp))))))
 
   (describe "PUT application with empty answers"
     (it "should work"
