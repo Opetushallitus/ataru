@@ -40,17 +40,15 @@
 (defn- email-verify-field-change [field-descriptor value verify-value]
   (dispatch [:application/set-email-verify-field field-descriptor value verify-value]))
 
-(defn- textual-field-change [field-descriptor evt]
-  (let [value (-> evt .-target .-value)]
-    (dispatch [:application/set-repeatable-application-field field-descriptor nil nil value])))
+(defn- textual-field-change [field-descriptor value]
+  (dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]))
 
 (defn textual-field-blur
   [field-descriptor]
   (dispatch [:application/run-rules (:blur-rules field-descriptor)]))
 
-(defn- multi-value-field-change [field-descriptor question-group-idx event]
-  (let [value (some-> event .-target .-value)]
-    (dispatch [:application/set-repeatable-application-field field-descriptor question-group-idx nil value])))
+(defn- multi-value-field-change [field-descriptor question-group-idx value]
+  (dispatch [:application/set-repeatable-application-field field-descriptor question-group-idx nil value]))
 
 (defn- validation-error
   [errors]
@@ -74,6 +72,11 @@
      (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
+
+(defn- event->value [handler]
+  (fn [evt]
+    (let [value (-> evt .-target .-value)]
+      (handler value))))
 
 (defn email-field [field-descriptor idx]
   (let [id            (keyword (:id field-descriptor))
@@ -101,8 +104,10 @@
                                   (if show-error?
                                     " application__form-field-error"
                                     " application__form-text-input--normal"))
-              :on-blur       (fn [_] (textual-field-blur field-descriptor))
-              :on-change     on-change
+              :on-blur       (event->value (fn [value]
+                                             (on-change (clojure.string/trim (or value "")))
+                                             (textual-field-blur field-descriptor)))
+              :on-change     (event->value on-change)
               :required      (is-required-field? field-descriptor)
               :aria-invalid  (not (:valid answer))
               :autoComplete  autocomplete-off
@@ -217,11 +222,11 @@
                                   (swap! local-state assoc
                                          :focused? false)
                                   (on-blur evt))
-                  :on-change    (fn [evt]
-                                  (swap! local-state assoc
-                                         :focused? true
-                                         :value (-> evt .-target .-value))
-                                  (on-change evt))
+                  :on-change    (event->value (fn [value]
+                                                (swap! local-state assoc
+                                                       :focused? true
+                                                       :value value)
+                                                (on-change value)))
                   :required     (is-required-field? field-descriptor)
                   :aria-invalid (not valid)
                   :tab-index    "0"
@@ -376,11 +381,11 @@
                   :on-blur      (fn [_]
                                   (swap! local-state assoc
                                          :focused? false))
-                  :on-change    (fn [evt]
-                                  (swap! local-state assoc
-                                         :focused? true
-                                         :value (-> evt .-target .-value))
-                                  (on-change evt))
+                  :on-change    (event->value (fn [value]
+                                                (swap! local-state assoc
+                                                       :focused? true
+                                                       :value value)
+                                                (on-change value)))
                   :required     (is-required-field? field-descriptor)
                   :aria-invalid (not valid)
                   :tab-index    "0"}
