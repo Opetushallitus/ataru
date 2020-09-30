@@ -1,8 +1,10 @@
 (ns ataru.anonymizer.core
   (:require [ataru.anonymizer.anonymizer-application-store :as application-store]
-            [ataru.anonymizer.data :as data]
-            [ataru.anonymizer.ssn-generator :as ssn-gen]
-            [taoensso.timbre :as log]))
+            [cheshire.core :as json]
+            clojure.string
+            clojure.walk
+            [taoensso.timbre :as log])
+  (:import java.util.concurrent.Executors))
 
 (defn- date-to-iso8601
   [date]
@@ -43,11 +45,9 @@
 
 (defn fake-person->ataru-person [{:keys [sukupuoli
                                          toinennimi
-                                         hetu_aes
                                          syntymaaika
                                          sahkopostiosoite
                                          sukunimi
-                                         hetu_sha
                                          hetu
                                          etunimi
                                          puhelinnumero
@@ -73,17 +73,23 @@
        (clojure.string/split-lines)
        (map (comp fake-person->ataru-person
                   clojure.walk/keywordize-keys
-                  cheshire.core/parse-string))
+                  json/parse-string))
        (group-by :person-oid)))
 
 (defn anonymize-data [& args]
   (assert (not (clojure.string/blank? (second args))))
-  (let [fake-persons   (file->fake-persons (first args))
-        attachment-key (second args)]
-    (doseq [id   (application-store/get-all-application-ids)
-            :let [application (application-store/get-application id)]]
-      (if-let [fake-person (first (get fake-persons (:person_oid application)))]
-        (do (application-store/update-application (anonymize fake-person attachment-key application))
-            (log/info "Anonymized application" (:id application)))
-        (log/info "Did not anonymize application" (:id application))))
+  (let [executor-service (Executors/newFixedThreadPool
+                          (.availableProcessors (Runtime/getRuntime)))
+        fake-persons     (file->fake-persons (first args))
+        attachment-key   (second args)]
+    (doseq [id (application-store/get-all-application-ids)]
+      (.execute
+       executor-service
+       (fn []
+         (let [application (application-store/get-application id)]
+           (if-let [fake-person (first (get fake-persons (:person_oid application)))]
+             (do (application-store/update-application (anonymize fake-person attachment-key application))
+                 (log/info "Anonymized application" (:id application)))
+             (log/info "Did not anonymize application" (:id application)))))))
+    (.shutdown executor-service)
     (application-store/regenerate-application-secrets)))
