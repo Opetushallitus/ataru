@@ -277,7 +277,14 @@
                                               [filter-kw @(subscribe [:state-query [:application filter-kw]])]))
                                        (every? (fn [[filter-kw filter-sub]]
                                                  (= (count filter-sub)
-                                                    (-> states filter-kw count)))))]
+                                                    (-> states filter-kw count)))))
+            all-counts-zero?      (->> (keys states)
+                                       (every? (fn [filter-kw]
+                                                 (let [state-counts-sub (some-> state-counts-subs filter-kw)]
+                                                   (or (not state-counts-sub)
+                                                       (every? (fn [[review-state-id]]
+                                                                  (= 0 (get-state-count state-counts-sub review-state-id)))
+                                                                  (filter-kw states)))))))]
         [:div.application-handling__filter-state.application-handling__filter-state--application-state
          [hakukohde-state-filter-controls-title
           {:title                 title
@@ -290,7 +297,8 @@
                            (let [state-counts-sub (some-> state-counts-subs filter-kw)]
                              (or (not state-counts-sub)
                                  (some (fn [[review-state-id]]
-                                         (< 0 (get-state-count state-counts-sub review-state-id)))
+                                         (or all-counts-zero?
+                                             (< 0 (get-state-count state-counts-sub review-state-id))))
                                        (filter-kw states))))))
                  (map (fn [filter-kw]
                         (let [filter-sub                     @(subscribe [:state-query [:application filter-kw]])
