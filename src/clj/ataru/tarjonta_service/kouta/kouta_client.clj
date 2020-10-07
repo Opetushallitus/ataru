@@ -8,6 +8,7 @@
             [clj-time.core :as t]
             [clj-time.format :as f]
             [schema.core :as s]
+            [clojure.string :as string]
             [taoensso.timbre :as log]))
 
 (def haku-checker (s/checker form-schema/Haku))
@@ -32,7 +33,7 @@
                              {:end (parse-date-time paattyy)})))
                        (:hakuajat haku))]
     (merge
-     {:can-submit-multiple-applications           true
+     {:can-submit-multiple-applications           false
       :hakuajat                                   hakuajat
       :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
@@ -42,7 +43,7 @@
       :oid                                        (:oid haku)
       :prioritize-hakukohteet                     false
       :sijoittelu                                 false
-      :yhteishaku                                 (clojure.string/starts-with?
+      :yhteishaku                                 (string/starts-with?
                                                    (:hakutapaKoodiUri haku)
                                                    "hakutapa_01#")
       :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
@@ -203,7 +204,7 @@
   cache-service/CacheLoader
 
   (load [_ key]
-    (let [[haku-oid organization-oid] (clojure.string/split key #"#")]
+    (let [[haku-oid organization-oid] (string/split key #"#")]
       (get-hakukohdes-by
        cas-client
        (cond-> {:haku-oid haku-oid}
