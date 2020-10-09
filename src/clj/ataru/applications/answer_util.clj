@@ -175,6 +175,10 @@
                                                 application-key
                                                 answers
                                                 [:pohjakoulutus_muu--year-of-completion])
+    "pohjakoulutus_avoin"                      (suoritusvuosi-one-of
+                                                application-key
+                                                answers
+                                                [:pohjakoulutus_avoin--year-of-completion])
     (do (log/warn "Form for haku" (:oid haku)
                   "has the question higher-completed-base-education"
                   "but the answer" pohjakoulutus "is unknown")
@@ -184,11 +188,9 @@
   [haku answers application-key]
   (vec
    (mapcat (fn [pohjakoulutus]
-             (if (= "pohjakoulutus_avoin" pohjakoulutus)
-               [{:pohjakoulutuskklomake pohjakoulutus}]
-               (mapv (fn [suoritusvuosi]
-                       (merge {:pohjakoulutuskklomake pohjakoulutus}
-                              (when (some? suoritusvuosi)
-                                {:suoritusvuosi suoritusvuosi})))
-                     (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus application-key))))
+             (mapv (fn [suoritusvuosi]
+                     (merge {:pohjakoulutuskklomake pohjakoulutus}
+                            (when (some? suoritusvuosi)
+                              {:suoritusvuosi suoritusvuosi})))
+                   (kk-pohjakoulutus-suoritusvuosi haku answers pohjakoulutus application-key)))
            (get-in answers [:higher-completed-base-education :value]))))
