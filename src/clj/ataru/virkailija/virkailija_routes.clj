@@ -316,6 +316,14 @@
                 application-id)
               (response/ok {}))
           (response/unauthorized {})))
+      (api/POST "/start-tutkintojen-tunnustaminen-edit-job/:application-id" {session :session}
+        :path-params [application-id :- s/Int]
+        (if (get-in session [:identity :superuser])
+          (do (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
+                job-runner
+                application-id)
+              (response/ok {}))
+          (response/unauthorized {})))
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
