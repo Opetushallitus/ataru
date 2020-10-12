@@ -7,6 +7,7 @@
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
+            [clojure.string]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
@@ -127,11 +128,7 @@
   (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                (url-helper/resolve-url hakukohde-oid)
                                (get-result cas-client))]
-    (let [toteutus  (some-> :kouta-internal.toteutus
-                            (url-helper/resolve-url (:toteutusOid hakukohde))
-                            (get-result cas-client))
-          tarjoajat (some->> (or (seq (:tarjoajat hakukohde))
-                                 (seq (:tarjoajat toteutus)))
+    (let [tarjoajat (some->> (seq (:tarjoajat hakukohde))
                              (organization-service/get-organizations-for-oids
                               organization-service))]
       (parse-hakukohde hakukohde tarjoajat))))
