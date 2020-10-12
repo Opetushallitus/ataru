@@ -38,7 +38,7 @@ export default () => {
         .then(() =>
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'A',
-            arvosana: 'hyvaksytty-suoritettu',
+            arvosana: 'hyvaksytty',
             oppimaara: 'ruotsi-viittomakielisille',
             index: 3,
           })
@@ -46,7 +46,7 @@ export default () => {
         .then(() =>
           hakijanNakyma.arvosanat.asetaOppiaineenArvosanat({
             oppiaine: 'A1',
-            arvosana: '10',
+            arvosana: 'osallistunut',
             oppimaara: 'FI',
             index: 0,
           })

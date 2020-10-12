@@ -125,8 +125,11 @@
                                                           :en arvosana}
                                                   :value (str "arvosana-" oppiaineen-koodi "-" arvosana)}))))
                                   (dropdown-option
-                                    {:label (:hyvaksytty-suoritettu texts/translation-mapping)
-                                     :value (str "arvosana-" oppiaineen-koodi "-hyvaksytty-suoritettu")})
+                                    {:label (:hyvaksytty-s texts/translation-mapping)
+                                     :value (str "arvosana-" oppiaineen-koodi "-hyvaksytty")})
+                                  (dropdown-option
+                                    {:label (:osallistunut-o texts/translation-mapping)
+                                     :value (str "arvosana-" oppiaineen-koodi "-osallistunut")})
                                   (dropdown-option
                                     {:label (:ei-arvosanaa texts/translation-mapping)
                                      :value (str "arvosana-" oppiaineen-koodi "-ei-arvosanaa")}))

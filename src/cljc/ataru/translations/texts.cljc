@@ -5,9 +5,6 @@
   {:lisaa-kieli                                 {:fi "Lisää kieli"
                                                  :sv "Lisää kieli"
                                                  :en "Lisää kieli"}
-   :hyvaksytty-suoritettu                       {:fi "Hyväksytty / suoritettu"
-                                                 :sv "Hyväksytty / suoritettu"
-                                                 :en "Hyväksytty / suoritettu"}
    :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
                                                  :en "Add"}
@@ -389,8 +386,14 @@
    :hyvaksytty                                  {:fi "Hyväksytty"
                                                  :sv "Godkänd"
                                                  :en "Selected"}
+   :hyvaksytty-s                                {:fi "S (Hyväksytty)"
+                                                 :sv "S (Godkänd)"
+                                                 :en "S (Selected)"}
+   :osallistunut-o                              {:fi "O (Osallistunut)"
+                                                 :sv "O (Deltagit)"
+                                                 :en "O (Osallistunut)"}
    :ei-arvosanaa                                {:fi "Ei arvosanaa"
-                                                 :sv "Ei arvosanaa"
+                                                 :sv "Inget vitsord"
                                                  :en "Ei arvosanaa"}
    :preview-answers                             {:fi "Esikatselu"
                                                  :sv "Förhandsvisa"
