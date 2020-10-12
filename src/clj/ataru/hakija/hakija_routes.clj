@@ -416,7 +416,6 @@
                                       (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>"))))
                             (clj-access-logging/wrap-access-logging)
-                            (clj-stdout-access-logging/wrap-stdout-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
                              {:path (str (-> config :log :hakija-base-path)
                                          "/access_ataru-hakija"

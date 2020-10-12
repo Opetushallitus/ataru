@@ -1435,7 +1435,6 @@
                                                (update :responses dissoc :content-types)
                                                (update :security dissoc :content-type-options :anti-forgery)))
                             (clj-access-logging/wrap-access-logging)
-                            (clj-stdout-access-logging/wrap-stdout-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
                              {:path (str (-> config :log :virkailija-base-path)
                                          "/access_ataru-editori"
