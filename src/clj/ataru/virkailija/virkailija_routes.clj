@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.application.review-states :as review-states]
             [ataru.hakija.hakija-application-service :as hakija-application-service]
@@ -307,6 +308,14 @@
 
     (api/context "/background-jobs" []
       :tags ["background-jobs-api"]
+      (api/POST "/start-tutkintojen-tunnustaminen-submit-job/:application-id" {session :session}
+        :path-params [application-id :- s/Int]
+        (if (get-in session [:identity :superuser])
+          (do (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-submit-job
+                job-runner
+                application-id)
+              (response/ok {}))
+          (response/unauthorized {})))
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
