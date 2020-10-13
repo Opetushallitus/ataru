@@ -7,7 +7,7 @@
                          {:uri "tutkintonimikkeet" :version 2 :title "Tutkintonimikkeet"}
                          {:uri "maatjavaltiot2" :version 2 :title "Maat ja valtiot"}
                          {:uri "kktutkinnot" :version 1 :title "Kk-tutkinnot"}
-                         {:uri "pohjakoulutuskklomake" :version 1 :title "Kk-pohjakoulutusvaihtoehdot"}
+                         {:uri "pohjakoulutuskklomake" :version 2 :title "Kk-pohjakoulutusvaihtoehdot"}
                          {:uri "kunta" :version 1 :title "Kunta"}
                          {:uri "AmmatillisetOPSperustaiset" :version 1 :title "Ammatilliset tutkinnot"}
                          {:uri "oppilaitostyyppi" :version 1 :title "Ammatilliset oppilaitokset"}
