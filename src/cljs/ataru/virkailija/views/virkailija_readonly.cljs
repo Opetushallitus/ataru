@@ -39,12 +39,10 @@
 (defn- selected-hakukohteet [application]
   (get-in application [:answers :hakukohteet :value]))
 
-(defn- selected-hakukohteet-and-ryhmat-from-application [form application]
+(defn- selected-hakukohteet-and-ryhmat-from-application [application hakukohteet]
   (let [selected-hakukohteet                   (set (selected-hakukohteet application))
-        selected-hakukohteet-tarjonta          (when (not-empty selected-hakukohteet)
-                                                 (filter #(contains? selected-hakukohteet (:oid %))
-                                                         (get-in form [:tarjonta :hakukohteet])))
-        selected-hakukohderyhmat               (set (mapcat :hakukohderyhmat selected-hakukohteet-tarjonta))
+        selected-hakukohteet-tarjonta          (vals (select-keys hakukohteet selected-hakukohteet))
+        selected-hakukohderyhmat               (set (mapcat :ryhmaliitokset selected-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohteet-tarjonta (set (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?
                                                             selected-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
@@ -52,24 +50,40 @@
     [(set/union selected-hakukohteet selected-hakukohderyhmat)
      (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
+(defn- belongs-to-hakukohderyhma? [field application]
+  (let [hakukohteet             (-> application :hakukohde set)
+        applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
+                                     (filter #(contains? hakukohteet (:oid %)))
+                                     (mapcat :hakukohderyhmat)
+                                     set)]
+    (not-empty (set/intersection (-> field :belongs-to-hakukohderyhma set)
+                                 applied-hakukohderyhmat))))
+
+(defn- belongs-to-hakukohde? [field application]
+  (not-empty (set/intersection (set (:belongs-to-hakukohteet field))
+                               (set (:hakukohde application)))))
+
 (defn- visible? [field-descriptor application hakukohteet-and-ryhmat]
   (let [[selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] hakukohteet-and-ryhmat
         jyemp? (and (ylioppilastutkinto? application)
                     (contains? (:excluded-attachment-ids-when-yo-and-jyemp application) (:id field-descriptor)))
-        belongs-to             (set (concat (:belongs-to-hakukohderyhma field-descriptor)
-                                            (:belongs-to-hakukohteet field-descriptor)))]
-  (and (not (get-in field-descriptor [:params :hidden] false))
-       (not= "infoElement" (:fieldClass field-descriptor))
-       (not (:exclude-from-answers field-descriptor))
-       (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
-       (or (empty? belongs-to)
-           (not (empty? (set/intersection
-                          belongs-to
-                          (if jyemp?
-                            selected-ei-jyemp-hakukohteet-and-ryhmat
-                            selected-hakukohteet-and-ryhmat)))))
-       (or (empty? (:children field-descriptor))
-           (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor))))))
+        belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+                                (:belongs-to-hakukohteet field-descriptor)))]
+    (and (not (get-in field-descriptor [:params :hidden] false))
+         (not= "infoElement" (:fieldClass field-descriptor))
+         (not (:exclude-from-answers field-descriptor))
+         (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
+         (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
+                  (empty? (:belongs-to-hakukohderyhma field-descriptor)))
+             (belongs-to-hakukohde? field-descriptor application)
+             (belongs-to-hakukohderyhma? field-descriptor application)
+             (not (empty? (set/intersection
+                            belongs-to
+                            (if jyemp?
+                              selected-ei-jyemp-hakukohteet-and-ryhmat
+                              selected-hakukohteet-and-ryhmat)))))
+         (or (empty? (:children field-descriptor))
+             (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor))))))
 
 (defn- text-form-field-nested-container [selected-options lang application hakukohteet-and-ryhmat question-group-idx]
   [:div.application-handling__nested-container--top-level
@@ -381,12 +395,12 @@
         clojure.string/lower-case
         keyword)))
 
-(defn readonly-fields [form application]
+(defn readonly-fields [form application hakukohteet]
   (when form
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
-          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application form application)]
+          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
       (prn hakukohteet-and-ryhmat)
       (into [:div.application__readonly-container]
         (for [content (:content form)]
