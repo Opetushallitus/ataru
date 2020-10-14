@@ -45,7 +45,7 @@
         selected-hakukohderyhmat               (set (mapcat :ryhmaliitokset selected-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohteet-tarjonta (set (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?
                                                             selected-hakukohteet-tarjonta))
-        selected-ei-jyemp-hakukohderyhmat      (set (mapcat :hakukohderyhmat selected-ei-jyemp-hakukohteet-tarjonta))
+        selected-ei-jyemp-hakukohderyhmat      (set (mapcat :ryhmaliitokset selected-ei-jyemp-hakukohteet-tarjonta))
         selected-ei-jyemp-hakukohteet          (set (map :oid selected-ei-jyemp-hakukohteet-tarjonta))]
     [(set/union selected-hakukohteet selected-hakukohderyhmat)
      (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
@@ -62,6 +62,7 @@
          (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
          (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
                   (empty? (:belongs-to-hakukohderyhma field-descriptor)))
+
              (not (empty? (set/intersection
                             belongs-to
                             (if jyemp?
