@@ -50,19 +50,6 @@
     [(set/union selected-hakukohteet selected-hakukohderyhmat)
      (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
-(defn- belongs-to-hakukohderyhma? [field application]
-  (let [hakukohteet             (-> application :hakukohde set)
-        applied-hakukohderyhmat (->> (-> application :tarjonta :hakukohteet)
-                                     (filter #(contains? hakukohteet (:oid %)))
-                                     (mapcat :hakukohderyhmat)
-                                     set)]
-    (not-empty (set/intersection (-> field :belongs-to-hakukohderyhma set)
-                                 applied-hakukohderyhmat))))
-
-(defn- belongs-to-hakukohde? [field application]
-  (not-empty (set/intersection (set (:belongs-to-hakukohteet field))
-                               (set (:hakukohde application)))))
-
 (defn- visible? [field-descriptor application hakukohteet-and-ryhmat]
   (let [[selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] hakukohteet-and-ryhmat
         jyemp? (and (ylioppilastutkinto? application)
@@ -75,8 +62,6 @@
          (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
          (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
                   (empty? (:belongs-to-hakukohderyhma field-descriptor)))
-             (belongs-to-hakukohde? field-descriptor application)
-             (belongs-to-hakukohderyhma? field-descriptor application)
              (not (empty? (set/intersection
                             belongs-to
                             (if jyemp?
