@@ -196,8 +196,8 @@
    (cljs-util/update-url-with-query-params {:application-key application-key})
    (dispatch [:application/select-application application-key selected-hakukohde-oid with-newest-form?])))
 
-(defn application-contents [{:keys [form application]}]
-  [readonly-contents/readonly-fields form application])
+(defn application-contents [{:keys [form application]} hakukohteet]
+  [readonly-contents/readonly-fields form application hakukohteet])
 
 (defn review-state-selected-row [on-click label multiple-values?]
   (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
@@ -1330,7 +1330,8 @@
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
         expanded?                     (subscribe [:state-query [:application :application-list-expanded?]])
-        application-loading           (subscribe [:state-query [:application :loading?]])]
+        application-loading           (subscribe [:state-query [:application :loading?]])
+        hakukohteet                   (subscribe [:state-query [:hakukohteet]])]
     (fn []
       (let [application (:application @selected-application-and-form)]
         (when-not @expanded?
@@ -1343,7 +1344,7 @@
                [:i.zmdi.zmdi-spinner.spin]]]
              [:div.application-handling__review-area
               [:div.application-handling__application-contents
-               [application-contents @selected-application-and-form]]
+               [application-contents @selected-application-and-form @hakukohteet]]
               [:span#application-handling__review-position-canary]
               [application-review]])])))))
 
