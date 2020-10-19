@@ -24,12 +24,12 @@ export default () => {
       hakijanNakyma.arvosanat.tarkistaLukunakymanOppiaine({
         oppiaine: 'A',
         oppimaara: 'Ruotsi viittomakielisille',
-        arvosana: 'Hyväksytty / suoritettu',
+        arvosana: 'S (Hyväksytty)',
         index: 3,
       })
       hakijanNakyma.arvosanat.tarkistaLukunakymanOppiaine({
         oppiaine: 'A1',
-        arvosana: '10',
+        arvosana: 'O (Osallistunut)',
         index: 0,
       })
       hakijanNakyma.arvosanat.tarkistaLukunakymanOppiaine({
