@@ -23,6 +23,7 @@
             [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
+            [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
@@ -207,7 +208,8 @@
                        [:suoritusrekisteri-cas-client])
 
     :job-runner (component/using
-                 (job/new-job-runner virkailija-jobs/job-definitions)
+                 (job/new-job-runner (merge virkailija-jobs/job-definitions
+                                            hakija-jobs/job-definitions))
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache
