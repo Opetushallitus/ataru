@@ -78,7 +78,7 @@
                  [org.flywaydb/flyway-core "3.2.1" :upgrade false]
                  [camel-snake-kebab "0.4.1"]
                  [environ "1.1.0"]
-                 [org.clojure/core.async "1.1.587"]
+                 [org.clojure/core.async "1.3.610"]
                  [org.clojure/java.jdbc "0.7.11"]
                  [org.postgresql/postgresql "42.2.12"]
                  [clj-time "0.15.2"]
