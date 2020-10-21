@@ -507,8 +507,11 @@
    :keyValues           {s/Str Value}})
 
 (s/defschema ValintapisteApplication
-  {:hakemusOid          s/Str
-   :personOid           s/Str})
+  {:hakemus_oid         s/Str
+   :henkilo_oid         s/Str
+   :hakemus_tila        s/Str
+   :haku_oid            s/Str
+   :hakukohde_oids      [s/Str]})
 
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
