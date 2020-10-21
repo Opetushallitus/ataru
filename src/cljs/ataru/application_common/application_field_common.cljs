@@ -2,6 +2,7 @@
   (:require [markdown.core :refer [md->html]]
             [markdown.transformers :refer [transformer-vector]]
             [reagent.core :as reagent]
+            [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
             [clojure.string :as string]
             [goog.string :as s]
@@ -65,7 +66,7 @@
 (defn- set-markdown-height
   [component scroll-height]
   (reset! scroll-height (-> component
-                            reagent/dom-node
+                            reagent-dom/dom-node
                             (.getElementsByClassName "application__form-info-text-inner")
                             (aget 0)
                             .-scrollHeight)))

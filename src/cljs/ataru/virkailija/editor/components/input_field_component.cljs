@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.components.input-field-component
   (:require [re-frame.core :refer [subscribe]]
             [reagent.core :as r]
+            [reagent.dom :as r-dom]
             [reagent.ratom :refer-macros [reaction]]))
 
 (defn- prevent-default
@@ -29,7 +30,7 @@
                               (when (cond-> @focus?
                                             (> (count @languages) 1)
                                             (and (= (first @languages) lang)))
-                                (let [dom-node (r/dom-node component)]
+                                (let [dom-node (r-dom/dom-node component)]
                                   (.focus dom-node))))
        :reagent-render      (fn [_ _ _ _]
                               [tag

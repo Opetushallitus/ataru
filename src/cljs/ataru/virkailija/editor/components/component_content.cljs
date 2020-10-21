@@ -1,12 +1,13 @@
 (ns ataru.virkailija.editor.components.component-content
   (:require [re-frame.core :refer [subscribe]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [reagent.dom :as r-dom]))
 
 (defn- component-fold-transition
   [component folded? state height]
   (cond (= [true :unfolded] [@folded? @state])
         ;; folding, calculate and set height
-        (do (reset! height (.-scrollHeight (r/dom-node component)))
+        (do (reset! height (.-scrollHeight (r-dom/dom-node component)))
             (reset! state :set-height))
         (= [true :set-height] [@folded? @state])
         ;; folding, render folded
@@ -32,13 +33,13 @@
     (r/create-class
       {:component-did-mount
        (fn [component]
-         (.addEventListener (r/dom-node component)
+         (.addEventListener (r-dom/dom-node component)
                             "transitionend"
                             listener)
          (component-fold-transition component folded? state height))
        :component-will-unmount
        (fn [component]
-         (.removeEventListener (r/dom-node component)
+         (.removeEventListener (r-dom/dom-node component)
                                "transitionend"
                                listener))
        :component-did-update

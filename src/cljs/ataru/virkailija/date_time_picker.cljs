@@ -1,6 +1,7 @@
 (ns ataru.virkailija.date-time-picker
   (:require [cljs-time.format :as f]
             [reagent.core :as reagent]
+            [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]))
 
 (defn- iso-date-string->finnish-date-string [date-s]
@@ -59,7 +60,7 @@
     (reagent/create-class
      {:component-did-mount
       (fn [component]
-        (let [dom-node (reagent/dom-node component)]
+        (let [dom-node (reagent-dom/dom-node component)]
           (.setCustomValidity
            dom-node
            (if (not @valid?)
@@ -69,7 +70,7 @@
       :component-did-update
       (fn [component]
         (.setCustomValidity
-         (reagent/dom-node component)
+         (reagent-dom/dom-node component)
          (if (not @valid?)
            @invalid-date-format-i18n
            @invalid-text)))
@@ -105,7 +106,7 @@
     (reagent/create-class
      {:component-did-mount
       (fn [component]
-        (let [dom-node (reagent/dom-node component)]
+        (let [dom-node (reagent-dom/dom-node component)]
           (.setCustomValidity
            dom-node
            (if (not @valid?)
@@ -115,7 +116,7 @@
       :component-did-update
       (fn [component]
         (.setCustomValidity
-         (reagent/dom-node component)
+         (reagent-dom/dom-node component)
          (if (not @valid?)
            @invalid-date-format-i18n
            @invalid-text)))
