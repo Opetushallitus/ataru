@@ -21,6 +21,7 @@
 
 (defn- parse-date-time
   [s]
+
   (let [tz (t/time-zone-for-id "Europe/Helsinki")
         fmt-with-seconds (f/formatter "yyyy-MM-dd'T'HH:mm:ss" tz)
         fmt (f/formatter "yyyy-MM-dd'T'HH:mm" tz)]
