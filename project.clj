@@ -42,7 +42,7 @@
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.12"]
-                 [com.taoensso/timbre "4.10.0"]
+                 [com.taoensso/timbre "5.1.0"]
                  [timbre-ns-pattern-level "0.1.2"]
                  [org.clojure/core.match "1.0.0"]
                  [metosin/schema-tools "0.12.2"]
