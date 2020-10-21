@@ -8,7 +8,8 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [reagent.dom :as r-dom]))
 
 (defn form-row [key selected?]
   [:a.editor-form__row
@@ -94,8 +95,8 @@
       {:component-did-update (fn [this]
                                (when (and focus? @new-form-created?)
                                  (do
-                                   (.focus (r/dom-node this))
-                                   (.select (r/dom-node this)))))
+                                   (.focus (r-dom/dom-node this))
+                                   (.select (r-dom/dom-node this)))))
        :reagent-render       (fn [lang focus?]
                                [:input.editor-form__form-name-input
                                 {:data-test-id "form-name-input"
