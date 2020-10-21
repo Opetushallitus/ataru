@@ -37,18 +37,14 @@
                            "ataru-editori" ApplicationType/VIRKAILIJA
                            "ataru-hakija"  ApplicationType/OPPIJA)
         audit-log-config (assoc timbre/example-config
-                           :appenders {:standard-out     {:enabled? false
-                                                          :async?   true}
-                                       :println          {:enabled? false
-                                                          :async?   true}
+                           :appenders {:standard-out     {:enabled? false}
                                        :file-appender   (-> (rolling-appender
                                                               {:path    (str base-path
                                                                              "/audit_" service-name
                                                                              ;; Hostname will differentiate files in actual environments
                                                                              (when (:hostname env) (str "_" (:hostname env))))
                                                                :pattern :daily})
-                                                            (assoc :output-fn (fn [data] (force (:msg_ data))))
-                                                            (assoc :async? true))}
+                                                            (assoc :output-fn (fn [data] (force (:msg_ data)))))}
                            :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
                                             :timezone (TimeZone/getTimeZone "Europe/Helsinki")})
         logger           (proxy [Logger] [] (log [s]
