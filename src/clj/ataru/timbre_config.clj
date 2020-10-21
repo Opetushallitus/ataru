@@ -1,6 +1,5 @@
 (ns ataru.timbre-config
   (:require [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.core :refer [println-appender]]
             [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]
             [timbre-ns-pattern-level]
             [ataru.config.core :refer [config]])
@@ -9,8 +8,8 @@
 (defn configure-logging! [app-id hostname]
   (timbre/merge-config!
     {:appenders
-                     {:println
-                      (println-appender {:stream :std-out})
+                     {:standard-out     {:enabled? false}
+                      :println          nil
                       :file-appender
                       (rolling-appender
                        {:path    (str (case app-id
