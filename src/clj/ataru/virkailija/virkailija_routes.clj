@@ -1239,6 +1239,18 @@
                  {:unauthorized _}
                  (response/unauthorized {:error "Unauthorized"}))))
 
+      (api/GET "/valintapiste" {session :session}
+        :summary "Get application answers for Valintapiste Service"
+        :query-params [hakuOid :- s/Str
+                       {hakukohdeOid :- s/Str nil}]
+        :return [ataru-schema/ValintapisteApplication]
+        (if-let [applications (access-controlled-application/get-applications-for-valintapiste organization-service
+                                                                                               session
+                                                                                               hakuOid
+                                                                                               hakukohdeOid)]
+          (response/ok applications)
+          (response/unauthorized {:error "Unauthorized"})))
+
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
         :query-params [{hakukohdeOid :- s/Str nil}]

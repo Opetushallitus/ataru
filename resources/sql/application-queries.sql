@@ -881,6 +881,25 @@ WHERE person_oid IS NOT NULL
   AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
 ORDER BY created_time DESC;
 
+--name: yesql-valintapiste-applications
+SELECT
+  haku AS "haku-oid",
+  key AS "hakemus-oid",
+  person_oid "henkilo-oid",
+  hakukohde AS "hakukohde-oids",
+  (SELECT content
+   FROM answers_as_content
+   WHERE application_id = la.id) AS "content",
+  state AS "hakemus-tila"
+FROM latest_applications AS la
+JOIN application_reviews ON application_key = la.key
+WHERE person_oid IS NOT NULL
+  AND haku IS NOT NULL
+  AND haku = :haku_oid
+  AND state <> 'inactivated'
+  AND (:hakukohde_oid::TEXT IS NULL OR :hakukohde_oid = ANY (hakukohde))
+ORDER BY created_time DESC;
+
 --name: yesql-valintalaskenta-applications
 SELECT
   key,
