@@ -506,6 +506,10 @@
    :maksuvelvollisuus   {s/Str s/Str}
    :keyValues           {s/Str Value}})
 
+(s/defschema ValintapisteApplication
+  {:hakemusOid          s/Str
+   :personOid           s/Str})
+
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
    :person      {:oidHenkilo    s/Str
