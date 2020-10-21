@@ -223,11 +223,16 @@
                     (when (seq parent)
                       [:editor/set-required-to-all-in-path parent])]})))
 
+(defn any-child-is-selection-limit? [db path]
+  (let [field (get-in db (current-form-content-path db [path]))]
+    (first (filter :selection-group-id (tree-seq coll? seq field)))))
+
 (defn remove-validator
   [db [_ validator & path]]
   (let [content-path (current-form-content-path db [path :validators])
         validators   (get-in db content-path)]
-    (if-not (nil? validators)
+    (if (and (not (nil? validators))
+             (not (and (= validator "required") (any-child-is-selection-limit? db path))))
       (-> db
           (update-in content-path (fn [validators]
                                     (remove #(= % validator) validators)))
