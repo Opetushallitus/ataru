@@ -2,17 +2,21 @@
   (:require [ataru.config.core :refer [config]]
             [clojure.data :refer [diff]]
             [clojure.set]
-            [clj-timbre-auditlog.audit-log :as cta-audit-log])
+            [taoensso.timbre :as timbre]
+            [environ.core :refer [env]]
+            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
   (:import [fi.vm.sade.auditlog
             Operation
             Changes$Builder
             Target$Builder
+            Logger
             ApplicationType
             User
             Audit
             DummyAuditLog]
+           [org.ietf.jgss Oid]
            java.net.InetAddress
-           org.ietf.jgss.Oid))
+           java.util.TimeZone))
 
 (defn- create-operation [op]
   (proxy [Operation] [] (name [] op)))
@@ -31,8 +35,21 @@
                            "ataru-hakija"  (-> config :log :hakija-base-path))
         application-type (case service-name
                            "ataru-editori" ApplicationType/VIRKAILIJA
-                           "ataru-hakija"  ApplicationType/OPPIJA)]
-    (cta-audit-log/create-audit-logger service-name base-path application-type)))
+                           "ataru-hakija"  ApplicationType/OPPIJA)
+        audit-log-config (assoc timbre/example-config
+                           :appenders {:standard-out     {:enabled? false}
+                                       :file-appender   (-> (rolling-appender
+                                                              {:path    (str base-path
+                                                                             "/audit_" service-name
+                                                                             ;; Hostname will differentiate files in actual environments
+                                                                             (when (:hostname env) (str "_" (:hostname env))))
+                                                               :pattern :daily})
+                                                            (assoc :output-fn (fn [data] (force (:msg_ data)))))}
+                           :timestamp-opts {:pattern  "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+                                            :timezone (TimeZone/getTimeZone "Europe/Helsinki")})
+        logger           (proxy [Logger] [] (log [s]
+                                              (timbre/log* audit-log-config :info s)))]
+    (new Audit logger service-name application-type)))
 
 (defn new-dummy-audit-logger []
   (new DummyAuditLog))
