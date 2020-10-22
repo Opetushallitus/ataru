@@ -196,22 +196,43 @@
 
 (reg-event-db :editor/add-validator add-validator)
 
-(reg-event-db
+(reg-event-fx
   :editor/set-selection-group-id
-  (fn [db [_ selection-group-id & path]]
+  (fn [{db :db} [_ selection-group-id & path]]
     (let [content-path (current-form-content-path db [path :params])]
-      (-> db
-          (update-in content-path (fn [params]
-                                    (if selection-group-id
-                                      (assoc params :selection-group-id selection-group-id)
-                                      (dissoc params :selection-group-id))))
-          (update-modified-by path)))))
+      {:db         (-> db
+                       (update-in content-path (fn [params]
+                                                 (if selection-group-id
+                                                   (assoc params :selection-group-id selection-group-id)
+                                                   (dissoc params :selection-group-id))))
+                       (update-modified-by path))
+       :dispatch-n [(when selection-group-id
+                      [:editor/set-required-to-all-in-path path])]})))
+
+(reg-event-fx
+  :editor/set-required-to-all-in-path
+  (fn [{db :db} [_ & path]]
+    (let [parent       (vec (drop-last 2 (flatten path)))
+          is-option?   (= :options (last (drop-last 1 (flatten path))))
+          content-path (current-form-content-path db [path :validators])
+          validators   (set (get-in db content-path))]
+      {:db         db
+       :dispatch-n [(when-not (or is-option?
+                                  (contains? validators "required"))
+                      [:editor/add-validator "required" (vec (flatten path))])
+                    (when (seq parent)
+                      [:editor/set-required-to-all-in-path parent])]})))
+
+(defn any-child-is-selection-limit? [db path]
+  (let [field (get-in db (current-form-content-path db [path]))]
+    (first (filter :selection-group-id (tree-seq coll? seq field)))))
 
 (defn remove-validator
   [db [_ validator & path]]
   (let [content-path (current-form-content-path db [path :validators])
         validators   (get-in db content-path)]
-    (if-not (nil? validators)
+    (if (and (not (nil? validators))
+             (not (and (= validator "required") (any-child-is-selection-limit? db path))))
       (-> db
           (update-in content-path (fn [validators]
                                     (remove #(= % validator) validators)))
