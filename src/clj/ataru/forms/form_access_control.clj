@@ -2,10 +2,10 @@
   (:require
    [ataru.forms.form-store :as form-store]
    [ataru.schema.form-schema :as form-schema]
+   [clojure.walk :refer [prewalk]]
    [ataru.virkailija.editor.form-diff :as form-diff]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
    [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.organization-service.organization-client :refer [oph-organization]]
    [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
 
 (defn- form-allowed-by-id?
@@ -33,7 +33,7 @@
   [session]
   (if (:selected-organization session)
     (if (or (-> session :identity :superuser)
-            (contains? (-> session :selected-organization :rights) :form-edit))
+            (contains? (set (-> session :selected-organization :rights)) "form-edit"))
       [(:selected-organization session)]
       [])
     (-> session
@@ -41,7 +41,7 @@
         :user-right-organizations
         :form-edit)))
 
-(defn- check-lock-authorization [{:keys [key id]} session tarjonta-service]
+(defn- check-lock-authorization [{:keys [key]} session tarjonta-service]
   (when-not (-> session :identity :superuser)
     (let [haut (tarjonta-protocol/hakus-by-form-key tarjonta-service key)]
       (when (some :yhteishaku haut)
@@ -79,7 +79,7 @@
 (defn- check-form-field-id-duplicates
   [form]
   (let [form-element-ids (atom [])]
-    (clojure.walk/prewalk
+    (prewalk
       (fn [x]
         (when (and (map-entry? x)
                    (= :id (key x)))
@@ -133,7 +133,7 @@
         audit-logger)))))
 
 (defn- get-forms-as-ordinary-user
-  [tarjonta-service session authorized-organization-oids]
+  [tarjonta-service authorized-organization-oids]
   (filter (fn [form]
             (or (contains? authorized-organization-oids (:organization-oid form))
                 (form-allowed-by-haku? tarjonta-service authorized-organization-oids (:key form))))
@@ -147,7 +147,7 @@
            (fn [] [])
            (fn [org-oids]
              (map #(dissoc % :organization-oid)
-                  (get-forms-as-ordinary-user tarjonta-service session org-oids)))
+                  (get-forms-as-ordinary-user tarjonta-service org-oids)))
            (fn []
              (map #(dissoc % :organization-oid)
                   (form-store/get-all-forms))))})

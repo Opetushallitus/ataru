@@ -1,8 +1,8 @@
 (ns ataru.organization-service.session-organizations
   (:require
     [schema.core :as s]
-    [ataru.organization-service.organization-client :as organization-client]
     [ataru.user-rights :refer [Right]]
+    [clojure.set :refer [intersection]]
     [ataru.organization-service.organization-service :as organization-service]))
 
 (defn- right-organizations
@@ -19,7 +19,7 @@
             (get (keyword (:oid org)))
             :rights
             (set)
-            (clojure.set/intersection (set rights))
+            (intersection (set (map name rights)))
             (not-empty)))
       organizations)))
 
@@ -29,8 +29,8 @@
   {:pre [(right-seq? rights)]}
   (if-let [selected-organization (:selected-organization session)]
     (when-not (and (-> session :identity :superuser)
-                   (empty? (clojure.set/intersection (set rights)
-                                                     (->> selected-organization :rights (map keyword) set))))
+                   (empty? (intersection (set rights)
+                                         (->> selected-organization :rights (map keyword) set))))
       (filter-orgs-for-rights
         session
         rights
