@@ -202,6 +202,7 @@
                           koodisto-cache
                           person-service
                           get-haut-cache
+                          selection-state-used-cache
                           audit-logger
                           application-service]
                    :as   dependencies}]
@@ -717,6 +718,7 @@
                                  organization-service
                                  tarjonta-service
                                  get-haut-cache
+                                 selection-state-used-cache
                                  session
                                  show-hakukierros-paattynyt)))
 

@@ -6,6 +6,7 @@
             [ataru.cache.redis-cache :as redis]
             [ataru.cache.union-cache :as union-cache]
             [ataru.forms.form-store :as form-store]
+            [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.lokalisointi-service.lokalisointi-service :as lokalisointi-service]
             [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
@@ -50,6 +51,13 @@
       :loader        (cache/->FunctionCacheLoader lokalisointi-service/get-localizations)
       :expires-after [3 TimeUnit/DAYS]
       :refresh-after [5 TimeUnit/MINUTES]})]
+
+   [:selection-state-used-cache
+    (in-memory/map->InMemoryCache
+     {:name          "selection-state-used"
+      :loader        (cache/->FunctionCacheLoader hakukohde-store/selection-state-used-in-hakukohde?)
+      :expires-after [3 TimeUnit/DAYS]
+      :refresh-after [1 TimeUnit/MINUTES]})]
 
    [:kouta-hakukohde-cache-loader
     (component/using
