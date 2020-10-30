@@ -3,6 +3,7 @@
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.excel-export :as excel]
+    [ataru.cache.cache-service :as cache]
     [ataru.config.core :refer [config]]
     [ataru.email.application-email-confirmation :as email]
     [ataru.forms.form-store :as form-store]
@@ -224,7 +225,7 @@
          applications)))
 
 (defn- save-application-hakukohde-reviews
-  [application-key hakukohde-reviews session audit-logger]
+  [application-key hakukohde-reviews selection-state-used-cache session audit-logger]
   (doseq [[hakukohde review] hakukohde-reviews]
     (doseq [[review-requirement review-state] review]
       (application-store/save-application-hakukohde-review
@@ -233,7 +234,9 @@
         (name review-requirement)
         (name review-state)
         session
-        audit-logger))))
+        audit-logger)
+      (when (= :selection-state review-requirement)
+        (cache/remove-from selection-state-used-cache (name hakukohde))))))
 
 (defn- save-attachment-hakukohde-reviews
   [application-key attachment-reviews session audit-logger]
@@ -460,6 +463,7 @@
                                      person-service
                                      valinta-tulos-service
                                      koodisto-cache
+                                     selection-state-used-cache
                                      job-runner]
   ApplicationService
   (get-person
@@ -572,7 +576,7 @@
           (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
            job-runner
            event-id))
-        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
+        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) selection-state-used-cache session audit-logger)
         (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)
         {:events (get-application-events organization-service application-key)})))
 
@@ -724,4 +728,4 @@
       (log/error e "Failed to unmask" string)
       nil)))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil))
