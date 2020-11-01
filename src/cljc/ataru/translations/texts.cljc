@@ -1084,6 +1084,9 @@
    :copy-form                                       {:fi "Kopioi lomake"
                                                      :sv "Kopiera blanketten"
                                                      :en "Copy the form"}
+   :form-contains-applications?                     {:fi "Lomakkeella on hakemuksia"
+                                                     :sv "Innehåller ansökningar"
+                                                     :en "Form contains applications"}
    :cut-element                                     {:fi "Leikkaa"
                                                      :sv "Klipp ut"
                                                      :en "Cut"}

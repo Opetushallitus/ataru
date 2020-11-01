@@ -1,13 +1,13 @@
 (ns ataru.virkailija.editor.view
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.cljs-util :refer [wrap-scroll-to]]
-            [ataru.component-data.component :as component]
             [ataru.util :as util]
+            [clojure.string :as string]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
-            [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+            [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]))
 
 (defn form-row [key selected?]
@@ -72,7 +72,9 @@
       @(subscribe [:editor/virkailija-translation :cancel-form-delete])]]
     :disabled
     [:button.editor-form__control-button--disabled.editor-form__control-button
-     {:disabled true}
+     {:disabled true
+      :data-tooltip (when @(subscribe [:editor/form-contains-applications?])
+                      @(subscribe [:editor/virkailija-translation :form-contains-applications?]))}
      @(subscribe [:editor/virkailija-translation :delete-form])]))
 
 (defn- form-controls []
@@ -86,7 +88,7 @@
    [:h1.editor-form__form-heading @(subscribe [:editor/virkailija-translation :forms])]
    [form-controls]])
 
-(defn- editor-name-input [lang focus?]
+(defn- editor-name-input [_ focus?]
   (let [form              (subscribe [:editor/selected-form])
         new-form-created? (subscribe [:state-query [:editor :new-form-created?]])
         form-locked?      (subscribe [:editor/form-locked?])]
@@ -96,7 +98,7 @@
                                  (do
                                    (.focus (r/dom-node this))
                                    (.select (r/dom-node this)))))
-       :reagent-render       (fn [lang focus?]
+       :reagent-render       (fn [lang _]
                                [:input.editor-form__form-name-input
                                 {:data-test-id "form-name-input"
                                  :type         "text"
@@ -112,7 +114,7 @@
    [editor-name-input lang focus?]
    (when lang-tag?
      [:div.editor-form__form-name-input-lang
-      (clojure.string/upper-case (name lang))])])
+      (string/upper-case (name lang))])])
 
 (defn- editor-name []
   (let [[l & ls] @(subscribe [:editor/languages])]
@@ -122,14 +124,6 @@
      (doall (for [l ls]
               ^{:key (str "editor-name-" l)}
               [editor-name-wrapper l false true]))]))
-
-(defn- get-org-name [org]
-  (str (get-in org [:name :fi])
-       (if (= "group" (:type org))
-         (str " (" @(subscribe [:editor/virkailija-translation :group]) ")")
-         "")))
-
-(defn- get-org-name-for-oid [oid orgs] (get-org-name (first (filter #(= oid (:oid %)) orgs))))
 
 (defn- fold-all []
   [:div
@@ -308,7 +302,7 @@
       [form-not-in-use-in-hakus form-key])))
 
 (defn- close-form []
-  [:a {:on-click (fn [event]
+  [:a {:on-click (fn [_]
                    (dispatch [:set-state [:editor :selected-form-key] nil])
                    (routes/navigate-to-click-handler "/lomake-editori/editor"))}
    [:div.close-details-button

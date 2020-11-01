@@ -1,9 +1,9 @@
 (ns ataru.virkailija.editor.subs
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.util :as util :refer [collect-ids]]
             [re-frame.core :as re-frame]
             [ataru.cljs-util :as cu]
-            [markdown.core :as md]
+            [clojure.set :as cset]
+            [clojure.string :as string]
             [ataru.translations.translation-util :as translations]))
 
 (re-frame/reg-sub
@@ -186,7 +186,7 @@
 
 (re-frame/reg-sub
   :editor/get-hakukohde-name
-  (fn [db [_ hakukohde]]
+  (fn [_ [_ hakukohde]]
     (let [hakukohde-name (some #(get (:name hakukohde) %) [:fi :sv :en])
           tarjoaja-name (some #(get (:tarjoaja-name hakukohde) %) [:fi :sv :en])
           name (str hakukohde-name " - " tarjoaja-name)]
@@ -197,8 +197,8 @@
   (fn [db [_ id name]]
     (if-let [search-term (get-in db [:editor :ui id :belongs-to-hakukohteet :modal :search-term])]
       (map-indexed (fn [i part] [part (= 1 (mod i 2))])
-                   (clojure.string/split name
-                                         (re-pattern (str "(?i)(" search-term ")"))))
+                   (string/split name
+                                 (re-pattern (str "(?i)(" search-term ")"))))
       [[name false]])))
 
 (re-frame/reg-sub
@@ -222,7 +222,7 @@
       (if same-form?
         (or cut? (empty? unique-ids))
         (and (not cut?)
-             (empty? (clojure.set/intersection unique-ids unique-ids-in-form)))))))
+             (empty? (cset/intersection unique-ids unique-ids-in-form)))))))
 
 (re-frame/reg-sub
   :editor/belongs-to-hakukohderyhma-name
@@ -306,6 +306,13 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/form-contains-applications?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn form-contains-applications? [form _]
+    (> (:application-count form) 0)))
+
+(re-frame/reg-sub
   :editor/component-locked?
   (fn [[_ path] _]
     [(re-frame/subscribe [:editor/form-locked?])
@@ -347,9 +354,11 @@
   :editor/remove-form-button-state
   (fn [_ _]
     [(re-frame/subscribe [:editor/ui])
-     (re-frame/subscribe [:editor/form-locked?])])
-  (fn remove-form-button-state [[ui form-locked?] _]
-    (if form-locked?
+     (re-frame/subscribe [:editor/form-locked?])
+     (re-frame/subscribe [:editor/form-contains-applications?])])
+  (fn remove-form-button-state [[ui form-locked? form-contains-applications?] _]
+    (if (or form-locked?
+            form-contains-applications?)
       :disabled
       (get ui :remove-form-button-state :active))))
 
