@@ -6,7 +6,6 @@
    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
    [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.hakukohde.hakukohde-store :as hakukohde-store]
    [ataru.applications.application-store :as application-store]
    [ataru.forms.form-store :as form-store]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -115,6 +114,7 @@
    organization-service
    tarjonta-service
    get-haut-cache
+   selection-state-used-cache
    session
    show-hakukierros-paattynyt?]
   (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
@@ -137,7 +137,7 @@
                                    (assoc
                                      hakukohde
                                      :selection-state-used
-                                     (hakukohde-store/selection-state-used-in-hakukohde? hakukohde-oid))))
+                                     (cache/get-from selection-state-used-cache hakukohde-oid))))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
                          :oid

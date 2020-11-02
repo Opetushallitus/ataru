@@ -113,6 +113,7 @@
                             :person-service
                             :valinta-tulos-service
                             :koodisto-cache
+                            :selection-state-used-cache
                             :job-runner])
 
     :handler (component/using
