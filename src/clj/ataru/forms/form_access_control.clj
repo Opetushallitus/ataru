@@ -121,16 +121,18 @@
 
 (defn delete-form [form-id session tarjonta-service organization-service audit-logger]
   (let [form (form-store/fetch-latest-version form-id)]
-    (check-edit-authorization
-     form
-     session
-     tarjonta-service
-     organization-service
-     (fn []
-       (form-store/create-form-or-increment-version!
-        (assoc form :deleted true)
+    (if (> (:application-count form) 0)
+      (throw (user-feedback-exception "Lomakkeen poisto estetty. Lomakkeella on hakemuksia."))
+      (check-edit-authorization
+        form
         session
-        audit-logger)))))
+        tarjonta-service
+        organization-service
+        (fn []
+          (form-store/create-form-or-increment-version!
+            (assoc form :deleted true)
+            session
+            audit-logger))))))
 
 (defn- get-forms-as-ordinary-user
   [tarjonta-service authorized-organization-oids]
