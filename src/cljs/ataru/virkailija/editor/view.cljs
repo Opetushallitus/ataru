@@ -8,6 +8,7 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch]]
+            [reagent.core :as r]
             [reagent.dom :as r-dom]))
 
 (defn form-row [key selected?]
