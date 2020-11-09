@@ -3,7 +3,8 @@
             [com.stuartsierra.component :as component]
             [taoensso.carmine :as car :refer [wcar]]
             [taoensso.carmine.locks :as car-locks]
-            [ataru.cache.cache-service :as cache])
+            [ataru.cache.cache-service :as cache]
+            [clojure.string :as s])
   (:import [java.util.concurrent
             ArrayBlockingQueue
             ThreadPoolExecutor
@@ -32,7 +33,7 @@
 
 (defn- notify-key->key
   [name notify-key]
-  (clojure.string/replace notify-key (->notify-key name "") ""))
+  (s/replace notify-key (->notify-key name "") ""))
 
 (defn- ->lock-key
   [name key]
@@ -110,7 +111,7 @@
                  (:connection-opts (:redis cache))
                  lock-key
                  lock-id)
-        (log/error "Failed to release lock" lock-key lock-id))
+        (log/warn "Failed to release lock" lock-key lock-id))
       (catch Exception e
         (log/error e "Failed to release lock" lock-key lock-id)))))
 
