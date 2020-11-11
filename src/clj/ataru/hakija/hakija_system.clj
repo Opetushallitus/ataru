@@ -122,6 +122,7 @@
                (handler/new-handler)
                (into [:tarjonta-service
                       :job-runner
+                      :liiteri-cas-client
                       :organization-service
                       :ohjausparametrit-service
                       :person-service

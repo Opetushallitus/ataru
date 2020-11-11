@@ -184,6 +184,7 @@
               (vec (concat [:login-cas-client
                             :organization-service
                             :tarjonta-service
+                            :liiteri-cas-client
                             :valintalaskentakoostepalvelu-service
                             :valintaperusteet-service
                             :valinta-tulos-service
