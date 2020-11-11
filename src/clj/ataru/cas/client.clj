@@ -3,14 +3,15 @@
             [ataru.config.core :refer [config]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json])
-  (:import [fi.vm.sade.utils.cas CasClient CasParams]))
+  (:import [fi.vm.sade.utils.cas CasClient CasParams]
+           [org.http4s.client.blaze package$]))
 
 (defrecord CasClientState [client params session-cookie-name session-id])
 
 (defn new-cas-client [caller-id]
   (new CasClient
        (resolve-url :cas-client)
-       (.defaultClient org.http4s.client.blaze.package$/MODULE$)
+       (.defaultClient package$/MODULE$)
        caller-id))
 
 (defn new-client [service security-uri-suffix session-cookie-name caller-id]
@@ -35,7 +36,7 @@
            :throw-exceptions false}
           (some? body) (request-with-json-body body)))
 
-(defn- cas-http [client method url & [body]]
+(defn- cas-http [client method url opts & [body]]
   (let [cas-client          (:client client)
         cas-params          (:params client)
         session-cookie-name (:session-cookie-name client)
@@ -43,17 +44,28 @@
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
     (let [resp (http-util/do-request (merge {:url url :method method}
+                                            opts
                                             (create-params session-cookie-name cas-session-id body)))]
       (if (or (= 401 (:status resp))
               (= 302 (:status resp)))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
           (http-util/do-request (merge {:url url :method method}
+                                       opts
                                        (create-params session-cookie-name cas-session-id body))))
         resp))))
 
 (defn cas-authenticated-get [client url]
-  (cas-http client :get url))
+  (cas-http client :get url {}))
+
+(defn cas-authenticated-delete [client url]
+  (cas-http client :delete url {}))
 
 (defn cas-authenticated-post [client url body]
-  (cas-http client :post url body))
+  (cas-http client :post url {} body))
+
+(defn cas-authenticated-multipart-post [client url opts]
+  (cas-http client :post url opts nil))
+
+(defn cas-authenticated-get-as-stream [client url]
+  (cas-http client :get url {:as :stream} nil))

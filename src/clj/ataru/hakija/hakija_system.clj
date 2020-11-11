@@ -58,6 +58,9 @@
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
+                                        "session" (-> config :public-config :hakija-caller-id))
+
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
     :amazon-sqs (component/using

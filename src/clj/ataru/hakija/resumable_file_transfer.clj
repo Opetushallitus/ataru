@@ -1,12 +1,12 @@
 (ns ataru.hakija.resumable-file-transfer
   (:require [cheshire.core :as json]
             [ataru.config.core :refer [config]]
+            [ataru.cas.client :as cas]
+            [clojure.set :as cset]
             [ataru.config.url-helper :refer [resolve-url]]
-            [ataru.util.http-util :as http]
             [clojure.java.io :as io]
             [pandect.algo.md5 :refer [md5]]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
-            [clojure.core.match :refer [match]]
             [taoensso.timbre :as log]
             [string-normalizer.filename-normalizer :as normalizer])
   (:import (java.io File FileInputStream)))
@@ -86,18 +86,21 @@
                             (map (partial build-file-name file-id file-name parts-count))
                             (set))
         existing-files (set (temp-file-store/filenames-with-prefix file-store prefix))]
-    (clojure.set/superset? existing-files required-files)))
+    (cset/superset? existing-files required-files)))
 
 (defn upload-file-to-liiteri
-  [file file-name]
+  [cas-client file file-name]
   (log/info "Uploading to liiteri:" file-name (.length file) "bytes")
   (let [url                         (resolve-url :liiteri.files)
         start-time                  (System/currentTimeMillis)
-        {:keys [status body error]} (http/do-post url {:socket-timeout (* 1000 60 10)
-                                                       :cookie-policy  :standard
-                                                       :multipart      [{:part-name "file"
-                                                                         :content   (FileInputStream. file)
-                                                                         :name      (normalizer/normalize-filename file-name)}]})]
+        {:keys [status body error]} (cas/cas-authenticated-multipart-post
+                                      cas-client
+                                      url
+                                      {:socket-timeout (* 1000 60 10)
+                                       :cookie-policy  :standard
+                                       :multipart      [{:part-name "file"
+                                                         :content   (FileInputStream. file)
+                                                         :name      (normalizer/normalize-filename file-name)}]})]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
@@ -112,14 +115,14 @@
             [:liiteri-error nil]))))
 
 (defn store-file-part!
-  [file-store file-id file-size part-number file-part]
+  [cas-client file-store file-id file-size part-number file-part]
   (let [num-parts      (count-parts file-size)
         last-part?     (= num-parts (inc part-number))
         file-name      (:filename file-part)
         file           (:tempfile file-part)
         file-part-name (build-file-name file-id file-name num-parts part-number)]
     (if (= num-parts 1)
-      (upload-file-to-liiteri file file-name)
+      (upload-file-to-liiteri cas-client file file-name)
       (do
         (assert-valid-part-number num-parts part-number)
         (store-part file-store file file-part-name)
@@ -128,6 +131,6 @@
             (with-temp-file "combined-file" ".output"
               (fn [file]
                 (combine-file-parts! file-store file file-id file-name file-size)
-                (upload-file-to-liiteri file file-name)))
+                (upload-file-to-liiteri cas-client file file-name)))
             [:retransmit nil])
           [:send-next nil])))))

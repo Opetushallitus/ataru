@@ -138,6 +138,7 @@
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
+                          liiteri-cas-client
                           organization-service
                           ohjausparametrit-service
                           application-service
@@ -284,7 +285,7 @@
         :middleware [upload/wrap-multipart-params normalizer/wrap-multipart-filename-normalizer]
         :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
-          (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
+          (let [[status stored-file] (resumable-file/store-file-part! liiteri-cas-client temp-file-store file-id file-size file-part-number file-part)]
             (log/info "File upload" file-part-number "of" file-size "bytes:" status)
             (case status
               :send-next (response/ok {})
@@ -301,7 +302,7 @@
                        {virkailija-secret :- s/Str nil}]
         (if (hakija-application-service/can-access-attachment?
              secret virkailija-secret key)
-          (if-let [file (file-store/get-file key)]
+          (if-let [file (file-store/get-file liiteri-cas-client key)]
             (-> (:body file)
                 response/ok
                 (response/header "Content-Disposition"
@@ -312,7 +313,7 @@
         :summary "Delete a file"
         :path-params [key :- s/Str]
         :return {:key s/Str}
-        (if-let [resp (file-store/delete-file key)]
+        (if-let [resp (file-store/delete-file liiteri-cas-client key)]
           (response/ok resp)
           (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
     (api/POST "/client-error" []

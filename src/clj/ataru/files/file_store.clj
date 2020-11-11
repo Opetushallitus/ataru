@@ -1,34 +1,38 @@
 (ns ataru.files.file-store
   (:require [ataru.config.url-helper :refer [resolve-url]]
-            [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
+            [ataru.cas.client :as cas]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
             [clojure.string :as str]
             [string-normalizer.filename-normalizer :as normalizer])
   (:import [java.util.zip ZipOutputStream ZipEntry]))
 
-(defn upload-file [{:keys [tempfile filename]}]
+(defn upload-file [cas-client {:keys [tempfile filename]}]
   (let [url  (resolve-url :liiteri.files)
-        resp (http-util/do-post url {:multipart [{:name     "file"
-                                                  :content  tempfile
-                                                  :filename (normalizer/normalize-filename filename)}]})]
+        resp (cas/cas-authenticated-multipart-post
+               cas-client
+               url
+               {:multipart [{:name     "file"
+                             :content  tempfile
+                             :filename (normalizer/normalize-filename filename)}]})]
     (when (= (:status resp) 200)
       (-> (:body resp)
           (json/parse-string true)
           (dissoc :version :deleted)))))
 
-(defn delete-file [file-key]
+(defn delete-file [cas-client file-key]
   (let [url  (resolve-url :liiteri.file file-key)
-        resp (http-util/do-delete url)]
+        resp (cas/cas-authenticated-delete cas-client url)]
     (when (= (:status resp) 200)
       (json/parse-string (:body resp) true))))
 
-(defn get-metadata [file-keys]
+(defn get-metadata [cas-client file-keys]
   (if (seq file-keys)
-    (let [resp (http-util/do-post (resolve-url :liiteri.metadata)
-                                  {:headers {"Content-Type" "application/json"}
-                                   :body    (json/generate-string {:keys file-keys})})]
+    (let [resp (cas/cas-authenticated-post
+                 cas-client
+                 (resolve-url :liiteri.metadata)
+                 {:keys file-keys})]
       (if (= (:status resp) 200)
         (vec (json/parse-string (:body resp) true))
         (throw (new RuntimeException
@@ -38,9 +42,9 @@
                          ", body " (:body resp))))))
     file-keys))
 
-(defn get-file [key]
+(defn get-file [cas-client key]
   (let [url  (resolve-url :liiteri.file key)
-        resp (http-util/do-get-stream url)]
+        resp (cas/cas-authenticated-get-as-stream cas-client url)]
     (when (= (:status resp) 200)
       {:body                (:body resp)
        :content-disposition (-> resp :headers :content-disposition)})))
@@ -50,12 +54,12 @@
         extension (last (str/split filename #"\."))]
     (str (apply str (take 240 name)) counter "." extension)))
 
-( defn get-file-zip [keys out]
+(defn get-file-zip [liiteri-cas-client keys out]
   (with-open [zout (ZipOutputStream. out)]
     (let [filenames (atom #{})
           counter (atom 0)]
       (doseq [key keys]
-        (if-let [file (get-file key)]
+        (if-let [file (get-file liiteri-cas-client key)]
           (let [[_ filename] (re-matches #"attachment; filename=\"(.*)\"" (:content-disposition file))
                 generated-filename (if (contains? @filenames (generate-filename filename ""))
                                      (generate-filename filename (swap! counter inc))
