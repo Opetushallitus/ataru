@@ -163,8 +163,8 @@
 
     :login-cas-client (cas/new-cas-client (-> config :public-config :virkailija-caller-id))
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
-                                        "session" (-> config :public-config :virkailija-caller-id))
+    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
+                                        "ring-session" (-> config :public-config :virkailija-caller-id))
 
     :application-service (component/using
                            (application-service/new-application-service)
