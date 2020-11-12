@@ -89,7 +89,7 @@
     (when (and
             (not-empty @form-element-ids)
             (not (apply distinct? @form-element-ids)))
-      (throw (Exception. (str "Duplicate element id in form: " (pr-str (keep #(when (< 1 (second %)) (first %))
+      (throw (Exception. (str "Duplicate element id in form (" (:key form) "): " (pr-str (keep #(when (< 1 (second %)) (first %))
                                                                              (frequencies @form-element-ids)))))))))
 
 (defn post-form [form session tarjonta-service organization-service audit-logger]
