@@ -159,6 +159,24 @@
               (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-fx
+  :virkailija-kevyt-valinta/fetch-valinnan-tulos-monelle
+  [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
+                                                  :target-key :valinta-tulos-service-url})]
+  (fn [{db                        :db
+        valinta-tulos-service-url :valinta-tulos-service-url} [_ {:keys [application-keys]}]]
+      {:db (update db :valinta-tulos-service
+                     (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                       (->> application-keys
+                            (reduce (fn valinnan-tulos->db [acc key]
+                                      (dissoc acc key))
+                                    valinta-tulos-service-db))))
+       :http {:method              :post
+              :path                valinta-tulos-service-url
+              :params              application-keys
+              :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
+              :handler-args        {:application-keys application-keys}}}))
+
+(re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valinnan-tulos
   [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
                                                   :target-key :valinta-tulos-service-url})]
@@ -182,6 +200,39 @@
               :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
+
+(re-frame/reg-event-fx
+  :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
+  (fn [{db :db} [_ response {application-keys :application-keys}]]
+    (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+      (cond-> {:db (as-> db db'
+
+                         (-> db'
+                             (update :valinta-tulos-service ;pre-clear results for all affected hakemukses
+                               (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                                 (->> application-keys
+                                      (reduce (fn valinnan-tulos->db [acc key]
+                                                (assoc acc key {}))
+                                              valinta-tulos-service-db))))
+                             (update
+                               :valinta-tulos-service ;insert results
+                               (fn valinnan-tulokset->db [valinta-tulos-service-db]
+                                 (->> response
+                                      (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
+                                                (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
+                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                  (assoc-in acc
+                                                            [hakemus-oid hakukohde-oid]
+                                                            valinnan-tulos)))
+                                              valinta-tulos-service-db)))))
+
+                         (cond-> db'
+                                 (= new-multiple-requests-count 0)
+                                 (update :kevyt-valinta dissoc :multiple-requests-count)
+                                 (> new-multiple-requests-count 0)
+                                 (assoc-in [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))}
+              (= new-multiple-requests-count 0)
+              (assoc :dispatch [:virkailija-kevyt-valinta/filter-applications])))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos

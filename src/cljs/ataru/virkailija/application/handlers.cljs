@@ -289,6 +289,7 @@
                                                      (= (:key %) application-key-param)) all-applications)
                                         (first)
                                         :key))
+          fetch-valinnan-tulos-for-applications-dispatch [:virkailija-kevyt-valinta/fetch-valinnan-tulos-monelle {:application-keys (map :key applications)}]
           fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches
                                   (->> applications
                                        (filter (fn [{haku-oid :haku}]
@@ -297,29 +298,22 @@
                                                          (get haku-oid)
                                                          :sijoittelu
                                                          not)))
-                                       (reduce (fn [acc {hakukohde-oids  :hakukohde
-                                                         application-key :key}]
+                                       (reduce (fn [acc {hakukohde-oids  :hakukohde}]
                                                  (-> acc
                                                      (update
                                                        :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
                                                        (fnil into #{})
-                                                       hakukohde-oids)
-                                                     (update
-                                                       :virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                       (fnil conj #{})
-                                                       application-key)))
+                                                       hakukohde-oids)))
                                                {})
                                        (mapcat (fn [[event args]]
                                                  (map (fn [arg]
                                                         [event
                                                          (case event
                                                            :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                           {:hakukohde-oid arg}
-                                                           :virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                           {:application-key arg
-                                                            :memoize         true})])
+                                                           {:hakukohde-oid arg})
+                                                         ])
                                                       args)))
-                                       (into []))
+                                       (into [fetch-valinnan-tulos-for-applications-dispatch]))
           dispatches              (as-> [] dispatches'
 
                                         (if (and fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
