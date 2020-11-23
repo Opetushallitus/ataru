@@ -97,7 +97,7 @@
                      (mapcat identity value)
                      value))))))
 
-(defn- remove-orphan-attachments [new-application old-application]
+(defn- remove-orphan-attachments [liiteri-cas-client new-application old-application]
   (let [new-attachments    (->> new-application
                                 flatten-attachment-keys
                                 set)
@@ -105,7 +105,7 @@
                                 flatten-attachment-keys
                                 (remove new-attachments))]
     (doseq [attachment-key orphan-attachments]
-      (file-store/delete-file attachment-key))
+      (file-store/delete-file liiteri-cas-client attachment-key))
     (log/info (str "Updated application " (:key old-application) ", removed old attachments: " (string/join ", " orphan-attachments)))))
 
 (defn- valid-virkailija-update-secret [{:keys [virkailija-secret]}]
@@ -152,7 +152,8 @@
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
-(defn- validate-and-store [form-by-id-cache
+(defn- validate-and-store [liiteri-cas-client
+                           form-by-id-cache
                            koodisto-cache
                            tarjonta-service
                            organization-service
@@ -279,7 +280,7 @@
 
       :else
       (do
-        (remove-orphan-attachments final-application latest-application)
+        (remove-orphan-attachments liiteri-cas-client final-application latest-application)
         (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)
           :key (:key latest-application))))))
 
@@ -337,7 +338,8 @@
    application-id))
 
 (defn handle-application-submit
-  [form-by-id-cache
+  [liiteri-cas-client
+   form-by-id-cache
    koodisto-cache
    tarjonta-service
    job-runner
@@ -349,7 +351,8 @@
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
-        (validate-and-store form-by-id-cache
+        (validate-and-store liiteri-cas-client
+                            form-by-id-cache
                             koodisto-cache
                             tarjonta-service
                             organization-service
@@ -374,7 +377,8 @@
     result))
 
 (defn handle-application-edit
-  [form-by-id-cache
+  [liiteri-cas-client
+   form-by-id-cache
    koodisto-cache
    tarjonta-service
    job-runner
@@ -386,7 +390,8 @@
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application key]
          :as   result}
-        (validate-and-store form-by-id-cache
+        (validate-and-store liiteri-cas-client
+                            form-by-id-cache
                             koodisto-cache
                             tarjonta-service
                             organization-service
@@ -434,19 +439,20 @@
   (log/info "Saving feedback" feedback)
   (application-store/add-application-feedback feedback))
 
-(defn- attachment-metadata->answer [{:keys [fieldType] :as answer}]
-  (cond-> answer
-          (= fieldType "attachment")
-          (update :value (fn [value]
-                           (if (and (vector? value)
-                                    (not-empty value)
-                                    (or (nil? (first value))
-                                        (vector? (first value))))
-                             (mapv file-store/get-metadata value)
-                             (file-store/get-metadata value))))))
+(defn- attachment-metadata->answer [liiteri-cas-client]
+  (fn [{:keys [fieldType] :as answer}]
+    (cond-> answer
+            (= fieldType "attachment")
+            (update :value (fn [value]
+                             (if (and (vector? value)
+                                      (not-empty value)
+                                      (or (nil? (first value))
+                                          (vector? (first value))))
+                               (mapv #(file-store/get-metadata liiteri-cas-client %) value)
+                               (file-store/get-metadata liiteri-cas-client value)))))))
 
-(defn attachments-metadata->answers [application]
-  (update application :answers (partial map attachment-metadata->answer)))
+(defn attachments-metadata->answers [liiteri-cas-client application]
+  (update application :answers (partial map (attachment-metadata->answer liiteri-cas-client))))
 
 (defn is-inactivated? [application]
   (cond (nil? application)
@@ -458,7 +464,8 @@
         false))
 
 (defn get-latest-application-by-secret
-  [form-by-id-cache
+  [liiteri-cas-client
+   form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
    organization-service
@@ -524,7 +531,7 @@
                                        (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
-                                                  attachments-metadata->answers
+                                                  (attachments-metadata->answers liiteri-cas-client)
                                                   (dissoc :person-oid :application-hakukohde-reviews)
                                                   (assoc :cannot-edit-because-in-processing (and
                                                                                              (not= actor-role :virkailija)

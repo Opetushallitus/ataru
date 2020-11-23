@@ -12,6 +12,8 @@
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
 
+(def liiteri-cas-client nil)
+
 (def koodisto-cache (reify cache-service/Cache
                       (get-from [this key])
                       (get-many-from [this keys])
@@ -26,7 +28,8 @@
         application-review-notes {}
         hakukohteiden-ehdolliset {}
         lang                     :fi]
-    (excel-export/export-applications applications
+    (excel-export/export-applications liiteri-cas-client
+                                      applications
                                       application-reviews
                                       application-review-notes
                                       (input-params :selected-hakukohde)

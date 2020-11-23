@@ -453,7 +453,8 @@
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset]))
 
-(defrecord CommonApplicationService [organization-service
+(defrecord CommonApplicationService [liiteri-cas-client
+                                     organization-service
                                      tarjonta-service
                                      ohjausparametrit-service
                                      audit-logger
@@ -545,7 +546,8 @@
                                                (<= 4500 (count applications)))
             lang                             (keyword (or (-> session :identity :lang) :fi))]
         (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
-        (ByteArrayInputStream. (excel/export-applications applications-with-persons
+        (ByteArrayInputStream. (excel/export-applications liiteri-cas-client
+                                                          applications-with-persons
                                                           application-reviews
                                                           application-review-notes
                                                           selected-hakukohde
@@ -724,4 +726,4 @@
       (log/error e "Failed to unmask" string)
       nil)))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil))

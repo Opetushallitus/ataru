@@ -168,7 +168,8 @@
 
     :application-service (component/using
                            (application-service/new-application-service)
-                           [:organization-service
+                           [:liiteri-cas-client
+                            :organization-service
                             :tarjonta-service
                             :ohjausparametrit-service
                             :audit-logger

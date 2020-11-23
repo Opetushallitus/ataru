@@ -40,7 +40,8 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defn- get-application
-  [form-by-id-cache
+  [liiteri-cas-client
+   form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
    organization-service
@@ -50,7 +51,8 @@
    session
    secret]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
-        (hakija-application-service/get-latest-application-by-secret form-by-id-cache
+        (hakija-application-service/get-latest-application-by-secret liiteri-cas-client
+                                                                     form-by-id-cache
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
@@ -193,6 +195,7 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
+              liiteri-cas-client
               form-by-id-cache
               koodisto-cache
               tarjonta-service
@@ -211,6 +214,7 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
+              liiteri-cas-client
               form-by-id-cache
               koodisto-cache
               tarjonta-service
@@ -231,7 +235,8 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
-            (get-application form-by-id-cache
+            (get-application liiteri-cas-client
+                             form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
@@ -242,7 +247,8 @@
                              {:hakija secret})
 
             (not-blank? virkailija-secret)
-            (get-application form-by-id-cache
+            (get-application liiteri-cas-client
+                             form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
