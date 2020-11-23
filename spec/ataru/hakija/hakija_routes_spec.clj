@@ -80,7 +80,6 @@
                                                :organization-service     organization-service
                                                :tarjonta-service         tarjonta-service})]
     (-> (routes/new-handler)
-        (assoc :liiteri-cas-client (atom nil))
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))
         (assoc :organization-service organization-service)

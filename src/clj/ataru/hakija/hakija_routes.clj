@@ -40,8 +40,7 @@
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
 (defn- get-application
-  [liiteri-cas-client
-   form-by-id-cache
+  [form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
    organization-service
@@ -49,16 +48,17 @@
    tarjonta-service
    audit-logger
    session
-   secret]
+   secret
+   liiteri-cas-client]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
-        (hakija-application-service/get-latest-application-by-secret liiteri-cas-client
-                                                                     form-by-id-cache
+        (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
                                                                      application-service
                                                                      tarjonta-service
-                                                                     secret)]
+                                                                     secret
+                                                                     liiteri-cas-client)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated"})
 
@@ -140,7 +140,6 @@
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
-                          liiteri-cas-client
                           organization-service
                           ohjausparametrit-service
                           application-service
@@ -149,7 +148,8 @@
                           form-by-haku-oid-str-cache
                           temp-file-store
                           amazon-sqs
-                          audit-logger]}]
+                          audit-logger
+                          liiteri-cas-client]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -195,7 +195,6 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-submit
-              liiteri-cas-client
               form-by-id-cache
               koodisto-cache
               tarjonta-service
@@ -204,7 +203,8 @@
               ohjausparametrit-service
               audit-logger
               application
-              session)
+              session
+              liiteri-cas-client)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -214,7 +214,6 @@
       :summary "Edit application"
       :body [application ataru-schema/Application]
       (match (hakija-application-service/handle-application-edit
-              liiteri-cas-client
               form-by-id-cache
               koodisto-cache
               tarjonta-service
@@ -223,7 +222,8 @@
               ohjausparametrit-service
               audit-logger
               application
-              session)
+              session
+              liiteri-cas-client)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -235,8 +235,7 @@
                      {virkailija-secret :- s/Str nil}]
       :return ataru-schema/ApplicationWithPersonAndForm
       (cond (not-blank? secret)
-            (get-application liiteri-cas-client
-                             form-by-id-cache
+            (get-application form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
@@ -244,11 +243,11 @@
                              tarjonta-service
                              audit-logger
                              session
-                             {:hakija secret})
+                             {:hakija secret}
+                             liiteri-cas-client)
 
             (not-blank? virkailija-secret)
-            (get-application liiteri-cas-client
-                             form-by-id-cache
+            (get-application form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
@@ -256,7 +255,8 @@
                              tarjonta-service
                              audit-logger
                              session
-                             {:virkailija virkailija-secret})
+                             {:virkailija virkailija-secret}
+                             liiteri-cas-client)
 
             :else
             (response/bad-request {:code :secret-expired

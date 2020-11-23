@@ -453,15 +453,15 @@
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset]))
 
-(defrecord CommonApplicationService [liiteri-cas-client
-                                     organization-service
+(defrecord CommonApplicationService [organization-service
                                      tarjonta-service
                                      ohjausparametrit-service
                                      audit-logger
                                      person-service
                                      valinta-tulos-service
                                      koodisto-cache
-                                     job-runner]
+                                     job-runner
+                                     liiteri-cas-client]
   ApplicationService
   (get-person
     [_ application]

@@ -338,8 +338,7 @@
    application-id))
 
 (defn handle-application-submit
-  [liiteri-cas-client
-   form-by-id-cache
+  [form-by-id-cache
    koodisto-cache
    tarjonta-service
    job-runner
@@ -347,7 +346,8 @@
    ohjausparametrit-service
    audit-logger
    application
-   session]
+   session
+   liiteri-cas-client]
   (log/info "Application submitted:" application)
   (let [{:keys [passed? id]
          :as   result}
@@ -377,8 +377,7 @@
     result))
 
 (defn handle-application-edit
-  [liiteri-cas-client
-   form-by-id-cache
+  [form-by-id-cache
    koodisto-cache
    tarjonta-service
    job-runner
@@ -386,7 +385,8 @@
    ohjausparametrit-service
    audit-logger
    input-application
-   session]
+   session
+   liiteri-cas-client]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application key]
          :as   result}
@@ -451,7 +451,7 @@
                                (mapv #(file-store/get-metadata liiteri-cas-client %) value)
                                (file-store/get-metadata liiteri-cas-client value)))))))
 
-(defn attachments-metadata->answers [liiteri-cas-client application]
+(defn attachments-metadata->answers [application liiteri-cas-client]
   (update application :answers (partial map (attachment-metadata->answer liiteri-cas-client))))
 
 (defn is-inactivated? [application]
@@ -464,14 +464,14 @@
         false))
 
 (defn get-latest-application-by-secret
-  [liiteri-cas-client
-   form-by-id-cache
+  [form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
    organization-service
    application-service
    tarjonta-service
-   secret]
+   secret
+   liiteri-cas-client]
   (let [[actor-role secret] (match [secret]
                               [{:virkailija s}]
                               [:virkailija s]
