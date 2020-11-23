@@ -15,7 +15,7 @@
             [ataru.log.audit-log :as audit-log]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer [should-contain should-be should= it describe tags]]
+            [speclj.core :refer [around should-contain should-be should= it describe tags]]
             [yesql.core :refer [defqueries]])
   (:import java.io.ByteArrayInputStream))
 

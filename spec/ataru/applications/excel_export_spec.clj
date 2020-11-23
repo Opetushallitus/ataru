@@ -5,7 +5,7 @@
             [ataru.forms.form-store :as form-store]
             [clojure.string :as string]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [speclj.core :refer [should-be-nil should== should= should it describe tags]]
+            [speclj.core :refer [around should-be-nil should== should= should it describe tags]]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.organization-service.organization-service :as organization-service])
   (:import [java.io FileOutputStream File]

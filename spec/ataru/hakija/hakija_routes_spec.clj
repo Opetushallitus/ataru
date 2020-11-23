@@ -25,7 +25,7 @@
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
-            [speclj.core :refer [before-all should-not before should= should it describe tags]]
+            [speclj.core :refer [around before-all should-not before should= should it describe tags]]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
