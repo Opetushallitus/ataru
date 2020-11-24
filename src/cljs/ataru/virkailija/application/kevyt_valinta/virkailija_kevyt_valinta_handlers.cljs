@@ -164,17 +164,24 @@
                                                   :target-key :valinta-tulos-service-url})]
   (fn [{db                        :db
         valinta-tulos-service-url :valinta-tulos-service-url} [_ {:keys [application-keys]}]]
-      {:db (update db :valinta-tulos-service
-                     (fn valinnan-tulokset->db [valinta-tulos-service-db]
-                       (->> application-keys
-                            (reduce (fn valinnan-tulos->db [acc key]
-                                      (dissoc acc key))
-                                    valinta-tulos-service-db))))
-       :http {:method              :post
-              :path                valinta-tulos-service-url
-              :params              application-keys
-              :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
-              :handler-args        {:application-keys application-keys}}}))
+    (let [ei-tulosta (set (doall (filter (fn [application-key] (not (contains? (get db :valinta-tulos-service) application-key))) application-keys)))
+          new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+      (if (empty? ei-tulosta)
+        (cond-> {:dispatch [:virkailija-kevyt-valinta/filter-applications]}
+                (= new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (update db :kevyt-valinta dissoc :multiple-requests-count))
+                (> new-multiple-requests-count 0)
+                (assoc
+                  :db
+                  (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))
+        {:db   db
+         :http {:method              :post
+                :path                valinta-tulos-service-url
+                :params              ei-tulosta
+                :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
+                :handler-args        {:application-keys ei-tulosta}}}))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valinnan-tulos
