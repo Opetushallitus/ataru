@@ -58,6 +58,9 @@
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :hakija-caller-id))
 
+    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
+                                        "ring-session" (-> config :public-config :hakija-caller-id))
+
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
     :amazon-sqs (component/using
@@ -106,7 +109,8 @@
 
     :application-service (component/using
                            (application-service/new-application-service)
-                           [:organization-service
+                           [:liiteri-cas-client
+                            :organization-service
                             :tarjonta-service
                             :ohjausparametrit-service
                             :audit-logger
@@ -119,6 +123,7 @@
                (handler/new-handler)
                (into [:tarjonta-service
                       :job-runner
+                      :liiteri-cas-client
                       :organization-service
                       :ohjausparametrit-service
                       :person-service

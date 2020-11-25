@@ -242,7 +242,7 @@
                    first)]
     (util/non-blank-val (:label koodi) [lang :fi :sv :en])))
 
-(defn- raw-values->human-readable-value [field-descriptor {:keys [lang]} get-koodisto-options value]
+(defn- raw-values->human-readable-value [liiteri-cas-client field-descriptor {:keys [lang]} get-koodisto-options value]
   (let [lang (-> lang clojure.string/lower-case keyword)
         koodisto-source (:koodisto-source field-descriptor)
         options (:options field-descriptor)]
@@ -257,7 +257,7 @@
                  (apply str)))
           (= (:fieldType field-descriptor) "attachment")
           (try
-            (let [[{:keys [filename size]}] (file-store/get-metadata [value])]
+            (let [[{:keys [filename size]}] (file-store/get-metadata liiteri-cas-client [value])]
               (str filename " (" (util/size-bytes->str size) ")"))
             (catch Exception _
               (util/non-blank-val (:internal-server-error virkailija-texts)
@@ -272,7 +272,8 @@
           :else
           value)))
 
-(defn- write-application! [writer application
+(defn- write-application! [liiteri-cas-client
+                           writer application
                            application-review
                            application-review-notes
                            person
@@ -301,7 +302,7 @@
           field-descriptor       (get form-fields-by-key answer-key)
           column                 (:column (first (filter #(= answer-key (:id %)) headers)))
           value-or-values        (get person (keyword answer-key) (:value answer))
-          ->human-readable-value (partial raw-values->human-readable-value field-descriptor application get-koodisto-options)
+          ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
           value                  (cond
                                    (util/is-question-group-answer? value-or-values)
                                    (->> value-or-values
@@ -523,7 +524,8 @@
        (map :oid)))
 
 (defn export-applications
-  [applications
+  [liiteri-cas-client
+   applications
    application-reviews
    application-review-notes
    selected-hakukohde
@@ -625,7 +627,8 @@
                                                     review-notes-for-application (get application-review-notes (:key application))
                                                     person                       (:person application)
                                                     ehdollinen?                  (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids)]
-                                                (write-application! row-writer
+                                                (write-application! liiteri-cas-client
+                                                                    row-writer
                                                                     application
                                                                     application-review
                                                                     review-notes-for-application

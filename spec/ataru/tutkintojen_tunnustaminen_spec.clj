@@ -1,32 +1,37 @@
-(ns ataru.tutkintojen-tunnustaminen
+(ns ataru.tutkintojen-tunnustaminen-spec
   (:require [ataru.applications.application-store :as application-store]
             [ataru.cache.cache-service :as cache-service]
-            [ataru.cache.in-memory-cache :as in-memory]
+            [ataru.files.file-store :as file-store]
+            [clojure.java.shell :refer [sh]]
+            [clj-time.core :as t]
+            [clj-time.format :as f]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
-            [ataru.dob :as dob]
+            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-step
+                                                     tutkintojen-tunnustaminen-submit-job-step
+                                                     tutkintojen-tunnustaminen-review-state-changed-job-step]]
             [ataru.forms.form-store :as form-store]
+            [clojure.string :as string]
             [ataru.log.audit-log :as audit-log]
             [clojure.data.xml :as xml]
             [clojure.java.jdbc :as jdbc]
-            [speclj.core :refer :all]
+            [speclj.core :refer [around should-contain should-be should= it describe tags]]
             [yesql.core :refer [defqueries]])
-  (:import java.io.ByteArrayInputStream
-           java.util.concurrent.TimeUnit))
+  (:import java.io.ByteArrayInputStream))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
 
 (defn- get-file
   [filename]
-  (let [config (get-in config [:tutkintojen-tunnustaminen :ftp])]
-    (let [r (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
-                                 (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
-                                 "&& set ftp:ssl-protect-data true"
-                                 (format "&& cd %s && cat %s" (:path config) filename))
-                :env {"LFTP_PASSWORD" (:password config)})]
-      (when (zero? (:exit r))
-        (:out r)))))
+  (let [config (get-in config [:tutkintojen-tunnustaminen :ftp])
+        r (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                               (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
+                               "&& set ftp:ssl-protect-data true"
+                               (format "&& cd %s && cat %s" (:path config) filename))
+              :env {"LFTP_PASSWORD" (:password config)})]
+    (when (zero? (:exit r))
+      (:out r))))
 
 (defn- delete-file
   [filename]
@@ -102,18 +107,18 @@
                      :data     "liite-3-1-2-data"}})
 
 (defn get-metadata
-  [keys]
+  [_ keys]
   (let [ms      (keep attachment-metadata keys)
         found   (set (map :key ms))
         missing (remove found keys)]
     (when (not-empty missing)
       (throw (new RuntimeException (str "no files "
-                                        (clojure.string/join ", " missing)
+                                        (string/join ", " missing)
                                         " found"))))
     (map #(select-keys % [:size :filename :key]) ms)))
 
 (defn- get-attachment
-  [key]
+  [_ key]
   (if-let [data (get-in attachment-metadata [key :data])]
     {:body (new ByteArrayInputStream (.getBytes data))}
     (throw (new RuntimeException (str "no file " key " found")))))
@@ -158,6 +163,8 @@
 (def ^:dynamic *event-id*)
 (def ^:dynamic *application-key*)
 (def ^:dynamic *application-submitted*)
+
+(def liiteri-cas-client nil)
 
 (describe "Tutkintojen tunnustaminen integration"
   (tags :unit)

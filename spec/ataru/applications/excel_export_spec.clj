@@ -1,11 +1,11 @@
 (ns ataru.applications.excel-export-spec
-  (:require [ataru.applications.application-store :as application-store]
-            [ataru.applications.excel-export :as j2ee]
+  (:require [ataru.applications.excel-export :as j2ee]
             [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.cache.cache-service :as cache-service]
             [ataru.forms.form-store :as form-store]
+            [clojure.string :as string]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [speclj.core :refer :all]
+            [speclj.core :refer [around should-be-nil should== should= should it describe tags]]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.organization-service.organization-service :as organization-service])
   (:import [java.io FileOutputStream File]
@@ -38,14 +38,17 @@
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
 (defn- format-included-ids [id-string]
-  (set (remove clojure.string/blank? (clojure.string/split id-string #"\s+"))))
+  (set (remove string/blank? (clojure.string/split id-string #"\s+"))))
+
+(def liiteri-cas-client nil)
 
 (defmacro with-excel [input-params bindings & body]
   `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")
          applications#     ~(second bindings)]
      (try
        (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
-         (->> (j2ee/export-applications applications#
+         (->> (j2ee/export-applications liiteri-cas-client
+                                        applications#
                                         (reduce #(assoc %1 (:key %2) fixtures/application-review)
                                                 {}
                                                 applications#)

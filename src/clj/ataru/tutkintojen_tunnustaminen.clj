@@ -1,11 +1,12 @@
 (ns ataru.tutkintojen-tunnustaminen
   (:require [ataru.background-job.job :as job]
+            [clojure.java.io :as io]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.util :as util]
-            [cheshire.core :as json]
+            [clojure.string :as string]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.data.xml :as xml]
@@ -14,7 +15,6 @@
             [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]])
   (:import [java.io
-            ByteArrayInputStream
             ByteArrayOutputStream
             OutputStreamWriter
             PipedInputStream
@@ -34,7 +34,7 @@
 (defn- ->case
   [application]
   (when (or (not (string? (:country application)))
-            (clojure.string/blank? (:country application)))
+            (string/blank? (:country application)))
     (throw (new RuntimeException
                 (str "Application " (:id application)
                      " has invalid country: " (:country application)))))
@@ -88,14 +88,14 @@
                 value)
 
         (string? value)
-        (remove clojure.string/blank? (clojure.string/split value #"\n"))
+        (remove string/blank? (string/split value #"\n"))
         :else
         [""]))
 
 (defn- pretty-print
   [[label value]]
   (str "- " label "\n  "
-       (clojure.string/join "\n  " (pretty-print-value value))))
+       (string/join "\n  " (pretty-print-value value))))
 
 (defn- application->document
   [application form attachments]
@@ -107,7 +107,7 @@
                     util/flatten-form-fields
                     (keep (partial field->label-value answers attachments lang))
                     (map pretty-print)
-                    (clojure.string/join "\n\n")
+                    (string/join "\n\n")
                     ((fn [x] (.getBytes x "UTF-8"))))}))
 
 (defn- ->documents
@@ -185,17 +185,17 @@
      :application (get-application country-question-id (:id id-and-state))}))
 
 (defn- attachment-as-bytes
-  [key]
-  (if-let [response (file-store/get-file key)]
+  [liiteri-cas-client key]
+  (if-let [response (file-store/get-file liiteri-cas-client key)]
     (with-open [in (:body response)
                 out (new ByteArrayOutputStream)]
-      (clojure.java.io/copy in out)
+      (io/copy in out)
       (.toByteArray out))
     (throw (new RuntimeException (str "Attachment " key " not found")))))
 
 (defn- get-attachments
-  [size-limit application]
-  (let [attachment-metadata   (file-store/get-metadata (:attachment-keys application))
+  [liiteri-cas-client size-limit application]
+  (let [attachment-metadata   (file-store/get-metadata liiteri-cas-client (:attachment-keys application))
         attachment-total-size (reduce + 0 (map :size attachment-metadata))]
     (if (< size-limit attachment-total-size)
       (do (log/error "Application" (:id application)
@@ -206,7 +206,7 @@
       (map (fn [{:keys [key filename]}]
              {:key      key
               :filename filename
-              :data     (attachment-as-bytes key)})
+              :data     (attachment-as-bytes liiteri-cas-client key)})
            attachment-metadata))))
 
 (defn- transfer
@@ -226,7 +226,7 @@
                     :env {"LFTP_PASSWORD" (:password config)}))
         r     (try
                 (.get lftp (:timeout-seconds config) TimeUnit/SECONDS)
-                (catch TimeoutException e
+                (catch TimeoutException _
                   (future-cancel emit)
                   (future-cancel lftp)
                   {:exit 1 :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))]
@@ -267,10 +267,10 @@
 (defn- get-configuration
   []
   (let [cfg (:tutkintojen-tunnustaminen config)]
-    (when (clojure.string/blank? (:form-key cfg))
+    (when (string/blank? (:form-key cfg))
       (throw (new RuntimeException
                   "Tutkintojen tunnustaminen form key not set")))
-    (when (clojure.string/blank? (:country-question-id cfg))
+    (when (string/blank? (:country-question-id cfg))
       (throw (new RuntimeException
                   "Tutkintojen tunnustaminen country question id not set")))
     (when (not (integer? (:attachment-total-size-limit cfg)))
@@ -279,7 +279,7 @@
     cfg))
 
 (defn- application-job-step
-  [form-by-id-cache koodisto-cache application-id edit?]
+  [liiteri-cas-client form-by-id-cache koodisto-cache application-id edit?]
   (let [{:keys [form-key
                 country-question-id
                 attachment-total-size-limit
@@ -287,7 +287,7 @@
         application   (get-application country-question-id application-id)]
     (if (= form-key (:form-key application))
       (let [form        (get-form form-by-id-cache koodisto-cache application)
-            attachments (get-attachments attachment-total-size-limit application)
+            attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
             message     (if edit?
                           (->application-edited application form attachments)
                           (->application-submitted application form attachments))]
@@ -306,12 +306,12 @@
       {:transition {:id :final}})))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
-  [{:keys [application-id]} {:keys [form-by-id-cache koodisto-cache]}]
-  (application-job-step form-by-id-cache koodisto-cache application-id false))
+  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
+  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id false))
 
 (defn tutkintojen-tunnustaminen-edit-job-step
-  [{:keys [application-id]} {:keys [form-by-id-cache koodisto-cache]}]
-  (application-job-step form-by-id-cache koodisto-cache application-id true))
+  [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
+  (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id true))
 
 (defn tutkintojen-tunnustaminen-review-state-changed-job-step
   [{:keys [event-id]} _]

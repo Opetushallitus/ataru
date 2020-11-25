@@ -163,9 +163,13 @@
 
     :login-cas-client (cas/new-cas-client (-> config :public-config :virkailija-caller-id))
 
+    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
+                                        "ring-session" (-> config :public-config :virkailija-caller-id))
+
     :application-service (component/using
                            (application-service/new-application-service)
-                           [:organization-service
+                           [:liiteri-cas-client
+                            :organization-service
                             :tarjonta-service
                             :ohjausparametrit-service
                             :audit-logger
@@ -181,6 +185,7 @@
               (vec (concat [:login-cas-client
                             :organization-service
                             :tarjonta-service
+                            :liiteri-cas-client
                             :valintalaskentakoostepalvelu-service
                             :valintaperusteet-service
                             :valinta-tulos-service

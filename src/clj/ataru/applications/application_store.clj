@@ -414,7 +414,9 @@
                      {:new       (application->loggable-form new-application)
                       :old       (application->loggable-form old-application)
                       :operation audit-log/operation-modify
-                      :session   session
+                      :session   (if updated-by-applicant?
+                                   session
+                                   (assoc-in session [:identity :oid] virkailija-oid))
                       :id        {:applicationOid key}})
       id)))
 

@@ -48,7 +48,8 @@
    tarjonta-service
    audit-logger
    session
-   secret]
+   secret
+   liiteri-cas-client]
   (let [[application-form-and-person secret-expired? lang-override inactivated?]
         (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
@@ -56,7 +57,8 @@
                                                                      organization-service
                                                                      application-service
                                                                      tarjonta-service
-                                                                     secret)]
+                                                                     secret
+                                                                     liiteri-cas-client)]
     (cond inactivated?
           (response/bad-request {:code :inactivated :error "Inactivated"})
 
@@ -146,7 +148,8 @@
                           form-by-haku-oid-str-cache
                           temp-file-store
                           amazon-sqs
-                          audit-logger]}]
+                          audit-logger
+                          liiteri-cas-client]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -200,7 +203,8 @@
               ohjausparametrit-service
               audit-logger
               application
-              session)
+              session
+              liiteri-cas-client)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -218,7 +222,8 @@
               ohjausparametrit-service
               audit-logger
               application
-              session)
+              session
+              liiteri-cas-client)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
@@ -238,7 +243,8 @@
                              tarjonta-service
                              audit-logger
                              session
-                             {:hakija secret})
+                             {:hakija secret}
+                             liiteri-cas-client)
 
             (not-blank? virkailija-secret)
             (get-application form-by-id-cache
@@ -249,7 +255,8 @@
                              tarjonta-service
                              audit-logger
                              session
-                             {:virkailija virkailija-secret})
+                             {:virkailija virkailija-secret}
+                             liiteri-cas-client)
 
             :else
             (response/bad-request {:code :secret-expired
@@ -284,7 +291,7 @@
         :middleware [upload/wrap-multipart-params normalizer/wrap-multipart-filename-normalizer]
         :return {(s/optional-key :stored-file) ataru-schema/File}
         (try
-          (let [[status stored-file] (resumable-file/store-file-part! temp-file-store file-id file-size file-part-number file-part)]
+          (let [[status stored-file] (resumable-file/store-file-part! liiteri-cas-client temp-file-store file-id file-size file-part-number file-part)]
             (log/info "File upload" file-part-number "of" file-size "bytes:" status)
             (case status
               :send-next (response/ok {})
@@ -301,7 +308,7 @@
                        {virkailija-secret :- s/Str nil}]
         (if (hakija-application-service/can-access-attachment?
              secret virkailija-secret key)
-          (if-let [file (file-store/get-file key)]
+          (if-let [file (file-store/get-file liiteri-cas-client key)]
             (-> (:body file)
                 response/ok
                 (response/header "Content-Disposition"
@@ -312,7 +319,7 @@
         :summary "Delete a file"
         :path-params [key :- s/Str]
         :return {:key s/Str}
-        (if-let [resp (file-store/delete-file key)]
+        (if-let [resp (file-store/delete-file liiteri-cas-client key)]
           (response/ok resp)
           (response/bad-request {:failures (str "Failed to delete file with key " key)}))))
     (api/POST "/client-error" []

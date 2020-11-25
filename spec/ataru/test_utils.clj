@@ -38,11 +38,11 @@
 
 (defn- create-fake-virkailija-update-secret
   [application-key]
-  (db/exec :db yesql-upsert-virkailija<! {:oid        "1213"
+  (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.24.00000001213"
                                           :first_name "Hemuli"
                                           :last_name  "Hemuli?"})
   (virkailija-edit/create-virkailija-update-secret
-   {:identity {:oid        "1213"
+   {:identity {:oid        "1.2.246.562.24.00000001213"
                :username   "tsers"
                :first-name "Hemuli"
                :last-name  "Hemuli?"}}
@@ -50,11 +50,11 @@
 
 (defn- create-fake-virkailija-create-secret
   []
-  (db/exec :db yesql-upsert-virkailija<! {:oid        "1214"
+  (db/exec :db yesql-upsert-virkailija<! {:oid        "1.2.246.562.24.00000001214"
                                           :first_name "Mymmeli"
                                           :last_name  "Mymmeli?"})
   (virkailija-edit/create-virkailija-create-secret
-   {:identity {:oid        "1214"
+   {:identity {:oid        "1.2.246.562.24.00000001214"
                :username   "ksers"
                :first-name "Mymmeli"
                :last-name  "Mymmeli?"}}))

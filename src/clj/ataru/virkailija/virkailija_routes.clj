@@ -193,6 +193,7 @@
                           tarjonta-service
                           valintalaskentakoostepalvelu-service
                           valintaperusteet-service
+                          liiteri-cas-client
                           job-runner
                           ohjausparametrit-service
                           localizations-cache
@@ -847,20 +848,20 @@
         :query-params [key :- (api/describe [s/Str] "File key")]
         :summary "Get metadata for one or more files"
         :return [ataru-schema/File]
-        (if-let [resp (file-store/get-metadata key)]
+        (if-let [resp (file-store/get-metadata liiteri-cas-client key)]
           (ok resp)
           (not-found)))
       (api/POST "/metadata" []
         :body-params [keys :- (api/describe [s/Str] "File keys")]
         :summary "Get metadata for one or more files"
         :return [ataru-schema/File]
-        (if-let [resp (file-store/get-metadata keys)]
+        (if-let [resp (file-store/get-metadata liiteri-cas-client keys)]
           (ok resp)
           (not-found)))
       (api/GET "/content/:key" []
         :path-params [key :- (api/describe s/Str "File key")]
         :summary "Download a file"
-        (if-let [file-response (file-store/get-file key)]
+        (if-let [file-response (file-store/get-file liiteri-cas-client key)]
           (-> (ok (:body file-response))
               (header "Content-Disposition" (:content-disposition file-response))
               (header "Cache-Control" "public, max-age=31536000"))
@@ -873,7 +874,7 @@
           (->
             (ring-util/response
               (ring-io/piped-input-stream
-                (fn [out] (file-store/get-file-zip keys out))))
+                (fn [out] (file-store/get-file-zip liiteri-cas-client keys out))))
             (header "Content-Disposition" (str "attachment; filename=" "attachments.zip"))))))
 
     (api/context "/statistics" []

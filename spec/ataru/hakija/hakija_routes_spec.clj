@@ -1,6 +1,7 @@
 (ns ataru.hakija.hakija-routes-spec
   (:require [ataru.applications.field-deadline :as field-deadline]
             [ataru.util :as util]
+            [ataru.log.audit-log :as audit-log]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.applications.application-store :as store]
             [ataru.background-job.job :as job]
@@ -24,11 +25,14 @@
             [cheshire.core :as json]
             [ataru.db.db :as ataru-db]
             [ring.mock.request :as mock]
-            [speclj.core :refer :all]
+            [speclj.core :refer [around before-all should-not before should= should it describe tags]]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
   (:import org.joda.time.DateTime))
+
+(declare resp)
+(declare yesql-get-application-by-id)
 
 (sql/defqueries "sql/application-queries.sql")
 
@@ -63,7 +67,7 @@
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
-        audit-logger                         (ataru.log.audit-log/new-dummy-audit-logger)
+        audit-logger                         (audit-log/new-dummy-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
@@ -186,15 +190,6 @@
                                  :hakukierros-end                     nil
                                  :jatkuva-haku?                       false
                                  :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
-
-(defn- hakuaika-ended
-  [_ _ _ _]
-  (hakuaika/hakuaika-with-label {:on                                  false
-                                 :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
-                                 :end                                 (- (System/currentTimeMillis) (* 2 24 3600 1000))
-                                 :hakukierros-end                     nil
-                                 :jatkuva-haku?                       false
-                                 :attachment-modify-grace-period-days nil}))
 
 (defn- hakuaika-ended-within-grace-period
   [_ _ _ _]
@@ -401,7 +396,7 @@
                                                                                       #{"1" "2"}
                                                                                       "kieli"
                                                                                       #{"FI" "SV" "EN"}))
-                    file-store/get-metadata                               (fn [keys]
+                    file-store/get-metadata                               (fn [_ keys]
                                                                             (mapv #(hash-map
                                                                                     :key %
                                                                                     :content-type "plain/text"
@@ -471,7 +466,7 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
-                    application-service/remove-orphan-attachments         (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _ _])
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                             (case uri
@@ -539,7 +534,7 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
-                    application-service/remove-orphan-attachments         (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _ _])
                     koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                             (case uri
                                                                               "maatjavaltiot2"
@@ -621,7 +616,7 @@
       (reset! form (db/init-db-fixture form-fixtures/person-info-form-with-more-questions))
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
-                    application-service/remove-orphan-attachments         (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _ _])
                     koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                             (case uri
                                                                               "maatjavaltiot2"
@@ -645,7 +640,7 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
-                    application-service/remove-orphan-attachments         (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _ _])
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                             (case uri
@@ -709,7 +704,7 @@
     (around [spec]
       (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
                     application-email/start-email-edit-confirmation-job   (constantly nil)
-                    application-service/remove-orphan-attachments         (fn [_ _])
+                    application-service/remove-orphan-attachments         (fn [_ _ _])
                     hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
                     koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                             (case uri
