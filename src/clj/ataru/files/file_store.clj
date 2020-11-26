@@ -4,22 +4,8 @@
             [ataru.cas.client :as cas]
             [clojure.java.io :as io]
             [taoensso.timbre :as log]
-            [clojure.string :as str]
-            [string-normalizer.filename-normalizer :as normalizer])
+            [clojure.string :as str])
   (:import [java.util.zip ZipOutputStream ZipEntry]))
-
-(defn upload-file [cas-client {:keys [tempfile filename]}]
-  (let [url  (resolve-url :liiteri.files)
-        resp (cas/cas-authenticated-multipart-post
-               cas-client
-               url
-               {:multipart [{:name     "file"
-                             :content  tempfile
-                             :filename (normalizer/normalize-filename filename)}]})]
-    (when (= (:status resp) 200)
-      (-> (:body resp)
-          (json/parse-string true)
-          (dissoc :version :deleted)))))
 
 (defn delete-file [cas-client file-key]
   (let [url  (resolve-url :liiteri.file file-key)

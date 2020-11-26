@@ -96,11 +96,12 @@
         {:keys [status body error]} (cas/cas-authenticated-multipart-post
                                       cas-client
                                       url
-                                      {:socket-timeout (* 1000 60 10)
-                                       :cookie-policy  :standard
-                                       :multipart      [{:part-name "file"
-                                                         :content   (FileInputStream. file)
-                                                         :name      (normalizer/normalize-filename file-name)}]})]
+                                      (fn []
+                                        {:socket-timeout (* 1000 60 10)
+                                         :cookie-policy  :standard
+                                         :multipart      [{:part-name "file"
+                                                           :content   (FileInputStream. file)
+                                                           :name      (normalizer/normalize-filename file-name)}]}))]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
