@@ -1,5 +1,5 @@
 (ns ataru.hakija.core
-  (:require [reagent.core :as reagent]
+  (:require [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
             [re-frisk.core :as re-frisk]
             [ataru.cljs-util :as cljs-util]
@@ -53,8 +53,8 @@
 (defn mount-root []
   (schema-validation/enable-schema-fn-validation)
   (re-frame/clear-subscription-cache!)
-  (reagent/render [form-view]
-                  (.getElementById js/document "app")))
+  (reagent-dom/render [form-view]
+                      (.getElementById js/document "app")))
 
 (defn- re-frisk-environment?
   []

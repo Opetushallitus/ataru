@@ -2,11 +2,13 @@
   (:require [ataru.cache.cache-service :as cache-service]
             [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url-helper]
+            [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.schema.form-schema :as form-schema]
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
+            [clojure.string]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
@@ -20,11 +22,11 @@
 (defn- parse-date-time
   [s]
   (let [tz  (t/time-zone-for-id "Europe/Helsinki")
-        fmt (f/formatter "yyyy-MM-dd'T'HH:mm" tz)]
+        fmt (f/formatter "yyyy-MM-dd'T'HH:mm:ss" tz)]
     (t/to-time-zone (f/parse fmt s) tz)))
 
 (defn- parse-haku
-  [haku hakukohteet]
+  [haku hakukohteet ohjausparametrit]
   (let [hakuajat (mapv (fn [hakuaika]
                          (merge
                            {:hakuaika-id "kouta-hakuaika-id"
@@ -33,7 +35,7 @@
                              {:end (parse-date-time paattyy)})))
                        (:hakuajat haku))]
     (merge
-     {:can-submit-multiple-applications           false
+     {:can-submit-multiple-applications           (get ohjausparametrit :useitaHakemuksia false)
       :hakuajat                                   hakuajat
       :hakukohteet                                (mapv :oid hakukohteet)
       :hakutapa-uri                               (:hakutapaKoodiUri haku)
@@ -41,12 +43,14 @@
       :kohdejoukko-uri                            (:kohdejoukkoKoodiUri haku)
       :name                                       (:nimi haku)
       :oid                                        (:oid haku)
-      :prioritize-hakukohteet                     false
-      :sijoittelu                                 false
+      :prioritize-hakukohteet                     (get ohjausparametrit :jarjestetytHakutoiveet false)
+      :sijoittelu                                 (get ohjausparametrit :sijoittelu false)
       :yhteishaku                                 (string/starts-with?
                                                    (:hakutapaKoodiUri haku)
                                                    "hakutapa_01#")
       :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
+     (when (get ohjausparametrit :hakutoiveidenMaaraRajoitettu false)
+       {:max-hakukohteet (get ohjausparametrit :hakutoiveidenEnimmaismaara 1)})
      (when (seq hakuajat)
        {:hakukausi-vuosi (->> hakuajat
                               (map #(t/year (:start %)))
@@ -108,10 +112,11 @@
   (when-let [haku (some-> :kouta-internal.haku
                           (url-helper/resolve-url haku-oid)
                           (get-result cas-client))]
-    (let [hakukohteet (some-> :kouta-internal.hakukohde-search
-                              (url-helper/resolve-url {"haku" haku-oid})
-                              (get-result cas-client))]
-      (parse-haku haku hakukohteet))))
+    (let [hakukohteet      (some-> :kouta-internal.hakukohde-search
+                                   (url-helper/resolve-url {"haku" haku-oid})
+                                   (get-result cas-client))
+          ohjausparametrit (ohjausparametrit-client/get-ohjausparametrit haku-oid)]
+      (parse-haku haku hakukohteet ohjausparametrit))))
 
 (s/defn ^:always-validate get-hakus-by-form-key :- [s/Str]
   [cas-client form-key]
@@ -127,11 +132,7 @@
   (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                (url-helper/resolve-url hakukohde-oid)
                                (get-result cas-client))]
-    (let [toteutus  (some-> :kouta-internal.toteutus
-                            (url-helper/resolve-url (:toteutusOid hakukohde))
-                            (get-result cas-client))
-          tarjoajat (some->> (or (seq (:tarjoajat hakukohde))
-                                 (seq (:tarjoajat toteutus)))
+    (let [tarjoajat (some->> (seq (:tarjoajat hakukohde))
                              (organization-service/get-organizations-for-oids
                               organization-service))]
       (parse-hakukohde hakukohde tarjoajat))))
