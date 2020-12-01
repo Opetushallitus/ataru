@@ -2,7 +2,6 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.cas.client :as cas]
             [ataru.config.url-helper :refer [resolve-url]]
-            [cheshire.core :as json]
             [taoensso.timbre :as log]))
 
 (defn finalize-attachments [{:keys [application-id]} {:keys [liiteri-cas-client]}]
@@ -16,7 +15,7 @@
     (when (> (count attachment-ids) 0)
       (let [response (cas/cas-authenticated-post liiteri-cas-client
                                                  (resolve-url :liiteri.finalize)
-                                                 (json/generate-string {:keys attachment-ids}))]
+                                                 {:keys attachment-ids})]
         (when (not= 200 (:status response))
           (throw (Exception. (str "Could not finalize attachments for application " application-id))))
         (log/info (str "Finalized attachments for application " application-id))))
