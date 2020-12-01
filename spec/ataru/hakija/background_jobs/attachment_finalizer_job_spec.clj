@@ -2,17 +2,18 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as job]
             [cheshire.core :as json]
+            [ataru.cas.client :as cas]
             [clj-http.client :as http]
             [ring.util.http-response :as response]
-            [speclj.core :refer :all]))
+            [speclj.core :refer [describe tags it should= should-fail]]))
 
 (describe "finalizing attachments"
   (tags :unit)
 
   (it "should finalize attachments belonging to an application"
-    (with-redefs [http/request                      (fn [{:keys [url] :as params}]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ url body]
                                                       (should= "/api/files/finalize" url)
-                                                      (let [body (json/parse-string (:body params) true)]
+                                                      (let [body (json/parse-string body true)]
                                                         (should= {:keys ["attachment-key-1"
                                                                          "attachment-key-2"
                                                                          "attachment-key-3"]} body))
