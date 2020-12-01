@@ -149,7 +149,8 @@
                   :person-service
                   :tarjonta-service
                   :suoritus-service
-                  :audit-logger])
+                  :audit-logger
+                  :liiteri-cas-client])
 
     :redis (redis/map->Redis {})
 

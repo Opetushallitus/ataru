@@ -222,7 +222,8 @@
                   :person-service
                   :tarjonta-service
                   :suoritus-service
-                  :audit-logger])
+                  :audit-logger
+                  :liiteri-cas-client])
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
