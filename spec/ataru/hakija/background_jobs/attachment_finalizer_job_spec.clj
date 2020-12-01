@@ -1,9 +1,7 @@
 (ns ataru.hakija.background-jobs.attachment-finalizer-job-spec
   (:require [ataru.applications.application-store :as application-store]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as job]
-            [cheshire.core :as json]
             [ataru.cas.client :as cas]
-            [clj-http.client :as http]
             [ring.util.http-response :as response]
             [speclj.core :refer [describe tags it should= should-fail]]))
 
@@ -13,10 +11,9 @@
   (it "should finalize attachments belonging to an application"
     (with-redefs [cas/cas-authenticated-post        (fn [_ url body]
                                                       (should= "/api/files/finalize" url)
-                                                      (let [body (json/parse-string body true)]
-                                                        (should= {:keys ["attachment-key-1"
-                                                                         "attachment-key-2"
-                                                                         "attachment-key-3"]} body))
+                                                      (should= {:keys ["attachment-key-1"
+                                                                       "attachment-key-2"
+                                                                       "attachment-key-3"]} body)
                                                       (response/ok))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)
@@ -30,7 +27,7 @@
         (should= {:transition {:id :final}} result))))
 
   (it "should not call finalize API without any attachments"
-    (with-redefs [http/request                      (fn [_]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ _ _]
                                                       (should-fail))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)
