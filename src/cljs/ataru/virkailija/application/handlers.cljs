@@ -289,42 +289,39 @@
                                                      (= (:key %) application-key-param)) all-applications)
                                         (first)
                                         :key))
-          fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches
-                                  (->> applications
-                                       (filter (fn [{haku-oid :haku}]
-                                                 (some-> db
-                                                         :haut
-                                                         (get haku-oid)
-                                                         :sijoittelu
-                                                         not)))
-                                       (reduce (fn [acc {hakukohde-oids  :hakukohde
-                                                         application-key :key}]
+          applications-with-no-sijoittelu (filter (fn [{haku-oid :haku}]
+                                                    (some-> db
+                                                            :haut
+                                                            (get haku-oid)
+                                                            :sijoittelu
+                                                            not)) applications)
+          fetch-valintalaskenta-in-use-dispatches
+                                  (->> applications-with-no-sijoittelu
+                                       (reduce (fn [acc {hakukohde-oids  :hakukohde}]
                                                  (-> acc
                                                      (update
                                                        :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
                                                        (fnil into #{})
-                                                       hakukohde-oids)
-                                                     (update
-                                                       :virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                       (fnil conj #{})
-                                                       application-key)))
+                                                       hakukohde-oids)))
                                                {})
                                        (mapcat (fn [[event args]]
                                                  (map (fn [arg]
                                                         [event
                                                          (case event
                                                            :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?
-                                                           {:hakukohde-oid arg}
-                                                           :virkailija-kevyt-valinta/fetch-valinnan-tulos
-                                                           {:application-key arg
-                                                            :memoize         true})])
+                                                           {:hakukohde-oid arg})
+                                                         ])
                                                       args)))
                                        (into []))
+          combined-kevyt-valinta-dispatches (cond-> fetch-valintalaskenta-in-use-dispatches
+                                                    (not-empty applications-with-no-sijoittelu)
+                                                    (conj [:virkailija-kevyt-valinta/fetch-valinnan-tulos-monelle
+                                                           {:application-keys (map :key applications-with-no-sijoittelu)}]))
           dispatches              (as-> [] dispatches'
 
                                         (if (and fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
-                                                 (not-empty fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches))
-                                          (into dispatches' fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches)
+                                                 (not-empty combined-kevyt-valinta-dispatches))
+                                          (into dispatches' combined-kevyt-valinta-dispatches)
                                           (conj dispatches' [:virkailija-kevyt-valinta/filter-applications]))
 
                                         (if fetch-more?
@@ -334,7 +331,7 @@
                                                               [:application/close-application]))))]
       {:db         (assoc-in db
                              [:kevyt-valinta :multiple-requests-count]
-                             (count fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications-dispatches))
+                             (count combined-kevyt-valinta-dispatches))
        :dispatch-n dispatches})))
 
 (defn- extract-unselected-review-states-from-query
