@@ -37,13 +37,14 @@
   (let [handler-ref (atom nil)
         sanity-count (atom 0)
         dispatcher (fn [db]
-                     (match [(swap! sanity-count inc) (predicate db)]
-                            [50 _] (js/clearInterval @handler-ref)
-                            [_ (result :guard (comp true? boolean))]
-                            (do
-                              (js/clearInterval @handler-ref)
-                              (handler result))
-                            :else nil))]
+                     (let [pred (predicate db)]
+                       (match [(swap! sanity-count inc) pred]
+                              [50 _] (js/clearInterval @handler-ref)
+                              [_ (result :guard (comp true? boolean))]
+                              (do
+                                (js/clearInterval @handler-ref)
+                                (handler result))
+                              :else nil)))]
     (reset!
       handler-ref
       (js/setInterval
@@ -53,13 +54,14 @@
 (defn set-global-error-handler!
   "Sets the global error handler. Prints stack trace of uncaught
    error"
-  [send-to-server-fn]
+  [send-to-server-fn description-fn]
   (set! (.-onerror js/window)
         (fn [error-msg url line col error-obj]
           (let [user-agent (-> js/window .-navigator .-userAgent)
                 error-details {:error-message error-msg
                                :url url
                                :line line
+                               :description (description-fn)
                                :col col
                                :user-agent user-agent}]
             (-> ((.-fromError js/StackTrace) error-obj)

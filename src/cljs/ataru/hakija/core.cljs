@@ -10,9 +10,9 @@
             [ataru.hakija.subs]                             ;; required although no explicit dependency
             [ataru.application-common.fx]                   ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.hakija.component-handlers.dropdown-component-handlers]
-            [ataru.cljs-util :as cljs-util]
             [ataru.util :as u]
-            [clojure.string :as str]
+            [goog.string :as gstring]
+            [clojure.string :as string]
             [ataru.schema-validation :as schema-validation]))
 
 (enable-console-print!)
@@ -31,7 +31,7 @@
         query-params      (cljs-util/extract-query-params)
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)
-        hakukohteet       (clojure.string/split (:hakukohteet query-params) #",")]
+        hakukohteet       (string/split (:hakukohteet query-params) #",")]
     (cljs-util/unset-query-param "modify")
     (cljs-util/unset-query-param "virkailija-secret")
     (cond
@@ -75,7 +75,13 @@
   (cljs-util/set-global-error-handler! #(ajax/http {:method    :post
                                                     :post-data %
                                                     :url       "/hakemus/api/client-error"
-                                                    :handler   [:application/handle-client-error]}))
+                                                    :handler   [:application/handle-client-error]})
+                                       #(let [form @(re-frame/subscribe [:application/form])]
+                                          (gstring/format "Hakija form=%s, id=%s, haku-oid=%s, lang=%s"
+                                                          (:key form)
+                                                          (:id form)
+                                                          (get-in form [:tarjonta :haku-oid])
+                                                          (:selected-language form))))
   (network-listener)
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])

@@ -57,7 +57,8 @@
 
 (defn ^:export init []
   (schema-validation/enable-schema-fn-validation)
-  (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity))
+  (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity)
+                             (constantly "Virkailija lomake-editori"))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
   (when (-> js/config
