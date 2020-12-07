@@ -521,7 +521,8 @@
 (defn multiple-choice
   [field-descriptor _]
   (let [id        (answer-key field-descriptor)
-        languages (subscribe [:application/default-languages])]
+        languages (subscribe [:application/default-languages])
+        options   (subscribe [:application/visible-options field-descriptor])]
     (fn [field-descriptor idx]
       [:div.application__form-field
        [generic-label-component/generic-label field-descriptor idx]
@@ -538,7 +539,7 @@
           (map-indexed (fn [option-idx option]
                          ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
                          [multiple-choice-option field-descriptor option id idx])
-                       (cond->> (:options field-descriptor)
+                       (cond->> @options
                                 (and (some? (:koodisto-source field-descriptor))
                                      (not (:koodisto-ordered-by-user field-descriptor)))
                                 (sort-by #(util/non-blank-option-label % @languages)))))]])))
