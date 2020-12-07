@@ -12,7 +12,6 @@
 
 
 (defn log-client-error [error-details]
-  (prn "vsdfvf")
   (log/error (str "Error from client browser:\n"
                   (:description error-details) "\n"
                   (:error-message error-details) "\n"
