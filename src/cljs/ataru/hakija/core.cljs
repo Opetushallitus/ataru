@@ -11,6 +11,7 @@
             [ataru.application-common.fx]                   ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.hakija.component-handlers.dropdown-component-handlers]
             [ataru.util :as u]
+            [cemerick.url :as url]
             [goog.string :as gstring]
             [clojure.string :as string]
             [ataru.schema-validation :as schema-validation]))
@@ -77,11 +78,14 @@
                                                     :url       "/hakemus/api/client-error"
                                                     :handler   [:application/handle-client-error]})
                                        #(let [form @(re-frame/subscribe [:application/form])]
-                                          (gstring/format "Hakija form=%s, id=%s, haku-oid=%s, lang=%s"
+                                          (gstring/format "Hakija form=%s, id=%s, haku-oid=%s, lang=%s, application-key=%s"
                                                           (:key form)
                                                           (:id form)
                                                           (get-in form [:tarjonta :haku-oid])
-                                                          (:selected-language form))))
+                                                          (:selected-language form)
+                                                          (-> (.. js/window -location -href)
+                                                              (url/url)
+                                                              (get-in [:query "application-key"])))))
   (network-listener)
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
