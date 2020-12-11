@@ -339,7 +339,8 @@
             (match (:fieldClass component)
               "questionGroup" (map #(recursively-get-labels %) (:children component))
               "wrapperElement" (map #(recursively-get-labels %) (:children component))
-              :else (-> component :label lang)))]
+              :else (or (-> component :label lang)
+                        (-> component :label :fi))))]
     (flatten (recursively-get-labels component))))
 
 (defn hakukohteet-module [_ path]
@@ -404,7 +405,7 @@
              " "
              [:span
               {:data-test-id (some-> data-test-id-prefix (str "-fields-label"))}
-              (clojure.string/join ", " (get-leaf-component-labels @value :fi))]])]]))))
+              (clojure.string/join ", " (get-leaf-component-labels @value @(subscribe [:editor/virkailija-lang])))]])]]))))
 
 (defn info-element
   "Info text which is a standalone component"
