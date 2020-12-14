@@ -108,6 +108,14 @@
                                                     :f3a87aa7-b782-4947-a4a0-0f126147f7b5
                                                     :5e5a0f04-f04d-478c-b093-3f47d33ba1a4
                                                     :75d3d13c-5865-4924-8a69-d22b8a8aea65]))
+    "pohjakoulutus_amv"                         (suoritusvuosi-one-of
+                                                 application-key
+                                                 answers
+                                                 [:pohjakoulutus_amv--year-of-completion])
+    "pohjakoulutus_amp"                         (suoritusvuosi-one-of
+                                                 application-key
+                                                 answers
+                                                 [:pohjakoulutus_amp--year-of-completion])
     "pohjakoulutus_amt"                        (if (or (any-answers-match? answers "1" [:718d7f0b-4075-4960-8456-1ec49e147551])
                                                        (any-answers-match? answers "2" [:1a9c3205-0500-439e-84b9-4bb7b90dabe8]))
                                                  [(:hakukausi-vuosi haku)]
