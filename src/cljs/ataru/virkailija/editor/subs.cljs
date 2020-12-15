@@ -55,7 +55,7 @@
     [(re-frame/subscribe [:editor/form key])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn form-name [[form lang] _]
-    (util/non-blank-val (:name form) [lang :fi :sv :en])))
+    (util/non-blank-val (select-keys (:name form) (:languages form)) [lang :fi :sv :en])))
 
 (re-frame/reg-sub
   :editor/form-created-by
