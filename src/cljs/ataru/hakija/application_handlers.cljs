@@ -774,10 +774,14 @@
 
 (defn- remove-repeatable-field-value
   [db field-descriptor question-group-idx data-idx]
-  (let [id (keyword (:id field-descriptor))]
+  (let [id (keyword (:id field-descriptor))
+        preserve-first-value (fn [v idx]
+                               (if (= (count v) 1)
+                                 (assoc-in v [idx :value] "")
+                                 (autil/remove-nth v idx)))]
     (-> (if (some? question-group-idx)
-          (update-in db [:application :answers id :values question-group-idx] autil/remove-nth data-idx)
-          (update-in db [:application :answers id :values] autil/remove-nth data-idx))
+          (update-in db [:application :answers id :values question-group-idx] preserve-first-value data-idx)
+          (update-in db [:application :answers id :values] preserve-first-value data-idx))
         (set-repeatable-field-value id)
         (set-repeatable-application-field-top-level-valid id true))))
 
