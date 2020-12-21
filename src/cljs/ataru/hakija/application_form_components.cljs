@@ -523,25 +523,26 @@
   (let [id        (answer-key field-descriptor)
         languages (subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
-      [:div.application__form-field
-       [generic-label-component/generic-label field-descriptor idx]
-       (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
-         [hakukohde-names-component/question-hakukohde-names field-descriptor])
-       [:div.application__form-text-input-info-text
-        [info-text-component/info-text field-descriptor]]
-       [:div.application__form-outer-checkbox-container
-        {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
-         :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
-         :tab-index       "0"
-         :role            "listbox"}
-        (doall
-          (map-indexed (fn [option-idx option]
-                         ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx (when idx (str "-" idx)))}
-                         [multiple-choice-option field-descriptor option id idx])
-                       (cond->> (:options field-descriptor)
-                                (and (some? (:koodisto-source field-descriptor))
-                                     (not (:koodisto-ordered-by-user field-descriptor)))
-                                (sort-by #(util/non-blank-option-label % @languages)))))]])))
+      (let [options @(subscribe [:application/visible-options field-descriptor])]
+        [:div.application__form-field
+         [generic-label-component/generic-label field-descriptor idx]
+         (when (belongs-to-hakukohde-or-ryhma? field-descriptor)
+           [hakukohde-names-component/question-hakukohde-names field-descriptor])
+         [:div.application__form-text-input-info-text
+          [info-text-component/info-text field-descriptor]]
+         [:div.application__form-outer-checkbox-container
+          {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
+           :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
+           :tab-index       "0"
+           :role            "listbox"}
+          (doall
+            (map-indexed (fn [option-idx option]
+                           ^{:key (str "multiple-choice-" (:id field-descriptor) "-" option-idx "-" (:value option) (when idx (str "-" idx)))}
+                           [multiple-choice-option field-descriptor option id idx])
+                         (cond->> options
+                                  (and (some? (:koodisto-source field-descriptor))
+                                       (not (:koodisto-ordered-by-user field-descriptor)))
+                                  (sort-by #(util/non-blank-option-label % @languages)))))]]))))
 
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages _ _]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
