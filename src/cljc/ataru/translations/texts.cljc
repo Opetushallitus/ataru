@@ -3,7 +3,7 @@
 
 (def translation-mapping
   {:lisaa-kieli                                 {:fi "Lisää kieli"
-                                                 :sv "Lisää kieli"
+                                                 :sv "Lägg till språk"
                                                  :en "Lisää kieli"}
    :add                                         {:fi "Lisää"
                                                  :sv "Lägg till"
@@ -273,46 +273,46 @@
                                                  :sv "ingen pågående ansökningstid"
                                                  :en "application period currently not ongoing"}
    :oppiaine                                    {:fi "Oppiaine"
-                                                 :sv "Oppiaine"
+                                                 :sv "Läroämne"
                                                  :en "Oppiaine"}
    :valinnaisaine                               {:fi "Valinnaisaine"
-                                                 :sv "Valinnaisaine"
+                                                 :sv "Valfritt ämne"
                                                  :en "Valinnaisaine"}
    :oppimaara                                   {:fi "Oppimäärä"
-                                                 :sv "Oppimäärä"
+                                                 :sv "Lärokurs"
                                                  :en "Oppimäärä"}
    :suomi-aidinkielena                          {:fi "Suomi äidinkielenä"
-                                                 :sv "Suomi äidinkielenä"
+                                                 :sv "Finska som modersmål"
                                                  :en "Suomi äidinkielenä"}
    :suomi-toisena-kielena                       {:fi "Suomi toisena kielena"
-                                                 :sv "Suomi toisena kielena"
+                                                 :sv "Finska som andra språk"
                                                  :en "Suomi toisena kielena"}
    :suomi-viittomakielisille                    {:fi "Suomi viittomakielisille"
-                                                 :sv "Suomi viittomakielisille"
+                                                 :sv "Finska för teckenspråkiga"
                                                  :en "Suomi viittomakielisille"}
    :suomi-saamenkielisille                      {:fi "Suomi saamenkielisille"
-                                                 :sv "Suomi saamenkielisille"
+                                                 :sv "Finska för samiskspråkiga"
                                                  :en "Suomi saamenkielisille"}
    :ruotsi-aidinkielena                         {:fi "Ruotsi äidinkielenä"
-                                                 :sv "Ruotsi äidinkielenä"
+                                                 :sv "Svenska som modersmål"
                                                  :en "Ruotsi äidinkielenä"}
    :ruotsi-toisena-kielena                      {:fi "Ruotsi toisena kielenä"
-                                                 :sv "Ruotsi toisena kielenä"
+                                                 :sv "Svenska som andra språk"
                                                  :en "Ruotsi toisena kielenä"}
    :ruotsi-viittomakielisille                   {:fi "Ruotsi viittomakielisille"
-                                                 :sv "Ruotsi viittomakielisille"
+                                                 :sv "Svenska för teckenspråkiga"
                                                  :en "Ruotsi viittomakielisille"}
    :saame-aidinkielena                          {:fi "Saame äidinkielenä"
-                                                 :sv "Saame äidinkielenä"
+                                                 :sv "Samiska som modersmål"
                                                  :en "Saame äidinkielenä"}
    :romani-aidinkielena                         {:fi "Romani äidinkielenä"
-                                                 :sv "Romani äidinkielenä"
+                                                 :sv "Romani som modersmål"
                                                  :en "Romani äidinkielenä"}
    :viittomakieli-aidinkielena                  {:fi "Viittomakieli äidinkielenä"
-                                                 :sv "Viittomakieli äidinkielenä"
+                                                 :sv "Teckenspråk som modersmål"
                                                  :en "Viittomakieli äidinkielenä"}
    :muu-oppilaan-aidinkieli                     {:fi "Muu oppilaan äidinkieli"
-                                                 :sv "Muu oppilaan äidinkieli"
+                                                 :sv "Annat modersmål för eleven"
                                                  :en "Muu oppilaan äidinkieli"}
    :page-title                                  {:fi "Opintopolku – hakulomake"
                                                  :en "Studyinfo – application form"
@@ -346,7 +346,7 @@
                                                  :sv "Dölj ansökningsmål"}
    :limit-reached                               {:fi "ei valittavissa"
                                                  :en "unselectable"
-                                                 :sv "ei valittavissa"}
+                                                 :sv "icke-valbar"}
    :read-less                                   {:fi "Sulje ohje"
                                                  :sv "Dölj anvisning"
                                                  :en "Hide instructions"}
@@ -360,7 +360,7 @@
                                                  :sv "Ta bort rad"
                                                  :en "Remove row"}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
-                                                 :sv "Sök ansökningsmål i denna ansökan"
+                                                 :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
@@ -420,75 +420,75 @@
                                                  :sv "%s, valinnainen"
                                                  :en "%s, valinnainen"}
    :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
-                                                 :sv "Lisää valinnaisaine"
+                                                 :sv "Lägg till valfritt ämne"
                                                  :en "Lisää valinnaisaine"}
    :poista                                      {:fi "Poista"
-                                                 :sv "Poista"
+                                                 :sv "Radera"
                                                  :en "Poista"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
-                :sv "Äidinkieli ja kirjallisuus"
+                :sv "Modersmål och litteratur"
                 :en "Äidinkieli ja kirjallisuus"}
    :oppiaine-a1 {:fi "A1-kieli"
-                 :sv "A1-kieli"
+                 :sv "A1-språk"
                  :en "A1-kieli"}
    :oppiaine-a2 {:fi "A2-kieli"
-                 :sv "A2-kieli"
+                 :sv "A2-språk"
                  :en "A2-kieli"}
    :oppiaine-b1 {:fi "B1-kieli"
-                 :sv "B1-kieli"
+                 :sv "B1-språk"
                  :en "B1-kieli"}
    :oppiaine-b2 {:fi "B2-kieli"
-                 :sv "B2-kieli"
+                 :sv "B2-språk"
                  :en "B2-kieli"}
    :oppiaine-b3 {:fi "B3-kieli"
-                 :sv "B3-kieli"
+                 :sv "B3-språk"
                  :en "B3-kieli"}
    :oppiaine-ma {:fi "Matematiikka"
-                 :sv "Matematiikka"
+                 :sv "Matematik"
                  :en "Matematiikka"}
    :oppiaine-bi {:fi "Biologia"
-                 :sv "Biologia"
+                 :sv "Biologi"
                  :en "Biologia"}
    :oppiaine-ge {:fi "Maantieto"
-                 :sv "Maantieto"
+                 :sv "Geografi"
                  :en "Maantieto"}
    :oppiaine-fy {:fi "Fysiikka"
-                 :sv "Fysiikka"
+                 :sv "Fysik"
                  :en "Fysiikka"}
    :oppiaine-ke {:fi "Kemia"
-                 :sv "Kemia"
+                 :sv "Kemi"
                  :en "Kemia"}
    :oppiaine-tt {:fi "Terveystieto"
-                 :sv "Terveystieto"
+                 :sv "Hälsokunskap"
                  :en "Terveystieto"}
    :oppiaine-ty {:fi "Uskonto tai elämänkatsomustieto"
-                 :sv "Uskonto tai elämänkatsomustieto"
+                 :sv "Religion eller livsåskådningskunskap"
                  :en "Uskonto tai elämänkatsomustieto"}
    :oppiaine-hi {:fi "Historia"
                  :sv "Historia"
                  :en "Historia"}
    :oppiaine-yh {:fi "Yhteiskuntaoppi"
-                 :sv "Yhteiskuntaoppi"
+                 :sv "Samhällslära"
                  :en "Yhteiskuntaoppi"}
    :oppiaine-mu {:fi "Musiikki"
-                 :sv "Musiikki"
+                 :sv "Musik"
                  :en "Musiikki"}
    :oppiaine-ku {:fi "Kuvaamataito"
-                 :sv "Kuvaamataito"
+                 :sv "Bildkonst"
                  :en "Kuvaamataito"}
    :oppiaine-ka {:fi "Käsityö"
-                 :sv "Käsityö"
+                 :sv "Slöjd"
                  :en "Käsityö"}
    :oppiaine-li {:fi "Liikunta"
-                 :sv "Liikunta"
+                 :sv "Gymnastik"
                  :en "Liikunta"}
    :oppiaine-ko {:fi "Kotitalous"
-                 :sv "Kotitalous"
+                 :sv "Huslig ekonomi"
                  :en "Kotitalous"}
    :oppiaine-valinnainen-kieli {:fi "Valinnainen kieli"
-                                :sv "Valinnainen kieli"
+                                :sv "Valfritt språk"
                                 :en "Valinnainen kieli"}})
 
 (def general-texts
@@ -851,85 +851,85 @@
 
 (def virkailija-texts
   {:valintakasittelymerkinta                        {:fi "Valintakäsittelymerkintä"
-                                                     :sv "Valintakäsittelymerkintä"
+                                                     :sv "Notering om antagningsbehandling"
                                                      :en "Valintakäsittelymerkintä"}
    :valinnan-tila                                   {:fi "Valinnan tila"
-                                                     :sv "Valinnan tila"
+                                                     :sv "Antagningens status"
                                                      :en "Valinnan tila"}
    :valinnan-tila-ladattu-valinnoista               {:fi "Valintatieto tuotu valintarekisteristä"
-                                                     :sv "Antagningsuppgiften inhämtad från antagningsregistret"
+                                                     :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                      :en "Valintatieto tuotu valintarekisteristä"}
    :valinnan-tila-ladataan-valinnoista              {:fi "Valintatieto tuotu valintarekisteristä"
                                                      :sv "Antagningsuppgiften inhämtad från antagningsregistret"
                                                      :en "Valintatieto tuotu valintarekisteristä"}
    :arvosanat-peruskoulu                            {:fi "Arvosanat (peruskoulu)"
-                                                     :sv "Arvosanat (peruskoulu)"
+                                                     :sv "Vitsord (grundskola)"
                                                      :en "Arvosanat (peruskoulu)"}
    :arvosanat-lukio                                 {:fi "Arvosanat (lukio)"
-                                                     :sv "Arvosanat (lukio)"
+                                                     :sv "Vitsord (gymnasium)"
                                                      :en "Arvosanat (lukio)"}
    :arvosana-aidinkieli-ja-kirjallisuus             {:fi "Äidinkieli ja kirjallisuus"
-                                                     :sv "Äidinkieli ja kirjallisuus"
+                                                     :sv "Modersmål och litteratur"
                                                      :en "Äidinkieli ja kirjallisuus"}
    :arvosana-a1-kieli                               {:fi "A1-kieli"
-                                                     :sv "A1-kieli"
+                                                     :sv "A1-språk"
                                                      :en "A1-kieli"}
    :arvosana-a2-kieli                               {:fi "A2-kieli"
-                                                     :sv "A2-kieli"
+                                                     :sv "A2-språk"
                                                      :en "A2-kieli"}
    :arvosana-b1-kieli                               {:fi "B1-kieli"
-                                                     :sv "B1-kieli"
+                                                     :sv "B1-språk"
                                                      :en "B1-kieli"}
    :arvosana-matematiikka                           {:fi "Matematiikka"
-                                                     :sv "Matematiikka"
+                                                     :sv "Matematik"
                                                      :en "Matematiikka"}
    :arvosana-biologia                               {:fi "Biologia"
-                                                     :sv "Biologia"
+                                                     :sv "Biologi"
                                                      :en "Biologia"}
    :arvosana-maantieto                              {:fi "Maantieto"
-                                                     :sv "Maantieto"
+                                                     :sv "Geografi"
                                                      :en "Maantieto"}
    :arvosana-fysiikka                               {:fi "Fysiikka"
-                                                     :sv "Fysiikka"
+                                                     :sv "Fysik"
                                                      :en "Fysiikka"}
    :arvosana-kemia                                  {:fi "Kemia"
-                                                     :sv "Kemia"
+                                                     :sv "Kemi"
                                                      :en "Kemia"}
    :arvosana-terveystieto                           {:fi "Terveystieto"
-                                                     :sv "Terveystieto"
+                                                     :sv "Hälsokunskap"
                                                      :en "Terveystieto"}
    :arvosana-uskonto-tai-elamankatsomustieto        {:fi "Uskonto tai elämänkatsomustieto"
-                                                     :sv "Uskonto tai elämänkatsomustieto"
+                                                     :sv "Religion eller livsåskådningskunskap"
                                                      :en "Uskonto tai elämänkatsomustieto"}
    :arvosana-historia                               {:fi "Historia"
                                                      :sv "Historia"
                                                      :en "Historia"}
    :arvosana-yhteiskuntaoppi                        {:fi "Yhteiskuntaoppi"
-                                                     :sv "Yhteiskuntaoppi"
+                                                     :sv "Samhällslära"
                                                      :en "Yhteiskuntaoppi"}
    :arvosana-musiikki                               {:fi "Musiikki"
-                                                     :sv "Musiikki"
+                                                     :sv "Musik"
                                                      :en "Musiikki"}
    :arvosana-kuvataide                              {:fi "Kuvataide"
-                                                     :sv "Kuvataide"
+                                                     :sv "Bildkonst"
                                                      :en "Kuvataide"}
    :arvosana-kasityo                                {:fi "Käsityö"
-                                                     :sv "Käsityö"
+                                                     :sv "Slöjd"
                                                      :en "Käsityö"}
    :arvosana-liikunta                               {:fi "Liikunta"
-                                                     :sv "Liikunta"
+                                                     :sv "Gymnastik"
                                                      :en "Liikunta"}
    :arvosana-kotitalous                             {:fi "Kotitalous"
-                                                     :sv "Kotitalous"
+                                                     :sv "Huslig ekonomi"
                                                      :en "Kotitalous"}
    :arvosanat-info                                  {:fi "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
-                                                     :sv "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
+                                                     :sv "Ange vitsorden från det betyg, enligt vilket du söker till utbildningen. Du kan ange höjda vitsord, om du har fått ett officiellt intyg över höjningen. Om du har avlagt gymnasiets lärokurs, kan du inte söka med avgångsbetyget över grundläggande utbildning. Du kan inte söka enligt en yrkesinriktad grundexamen. Läroanstalterna kontrollerar betygen för de sökande som godkänns till utbildning.\n\nOBS! Om du söker med den grundläggande utbildningens avgångsbetyg ska du komma ihåg att fylla i vitsorden över valfria ämnen. Ange ändå vitsorden bara om du studerat ämnet i minst två årsveckotimmar under årsklasser 7-9."
                                                      :en "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."}
    :show-hakukierros-paattynyt                      {:fi "Näytä haut joissa hakukierros päättynyt"
-                                                     :sv "Näytä haut joissa hakukierros päättynyt"
+                                                     :sv "Visa ansökningar där ansökningsperioden har avslutats"
                                                      :en "Näytä haut joissa hakukierros päättynyt"}
    :hide-hakukierros-paattynyt                      {:fi "Piilota haut joissa hakukierros päättynyt"
-                                                     :sv "Piilota haut joissa hakukierros päättynyt"
+                                                     :sv "Dölj ansökningar där ansökningsperioden har avslutats"
                                                      :en "Piilota haut joissa hakukierros päättynyt"}
    :active                                          {:fi "Aktiivinen"
                                                      :sv "Aktiv"
@@ -947,7 +947,7 @@
                                                      :sv "Alla ansökningsmål"
                                                      :en "All study programmes"}
    :allow-invalid-koodis                            {:fi "Sisällytä päättyneet koodit"
-                                                     :sv "SV: Sisällytä päättyneet koodit"
+                                                     :sv "Inbegrip utgångna koder"
                                                      :en "EN: Sisällytä päättyneet koodit"}
    :alphabetically                                  {:fi "Aakkosjärjestyksessä"
                                                      :sv "I alfabetisk ordning"
@@ -980,7 +980,7 @@
                                                      :sv "ansökningar"
                                                      :en "application"}
    :view-applications                               {:fi "Näytä oppijan hakemukset"
-                                                     :sv "SV: Näytä oppijan hakemukset"
+                                                     :sv "Visa sökandes ansökningar"
                                                      :en "Show applications"}
    :valintojen-toteuttaminen                        {:fi "Valintojen toteuttaminen"
                                                      :sv "Förverkligandet av antagningar"
@@ -998,22 +998,22 @@
                                                      :sv "Begäran om bilagor innehåller anvisningar"
                                                      :en "EN: Liitepyyntö sisältää ohjetekstin"}
    :mail-attachment-text                            {:fi "Postitettava liitepyyntö"
-                                                     :sv "SV: Postitettava liitepyyntö"
+                                                     :sv "Begäran om bilagor som kan postas"
                                                      :en "EN: Postitettava liitepyyntö"}
    :attachment-name                                 {:fi "Liitteen nimi"
                                                      :sv "Bilagans namn"
                                                      :en "Title of an attachment"}
    :attachment-deadline                             {:fi "Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
-                                                     :sv "SV: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"
+                                                     :sv "Valfri leveransdag (pp.kk.vvvv hh:mm)"
                                                      :en "EN: Valinnainen toimituspäivämäärä (pp.kk.vvvv hh:mm)"}
    :attachments                                     {:fi "Liitepyynnöt"
                                                      :sv "Begäran om bilagor"
                                                      :en "Attachments"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
-                                                     :sv "SV: Hae kysymyksellä tai liitepyynnöllä..."
+                                                     :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
    :submitted-content-search-label                  {:fi "Kysymys / liitepyyntö"
-                                                     :sv "SV: Kysymys / liitepyyntö"
+                                                     :sv "Fråga / begäran om bilaga"
                                                      :en "EN: Kysymys / liitepyyntö"}
    :base-education                                  {:fi "Pohjakoulutus"
                                                      :sv "Grundutbildning"
@@ -1025,7 +1025,7 @@
                                                      :sv "Denna bilaga kan tyvärr inte visas i förhandsgranskningen, men du kan ladda ner bilagan som en fil."
                                                      :en "This attachment can't unfortunately be shown but you can download it here."}
    :partial-preview-in-attachment-skimming          {:fi "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut "
-                                                     :sv "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut (sv) "
+                                                     :sv "Du kan ladda ner hela bilaga här. I förhandsvisningen visas sidorna "
                                                      :en "Voit ladata koko liitteen tästä. Esikatselussa näytetään sivut (en) "}
    :change                                          {:fi "Muuta"
                                                      :sv "Byt"
@@ -1049,7 +1049,7 @@
                                                      :sv "stäng"
                                                      :en "close"}
    :collapse-info-text                              {:fi "Pienennä pitkä ohjeteksti"
-                                                     :sv "Minimera anvisningarna"
+                                                     :sv "Visa mindre av långa anvisningar"
                                                      :en "EN: Pienennä pitkä ohjeteksti"}
    :compare                                         {:fi "Vertaile"
                                                      :sv "Jämför"
@@ -1145,7 +1145,7 @@
                                                      :sv "Utvärdering av ansökningar"
                                                      :en "Evaluation of applications"}
    :edit-valinta-rights-panel                       {:fi "Valinnan tuloksen muokkaus"
-                                                     :sv "SV: Valinnan tuloksen muokkaus"
+                                                     :sv "Bearbeta antagningsresultat"
                                                      :en "EN: Valinnan tuloksen muokkaus"}
    :edit-email-templates                            {:fi "Muokkaa sähköpostipohjia"
                                                      :sv "Bearbeta e-postmallar"
@@ -1163,12 +1163,12 @@
                                                      :sv "Del som ska bearbetas (rubrik)"
                                                      :en "EN: Muokattava osuus (otsikko)"}
    :ehdollisuus                                     {:fi "Ehdollisuus"
-                                                     :sv "SV: Ehdollisuus"
+                                                     :sv "Villkorlighet"
                                                      :en "EN: Ehdollisuus"}
    :ehdollisesti-hyvaksyttavissa                    {:fi "Ehdollinen"
-                                                     :sv "SV: Ehdollinen"
+                                                     :sv "Villkorlig"
                                                      :en "EN: Ehdollinen"}
-   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Ei ehdollinen"
+   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Icke-villkorlig"
                                                      :sv "SV: Ei ehdollinen"
                                                      :en "EN: Ei ehdollinen"}
    :eligibility                                     {:fi "Hakukelpoisuus:"
@@ -1211,7 +1211,7 @@
                                                      :sv "Avgränsa ansökningar"
                                                      :en "Filter the applications"}
    :filter-by-state                                 {:fi "Rajaa tilan mukaan"
-                                                     :sv "SV: Rajaa tilan mukaan"
+                                                     :sv "Avgränsa enligt status"
                                                      :en "EN: Rajaa tilan mukaan"}
    :filters-apply-button                            {:fi "Ota käyttöön"
                                                      :sv "Använd"
@@ -1247,7 +1247,7 @@
                                                      :sv "Det finns en ny version av sökandens blankett!"
                                                      :en "There is a new version of the application"}
    :show-newest-version                             {:fi "Näytä lomake uusimmalla versiolla"
-                                                     :sv "SV: Näytä lomake uusimmalla versiolla"
+                                                     :sv "Visa blanketten i nyaste version"
                                                      :en "Show the latest version of the form"}
    :forms                                           {:fi "Lomakkeet"
                                                      :sv "Blanketter"
@@ -1286,10 +1286,10 @@
                                                      :sv "Stäng svarsalternativen"
                                                      :en "Hide the options"}
    :identified                                      {:fi "Yksilöidyt"
-                                                     :sv "Individualiserade"
+                                                     :sv "Identifierade"
                                                      :en "Identified"}
    :identifying                                     {:fi "Yksilöinti"
-                                                     :sv "Individualisering"
+                                                     :sv "Identifiering"
                                                      :en "Identifying"}
    :incomplete                                      {:fi "Kesken"
                                                      :sv "Inte färdig"
@@ -1343,7 +1343,7 @@
                                                      :sv "ladda"
                                                      :en "download"}
    :select-all                                      {:fi "Valitse kaikki"
-                                                     :sv "Valitse kaikki"
+                                                     :sv "Välj alla"
                                                      :en "Select all"}
    :lock-form                                       {:fi "Lukitse lomake"
                                                      :sv "Lås blanketten"
@@ -1406,7 +1406,7 @@
                                                      :sv "Lägg till anvisningar för utformning"
                                                      :en "More instructions"}
    :md-help-title                                   {:fi "# otsikko (# ylin - ###### alin)"
-                                                     :sv "# otsikko (# högsta - ###### lägst)"
+                                                     :sv "# rubrik (# högsta - ###### lägst)"
                                                      :en "# title (# highest - ###### lowest)"}
    :message-preview                                 {:fi "Viestin esikatselu"
                                                      :sv "Förhandsgranska meddelandet"
@@ -1430,7 +1430,7 @@
                                                      :sv "Ny blankett"
                                                      :en "New form"}
    :no-search-hits                                  {:fi "Ei hakutuloksia"
-                                                     :sv "SV: Ei hakutuloksia"
+                                                     :sv "Inga sökresultat"
                                                      :en "EN: Ei hakutuloksia"}
    :no-organization                                 {:fi "Ei organisaatiota"
                                                      :sv "Ingen organisation"
@@ -1448,7 +1448,7 @@
                                                      :sv "Endast siffror i fältet"
                                                      :en "Only numbers"}
    :numeric-range                                   {:fi "Arvoalueen rajaus"
-                                                     :sv "Arvoalueen rajaus"
+                                                     :sv "Avgränsning av värdeområde"
                                                      :en "Arvoalueen rajaus"}
    :open                                            {:fi "avaa"
                                                      :sv "öppna"
@@ -1464,10 +1464,10 @@
                                                      :en "Applicant's exams in Finland"}
    :person-info-module-onr                          {:fi "Opiskelijavalinta"
                                                      :en "Opiskelijavalinta"
-                                                     :sv "Opiskelijavalinta"}
+                                                     :sv "Studerandeantagning"}
    :person-info-module-muu                          {:fi "Muu käyttö"
                                                      :en "Muu käyttö"
-                                                     :sv "Muu käyttö"}
+                                                     :sv "Annat bruk"}
    :metadata-not-found                              {:fi "Hakijan liitteitä ei löytynyt"
                                                      :sv "Sökandes bilagor hittades inte"
                                                      :en "Applicant's attachements can't be found"}
@@ -1478,16 +1478,16 @@
                                                      :sv "Identifiera i persontjänsten."
                                                      :en "Identify the applicant."}
    :operation-failed                                {:fi "Toiminto epäonnistui"
-                                                     :sv "SV: Toiminto epäonnistui"
+                                                     :sv "Funktionen misslyckades"
                                                      :en "EN: Toiminto epäonnistui"}
    :creating-henkilo-failed                         {:fi "Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)."
                                                      :sv "Att bilda personen är inte färdig. Kontrollera att namnuppgifterna är korrekta (t.ex. att tilltalsnamnet ingår)"
                                                      :en "EN: Henkilön luonti ei ole valmistunut! Tarkista hakemuksen nimitiedot (esim. kutsumanimi on yksi etunimistä)"}
    :henkilo-info-incomplete                         {:fi "Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."
-                                                     :sv "SV: Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."
+                                                     :sv "Att ladda ner ansökan misslyckades p g a bristfälliga personuppgifter."
                                                      :en "EN: Hakemuksen lataus epäonnistui puuttuvien henkilötietojen vuoksi."}
    :review-in-henkilopalvelu                        {:fi "Tarkasta henkilön tiedot henkilöpalvelussa."
-                                                     :sv "SV: Tarkasta henkilön tiedot henkilöpalvelussa."
+                                                     :sv "Kontrollera personens uppgifter i persontjänsten."
                                                      :en "EN: Tarkasta henkilön tiedot henkilöpalvelussa."}
    :pohjakoulutus_am                                {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                      :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
@@ -1559,7 +1559,7 @@
                                                      :sv "Öppna låset"
                                                      :en "Unlock the form"}
    :selection-limit                                 {:fi "Rajoitettu valinta"
-                                                     :sv "SV: Rajoitettu valinta"
+                                                     :sv "Begränsat urval"
                                                      :en "Limited selection"}
    :selection-limit-input                           {:fi "Raja-arvo"
                                                      :sv "Gränsvärde"
@@ -1568,10 +1568,10 @@
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
    :invalid-date-format                             {:fi "Päivämäärän tulee olla muotoa p.k.vvvv"
-                                                     :sv "SV: Päivämäärän tulee olla muotoa p.k.vvvv"
+                                                     :sv "Ange datumet i formen p.k.vvvv"
                                                      :en "EN: Päivämäärän tulee olla muotoa d.m.yyyy"}
    :invalid-time-format                             {:fi "Ajan tulee olla muotoa t.mm"
-                                                     :sv "SV: Ajan tulee olla muotoa h.mm"
+                                                     :sv "Ange tiden i formen h.mm"
                                                      :en "EN: Ajan tulee olla muotoa h.mm"}
    :reset-organization                              {:fi "Palauta oletusorganisaatio"
                                                      :sv "Återställ utgångsorganisation"
@@ -1592,7 +1592,7 @@
                                                      :sv "Namn, personbeteckning, födelsetid eller e-postadress"
                                                      :en "Name, Finnish personal identity number, date of birth, email or OIDs"}
    :id-in-shared-use                                {:fi "(tunniste on jaetussa käytössä)"
-                                                     :sv "(tunniste on jaetussa käytössä)"
+                                                     :sv "(identifikationen är delad)"
                                                      :en "(tunniste on jaetussa käytössä)"}
    :questions                                       {:fi "kysymykset"
                                                      :sv "frågor"
@@ -1619,28 +1619,28 @@
                                                      :sv "Ställ först blanketten för användning i ansökan för att kunna bilda innehåll för ansökningsmålet."
                                                      :en "EN: Aseta ensin lomake haun käyttöön niin voit tehdä hakukohteen mukaan näkyviä sisältöjä."}
    :state                                           {:fi "Tila"
-                                                     :sv "SV: Tila"
+                                                     :sv "Status"
                                                      :en "EN: Tila"}
    :states-selected                                 {:fi "tilaa valittu"
-                                                     :sv "SV: tilaa valittu"
+                                                     :sv "status har valts"
                                                      :en "EN: tilaa valittu"}
    :liitepyynto-deadline                            {:fi "Hakijakohtainen aikaraja"
-                                                     :sv "SV: Hakijakohtainen aikaraja"
+                                                     :sv "Tidsgräns enligt sökande"
                                                      :en "EN: Hakijakohtainen aikaraja"}
    :liitepyynto-deadline-date                       {:fi "Viimeinen palautusajankohta"
-                                                     :sv "SV: Viimeinen palautusajankohta"
+                                                     :sv "Sista returdatum"
                                                      :en "EN: Viimeinen palautusajankohta"}
    :liitepyynto-deadline-time                       {:fi "klo"
-                                                     :sv "SV: klo"
+                                                     :sv "kl."
                                                      :en "EN: klo"}
    :liitepyynto-deadline-error                      {:fi "Aikarajan tallennus epäonnistui"
-                                                     :sv "SV: Aikarajan tallennus epäonnistui"
+                                                     :sv "Att spara tidsgränsen misslyckades"
                                                      :en "EN: Aikarajan tallennus epäonnistui"}
    :liitepyynto-deadline-set                        {:fi "Hakijakohtainen aikaraja asetettu"
-                                                     :sv "SV: Hakijakohtainen aikaraja asetettu"
+                                                     :sv "En tidsgräns enligt sökande har angetts"
                                                      :en "EN: Hakijakohtainen aikaraja asetettu"}
    :liitepyynto-deadline-unset                      {:fi "Hakijakohtainen aikaraja poistettu"
-                                                     :sv "SV: Hakijakohtainen aikaraja poistettu"
+                                                     :sv "En tidsgräns enligt sökande har raderats"
                                                      :en "EN: Hakijakohtainen aikaraja poistettu"}
    :settings                                        {:fi "Asetukset"
                                                      :sv "Inställningar"
@@ -1706,7 +1706,7 @@
                                                      :sv "Status ändras till"
                                                      :en "Change status to"}
    :unidentified                                    {:fi "Yksilöimättömät"
-                                                     :sv "Inte identifierad"
+                                                     :sv "Inte identifierade"
                                                      :en "Unidentified"}
    :unknown                                         {:fi "Tuntematon"
                                                      :sv "Okänd"
@@ -1739,7 +1739,7 @@
                                                      :sv "Granskning av ansökningar"
                                                      :en "EN: Hakemusten katselu"}
    :view-valinta-rights-panel                       {:fi "Valinnan tuloksen katselu"
-                                                     :sv "SV: Valinnan tuloksen katselu"
+                                                     :sv "Granskning av antagningsresultat"
                                                      :en "EN: Valinnan tuloksen katselu"}
    :virus-found                                     {:fi "Virus löytyi"
                                                      :sv "Ett virus hittades"
@@ -1852,28 +1852,28 @@
                                                      :sv "SV: Lisäkysymys arvon perusteella"
                                                      :en "EN: Lisäkysymys arvon perusteella"}
    :lisakysymys-arvon-perusteella-ehto              {:fi "Jos vastauksen arvo on"
-                                                     :sv "SV: Jos vastauksen arvo on"
+                                                     :sv "Om svarets värde är"
                                                      :en "EN: Jos vastauksen arvo on"}
    :lisakysymys-arvon-perusteella-ehto-pienempi     {:fi "pienempi kuin"
-                                                     :sv "SV: mindre än"
+                                                     :sv "mindre än"
                                                      :en "EN: less than"}
    :lisakysymys-arvon-perusteella-ehto-suurempi     {:fi "suurempi kuin"
-                                                     :sv "SV: större än"
+                                                     :sv "större än"
                                                      :en "EN: greater than"}
    :lisakysymys-arvon-perusteella-ehto-yhtasuuri    {:fi "yhtä suuri kuin"
-                                                     :sv "SV: lika med"
+                                                     :sv "lika med"
                                                      :en "EN: equal to"}
    :lisakysymys-arvon-perusteella-lisaa-ehto        {:fi "Lisää ehto"
-                                                     :sv "SV: Lisää ehto"
+                                                     :sv "Lisää ehto"
                                                      :en "EN: Lisää ehto"}
    :filter-by-question-answer                       {:fi "Rajaa vastauksen mukaan"
-                                                     :sv "SV: Rajaa vastauksen mukaan"
+                                                     :sv "Avgränsa enligt svar"
                                                      :en "EN: Rajaa vastauksen mukaan"}
    :question-answer                                 {:fi "Vastaus"
-                                                     :sv "SV: Vastaus"
+                                                     :sv "Svar"
                                                      :en "EN: Vastaus"}
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
-                                                     :sv "SV: vastausvaihtoehtoa valittu"
+                                                     :sv "Svarsalternativ valt"
                                                      :en "EN: vastausvaihtoehtoa valittu"}})
 
 (def state-translations
