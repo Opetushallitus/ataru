@@ -429,3 +429,7 @@
        (map :rules)
        (remove empty?)
        (reduce run-rules db)))
+
+(defn run-pohjakoulutusristiriita-rule
+  [db]
+  (run-rules db {:pohjakoulutusristiriita nil}))
