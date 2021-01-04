@@ -870,7 +870,8 @@
                                                 (:value option))
                  (set-repeatable-field-value id)
                  (field-visibility/set-field-visibility field-descriptor)
-                 (set-validator-processing id))]
+                 (set-validator-processing id)
+                 (rules/run-pohjakoulutusristiriita-rule))]
       {:db                 db
        :dispatch           [:application/set-followup-values field-descriptor]
        :validate-debounced {:value                        (if (some? question-group-idx)
