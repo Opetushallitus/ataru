@@ -777,7 +777,10 @@
   (let [id (keyword (:id field-descriptor))
         preserve-first-value (fn [v idx]
                                (if (= (count v) 1)
-                                 (assoc-in v [idx :value] "")
+                                 (-> v
+                                     (assoc-in [idx :value] "")
+                                     (assoc-in [idx :valid]
+                                               (not (boolean (some #(= "required" %) (:validators field-descriptor))))))
                                  (autil/remove-nth v idx)))]
     (-> (if (some? question-group-idx)
           (update-in db [:application :answers id :values question-group-idx] preserve-first-value data-idx)

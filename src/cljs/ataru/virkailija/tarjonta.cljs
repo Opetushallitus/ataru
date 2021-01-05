@@ -43,7 +43,7 @@
         organization-oids-c (async/chan (count organization-oids))
         hakukohteet-c (async/chan (count organization-oids))]
     (fetch-haku haku-oid haku-c)
-    (async/onto-chan organization-oids-c organization-oids)
+    (async/onto-chan! organization-oids-c organization-oids)
     (async/pipeline-async 1
                           hakukohteet-c
                           (partial fetch-hakukohteet haku-oid)
@@ -59,7 +59,7 @@
   [haku-oids organization-oids]
   (let [haku-oids-c (async/chan (count haku-oids))
         haut-c      (async/chan (count haku-oids))]
-    (async/onto-chan haku-oids-c haku-oids)
+    (async/onto-chan! haku-oids-c haku-oids)
     (async/pipeline-async 1
                           haut-c
                           (partial fetch-haku-with-hakukohteet organization-oids)
