@@ -1,35 +1,33 @@
-[
-  {
-    "koodiUri": "oppilaitosnumero_02439",
-    "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/oppilaitosnumero_02439",
-    "version": 2,
-    "versio": 1,
-    "koodisto": {
-      "koodistoUri": "oppilaitosnumero",
-      "organisaatioOid": "1.2.246.562.10.00000000001",
-      "koodistoVersios": [
-        1
-      ]
-    },
-    "koodiArvo": "02439",
-    "paivitysPvm": 1577427631033,
-    "paivittajaOid": "1.2.246.562.24.70746687432",
-    "voimassaAlkuPvm": "1994-08-01",
-    "voimassaLoppuPvm": "1996-07-31",
-    "tila": "LUONNOS",
-    "metadata": [
-      {
-        "nimi": "Suonenjoen maatalousoppilaitos",
-        "kuvaus": "Suonenjoen maatalousoppilaitos",
-        "lyhytNimi": "Suonenjoen maatalousoppilaitos",
-        "kayttoohje": null,
-        "kasite": null,
-        "sisaltaaMerkityksen": null,
-        "eiSisallaMerkitysta": null,
-        "huomioitavaKoodi": null,
-        "sisaltaaKoodiston": null,
-        "kieli": "FI"
-      }
+{
+  "koodiUri": "oppilaitosnumero_02439",
+  "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/oppilaitosnumero_02439",
+  "version": 2,
+  "versio": 1,
+  "koodisto": {
+    "koodistoUri": "oppilaitosnumero",
+    "organisaatioOid": "1.2.246.562.10.00000000001",
+    "koodistoVersios": [
+      1
     ]
-  }
-]
+  },
+  "koodiArvo": "02439",
+  "paivitysPvm": 1577427631033,
+  "paivittajaOid": "1.2.246.562.24.70746687432",
+  "voimassaAlkuPvm": "1994-08-01",
+  "voimassaLoppuPvm": "1996-07-31",
+  "tila": "LUONNOS",
+  "metadata": [
+    {
+      "nimi": "Suonenjoen maatalousoppilaitos",
+      "kuvaus": "Suonenjoen maatalousoppilaitos",
+      "lyhytNimi": "Suonenjoen maatalousoppilaitos",
+      "kayttoohje": null,
+      "kasite": null,
+      "sisaltaaMerkityksen": null,
+      "eiSisallaMerkitysta": null,
+      "huomioitavaKoodi": null,
+      "sisaltaaKoodiston": null,
+      "kieli": "FI"
+    }
+  ]
+}
