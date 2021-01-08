@@ -58,12 +58,12 @@
 
 (defn- add-within
   [koodisto koodit]
-  (let [koodit-by-uri (memoize (fn [versio]
-                                 (->> (get-koodisto koodisto versio)
-                                      (map (fn [koodi] [(:uri koodi) koodi]))
-                                      (into {}))))
-        get-koodi     (memoize (fn [koodi versio]
-                                 (get (koodit-by-uri versio) koodi)))]
+  (let [get-koodi     (memoize (fn [koodi versio]
+                                 (-> (resolve-url :koodisto-service.koodi-detail
+                                                  koodi
+                                                  versio)
+                                     do-get
+                                     koodi-value->soresu-option)))]
     (mapv (fn [koodi]
             (->> (resolve-url :koodisto-service.koodi-detail
                               (:uri koodi)
