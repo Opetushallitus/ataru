@@ -387,7 +387,6 @@
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
           hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
-      (prn hakukohteet-and-ryhmat)
       (into [:div.application__readonly-container]
         (for [content (:content form)]
           [field content application hakukohteet-and-ryhmat lang nil])))))
