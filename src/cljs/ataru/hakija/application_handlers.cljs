@@ -261,8 +261,12 @@
           db
           (:flat-form-content db)))
 
+(defn- is-answered? [value]
+  (not-empty value))
+
 (defn- merge-value [answer value]
-  (merge answer {:valid  true
+  (merge answer {:valid  (or (:valid answer)
+                             (is-answered? value))
                  :value  value
                  :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                                (mapv #(when (vector? %)
