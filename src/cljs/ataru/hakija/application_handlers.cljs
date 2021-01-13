@@ -264,8 +264,9 @@
 (defn- is-answered? [value]
   (not-empty value))
 
-(defn- merge-value [answer value]
+(defn- merge-value [field-descriptor answer value]
   (merge answer {:valid  (or (:valid answer)
+                             (:cannot-edit field-descriptor)
                              (is-answered? value))
                  :value  value
                  :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
@@ -294,7 +295,7 @@
                       (update-in db [:application :answers id]
                                  #(cond (= :email id)
                                         (-> %
-                                            (merge-value (:value answer))
+                                            (merge-value field-descriptor (:value answer))
                                             (assoc :verify (:value answer)))
 
                                         (= "attachment" (:fieldType field-descriptor))
@@ -322,7 +323,7 @@
                                                     :valid  true}))
 
                                         :else
-                                        (merge-value % (:value answer))))
+                                        (merge-value field-descriptor % (:value answer))))
                       db)))
                 db
                 submitted-answers)
