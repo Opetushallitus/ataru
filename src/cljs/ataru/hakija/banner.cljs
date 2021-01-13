@@ -138,8 +138,7 @@
   (let [hakuaika-end  (subscribe [:state-query [:form :hakuaika-end]])
         time-diff     (subscribe [:state-query [:form :time-delta-from-server]])
         seconds-left  (r/atom (new-time-left @hakuaika-end @time-diff))
-        interval      (r/atom nil)
-        lang          @(subscribe [:application/form-language])]
+        interval      (r/atom nil)]
     (reset! interval (js/setInterval (fn []
                                        (let [new-time (new-time-left @hakuaika-end @time-diff)]
                                          (if (or (nil? @hakuaika-end) (< 0 new-time))
@@ -147,7 +146,7 @@
                                            (.clearInterval js/window @interval))))
                                      1000))
     (fn []
-      (hakuaika-left-text @seconds-left lang))))
+      (hakuaika-left-text @seconds-left @(subscribe [:application/form-language])))))
 
 (defn status-controls []
   (let [can-apply? (subscribe [:application/can-apply?])
