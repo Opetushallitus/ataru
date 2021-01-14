@@ -264,7 +264,7 @@
 (defn- is-answered? [value]
   (not-empty value))
 
-(defn- merge-value [field-descriptor answer value]
+(defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
                                       (:cannot-edit field-descriptor)
                                       (is-answered? value)))
@@ -323,7 +323,7 @@
                                                     :valid  true}))
 
                                         :else
-                                        (merge-value field-descriptor % (:value answer))))
+                                        (merge-value % field-descriptor (:value answer))))
                       db)))
                 db
                 submitted-answers)
