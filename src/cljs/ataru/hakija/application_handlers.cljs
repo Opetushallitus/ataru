@@ -265,9 +265,9 @@
   (not-empty value))
 
 (defn- merge-value [field-descriptor answer value]
-  (merge answer {:valid  (or (:valid answer)
-                             (:cannot-edit field-descriptor)
-                             (is-answered? value))
+  (merge answer {:valid  (boolean (or (:valid answer)
+                                      (:cannot-edit field-descriptor)
+                                      (is-answered? value)))
                  :value  value
                  :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                                (mapv #(when (vector? %)
