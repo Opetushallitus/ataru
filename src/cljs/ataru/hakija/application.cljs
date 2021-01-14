@@ -224,6 +224,7 @@
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
        :value     (if (and (not-empty (:options field-descriptor))
+                           (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
                            (vector? value))
                     (let [allowed-values (set (map :value (:options field-descriptor)))]
                       (if (vector? (first value))
