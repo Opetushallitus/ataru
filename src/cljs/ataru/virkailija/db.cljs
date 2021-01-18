@@ -32,7 +32,9 @@
                       :base-education                    {:pohjakoulutus_kk_ulk                     true
                                                           :pohjakoulutus_lk                         true
                                                           :pohjakoulutus_kk                         true
+                                                          :pohjakoulutus_amp                        true
                                                           :pohjakoulutus_amt                        true
+                                                          :pohjakoulutus_amv                        true
                                                           :pohjakoulutus_ulk                        true
                                                           :pohjakoulutus_muu                        true
                                                           :pohjakoulutus_avoin                      true
