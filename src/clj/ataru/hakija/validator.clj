@@ -1,13 +1,11 @@
 (ns ataru.hakija.validator
-  (:require [ataru.forms.form-store :as form-store]
-            [ataru.hakija.application-validators :as validator]
-            [ataru.util :as util :refer [collect-ids]]
-            [clojure.core.async :as asyncm]
-            [clojure.set :refer [difference]]
-            [clojure.core.match :refer [match]]
+  (:require [ataru.hakija.application-validators :as validator]
+            [ataru.util :as util]
             [clojure.core.async :as async]
             [taoensso.timbre :as log]
-            [ataru.koodisto.koodisto :as koodisto]))
+            [ataru.koodisto.koodisto :as koodisto]
+            [clojure.string :as str]
+            [clojure.set :as set]))
 
 (defn- nationalities-value-contains-finland?
   [value]
@@ -21,14 +19,14 @@
   (and (not (contains? failed :birth-date))
        (not (contains? failed :gender))
        (or (not (contains? failed :ssn))
-           (and (clojure.string/blank? (-> answers-by-key :ssn :value))
+           (and (str/blank? (-> answers-by-key :ssn :value))
                 (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value)))))))
 
 (defn- validate-ssn-or-birthdate-component
   [answers-by-key failed _]
   (and (not (contains? failed :birth-date))
        (or (not (contains? failed :ssn))
-           (and (clojure.string/blank? (-> answers-by-key :ssn :value))
+           (and (str/blank? (-> answers-by-key :ssn :value))
                 (not (nationalities-value-contains-finland? (-> answers-by-key :nationality :value)))))))
 
 (defn- validate-oppiaine-a1-or-a2-component
@@ -76,7 +74,7 @@
 (defn- passed? [has-applied form answer validators answers-by-key field-descriptor virkailija?]
   (every? (fn [validator]
               (first (async/<!! (validator/validate {:has-applied                  has-applied
-                                                     :try-selection                (constantly (asyncm/go [true []]))
+                                                     :try-selection                (constantly (async/go [true []]))
                                                      :validator                    validator
                                                      :value                        answer
                                                      :answers-by-key               answers-by-key
@@ -100,10 +98,10 @@
       (not-empty (:belongs-to-hakukohderyhma field))))
 
 (defn- belongs-to-correct-hakukohde? [field hakukohteet]
-  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
+  (not-empty (set/intersection (-> field :belongs-to-hakukohteet set) hakukohteet)))
 
 (defn- belongs-to-correct-hakukohderyhma? [field hakukohderyhmat]
-  (not-empty (clojure.set/intersection (-> field :belongs-to-hakukohderyhma set) hakukohderyhmat)))
+  (not-empty (set/intersection (-> field :belongs-to-hakukohderyhma set) hakukohderyhmat)))
 
 (defn- belongs-to-existing-hakukohde-or-hakukohderyma? [field hakukohteet hakukohderyhmat]
   (or (belongs-to-correct-hakukohde? field hakukohteet)
@@ -252,14 +250,61 @@
         extra-answers      (extra-answers-not-in-original-form
                              (map (comp keyword :id) (util/flatten-form-fields (:content form)))
                              (keys answers-by-key))
-        failed-results     (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
-        failed-meta-fields (validate-meta-fields application)]
+        failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
+        failed-meta-fields        (validate-meta-fields application)
+        failed-application-id     (:id application)
+        failed-application-key    (:key application)
+        failed-haku-oid           (:haku application)
+        failed-hakukohteet        (:hakukohde application)
+        failed-person-oid         (:person-oid application)
+        failed-person-first-name  (get-in answers-by-key [:first-name :value])
+        failed-person-last-name   (get-in answers-by-key [:last-name :value])
+        failed-person-email       (get-in answers-by-key [:email :value])
+        failed-form-id            (:id form)
+        failed-form-key           (:key form)]
     (when (not (empty? extra-answers))
-      (log/warn "Extra answers in application" (apply str extra-answers)))
+      (println application)
+      (log/warnf "Extra answers in application (id: %s, key: %s, haku: %s, hakukohde: %s)
+      for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Answers: %s"
+                 failed-application-id
+                 failed-application-key
+                 failed-haku-oid
+                 failed-hakukohteet
+                 failed-person-oid
+                 failed-person-first-name
+                 failed-person-last-name
+                 failed-person-email
+                 failed-form-id
+                 failed-form-key
+                 (apply str extra-answers)))
     (when (not (empty? failed-results))
-      (log/warn "Validation failed in application fields" failed-results))
+      (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
+      fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Failed results: %s"
+                 failed-application-id
+                 failed-application-key
+                 failed-haku-oid
+                 failed-hakukohteet
+                 failed-person-oid
+                 failed-person-first-name
+                 failed-person-last-name
+                 failed-person-email
+                 failed-form-id
+                 failed-form-key
+                 failed-results))
     (when (not (empty? failed-meta-fields))
-      (log/warn "Validation failed in application meta fields " (str failed-meta-fields)))
+      (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
+      meta fields. Form id: %s, key: %s. Failed meta fields: %s"
+                 failed-application-id
+                 failed-application-key
+                 failed-haku-oid
+                 failed-hakukohteet
+                 failed-person-oid
+                 failed-person-first-name
+                 failed-person-last-name
+                 failed-person-email
+                 failed-form-id
+                 failed-form-key
+                 (str failed-meta-fields)))
     {:passed?
      (and
        (empty? extra-answers)
