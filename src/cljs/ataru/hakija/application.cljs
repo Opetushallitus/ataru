@@ -1,7 +1,7 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
   (:require [ataru.util :as util]
-            [ataru.application-common.application-field-common :refer [required-validators]]
+            [ataru.application-common.application-field-common :refer [required-validators sanitize-value]]
             [clojure.core.match :refer [match]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohteet]
@@ -209,11 +209,7 @@
                       :label (:label answer)})})
 
 (defn- create-answers-to-submit [answers form ui]
-  (let [flat-form-map (util/form-fields-by-id form)
-        sanitize-values (fn [allowed-values values]
-                          (filterv allowed-values values))
-        sanitize-question-group-values (fn [allowed-values values]
-                                         (mapv (partial sanitize-values allowed-values) values))]
+  (let [flat-form-map (util/form-fields-by-id form)]
     (for [[ans-key {:keys [value]}] answers
           :let
           [field-descriptor (get flat-form-map ans-key)]
@@ -223,14 +219,7 @@
                    (get-in ui [ans-key :visible?] true))
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
-       :value     (if (and (not-empty (:options field-descriptor))
-                           (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor))
-                           (vector? value))
-                    (let [allowed-values (set (map :value (:options field-descriptor)))]
-                      (if (vector? (first value))
-                        (sanitize-question-group-values allowed-values value)
-                        (sanitize-values allowed-values value)))
-                    value)
+       :value     (sanitize-value field-descriptor value)
        :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 

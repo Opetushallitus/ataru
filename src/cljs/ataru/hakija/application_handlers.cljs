@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-handlers
   (:require [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
+            [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
             [ataru.application.option-visibility :as option-visibility]
             [ataru.feature-config :as fc]
@@ -267,7 +268,7 @@
 (defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
                                       (:cannot-edit field-descriptor)
-                                      (is-answered? value)))
+                                      (is-answered? (sanitize-value field-descriptor value))))
                  :value  value
                  :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
                                (mapv #(when (vector? %)
