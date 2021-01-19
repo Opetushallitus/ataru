@@ -244,16 +244,14 @@
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
-  [koodisto-cache has-applied application form applied-hakukohderyhmat virkailija?]
+  [koodisto-cache has-applied application form applied-hakukohderyhmat virkailija? application-id application-key]
   {:pre [(not-empty form)]}
-  (let [answers-by-key     (util/answers-by-key (:answers application))
-        extra-answers      (extra-answers-not-in-original-form
-                             (map (comp keyword :id) (util/flatten-form-fields (:content form)))
-                             (keys answers-by-key))
+  (let [answers-by-key            (util/answers-by-key (:answers application))
+        extra-answers             (extra-answers-not-in-original-form
+                                    (map (comp keyword :id) (util/flatten-form-fields (:content form)))
+                                    (keys answers-by-key))
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
-        failed-application-id     (:id application)
-        failed-application-key    (:key application)
         failed-haku-oid           (:haku application)
         failed-hakukohteet        (:hakukohde application)
         failed-person-oid         (:person-oid application)
@@ -263,11 +261,10 @@
         failed-form-id            (:id form)
         failed-form-key           (:key form)]
     (when (not (empty? extra-answers))
-      (println application)
       (log/warnf "Extra answers in application (id: %s, key: %s, haku: %s, hakukohde: %s)
       for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Answers: %s"
-                 failed-application-id
-                 failed-application-key
+                 application-id
+                 application-key
                  failed-haku-oid
                  failed-hakukohteet
                  failed-person-oid
@@ -280,8 +277,8 @@
     (when (not (empty? failed-results))
       (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
       fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Failed results: %s"
-                 failed-application-id
-                 failed-application-key
+                 application-id
+                 application-key
                  failed-haku-oid
                  failed-hakukohteet
                  failed-person-oid
@@ -294,8 +291,8 @@
     (when (not (empty? failed-meta-fields))
       (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
       meta fields. Form id: %s, key: %s. Failed meta fields: %s"
-                 failed-application-id
-                 failed-application-key
+                 application-id
+                 application-key
                  failed-haku-oid
                  failed-hakukohteet
                  failed-person-oid
