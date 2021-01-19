@@ -1,17 +1,14 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
   (:require [ataru.util :as util]
-            [medley.core :refer [remove-vals filter-vals remove-keys]]
-            [ataru.application-common.application-field-common :refer [required-validators]]
-            [clojure.core.match :refer [match]]
-            [cljs-time.core :as time]
-            [cljs-time.coerce :refer [from-long]]))
+            [ataru.application-common.application-field-common :refer [required-validators sanitize-value]]
+            [clojure.core.match :refer [match]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohteet]
   (->> flattened-form-fields
        (filter util/answerable?)
        (map-indexed
-        (fn [idx field]
+        (fn [_ field]
           (match [field]
             [{:id      "hakukohteet"
               :label   label
@@ -222,7 +219,7 @@
                    (get-in ui [ans-key :visible?] true))
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
-       :value     value
+       :value     (sanitize-value field-descriptor value)
        :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 
