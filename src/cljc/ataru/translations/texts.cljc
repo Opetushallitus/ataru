@@ -1492,9 +1492,15 @@
    :pohjakoulutus_am                                {:fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                      :sv "I Finland avlagd yrkesinriktad grundexamen, examen på skolnivå, institutnivå eller inom yrkesutbildning på högre nivå"
                                                      :en "EN: Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"}
+   :pohjakoulutus_amp                               {:fi "Suomessa suoritettu ammatillinen perustutkinto"
+                                                     :sv "Yrkesinriktad grundexamen som avlagts i Finland"
+                                                     :en "Vocational upper secondary qualification completed in Finland (ammatillinen perustutkinto)"}
    :pohjakoulutus_amt                               {:fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
                                                      :sv "I Finland avlagd yrkes- eller specialyrkesexamen"
                                                      :en "EN: Suomessa suoritettu ammatti- tai erikoisammattitutkinto"}
+   :pohjakoulutus_amv                               {:fi "Suomessa suoritettu kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
+                                                     :sv "Yrkesinriktad examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"
+                                                     :en "Former vocational qualification completed in Finland (kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto)"}
    :pohjakoulutus_avoin                             {:fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
                                                      :sv "Studier inom öppen högskoleundervisning som högskolan förutsätter"
                                                      :en "EN: Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"}
