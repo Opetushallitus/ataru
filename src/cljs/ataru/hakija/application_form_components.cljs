@@ -796,22 +796,21 @@
      [:div.application__form-attachment-list-item-sub-container
       [cancel-attachment-upload-button field-descriptor question-group-idx attachment-idx]]]))
 
-(defn attachment-row [field-descriptor component-id attachment-idx question-group-idx]
+(defn attachment-row [field-descriptor component-id attachment-idx question-group-idx status]
   [:li.application__attachment-filename-list-item
-   [(case (:status @(subscribe [:application/answer
-                                component-id
-                                question-group-idx
-                                attachment-idx]))
-      :ready     attachment-view-file
-      :error     attachment-view-file-error
+   [(case status
+      :ready attachment-view-file
+      :error attachment-view-file-error
       :uploading attachment-uploading-file
-      :deleting  attachment-deleting-file)
+      :deleting attachment-deleting-file)
     field-descriptor component-id question-group-idx attachment-idx]])
 
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
   (let [languages              @(subscribe [:application/default-languages])
         text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
-        attachment-count       @(subscribe [:application/attachment-count id question-group-idx])
+        attachments            @(subscribe [:application/attachments id question-group-idx])
+        visible-attachments    @(subscribe [:application/visible-attachments id question-group-idx])
+        attachment-count       (count attachments)
         application-identifier @(subscribe [:application/application-identifier])]
     [:div.application__form-field
      [generic-label-component/generic-label field-descriptor question-group-idx]
@@ -819,12 +818,12 @@
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
      (when-not (clojure.string/blank? text)
        [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) application-identifier])
-     (when (> attachment-count 0)
+     (when (not-empty visible-attachments)
        [:ol.application__attachment-filename-list
-        (->> (range attachment-count)
-             (map (fn [attachment-idx]
-                    ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
-                    [attachment-row field-descriptor id attachment-idx question-group-idx])))])
+        (doall (map (fn [[attachment-idx attachment]]
+                      ^{:key (str "attachment-" (when question-group-idx (str question-group-idx "-")) id "-" attachment-idx)}
+                      [attachment-row field-descriptor id attachment-idx question-group-idx (:status attachment)])
+                    visible-attachments))])
      (if (get-in field-descriptor [:params :mail-attachment?])
        (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
          [:div.application__mail-attachment--deadline

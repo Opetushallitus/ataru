@@ -208,9 +208,25 @@
                      {:key   key
                       :label (:label answer)})})
 
+(defn- sanitize-attachment-value-by-state [value values]
+  (when (not= :deleting (:status values))
+    value))
+
+(defn- sanitize-attachment-values-by-states [value values]
+  (filterv identity (map-indexed (fn [idx value]
+                                   (sanitize-attachment-value-by-state value (get values idx))) value)))
+
+(defn- sanitize-attachment-value [value values]
+  (if (vector? value)
+    (if (or (vector? (first value)) (nil? (first value)))
+      (vec (map-indexed (fn [idx value]
+                          (sanitize-attachment-values-by-states value (get values idx))) value))
+      (sanitize-attachment-values-by-states value values))
+    (sanitize-attachment-value-by-state value values)))
+
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (util/form-fields-by-id form)]
-    (for [[ans-key {:keys [value]}] answers
+    (for [[ans-key {:keys [value values]}] answers
           :let
           [field-descriptor (get flat-form-map ans-key)]
           :when
@@ -219,7 +235,10 @@
                    (get-in ui [ans-key :visible?] true))
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
-       :value     (sanitize-value field-descriptor value)
+       :value     (cond (#{"attachment"} (:fieldType field-descriptor))
+                        (sanitize-attachment-value value values)
+                        :else
+                        (sanitize-value field-descriptor value))
        :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 
