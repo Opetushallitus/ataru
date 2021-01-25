@@ -439,34 +439,20 @@
   (log/info "Saving feedback" feedback)
   (application-store/add-application-feedback feedback))
 
-(defn- attachment-metadata->keys [{:keys [value fieldType]}]
-  (when (= fieldType "attachment")
-    (if (and (vector? value)
-             (not-empty value)
-             (or (nil? (first value))
-                 (vector? (first value))))
-      (flatten value)
-      value)))
-
-(defn- attachment-metadata->answer [attachment-metadata]
+(defn- attachment-metadata->answer [liiteri-cas-client]
   (fn [{:keys [fieldType] :as answer}]
-    (let [pick-metadata (fn [keys]
-                          (let [ks (set keys)]
-                            (filterv #(ks (:key %)) attachment-metadata)))]
-      (cond-> answer
-              (= fieldType "attachment")
-              (update :value (fn [value]
-                               (if (and (vector? value)
-                                        (not-empty value)
-                                        (or (nil? (first value))
-                                            (vector? (first value))))
-                                 (mapv pick-metadata value)
-                                 (pick-metadata value))))))))
+    (cond-> answer
+            (= fieldType "attachment")
+            (update :value (fn [value]
+                             (if (and (vector? value)
+                                      (not-empty value)
+                                      (or (nil? (first value))
+                                          (vector? (first value))))
+                               (mapv #(file-store/get-metadata liiteri-cas-client %) value)
+                               (file-store/get-metadata liiteri-cas-client value)))))))
 
 (defn attachments-metadata->answers [application liiteri-cas-client]
-  (let [all-attachment-keys (mapcat attachment-metadata->keys (:answers application))
-        attachment-metadata (file-store/get-metadata liiteri-cas-client all-attachment-keys)]
-    (update application :answers (partial map (attachment-metadata->answer attachment-metadata)))))
+  (update application :answers (partial map (attachment-metadata->answer liiteri-cas-client))))
 
 (defn is-inactivated? [application]
   (cond (nil? application)
