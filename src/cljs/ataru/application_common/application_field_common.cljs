@@ -222,7 +222,7 @@
              (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor)))
       (let [allowed-values (set (map :value (:options field-descriptor)))]
         (if (vector? value)
-          (if (vector? (first value))
+          (if (or (vector? (first value)) (nil? (first value)))
             (sanitize-question-group-values allowed-values value)
             (sanitize-values allowed-values value))
           (allowed-values value)))
