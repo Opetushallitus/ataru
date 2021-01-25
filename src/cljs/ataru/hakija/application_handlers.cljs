@@ -263,7 +263,11 @@
           (:flat-form-content db)))
 
 (defn- is-answered? [value]
-  (not-empty value))
+  (if (vector? value)
+    (if (or (vector? (first value)) (nil? (first value)))
+      (every? #(and (not-empty %) (every? some? %)) value)
+      (and (not-empty value) (every? some? value)))
+    (some? value)))
 
 (defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
