@@ -236,9 +236,10 @@
                                                             final-application
                                                             latest-application
                                                             form)]
-                                          (if (= "1.2.246.562.29.78350340184" (:haku application))
+                                          (if (or (= "1.2.246.562.29.72389663526" (:haku application))
+                                                  (= "1.2.246.562.29.78350340184" (:haku application)))
                                             (when (not-empty cannot-edit)
-                                              (log/error "Skipped cannot edit check in haku 1.2.246.562.29.78350340184: " (into {} (map #(vector % "Cannot edit answer to question")
+                                              (log/error "Skipped cannot edit check in haku " (:haku application) ": " (into {} (map #(vector % "Cannot edit answer to question")
                                                                                                                                         cannot-edit))))
                                             cannot-edit)))]
     (cond
