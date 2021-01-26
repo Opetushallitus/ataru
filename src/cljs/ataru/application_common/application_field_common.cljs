@@ -215,7 +215,9 @@
 
 (defn sanitize-value [field-descriptor value]
   (let [sanitize-values (fn [allowed-values values]
-                          (filterv allowed-values values))
+                          (if (nil? values)
+                            values
+                            (filterv allowed-values values)))
         sanitize-question-group-values (fn [allowed-values values]
                                          (mapv (partial sanitize-values allowed-values) values))]
     (if (and (not-empty (:options field-descriptor))
