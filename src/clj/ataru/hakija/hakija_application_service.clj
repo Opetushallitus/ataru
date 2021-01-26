@@ -232,10 +232,15 @@
                                        applied-hakukohderyhmat
                                        (some? virkailija-secret))
         edited-cannot-edit-questions  (when is-modify?
-                                        (edited-cannot-edit-questions
-                                         final-application
-                                         latest-application
-                                         form))]
+                                        (let [cannot-edit (edited-cannot-edit-questions
+                                                            final-application
+                                                            latest-application
+                                                            form)]
+                                          (if (= "1.2.246.562.29.78350340184" (:haku application))
+                                            (when (not-empty cannot-edit)
+                                              (log/error "Skipped cannot edit check in haku 1.2.246.562.29.78350340184: " (into {} (map #(vector % "Cannot edit answer to question")
+                                                                                                                                        cannot-edit))))
+                                            cannot-edit)))]
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
