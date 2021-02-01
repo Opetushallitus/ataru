@@ -1168,8 +1168,8 @@
    :ehdollisesti-hyvaksyttavissa                    {:fi "Ehdollinen"
                                                      :sv "Villkorlig"
                                                      :en "EN: Ehdollinen"}
-   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Icke-villkorlig"
-                                                     :sv "SV: Ei ehdollinen"
+   :ei-ehdollisesti-hyvaksyttavissa                 {:fi "Ei ehdollinen"
+                                                     :sv "Icke-villkorlig"
                                                      :en "EN: Ei ehdollinen"}
    :eligibility                                     {:fi "Hakukelpoisuus:"
                                                      :sv "Ansökningsbehörighet:"
