@@ -2,8 +2,9 @@
   (:require [ataru.hakija.validator :as validator]
             [clojure.core.match :refer [match]]
             [clojure.core.async :as async]
+            [clojure.walk :as walk]
             [ataru.cache.cache-service :as cache-service]
-            [speclj.core :refer :all]
+            [speclj.core :refer [describe tags it should should= should-not]]
             [ataru.util :as util]
             [ataru.fixtures.answer :refer [answer]]
             [ataru.fixtures.person-info-form :refer [form]]))
@@ -94,7 +95,7 @@
                              :value     "Kyllä"
                              :fieldType "singleChoice"})
 
-(defn- has-never-applied [haku-oid identifier] (async/go false))
+(defn- has-never-applied [] (async/go false))
 
 (defn- set-can-submit-multiple-applications
   [multiple? haku-oid field]
@@ -112,7 +113,7 @@
   [form multiple?]
   (update form :content
           (fn [content]
-            (clojure.walk/prewalk
+            (walk/prewalk
              (partial map-if-ssn-or-email
                       (partial set-can-submit-multiple-applications
                                multiple? "dummy-haku-oid"))
@@ -128,7 +129,7 @@
   (tags :unit :backend-validation)
   (it "fails answers with extraneous keys"
     (should= false
-      (-> (validator/valid-application? koodisto-cache has-never-applied extra-answers f #{} false)
+      (-> (validator/valid-application? koodisto-cache has-never-applied extra-answers f #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")
         :passed?))
     (should= #{:foo}
       (validator/extra-answers-not-in-original-form
@@ -136,12 +137,12 @@
         (keys (util/answers-by-key (:answers extra-answers))))))
   (it "fails answers with missing answers"
     (should= false
-      (:passed? (validator/valid-application? koodisto-cache has-never-applied (assoc a :answers []) f #{} false)))
+      (:passed? (validator/valid-application? koodisto-cache has-never-applied (assoc a :answers []) f #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))
     (should= false
-      (:passed? (validator/valid-application? koodisto-cache has-never-applied (update a :answers rest) f #{} false))))
+      (:passed? (validator/valid-application? koodisto-cache has-never-applied (update a :answers rest) f #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation"
-    (should (:passed? (validator/valid-application? koodisto-cache has-never-applied a f #{} false)))
+    (should (:passed? (validator/valid-application? koodisto-cache has-never-applied a f #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))
     (should= {}
              (validator/build-results koodisto-cache
                                       has-never-applied
@@ -331,101 +332,101 @@
   (it "passes validation when no hakukohde is selected, a question belongs to a hakukohde a but has no value"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          a
-                         (update f :content conj hakukohde-specific-question) #{} false))))
+                         (update f :content conj hakukohde-specific-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "fails when no hakukohde is selected, a question belongs to a hakukohde and has a value"
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer)
-                             (update f :content conj hakukohde-specific-question) #{} false))))
+                             (update f :content conj hakukohde-specific-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when hakukohde is selected and no answers are specified to a hakukohde"
-      (should (:passed? (validator/valid-application? koodisto-cache has-never-applied a (update f :content conj hakukohde-specific-question) #{} false))))
+      (should (:passed? (validator/valid-application? koodisto-cache has-never-applied a (update f :content conj hakukohde-specific-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when hakukohde is selected and an answer belongs to it"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-question) #{} false))))
+                         (update f :content conj hakukohde-question hakukohde-specific-question) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when hakukohde is selected, a question belongs to different hakukohde but has no value"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          (update a :answers conj hakukohde-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) #{} false))))
+                         (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "fails validation when hakukohde is selected, a question belongs to different hakukohde but has a value"
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                              (update a :answers conj hakukohde-specific-question-answer hakukohde-answer)
-                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) #{} false))))
+                             (update f :content conj hakukohde-question hakukohde-specific-question-another-hakukohde) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when a dropdown question is hakukohde specific, no answers"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          a
-                         (update f :content conj hakukohde-specific-dropdown-with-followups) #{} false))))
+                         (update f :content conj hakukohde-specific-dropdown-with-followups) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when a dropdown question is hakukohde specific and has answers",
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
-                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) #{} false))))
+                         (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "fails validation when a dropdown question is hakukohde specific and has no required followup answers",
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer)
-                             (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) #{} false))))
+                             (update f :content conj hakukohde-question hakukohde-specific-dropdown-with-followups) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when a dropdown question is hakukohde specific to wrong hakukohde and has no answers",
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                          (update a :answers conj hakukohde-answer)
                          (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                           :belongs-to-hakukohteet
-                                                                          ["1.2.246.562.20.352373851711"])) #{} false))))
+                                                                          ["1.2.246.562.20.352373851711"])) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "fails validation when a dropdown question is hakukohde specific to wrong hakukohde and has answers",
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                              (update a :answers conj hakukohde-answer dropdown-answer dropdown-followup-answer)
                              (update f :content conj hakukohde-question (assoc hakukohde-specific-dropdown-with-followups
                                                                                :belongs-to-hakukohteet
-                                                                               ["1.2.246.562.20.352373851711"])) #{} false))))
+                                                                               ["1.2.246.562.20.352373851711"])) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "fails validation when cannot submit multiple applications and has applied"
       (let [has-applied (fn [_ _] (async/go true))
             form (populate-can-submit-multiple-applications f false)
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
-        (should-not (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false)))))
+        (should-not (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))
 
   (it "passes validation when cannot submit multiple applications and has not applied"
       (let [has-applied (fn [_ _] (async/go false))
             form (populate-can-submit-multiple-applications f false)
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
-        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false)))))
+        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))
 
   (it "passes validation when can submit multiple applications and has applied"
       (let [has-applied (fn [_ _] (async/go true))
             form (populate-can-submit-multiple-applications f true)
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
-        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false)))))
+        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))
 
   (it "passes validation when can submit multiple applications and has not applied"
       (let [has-applied (fn [_ _] (async/go false))
             form (populate-can-submit-multiple-applications f true)
             answers (update a :answers (partial remove #(= "birth-date" (:key %))))]
-        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false)))))
+        (should (:passed? (validator/valid-application? koodisto-cache has-applied answers form #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))
 
   (it "fails validation when validating required-hakija question with no answer when applying as hakija"
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                           a
                                                           (update f :content conj required-hakija-question)
                                                           #{}
-                                                          false))))
+                                                          false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when validating required-hakija question with an answer when applying as hakija"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                           (update a :answers conj required-hakija-answer)
                                                           (update f :content conj required-hakija-question)
                                                           #{}
-                                                          false))))
+                                                          false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
   (it "passes validation when validating required-hakija question with no answer when applying as virkailija"
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                       a
                                                       (update f :content conj required-hakija-question)
                                                       #{}
-                                                      true)))))
+                                                      true "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY")))))

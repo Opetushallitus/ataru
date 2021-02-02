@@ -116,6 +116,12 @@ To build and run all the tests in the system:
 ./bin/cibuild.sh run-tests
 ```
 
+### All tests
+
+```
+make test
+```
+
 ### Backend unit tests
 
 ```
