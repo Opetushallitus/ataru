@@ -239,6 +239,7 @@
                                     :G__25 {:valid true :value "Joroinen"})})
 
 (def expected-application {:form 37,
+                           :strict-warnings-on-unchanged-edits? true
                            :lang "fi",
                            :hakukohde '(),
                            :haku nil,
