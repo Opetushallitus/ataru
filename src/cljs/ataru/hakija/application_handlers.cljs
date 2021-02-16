@@ -152,7 +152,10 @@
     {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
      :http {:method        method
             :url           "/hakemus/api/application"
-            :post-data     (create-application-to-submit (:application db) (:form db) (get-in db [:form :selected-language]))
+            :post-data     (create-application-to-submit (:application db)
+                                                         (:form db)
+                                                         (get-in db [:form :selected-language])
+                                                         (:strict-warnings-on-unchanged-edits? db))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
 
@@ -365,23 +368,25 @@
     field-descriptor))
 
 (defn- handle-form [db answers server-date form]
-  (let [form                       (-> (languages->kwd form)
+  (let [hakuaika-end               (->> form :tarjonta :hakukohteet
+                                        (map :hakuaika)
+                                        (filter :on)
+                                        (sort-by :end >)
+                                        first
+                                        :end)
+        time-diff                  (if (some? server-date)
+                                     (- (if (some? server-date)
+                                          (->> (clojure.string/replace server-date " GMT" "")
+                                               (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
+                                               to-long))
+                                        (.getTime (js/Date.)))
+                                     0)
+        form                       (-> (languages->kwd form)
                                        (set-form-language)
                                        (update :content (partial map set-question-group-id))
                                        (update :content (partial autil/map-form-fields set-adjacent-field-id))
-                                       (assoc :hakuaika-end (->> form :tarjonta :hakukohteet
-                                                                 (map :hakuaika)
-                                                                 (filter :on)
-                                                                 (sort-by :end >)
-                                                                 first
-                                                                 :end))
-                                       (assoc :time-delta-from-server
-                                              (if (some? server-date)
-                                                (- (->> (clojure.string/replace server-date " GMT" "")
-                                                        (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
-                                                        to-long)
-                                                   (.getTime (js/Date.)))
-                                                0)))
+                                       (assoc :hakuaika-end hakuaika-end)
+                                       (assoc :time-delta-from-server time-diff))
         valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
                                              (filter #(get-in % [:hakuaika :on]))
                                              (map :oid)))
@@ -400,6 +405,9 @@
         (assoc-in [:application :answers] initial-answers)
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc-in [:application :validators-processing] #{})
+        (assoc :strict-warnings-on-unchanged-edits? (if (and (some? hakuaika-end) (some? time-diff))
+                                                      (boolean (> (- hakuaika-end (.getTime (js/Date.)) time-diff) 0))
+                                                      true))
         (assoc :wrapper-sections (extract-wrapper-sections form))
         (merge-submitted-answers answers flat-form-content)
         (set-field-visibilities))))

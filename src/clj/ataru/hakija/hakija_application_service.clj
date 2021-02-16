@@ -179,7 +179,10 @@
                            application
                            is-modify?
                            session]
-  (let [now                           (time/now)
+  (let [strict-warnings-on-unchanged-edits? (if (nil? (:strict-warnings-on-unchanged-edits? application))
+                                              true
+                                              (:strict-warnings-on-unchanged-edits? application))
+        now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -309,6 +312,14 @@
          :failures ["Application period is not open."]
          :key  (:key latest-application)
          :code :application-period-closed})
+
+      (and strict-warnings-on-unchanged-edits?
+           (not-empty cannot-edit-fields))
+      {:passed?  false
+       :failures (into {} (map #(vector % "Cannot edit answer to question")
+                               edited-cannot-edit-questions))
+       :key  (:key latest-application)
+       :code :internal-server-error}
 
       (not-empty cannot-edit-attachment)
       {:passed?  false
