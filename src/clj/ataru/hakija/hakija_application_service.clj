@@ -517,8 +517,8 @@
                                  (pick-metadata value))))))))
 
 (defn attachments-metadata->answers [application liiteri-cas-client]
-  (let [all-attachment-keys (mapcat attachment-metadata->keys (:answers application))
-        attachment-metadata (file-store/get-metadata liiteri-cas-client all-attachment-keys)]
+  (let [all-attachment-keys (filter some? (mapcat attachment-metadata->keys (:answers application)))
+        attachment-metadata (file-store/get-metadata liiteri-cas-client (vec all-attachment-keys))]
     (update application :answers (partial map (attachment-metadata->answer attachment-metadata)))))
 
 (defn is-inactivated? [application]
