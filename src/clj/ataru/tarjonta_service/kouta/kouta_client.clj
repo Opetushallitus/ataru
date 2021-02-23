@@ -19,9 +19,13 @@
 
 (defn- parse-date-time
   [s]
-  (let [tz  (t/time-zone-for-id "Europe/Helsinki")
+  (let [tz (t/time-zone-for-id "Europe/Helsinki")
+        fmt-with-seconds (f/formatter "yyyy-MM-dd'T'HH:mm:ss" tz)
         fmt (f/formatter "yyyy-MM-dd'T'HH:mm" tz)]
-    (t/to-time-zone (f/parse fmt s) tz)))
+    (try
+      (t/to-time-zone (f/parse fmt-with-seconds s) tz)
+      (catch Exception _
+        (t/to-time-zone (f/parse fmt s) tz)))))
 
 (defn- parse-haku
   [haku hakukohteet]
