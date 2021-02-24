@@ -368,7 +368,8 @@
     field-descriptor))
 
 (defn- handle-form [db answers server-date form]
-  (let [hakuaika-end               (->> form :tarjonta :hakukohteet
+  (let [hakuaika-on?               (-> form :tarjonta :hakuaika :on)
+        hakuaika-end               (->> form :tarjonta :hakukohteet
                                         (map :hakuaika)
                                         (filter :on)
                                         (sort-by :end >)
@@ -405,9 +406,7 @@
         (assoc-in [:application :answers] initial-answers)
         (assoc-in [:application :show-hakukohde-search] false)
         (assoc-in [:application :validators-processing] #{})
-        (assoc :strict-warnings-on-unchanged-edits? (if (and (some? hakuaika-end) (some? time-diff))
-                                                      (boolean (> (- hakuaika-end (.getTime (js/Date.)) time-diff) 0))
-                                                      true))
+        (assoc :strict-warnings-on-unchanged-edits? hakuaika-on?)
         (assoc :wrapper-sections (extract-wrapper-sections form))
         (merge-submitted-answers answers flat-form-content)
         (set-field-visibilities))))
