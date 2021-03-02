@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.subs
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
+            [taoensso.timbre :as log]
             [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]
             clojure.set
             clojure.string))
@@ -75,9 +76,13 @@
                                                                              :ehto-text                     ehto-text}))
                                                                      (dedupe))))
           total-values                              (count hakukohteet-ehdollisesti-hyvaksyttavissa?)
+          results                                   hakukohteet-ehdollisesti-hyvaksyttavissa?
           hakukohde-ehdollisesti-hyvaksyttavissa?   (-> hakukohteet-ehdollisesti-hyvaksyttavissa?
                                                         first
                                                         :ehdollisesti-hyvaksyttavissa?)]
+
+
+        (log/error "------------------> Hakukohteet ehdollisesti hyväksyttävissä: " results)
       (cond (> total-values 1)
             :hyvaksynnan-ehto/monta-arvoa
 
