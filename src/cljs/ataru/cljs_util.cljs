@@ -146,7 +146,7 @@
     (set unselected-states)))
 
 (defn include-csrf-header? [method]
-  (contains? #{:post :put :delete} method))
+  (contains? #{:patch :post :put :delete} method))
 
 (defn csrf-token []
   (when-let [token (-> js/document
