@@ -8,7 +8,6 @@
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clojure.string]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
@@ -21,9 +20,13 @@
 
 (defn- parse-date-time
   [s]
-  (let [tz  (t/time-zone-for-id "Europe/Helsinki")
-        fmt (f/formatter "yyyy-MM-dd'T'HH:mm:ss" tz)]
-    (t/to-time-zone (f/parse fmt s) tz)))
+  (let [tz (t/time-zone-for-id "Europe/Helsinki")
+        fmt-with-seconds (f/formatter "yyyy-MM-dd'T'HH:mm:ss" tz)
+        fmt (f/formatter "yyyy-MM-dd'T'HH:mm" tz)]
+    (try
+      (t/to-time-zone (f/parse fmt-with-seconds s) tz)
+      (catch Exception _
+        (t/to-time-zone (f/parse fmt s) tz)))))
 
 (defn- parse-haku
   [haku hakukohteet ohjausparametrit]

@@ -5,7 +5,6 @@
             [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch]]
-            [reagent.core :as r]
             [reagent.dom :as r-dom]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
@@ -147,7 +146,7 @@
     (set unselected-states)))
 
 (defn include-csrf-header? [method]
-  (contains? #{:post :put :delete} method))
+  (contains? #{:patch :post :put :delete} method))
 
 (defn csrf-token []
   (when-let [token (-> js/document

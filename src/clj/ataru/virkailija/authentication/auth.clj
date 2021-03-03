@@ -26,7 +26,7 @@
 (defn cas-login [cas-client ticket]
   (fn []
     (when ticket
-      [(.run (.validateServiceTicket cas-client (resolve-url :ataru.login-success) ticket))
+      [(.run (.validateServiceTicketWithVirkailijaUsername cas-client (resolve-url :ataru.login-success) ticket))
        ticket])))
 
 (defn- user-right-organizations->organization-rights
