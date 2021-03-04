@@ -283,7 +283,7 @@
 (defn- update-ehto-valintatapajonoissa
   [old response]
   (-> old
-      (assoc :ehdollisesti-hyvaksyttavissa? (not (empty? (:body response))))
+      (assoc :ehdollisesti-hyvaksyttavissa? (not-empty (:body response)))
       (dissoc :hakukohteessa)
       (assoc :valintatapajonoissa
              (->> (:body response)
