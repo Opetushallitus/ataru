@@ -432,7 +432,8 @@
               db
               (-> db
                   (assoc-in [:application :answers key :values :value] nil)
-                  (assoc-in [:application :answers key :value] nil))))
+                  (assoc-in [:application :answers key :value] nil)
+                  (assoc-in [:application :answers key :valid] false))))
           db
           (map keyword (:selection-limited db))))
 
