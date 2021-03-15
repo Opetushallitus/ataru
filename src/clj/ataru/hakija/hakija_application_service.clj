@@ -72,6 +72,23 @@
                               (old-answers-by-key (:key answer))
                               answer))))))
 
+(defn- merge-uneditable-answers-from-previous
+  [new-application
+   old-application
+   form
+   cannot-edit-fields]
+  (let [cannot-edit-fields      (set cannot-edit-fields)
+        fields-by-key           (->> (:content form)
+                                     util/flatten-form-fields
+                                     (util/group-by-first :id))
+        old-answers-by-key      (util/group-by-first :key (:answers old-application))]
+    (update new-application :answers
+            (partial keep (fn [answer]
+                            (if (or (:cannot-view (fields-by-key (:key answer)))
+                                    (cannot-edit-fields (:key answer)))
+                              (old-answers-by-key (:key answer))
+                              answer))))))
+
 (defn- edited-cannot-edit-questions
   [new-application old-application form]
   (let [new-answers (util/group-by-first :key (:answers new-application))
@@ -162,7 +179,10 @@
                            application
                            is-modify?
                            session]
-  (let [now                           (time/now)
+  (let [strict-warnings-on-unchanged-edits? (if (nil? (:strict-warnings-on-unchanged-edits? application))
+                                              true
+                                              (:strict-warnings-on-unchanged-edits? application))
+        now                           (time/now)
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -224,6 +244,32 @@
                                              form)
                                             (assoc :person-oid (:person-oid latest-application)))
                                         application)
+        edited-cannot-edit-questions  (when is-modify?
+                                        (edited-cannot-edit-questions
+                                          final-application
+                                          latest-application
+                                          form))
+        cannot-edit-attachment        (when (not-empty edited-cannot-edit-questions)
+                                        (->> (:content form)
+                                             util/flatten-form-fields
+                                             (filter #((set edited-cannot-edit-questions) (:id %)))
+                                             (keep (fn [{:keys [id fieldType]}]
+                                                     (when (= fieldType "attachment")
+                                                       id)))))
+        cannot-edit-fields            (when (not-empty edited-cannot-edit-questions)
+                                        (->> (:content form)
+                                             util/flatten-form-fields
+                                             (filter #((set edited-cannot-edit-questions) (:id %)))
+                                             (keep (fn [{:keys [id fieldType]}]
+                                                     (when-not (= fieldType "attachment")
+                                                       id)))))
+        final-application             (if (and is-modify? (not-empty cannot-edit-fields))
+                                        (merge-uneditable-answers-from-previous
+                                          final-application
+                                          latest-application
+                                          form
+                                          cannot-edit-fields)
+                                        final-application)
         validation-result             (validator/valid-application?
                                        koodisto-cache
                                        has-applied
@@ -232,12 +278,9 @@
                                        applied-hakukohderyhmat
                                        (some? virkailija-secret)
                                        (get latest-application :id "NEW_APPLICATION_ID")
-                                       (get latest-application :key "NEW_APPLICATION_KEY"))
-        edited-cannot-edit-questions  (when is-modify?
-                                        (edited-cannot-edit-questions
-                                         final-application
-                                         latest-application
-                                         form))]
+                                       (get latest-application :key "NEW_APPLICATION_KEY"))]
+    (when (not-empty cannot-edit-fields)
+      (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
@@ -270,10 +313,18 @@
          :key  (:key latest-application)
          :code :application-period-closed})
 
-      (not-empty edited-cannot-edit-questions)
+      (and strict-warnings-on-unchanged-edits?
+           (not-empty cannot-edit-fields))
       {:passed?  false
        :failures (into {} (map #(vector % "Cannot edit answer to question")
                                edited-cannot-edit-questions))
+       :key  (:key latest-application)
+       :code :internal-server-error}
+
+      (not-empty cannot-edit-attachment)
+      {:passed?  false
+       :failures (into {} (map #(vector % "Deadline passed in attachments")
+                               cannot-edit-attachment))
        :key  (:key latest-application)
        :code :internal-server-error}
 

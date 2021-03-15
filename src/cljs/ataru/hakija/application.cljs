@@ -223,9 +223,12 @@
        :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 
-(defn create-application-to-submit [application form lang]
+(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits?]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
+             :strict-warnings-on-unchanged-edits? (if (nil? strict-warnings-on-unchanged-edits?)
+                                                    true
+                                                    (boolean strict-warnings-on-unchanged-edits?))
              :lang      lang
              :haku      (-> form :tarjonta :haku-oid)
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))

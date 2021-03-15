@@ -239,6 +239,7 @@
                                     :G__25 {:valid true :value "Joroinen"})})
 
 (def expected-application {:form 37,
+                           :strict-warnings-on-unchanged-edits? true
                            :lang "fi",
                            :hakukohde '(),
                            :haku nil,
@@ -256,7 +257,7 @@
                                        :label {:fi "ulkokenttä", :sv ""}})})
 
 (deftest application-to-submit-is-correct
-  (let [result (create-application-to-submit application-data-to-submit form1 "fi")]
+  (let [result (create-application-to-submit application-data-to-submit form1 "fi" true)]
     (is (= expected-application result))))
 
 (def form2

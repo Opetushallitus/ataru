@@ -375,7 +375,8 @@
    (s/optional-key :selection-id)       s/Str
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
-   (s/optional-key :person-oid)         (s/maybe s/Str)})
+   (s/optional-key :person-oid)         (s/maybe s/Str)
+   (s/optional-key :strict-warnings-on-unchanged-edits?) (s/maybe s/Bool)})
 
 (s/defschema Person
   {(s/optional-key :oid)         s/Str
