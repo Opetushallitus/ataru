@@ -659,15 +659,18 @@
 
 (defn- set-repeatable-application-field-top-level-valid
   [db id valid?]
-  (let [values (get-in db [:application :answers id :values])]
+  (let [values (get-in db [:application :answers id :values])
+        valid-attachment? (fn [attachment]
+                            (or (= :deleting (:status attachment))
+                                (:valid attachment)))]
     (assoc-in db [:application :answers id :valid]
               (and valid?
                    (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
-                         (every? #(or (nil? %) (every? :valid %)) values)
+                         (every? #(or (nil? %) (every? valid-attachment? %)) values)
                          (vector? values)
-                         (every? :valid values)
+                         (every? valid-attachment? values)
                          :else
-                         (:valid values))))))
+                         (valid-attachment? values))))))
 
 (reg-event-db
   :application/unset-field-value
@@ -974,7 +977,7 @@
           new-files            (remove (fn [file]
                                          (some #(and (= (.-name file) (:filename %))
                                                      (= (.-size file) (:size %)))
-                                               existing-attachments))
+                                               (filter #(not= (:status %) :deleting) existing-attachments)))
                                        files)
           new-attachments      (map (fn [file]
                                       (cond
@@ -1116,18 +1119,11 @@
 (reg-event-fx
   :application/handle-attachment-delete
   [check-schema-interceptor]
-  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx attachment-key _]]
+  (fn [{db :db} [_ field-descriptor question-group-idx _ _ _]]
     (let [id     (keyword (:id field-descriptor))
           new-db (-> (if (some? question-group-idx)
                        (update-in db [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
                        db)
-                     (update-in (cond-> [:application :answers id :values]
-                                        (some? question-group-idx)
-                                        (conj question-group-idx))
-                                (fn [values]
-                                  (if (some? attachment-idx)
-                                    (autil/remove-nth values attachment-idx)
-                                    (vec (remove #(= attachment-key (:value %)) values)))))
                      (set-repeatable-field-value id)
                      (set-validator-processing id))]
       {:db                 new-db

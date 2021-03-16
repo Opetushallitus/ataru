@@ -1,11 +1,12 @@
 (ns ataru.hakija.subs
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :as autil]
             [ataru.hakija.application-validators :as validators]
             [ataru.hakija.person-info-fields :as person-info-fields]
+            [clojure.set :as cset]
+            [clojure.string :as cstr]
             [cemerick.url :as url]))
 
 (defonce attachment-modify-grace-period-days
@@ -128,17 +129,17 @@
 
 (re-frame/reg-sub
   :application/attachment-deadline
-  (fn [db _]
+  (fn [_ _]
     (re-frame/subscribe [:application/selected-language]))
   (fn [selected-language [_ field]]
     (-> field :params :deadline-label selected-language)))
 
 (re-frame/reg-sub
   :application/haku-end-time
-  (fn [db _]
+  (fn [_ _]
     [(re-frame/subscribe [:state-query [:form :tarjonta :hakuaika :label :end-time]])
      (re-frame/subscribe [:application/selected-language])])
-  (fn [[label selected-language] [_ field]]
+  (fn [[label selected-language] [_ _]]
     (when label
       (get label selected-language))))
 
@@ -281,7 +282,7 @@
         (->> (cond->> (map hakukohteet selected-hakukohteet)
                       jyemp?
                       (remove :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?))
-             (remove #(empty? (clojure.set/intersection
+             (remove #(empty? (cset/intersection
                                ids
                                (conj (set (:hakukohderyhmat %)) (:oid %))))))))))
 
@@ -310,7 +311,7 @@
 
 (re-frame/reg-sub
   :application/get-i18n-text
-  (fn [db [_ translations]]
+  (fn [_ [_ translations]]
     (get translations @(re-frame/subscribe [:application/form-language]))))
 
 (re-frame/reg-sub
@@ -333,13 +334,24 @@
     (:count ui-of 1)))
 
 (re-frame/reg-sub
-  :application/attachment-count
+  :application/attachments
   (fn [_ _]
     (re-frame/subscribe [:application/answers]))
   (fn [answers [_ id question-group-idx]]
     (if (some? question-group-idx)
-      (count (get-in answers [(keyword id) :values question-group-idx]))
-      (count (get-in answers [(keyword id) :values])))))
+      (get-in answers [(keyword id) :values question-group-idx])
+      (get-in answers [(keyword id) :values]))))
+
+(re-frame/reg-sub
+  :application/visible-attachments
+  (fn [[_ id question-group-idx] _]
+    (re-frame/subscribe [:application/attachments id question-group-idx]))
+  (fn [attachments _]
+    (doall (filterv (fn [[_ attachment]]
+                      (not= :deleting
+                            (:status attachment)))
+                    (map-indexed (fn [idx attachment]
+                                   [idx attachment]) attachments)))))
 
 (re-frame/reg-sub
   :application/multiple-choice-option-checked?
@@ -379,13 +391,13 @@
 
 (re-frame/reg-sub
   :application/hakukohde-options-by-oid
-  (fn [db _]
+  (fn [_ _]
     (into {} (map (juxt :value identity)
                   @(re-frame/subscribe [:application/hakukohde-options])))))
 
 (re-frame/reg-sub
   :application/hakukohteet-editable?
-  (fn [db _]
+  (fn [_ _]
     (and (< 1 (count @(re-frame/subscribe [:application/hakukohde-options])))
          (not @(re-frame/subscribe [:application/cannot-edit? :hakukohteet])))))
 
@@ -515,7 +527,7 @@
 
 (re-frame/reg-sub
   :application/hakukohde-label
-  (fn [db [_ hakukohde-oid]]
+  (fn [_ [_ hakukohde-oid]]
     (util/non-blank-val
      (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
              [hakukohde-oid :label])
@@ -523,7 +535,7 @@
 
 (re-frame/reg-sub
   :application/hakukohde-description
-  (fn [db [_ hakukohde-oid]]
+  (fn [_ [_ hakukohde-oid]]
     (util/non-blank-val
      (get-in @(re-frame/subscribe [:application/hakukohde-options-by-oid])
              [hakukohde-oid :description])
@@ -584,7 +596,7 @@
          (or (afc/is-required-field? field)
              (-> field :params :numeric))
          (if (string? value)
-           (not (clojure.string/blank? value))
+           (not (cstr/blank? value))
            (not (empty? value)))
          (not validator-processing?))))
 
