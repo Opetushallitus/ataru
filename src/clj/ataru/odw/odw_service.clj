@@ -30,14 +30,14 @@
                           distinct
                           (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                           (into {}))
-        persons      (person-service/get-persons person-service (distinct (keep :person_oid applications)))
+        persons      (person-service/get-persons person-service (distinct (keep :person-oid applications)))
         results      (map (fn [application]
                             (try
                               [nil (let [answers     (if application-key
                                                        (-> application :answers util/answers-by-key)
                                                        (-> application :content :answers util/answers-by-key))
                                          hakukohteet (:hakukohde application)
-                                         person-oid  (:person_oid application)
+                                         person-oid  (:person-oid application)
                                          person      (get persons person-oid)
                                          state       (:state application)
                                          foreign?    (not= finland-country-code (-> answers :country-of-residence :value))]
