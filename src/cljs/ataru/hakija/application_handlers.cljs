@@ -268,7 +268,7 @@
 (defn- is-answered? [value]
   (if (vector? value)
     (if (or (vector? (first value)) (nil? (first value)))
-      (every? #(and (not-empty %) (every? some? %)) value)
+      (every? #(every? some? %) value)
       (and (not-empty value) (every? some? value)))
     (some? value)))
 
