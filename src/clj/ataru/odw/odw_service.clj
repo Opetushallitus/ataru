@@ -73,7 +73,7 @@
                                                :postinumero (-> answers :postal-code :value)
                                                :kotikunta   (-> answers :home-town :value)})
                                             (into {}
-                                                  (for [index (range 1 7) ; Hard-coded amount in ODW 1-6
+                                                  (for [index (range 1 (inc (count hakukohteet)))
                                                         :let  [hakukohde-oid (nth hakukohteet (dec index) nil)
                                                                hakukohde     (when hakukohde-oid
                                                                                (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
