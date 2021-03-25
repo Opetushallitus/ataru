@@ -215,20 +215,34 @@
 (defn- sanitize-attachment-values-by-states [value values]
   (filterv identity (map-indexed (fn [idx value]
                                    (sanitize-attachment-value-by-state value (get values idx))) value)))
+(defn- pad [n coll val]
+  (vec (take n (concat coll (repeat val)))))
 
-(defn- sanitize-attachment-value [value values]
+(defn- sanitize-attachment-value [value values question-group-highest-dimension]
   (if (vector? value)
     (if (or (vector? (first value)) (nil? (first value)))
-      (vec (map-indexed (fn [idx value]
-                          (sanitize-attachment-values-by-states value (get values idx))) value))
+      (pad (or question-group-highest-dimension 0)
+           (map-indexed (fn [idx value]
+                          (sanitize-attachment-values-by-states value (get values idx))) value) nil)
       (sanitize-attachment-values-by-states value values))
     (sanitize-attachment-value-by-state value values)))
+
+(defn- question-group-shared-answers [ans-key answers flat-form-map]
+  (if-let [question-group-id (-> (get flat-form-map ans-key) :params :question-group-id)]
+    (->> flat-form-map
+         (filter (fn [[_ v]] (= (-> v :params :question-group-id) question-group-id)))
+         (keep (fn [[k _]] (get answers k))))))
 
 (defn- create-answers-to-submit [answers form ui]
   (let [flat-form-map (util/form-fields-by-id form)]
     (for [[ans-key {:keys [value values]}] answers
           :let
-          [field-descriptor (get flat-form-map ans-key)]
+          [field-descriptor (get flat-form-map ans-key)
+           question-group-highest-dimension (->> (question-group-shared-answers ans-key answers flat-form-map)
+                                                 (map #(count (:value %)))
+                                                 (distinct)
+                                                 (sort-by >)
+                                                 (first))]
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
@@ -236,7 +250,8 @@
                (not (:exclude-from-answers field-descriptor)))]
       {:key       (:id field-descriptor)
        :value     (cond (#{"attachment"} (:fieldType field-descriptor))
-                        (sanitize-attachment-value value values)
+                        (sanitize-attachment-value value values question-group-highest-dimension)
+
                         :else
                         (sanitize-value field-descriptor value))
        :fieldType (:fieldType field-descriptor)
