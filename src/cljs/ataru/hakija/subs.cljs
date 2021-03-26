@@ -631,4 +631,6 @@
   (fn [_ _]
     (re-frame/subscribe [:application/answers]))
   (fn [answers _]
-    (some? (some #(not= (:original-value %) (:value %)) (vals answers)))))
+      (let [changed? (fn [answer] (or (not= (:original-value answer) (:value answer))
+                                      (some? (some #(= :deleting (:status %)) (:values answer)))))]
+           (some? (some changed? (vals answers))))))

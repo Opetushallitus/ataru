@@ -87,11 +87,12 @@
        [text-nested-container options application lang group-idx])]))
 
 (defn- attachment-list [attachments]
-  [:div
-   (map (fn [value]
-          ^{:key (str "attachment-" (:value value))}
-          [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
-        attachments)])
+  (let [visible-attachments (filter #(not= (:status %) :deleting) attachments)]
+    [:div
+     (map (fn [value]
+            ^{:key (str "attachment-" (:value value))}
+            [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
+          visible-attachments)]))
 
 (defn attachment [field-descriptor application lang question-group-index]
   (let [answer-key (keyword (application-field/answer-key field-descriptor))
