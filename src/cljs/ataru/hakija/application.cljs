@@ -1,7 +1,7 @@
 (ns ataru.hakija.application
   "Pure functions handling application data"
   (:require [ataru.util :as util]
-            [ataru.application-common.application-field-common :refer [required-validators sanitize-value]]
+            [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
 (defn- initial-valid-status [flattened-form-fields preselected-hakukohteet]
@@ -215,8 +215,6 @@
 (defn- sanitize-attachment-values-by-states [value values]
   (filterv identity (map-indexed (fn [idx value]
                                    (sanitize-attachment-value-by-state value (get values idx))) value)))
-(defn- pad [n coll val]
-  (vec (take n (concat coll (repeat val)))))
 
 (defn- sanitize-attachment-value [value values question-group-highest-dimension]
   (if (vector? value)
@@ -241,7 +239,7 @@
            question-group-highest-dimension (->> (question-group-shared-answers ans-key answers flat-form-map)
                                                  (map #(count (:value %)))
                                                  (distinct)
-                                                 (sort-by >)
+                                                 (sort (comp - compare))
                                                  (first))]
           :when
           (and (or (= :birth-date ans-key)
@@ -253,7 +251,7 @@
                         (sanitize-attachment-value value values question-group-highest-dimension)
 
                         :else
-                        (sanitize-value field-descriptor value))
+                        (sanitize-value field-descriptor value question-group-highest-dimension))
        :fieldType (:fieldType field-descriptor)
        :label     (:label field-descriptor)})))
 

@@ -101,7 +101,7 @@
                          :answers
                          answer-key
                          :values
-                         (nth question-group-index))
+                         (nth question-group-index nil))
                      (-> application :answers answer-key :values))]
     [:div.application__form-field
      [:div.application__form-field-label
