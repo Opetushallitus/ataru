@@ -1010,6 +1010,9 @@
       {:db         (-> (if (some? question-group-idx)
                          (-> db
                              (update-in [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
+                             (update-in [:application :answers id :values question-group-idx] #(if (nil? %)
+                                                                                                 []
+                                                                                                 %))
                              (update-in [:application :answers id :values question-group-idx] into new-attachments))
                          (update-in db [:application :answers id :values] into new-attachments))
                        (set-repeatable-field-value id)
