@@ -213,7 +213,10 @@
   (seq (concat (:belongs-to-hakukohteet field)
                (:belongs-to-hakukohderyhma field))))
 
-(defn sanitize-value [field-descriptor value]
+(defn pad [n coll val]
+  (vec (take (max (count coll) n) (concat coll (repeat val)))))
+
+(defn sanitize-value [field-descriptor value question-group-highest-dimension]
   (let [sanitize-values (fn [allowed-values values]
                           (if (nil? values)
                             values
@@ -225,7 +228,9 @@
       (let [allowed-values (set (map :value (:options field-descriptor)))]
         (if (vector? value)
           (if (or (vector? (first value)) (nil? (first value)))
-            (sanitize-question-group-values allowed-values value)
+            (pad (or question-group-highest-dimension 0)
+                 (sanitize-question-group-values allowed-values value)
+                 nil)
             (sanitize-values allowed-values value))
           (allowed-values value)))
       value)))
