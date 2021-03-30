@@ -805,7 +805,7 @@ SELECT
   a.key,
   a.haku,
   a.hakukohde,
-  a.person_oid,
+  a.person_oid AS "person-oid",
   (SELECT content
    FROM answers_as_content
    WHERE application_id = a.id) AS content,
