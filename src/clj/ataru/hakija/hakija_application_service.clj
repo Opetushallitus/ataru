@@ -353,7 +353,7 @@
                              (:type attachment-finalizer-job/job-definition)
                              {:application-id application-id}))))
 
-(defn- start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+(defn start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
   (application-email/start-email-submit-confirmation-job koodisto-cache tarjonta-service
                                                          organization-service
                                                          ohjausparametrit-service

@@ -340,6 +340,18 @@
                 job-runner
                 person-oid)
               (response/ok {}))
+          (response/unauthorized {})))
+      (api/POST "/start-submit-jobs/:application-id" {session :session}
+        :path-params [application-id :- s/Int]
+        (if (get-in session [:identity :superuser])
+          (do (hakija-application-service/start-submit-jobs
+                koodisto-cache
+                tarjonta-service
+                organization-service
+                ohjausparametrit-service
+                job-runner
+                application-id)
+              (response/ok {}))
           (response/unauthorized {}))))
 
     (api/context "/post-process" []
