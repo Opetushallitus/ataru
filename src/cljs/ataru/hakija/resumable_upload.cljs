@@ -69,11 +69,7 @@
                                                           (if (= status 404)
                                                             (dispatch not-have-file-dispatch)
                                                             (dispatch (conj error-handler status))))})
-          req                    (GET (str url
-                                           "?file-id=" file-id
-                                           "&file-size=" (.-size file)
-                                           "&file-name=" (normalizer/normalize-filename (.-name file))
-                                           "&file-part-number=" file-part-number) params)]
+          req                    (GET url params)]
       {:dispatch (conj started-handler req)})))
 
 (defn- get-xhrio-json
