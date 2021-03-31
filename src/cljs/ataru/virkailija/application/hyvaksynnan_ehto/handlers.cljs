@@ -2,9 +2,9 @@
   (:require [cljs-time.core :as c]
             [cljs-time.format :as f]
             [re-frame.core :as re-frame]
-            [ataru.util :as util]
             [ataru.application-common.fx :refer [http]]
-            [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]))
+            [ataru.virkailija.application.hyvaksynnan-ehto.hyvaksynnan-ehto-xforms :as hx]
+            [clojure.set :as set]))
 
 (defn- update-hyvaksynnan-ehdot-for-selected-hakukohde-oids
   [db update-fn application-key hakukohde-oids]
@@ -91,7 +91,7 @@
   (fn [{db :db} [_ application-key hakukohde-oid]]
     (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
                       (map second)
-                      (apply clojure.set/union))]
+                      (apply set/union))]
       (when (or (contains? rights :view-applications)
                 (contains? rights :edit-applications))
         {:db
@@ -280,7 +280,7 @@
 (defn- update-ehto-valintatapajonoissa
   [old response]
   (-> old
-      (assoc :ehdollisesti-hyvaksyttavissa? (not (empty? (:body response))))
+      (assoc :ehdollisesti-hyvaksyttavissa? (not-empty (:body response)))
       (dissoc :hakukohteessa)
       (assoc :valintatapajonoissa
              (->> (:body response)
