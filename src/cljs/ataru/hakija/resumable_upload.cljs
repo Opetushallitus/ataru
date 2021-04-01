@@ -105,7 +105,7 @@
           req                     (POST (str url
                                              "?file-id=" file-id
                                              "&file-size=" (.-size file)
-                                             "&file-part=" file-part (normalizer/normalize-filename (.-name file))
+                                             "&file-name=" (normalizer/normalize-filename (.-name file))
                                              "&file-part-number=" file-part-number) params)]
       {:dispatch (conj started-handler req)})))
 
