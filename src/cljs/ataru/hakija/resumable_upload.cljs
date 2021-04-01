@@ -102,7 +102,11 @@
                                                               (.append "file-id" file-id)
                                                               (.append "file-size" (.-size file))
                                                               (.append "file-part-number" file-part-number))})
-          req                     (POST url params)]
+          req                     (POST (str url
+                                             "?file-id=" file-id
+                                             "&file-size=" (.-size file)
+                                             "&file-name=" (normalizer/normalize-filename (.-name file))
+                                             "&file-part-number=" file-part-number) params)]
       {:dispatch (conj started-handler req)})))
 
 (reg-event-db

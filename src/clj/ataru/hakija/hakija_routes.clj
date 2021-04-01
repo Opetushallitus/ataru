@@ -284,6 +284,11 @@
             (response/not-found {}))))
       (api/POST "/resumable" []
         :summary "Upload file part"
+        :query-params [{file-part-number :- s/Any nil}
+                       {file-size :- s/Any nil}
+                       {file-id :- s/Any nil}
+                       {file-part :- s/Any nil}
+                       {file-name :- s/Any nil}]
         :multipart-params [file-part :- upload/TempFileUpload
                            file-part-number :- s/Int
                            file-size :- s/Int
