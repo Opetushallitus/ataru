@@ -213,8 +213,11 @@
     value))
 
 (defn- sanitize-attachment-values-by-states [value values]
-  (filterv identity (map-indexed (fn [idx value]
-                                   (sanitize-attachment-value-by-state value (get values idx))) value)))
+       (if (and (nil? values)
+                (nil? value))
+           nil
+           (filterv identity (map-indexed (fn [idx value]
+                                              (sanitize-attachment-value-by-state value (get values idx))) value))))
 
 (defn- sanitize-attachment-value [value values question-group-highest-dimension]
   (if (vector? value)
