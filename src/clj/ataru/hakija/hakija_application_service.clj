@@ -504,7 +504,9 @@
 (defn- attachment-metadata->answer [attachment-metadata]
   (fn [{:keys [fieldType] :as answer}]
     (let [pick-metadata (fn [keys]
-                          (mapv (fn [key] (first (filter #(= (:key %) key) attachment-metadata))) keys))]
+                            (if (nil? keys)
+                                nil
+                                (mapv (fn [key] (first (filter #(= (:key %) key) attachment-metadata))) keys)))]
       (cond-> answer
               (= fieldType "attachment")
               (update :value (fn [value]
