@@ -903,11 +903,13 @@
         nil))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde person_oid lang email content payment-obligations eligibilities]}]
+  [{:keys [key haku hakukohde created_time modified_time person_oid lang email content payment-obligations eligibilities]}]
   (let [answers  (answers-by-key (:answers content))
         foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
     {:oid                         key
      :personOid                   person_oid
+     :createdTime                 created_time
+     :modifiedTime                modified_time
      :applicationSystemId         haku
      :kieli                       lang
      :hakukohteet                 hakukohde
