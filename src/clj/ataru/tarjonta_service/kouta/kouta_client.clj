@@ -3,7 +3,6 @@
             [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url-helper]
             [ataru.organization-service.organization-service :as organization-service]
-            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
             [ataru.schema.form-schema :as form-schema]
             [cheshire.core :as json]
             [clj-time.core :as t]
@@ -71,7 +70,7 @@
                " in hakukohde " (:oid hakukohde))))))
 
 (defn- parse-hakukohde
-  [hakukohde tarjoajat hakukohderyhmas]
+  [hakukohde tarjoajat]
   (merge
    {:oid                                                         (:oid hakukohde)
     :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))
@@ -81,7 +80,7 @@
     :name                                                        (:nimi hakukohde)
     :tarjoaja-name                                               (or (:name (first tarjoajat)) {})
     :tarjoaja-oids                                               (mapv :oid tarjoajat)
-    :ryhmaliitokset                                              hakukohderyhmas
+    :ryhmaliitokset                                              []
     :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? false}
@@ -128,7 +127,6 @@
 (s/defn ^:always-validate get-hakukohde :- (s/maybe form-schema/Hakukohde)
   [hakukohde-oid :- s/Str
    organization-service
-   hakukohderyhmapalvelu-service
    cas-client]
   (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                (url-helper/resolve-url hakukohde-oid)
@@ -139,10 +137,8 @@
           tarjoajat (some->> (or (seq (:tarjoajat hakukohde))
                                  (seq (:tarjoajat toteutus)))
                              (organization-service/get-organizations-for-oids
-                              organization-service))
-          hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
-                            hakukohderyhmapalvelu-service hakukohde-oid)]
-      (parse-hakukohde hakukohde tarjoajat hakukohderyhmas))))
+                              organization-service))]
+      (parse-hakukohde hakukohde tarjoajat))))
 
 (s/defn ^:always-validate get-hakukohdes-by :- (s/maybe [s/Str])
   [cas-client
@@ -178,11 +174,11 @@
   (check-schema [_ response]
     (haku-checker response)))
 
-(defrecord HakukohdeCacheLoader [cas-client organization-service hakukohderyhmapalvelu-service]
+(defrecord HakukohdeCacheLoader [cas-client organization-service]
   cache-service/CacheLoader
 
   (load [_ hakukohde-oid]
-    (get-hakukohde hakukohde-oid organization-service hakukohderyhmapalvelu-service cas-client))
+    (get-hakukohde hakukohde-oid organization-service cas-client))
 
   (load-many [this hakukohde-oids]
     (cache-service/default-load-many this hakukohde-oids))

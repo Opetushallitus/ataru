@@ -22,8 +22,7 @@
             [ataru.temp-file-storage.filesystem-temp-file-store :as filesystem-temp-file-store]
             [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]
             [ataru.valinta-tulos-service.service :as valinta-tulos-service]
-            [ataru.applications.application-service :as application-service]
-            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]))
+            [ataru.applications.application-service :as application-service]))
 
 (defn new-system
   ([audit-logger]
@@ -36,15 +35,6 @@
     component/system-map
 
     :audit-logger audit-logger
-
-    :hakukohderyhmapalvelu-cas-client (cas/new-client "/hakukohderyhmapalvelu"
-                                                      "auth/cas"
-                                                      "ring-session"
-                                                      (-> config :public-config :virkailija-caller-id))
-
-    :hakukohderyhmapalvelu-service (component/using
-                                     (hakukohderyhma-service/new-hakukohderyhmapalvelu-service)
-                                     [:hakukohderyhmapalvelu-cas-client])
 
     :organization-service (component/using
                            (organization-service/new-organization-service)
