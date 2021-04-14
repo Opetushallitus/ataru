@@ -453,6 +453,7 @@
 (s/defschema HakurekisteriApplication
   {:oid                         s/Str
    :personOid                   s/Str
+   :createdTime                 s/Str
    :applicationSystemId         s/Str
    :kieli                       s/Str
    :hakukohteet                 [s/Str]
