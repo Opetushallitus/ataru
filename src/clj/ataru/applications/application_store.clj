@@ -902,13 +902,16 @@
         :else
         nil))
 
+(def JodaFormatter (.withZone (org.joda.time.format.DateTimeFormat/forPattern "yyyy-MM-dd'T'HH:mm:ss")
+                              (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
+
 (defn- unwrap-hakurekisteri-application
   [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities]}]
   (let [answers  (answers-by-key (:answers content))
         foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
     {:oid                         key
      :personOid                   person_oid
-     :createdTime                 created_time
+     :createdTime                 (.print JodaFormatter created_time)
      :applicationSystemId         haku
      :kieli                       lang
      :hakukohteet                 hakukohde
