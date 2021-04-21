@@ -465,6 +465,7 @@
    :asuinmaa                    s/Str
    :kotikunta                   (s/maybe s/Str)
    :paymentObligations          {s/Str s/Str}
+   :attachments                 {s/Str s/Str}
    :eligibilities               {s/Str s/Str}
    :kkPohjakoulutus             [s/Str]
    :sahkoisenAsioinninLupa      s/Bool

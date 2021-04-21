@@ -906,7 +906,7 @@
                               (org.joda.time.DateTimeZone/forID "Europe/Helsinki")))
 
 (defn- unwrap-hakurekisteri-application
-  [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities]}]
+  [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities attachment_reviews]}]
   (let [answers  (answers-by-key (:answers content))
         foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
     {:oid                         key
@@ -932,6 +932,7 @@
      :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
      :korkeakoulututkintoVuosi    (korkeakoulututkinto-vuosi answers)
      :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
+     :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 (defn suoritusrekisteri-applications
