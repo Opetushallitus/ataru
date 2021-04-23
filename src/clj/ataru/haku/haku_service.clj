@@ -6,14 +6,9 @@
    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
    [ataru.organization-service.organization-service :as organization-service]
    [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.hakukohde.hakukohde-store :as hakukohde-store]
-   [ataru.applications.application-store :as application-store]
-   [ataru.forms.form-store :as form-store]
    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
    [clj-time.core :as t]
-   [clj-time.coerce :as c]
-   [taoensso.timbre :as log]))
+   [clj-time.coerce :as c]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -133,11 +128,10 @@
                                        tarjonta-service
                                        %
                                        nil))
-                            (map (fn [{hakukohde-oid :oid :as hakukohde}]
+                            (map (fn [hakukohde]
                                    (assoc
                                      hakukohde
-                                     :selection-state-used
-                                     (hakukohde-store/selection-state-used-in-hakukohde? hakukohde-oid))))
+                                     :selection-state-used false)))
                             (util/group-by-first :oid))
      :hakukohderyhmat  (util/group-by-first
                          :oid
