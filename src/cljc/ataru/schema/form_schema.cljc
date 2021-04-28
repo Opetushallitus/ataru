@@ -453,6 +453,7 @@
 (s/defschema HakurekisteriApplication
   {:oid                         s/Str
    :personOid                   s/Str
+   :createdTime                 s/Str
    :applicationSystemId         s/Str
    :kieli                       s/Str
    :hakukohteet                 [s/Str]
@@ -464,6 +465,7 @@
    :asuinmaa                    s/Str
    :kotikunta                   (s/maybe s/Str)
    :paymentObligations          {s/Str s/Str}
+   :attachments                 {s/Str s/Str}
    :eligibilities               {s/Str s/Str}
    :kkPohjakoulutus             [s/Str]
    :sahkoisenAsioinninLupa      s/Bool

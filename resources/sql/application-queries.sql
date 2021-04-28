@@ -765,9 +765,11 @@ SELECT
                   application_id = a.id),
             a.lang) AS "lang",
   a.email,
+  a.created_time,
   (SELECT content
    FROM answers_as_content
    WHERE application_id = a.id) AS content,
+  coalesce(ahar.attachment_reviews, '{}') AS "attachment_reviews",
   coalesce(ahr.payment_obligations, '{}') AS "payment-obligations",
   coalesce(ahr.eligibilities, '{}') AS eligibilities
 FROM applications AS a
@@ -775,6 +777,9 @@ JOIN application_reviews AS ar
   ON ar.application_key = a.key
 LEFT JOIN applications AS la
   ON la.key = a.key AND la.id > a.id
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS attachment_reviews
+                   FROM application_hakukohde_attachment_reviews
+                   WHERE application_key = a.key) AS ahar ON true
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations,
                           jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'eligibility-state') AS eligibilities
                    FROM application_hakukohde_reviews
