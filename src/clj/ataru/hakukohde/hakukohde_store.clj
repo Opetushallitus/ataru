@@ -11,3 +11,10 @@
   (-> (exec-db :db queries/yesql-selection-state-used-in-hakukohde {:hakukohde_oid hakukohde-oid})
       first
       :exists))
+
+(defn selection-state-used-in-hakukohdes?
+  [hakukohde-oids]
+  (if (seq hakukohde-oids)
+    (->> (exec-db :db queries/yesql-selection-state-used-in-hakukohdes {:hakukohde_oids hakukohde-oids})
+        (map #(:hakukohde %)))
+    []))
