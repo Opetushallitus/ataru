@@ -81,7 +81,7 @@
          :refresh-after       [1 TimeUnit/SECONDS]})
       {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
                                                       "session" (-> config :public-config :virkailija-caller-id))
 
     :valinta-tulos-service (component/using

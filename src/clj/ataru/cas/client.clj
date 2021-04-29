@@ -4,10 +4,11 @@
             [cheshire.core :as json]
             [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
+            [clojure.core :as c]
             [clojure.string :as s])
   (:import [fi.vm.sade.javautils.nio.cas CasClient CasConfig]
            [org.asynchttpclient RequestBuilder]
-           ))
+           (org.asynchttpclient.request.body.multipart FilePart)))
 
 (defrecord CasClientState [client params session-cookie-name session-id])
 
@@ -16,8 +17,8 @@
         username (get-in config [:cas :username])
         password (get-in config [:cas :password])
         cas-url (resolve-url :cas-client)
-        service-url (s/str (resolve-url :url-virkailija) service)
-        csrf (clojure.string/replace service "/" "")]
+        service-url (c/str (resolve-url :url-virkailija) service)
+        csrf (s/replace service "/" "")]
     (match session-cookie-name
            "JSESSIONID" (CasConfig/SpringSessionCasConfig
                           username
@@ -67,8 +68,9 @@
 ;          (some? body) (request-with-json-body body)))
 
 (defn- cas-http [client method url opts-fn & [body]]
-  (log/info "CREATE REQUEST...")
-  (log/info "fix this opts-fn" opts-fn)
+  (log/info "CREATE REQUEST for: " url)
+  (if (not (nil? opts-fn)) (log/info "opts-fn: " opts-fn) (log/info "no opts-fn"))
+
   (let [cas-client (:client client)
         ;cas-params (:params client)
         ;TODO HANDLE opts-fn???
@@ -84,6 +86,12 @@
                             (.setHeader "Content-Type" "application/json")
                             (.setBody (json/generate-string body))
                             (.build))
+                 :post-multipart (-> (RequestBuilder.)
+                             (.setUrl url)
+                             (.setMethod "POST")
+                             (.setHeader "Content-Type" "multipart/form-data")
+                             (.addBodyPart (new FilePart))
+                             (.build))
                   :delete (-> (RequestBuilder.)
                               (.setUrl url)
                               (.setMethod "DELETE")
@@ -129,7 +137,7 @@
   (cas-http client :post url (constantly {}) body))
 
 (defn cas-authenticated-multipart-post [client url opts-fn]
-  (cas-http client :post url opts-fn nil))
+  (cas-http client :post-multipart url opts-fn nil))
 
 (defn cas-authenticated-get-as-stream [client url]
   (cas-http client :get url (constantly {:as :stream}) nil))

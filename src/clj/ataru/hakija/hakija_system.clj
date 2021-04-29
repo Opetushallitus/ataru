@@ -100,7 +100,7 @@
                         [:s3-client])
                        (filesystem-temp-file-store/new-store))
 
-    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
+    :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
                                                       "session" (-> config :public-config :hakija-caller-id))
 
     :valinta-tulos-service (component/using
