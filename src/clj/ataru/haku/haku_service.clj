@@ -117,19 +117,15 @@
                   nil)) tarjonta-haut))
 
 (defn- add-selection-to-hakukohteet
-  [hakukohteet-without-selection
-   startedHaku]
-    (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)]
-      (let [hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)]
-        (let [hakukohteet (->> hakukohteet-without-selection
+  [hakukohteet-without-selection]
+    (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
+          hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)]
+        (->> hakukohteet-without-selection
              (map (fn [{hakukohde-oid :oid :as hakukohde}]
                     (assoc
                       hakukohde
                       :selection-state-used (some hakukohde-oid hakukohde-oids-with-selection-state-used))))
-              (util/group-by-first :oid))]
-          (log/info (str "!!!!Time passed after fetching hakukohteet: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet)))
-          (hakukohteet)
-  ))))
+              (util/group-by-first :oid))))
 
 
 (defn get-haut
@@ -156,13 +152,14 @@
           (log/info (str "!!!!Time passed after fetching haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count haut)))
           (let [hakukohteet-without-selection (get-hakuKohteet-without-selection tarjonta-haut tarjonta-service)]
             (log/info (str "!!!!Time passed after fetching hakukohteet before selection-state-mapping: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet-without-selection)))
-            (let [hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection startedHaku)]
-                (let [hakukohderyhmat (util/group-by-first
-                                 :oid
-                                 (filter :active? (organization-service/get-hakukohde-groups organization-service)))]
-                  (log/info (str "!!!!Time passed after fetching hakukohderyhmat: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohderyhmat)))
-                  {:tarjonta-haut    tarjonta-haut
-                   :direct-form-haut direct-form-haut
-                   :haut             haut
-                   :hakukohteet      hakukohteet
-                   :hakukohderyhmat  hakukohderyhmat}))))))))
+            (let [hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)]
+              (log/info (str "!!!!Time passed after fetching hakukohteet: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet)))
+              (let [hakukohderyhmat (util/group-by-first
+                               :oid
+                               (filter :active? (organization-service/get-hakukohde-groups organization-service)))]
+                (log/info (str "!!!!Time passed after fetching hakukohderyhmat: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohderyhmat)))
+                {:tarjonta-haut    tarjonta-haut
+                 :direct-form-haut direct-form-haut
+                 :haut             haut
+                 :hakukohteet      hakukohteet
+                 :hakukohderyhmat  hakukohderyhmat}))))))))
