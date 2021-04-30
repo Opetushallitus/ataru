@@ -136,28 +136,28 @@
    session
    show-hakukierros-paattynyt?]
   (let [startedHaku (System/currentTimeMillis)]
-    (log/info (str "!!!!Started haku at " (quot startedHaku 1000) " s"))
+    (log/debug (str "!!!!Started haku at " (quot startedHaku 1000) " s"))
     (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
                                            organization-service
                                            tarjonta-service
                                            get-haut-cache
                                            session
                                            show-hakukierros-paattynyt?)]
-      (log/info (str "!!!!Time passed after fetching tarjonta-haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count tarjonta-haut)))
+      (log/debug (str "!!!!Time passed after fetching tarjonta-haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count tarjonta-haut)))
       (let [direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)]
-        (log/info (str "!!!!Time passed after fetching direct-form-haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count direct-form-haut)))
+        (log/debug (str "!!!!Time passed after fetching direct-form-haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count direct-form-haut)))
         (let [haut (->> (keys tarjonta-haut)
                      (keep #(tarjonta/get-haku tarjonta-service %))
                      (util/group-by-first :oid))]
-          (log/info (str "!!!!Time passed after fetching haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count haut)))
+          (log/debug (str "!!!!Time passed after fetching haut: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count haut)))
           (let [hakukohteet-without-selection (get-hakuKohteet-without-selection tarjonta-haut tarjonta-service)]
-            (log/info (str "!!!!Time passed after fetching hakukohteet before selection-state-mapping: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet-without-selection)))
+            (log/debug (str "!!!!Time passed after fetching hakukohteet before selection-state-mapping: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet-without-selection)))
             (let [hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)]
-              (log/info (str "!!!!Time passed after fetching hakukohteet: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet)))
+              (log/debug (str "!!!!Time passed after fetching hakukohteet: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohteet)))
               (let [hakukohderyhmat (util/group-by-first
                                :oid
                                (filter :active? (organization-service/get-hakukohde-groups organization-service)))]
-                (log/info (str "!!!!Time passed after fetching hakukohderyhmat: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohderyhmat)))
+                (log/debug (str "!!!!Time passed after fetching hakukohderyhmat: " (quot (- (System/currentTimeMillis) startedHaku) 1000) " s, amount " (count hakukohderyhmat)))
                 {:tarjonta-haut    tarjonta-haut
                  :direct-form-haut direct-form-haut
                  :haut             haut
