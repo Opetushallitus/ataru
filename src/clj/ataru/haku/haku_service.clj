@@ -134,20 +134,33 @@
                                            get-haut-cache
                                            session
                                            show-hakukierros-paattynyt?)
+        time-after-tarjonta-haut (quot (- (System/currentTimeMillis) start-time) 1000)
         direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
+        time-after-direct-form-haut (quot (- (System/currentTimeMillis) start-time) 1000)
         haut (->> (keys tarjonta-haut)
                   (keep #(tarjonta/get-haku tarjonta-service %))
                   (util/group-by-first :oid))
+        time-after-haut (quot (- (System/currentTimeMillis) start-time) 1000)
         hakukohteet-without-selection (->> (keys tarjonta-haut)
                                             (mapcat #(tarjonta/hakukohde-search
                                                        tarjonta-service
                                                        %
                                                        nil)))
+        time-after-hakukohteet-without (quot (- (System/currentTimeMillis) start-time) 1000)
         hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)
+        time-after-hakukohteet (quot (- (System/currentTimeMillis) start-time) 1000)
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
+        time-after-hakukohderyhmat (quot (- (System/currentTimeMillis) start-time) 1000)
         duration (quot (- (System/currentTimeMillis) start-time) 1000)]
+          (log/info "time-after-tarjonta-haut " time-after-tarjonta-haut)
+          (log/info "time-after-direct-form-haut " time-after-direct-form-haut)
+          (log/info "time-after-haut " time-after-haut)
+          (log/info "time-after-hakukohteet-without " time-after-hakukohteet-without)
+          (log/info "time-after-hakukohteet " time-after-hakukohteet)
+          (log/info "time-after-hakukohderyhmat " time-after-hakukohderyhmat)
+
           (when (>= duration time-limit-to-fetch-haut)
             (log/warn "Duration of fetching haut is over the time limit, duration: " duration " s, limit: " time-limit-to-fetch-haut " s."))
           {:tarjonta-haut    tarjonta-haut
