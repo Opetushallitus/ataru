@@ -115,8 +115,8 @@
              (map (fn [{hakukohde-oid :oid :as hakukohde}]
                     (assoc
                       hakukohde
-                      :selection-state-used (some hakukohde-oid hakukohde-oids-with-selection-state-used))))
-              (util/group-by-first :oid))))
+                      :selection-state-used (some?(some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
+             (util/group-by-first :oid))))
 
 (def time-limit-to-fetch-haut 7)
 
@@ -142,7 +142,7 @@
                                             (mapcat #(tarjonta/hakukohde-search
                                                        tarjonta-service
                                                        %
-                                                       nil)) tarjonta-haut)
+                                                       nil)))
         hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)
         hakukohderyhmat (util/group-by-first
                           :oid
