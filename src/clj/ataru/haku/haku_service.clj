@@ -110,7 +110,9 @@
 (defn- add-selection-to-hakukohteet
   [hakukohteet-without-selection]
     (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
+          start-time (System/currentTimeMillis)
           hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)]
+        (log/info "Time taken to fetch oids " (quot (- (System/currentTimeMillis) start-time) 1000) " s, total oids: " (count hakukohdeoids) " found: " (count hakukohde-oids-with-selection-state-used))
         (->> hakukohteet-without-selection
              (map (fn [{hakukohde-oid :oid :as hakukohde}]
                     (assoc
