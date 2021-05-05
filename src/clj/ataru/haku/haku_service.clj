@@ -111,14 +111,19 @@
   [hakukohteet-without-selection]
     (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
           start-time (System/currentTimeMillis)
-          hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)]
-        (log/info "Time taken to fetch oids " (quot (- (System/currentTimeMillis) start-time) 1000) " s, total oids: " (count hakukohdeoids) " found: " (count hakukohde-oids-with-selection-state-used))
-        (->> hakukohteet-without-selection
+          hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)
+          duration-db (quot (- (System/currentTimeMillis) start-time) 1000)
+          hakukohteet (->> hakukohteet-without-selection
              (map (fn [{hakukohde-oid :oid :as hakukohde}]
                     (assoc
                       hakukohde
                       :selection-state-used (some?(some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
-             (util/group-by-first :oid))))
+             (util/group-by-first :oid))
+          duration-map (quot (- (System/currentTimeMillis) duration-db) 1000)]
+            (log/info "Time taken to fetch oids " duration-db " s, total oids: " (count hakukohdeoids) " found: " (count hakukohde-oids-with-selection-state-used))
+            (log/info "Time taken to map selection state used " duration-map " s")
+              hakukohteet)
+          )
 
 (def time-limit-to-fetch-haut 7)
 

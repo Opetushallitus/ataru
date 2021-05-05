@@ -1,5 +1,6 @@
 (ns ataru.util.http-util
   (:require [clj-http.client :as http-client]
+            [clojure.string]
             [taoensso.timbre :as log]))
 
 (def csrf-value "ataru")
@@ -25,6 +26,8 @@
         status      (:status response 500)]
     (when (or (<= 400 status) (< 1000 time))
       (log/warn "HTTP" method-name url status (str time "ms")))
+    (when (or (> 400 status) (< 1000 time))
+      (log/info "HTTP" method-name url status (str time "ms")))
     response))
 
 (defn do-get
