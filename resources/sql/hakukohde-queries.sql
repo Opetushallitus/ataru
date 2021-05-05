@@ -5,7 +5,7 @@ select exists(select true
                 and ahr.requirement = 'selection-state');
 
 -- name: yesql-selection-state-used-in-hakukohdes
-select ahr.hakukohde
+select distinct ahr.hakukohde
             from application_hakukohde_reviews ahr
             where ahr.hakukohde in (:hakukohde_oids)
               and ahr.requirement = 'selection-state';
