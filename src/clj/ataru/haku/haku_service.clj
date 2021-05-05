@@ -119,7 +119,7 @@
                       hakukohde
                       :selection-state-used (some?(some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
              (util/group-by-first :oid))
-          duration-map (- (quot (System/currentTimeMillis) 1000) duration-db)]
+          duration-map (- (quot (System/currentTimeMillis) 1000) (+ start-time duration-db))]
             (log/info "Time taken to fetch oids " duration-db " s, total oids: " (count hakukohdeoids) " found: " (count hakukohde-oids-with-selection-state-used))
             (log/info "Time taken to map selection state used " duration-map " s")
               hakukohteet)
