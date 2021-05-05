@@ -85,7 +85,7 @@
                  [cheshire/cheshire "5.10.0"]
                  [selmer "1.12.23"]
                  [metosin/ring-http-response "0.9.1"]
-                 [fi.vm.sade.java-utils/java-cas "0.6.2-SNAPSHOT" :exclusions [org.slf4j/slf4j-simple]]
+                 [fi.vm.sade.java-utils/java-cas "0.6.3-SNAPSHOT" :exclusions [org.slf4j/slf4j-simple]]
                  [org.asynchttpclient/async-http-client "2.12.3"]
                  [ring/ring-session-timeout "0.2.0"]
                  [org.apache.poi/poi-ooxml "4.1.2"]
