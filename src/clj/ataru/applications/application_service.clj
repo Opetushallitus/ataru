@@ -1,5 +1,6 @@
 (ns ataru.applications.application-service
   (:require
+    [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.application-access-control :as aac]
     [ataru.applications.application-store :as application-store]
     [ataru.applications.excel-export :as excel]
@@ -725,5 +726,12 @@
     (catch Exception e
       (log/error e "Failed to unmask" string)
       nil)))
+
+(defn start-automatic-eligibility-if-ylioppilas-job-for-haku
+  [job-runner haku-oid]
+  (for [id (application-store/get-application-ids-for-haku haku-oid)]
+    (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+      job-runner
+      id)))
 
 (defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil))
