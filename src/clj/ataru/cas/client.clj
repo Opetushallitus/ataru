@@ -34,7 +34,7 @@
                             service-url
                             csrf
                             caller-id)
-           :else (new CasConfig
+           :else (CasConfig/CasConfig
                    username
                    password
                    cas-url
