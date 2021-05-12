@@ -26,8 +26,6 @@
         status      (:status response 500)]
     (when (or (<= 400 status) (< 1000 time))
       (log/warn "HTTP" method-name url status (str time "ms")))
-    (when (or (> 400 status) (< 1000 time))
-      (log/info "HTTP" method-name url status (str time "ms")))
     response))
 
 (defn do-get
