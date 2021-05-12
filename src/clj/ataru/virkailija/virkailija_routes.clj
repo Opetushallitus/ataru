@@ -334,7 +334,7 @@
               (response/ok {}))
           (response/unauthorized {})))
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job-for-haku/:haku-oid" {session :session}
-        :path-params [haku-oid :- s/Int]
+        :path-params [haku-oid :- s/Str]
         (if (get-in session [:identity :superuser])
           (do (application-service/start-automatic-eligibility-if-ylioppilas-job-for-haku
                 job-runner
