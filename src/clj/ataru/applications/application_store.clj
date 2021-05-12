@@ -1352,4 +1352,4 @@
 
 (defn get-application-ids-for-haku
   [haku-oid]
-  (map :id (exec-db :db queries/yesql-get-application-ids-for-haku {:haku-oid haku-oid})))
+  (map :id (exec-db :db queries/yesql-get-application-ids-for-haku {:haku haku-oid})))

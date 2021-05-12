@@ -1009,6 +1009,6 @@ ORDER BY a.id ASC;
 --name: yesql-get-application-ids-for-haku
 SELECT la.id
 FROM latest_applications la
-WHERE la.haku = :haku-oid
+WHERE la.haku = :haku
 JOIN application_reviews AS ar ON ar.application_key = la.key
     AND ar.state <> 'inactivated';
