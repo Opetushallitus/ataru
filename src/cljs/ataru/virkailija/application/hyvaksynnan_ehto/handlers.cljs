@@ -260,7 +260,7 @@
   :hyvaksynnan-ehto/set-ehto-hakukohteessa
   (fn [{db :db} [_ application-key hakukohde-oid response]]
     (case (:status response)
-      (200 201 204 404)
+      (200 201 204 400 404)
       {:db
        (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
                   update-ehto-hakukohteessa response)
