@@ -1,5 +1,6 @@
 (ns ataru.util.http-util
   (:require [clj-http.client :as http-client]
+            [clojure.string]
             [taoensso.timbre :as log]))
 
 (def csrf-value "ataru")

@@ -1,19 +1,16 @@
 (ns ataru.haku.haku-service
   (:require
-   [ataru.applications.application-access-control :as aac]
-   [ataru.cache.cache-service :as cache]
-   [ataru.util :as util]
-   [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
-   [ataru.organization-service.organization-service :as organization-service]
-   [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.hakukohde.hakukohde-store :as hakukohde-store]
-   [ataru.applications.application-store :as application-store]
-   [ataru.forms.form-store :as form-store]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-   [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-   [clj-time.core :as t]
-   [clj-time.coerce :as c]
-   [taoensso.timbre :as log]))
+    [ataru.applications.application-access-control :as aac]
+    [ataru.cache.cache-service :as cache]
+    [ataru.util :as util]
+    [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]
+    [ataru.organization-service.organization-service :as organization-service]
+    [ataru.organization-service.session-organizations :as session-orgs]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+    [ataru.hakukohde.hakukohde-store :as hakukohde-store]
+    [clj-time.core :as t]
+    [clj-time.coerce :as c]
+    [taoensso.timbre :as log]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -110,6 +107,21 @@
          (map remove-organization-oid)
          (util/group-by-first :key))))
 
+(defn- add-selection-to-hakukohteet
+  [hakukohteet-without-selection]
+    (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
+          hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)
+          hakukohteet (->> hakukohteet-without-selection
+             (map (fn [{hakukohde-oid :oid :as hakukohde}]
+                    (assoc
+                      hakukohde
+                      :selection-state-used (some? (some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
+             (util/group-by-first :oid))]
+              hakukohteet)
+          )
+
+(def time-limit-to-fetch-haut 12)
+
 (defn get-haut
   [ohjausparametrit-service
    organization-service
@@ -117,28 +129,32 @@
    get-haut-cache
    session
    show-hakukierros-paattynyt?]
-  (let [tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
-                                         organization-service
-                                         tarjonta-service
-                                         get-haut-cache
-                                         session
-                                         show-hakukierros-paattynyt?)]
-    {:tarjonta-haut    tarjonta-haut
-     :direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
-     :haut             (->> (keys tarjonta-haut)
-                            (keep #(tarjonta/get-haku tarjonta-service %))
-                            (util/group-by-first :oid))
-     :hakukohteet      (->> (keys tarjonta-haut)
-                            (mapcat #(tarjonta/hakukohde-search
-                                       tarjonta-service
-                                       %
-                                       nil))
-                            (map (fn [{hakukohde-oid :oid :as hakukohde}]
-                                   (assoc
-                                     hakukohde
-                                     :selection-state-used
-                                     (hakukohde-store/selection-state-used-in-hakukohde? hakukohde-oid))))
-                            (util/group-by-first :oid))
-     :hakukohderyhmat  (util/group-by-first
-                         :oid
-                         (filter :active? (organization-service/get-hakukohde-groups organization-service)))}))
+  (let [start-time (System/currentTimeMillis)
+        tarjonta-haut (get-tarjonta-haut ohjausparametrit-service
+                                           organization-service
+                                           tarjonta-service
+                                           get-haut-cache
+                                           session
+                                           show-hakukierros-paattynyt?)
+        direct-form-haut (get-direct-form-haut organization-service get-haut-cache session)
+        haut (->> (keys tarjonta-haut)
+                  (keep #(tarjonta/get-haku tarjonta-service %))
+                  (util/group-by-first :oid))
+        hakukohteet-without-selection (->> (keys tarjonta-haut)
+                                            (mapcat #(tarjonta/hakukohde-search
+                                                       tarjonta-service
+                                                       %
+                                                       nil)))
+        hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)
+        hakukohderyhmat (util/group-by-first
+                          :oid
+                          (filter :active? (organization-service/get-hakukohde-groups organization-service)))
+        duration (quot (- (System/currentTimeMillis) start-time) 1000)]
+
+          (when (>= duration time-limit-to-fetch-haut)
+            (log/warn "Duration of fetching haut is over the time limit, duration: " duration " s, limit: " time-limit-to-fetch-haut " s."))
+          {:tarjonta-haut    tarjonta-haut
+           :direct-form-haut direct-form-haut
+           :haut             haut
+           :hakukohteet      hakukohteet
+           :hakukohderyhmat  hakukohderyhmat}))
