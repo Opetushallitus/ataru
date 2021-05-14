@@ -1349,3 +1349,7 @@
                            :old   (util/populate-answer-koodisto-values old-value field get-koodisto-options)
                            :new   (util/populate-answer-koodisto-values new-value field get-koodisto-options)}}))))
          all-versions-paired)))
+
+(defn get-application-ids-for-haku
+  [haku-oid]
+  (map :id (exec-db :db queries/yesql-get-application-ids-for-haku {:haku haku-oid})))

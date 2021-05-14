@@ -1005,3 +1005,10 @@ SELECT (SELECT content
 FROM applications AS a
 WHERE a.key = :application_key
 ORDER BY a.id ASC;
+
+--name: yesql-get-application-ids-for-haku
+SELECT la.id
+FROM latest_applications la
+JOIN application_reviews AS ar ON ar.application_key = la.key
+WHERE la.haku = :haku
+    AND ar.state <> 'inactivated';
