@@ -732,9 +732,10 @@
   (log/info (str "Running automatic eligibility job for haku " haku-oid))
   (let [ids (application-store/get-application-ids-for-haku haku-oid)]
     (log/info (str "Found " (count ids) " active applications for haku " haku-oid))
-    (for [id ids]
-      (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
-        job-runner
-        id))))
+    (doall
+      (for [id ids]
+        (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+          job-runner
+          id)))))
 
 (defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil))
