@@ -173,10 +173,7 @@
                                                     " application__form-text-input--normal"))
                              :aria-invalid (not (:valid answer))
                              :autoComplete autocomplete-off
-                             :data-test-id "verify-email-input"}]])])
-               )
-           )
-      )
+                             :data-test-id "verify-email-input"}]])]))))
 
 (defn- options-satisfying-condition [field-descriptor answer-value options]
   (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
