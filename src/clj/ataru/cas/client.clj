@@ -44,32 +44,16 @@
                    session-cookie-name
                    security-uri-suffix))))
 
-(defn new-cas-client [service security-uri-suffix session-cookie-name caller-id]
-  (new CasClient
-       (create-cas-config service security-uri-suffix session-cookie-name caller-id)))
-
 (defn new-client [service security-uri-suffix session-cookie-name caller-id]
   {:pre [(some? (:cas config))]}
-  (let [cas-client (new-cas-client service security-uri-suffix session-cookie-name caller-id) ]
+  (let [cas-client (new CasClient
+                        (create-cas-config service security-uri-suffix session-cookie-name caller-id))]
     (map->CasClientState {:client              cas-client
-                          ;:cas-config              cas-params
                           :session-cookie-name session-cookie-name
                           :session-id          (atom nil)})))
 
-;(defn- request-with-json-body [request body]
-;  (-> request
-;      (assoc-in [:headers "Content-Type"] "application/json")
-;      (assoc :body (json/generate-string body))))
-
-;(defn- create-params [session-cookie-name cas-session-id body]
-;  (cond-> {:cookies           {session-cookie-name {:value @cas-session-id :path "/"}}
-;           :redirect-strategy :none
-;           :throw-exceptions  false}
-;          (some? body) (request-with-json-body body)))
-
 (defn- cas-http [client method url opts-fn & [body]]
   (let [cas-client (:client client)
-        ;cas-params (:params client)
         request (match method
                        :get (-> (RequestBuilder.)
                                 (.setUrl url)
@@ -96,31 +80,15 @@
                                    (.build)))
         ]
     (log/info "REQUEST" request)
-    ;(when (nil? @cas-session-id)
-      ;(reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
     (let [resp (.executeBlocking cas-client request)
           status (.getStatusCode resp)
           body (match method
                       :get-as-stream (.getResponseBodyAsStream resp)
                       :else
-                 (.getResponseBody resp))
-          response {:status status :body body}
-          ;(http-util/do-request (merge {:url url :method method}
-          ;                                  (opts-fn)
-          ;                                  (create-params session-cookie-name cas-session-id body)))
-          ]
-      ;(if (or (= 401 (:status resp))
-      ;        (= 302 (:status resp)))
-        ;(do
-        ;  (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
-        ;  (http-util/do-request (merge {:url url :method method}
-        ;                               (opts-fn)
-        ;                               (create-params session-cookie-name cas-session-id body))))
-        ;resp)
+                      (.getResponseBody resp))
+          response {:status status :body body}]
       (log/info "RESPONSE STATUS: " status)
-      response)
-      ;)
-    ))
+      response)))
 
 (defn cas-authenticated-get [client url]
   (log/info "cas-authenticated-get")
