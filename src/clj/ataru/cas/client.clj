@@ -6,7 +6,7 @@
             [clojure.core.match :refer [match]]
             [clojure.core :as c]
             [clojure.string :as s])
-  (:import [fi.vm.sade.javautils.nio.cas CasClient CasConfig]
+  (:import [fi.vm.sade.javautils.nio.cas CasClient CasConfig CasLogout]
            [org.asynchttpclient RequestBuilder]
            (org.asynchttpclient.request.body.multipart InputStreamPart)))
 
@@ -43,6 +43,9 @@
                    caller-id
                    session-cookie-name
                    security-uri-suffix))))
+
+(defn cas-logout []
+  (new CasLogout))
 
 (defn new-cas-client [service security-uri-suffix session-cookie-name caller-id]
   (new CasClient

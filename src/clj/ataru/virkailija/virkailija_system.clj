@@ -163,6 +163,8 @@
 
     :login-cas-client (cas/new-cas-client "/cas/login" "/auth/cas" "ring-session" (-> config :public-config :virkailija-caller-id))
 
+    :cas-logout (cas/cas-logout)
+
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
@@ -195,7 +197,8 @@
                             :kayttooikeus-service
                             :audit-logger
                             :application-service
-                            :session-store]
+                            :session-store
+                            :cas-logout]
                            (map first caches))))
 
     :server-setup {:port      http-port
