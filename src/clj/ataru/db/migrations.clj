@@ -431,7 +431,7 @@
                                (kayttooikeus-service/->FakeKayttooikeusService)
                                (kayttooikeus-service/->HttpKayttooikeusService
                                 (cas/new-client "/kayttooikeus-service" "j_spring_cas_security_check"
-                                                "JSESSIONID" (-> config :public-config :virkailija-caller-id))))
+                                                "JSESSIONID" (-> config :public-config :virkailija-caller-id) nil)))
         person-service       (person-service/new-person-service)
         get-virkailija       (memoize (fn [username]
                                         (->> username

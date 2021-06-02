@@ -12,49 +12,66 @@
 
 (defrecord CasClientState [client])
 
-(defn create-cas-config [service security-uri-suffix session-cookie-name caller-id]
+(defn create-cas-config [service security-uri-suffix session-cookie-name caller-id request-timeout]
   (let [
         username (get-in config [:cas :username])
         password (get-in config [:cas :password])
         cas-url (resolve-url :cas-client)
         service-url (c/str (resolve-url :url-virkailija) service)
         csrf (s/replace service "/" "")]
-    (match session-cookie-name
-           "JSESSIONID" (CasConfig/SpringSessionCasConfig
-                          username
-                          password
-                          cas-url
-                          service-url
-                          csrf
-                          caller-id)
-           "ring-session" (CasConfig/RingSessionCasConfig
-                            username
-                            password
-                            cas-url
-                            service-url
-                            csrf
-                            caller-id)
-           :else (CasConfig/CasConfig
-                   username
-                   password
-                   cas-url
-                   service-url
-                   csrf
-                   caller-id
-                   session-cookie-name
-                   security-uri-suffix))))
+    (if (nil? request-timeout)
+      (do
+        (log/info "Cas client created for service: " service-url)
+        (match session-cookie-name
+               "JSESSIONID" (CasConfig/SpringSessionCasConfig
+                              username
+                              password
+                              cas-url
+                              service-url
+                              csrf
+                              caller-id)
+               "ring-session" (CasConfig/RingSessionCasConfig
+                                username
+                                password
+                                cas-url
+                                service-url
+                                csrf
+                                caller-id)
+               :else (CasConfig/CasConfig
+                       username
+                       password
+                       cas-url
+                       service-url
+                       csrf
+                       caller-id
+                       session-cookie-name
+                       security-uri-suffix)))
+      (do
+        (log/info "Cas client created for service: " service-url "timeout: " request-timeout)
+        (new CasConfig
+           username
+           password
+           cas-url
+           service-url
+           csrf
+           caller-id
+           session-cookie-name
+           security-uri-suffix
+           nil
+           request-timeout))
+      )))
 
 (defn cas-logout []
   (new CasLogout))
 
-(defn new-cas-client [service security-uri-suffix session-cookie-name caller-id]
+(defn new-cas-client [service security-uri-suffix session-cookie-name caller-id request-timeout]
   (new CasClient
-       (create-cas-config service security-uri-suffix session-cookie-name caller-id)))
+       (create-cas-config service security-uri-suffix session-cookie-name caller-id request-timeout)))
 
-(defn new-client [service security-uri-suffix session-cookie-name caller-id]
+(defn new-client [service security-uri-suffix session-cookie-name caller-id request-timeout]
   {:pre [(some? (:cas config))]}
-  (let [cas-client (new-cas-client service security-uri-suffix session-cookie-name caller-id) ]
-    (map->CasClientState {:client              cas-client})))
+  (let [cas-client (new-cas-client service security-uri-suffix session-cookie-name caller-id request-timeout) ]
+    (map->CasClientState {:client cas-client})))
 
 (defn- cas-http [client method url opts-fn & [body]]
   (let [cas-client (:client client)
@@ -74,6 +91,8 @@
                                              file-name (get-in (opts-fn) [:multipart 0 :name])]
                                          (-> (RequestBuilder.)
                                              (.setUrl url)
+                                             (.setRequestTimeout 300000)
+                                             (.setReadTimeout 300000)
                                              (.setMethod "POST")
                                              (.setHeader "Content-Type" "multipart/form-data")
                                              (.addBodyPart (new InputStreamPart name content file-name))
@@ -89,7 +108,7 @@
           body (match method
                       :get-as-stream (.getResponseBodyAsStream resp)
                       :else
-                 (.getResponseBody resp))
+                      (.getResponseBody resp))
           response {:status status :body body}]
 
       (log/info "RESPONSE STATUS: " status)

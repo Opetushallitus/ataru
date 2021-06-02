@@ -56,10 +56,12 @@
                                [:ohjausparametrit-cache])
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
-                                                      "JSESSIONID" (-> config :public-config :hakija-caller-id))
+                                                      "JSESSIONID" (-> config :public-config :hakija-caller-id) nil)
 
-    :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
-                                        "ring-session" (-> config :public-config :hakija-caller-id))
+    :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
+                                        "ring-session" (-> config :public-config :hakija-caller-id) nil)
+    ;(cas/new-client "/liiteri" "/auth/cas"
+    ;                                        "ring-session" (-> config :public-config :hakija-caller-id) 300000)
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
@@ -84,7 +86,7 @@
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
     :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
-                                                  "JSESSIONID" (-> config :public-config :hakija-caller-id))
+                                                  "JSESSIONID" (-> config :public-config :hakija-caller-id) nil)
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
@@ -101,7 +103,7 @@
                        (filesystem-temp-file-store/new-store))
 
     :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
-                                                      "session" (-> config :public-config :hakija-caller-id))
+                                                      "session" (-> config :public-config :hakija-caller-id) nil)
 
     :valinta-tulos-service (component/using
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
