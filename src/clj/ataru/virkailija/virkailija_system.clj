@@ -82,7 +82,7 @@
       {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
 
     :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "/auth/login"
-                                                      "session" (-> config :public-config :virkailija-caller-id) nil)
+                                                      "session" (-> config :public-config :virkailija-caller-id))
 
     :valinta-tulos-service (component/using
                             (valinta-tulos-service/map->RemoteValintaTulosService {})
@@ -91,7 +91,7 @@
     :valintalaskentakoostepalvelu-cas-client (cas/new-client "/valintalaskentakoostepalvelu"
                                                              "j_spring_cas_security_check"
                                                              "JSESSIONID"
-                                                             (-> config :public-config :virkailija-caller-id) nil)
+                                                             (-> config :public-config :virkailija-caller-id))
 
     :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader (component/using
                                                                            (koostepalvelu-client/map->HakukohdeValintalaskentaCacheLoader {})
@@ -102,7 +102,7 @@
                                             [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache])
 
     :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check"
-                                                 "JSESSIONID" (-> config :public-config :virkailija-caller-id) nil)
+                                                 "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :valintatapajono-cache-loader (component/using
                                    (valintaperusteet-client/map->ValintatapajonoCacheLoader {})
@@ -134,7 +134,7 @@
                                [:ohjausparametrit-cache])
 
     :kayttooikeus-cas-client (cas/new-client "/kayttooikeus-service" "j_spring_cas_security_check"
-                                             "JSESSIONID" (-> config :public-config :virkailija-caller-id) nil)
+                                             "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :kayttooikeus-service (if (-> config :dev :fake-dependencies)
                             (kayttooikeus-service/->FakeKayttooikeusService)
@@ -143,7 +143,7 @@
                              [:kayttooikeus-cas-client]))
 
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
-                                                      "JSESSIONID" (-> config :public-config :virkailija-caller-id) nil)
+                                                      "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :henkilo-cache-loader (component/using
                            (person-client/map->PersonCacheLoader {})
@@ -161,12 +161,12 @@
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
 
-    :login-cas-client (cas/new-cas-client "/cas/login" "/auth/cas" "ring-session" (-> config :public-config :virkailija-caller-id) nil)
+    :login-cas-client (cas/new-cas-client "/cas/login" "/auth/cas" "ring-session" (-> config :public-config :virkailija-caller-id))
 
     :cas-logout (cas/cas-logout)
 
     :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
-                                        "ring-session" (-> config :public-config :virkailija-caller-id)  300000)
+                                        "ring-session" (-> config :public-config :virkailija-caller-id))
 
     :application-service (component/using
                            (application-service/new-application-service)
@@ -209,7 +209,7 @@
              [:server-setup :handler])
 
     :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
-                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id) nil)
+                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
