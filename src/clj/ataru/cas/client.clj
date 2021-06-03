@@ -2,7 +2,6 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
             [cheshire.core :as json]
-            [taoensso.timbre :as log]
             [clojure.core.match :refer [match]]
             [clojure.core :as c]
             [clojure.string :as s])
@@ -74,8 +73,8 @@
                                              file-name (get-in (opts-fn) [:multipart 0 :name])]
                                          (-> (RequestBuilder.)
                                              (.setUrl url)
-                                             (.setRequestTimeout 300000)
-                                             (.setReadTimeout 300000)
+                                             (.setRequestTimeout 900000)
+                                             (.setReadTimeout 900000)
                                              (.setMethod "POST")
                                              (.setHeader "Content-Type" "multipart/form-data")
                                              (.addBodyPart (new InputStreamPart name content file-name))
@@ -85,7 +84,6 @@
                                    (.setMethod "DELETE")
                                    (.build)))
         ]
-    (log/info "REQUEST" request)
     (let [resp (.executeBlocking cas-client request)
           status (.getStatusCode resp)
           body (match method
@@ -93,26 +91,19 @@
                       :else
                       (.getResponseBody resp))
           response {:status status :body body}]
-
-      (log/info "RESPONSE STATUS: " status)
       response)))
 
 (defn cas-authenticated-get [client url]
-  (log/info "cas-authenticated-get")
   (cas-http client :get url (constantly {})))
 
 (defn cas-authenticated-delete [client url]
-  (log/info "cas-authenticated-delete")
   (cas-http client :delete url (constantly {})))
 
 (defn cas-authenticated-post [client url body]
-  (log/info "cas-authenticated-post")
   (cas-http client :post url (constantly {}) body))
 
 (defn cas-authenticated-multipart-post [client url opts-fn]
-  (log/info "cas-authenticated-multipart-post")
   (cas-http client :post-multipart url opts-fn nil))
 
 (defn cas-authenticated-get-as-stream [client url]
-  (log/info "cas-authenticated-get-as-stream")
   (cas-http client :get-as-stream url (constantly {:as :stream}) nil))

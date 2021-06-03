@@ -60,8 +60,6 @@
 
     :liiteri-cas-client (cas/new-client "/liiteri" "/auth/cas"
                                         "ring-session" (-> config :public-config :hakija-caller-id))
-    ;(cas/new-client "/liiteri" "/auth/cas"
-    ;                                        "ring-session" (-> config :public-config :hakija-caller-id) 300000)
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
