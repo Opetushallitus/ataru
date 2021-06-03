@@ -12,55 +12,6 @@
 
 (defrecord CasClientState [client])
 
-;(comment defn create-cas-config [service security-uri-suffix session-cookie-name caller-id request-timeout]
-;  (let [
-;        username (get-in config [:cas :username])
-;        password (get-in config [:cas :password])
-;        cas-url (resolve-url :cas-client)
-;        service-url (c/str (resolve-url :url-virkailija) service)
-;        csrf (s/replace service "/" "")]
-;    (if (nil? request-timeout)
-;      (do
-;        (log/info "Cas client created for service: " service-url)
-;        (match session-cookie-name
-;               "JSESSIONID" (CasConfig/SpringSessionCasConfig
-;                              username
-;                              password
-;                              cas-url
-;                              service-url
-;                              csrf
-;                              caller-id)
-;               "ring-session" (CasConfig/RingSessionCasConfig
-;                                username
-;                                password
-;                                cas-url
-;                                service-url
-;                                csrf
-;                                caller-id)
-;               :else (CasConfig/CasConfig
-;                       username
-;                       password
-;                       cas-url
-;                       service-url
-;                       csrf
-;                       caller-id
-;                       session-cookie-name
-;                       security-uri-suffix)))
-;      (do
-;        (log/info "Cas client created for service: " service-url "timeout: " request-timeout)
-;        (new CasConfig
-;           username
-;           password
-;           cas-url
-;           service-url
-;           csrf
-;           caller-id
-;           session-cookie-name
-;           security-uri-suffix
-;           nil
-;           request-timeout))
-;      )))
-
 (defn create-cas-config [service security-uri-suffix session-cookie-name caller-id]
   (let [
         username (get-in config [:cas :username])
