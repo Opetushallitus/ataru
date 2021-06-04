@@ -80,7 +80,8 @@
                                                                            (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
                                                                            (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
-                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
+                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
+                        (s/optional-key :per-hakukohde)                  s/Bool})
 
 (s/defschema BasicElement
   (s/conditional

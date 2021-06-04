@@ -11,6 +11,7 @@
     [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
     [ataru.virkailija.editor.components.text-header-component :as text-header-component]
     [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
+    [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]
     [cljs.core.match :refer-macros [match]]
     [clojure.string :as string]
     [reagent.core :as r]
@@ -394,6 +395,8 @@
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
+           (when (seq (:belongs-to-hakukohderyhma initial-content))
+             [checkbox-component/checkbox path initial-content :per-hakukohde])
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
