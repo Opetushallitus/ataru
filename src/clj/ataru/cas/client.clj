@@ -64,6 +64,8 @@
                                 (.build))
                        :post (-> (RequestBuilder.)
                                  (.setUrl url)
+                                 (.setRequestTimeout 900000)
+                                 (.setReadTimeout 900000)
                                  (.setMethod "POST")
                                  (.setHeader "Content-Type" "application/json")
                                  (.setBody (json/generate-string body))
