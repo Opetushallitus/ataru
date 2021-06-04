@@ -5,10 +5,20 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
-            [re-frame.core :as re-frame]
+            [re-frame.core :as re-frame :refer [subscribe]]
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
+
+(defn dropdown-render-options
+  [field-descriptor]
+    (fn [body]
+      (if (:per-hakukohde field-descriptor)
+        (for [hakukohde @(subscribe [:application/hakukohteet-in-hakukohderyhmat (:belongs-to-hakukohderyhma field-descriptor)])]
+          (do (println hakukohde field-descriptor)
+          body))
+        body)
+  ))
 
 (defn dropdown [field-descriptor idx render-field]
   (let [languages     (re-frame/subscribe [:application/default-languages])
@@ -32,14 +42,15 @@
                                          :language])
                         (-> id
                             name
-                            (str "-input")))]
+                            (str "-input")))
+        wrapper (dropdown-render-options field-descriptor)]
     [:div.application__form-field
      [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text-component/info-text field-descriptor]]
-     [:div.application__form-select-wrapper
+     (wrapper [:div.application__form-select-wrapper
       (if disabled?
         [:span.application__form-select-arrow.application__form-select-arrow__disabled
          [:i.zmdi.zmdi-chevron-down]]
@@ -69,7 +80,7 @@
              (cond->> options
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
-                      (sort-by #(util/non-blank-option-label % @languages))))))]]
+                      (sort-by #(util/non-blank-option-label % @languages))))))]])
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]

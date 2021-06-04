@@ -978,10 +978,11 @@
 
 (defn render-field [field-descriptor idx]
   (when field-descriptor
-    (let [render-fn (case (:version field-descriptor)
-                      "generic" generic-component/render-generic-component
-                      "oppiaineen-arvosanat" arvosanat/render-arvosanat-component
-                      render-component)
+    (let [version (:version field-descriptor)
+          render-fn (cond
+                      (= "generic" version) generic-component/render-generic-component
+                      (= "oppiaineen-arvosanat" version) arvosanat/render-arvosanat-component
+                      :else render-component)
           visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
       (when visible?
         [render-fn
