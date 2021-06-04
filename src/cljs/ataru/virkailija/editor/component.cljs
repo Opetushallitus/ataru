@@ -23,7 +23,8 @@
    [ataru.virkailija.editor.components.repeater-checkbox-component :as repeater-checkbox-component]
    [ataru.virkailija.editor.components.text-component :as text-component]
    [ataru.virkailija.editor.components.text-header-component :as text-header-component]
-   [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]))
+   [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
+   [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -250,6 +251,8 @@
                :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
+              (when (seq (:belongs-to-hakukohderyhma initial-content))
+                [checkbox-component/checkbox path initial-content :per-hakukohde])
               (when @support-selection-limit?
                 [validator-checkbox-component/validator-checkbox path initial-content :selection-limit nil
                  #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])])
@@ -559,6 +562,8 @@
            :header? true)]
          [:div.editor-form__checkbox-wrapper
           [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
+          (when (seq (:belongs-to-hakukohderyhma content))
+            [checkbox-component/checkbox path content :per-hakukohde])
           [text-component/text-component-type-selector (:id content) path {:adjacent-text-field? true
                                                                            :allow-decimals?      true}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
@@ -697,6 +702,8 @@
              :on-change   update-deadline}]]
           (when-not @mail-attachment?
             [:div.editor-form__checkbox-wrapper
-             [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]])
+             [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]
+             (when (seq (:belongs-to-hakukohderyhma content))
+              [checkbox-component/checkbox path content :per-hakukohde])])
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
          [attachment-textarea path]]]])))
