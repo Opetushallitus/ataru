@@ -5,7 +5,6 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
-            [ataru.hakija.components.multi-answer-component :refer [multi-answer]]
             [re-frame.core :as re-frame :refer [subscribe]]
             [schema.core :as s]
             [schema-tools.core :as st]
@@ -33,15 +32,14 @@
                                          :language])
                         (-> id
                             name
-                            (str "-input")))
-        wrapper (multi-answer field-descriptor)]
+                            (str "-input")))]
     [:div.application__form-field
      [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor])
      [:div.application__form-text-input-info-text
       [info-text-component/info-text field-descriptor]]
-     (wrapper [:div.application__form-select-wrapper
+     [:div.application__form-select-wrapper
       (if disabled?
         [:span.application__form-select-arrow.application__form-select-arrow__disabled
          [:i.zmdi.zmdi-chevron-down]]
@@ -71,7 +69,7 @@
              (cond->> options
                       (and (some? (:koodisto-source field-descriptor))
                            (not (:koodisto-ordered-by-user field-descriptor)))
-                      (sort-by #(util/non-blank-option-label % @languages))))))]])
+                      (sort-by #(util/non-blank-option-label % @languages))))))]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]
