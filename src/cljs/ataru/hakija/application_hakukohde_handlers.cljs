@@ -100,13 +100,13 @@
                                                           (dispatch [:application/set-hakukohde-valid
                                                                      valid?]))}}))
 
-(defn add-children
+(defn- add-children
   [hakukohde-oid questions question]
   (if (:per-hakukohde question)
     (conj questions question (-> question
                                  (dissoc :per-hakukohde)
                                  (assoc :id (str (:id question) '_' hakukohde-oid)
-                                        :hakukohde-oid hakukohde-oid)))
+                                        :duplikoitu-kysymys-hakukohde-oid hakukohde-oid)))
     (conj questions question)))
 
 (reg-event-fx
@@ -141,6 +141,20 @@
                                    (assoc-in [:application :show-hakukohde-search] false))
        :dispatch-n [[:application/validate-hakukohteet] [:application/create-questions-per-hakukohde hakukohde-oid]]})))
 
+(defn- remove-children
+  [hakukohde-oid questions question]
+  (if (= (:duplikoitu-kysymys-hakukohde-oid question) hakukohde-oid)
+    questions
+    (conj questions question)))
+
+(reg-event-fx
+  :application/remove-questions-per-hakukohde
+  (fn [{db :db} [_ hakukohde-oid]]
+    (let [questions (get-in db [:form :content])
+          update-questions (reduce (partial remove-children hakukohde-oid) [] questions)]
+      {:db (assoc-in db [:form :content] update-questions)}))
+  )
+
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
   (remove #(= hakukohde %) hakukohteet))
@@ -160,7 +174,7 @@
                                    (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                                    set-field-visibilities)]
       {:db                 db
-       :dispatch [:application/validate-hakukohteet]})))
+       :dispatch-n [[:application/validate-hakukohteet] [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection
