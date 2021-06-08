@@ -141,19 +141,27 @@
                                    (assoc-in [:application :show-hakukohde-search] false))
        :dispatch-n [[:application/validate-hakukohteet] [:application/create-questions-per-hakukohde hakukohde-oid]]})))
 
-(defn- remove-children
-  [hakukohde-oid questions question]
-  (if (= (:duplikoitu-kysymys-hakukohde-oid question) hakukohde-oid)
-    questions
-    (conj questions question)))
+(defn- remove-question-duplicates-with-hakukohde
+  [hakukohde-oid questions]
+  (filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid) questions))
+
+(defn- remove-answer-duplicates-with-hakukohde
+  [answers questions hakukohde-oid]
+  (let [duplicate-question-ids (->> questions
+                                    (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
+                                    (map #(keyword (:id %))))]
+    (apply dissoc answers duplicate-question-ids )))
 
 (reg-event-fx
   :application/remove-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
-          update-questions (reduce (partial remove-children hakukohde-oid) [] questions)]
-      {:db (assoc-in db [:form :content] update-questions)}))
-  )
+          answers (get-in db [:application :answers])
+          answers-without-duplicates (remove-answer-duplicates-with-hakukohde answers questions hakukohde-oid)
+          update-questions (remove-question-duplicates-with-hakukohde hakukohde-oid questions)]
+      {:db (-> db
+               (assoc-in [:form :content] update-questions)
+               (assoc-in [:application :answers] answers-without-duplicates))})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
