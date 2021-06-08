@@ -5,20 +5,11 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application-common.components.dropdown-component :as dropdown-component]
+            [ataru.hakija.components.multi-answer-component :refer [multi-answer]]
             [re-frame.core :as re-frame :refer [subscribe]]
             [schema.core :as s]
             [schema-tools.core :as st]
             [ataru.hakija.schema.render-field-schema :as render-field-schema]))
-
-(defn dropdown-render-options
-  [field-descriptor]
-    (fn [body]
-      (if (:per-hakukohde field-descriptor)
-        (for [hakukohde @(subscribe [:application/hakukohteet-in-hakukohderyhmat (:belongs-to-hakukohderyhma field-descriptor)])]
-          (do (println hakukohde field-descriptor)
-          body))
-        body)
-  ))
 
 (defn dropdown [field-descriptor idx render-field]
   (let [languages     (re-frame/subscribe [:application/default-languages])
@@ -43,7 +34,7 @@
                         (-> id
                             name
                             (str "-input")))
-        wrapper (dropdown-render-options field-descriptor)]
+        wrapper (multi-answer field-descriptor)]
     [:div.application__form-field
      [form-field-label-component/form-field-label field-descriptor form-field-id]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
