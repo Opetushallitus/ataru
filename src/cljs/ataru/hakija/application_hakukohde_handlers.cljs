@@ -4,6 +4,7 @@
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.application-validators :as validator]
+    [ataru.component-data.component :as component]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))
@@ -99,6 +100,23 @@
                                                           (dispatch [:application/set-hakukohde-valid
                                                                      valid?]))}}))
 
+(defn add-children
+  [hakukohde-oid questions question]
+  (if (:per-hakukohde question)
+    (conj questions question (-> question
+                                 (dissoc :per-hakukohde)
+                                 (assoc :id (str (:id question) '_' hakukohde-oid)
+                                        :hakukohde-oid hakukohde-oid)))
+    (conj questions question)))
+
+(reg-event-fx
+  :application/create-questions-per-hakukohde
+  (fn [{db :db} [_ hakukohde-oid]]
+    (let [questions (get-in db [:form :content])
+          update-questions (reduce (partial add-children hakukohde-oid) [] questions)]
+      {:db (assoc-in db [:form :content] update-questions)}))
+  )
+
 (reg-event-fx
   :application/hakukohde-add-selection
   [check-schema-interceptor]
@@ -121,7 +139,7 @@
                                    (and (some? max-hakukohteet)
                                         (<= max-hakukohteet (count new-hakukohde-values)))
                                    (assoc-in [:application :show-hakukohde-search] false))
-       :dispatch [:application/validate-hakukohteet]})))
+       :dispatch-n [[:application/validate-hakukohteet] [:application/create-questions-per-hakukohde hakukohde-oid]]})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]

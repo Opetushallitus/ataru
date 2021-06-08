@@ -19,7 +19,6 @@
             [ataru.translations.translation-util :as tu]
             [ataru.feature-config :as fc]
             [ataru.hakija.components.form-field-label-component :as form-field-label-component]
-            [ataru.hakija.components.multi-answer-component :refer [multi-answer]]
             [ataru.hakija.components.dropdown-component :as dropdown-component]
             [ataru.hakija.components.generic-label-component :as generic-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
@@ -549,8 +548,7 @@
 (defn multiple-choice
   [field-descriptor _]
   (let [id        (answer-key field-descriptor)
-        languages (subscribe [:application/default-languages])
-        wrapper (multi-answer field-descriptor)]
+        languages (subscribe [:application/default-languages])]
     (fn [field-descriptor idx]
       (let [options @(subscribe [:application/visible-options field-descriptor])]
         [:div.application__form-field
@@ -559,7 +557,7 @@
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
-         (wrapper [:div.application__form-outer-checkbox-container
+         [:div.application__form-outer-checkbox-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
            :tab-index       "0"
@@ -571,7 +569,7 @@
                          (cond->> options
                                   (and (some? (:koodisto-source field-descriptor))
                                        (not (:koodisto-ordered-by-user field-descriptor)))
-                                  (sort-by #(util/non-blank-option-label % @languages)))))])]))))
+                                  (sort-by #(util/non-blank-option-label % @languages)))))]]))))
 
 (defn- single-choice-option [option parent-id field-descriptor question-group-idx languages _ _]
   (let [cannot-edit?   (subscribe [:application/cannot-edit? (keyword (:id field-descriptor))])
@@ -979,7 +977,7 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
-  (when field-descriptor
+  (when (and field-descriptor (not (:per-hakukohde field-descriptor)))
     (let [version (:version field-descriptor)
           render-fn (cond
                       (= "generic" version) generic-component/render-generic-component
