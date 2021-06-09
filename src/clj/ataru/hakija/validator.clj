@@ -247,9 +247,10 @@
   [koodisto-cache has-applied application form applied-hakukohderyhmat virkailija? application-id application-key]
   {:pre [(not-empty form)]}
   (let [answers-by-key            (util/answers-by-key (:answers application))
+        answers-no-duplicates     (util/answers-by-key (filter #(nil? (:duplikoitu-kysymys-hakukohde-oid %)) (:answers application)))
         extra-answers             (extra-answers-not-in-original-form
                                     (map (comp keyword :id) (util/flatten-form-fields (:content form)))
-                                    (keys answers-by-key))
+                                    (keys answers-no-duplicates))
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
         failed-haku-oid           (:haku application)

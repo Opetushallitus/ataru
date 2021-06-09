@@ -243,20 +243,23 @@
                                                  (map #(count (:value %)))
                                                  (distinct)
                                                  (sort (comp - compare))
-                                                 (first))]
+                                                 (first))
+           duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid field-descriptor)]
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
                    (get-in ui [ans-key :visible?] true))
                (not (:exclude-from-answers field-descriptor)))]
-      {:key       (:id field-descriptor)
-       :value     (cond (#{"attachment"} (:fieldType field-descriptor))
-                        (sanitize-attachment-value value values question-group-highest-dimension)
+      (cond->
+        {:key       (:id field-descriptor)
+         :value     (cond (#{"attachment"} (:fieldType field-descriptor))
+                          (sanitize-attachment-value value values question-group-highest-dimension)
 
-                        :else
-                        (sanitize-value field-descriptor value question-group-highest-dimension))
-       :fieldType (:fieldType field-descriptor)
-       :label     (:label field-descriptor)})))
+                          :else
+                          (sanitize-value field-descriptor value question-group-highest-dimension))
+         :fieldType (:fieldType field-descriptor)
+         :label     (:label field-descriptor)}
+        (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)))))
 
 (defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits?]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
