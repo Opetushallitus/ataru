@@ -106,7 +106,8 @@
     (conj questions question (-> question
                                  (dissoc :per-hakukohde)
                                  (assoc :id (str (:id question) '_' hakukohde-oid)
-                                        :duplikoitu-kysymys-hakukohde-oid hakukohde-oid)))
+                                        :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
+                                        :original-question (:id question))))
     (conj questions question)))
 
 (reg-event-fx
@@ -145,23 +146,26 @@
   [hakukohde-oid questions]
   (filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid) questions))
 
-(defn- remove-answer-duplicates-with-hakukohde
-  [answers questions hakukohde-oid]
+(defn- remove-duplicates-with-hakukohde
+  [m questions hakukohde-oid]
   (let [duplicate-question-ids (->> questions
                                     (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
                                     (map #(keyword (:id %))))]
-    (apply dissoc answers duplicate-question-ids )))
+    (apply dissoc m duplicate-question-ids )))
 
 (reg-event-fx
   :application/remove-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
           answers (get-in db [:application :answers])
-          answers-without-duplicates (remove-answer-duplicates-with-hakukohde answers questions hakukohde-oid)
+          ui (get-in db [:application :ui])
+          answers-without-duplicates (remove-duplicates-with-hakukohde answers questions hakukohde-oid)
+          ui-without-duplicates (remove-duplicates-with-hakukohde ui questions hakukohde-oid)
           update-questions (remove-question-duplicates-with-hakukohde hakukohde-oid questions)]
       {:db (-> db
                (assoc-in [:form :content] update-questions)
-               (assoc-in [:application :answers] answers-without-duplicates))})))
+               (assoc-in [:application :answers] answers-without-duplicates)
+               (assoc-in [:application :ui] ui-without-duplicates))})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
