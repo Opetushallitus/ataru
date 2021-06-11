@@ -1011,5 +1011,6 @@
                                      [:div.per-question-wrapper
                                         [form-field-label-component/form-field-label field (application-field/form-field-id field nil)]
                                         (for [duplicate-field (filter #(= (:original-question %) (:id field)) (:content form-data))]
+                                          ^{:key (str "duplicate-" (:id duplicate-field))}
                                           [render-duplicate-field duplicate-field nil])]
                                      [render-field field nil]))))}))

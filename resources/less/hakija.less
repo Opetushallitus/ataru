@@ -2114,9 +2114,28 @@ th.application__readonly-adjacent--header {
   .application__question_hakukohde_names_container {
     display: none;
   }
-  .application__form-field-label--duplicate-question {
+  .application__form-field-label {
     span {
       font-weight: normal;
     }
+  }
+  &:first-child {
+    .application__form-field-label {
+      span {
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+.readonly__per-question-wrapper {
+  border-top: 1px solid @pale-blue;
+  border-bottom: 1px solid @pale-blue;
+  padding: 0.8rem 0 0.4rem;
+  .application__form-field-label {
+    display: none;
+  }
+  .application__form-field__original-question {
+    display: block;
   }
 }
