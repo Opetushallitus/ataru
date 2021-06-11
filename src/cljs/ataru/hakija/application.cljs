@@ -244,6 +244,7 @@
                                                  (distinct)
                                                  (sort (comp - compare))
                                                  (first))
+           original-question (:original-question field-descriptor)
            duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid field-descriptor)]
           :when
           (and (or (= :birth-date ans-key)
@@ -259,6 +260,7 @@
                           (sanitize-value field-descriptor value question-group-highest-dimension))
          :fieldType (:fieldType field-descriptor)
          :label     (:label field-descriptor)}
+        (some? original-question) (assoc :original-question original-question)
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)))))
 
 (defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits?]

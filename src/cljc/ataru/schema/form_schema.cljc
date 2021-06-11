@@ -318,6 +318,7 @@
    :value                        Value
    :fieldType                    (apply s/enum form-fields)
    (s/optional-key :duplikoitu-kysymys-hakukohde-oid) s/Str
+   (s/optional-key :original-question) s/Str
    (s/optional-key :cannot-view) s/Bool
    (s/optional-key :label)       (s/maybe (s/cond-pre
                                            localized-schema/LocalizedString
