@@ -442,6 +442,15 @@
     (get-in db [:application :hakukohde-hits])))
 
 (re-frame/reg-sub
+  :application/get-hakukohde
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet])])
+  (fn [[hakukohteet] [_ hakukohde-oid]]
+    (println hakukohde-oid)
+    (println (filter #(= (:oid %) hakukohde-oid) hakukohteet ))
+    (first (filter #(= (:oid %) hakukohde-oid) hakukohteet ))))
+
+(re-frame/reg-sub
   :application/hakukohteet-in-hakukohderyhmat
   (fn [db _]
     (println (get-in db [:application :answers]))

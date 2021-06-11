@@ -977,7 +977,7 @@
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]
-  (when (and field-descriptor (not (:per-hakukohde field-descriptor)))
+  (when (and field-descriptor (not (:duplikoitu-kysymys-hakukohde-oid field-descriptor)))
     (let [version (:version field-descriptor)
           render-fn (cond
                       (= "generic" version) generic-component/render-generic-component
@@ -990,6 +990,15 @@
           :idx              idx
           :render-field     render-field}]))))
 
+(defn render-duplicate-field [field-descriptor idx]
+  (when (and field-descriptor (:duplikoitu-kysymys-hakukohde-oid field-descriptor))
+    (let [visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
+      (when visible?
+        [render-component
+         {:field-descriptor field-descriptor
+          :idx              idx
+          :render-field     render-field}]))))
+
 (defn editable-fields [_]
   (r/create-class
    {:component-did-mount #(dispatch [:application/setup-window-unload])
@@ -998,4 +1007,9 @@
                                  (for [field (:content form-data)
                                        :when @(subscribe [:application/visible? (keyword (:id field))])]
                                    ^{:key (:id field)}
-                                   [render-field field nil])))}))
+                                   (if (some? (:per-hakukohde field))
+                                     [:div.per-question-wrapper
+                                        [form-field-label-component/form-field-label field (application-field/form-field-id field nil)]
+                                        (for [duplicate-field (filter #(= (:original-question %) (:id field)) (:content form-data))]
+                                          [render-duplicate-field duplicate-field nil])]
+                                     [render-field field nil]))))}))
