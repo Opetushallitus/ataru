@@ -100,9 +100,15 @@
                                                           (dispatch [:application/set-hakukohde-valid
                                                                      valid?]))}}))
 
-(defn- add-children
-  [hakukohde-oid questions question]
-  (if (:per-hakukohde question)
+(defn- is-hakukohde-in-hakukohderyhma-of-question
+  [db hakukohde-oid question]
+  (let [is-ryhma-in-hakukohderyhmat (fn [hakukohderyhma] (some #(= hakukohderyhma %) (:belongs-to-hakukohderyhma question)))
+        selected-hakukohde (some #(when (= (:oid %) hakukohde-oid) %) (get-in db [:form :tarjonta :hakukohteet]))]
+    (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
+
+(defn- duplicate-questions-for-hakukohteet
+  [db hakukohde-oid questions question]
+  (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question db hakukohde-oid question))
     (conj questions question (-> question
                                  (dissoc :per-hakukohde)
                                  (assoc :id (str (:id question) '_' hakukohde-oid)
@@ -114,9 +120,8 @@
   :application/create-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
-          update-questions (reduce (partial add-children hakukohde-oid) [] questions)]
-      {:db (assoc-in db [:form :content] update-questions)}))
-  )
+          update-questions (reduce (partial duplicate-questions-for-hakukohteet db hakukohde-oid) [] questions)]
+      {:db (assoc-in db [:form :content] update-questions)})))
 
 (reg-event-fx
   :application/hakukohde-add-selection

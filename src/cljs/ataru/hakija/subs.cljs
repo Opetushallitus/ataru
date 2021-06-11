@@ -446,30 +446,7 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])])
   (fn [[hakukohteet] [_ hakukohde-oid]]
-    (println hakukohde-oid)
-    (println (filter #(= (:oid %) hakukohde-oid) hakukohteet ))
     (first (filter #(= (:oid %) hakukohde-oid) hakukohteet ))))
-
-(re-frame/reg-sub
-  :application/hakukohteet-in-hakukohderyhmat
-  (fn [db _]
-    (println (get-in db [:application :answers]))
-    [(re-frame/subscribe [:application/tarjonta-hakukohteet])
-     (re-frame/subscribe [:application/selected-hakukohteet])])
-  (fn [[hakukohteet selected-hakukohteet-oids] [_ hakukohderyhmat]]
-    (println "Valitut hakukohteet " selected-hakukohteet-oids)
-    (println "Hakukohderyhmat " hakukohderyhmat)
-    (println (count hakukohteet))
-    (let [is-ryhma-in-hakukohderyhmat (fn [hakukohderyhma] (some #(= hakukohderyhma %) hakukohderyhmat))
-          selected-hakukohteet (filter #(some (fn [hakukohde] (= hakukohde (:oid %))) selected-hakukohteet-oids) hakukohteet)
-          hakukohteet-ryhmissa (filter #(some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat %)) selected-hakukohteet)]
-      (println "Ryhmat " selected-hakukohteet)
-      (println (count hakukohteet-ryhmissa))
-      (doseq [hakukohde hakukohteet-ryhmissa]
-        (println (:oid hakukohde)))
-      (println "Ryhmat loppu")
-      hakukohteet-ryhmissa)
-    ))
 
 (re-frame/reg-sub
   :application/hakukohde-selected?
