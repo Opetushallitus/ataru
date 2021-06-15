@@ -286,7 +286,8 @@
                                (mapv (fn [value] {:valid true :value value}) value)
                                :else
                                {:value value
-                                :valid true})}))
+                                :valid true})
+                 }))
 
 (defn- original-values->answers [db]
   (update-in db [:application :answers]
@@ -299,7 +300,8 @@
   (let [form-fields-by-id (autil/group-by-first (comp keyword :id) flat-form-content)]
     (-> (reduce (fn [db answer]
                   (let [id               (keyword (:key answer))
-                        field-descriptor (get form-fields-by-id id)]
+                        original-question (:original-question answer)
+                        field-descriptor (get form-fields-by-id (or original-question id))]
                     (if (contains? (get-in db [:application :answers]) id)
                       (update-in db [:application :answers id]
                                  #(cond (= :email id)
@@ -394,11 +396,11 @@
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
-        flat-form-content          (autil/flatten-form-fields (:content form))
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
-        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)
         questions                  (:content form)
-        questions-with-duplicates (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) (get-in db [:application :hakukohde]) questions)]
+        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) (get-in db [:application :hakukohde]) questions)
+        flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form

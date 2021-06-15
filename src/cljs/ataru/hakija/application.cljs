@@ -110,7 +110,6 @@
                              :value  (or value "")
                              :values {:value (or value "")
                                       :valid (or (some? value) (not required?))}}])
-
             [{:id         id
               :fieldClass "formField"
               :fieldType  "singleChoice"
