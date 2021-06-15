@@ -3,8 +3,7 @@
     [clojure.string :as string]
     [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
     [ataru.util :as util]
-    [ataru.hakija.application-validators :as validator]
-    [ataru.component-data.component :as component]
+    [ataru.hakija.handlers-util :as handlers-util]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))
@@ -100,27 +99,11 @@
                                                           (dispatch [:application/set-hakukohde-valid
                                                                      valid?]))}}))
 
-(defn- is-hakukohde-in-hakukohderyhma-of-question
-  [db hakukohde-oid question]
-  (let [is-ryhma-in-hakukohderyhmat (fn [hakukohderyhma] (some #(= hakukohderyhma %) (:belongs-to-hakukohderyhma question)))
-        selected-hakukohde (some #(when (= (:oid %) hakukohde-oid) %) (get-in db [:form :tarjonta :hakukohteet]))]
-    (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
-
-(defn- duplicate-questions-for-hakukohteet
-  [db hakukohde-oid questions question]
-  (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question db hakukohde-oid question))
-    (conj questions question (-> question
-                                 (dissoc :per-hakukohde)
-                                 (assoc :id (str (:id question) '_' hakukohde-oid)
-                                        :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
-                                        :original-question (:id question))))
-    (conj questions question)))
-
 (reg-event-fx
   :application/create-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
-          update-questions (reduce (partial duplicate-questions-for-hakukohteet db hakukohde-oid) [] questions)]
+          update-questions (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions)]
       {:db (assoc-in db [:form :content] update-questions)})))
 
 (reg-event-fx
