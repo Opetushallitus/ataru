@@ -150,12 +150,12 @@
               :fieldClass "formField"
               :fieldType  "multipleChoice"
               :label      label}]
-            [(keyword id) {:valid  (not (some #(contains? required-validators %)
-                                              (:validators field)))
-                           :value  []
-                           :values []
-                           :label  label}]
-
+            [(keyword id) {:valid  (or (not (some #(contains? required-validators %)
+                                             (:validators field)))
+                                  (:per-hakukohde field))
+                      :value  []
+                      :values []
+                      :label  label}]
             [{:id         id
               :fieldClass "formField"
               :fieldType  "attachment"

@@ -196,8 +196,9 @@
                                        followup (:followups option)]
                                    [idx (not (= value (:value option))) followup])
                                  (rest fields))
-                         (if (and (contains? allowed-values value)
+                         (if (or (and (contains? allowed-values value)
                                   (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                                 (:per-hakukohde field))
                            results
                            (assoc results id (get answers-by-key id)))))
 
@@ -209,8 +210,9 @@
                                        followup (:followups option)]
                                    [idx (not (contains? (set value) (:value option))) followup])
                                  (rest fields))
-                         (if (and (every? #(contains? allowed-values %) value)
+                         (if (or (and (every? #(contains? allowed-values %) value)
                                   (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
+                                 (:per-hakukohde field))
                            results
                            (assoc results id (get answers-by-key id)))))
 

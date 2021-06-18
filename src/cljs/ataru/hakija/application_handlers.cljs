@@ -275,6 +275,7 @@
 
 (defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
+                                      (:per-hakukohde field-descriptor)
                                       (:cannot-edit field-descriptor)
                                       (is-answered? (sanitize-value field-descriptor value nil))))
                  :value  value
