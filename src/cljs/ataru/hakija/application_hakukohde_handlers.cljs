@@ -103,7 +103,13 @@
   :application/create-questions-per-hakukohde
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
-          update-questions (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions)]
+          selected-hakukohteet (get-in db [:application :answers :hakukohteet :value])
+          update-questions (sort (fn [a b] (
+                                             if (and (:original-question a) (= (:original-question a) (:original-question b)))
+                                              (-  (.indexOf selected-hakukohteet (:duplikoitu-kysymys-hakukohde-oid a))
+                                                  (.indexOf selected-hakukohteet (:duplikoitu-kysymys-hakukohde-oid b)))
+                                              0))
+                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions))]
       {:db (assoc-in db [:form :content] update-questions)})))
 
 (reg-event-fx
