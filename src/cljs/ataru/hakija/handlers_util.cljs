@@ -31,6 +31,5 @@
 (defn duplicate-questions-for-hakukohteet
   [tarjonta-hakukohteet hakukohde-oids questions]
   (let [questions-duplicated (reduce (partial duplicate-questions-for-hakukohde-inner tarjonta-hakukohteet hakukohde-oids) [] questions)]
-    (println (map :id questions-duplicated))
     questions-duplicated))
 

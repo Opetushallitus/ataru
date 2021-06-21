@@ -389,4 +389,20 @@
           hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
       (into [:div.application__readonly-container]
         (for [content (:content form)]
-          [field content application hakukohteet-and-ryhmat lang nil])))))
+          (if (some? (:per-hakukohde content))
+            [:div.readonly__per-question-wrapper
+             [:div.application__form-field-label.application__form-field__original-question
+              [:span
+               (from-multi-lang (:label content) lang)]]
+             (for [duplicate-field (map #(-> content
+                                         (dissoc :per-hakukohde)
+                                         (assoc :id (:key %)
+                                                :original-question (:original-question %)
+                                                :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %)))
+                                        (filter #(= (:original-question %) (:id content)) (vals (:answers application))))]
+               ^{:key (str "duplicate-" (:id duplicate-field))}
+               [:section
+                [:div.application__per-hakukohde.application__form-field
+                 (str @(subscribe [:application/hakukohde-label (:duplikoitu-kysymys-hakukohde-oid duplicate-field)]) " ")]
+                [selectable duplicate-field application hakukohteet-and-ryhmat lang nil]])]
+          [field content application hakukohteet-and-ryhmat lang nil]))))))
