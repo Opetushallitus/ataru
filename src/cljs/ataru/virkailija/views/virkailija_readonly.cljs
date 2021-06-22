@@ -19,6 +19,7 @@
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.set :as set]
             [clojure.string :as string]
+            [ataru.application_common.comparators :as comparators]
             [cljs.core.match :refer-macros [match]]
             [goog.string :as s]))
 
@@ -386,7 +387,8 @@
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
-          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
+          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)
+          selected-hakukohteet (get-in application [:answers :hakukohteet :value])]
       (into [:div.application__readonly-container]
         (for [content (:content form)]
           (if (some? (:per-hakukohde content))
@@ -394,12 +396,12 @@
              [:div.application__form-field-label.application__form-field__original-question
               [:span
                (from-multi-lang (:label content) lang)]]
-             (for [duplicate-field (map #(-> content
+             (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)(map #(-> content
                                          (dissoc :per-hakukohde)
                                          (assoc :id (:key %)
                                                 :original-question (:original-question %)
                                                 :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %)))
-                                        (filter #(= (:original-question %) (:id content)) (vals (:answers application))))]
+                                        (filter #(= (:original-question %) (:id content)) (vals (:answers application)))))]
                ^{:key (str "duplicate-" (:id duplicate-field))}
                [:section
                 [:div.application__per-hakukohde.application__form-field
