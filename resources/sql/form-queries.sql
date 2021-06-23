@@ -18,14 +18,31 @@ JOIN LATERAL (SELECT *
               LIMIT 1) AS f ON true
 WHERE (f.deleted IS NULL OR NOT f.deleted)
   AND :hakukohderyhma_oid::varchar IS NULL
-  OR f.content->'content' @>
-    jsonb_build_array(jsonb_build_object('belongs-to-hakukohderyhma', jsonb_build_array(:hakukohderyhma_oid::varchar)))
+  OR f.used_hakukohderyhmas @> ARRAY[ :hakukohderyhma_oid::varchar ]
 ORDER BY f.created_time DESC;
 
 -- name: yesql-add-form<!
 -- Add form
-INSERT INTO forms (name, content, created_by, key, languages, organization_oid, deleted, locked, locked_by)
-VALUES (:name, :content, :created_by, :key, :languages, :organization_oid, :deleted, :locked::timestamp, :locked_by);
+INSERT INTO forms (name,
+                   content,
+                   created_by,
+                   key,
+                   languages,
+                   organization_oid,
+                   deleted,
+                   locked,
+                   locked_by,
+                   used_hakukohderyhmas)
+VALUES (:name,
+        :content,
+        :created_by,
+        :key,
+        :languages,
+        :organization_oid,
+        :deleted,
+        :locked::timestamp,
+        :locked_by,
+        ARRAY[ :used_hakukohderyhmas ]::varchar[]);
 
 -- name: yesql-get-by-id
 SELECT

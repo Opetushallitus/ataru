@@ -6,7 +6,8 @@
             [clojure.java.jdbc :refer [with-db-transaction]]
             [ataru.db.db :refer [exec get-datasource]]
             [yesql.core :refer [defqueries]]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [ataru.util :as util])
   (:import [java.util UUID]))
 
 (defqueries "sql/form-queries.sql")
@@ -94,6 +95,14 @@
 (defn latest-version-same? [form latest-version]
   (= (:id form) (:id latest-version)))
 
+(defn form-used-hakukohderyhmas [form]
+  (->> form
+       :content
+       util/flatten-form-fields
+       (mapcat :belongs-to-hakukohderyhma)
+       (remove nil?)
+       distinct))
+
 (defn create-new-form!
   ([form]
    (create-new-form! form (str (UUID/randomUUID))))
@@ -104,13 +113,16 @@
               form
               (dissoc :created-time :id)
               (assoc :key key)
+              (assoc :used_hakukohderyhmas (form-used-hakukohderyhmas form))
               (update :deleted identity))))))
 
 (defn increment-version [{:keys [key id] :as form} conn]
   {:pre [(some? key)
          (some? id)]}
   (first
-    (execute yesql-add-form<! (dissoc form :created-time :id))))
+    (execute yesql-add-form<! (-> form
+                                  (dissoc :created-time :id)
+                                  (assoc :used_hakukohderyhmas (form-used-hakukohderyhmas form))))))
 
 (defn create-form-or-increment-version! [{:keys [id organization-oid] :as form} session audit-logger]
   (or
