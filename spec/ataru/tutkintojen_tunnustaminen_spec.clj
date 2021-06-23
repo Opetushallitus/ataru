@@ -172,64 +172,66 @@
   (around [it]
     (let [audit-logger  (audit-log/new-dummy-audit-logger)
           form-id       (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (:id (yesql-add-form<! {:name             {:fi "Lomake"}
-                                                  :content          {:content [{:id              (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                                                                :fieldType       "dropdown"
-                                                                                :koodisto-source {:uri     "maatjavaltiot2"
-                                                                                                  :version 1}
-                                                                                :label           {:fi "FI: Suoritusmaa"
-                                                                                                  :sv "SV: Suoritusmaa"
-                                                                                                  :en "EN: Suoritusmaa"}}
-                                                                               {:id        "liite-1"
-                                                                                :fieldType "attachment"
-                                                                                :label     {:fi "FI: Liite 1"
-                                                                                            :sv "SV: Liite 1"
-                                                                                            :en "EN: Liite 1"}}
-                                                                               {:id        "liite-2"
-                                                                                :fieldType "attachment"
-                                                                                :label     {:fi "FI: Liite 2"
-                                                                                            :sv "SV: Liite 2"
-                                                                                            :en "EN: Liite 2"}}
-                                                                               {:id         "ryhma-1"
-                                                                                :fieldClass "questionGroup"
-                                                                                :fieldType  "fieldset"
-                                                                                :label      {:fi ""
-                                                                                             :sv ""
-                                                                                             :en ""}
-                                                                                :children   [{:id        "liite-3"
-                                                                                              :fieldType "attachment"
-                                                                                              :label     {:fi "FI: Liite 3"
-                                                                                                          :sv "SV: Liite 3"
-                                                                                                          :en "EN: Liite 3"}}]}
-                                                                               {:id        "first-name"
-                                                                                :fieldType "textField"
-                                                                                :label     {:fi "FI: Etunimet"
-                                                                                            :sv "SV: Etunimet"
-                                                                                            :en "EN: Etunimet"}}
-                                                                               {:id        "last-name"
-                                                                                :fieldType "textField"
-                                                                                :label     {:fi "FI: Sukunimi"
-                                                                                            :sv "SV: Sukunimi"
-                                                                                            :en "EN: Sukunimi"}}]}
-                                                  :created_by       "testi"
-                                                  :key              (get-in config [:tutkintojen-tunnustaminen :form-key])
-                                                  :languages        {:languages ["fi"]}
-                                                  :organization_oid "1.2.246.562.10.00000000001"
-                                                  :deleted          false
-                                                  :locked           nil
-                                                  :locked_by        nil}
+                          (:id (yesql-add-form<! {:name                 {:fi "Lomake"}
+                                                  :content              {:content [{:id              (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                                                                    :fieldType       "dropdown"
+                                                                                    :koodisto-source {:uri     "maatjavaltiot2"
+                                                                                                      :version 1}
+                                                                                    :label           {:fi "FI: Suoritusmaa"
+                                                                                                      :sv "SV: Suoritusmaa"
+                                                                                                      :en "EN: Suoritusmaa"}}
+                                                                                   {:id        "liite-1"
+                                                                                    :fieldType "attachment"
+                                                                                    :label     {:fi "FI: Liite 1"
+                                                                                                :sv "SV: Liite 1"
+                                                                                                :en "EN: Liite 1"}}
+                                                                                   {:id        "liite-2"
+                                                                                    :fieldType "attachment"
+                                                                                    :label     {:fi "FI: Liite 2"
+                                                                                                :sv "SV: Liite 2"
+                                                                                                :en "EN: Liite 2"}}
+                                                                                   {:id         "ryhma-1"
+                                                                                    :fieldClass "questionGroup"
+                                                                                    :fieldType  "fieldset"
+                                                                                    :label      {:fi ""
+                                                                                                 :sv ""
+                                                                                                 :en ""}
+                                                                                    :children   [{:id        "liite-3"
+                                                                                                  :fieldType "attachment"
+                                                                                                  :label     {:fi "FI: Liite 3"
+                                                                                                              :sv "SV: Liite 3"
+                                                                                                              :en "EN: Liite 3"}}]}
+                                                                                   {:id        "first-name"
+                                                                                    :fieldType "textField"
+                                                                                    :label     {:fi "FI: Etunimet"
+                                                                                                :sv "SV: Etunimet"
+                                                                                                :en "EN: Etunimet"}}
+                                                                                   {:id        "last-name"
+                                                                                    :fieldType "textField"
+                                                                                    :label     {:fi "FI: Sukunimi"
+                                                                                                :sv "SV: Sukunimi"
+                                                                                                :en "EN: Sukunimi"}}]}
+                                                  :created_by           "testi"
+                                                  :key                  (get-in config [:tutkintojen-tunnustaminen :form-key])
+                                                  :languages            {:languages ["fi"]}
+                                                  :organization_oid     "1.2.246.562.10.00000000001"
+                                                  :deleted              false
+                                                  :locked               nil
+                                                  :locked_by            nil
+                                                  :used_hakukohderyhmas []}
                                 {:connection connection})))
           form          (form-store/fetch-by-id form-id)
           wrong-form-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (:id(yesql-add-form<! {:name             {:fi "Lomake"}
-                                                 :content          {:content []}
-                                                 :created_by       "testi"
-                                                 :key              (str (get-in config [:tutkintojen-tunnustaminen :form-key]) "-asd")
-                                                 :languages        {:languages ["fi"]}
-                                                 :organization_oid "1.2.246.562.10.00000000001"
-                                                 :deleted          false
-                                                 :locked           nil
-                                                 :locked_by        nil}
+                          (:id(yesql-add-form<! {:name                 {:fi "Lomake"}
+                                                 :content              {:content []}
+                                                 :created_by           "testi"
+                                                 :key                  (str (get-in config [:tutkintojen-tunnustaminen :form-key]) "-asd")
+                                                 :languages            {:languages ["fi"]}
+                                                 :organization_oid     "1.2.246.562.10.00000000001"
+                                                 :deleted              false
+                                                 :locked               nil
+                                                 :locked_by            nil
+                                                 :used_hakukohderyhmas []}
                                                 {:connection connection})))
           wrong-form    (form-store/fetch-by-id wrong-form-id)
           application   (application-store/get-application

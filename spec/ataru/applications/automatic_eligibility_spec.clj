@@ -148,15 +148,16 @@
 
   (around [it]
     (let [form-id          (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                             (:id (yesql-add-form<! {:name             {:fi "Lomake"}
-                                                     :content          {:content []}
-                                                     :created_by       "testi"
-                                                     :key              "d3fb73dd-b097-42b9-bf35-a873735440e2"
-                                                     :languages        {:languages ["fi"]}
-                                                     :organization_oid "1.2.246.562.10.00000000001"
-                                                     :deleted          false
-                                                     :locked           nil
-                                                     :locked_by        nil}
+                             (:id (yesql-add-form<! {:name                 {:fi "Lomake"}
+                                                     :content              {:content []}
+                                                     :created_by           "testi"
+                                                     :key                  "d3fb73dd-b097-42b9-bf35-a873735440e2"
+                                                     :languages            {:languages ["fi"]}
+                                                     :organization_oid     "1.2.246.562.10.00000000001"
+                                                     :deleted              false
+                                                     :locked               nil
+                                                     :locked_by            nil
+                                                     :used_hakukohderyhmas []}
                                                     {:connection connection})))
           {:keys [id key]} (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (yesql-add-application<! {:form_id        form-id
