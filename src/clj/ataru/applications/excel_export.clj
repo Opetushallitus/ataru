@@ -277,31 +277,6 @@
           :else
           value)))
 
-(defn- compose-per-application-answer-value
-  [answer answers field-descriptor {:keys [lang]}]
-  (let [lang (-> lang clojure.string/lower-case keyword)
-        options (:options field-descriptor)
-        hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") answers)))
-        answers-per-question (filter #(= (:original-question answer) (:original-question %)) answers)
-        get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (:duplikoitu-kysymys-hakukohde-oid answer)) hakukohteet)))
-        convert-value (fn [answer]
-                        (cond
-                          (not (empty? options))
-                          (convert-answer-with-options-to-human-readable (:value answer) options lang)
-
-                          (util/is-question-group-answer? (:value answer))
-                          (->> (:value answer)
-                               (map #(string/join "," %))
-                               (map-indexed #(format "#%s: %s,\n" %1 %2))
-                               (apply str))
-
-                          :else
-                          (:value answer)))
-        composed-answers (map #(str (get-hakukohde-for-answer %) ",\n" (convert-value %)) answers-per-question)]
-    (println answers-per-question)
-    (println composed-answers)
-    composed-answers))
-
 (defn- write-application! [liiteri-cas-client
                            writer application
                            application-review
