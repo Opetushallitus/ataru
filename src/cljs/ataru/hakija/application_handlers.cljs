@@ -301,8 +301,7 @@
   (let [form-fields-by-id (autil/group-by-first (comp keyword :id) flat-form-content)]
     (-> (reduce (fn [db answer]
                   (let [id               (keyword (:key answer))
-                        original-question (:original-question answer)
-                        field-descriptor (get form-fields-by-id (or original-question id))]
+                        field-descriptor (get form-fields-by-id id)]
                     (if (contains? (get-in db [:application :answers]) id)
                       (update-in db [:application :answers id]
                                  #(cond (= :email id)
