@@ -41,7 +41,6 @@
 
 (defn- reset-database! []
   (let [form-with-attachment (update form-fixtures/person-info-form :content concat (:content form-fixtures/attachment-test-form))]
-    (println "Tyhjennetään hakemuksia tietokannasta.")
     (delete-application! @test-application-id)
     (reset! form (unit-test-db/init-db-fixture form-with-attachment))))
 
