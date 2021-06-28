@@ -1,4 +1,5 @@
-(ns ataru.hakija.handlers-util)
+(ns ataru.hakija.handlers-util
+  (:require [ataru.application-common.application-field-common :refer [required-validators]]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
        [tarjonta-hakukohteet hakukohde-oid question]
@@ -32,4 +33,21 @@
   [tarjonta-hakukohteet hakukohde-oids questions]
   (let [questions-duplicated (reduce (partial duplicate-questions-for-hakukohde-inner tarjonta-hakukohteet hakukohde-oids) [] questions)]
     questions-duplicated))
+
+(defn- is-duplicated-required
+  [question]
+  (some #(contains? required-validators %)
+        (:validators question)))
+
+(defn fill-missing-answer-for-hakukohde
+  [answers questions]
+    (let [missing-questions (filter #(and (:original-question %) (not (get answers (keyword (:id %))))) questions)
+          get-original-answer (fn [question]
+                                (get answers (keyword (:original-question question))))]
+      (if (seq missing-questions)
+        (reduce (fn [answers question]
+                  (assoc answers (keyword (:id question))
+                                 (assoc (get-original-answer question) :valid (not (is-duplicated-required question)))))
+                answers missing-questions)
+        answers)))
 

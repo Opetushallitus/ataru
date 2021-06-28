@@ -53,7 +53,6 @@
   (fn [_ _]
     (re-frame/subscribe [:application/application]))
   (fn [application _]
-    (js/console.log (clj->js  (:answers application)))
     (:answers application)))
 
 (re-frame/reg-sub

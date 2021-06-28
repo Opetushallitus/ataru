@@ -1,7 +1,7 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [clojure.string :as string]
-    [re-frame.core :refer [subscribe reg-event-db reg-fx reg-event-fx dispatch]]
+    [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
     [ataru.application_common.comparators :as comparators]
@@ -106,8 +106,13 @@
     (let [questions (get-in db [:form :content])
           selected-hakukohteet (get-in db [:application :answers :hakukohteet :value])
           update-questions (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
-                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions))]
-      {:db (assoc-in db [:form :content] update-questions)})))
+                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions))
+          updated-answers (handlers-util/fill-missing-answer-for-hakukohde (get-in db [:application :answers]) update-questions)
+          flat-form-content (util/flatten-form-fields update-questions)]
+      {:db (-> db
+               (assoc-in [:form :content] update-questions)
+               (assoc-in [:application :answers] updated-answers)
+               (assoc :flat-form-content flat-form-content))})))
 
 (reg-event-fx
   :application/hakukohde-add-selection
@@ -152,11 +157,13 @@
           ui (get-in db [:application :ui])
           answers-without-duplicates (remove-duplicates-with-hakukohde answers questions hakukohde-oid)
           ui-without-duplicates (remove-duplicates-with-hakukohde ui questions hakukohde-oid)
-          update-questions (remove-question-duplicates-with-hakukohde hakukohde-oid questions)]
+          update-questions (remove-question-duplicates-with-hakukohde hakukohde-oid questions)
+          flat-form-content (autil/flatten-form-fields update-questions)]
       {:db (-> db
                (assoc-in [:form :content] update-questions)
                (assoc-in [:application :answers] answers-without-duplicates)
-               (assoc-in [:application :ui] ui-without-duplicates))})))
+               (assoc-in [:application :ui] ui-without-duplicates)
+               (assoc :flat-form-content flat-form-content))})))
 
 (defn- remove-hakukohde-from-deleting
   [hakukohteet hakukohde]
