@@ -387,7 +387,12 @@
   (let [field (first (filter #(= (:id %) (:original-question answer)) form-fields))
         hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
         get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (:duplikoitu-kysymys-hakukohde-oid answer)) hakukohteet)))
-        label (str (util/non-blank-val (:label field) [:fi :sv :en]) "\n" (get-hakukohde-for-answer answer))]
+        remove-oid-from-hakukohde (fn [hakukohde] (-> hakukohde
+                                                      (string/reverse)
+                                                      (string/split #"\(" 2)
+                                                      (last)
+                                                      (string/reverse)))
+        label (str (util/non-blank-val (:label field) [:fi :sv :en]) "\n" (remove-oid-from-hakukohde (get-hakukohde-for-answer answer)))]
     (vector (:key answer) label)))
 
 
