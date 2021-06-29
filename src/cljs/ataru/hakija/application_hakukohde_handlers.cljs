@@ -158,7 +158,7 @@
           answers-without-duplicates (remove-duplicates-with-hakukohde answers questions hakukohde-oid)
           ui-without-duplicates (remove-duplicates-with-hakukohde ui questions hakukohde-oid)
           update-questions (remove-question-duplicates-with-hakukohde hakukohde-oid questions)
-          flat-form-content (autil/flatten-form-fields update-questions)]
+          flat-form-content (util/flatten-form-fields update-questions)]
       {:db (-> db
                (assoc-in [:form :content] update-questions)
                (assoc-in [:application :answers] answers-without-duplicates)
