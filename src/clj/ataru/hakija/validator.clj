@@ -243,6 +243,15 @@
   (when (not (contains? #{"fi" "sv" "en"} (:lang application)))
     {:lang (:lang application)}))
 
+(defn- validate-per-hakukohde-fields [application form]
+  (let [per-hakukohde-answers (filter #(:duplikoitu-kysymys-hakukohde-oid %) (:answers application))
+        get-matching-question (fn [answer] (first (filter #(= (:id %) (:original-question answer)) (:content form))))
+        required-answers (filter #(some (fn [validator] (= validator "required")) (:validators (get-matching-question %))) per-hakukohde-answers)
+        invalid-answers (filter #(or (nil? (:value %)) (empty? (:value %))) required-answers)]
+    (if (empty? invalid-answers)
+      invalid-answers
+      (apply disj invalid-answers))))
+
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."
@@ -255,6 +264,7 @@
                                     (keys answers-no-duplicates))
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
+        failed-per-hakukohde-fields (validate-per-hakukohde-fields application form)
         failed-haku-oid           (:haku application)
         failed-hakukohteet        (:hakukohde application)
         failed-person-oid         (:person-oid application)
@@ -305,14 +315,30 @@
                  failed-form-id
                  failed-form-key
                  (str failed-meta-fields)))
+    (when (not (empty? failed-per-hakukohde-fields))
+      (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
+      per hakukohde fields. Form id: %s, key: %s. Failed per-hakukohde fields: %s"
+                 application-id
+                 application-key
+                 failed-haku-oid
+                 failed-hakukohteet
+                 failed-person-oid
+                 failed-person-first-name
+                 failed-person-last-name
+                 failed-person-email
+                 failed-form-id
+                 failed-form-key
+                 (str failed-per-hakukohde-fields)))
     {:passed?
      (and
        (empty? extra-answers)
        (empty? failed-results)
+       (empty? failed-per-hakukohde-fields)
        (empty? failed-meta-fields))
      :failures
      (merge
        (when (not-empty extra-answers) {:extra-answers extra-answers})
        failed-results
-       failed-meta-fields)
+       failed-meta-fields
+       failed-per-hakukohde-fields)
      :code :application-validation-failed-error}))
