@@ -391,7 +391,7 @@
           selected-hakukohteet (get-in application [:answers :hakukohteet :value])]
       (into [:div.application__readonly-container]
         (for [content (:content form)]
-          (if (some? (:per-hakukohde content))
+          (if (:per-hakukohde content)
             [:div.readonly__per-question-wrapper
              [:div.application__form-field-label.application__form-field__original-question
               [:span

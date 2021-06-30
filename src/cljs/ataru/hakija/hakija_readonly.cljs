@@ -116,7 +116,7 @@
     ^{:key (str (:id child)
                 (when question-group-id
                   (str "-" question-group-id)))}
-    (if (some? (:per-hakukohde child))
+    (if (:per-hakukohde child)
       [:div.readonly__per-question-wrapper
        [:div.application__form-field-label.application__form-field__original-question
         (from-multi-lang (:label child) lang)]
