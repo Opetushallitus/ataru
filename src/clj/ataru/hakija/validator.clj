@@ -198,7 +198,7 @@
                                  (rest fields))
                          (if (or (and (contains? allowed-values value)
                                   (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
-                                 (:per-hakukohde field))
+                                 (boolean (:per-hakukohde field)))
                            results
                            (assoc results id (get answers-by-key id)))))
 
@@ -212,7 +212,7 @@
                                  (rest fields))
                          (if (or (and (every? #(contains? allowed-values %) value)
                                   (passed? has-applied form value (:validators field) answers-by-key field virkailija?))
-                                 (:per-hakukohde field))
+                                 (boolean (:per-hakukohde field)))
                            results
                            (assoc results id (get answers-by-key id)))))
 

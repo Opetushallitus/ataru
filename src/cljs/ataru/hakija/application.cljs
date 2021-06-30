@@ -110,8 +110,8 @@
                              :value  (or value "")
                              :values {:value (or value "")
                                       :valid (or (some? value)
-                                                 (or (not required?)
-                                                     (:per-hakukohde field)))}}])
+                                                    (or (not required?)
+                                                    (boolean (:per-hakukohde field))))}}])
             [{:id         id
               :fieldClass "formField"
               :fieldType  "singleChoice"
@@ -132,11 +132,11 @@
             (let [required? (some #(contains? required-validators %)
                                   (:validators field))]
               [(keyword id) {:valid  (or (not required?)
-                                         (:per-hakukohde field))
+                                         (boolean (:per-hakukohde field)))
                              :value  nil
                              :values {:value nil
                                       :valid (or (not required?)
-                                                 (:per-hakukohde field))}
+                                                 (boolean (:per-hakukohde field)))}
                              :label  label}])
 
             [{:id         id
@@ -156,7 +156,7 @@
               :label      label}]
             [(keyword id) {:valid  (or (not (some #(contains? required-validators %)
                                              (:validators field)))
-                                  (:per-hakukohde field))
+                                  (boolean (:per-hakukohde field)))
                       :value  []
                       :values []
                       :label  label}]
