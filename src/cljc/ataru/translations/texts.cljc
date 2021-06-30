@@ -1574,8 +1574,8 @@
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
    :per-hakukohde                                   {:fi "Vastaukset ovat hakukohdekohtaisia"
-                                                     :sv ""
-                                                     :en "One answer for each application"}
+                                                     :sv "Svaren ges enligt ansökningsmål"
+                                                     :en "Answers are specific to application options"}
    :invalid-date-format                             {:fi "Päivämäärän tulee olla muotoa p.k.vvvv"
                                                      :sv "Ange datumet i formen p.k.vvvv"
                                                      :en "EN: Päivämäärän tulee olla muotoa d.m.yyyy"}
