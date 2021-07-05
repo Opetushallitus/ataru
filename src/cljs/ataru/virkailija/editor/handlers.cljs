@@ -95,13 +95,16 @@
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
+(defn- into-vec [a b]
+  (vec (into a b)))
+
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-optio
   (fn [db [_ path]]
     (let [text-field-path (current-form-content-path db [path :options])
           component       (component/text-field-conditional-option)]
       (-> db
-          (update-in text-field-path into [component])
+          (update-in text-field-path into-vec [component])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (defn text-field-section-visibility-condition [section-name]
@@ -116,7 +119,7 @@
           default-hidden-section-name (-> hideable-form-sections first :id)
           section-visibility (text-field-section-visibility-condition default-hidden-section-name)]
       (-> db
-          (update-in text-field-path into [section-visibility])
+          (update-in text-field-path into-vec [section-visibility])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
 (reg-event-db
