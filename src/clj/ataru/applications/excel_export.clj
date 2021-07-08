@@ -368,8 +368,8 @@
                                  (or always?
                                      (and (not always?)
                                           (not skip-answers?)
-                                          hakukohde?
-                                          id-match?)))))]
+                                          (or hakukohde?
+                                              id-match?))))))]
     (->> form-fields
          (filter should-include?)
          (map #(vector (:id %) (pick-header form-fields-by-id %))))))
