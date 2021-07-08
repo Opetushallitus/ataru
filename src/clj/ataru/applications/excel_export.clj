@@ -362,8 +362,7 @@
                                                 (util/answerable? field))
                                 always?    (answer-to-always-include? (:id field))
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))
-                                id-match?  (or (included-ids (:id field))
-                                               (empty? included-ids))]
+                                id-match?  (included-ids (:id field))]
                             (and candidate?
                                  (or always?
                                      (and (not always?)
