@@ -115,6 +115,11 @@ export const komponentinLisays = {
       komponentinLisays.avaaValikko()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
     }),
+  lisaaKoodistoElementti: (formId: number, elementinTeksti: string) => {
+    return komponentinLisays.avaaValikko().then(() => {
+      return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
+    })
+  },
 }
 
 export const painikeYksiValittavissa = {

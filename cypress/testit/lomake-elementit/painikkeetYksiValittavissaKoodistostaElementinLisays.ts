@@ -8,11 +8,11 @@ export default (
   describe('Painikkeet, yksi valittavissa, koodisto -elementin lisäys', () => {
     before(() => {
       lomakkeenMuokkaus.komponentinLisays
-        .lisaaElementti(
+        .lisaaKoodistoElementti(
           lomakkeenTunnisteet().lomakkeenId,
           'Painikkeet, yksi valittavissa, koodisto'
         )
-        .then(({ result: painikkeenLisaysLinkki }) =>
+        .then((painikkeenLisaysLinkki) =>
           cy
             .wrap(painikkeenLisaysLinkki.text())
             .as('component-toolbar-painikkeet-koodisto-text')
