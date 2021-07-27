@@ -8,7 +8,7 @@
             [ataru.component-data.arvosanat-module :as arvosanat]))
 
 (defn- toolbar-elements []
-  [[:form-section component/form-section]
+  [[:form-section component/form-section {:data-test-id "component-toolbar-lomakeosio"}]
    [:single-choice-button component/single-choice-button]
    [:single-choice-button-koodisto (fn [metadata]
                                      (assoc (component/single-choice-button metadata)
