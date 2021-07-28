@@ -105,7 +105,10 @@
             (let [value     (some #(when (:default-value %) (:value %)) options)
                   required? (some #(contains? required-validators %)
                                   (:validators field))]
-              [(keyword id) {:valid  (or (some? value) (not required?))
+              [(keyword id) {:valid  (or
+                                       (some? value)
+                                       (boolean (:per-hakukohde field))
+                                       (not required?))
                              :label  label
                              :value  (or value "")
                              :values {:value (or value "")
