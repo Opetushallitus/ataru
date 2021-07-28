@@ -2,7 +2,6 @@
   (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module :as base-education-module]
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
-            [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [ataru.component-data.arvosanat-module :as arvosanat]))
@@ -117,8 +116,7 @@
 
 (defn add-component [path root-level-add-component?]
   (let [elements (cond-> (toolbar-elements)
-                         (and root-level-add-component?
-                              (fc/feature-enabled? :arvosanat))
+                         root-level-add-component?
                          (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
                                [:arvosanat-lukio arvosanat/arvosanat-lukio]))]
     [custom-add-component elements path
