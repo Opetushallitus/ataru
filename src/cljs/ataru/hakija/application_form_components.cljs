@@ -218,8 +218,10 @@
             show-error?      @(subscribe [:application/show-validation-error-class? id idx nil])
             on-change        (if idx
                                (partial multi-value-field-change field-descriptor idx)
-                               (partial text-field-change field-descriptor))
-            on-blur          (fn [_] (textual-field-blur field-descriptor))
+                               (partial textual-field-change field-descriptor))
+            on-blur          (fn [_]
+                               (textual-field-blur field-descriptor)
+                               (text-field-change field-descriptor (get @local-state :value)))
             form-field-id    (application-field/form-field-id field-descriptor idx)
             data-test-id     (if (some #{id} [:first-name
                                               :preferred-name
