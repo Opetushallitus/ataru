@@ -760,12 +760,11 @@
 (reg-event-db
   :application/hide-form-sections-with-text-component-visibility-rules
   (fn [db _]
-    (let [form-content (get-in db [:form :content])
+    (let [form-content (:flat-form-content db)
           section-ids-with-visibility-rules (->> form-content
                                                  (keep :section-visibility-conditions)
                                                  flatten
-                                                 (map :section-name)
-                                                 set)]
+                                                 (map :section-name))]
       (reduce
         (fn [acc-db section-id]
           (assoc-in acc-db [:application :ui (keyword section-id) :visible?] false))
