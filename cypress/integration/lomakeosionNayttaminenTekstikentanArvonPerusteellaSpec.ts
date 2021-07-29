@@ -11,6 +11,7 @@ const typeValueAndAssertVisibility = (value: string, isVisible: boolean) => {
       cy.get('[data-test-id=tekstikenttä-input]'),
       value
     )
+    .blur()
     .then(() => {
       hakijanNakyma.henkilotiedot
         .etunimi()
@@ -38,6 +39,7 @@ describe('Lomakeosion näkyvyys tekstikentän arvon perusteella', () => {
             it('Piilottaa lomakeosion, kun tekstikenttä on tyhjä', () => {
               cy.get('[data-test-id=tekstikenttä-input]')
                 .clear()
+                .blur()
                 .then(() => {
                   hakijanNakyma.henkilotiedot.etunimi().should('not.exist')
                 })
