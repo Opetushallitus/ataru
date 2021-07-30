@@ -110,4 +110,7 @@
       "pohjakoulutusvaatimuskorkeakoulut" (add-within "pohjakoulutuskklomake"
                                                       (get-koodisto uri version))
 
+      "pohjakoulutusvaatimuskouta" (add-within "pohjakoulutuskklomake"
+                                               (get-koodisto uri version))
+
       (get-koodisto uri version))))
