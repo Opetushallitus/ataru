@@ -1,6 +1,7 @@
 (ns ataru.tarjonta-service.tarjonta-parser
   (:require [clj-time.core :as t]
             [taoensso.timbre :as log]
+            [clojure.string :as string]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
             [ataru.organization-service.organization-service :as organization-service]
@@ -21,7 +22,7 @@
      :name                                                        (:name hakukohde)
      :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
-     :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
+     :kohdejoukko-korkeakoulu?                                    (string/starts-with?
                                                                    (:kohdejoukko-uri haku)
                                                                    "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
@@ -30,7 +31,8 @@
                                                                              (throw (new RuntimeException (str "Koulutus " % " not found"))))
                                                                         (:koulutus-oids hakukohde))
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
-     :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))
+     :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
+                                                                          (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
