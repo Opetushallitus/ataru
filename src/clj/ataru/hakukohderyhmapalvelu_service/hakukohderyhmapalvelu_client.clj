@@ -24,3 +24,11 @@
   (some-> :hakukohderyhmapalvelu.hakukohderyhmas-for-hakukohde
           (url-helper/resolve-url hakukohde-oid)
           (get-result cas-client)))
+
+(s/defn ^:always-validate get-settings-for-hakukohderyhma :- (s/maybe {:rajaava s/Bool
+                                                                       :max-hakukohteet (s/maybe s/Int) })
+  [hakukohderyhma-oid :- s/Str
+   cas-client]
+  (some-> :hakukohderyhmapalvelu.settings-for-hakukohderyhma
+          (url-helper/resolve-url hakukohderyhma-oid)
+          (get-result cas-client)))
