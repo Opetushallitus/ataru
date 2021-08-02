@@ -4,13 +4,19 @@
 
 (defprotocol HakukohderyhmapalveluServiceProtocol
   (get-hakukohderyhma-oids-for-hakukohde [this hakukohde-oid]
-    "Gets all oids of hakukohderyhmas hakukohde belongs to"))
+    "Gets all oids of hakukohderyhmas hakukohde belongs to")
+
+  (get-settings-for-hakukohderyhma [this hakukohderyhma-oid]
+    "Gets settings for hakukohderyhma"))
 
 (defrecord IntegratedHakukohderyhmapalveluService [hakukohderyhmapalvelu-cas-client]
   HakukohderyhmapalveluServiceProtocol
 
   (get-hakukohderyhma-oids-for-hakukohde [_ hakukohde-oid]
-    (client/get-hakukohderyhma-oids-for-hakukohde-oid hakukohde-oid hakukohderyhmapalvelu-cas-client)))
+    (client/get-hakukohderyhma-oids-for-hakukohde-oid hakukohde-oid hakukohderyhmapalvelu-cas-client))
+
+  (get-settings-for-hakukohderyhma [_ hakukohderyhma-oid]
+    (client/get-settings-for-hakukohderyhma hakukohderyhma-oid hakukohderyhmapalvelu-cas-client)))
 
 (defrecord FakeHakukohderyhmapalveluService []
   HakukohderyhmapalveluServiceProtocol
