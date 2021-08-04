@@ -734,3 +734,7 @@
 (s/defschema KayttaaValintalaskentaaResponse
   {:hakukohde-oid   s/Str
    :valintalaskenta s/Bool})
+
+(s/defschema HakukohderyhmaSettings
+  {:rajaava s/Bool
+   :max-hakukohteet (s/maybe s/Int)})

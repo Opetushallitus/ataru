@@ -1,6 +1,5 @@
 (ns ataru.hakija.hakija-form-service
   (:require [ataru.cache.cache-service :as cache]
-            [ataru.config.core :refer [config]]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.forms.hakukohderyhmat :as hakukohderyhmat]
@@ -10,7 +9,6 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [ataru.tarjonta-service.hakukohde :refer [populate-hakukohde-answer-options populate-attachment-deadlines]]
-            [taoensso.timbre :as log]
             [clj-time.core :as time]
             [clj-time.coerce :as t]
             [clj-time.format :as f]
@@ -21,7 +19,6 @@
             [ataru.schema.form-schema :as form-schema]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
-            [medley.core :refer [find-first]]
             [ataru.util :as util :refer [assoc?]]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
@@ -108,6 +105,18 @@
             (or (form-role/virkailija? roles)
                 (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?))))))
+
+(defn- combine-old-rajaavat-ryhmat-with-new
+  [haku-oid old-rajaavat hakukohderyhmat-with-settings]
+    (let [oid-is-found (fn [oid old-ones] (filter #(= oid (:hakukohderyhma-oid %)) old-ones))
+          rajaavat (filter #(:rajaava %) hakukohderyhmat-with-settings)
+          not-found-in-old (filter #(not (oid-is-found (:hakukohderyhma-oid %) old-rajaavat)) rajaavat)
+          transformed-to-rajaavat (map #(merge {} {:hakukohderyhma-oid (:hakukohderyhma-oid %)
+                                          :raja (:max-hakukohteet %)
+                                          :haku-oid haku-oid
+                                          :last-modified nil}) not-found-in-old)]
+      (concat old-rajaavat transformed-to-rajaavat))
+  )
 
 (defn flag-uneditable-and-unviewable-field
   [now hakuajat roles application-in-processing-state? field-deadlines field]
@@ -197,6 +206,7 @@
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
+   hakukohderyhma-settings-cache-loader :- s/Any
    haku-oid :- s/Any
    id :- s/Int
    application-in-processing-state? :- s/Bool
@@ -204,8 +214,10 @@
    roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        hakukohderyhmat (mapcat #(:ryhmaliitokset %) hakukohteet)
+        hakukohderyhmat-with-settings (map #(assoc (cache/get-from hakukohderyhma-settings-cache-loader %) :hakukohderyhma-oid %) hakukohderyhmat)
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
-        rajaavat      (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
+        rajaavat      (combine-old-rajaavat-ryhmat-with-new haku-oid (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid)) hakukohderyhmat-with-settings) ;; hae myös hakukohderyhmä asetukset kakusta tämä tieto
         form          (fetch-form-by-id
                        id
                        roles
@@ -214,6 +226,8 @@
                        hakukohteet
                        application-in-processing-state?
                        field-deadlines)]
+    (println "Hakukohderyhmat" hakukohderyhmat)
+    (println "Hakukohderyhmat with settings " hakukohderyhmat-with-settings)
     (when (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -228,6 +242,7 @@
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
+   hakukohderyhma-settings-cache-loader :- s/Any
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
@@ -240,6 +255,7 @@
                                    koodisto-cache
                                    organization-service
                                    ohjausparametrit-service
+                                   hakukohderyhma-settings-cache-loader
                                    haku-oid
                                    latest-id
                                    application-in-processing-state?
@@ -273,7 +289,8 @@
                                         koodisto-cache
                                         ohjausparametrit-service
                                         organization-service
-                                        tarjonta-service]
+                                        tarjonta-service
+                                        hakukohderyhma-settings-cache-loader]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
@@ -282,6 +299,7 @@
                                               koodisto-cache
                                               organization-service
                                               ohjausparametrit-service
+                                              hakukohderyhma-settings-cache-loader
                                               haku-oid
                                               false
                                               {}

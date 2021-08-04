@@ -46,6 +46,7 @@
    organization-service
    application-service
    tarjonta-service
+   hakukohderyhma-settings-cache-loader
    audit-logger
    session
    secret
@@ -57,6 +58,7 @@
                                                                      organization-service
                                                                      application-service
                                                                      tarjonta-service
+                                                                     hakukohderyhma-settings-cache-loader
                                                                      secret
                                                                      liiteri-cas-client)]
     (cond inactivated?
@@ -149,7 +151,8 @@
                           temp-file-store
                           amazon-sqs
                           audit-logger
-                          liiteri-cas-client]}]
+                          liiteri-cas-client
+                          hakukohderyhma-settings-cache-loader]}]
   (api/context "/api" []
     :tags ["application-api"]
     (api/GET ["/haku/:haku-oid" :haku-oid #"[0-9\.]+"] []
@@ -201,6 +204,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              hakukohderyhma-settings-cache-loader
               audit-logger
               application
               session
@@ -220,6 +224,7 @@
               job-runner
               organization-service
               ohjausparametrit-service
+              hakukohderyhma-settings-cache-loader
               audit-logger
               application
               session
@@ -241,6 +246,7 @@
                              organization-service
                              application-service
                              tarjonta-service
+                             hakukohderyhma-settings-cache-loader
                              audit-logger
                              session
                              {:hakija secret}
@@ -253,6 +259,7 @@
                              organization-service
                              application-service
                              tarjonta-service
+                             hakukohderyhma-settings-cache-loader
                              audit-logger
                              session
                              {:virkailija virkailija-secret}
