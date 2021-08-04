@@ -73,12 +73,18 @@
                                                (get-many-from [this keys])
                                                (remove-from [this key])
                                                (clear-all [this]))
+        hakukohderyhma-settings-cache-loader (reify cache-service/Cache
+                                               (get-from [this key])
+                                               (get-many-from [this keys])
+                                               (remove-from [this key])
+                                               (clear-all [this]))
         form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
                                               {:form-by-id-cache         form-by-id-cache
                                                :koodisto-cache           koodisto-cache
                                                :ohjausparametrit-service ohjausparametrit-service
                                                :organization-service     organization-service
-                                               :tarjonta-service         tarjonta-service})]
+                                               :tarjonta-service         tarjonta-service
+                                               :hakukohderyhma-settings-cache-loader hakukohderyhma-settings-cache-loader})]
     (-> (routes/new-handler)
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))

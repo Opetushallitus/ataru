@@ -19,6 +19,7 @@
 (def toteutus-checker (s/checker form-schema/Koulutus))
 (def hakus-by-checker (s/checker [s/Str]))
 (def hakukohde-search-checker (s/checker [s/Str]))
+(def hakukohderyhma-settings-checker (s/checker form-schema/HakukohderyhmaSettings))
 
 (defn- parse-date-time
   [s]
@@ -146,6 +147,12 @@
                             hakukohderyhmapalvelu-service hakukohde-oid)]
       (parse-hakukohde hakukohde tarjoajat hakukohderyhmas))))
 
+(s/defn ^:always-validate get-hakukohderyhma-settings :- (s/maybe s/Any)
+  [hakukohderyhma-oid :- s/Str
+   hakukohderyhmapalvelu-service]
+  (hakukohderyhmapalvelu-service/get-settings-for-hakukohderyhma hakukohderyhmapalvelu-service hakukohderyhma-oid))
+
+
 (s/defn ^:always-validate get-hakukohdes-by :- (s/maybe [s/Str])
   [cas-client
    query :- {:haku-oid                      s/Str
@@ -194,6 +201,21 @@
 
   (check-schema [_ response]
     (hakukohde-checker response)))
+
+(defrecord HakukohderyhmaSettingsLoader [hakukohderyhmapalvelu-service]
+  cache-service/CacheLoader
+
+  (load [_ hakukohderyhma-oid]
+    (get-hakukohderyhma-settings hakukohderyhma-oid hakukohderyhmapalvelu-service))
+
+  (load-many [this hakukohderyhma-oids]
+    (cache-service/default-load-many this hakukohderyhma-oids))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ response]
+    (hakukohderyhma-settings-checker response)))
 
 (defrecord HakusByFormKeyCacheLoader [cas-client]
   cache-service/CacheLoader

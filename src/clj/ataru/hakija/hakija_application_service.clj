@@ -175,6 +175,7 @@
                            tarjonta-service
                            organization-service
                            ohjausparametrit-service
+                           hakukohderyhma-settings-cache-loader
                            audit-logger
                            application
                            is-modify?
@@ -223,6 +224,7 @@
                                              koodisto-cache
                                              organization-service
                                              ohjausparametrit-service
+                                             hakukohderyhma-settings-cache-loader
                                              (:haku application)
                                              (:form application)
                                              (util/application-in-processing? application-hakukohde-reviews)
@@ -397,6 +399,7 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   hakukohderyhma-settings-cache-loader
    audit-logger
    application
    session
@@ -410,6 +413,7 @@
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
+                            hakukohderyhma-settings-cache-loader
                             audit-logger
                             application
                             false
@@ -436,6 +440,7 @@
    job-runner
    organization-service
    ohjausparametrit-service
+   hakukohderyhma-settings-cache-loader
    audit-logger
    input-application
    session
@@ -449,6 +454,7 @@
                             tarjonta-service
                             organization-service
                             ohjausparametrit-service
+                            hakukohderyhma-settings-cache-loader
                             audit-logger
                             input-application
                             true
@@ -538,6 +544,7 @@
    organization-service
    application-service
    tarjonta-service
+   hakukohderyhma-settings-cache-loader
    secret
    liiteri-cas-client]
   (let [[actor-role secret] (match [secret]
@@ -578,6 +585,7 @@
                                                                       koodisto-cache
                                                                       organization-service
                                                                       ohjausparametrit-service
+                                                                      hakukohderyhma-settings-cache-loader
                                                                       (:haku application)
                                                                       application-in-processing?
                                                                       field-deadlines

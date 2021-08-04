@@ -57,6 +57,10 @@
      {:cas-client                    :kouta-internal-cas-client
       :organization-service          :organization-service
       :hakukohderyhmapalvelu-service :hakukohderyhmapalvelu-service})]
+   [:hakukohderyhma-settings-cache-loader
+    (component/using
+      (kouta-client/map->HakukohderyhmaSettingsLoader {})
+      {:hakukohderyhmapalvelu-service :hakukohderyhmapalvelu-service})]
    [:hakukohde-union-cache-loader
     (component/using
      (union-cache/map->CacheLoader
