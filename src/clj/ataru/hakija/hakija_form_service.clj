@@ -108,7 +108,10 @@
 
 (defn- combine-old-rajaavat-ryhmat-with-new
   [haku-oid old-rajaavat hakukohderyhmat-with-settings]
-    (let [oid-is-found (fn [oid old-ones] (filter #(= oid (:hakukohderyhma-oid %)) old-ones))
+    (let [oid-is-found (fn [oid old-ones]
+                         (if (seq old-ones)
+                           (boolean (seq (filter #(= oid (:hakukohderyhma-oid %)) old-ones)))
+                           false))
           rajaavat (filter #(:rajaava %) hakukohderyhmat-with-settings)
           not-found-in-old (filter #(not (oid-is-found (:hakukohderyhma-oid %) old-rajaavat)) rajaavat)
           transformed-to-rajaavat (map #(merge {} {:hakukohderyhma-oid (:hakukohderyhma-oid %)
@@ -206,7 +209,7 @@
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
-   hakukohderyhma-settings-cache-loader :- s/Any
+   hakukohderyhma-settings-cache :- s/Any
    haku-oid :- s/Any
    id :- s/Int
    application-in-processing-state? :- s/Bool
@@ -214,10 +217,11 @@
    roles :- [form-role/FormRole]]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
-        hakukohderyhmat (mapcat #(:ryhmaliitokset %) hakukohteet)
-        hakukohderyhmat-with-settings (map #(assoc (cache/get-from hakukohderyhma-settings-cache-loader %) :hakukohderyhma-oid %) hakukohderyhmat)
+        hakukohderyhmat (distinct (mapcat #(:hakukohderyhmat %) hakukohteet))
+        hakukohderyhmat-with-settings (map #(assoc (cache/get-from hakukohderyhma-settings-cache %) :hakukohderyhma-oid %) hakukohderyhmat)
         priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
-        rajaavat      (combine-old-rajaavat-ryhmat-with-new haku-oid (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid)) hakukohderyhmat-with-settings) ;; hae myös hakukohderyhmä asetukset kakusta tämä tieto
+        old-rajaavat  (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
+        rajaavat      (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
         form          (fetch-form-by-id
                        id
                        roles
@@ -226,8 +230,6 @@
                        hakukohteet
                        application-in-processing-state?
                        field-deadlines)]
-    (println "Hakukohderyhmat" hakukohderyhmat)
-    (println "Hakukohderyhmat with settings " hakukohderyhmat-with-settings)
     (when (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -242,7 +244,7 @@
    koodisto-cache :- s/Any
    organization-service :- s/Any
    ohjausparametrit-service :- s/Any
-   hakukohderyhma-settings-cache-loader :- s/Any
+   hakukohderyhma-settings-cache :- s/Any
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
@@ -255,7 +257,7 @@
                                    koodisto-cache
                                    organization-service
                                    ohjausparametrit-service
-                                   hakukohderyhma-settings-cache-loader
+                                   hakukohderyhma-settings-cache
                                    haku-oid
                                    latest-id
                                    application-in-processing-state?
@@ -290,7 +292,7 @@
                                         ohjausparametrit-service
                                         organization-service
                                         tarjonta-service
-                                        hakukohderyhma-settings-cache-loader]
+                                        hakukohderyhma-settings-cache]
   cache/CacheLoader
   (load [_ key]
     (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
@@ -299,7 +301,7 @@
                                               koodisto-cache
                                               organization-service
                                               ohjausparametrit-service
-                                              hakukohderyhma-settings-cache-loader
+                                              hakukohderyhma-settings-cache
                                               haku-oid
                                               false
                                               {}
