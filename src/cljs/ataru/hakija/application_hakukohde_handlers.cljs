@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-hakukohde-handlers
   (:require
     [clojure.string :as string]
+    [clojure.set :as s]
     [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
@@ -8,7 +9,7 @@
                                                set-validator-processing
                                                check-schema-interceptor]]))
 
-(defn- hakukohteet-field [db]
+(defn hakukohteet-field [db]
   (->> (:flat-form-content db)
        (filter #(= "hakukohteet" (:id %)))
        first))
@@ -16,6 +17,35 @@
 (defn- toggle-hakukohde-search
   [db]
   (update-in db [:application :show-hakukohde-search] not))
+
+(defn query-hakukohteet [hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field]
+  (let [order-by-hakuaika             (if virkailija?
+                                        #{}
+                                        (->> tarjonta-hakukohteet
+                                             (remove #(:on (:hakuaika %)))
+                                             (map :oid)
+                                             set))
+        order-by-name                 #(util/non-blank-val (:label %) [lang :fi :sv :en])
+        hakukohde-options             (->> hakukohteet-field
+                                           :options
+                                           (sort-by (juxt (comp order-by-hakuaika :value)
+                                                          order-by-name)))
+        query-parts                   (map string/lower-case (string/split hakukohde-query #"\s+"))
+        results                       (if (or (string/blank? hakukohde-query)
+                                              (< (count hakukohde-query) 2))
+                                        (map :value hakukohde-options)
+                                        (->> hakukohde-options
+                                             (filter
+                                               (fn [option]
+                                                 (let [haystack (string/lower-case
+                                                                  (str (get-in option [:label lang] (get-in option [:label :fi] ""))
+                                                                       (get-in option [:description lang] "")))]
+                                                   (every? #(string/includes? haystack %) query-parts))))
+                                             (map :value)))
+        [hakukohde-hits rest-results] (split-at 15 results)]
+    {:hakukohde-hits  hakukohde-hits
+     :rest-results    rest-results
+     :hakukohde-query hakukohde-query}))
 
 (reg-event-db
   :application/hakukohde-search-toggle
@@ -25,33 +55,15 @@
 (reg-event-db
   :application/hakukohde-query-process
   [check-schema-interceptor]
-  (fn hakukohde-query-process [db [_ hakukohde-query-atom]]
-    (let [hakukohde-query               @hakukohde-query-atom
-          lang                          (-> db :form :selected-language)
-          order-by-hakuaika             (if (some? (get-in db [:application :virkailija-secret]))
-                                          #{}
-                                          (->> (get-in db [:form :tarjonta :hakukohteet])
-                                               (remove #(:on (:hakuaika %)))
-                                               (map :oid)
-                                               set))
-          order-by-name                 #(util/non-blank-val (:label %) [lang :fi :sv :en])
-          hakukohde-options             (->> (hakukohteet-field db)
-                                             :options
-                                             (sort-by (juxt (comp order-by-hakuaika :value)
-                                                            order-by-name)))
-          query-parts                   (map string/lower-case (string/split hakukohde-query #"\s+"))
-          results                       (if (or (string/blank? hakukohde-query)
-                                                (< (count hakukohde-query) 2))
-                                          (map :value hakukohde-options)
-                                          (->> hakukohde-options
-                                               (filter
-                                                (fn [option]
-                                                  (let [haystack (string/lower-case
-                                                                  (str (get-in option [:label lang] (get-in option [:label :fi] ""))
-                                                                       (get-in option [:description lang] "")))]
-                                                    (every? #(string/includes? haystack %) query-parts))))
-                                               (map :value)))
-          [hakukohde-hits rest-results] (split-at 15 results)]
+  (fn hakukohde-query-process [db [_ hakukohde-query-atom _]]
+    (let [hakukohde-query @hakukohde-query-atom
+          lang (-> db :form :selected-language)
+          virkailija? (some? (get-in db [:application :virkailija-secret]))
+          hakukohteet-field (hakukohteet-field db)
+          tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
+          {:keys [hakukohde-query
+                  hakukohde-hits
+                  rest-results]} (query-hakukohteet hakukohde-query lang virkailija? tarjonta-hakukohteet hakukohteet-field)]
       (-> db
           (assoc-in [:application :hakukohde-query] hakukohde-query)
           (assoc-in [:application :remaining-hakukohde-search-results] rest-results)
@@ -60,10 +72,12 @@
 (reg-event-fx
   :application/hakukohde-query-change
   [check-schema-interceptor]
-  (fn [{_db :db} [_ hakukohde-query-atom]]
+  (fn [{db :db} [_ hakukohde-query-atom idx]]
     {:dispatch-debounced {:timeout  500
                           :id       :hakukohde-query
-                          :dispatch [:application/hakukohde-query-process hakukohde-query-atom]}}))
+                          :dispatch [:application/hakukohde-query-process
+                                     hakukohde-query-atom
+                                     idx]}}))
 
 (reg-event-db
   :application/show-more-hakukohdes
@@ -115,13 +129,65 @@
                (assoc :flat-form-content flat-form-content))})))
 
 (reg-event-fx
+  :application/hakukohde-clear-selection
+  (fn [{db :db} [_ idx]]
+    (let [selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
+          updated-hakukohteet (assoc selected-hakukohteet idx {:valid false :value nil})
+          updated-db (-> db
+                         (assoc-in [:application :answers :hakukohteet :values]
+                                   updated-hakukohteet)
+                         (assoc-in [:application :answers :hakukohteet :value]
+                                   (mapv :value updated-hakukohteet))
+                         set-field-visibilities)]
+      {:db updated-db
+       :dispatch [:application/validate-hakukohteet]})))
+
+(reg-event-db
+  :application/set-active-hakukohde-search
+  (fn [db [_ active-search-idx]]
+    (assoc-in db [:application :active-hakukohde-search] active-search-idx)))
+
+(reg-event-fx
+  :application/hakukohde-add-selection-2nd
+  [check-schema-interceptor]
+  (fn [{db :db} [_ hakukohde-oid idx]]
+    (let [field-descriptor     (hakukohteet-field db)
+          selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
+          not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
+                                 selected-hakukohteet)
+          add-hakukohde-fn     (fn [hakukohteet]
+                                 (let [hakukohde {:valid true :value hakukohde-oid}
+                                       default {:valid false :value nil}]
+                                   (->> (range (max (inc idx) (count hakukohteet)))
+                                        (mapv (fn [cur-idx]
+                                                (let [cur (nth hakukohteet cur-idx nil)]
+                                                  (if (= idx cur-idx)
+                                                    hakukohde
+                                                    (or cur default))))))))
+          new-hakukohde-values (cond-> selected-hakukohteet
+                                       not-yet-selected?
+                                       add-hakukohde-fn)
+          max-hakukohteet      (get-in field-descriptor [:params :max-hakukohteet] nil)
+          db                   (-> db
+                                   (assoc-in [:application :answers :hakukohteet :values]
+                                             new-hakukohde-values)
+                                   (assoc-in [:application :answers :hakukohteet :value]
+                                             (mapv :value new-hakukohde-values))
+                                   set-field-visibilities)]
+      {:db                 (cond-> db
+                                   (and (some? max-hakukohteet)
+                                        (<= max-hakukohteet (count new-hakukohde-values)))
+                                   (assoc-in [:application :show-hakukohde-search] false))
+       :dispatch [:application/validate-hakukohteet]})))
+
+(reg-event-fx
   :application/hakukohde-add-selection
   [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid]]
     (let [field-descriptor     (hakukohteet-field db)
           selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
           not-yet-selected?    (every? #(not= hakukohde-oid (:value %))
-                                 selected-hakukohteet)
+                                       selected-hakukohteet)
           new-hakukohde-values (cond-> selected-hakukohteet
                                        not-yet-selected?
                                        (conj {:valid true :value hakukohde-oid}))
@@ -175,9 +241,20 @@
                (assoc-in [:application :ui] ui-without-duplicates)
                (assoc :flat-form-content flat-form-content))})))
 
-(defn- remove-hakukohde-from-deleting
-  [hakukohteet hakukohde]
-  (remove #(= hakukohde %) hakukohteet))
+(reg-event-db
+  :application/add-empty-hakukohde-selection
+  [check-schema-interceptor]
+  (fn [db _]
+    (let [current-hakukohteet (get-in db [:application :answers :hakukohteet :values])
+          hakukohteet-count (count current-hakukohteet)
+          repeat-times (if (zero? hakukohteet-count) 2 1)
+          empty-hakukohde (->> {:valid false :value ""}
+                               (repeat repeat-times)
+                               vec)
+          new-hakukohteet (vec (concat current-hakukohteet empty-hakukohde))]
+      (-> db
+          (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+          (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet))))))
 
 (reg-event-fx
   :application/hakukohde-remove
@@ -190,10 +267,29 @@
                                              new-hakukohde-values)
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
-                                   (update-in [:application :ui :hakukohteet :deleting] remove-hakukohde-from-deleting hakukohde-oid)
                                    set-field-visibilities)]
       {:db                 db
        :dispatch-n [[:application/validate-hakukohteet] [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
+
+(reg-event-fx
+  :application/hakukohde-remove-by-idx
+  [check-schema-interceptor]
+  (fn [{db :db} [_ idx]]
+    (let [selected-hakukohteet (-> db
+                                   (get-in [:application :answers :hakukohteet :values] [])
+                                   vec) ;; Need to be vec because of subvec
+          new-hakukohde-values (vec (concat
+                                      (subvec selected-hakukohteet 0 idx)
+                                      (subvec selected-hakukohteet (inc idx))))
+          db                   (-> db
+                                   (assoc-in [:application :answers :hakukohteet :values]
+                                             new-hakukohde-values)
+                                   (assoc-in [:application :answers :hakukohteet :value]
+                                             (mapv :value new-hakukohde-values))
+                                   set-field-visibilities)]
+      {:db       db
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/remove-koulutustyyppi-filter idx]]})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection
@@ -206,11 +302,13 @@
 (reg-event-fx
   :application/change-hakukohde-priority
   [check-schema-interceptor]
-  (fn [{db :db} [_ hakukohde-oid index-change]]
+  (fn [{db :db} [_ hakukohde-oid index-change original-index]]
     (let [hakukohteet     (-> db :application :answers :hakukohteet :values vec)
-          current-index   (first (keep-indexed #(when (= hakukohde-oid (:value %2))
+          current-index   (if hakukohde-oid
+                            (first (keep-indexed #(when (= hakukohde-oid (:value %2))
                                                   %1)
                                    hakukohteet))
+                            original-index)
           new-index       (+ current-index index-change)
           new-hakukohteet (assoc hakukohteet
                             current-index (nth hakukohteet new-index)
@@ -219,4 +317,52 @@
                               (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
                               (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet)))]
       {:db                 db
-       :dispatch [:application/validate-hakukohteet]})))
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/change-koulutustyyppi-filter-priority current-index index-change]]})))
+
+(reg-event-db
+  :application/handle-fetch-koulutustyypit
+  [check-schema-interceptor]
+  (fn [db [_ {koulutustyypit-response-body :body}]]
+    (let [relevant-koulutustyyyppi-ids #{"1" "2" "4" "5" "10" "40"} ;TODO yksi id puuttuu tästä "tutkintokoulutukseen valmentava koulutus erityisopetuksena"
+          koulutustyypit (filter #(relevant-koulutustyyyppi-ids (:value %))
+                                 koulutustyypit-response-body)]
+      (assoc-in db [:application :koulutustyypit] koulutustyypit))))
+
+(reg-event-fx
+  :application/fetch-koulutustyypit
+  [check-schema-interceptor]
+  (fn [_]
+    {:http {:method    :get
+            :url       "/hakemus/api/koulutustyypit"
+            :handler   [:application/handle-fetch-koulutustyypit]}}))
+
+(reg-event-db
+  :application/toggle-koulutustyyppi-filter
+  [check-schema-interceptor]
+  (fn [db [_ idx koulutustyyppi-value]]
+    (update-in db [:application :hakukohde-koulutustyyppi-filters idx koulutustyyppi-value] not)))
+
+(reg-event-db
+  :application/remove-koulutustyyppi-filter
+  [check-schema-interceptor]
+  (fn [db [_ idx]]
+    (let [filters (get-in db [:application :hakukohde-koulutustyyppi-filters])
+          indices-to-change (->> (keys filters)
+                                 (filter #(< idx %)))
+          new-indices (map dec indices-to-change)
+          filters' (-> filters
+                       (dissoc idx)
+                       (s/rename-keys (zipmap indices-to-change new-indices)))]
+      (assoc-in db [:application :hakukohde-koulutustyyppi-filters] filters'))))
+
+(reg-event-db
+  :application/change-koulutustyyppi-filter-priority
+  [check-schema-interceptor]
+  (fn [db [_ idx index-change]]
+    (let [filters (get-in db [:application :hakukohde-koulutustyyppi-filters])
+          new-idx (+ idx index-change)
+          changes {idx new-idx
+                   new-idx idx}
+          filters' (s/rename-keys filters changes)]
+      (assoc-in db [:application :hakukohde-koulutustyyppi-filters] filters'))))
