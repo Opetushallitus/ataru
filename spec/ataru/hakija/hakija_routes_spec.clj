@@ -73,7 +73,7 @@
                                                (get-many-from [this keys])
                                                (remove-from [this key])
                                                (clear-all [this]))
-        hakukohderyhma-settings-cache-loader (reify cache-service/Cache
+        hakukohderyhma-settings-cache         (reify cache-service/Cache
                                                (get-from [this key])
                                                (get-many-from [this keys])
                                                (remove-from [this key])
@@ -84,7 +84,7 @@
                                                :ohjausparametrit-service ohjausparametrit-service
                                                :organization-service     organization-service
                                                :tarjonta-service         tarjonta-service
-                                               :hakukohderyhma-settings-cache-loader hakukohderyhma-settings-cache-loader})]
+                                               :hakukohderyhma-settings-cache hakukohderyhma-settings-cache})]
     (-> (routes/new-handler)
         (assoc :tarjonta-service tarjonta-service)
         (assoc :job-runner (job/new-job-runner hakija-jobs/job-definitions))

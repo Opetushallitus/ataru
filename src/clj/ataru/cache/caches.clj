@@ -76,6 +76,15 @@
        :lock-timeout  [20 TimeUnit/SECONDS]})
      {:redis  :redis
       :loader :hakukohde-union-cache-loader})]
+   [:hakukohderyhma-settings-cache
+    (component/using
+      (redis/map->Cache
+        {:name          "hakukohderyhma-settings"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [15 TimeUnit/MINUTES]
+         :lock-timeout  [20 TimeUnit/SECONDS]})
+      {:redis   :redis
+       :loader  :hakukohderyhma-settings-cache-loader})]
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache

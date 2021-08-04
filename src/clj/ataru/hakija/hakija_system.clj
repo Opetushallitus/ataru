@@ -87,7 +87,8 @@
                                          :koodisto-cache
                                          :ohjausparametrit-service
                                          :organization-service
-                                         :tarjonta-service])
+                                         :tarjonta-service
+                                         :hakukohderyhma-settings-cache])
 
     :person-service (component/using
                      (person-service/new-person-service)
