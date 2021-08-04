@@ -110,6 +110,9 @@
    :check-answers                               {:fi ["Tarkista " " tietoa"]
                                                  :sv ["Kontrollera " " uppgifter"]
                                                  :en ["Check " " answers"]}
+   :clear                                       {:fi "Tyhjennä"
+                                                 :sv "Töm"
+                                                 :en "Clear"}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Ärendespråk"
                                                  :en "Contact language"}
@@ -179,6 +182,9 @@
    :file-size-info-min                          {:fi "Tiedoston koko on 0"
                                                  :en "The file size is 0"
                                                  :sv "Filstorleken är 0"}
+   :filter-by-koulutustyyppi                    {:fi "Rajaa koulutustyypillä"
+                                                 :en "EN: Rajaa koulutustyypillä"
+                                                 :sv "SV: Rajaa koulutustyypillä"}
    :uploading                                   {:fi "Ladataan"
                                                  :sv "Laddar upp"
                                                  :en "Uploading"}
@@ -380,12 +386,24 @@
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
+   :search-application-options-or-education     {:fi "Etsi koulutusta tai oppilaitosta"
+                                                 :sv "SV: Etsi koulutusta tai oppilaitosta"
+                                                 :en "EN: Etsi koulutusta tai oppilaitosta"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}
    :seconds                                     {:fi "sekuntia"
                                                  :en "seconds"
                                                  :sv "sekunder"}
+   :select-max-n-application-options            {:fi ["Valitse enintään " " hakukohdetta"]
+                                                 :sv ["SV: Valitse enintään " " SV: hakukohdetta"]
+                                                 :en ["SV: Valitse enintään " " SV: hakukohdetta"]}
+   :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
+                                                 :sv "SV: Voit valita vielä " " SV: hakukohdetta"
+                                                 :en "SV: Voit valita vielä " " SV: hakukohdetta"}
+   :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
+                                                 :sv ["SV: Voit valita vielä " " SV: hakukohdetta"]
+                                                 :en ["SV: Voit valita vielä " " SV: hakukohdetta"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
                                                  :sv "Visa mer..."}
