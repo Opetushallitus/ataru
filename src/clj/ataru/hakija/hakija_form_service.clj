@@ -116,8 +116,7 @@
           not-found-in-old (filter #(not (oid-is-found (:hakukohderyhma-oid %) old-rajaavat)) rajaavat)
           transformed-to-rajaavat (map #(merge {} {:hakukohderyhma-oid (:hakukohderyhma-oid %)
                                           :raja (:max-hakukohteet %)
-                                          :haku-oid haku-oid
-                                          :last-modified nil}) not-found-in-old)]
+                                          :haku-oid haku-oid}) not-found-in-old)]
       (concat old-rajaavat transformed-to-rajaavat))
   )
 
