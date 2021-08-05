@@ -14,7 +14,8 @@
                          :on-click                      s/Any
                          (s/optional-key :aria-attrs)   AriaAttributes
                          (s/optional-key :data-test-id) s/Str
-                         (s/optional-key :on-blur)      s/Any}]
+                         (s/optional-key :on-blur)      s/Any}
+   & children]
   [:button.a-button
    (cond-> {:type         "button"
             :on-click     on-click
@@ -22,4 +23,5 @@
            (seq aria-attrs)
            (merge aria-attrs)
            (fn? on-blur) (assoc :on-blur on-blur))
-   label])
+   label
+   children])
