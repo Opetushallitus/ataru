@@ -22,7 +22,10 @@
   HakukohderyhmapalveluServiceProtocol
 
   (get-hakukohderyhma-oids-for-hakukohde [_ _]
-    ["1.2.246.562.28.12345" "1.2.246.562.28.12346"]))
+    ["1.2.246.562.28.12345" "1.2.246.562.28.12346"])
+
+  (get-settings-for-hakukohderyhma [_ _]
+    {:rajaava false :max-hakukohteet nil}))
 
 (defn new-hakukohderyhmapalvelu-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
