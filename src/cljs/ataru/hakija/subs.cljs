@@ -1,5 +1,6 @@
 (ns ataru.hakija.subs
   (:require [re-frame.core :as re-frame]
+            [ataru.config :as config]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :as autil]
@@ -154,6 +155,26 @@
     (util/non-blank-val
       (:tarjoaja-name hakukohde)
       default-languages)))
+
+(re-frame/reg-sub
+  :application/hakukohde-koulutus-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/tarjonta-hakukohde-by-oid hakukohde-oid])])
+  (fn [[hakukohde] _]
+    (-> hakukohde
+        :koulutukset
+        first
+        :oid)))
+
+(re-frame/reg-sub
+  :application/hakukohde-konfo-url-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/hakukohde-koulutus-by-oid hakukohde-oid])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[koulutus-oid lang] _]
+    (when koulutus-oid
+      (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
+        (str konfo-base "/konfo/" (name lang) "/toteutus/" koulutus-oid)))))
 
 (re-frame/reg-sub
   :application/attachment-deadline

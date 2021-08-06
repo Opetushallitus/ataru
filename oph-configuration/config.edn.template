@@ -33,6 +33,7 @@
                  :hakija-caller-id "{{ataru_hakija_frontend_caller_id | default('1.2.246.562.10.00000000001.ataru-hakija.frontend')}}"
                  :applicant {:service_url "{{ataru_applicant_service_url}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
+                 :konfo {:service_url "https://beta.{{ataru_hakija_host}}"}
                  :environment-name "{{ataru_environment_name}}"
                  :features {:kevyt-valinta {{ataru_kevyt_valinta_enabled | default('false')}}
                             :attachment-download-allowed {{ataru_attachment_download_allowed | default('false')}}
