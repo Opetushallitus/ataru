@@ -108,10 +108,11 @@
                   :on-click on-click-fn}
       [:i.zmdi.zmdi-close-circle-o]]]))
 
-(defn- hakukohde-details [_]
-  (let [lang @(subscribe [:application/form-language])]
+(defn- hakukohde-details [hakukohde-oid]
+  (let [lang @(subscribe [:application/form-language])
+        url @(subscribe [:application/hakukohde-konfo-url-by-oid hakukohde-oid])]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
-       [:a {:href "/asdf"}
+       [:a {:href url :target :blank}
         [:i.zmdi.zmdi-open-in-new]
         (translations/get-hakija-translation :read-more lang)]]))
 
