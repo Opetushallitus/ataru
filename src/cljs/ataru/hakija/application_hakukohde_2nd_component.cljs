@@ -97,16 +97,16 @@
         on-click-fn #(when-not cannot-remove? (dispatch [:application/hakukohde-remove-by-idx idx]))]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    label
-                  :on-click on-click-fn}]
-     [:i.zmdi.zmdi-delete]]))
+                  :on-click on-click-fn}
+      [:i.zmdi.zmdi-delete]]]))
 
 (defn- clear-hakukohde [idx]
   (let [lang @(subscribe [:application/form-language])
         on-click-fn #(dispatch [:application/hakukohde-clear-selection idx])]
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    (translations/get-hakija-translation :clear lang)
-                  :on-click on-click-fn}]
-     [:i.zmdi.zmdi-close-circle-o]]))
+                  :on-click on-click-fn}
+      [:i.zmdi.zmdi-close-circle-o]]]))
 
 (defn- hakukohde-details [_]
   (let [lang @(subscribe [:application/form-language])]
