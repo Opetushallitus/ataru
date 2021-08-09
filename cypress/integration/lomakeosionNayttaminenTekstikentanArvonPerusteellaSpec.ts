@@ -8,7 +8,7 @@ import * as tekstinSyotto from '../tekstinSyotto'
 const typeValueAndAssertVisibility = (value: string, isVisible: boolean) => {
   tekstinSyotto
     .syotaTekstiTarkistamatta(
-      cy.get('[data-test-id=tekstikenttä-input]'),
+      cy.get('[data-test-id=tekstikenttä-input]').last(),
       value
     )
     .blur()
@@ -38,6 +38,7 @@ describe('Lomakeosion näkyvyys tekstikentän arvon perusteella', () => {
             })
             it('Piilottaa lomakeosion, kun tekstikenttä on tyhjä', () => {
               cy.get('[data-test-id=tekstikenttä-input]')
+                .last()
                 .clear()
                 .blur()
                 .then(() => {
