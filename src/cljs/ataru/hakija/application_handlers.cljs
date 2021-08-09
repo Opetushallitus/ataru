@@ -766,8 +766,7 @@
                                                  flatten
                                                  (map :section-name))]
       (reduce
-        (fn [acc-db section-id]
-          (assoc-in acc-db [:application :ui (keyword section-id) :visible?] false))
+        #(autil/set-nested-visibility %1 %2 false)
         db
         section-ids-with-visibility-rules))))
 
@@ -776,14 +775,13 @@
         distinct-form-sections (keys section-name->visibility-conditions)
         update-form-section-visibility (fn [db section-name]
                                          (when section-name
-                                           (let [visibility-conditions (get section-name->visibility-conditions section-name)]
-                                             (assoc-in
-                                               db
-                                               [:application :ui (keyword section-name) :visible?]
-                                               (when (seq value)
-                                                 (not
-                                                   (some #(option-visibility/non-blank-answer-satisfies-condition? value %)
-                                                         visibility-conditions)))))))]
+
+                                           (let [visibility-conditions (get section-name->visibility-conditions section-name)
+                                                 visible? (when (seq value)
+                                                            (not-any?
+                                                              #(option-visibility/non-blank-answer-satisfies-condition? value %)
+                                                              visibility-conditions))]
+                                             (autil/set-nested-visibility db section-name visible?))))]
     (reduce
       update-form-section-visibility
       db
