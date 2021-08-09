@@ -313,3 +313,10 @@
 
 (defn non-blank-option-label [option langs]
   (non-blank-val (:label option) langs))
+
+(defn set-nested-visibility [db id visible?]
+  (->> id
+       (find-field (get-in db [:form :content]))
+       (collect-ids [])
+       (reduce (fn [acc-db cur-id]
+                 (assoc-in acc-db [:application :ui (keyword cur-id) :visible?] visible?)) db)))
