@@ -320,3 +320,8 @@
        (collect-ids [])
        (reduce (fn [acc-db cur-id]
                  (assoc-in acc-db [:application :ui (keyword cur-id) :visible?] visible?)) db)))
+
+(defn visibility-conditions [content]
+  (->> content
+       (keep :section-visibility-conditions)
+       flatten))
