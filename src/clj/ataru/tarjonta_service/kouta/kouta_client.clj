@@ -9,7 +9,6 @@
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clojure.string]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
@@ -77,7 +76,7 @@
                " in hakukohde " (:oid hakukohde))))))
 
 (defn- parse-hakukohde
-  [hakukohde tarjoajat hakukohderyhmas]
+  [hakukohde tarjoajat hakukohderyhmas settings]
   (merge
    {:oid                                                         (:oid hakukohde)
     :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))
@@ -90,7 +89,7 @@
     :ryhmaliitokset                                              hakukohderyhmas
     :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
-    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? false}
+    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
@@ -136,7 +135,8 @@
   [hakukohde-oid :- s/Str
    organization-service
    hakukohderyhmapalvelu-service
-   cas-client]
+   cas-client
+   hakukohderyhma-settings-cache]
   (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                (url-helper/resolve-url hakukohde-oid)
                                (get-result cas-client))]
@@ -144,8 +144,9 @@
                              (organization-service/get-organizations-for-oids
                               organization-service))
           hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
-                            hakukohderyhmapalvelu-service hakukohde-oid)]
-      (parse-hakukohde hakukohde tarjoajat hakukohderyhmas))))
+                            hakukohderyhmapalvelu-service hakukohde-oid)
+          settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmas)]
+      (parse-hakukohde hakukohde tarjoajat hakukohderyhmas settings))))
 
 (s/defn ^:always-validate get-hakukohderyhma-settings :- (s/maybe s/Any)
   [hakukohderyhma-oid :- s/Str
@@ -187,11 +188,11 @@
   (check-schema [_ response]
     (haku-checker response)))
 
-(defrecord HakukohdeCacheLoader [cas-client organization-service hakukohderyhmapalvelu-service]
+(defrecord HakukohdeCacheLoader [cas-client organization-service hakukohderyhmapalvelu-service hakukohderyhma-settings-cache]
   cache-service/CacheLoader
 
   (load [_ hakukohde-oid]
-    (get-hakukohde hakukohde-oid organization-service hakukohderyhmapalvelu-service cas-client))
+    (get-hakukohde hakukohde-oid organization-service hakukohderyhmapalvelu-service cas-client hakukohderyhma-settings-cache))
 
   (load-many [this hakukohde-oids]
     (cache-service/default-load-many this hakukohde-oids))

@@ -56,7 +56,8 @@
      (kouta-client/map->HakukohdeCacheLoader {})
      {:cas-client                    :kouta-internal-cas-client
       :organization-service          :organization-service
-      :hakukohderyhmapalvelu-service :hakukohderyhmapalvelu-service})]
+      :hakukohderyhmapalvelu-service :hakukohderyhmapalvelu-service
+      :hakukohderyhma-settings-cache :hakukohderyhma-settings-cache})]
    [:hakukohderyhma-settings-cache-loader
     (component/using
       (kouta-client/map->HakukohderyhmaSettingsLoader {})
