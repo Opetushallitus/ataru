@@ -26,7 +26,8 @@
           (get-result cas-client)))
 
 (s/defn ^:always-validate get-settings-for-hakukohderyhma :- (s/maybe {:rajaava s/Bool
-                                                                       :max-hakukohteet (s/maybe s/Int) })
+                                                                       :max-hakukohteet (s/maybe s/Int)
+                                                                       :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool})
   [hakukohderyhma-oid :- s/Str
    cas-client]
   (some-> :hakukohderyhmapalvelu.settings-for-hakukohderyhma

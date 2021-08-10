@@ -9,14 +9,15 @@
   {:status 200 :body "[\"1.2.246.562.28.12341\",\"1.2.246.562.28.12342\"]"})
 
 (def fake-hakukohderyhmapalvelu-settings-response
-  {:status 200 :body "{\"rajaava\": true, \"max-hakukohteet\": 3}"})
+  {:status 200 :body "{\"rajaava\": true, \"max-hakukohteet\": 3, \"jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja\": false}"})
 
 (def expected-result
   ["1.2.246.562.28.12341" "1.2.246.562.28.12342"])
 
 (def expected-settings-result
   {:rajaava true
-   :max-hakukohteet 3})
+   :max-hakukohteet 3
+   :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja false})
 
 (describe "HakukohderyhmapalveluService"
           (it "Return list of hakukohderyhmas for hakukohde"

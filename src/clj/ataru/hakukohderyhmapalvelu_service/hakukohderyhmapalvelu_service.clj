@@ -25,7 +25,7 @@
     ["1.2.246.562.28.12345" "1.2.246.562.28.12346"])
 
   (get-settings-for-hakukohderyhma [_ _]
-    {:rajaava false :max-hakukohteet nil}))
+    {:rajaava false :max-hakukohteet nil :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja false}))
 
 (defn new-hakukohderyhmapalvelu-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
