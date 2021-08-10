@@ -739,4 +739,5 @@
   {:rajaava                                                    s/Bool
    :max-hakukohteet                                            (s/maybe s/Int)
    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool
+   :yo-amm-autom-hakukelpoisuus s/Bool
    s/Any                                                       s/Any})
