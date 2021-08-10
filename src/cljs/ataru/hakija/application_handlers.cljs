@@ -210,9 +210,15 @@
 
 (defn set-field-visibilities
   [db]
-  (rules/run-all-rules
-   (reduce field-visibility/set-field-visibility db (get-in db [:form :content]))
-   (:flat-form-content db)))
+  (let [flat-content (:flat-form-content db)
+        visibility-conditions (->> (autil/visibility-conditions flat-content)
+                                   (map :section-name)
+                                   set)
+        content (->> (get-in db [:form :content])
+                     (remove #(visibility-conditions (:id %))))]
+    (rules/run-all-rules
+      (reduce field-visibility/set-field-visibility db content)
+      flat-content)))
 
 (defn- set-have-finnish-ssn
   [db flat-form-content]
@@ -761,10 +767,7 @@
   :application/hide-form-sections-with-text-component-visibility-rules
   (fn [db _]
     (let [form-content (:flat-form-content db)
-          section-ids-with-visibility-rules (->> form-content
-                                                 (keep :section-visibility-conditions)
-                                                 flatten
-                                                 (map :section-name))]
+          section-ids-with-visibility-rules (map :section-name (autil/visibility-conditions form-content))]
       (reduce
         #(autil/set-nested-visibility %1 %2 false)
         db
