@@ -98,7 +98,7 @@
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    label
                   :on-click on-click-fn}
-      [:i.zmdi.zmdi-delete]]]))
+      ^{:key :i.zmdi.zmdi-delete} [:i.zmdi.zmdi-delete]]]))
 
 (defn- clear-hakukohde [idx]
   (let [lang @(subscribe [:application/form-language])
@@ -106,7 +106,7 @@
     [:div.application__hakukohde-2nd-row__selected-button-wrapper
      [btn/button {:label    (translations/get-hakija-translation :clear lang)
                   :on-click on-click-fn}
-      [:i.zmdi.zmdi-close-circle-o]]]))
+      ^{:key :i.zmdi.zmdi-close-circle-o} [:i.zmdi.zmdi-close-circle-o]]]))
 
 (defn- hakukohde-details [hakukohde-oid]
   (let [lang @(subscribe [:application/form-language])
