@@ -40,8 +40,8 @@
 (defn- email-verify-field-change [field-descriptor value verify-value]
   (dispatch [:application/set-email-verify-field field-descriptor value verify-value]))
 
-(defn- text-field-change [field-descriptor value]
-  (dispatch [:application/set-application-text-field field-descriptor value]))
+(defn- handle-section-visibility-on-blur [field-descriptor value]
+  (dispatch [:application/handle-section-visibility-conditions field-descriptor value]))
 
 (defn- textual-field-change [field-descriptor value]
   (dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]))
@@ -221,7 +221,8 @@
                                (partial textual-field-change field-descriptor))
             on-blur          (fn [_]
                                (textual-field-blur field-descriptor)
-                               (text-field-change field-descriptor (get @local-state :value)))
+                               (when (seq (:section-visibility-conditions field-descriptor))
+                                 (handle-section-visibility-on-blur field-descriptor (get @local-state :value))))
             form-field-id    (application-field/form-field-id field-descriptor idx)
             data-test-id     (if (some #{id} [:first-name
                                               :preferred-name
