@@ -790,14 +790,13 @@
       db
       distinct-form-sections)))
 
-(reg-event-fx
-  :application/set-application-text-field
-  (fn [{db :db} [_ field-descriptor value]]
+(reg-event-db
+  :application/handle-section-visibility-conditions
+  (fn [db [_ field-descriptor value]]
     (let [visibility-conditions (:section-visibility-conditions field-descriptor)]
-      {:db       (if (seq visibility-conditions)
-                   (hide-sections-based-on-conditions db value visibility-conditions)
-                   db)
-       :dispatch [:application/set-repeatable-application-field field-descriptor nil nil value]})))
+      (if (seq visibility-conditions)
+        (hide-sections-based-on-conditions db value visibility-conditions)
+        db))))
 
 (reg-event-fx
   :application/set-repeatable-application-field
