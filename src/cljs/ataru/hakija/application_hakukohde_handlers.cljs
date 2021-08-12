@@ -132,7 +132,7 @@
   :application/hakukohde-clear-selection
   (fn [{db :db} [_ idx]]
     (let [selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
-          updated-hakukohteet (assoc selected-hakukohteet idx {:valid false :value nil})
+          updated-hakukohteet (assoc selected-hakukohteet idx {:valid false :value ""})
           updated-db (-> db
                          (assoc-in [:application :answers :hakukohteet :values]
                                    updated-hakukohteet)
@@ -157,7 +157,7 @@
                                  selected-hakukohteet)
           add-hakukohde-fn     (fn [hakukohteet]
                                  (let [hakukohde {:valid true :value hakukohde-oid}
-                                       default {:valid false :value nil}]
+                                       default {:valid false :value ""}]
                                    (->> (range (max (inc idx) (count hakukohteet)))
                                         (mapv (fn [cur-idx]
                                                 (let [cur (nth hakukohteet cur-idx nil)]
@@ -241,10 +241,10 @@
                (assoc-in [:application :ui] ui-without-duplicates)
                (assoc :flat-form-content flat-form-content))})))
 
-(reg-event-db
+(reg-event-fx
   :application/add-empty-hakukohde-selection
   [check-schema-interceptor]
-  (fn [db _]
+  (fn [{db :db} _]
     (let [current-hakukohteet (get-in db [:application :answers :hakukohteet :values])
           hakukohteet-count (count current-hakukohteet)
           repeat-times (if (zero? hakukohteet-count) 2 1)
@@ -252,9 +252,10 @@
                                (repeat repeat-times)
                                vec)
           new-hakukohteet (vec (concat current-hakukohteet empty-hakukohde))]
-      (-> db
-          (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
-          (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet))))))
+      {:db (-> db
+               (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+               (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet)))
+       :dispatch [:application/validate-hakukohteet]})))
 
 (reg-event-fx
   :application/hakukohde-remove
