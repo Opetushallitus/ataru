@@ -736,6 +736,7 @@
    :valintalaskenta s/Bool})
 
 (s/defschema HakukohderyhmaSettings
-  {:rajaava s/Bool
-   :max-hakukohteet (s/maybe s/Int)
-   :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool})
+  {:rajaava                                                    s/Bool
+   :max-hakukohteet                                            (s/maybe s/Int)
+   :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool
+   s/Any                                                       s/Any})
