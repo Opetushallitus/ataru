@@ -1,6 +1,5 @@
 (ns ataru.tarjonta-service.tarjonta-parser
   (:require [clj-time.core :as t]
-            [taoensso.timbre :as log]
             [clojure.string :as string]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
@@ -9,7 +8,7 @@
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]))
 
 (defn- parse-hakukohde
-  [tarjonta-service
+  [_
    now
    hakukohderyhmat
    haku
@@ -30,6 +29,7 @@
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
                                                                              (throw (new RuntimeException (str "Koulutus " % " not found"))))
                                                                         (:koulutus-oids hakukohde))
+     :koulutustyypit                                              (:koulutustyypit hakukohde)
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
                                                                           (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
@@ -95,6 +95,7 @@
            :max-hakukohteet                  (:max-hakukohteet haku)
            :hakuaika                         (hakuaika/haun-hakuaika now haku ohjausparametrit)
            :can-submit-multiple-applications (:can-submit-multiple-applications haku)
+           :kohdejoukko-uri                  (:kohdejoukko-uri haku)
            :yhteishaku                       (:yhteishaku haku)}}))))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid]
    (when haku-oid

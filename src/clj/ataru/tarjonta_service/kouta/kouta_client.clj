@@ -9,7 +9,6 @@
             [cheshire.core :as json]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [clojure.string]
             [schema.core :as s]
             [clojure.string :as string]
             [taoensso.timbre :as log]))
@@ -89,6 +88,7 @@
     :ryhmaliitokset                                              hakukohderyhmas
     :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
+    :koulutustyypit                                              (:koulutustyypit hakukohde)
     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? false}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}

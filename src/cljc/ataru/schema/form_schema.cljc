@@ -80,7 +80,8 @@
                                                                            (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
                                                                            (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
                         (s/optional-key :belongs-to-hakukohteet)         [s/Str]
-                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]})
+                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
+                        (s/optional-key :per-hakukohde)                  s/Bool})
 
 (s/defschema BasicElement
   (s/conditional
@@ -191,6 +192,7 @@
    :hakukohderyhmat                                                              [s/Str]
    :hakuaika                                                                     Hakuaika
    :koulutukset                                                                  [Koulutus]
+   (s/optional-key :koulutustyypit)                                              [s/Str]
    :applicable-base-educations                                                   [s/Str]
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool})
@@ -203,6 +205,7 @@
    :prioritize-hakukohteet             s/Bool
    :max-hakukohteet                    (s/maybe s/Int)
    :can-submit-multiple-applications   s/Bool
+   :kohdejoukko-uri                    s/Str
    :yhteishaku                         (s/maybe s/Bool)})
 
 (s/defschema Haku
@@ -243,6 +246,7 @@
    (s/optional-key :hakuaika-id)                                                 s/Str
    (s/optional-key :hakuajat)                                                    [{:start                org.joda.time.DateTime
                                                                                    (s/optional-key :end) org.joda.time.DateTime}]
+   :koulutustyypit                                                               [s/Str]
    :hakukelpoisuusvaatimus-uris                                                  [s/Str]
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
@@ -316,6 +320,8 @@
   {:key                          s/Str
    :value                        Value
    :fieldType                    (apply s/enum form-fields)
+   (s/optional-key :duplikoitu-kysymys-hakukohde-oid) (s/maybe s/Str)
+   (s/optional-key :original-question) (s/maybe s/Str)
    (s/optional-key :cannot-view) s/Bool
    (s/optional-key :label)       (s/maybe (s/cond-pre
                                            localized-schema/LocalizedString
@@ -389,7 +395,8 @@
    (s/optional-key :birth-date)  s/Str
    (s/optional-key :gender)      s/Str
    (s/optional-key :language)    s/Str
-   (s/optional-key :ssn)         s/Str})
+   (s/optional-key :ssn)         s/Str
+   (s/optional-key :minor)       s/Bool})
 
 (s/defschema ApplicationWithPerson
   (-> Application
@@ -669,6 +676,7 @@
 (s/defschema EmailTemplate {:lang           (s/enum "fi" "sv" "en")
                             :content        s/Str
                             :content-ending s/Str
+                            :signature      s/Str
                             :subject        (s/constrained s/Str (comp not string/blank?))})
 
 (s/defschema Sort

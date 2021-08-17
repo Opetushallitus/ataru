@@ -171,6 +171,8 @@ make load-test-fixture
 
 After the service starts and fixture data is loaded, navigate to local URL to run the tests: http://localhost:8350/lomake-editori/virkailija-test.html
 
+Test suites can be found in karma-runner.js
+
 **NOTE**: after each run you need to manually compile test code and load the fixture data to test database using following command, otherwise the test will fail.
 
 ```
@@ -183,6 +185,11 @@ Swagger specs for the APIs can be found at
 
 * <http://localhost:8351/hakemus/swagger.json>
 * <http://localhost:8350/lomake-editori/swagger.json>
+
+Swagger UI can be found at 
+
+* <http://localhost:8351/hakemus/api-docs/index.html>
+* <http://localhost:8350/lomake-editori/api-docs/index.html>
 
 ## Anonymize data
 

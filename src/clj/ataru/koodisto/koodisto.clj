@@ -1,8 +1,6 @@
 (ns ataru.koodisto.koodisto
   (:require [ataru.util :as util]
-            [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
-            [clojure.core.cache :as cache]
             [ataru.cache.cache-service :as cache-service])
   (:import java.time.ZonedDateTime))
 
@@ -59,6 +57,10 @@
   (->> (get-koodisto-options koodisto-cache "posti" 1 false)
        (filter #(= postal-code (:value %)))
        (first)))
+
+(defn get-koulutustyypit
+  [koodisto-cache]
+  (get-koodisto-options koodisto-cache "koulutustyyppi" 2 false))
 
 (defn all-koodisto-values
   [koodisto-cache uri version allow-invalid?]

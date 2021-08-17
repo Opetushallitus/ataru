@@ -1,5 +1,6 @@
 (ns ataru.hakija.subs
   (:require [re-frame.core :as re-frame]
+            [ataru.config :as config]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :as autil]
@@ -126,6 +127,54 @@
     (re-frame/subscribe [:application/tarjonta-hakukohteet]))
   (fn [hakukohteet _]
     (util/group-by-first :oid hakukohteet)))
+
+(re-frame/reg-sub
+  :application/tarjonta-hakukohde-by-oid
+  (fn [_ _]
+    (re-frame/subscribe [:application/tarjonta-hakukohteet-by-oid]))
+  (fn [hakukohteet [_ hakukohde-oid]]
+    (get hakukohteet hakukohde-oid)))
+
+
+(re-frame/reg-sub
+  :application/hakukohde-name-label-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/tarjonta-hakukohde-by-oid hakukohde-oid])
+     (re-frame/subscribe [:application/default-languages])])
+  (fn [[hakukohde default-languages] _]
+    (util/non-blank-val
+      (:name hakukohde)
+      default-languages)))
+
+(re-frame/reg-sub
+  :application/hakukohde-tarjoaja-name-label-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/tarjonta-hakukohde-by-oid hakukohde-oid])
+     (re-frame/subscribe [:application/default-languages])])
+  (fn [[hakukohde default-languages] _]
+    (util/non-blank-val
+      (:tarjoaja-name hakukohde)
+      default-languages)))
+
+(re-frame/reg-sub
+  :application/hakukohde-koulutus-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/tarjonta-hakukohde-by-oid hakukohde-oid])])
+  (fn [[hakukohde] _]
+    (-> hakukohde
+        :koulutukset
+        first
+        :oid)))
+
+(re-frame/reg-sub
+  :application/hakukohde-konfo-url-by-oid
+  (fn [[_ hakukohde-oid]]
+    [(re-frame/subscribe [:application/hakukohde-koulutus-by-oid hakukohde-oid])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[koulutus-oid lang] _]
+    (when koulutus-oid
+      (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
+        (str konfo-base "/konfo/" (name lang) "/toteutus/" koulutus-oid)))))
 
 (re-frame/reg-sub
   :application/attachment-deadline
@@ -441,6 +490,18 @@
     (get-in db [:application :hakukohde-hits])))
 
 (re-frame/reg-sub
+  :application/get-hakukohde
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet])])
+  (fn [[hakukohteet] [_ hakukohde-oid]]
+    (first (filter #(= (:oid %) hakukohde-oid) hakukohteet ))))
+
+(re-frame/reg-sub
+  :application/remaining-hakukohde-search-results
+  (fn [db _]
+    (get-in db [:application :remaining-hakukohde-search-results])))
+
+(re-frame/reg-sub
   :application/hakukohde-selected?
   (fn [_ _]
     (re-frame/subscribe [:application/selected-hakukohteet]))
@@ -455,9 +516,8 @@
 (re-frame/reg-sub
   :application/max-hakukohteet
   (fn [db _]
-    (get-in (hakukohteet-field db)
-            [:params :max-hakukohteet]
-            nil)))
+    (-> (hakukohteet-field db)
+        (get-in [:params :max-hakukohteet]))))
 
 (re-frame/reg-sub
   :application/rajaavat-hakukohderyhmat
@@ -490,10 +550,16 @@
   :application/hakukohteet-full?
   (fn [_ _]
     [(re-frame/subscribe [:application/max-hakukohteet])
-     (re-frame/subscribe [:application/selected-hakukohteet])])
-  (fn [[max-hakukohteet selected-hakukohteet] _]
-    (and (some? max-hakukohteet)
-         (<= max-hakukohteet (count selected-hakukohteet)))))
+     (re-frame/subscribe [:application/selected-hakukohteet])
+     (re-frame/subscribe [:application/unselected-hakukohteet])])
+  (fn [[max-hakukohteet selected-hakukohteet unselected-hakukohteet] _]
+    (if (some? max-hakukohteet)
+      (<= max-hakukohteet (count selected-hakukohteet))
+      (or
+        (empty? unselected-hakukohteet)
+        (=
+          (count (filter nil? selected-hakukohteet))
+          (count unselected-hakukohteet))))))
 
 (re-frame/reg-sub
   :application/default-languages
@@ -634,3 +700,71 @@
       (let [changed? (fn [answer] (or (not= (:original-value answer) (:value answer))
                                       (some? (some #(= :deleting (:status %)) (:values answer)))))]
            (some? (some changed? (vals answers))))))
+
+(re-frame/reg-sub
+  :application/active-hakukohde-search
+  (fn [db _]
+    (get-in db [:application :active-hakukohde-search])))
+
+(re-frame/reg-sub
+  :application/koulutustyypit
+  (fn [db _]
+    (get-in db [:application :koulutustyypit])))
+
+(re-frame/reg-sub
+  :application/hakukohde-koulutustyypit-filters
+  (fn [db [_ idx]]
+    (get-in db [:application :hakukohde-koulutustyyppi-filters idx])))
+
+(re-frame/reg-sub
+  :application/active-koulutustyyppi-filters
+  (fn [db [_ idx]]
+    (->> (get-in db [:application :hakukohde-koulutustyyppi-filters idx])
+         (keep (fn [[key value]] (when value key)))
+         set)))
+
+(re-frame/reg-sub
+  :application/unselected-hakukohteet
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet])
+     (re-frame/subscribe [:application/selected-hakukohteet])
+     (re-frame/subscribe [:application/virkailija?])])
+  (fn [[hakukohteet selected-hakukohteet virkailija]]
+    (let [selected-filter (fn [{oid :oid}] ((set selected-hakukohteet) oid))
+          hakuaika-filter #(or virkailija (get-in % [:hakuaika :on]))]
+      (->> hakukohteet
+           (remove selected-filter)
+           (filter hakuaika-filter)))))
+
+(re-frame/reg-sub
+  :application/koulutustyyppi-filtered-hakukohde-hits
+  (fn [[_ idx] _]
+    [(re-frame/subscribe [:application/active-koulutustyyppi-filters idx])
+     (re-frame/subscribe [:application/hakukohde-hits])
+     (re-frame/subscribe [:application/remaining-hakukohde-search-results])
+     (re-frame/subscribe [:application/unselected-hakukohteet])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[active-koulutustyyppi-filters hakukohde-hits remaining-hits hakukohteet form-language]]
+    (let [all-hits (set (concat hakukohde-hits remaining-hits))
+          hit-filter (fn [{oid :oid}] (all-hits oid))
+          koulutustyyppi-filter (fn [{koulutustyypit :koulutustyypit}]
+                                  (or (empty? active-koulutustyyppi-filters)
+                                      (some active-koulutustyyppi-filters koulutustyypit)))
+          sort-fn #(get-in % [:name form-language])]
+      (->> hakukohteet
+           (filter hit-filter)
+           (filter koulutustyyppi-filter)
+           (sort-by sort-fn)
+           (map :oid)))))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku?
+  (fn [db]
+    (let [kohdejoukko-uri (get-in db [:form :tarjonta :kohdejoukko-uri])
+          kohdejoukko (when (some? kohdejoukko-uri)
+                        (-> kohdejoukko-uri
+                            (cstr/split #"#")
+                            first))
+          yhteishaku? (get-in db [:form :tarjonta :yhteishaku])]
+      (and yhteishaku?
+           (= kohdejoukko "haunkohdejoukko_11")))))
