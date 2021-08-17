@@ -2,6 +2,7 @@
   (:require [schema.core :as s]
             [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url-helper]
+            [ataru.schema.form-schema :as form-schema]
             [cheshire.core :as json]
             [taoensso.timbre :as log]))
 
@@ -25,9 +26,8 @@
           (url-helper/resolve-url hakukohde-oid)
           (get-result cas-client)))
 
-(s/defn ^:always-validate get-settings-for-hakukohderyhma :- (s/maybe {:rajaava s/Bool
-                                                                       :max-hakukohteet (s/maybe s/Int)
-                                                                       :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool})
+(s/defn ^:always-validate get-settings-for-hakukohderyhma
+  :- (s/maybe form-schema/HakukohderyhmaSettings)
   [hakukohderyhma-oid :- s/Str
    cas-client]
   (some-> :hakukohderyhmapalvelu.settings-for-hakukohderyhma
