@@ -6,11 +6,22 @@
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
+            [clojure.pprint :as pprint]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
             [speclj.core :refer :all]
-            [yesql.core :refer [defqueries]]))
+            [yesql.core :refer [defqueries]]
+            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
+            [ataru.cache.cache-service :as cache-service]))
+
+(def hakukohderyhmapalvelu-service (hakukohderyhmapalvelu-service/new-hakukohderyhmapalvelu-service))
+
+(def hakukohderyhma-settings-cache (reify cache-service/Cache
+                      (get-from [this key])
+                      (get-many-from [this keys])
+                      (remove-from [this key])
+                      (clear-all [this])))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
@@ -61,14 +72,17 @@
    (:ohjausparametrit inputs)
    (:now inputs)
    (:hakukohteet inputs)
-   (:suoritus? inputs)))
+   (:suoritus? inputs)
+   hakukohderyhmapalvelu-service
+   hakukohderyhma-settings-cache
+   ))
 
 (defn- check [times prop]
   (let [result (tc/quick-check times prop)]
     (when-not (:result result)
       (let [input (-> result :shrunk :smallest first)]
-        (-fail (str (with-out-str (clojure.pprint/pprint (list 'call-ae input))) "\n"
-                    (with-out-str (clojure.pprint/pprint (call-ae input)))))))))
+        (-fail (str (with-out-str (pprint/pprint (list 'call-ae input))) "\n"
+                    (with-out-str (pprint/pprint (call-ae input)))))))))
 
 (describe "Automatic eligibility"
   (tags :unit)

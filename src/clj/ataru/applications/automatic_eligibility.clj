@@ -4,6 +4,8 @@
             [ataru.db.db :as db]
             [ataru.forms.form-store :as form-store]
             [ataru.log.audit-log :as audit-log]
+            [ataru.cache.cache-service :as cache-service]
+            [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhmapalvelu-service]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-service]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
@@ -136,18 +138,32 @@
         (insert-application-event connection application hakukohde to)
         (audit-log audit-logger application hakukohde from to)))
 
+(defn- automatic-eligibility-if-yo-amm-in-hakukohderyhma?
+  [hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache]
+  (let [hakukohderyhmat (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde hakukohderyhmapalvelu-service hakukohde)
+        settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmat)]
+    (log/error "hakukohde: " hakukohde)
+    (log/error "hakukohderyhmat: " hakukohderyhmat)
+    (log/error "settings: " (pr-str settings))
+    (log/error "result: " (pr-str (true? (some #(= (:yo-amm-autom-hakukelpoisuus %) true) settings))))
+
+    (true? (some #(= (:yo-amm-autom-hakukelpoisuus %) true) settings))))
+
 (defn automatic-eligibility-if-ylioppilas
   [application
    haku
    ohjausparametrit
    now
    hakukohteet
-   ylioppilas-tai-ammatillinen?]
+   ylioppilas-tai-ammatillinen?
+   hakukohderyhmapalvelu-service
+   hakukohderyhma-settings-cache]
   (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
     (->> hakukohteet
-         (filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
+         ;(filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
          (keep (fn [hakukohde]
-                 (if ylioppilas-tai-ammatillinen?
+                 ;(if ylioppilas-tai-ammatillinen?
+                 (if (or ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
                    {:from        "unreviewed"
                     :to          "eligible"
                     :application application
@@ -155,7 +171,19 @@
                    {:from        "eligible"
                     :to          "unreviewed"
                     :application application
-                    :hakukohde   hakukohde}))))))
+                    :hakukohde   hakukohde})))))
+
+    (comment ->> hakukohteet
+         (keep (fn [hakukohde]
+                   (if (or ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
+                     {:from        "unreviewed"
+                      :to          "eligible"
+                      :application application
+                      :hakukohde   hakukohde}
+                     {:from        "eligible"
+                      :to          "unreviewed"
+                      :application application
+                      :hakukohde   hakukohde})))))
 
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
@@ -167,7 +195,9 @@
 
 (defn automatic-eligibility-if-ylioppilas-job-step
   [{:keys [application-id]}
-   {:keys [ohjausparametrit-service
+   {:keys [hakukohderyhmapalvelu-service
+           hakukohderyhma-settings-cache
+           ohjausparametrit-service
            tarjonta-service
            suoritus-service
            audit-logger]}]
@@ -187,7 +217,9 @@
                               ohjausparametrit
                               now
                               hakukohteet
-                              ylioppilas-tai-ammatillinen?)]
+                              ylioppilas-tai-ammatillinen?
+                              hakukohderyhmapalvelu-service
+                              hakukohderyhma-settings-cache)]
                 (update-application-hakukohde-review connection audit-logger update)))
             {:transition {:id :final}})
           (person-info-module/muu-person-info-module?
