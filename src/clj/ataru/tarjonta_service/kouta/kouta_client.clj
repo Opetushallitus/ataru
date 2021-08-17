@@ -89,7 +89,8 @@
     :ryhmaliitokset                                              hakukohderyhmas
     :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
-    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))}
+    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))
+    :yo-amm-autom-hakukelpoisuus                                 (boolean (some #(:yo-amm-autom-hakukelpoisuus %) settings))}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
