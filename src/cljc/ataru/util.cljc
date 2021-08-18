@@ -6,7 +6,8 @@
             #?(:clj  [clj-time.core :as time]
                :cljs [cljs-time.core :as time])
             #?(:clj  [clj-time.coerce :refer [from-long]]
-               :cljs [cljs-time.coerce :refer [from-long]]))
+               :cljs [cljs-time.coerce :refer [from-long]])
+            [clojure.string :as string])
   (:import #?(:clj [java.util UUID])))
 
 (defn is-question-group-answer? [value]
@@ -89,6 +90,14 @@
        :content
        flatten-form-fields
        (group-by-first (comp keyword :id))))
+
+(defn- form-sections-by-id [form]
+  (->> form
+       :content
+       (filter #(= "wrapperElement" (:fieldClass %)))
+       (group-by-first (comp keyword :id))))
+
+(def form-sections-by-id-memo (memoize form-sections-by-id))
 
 (defn form-attachment-fields [form]
   (->> form
@@ -197,7 +206,7 @@
   (some #(= item %) vec))
 
 (defn not-blank? [s]
-  (not (clojure.string/blank? s)))
+  (not (string/blank? s)))
 
 (defn not-blank [s]
   (when (not-blank? s) s))

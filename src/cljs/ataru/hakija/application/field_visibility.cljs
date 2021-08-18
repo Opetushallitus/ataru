@@ -31,13 +31,13 @@
 
 (defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
   (let [field-id (-> field-descriptor :id keyword)
-        fields-by-id (u/form-fields-by-id (:form db))
+        value (get-in db [:application :answers field-id :value])
+        fields-by-id (u/form-sections-by-id-memo (:form db))
         remove-fn (fn [condition]
                     (when show-followups?
-                      (let [value (get-in db [:application :answers field-id :value])]
-                        (or
-                          (string/blank? value)
-                          (option-visibility/non-blank-answer-satisfies-condition? value condition)))))
+                      (or
+                        (string/blank? value)
+                        (option-visibility/non-blank-answer-satisfies-condition? value condition))))
         conditional-sections (->> (:section-visibility-conditions field-descriptor)
                                   (remove remove-fn)
                                   (map (comp keyword :section-name))
