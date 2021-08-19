@@ -249,3 +249,31 @@
        util/flatten-form-fields
        (map (comp name :id))
        set))
+
+(defn- harkinnanvaraisuus-question [metadata]
+  (assoc (single-choice-button metadata)
+    :id "harkinnanvaraisuus"
+    :label {:fi "Haetko harkinnanvaraisesti"}
+    :validators ["required"]
+    :options [{:value     "1"
+               :label     {:fi "Kyllä"}
+               :followups [(assoc (single-choice-button metadata)
+                             :id "harkinnanvaraisuus-reason"
+                             :label {:fi "Peruste harkinnanvaraisuudelle"}
+                             :validators ["required"]
+                             :options [{:label {:fi "Oppimisvaikeudet"}
+                                        :value "0"}
+                                       {:label {:fi "Sosiaaliset syyt"}
+                                        :value "1"}
+                                       {:label {:fi "Koulutodistusten vertailuvaikeudet"}
+                                        :value "2"}
+                                       {:label {:fi "Riittämätön tutkintokielen taito"}
+                                        :value "3"}])]}
+              {:value "0"
+               :label {:fi "Ei"}}]))
+
+(defn harkinnanvaraisuus [metadata]
+  (assoc (form-section metadata)
+    :id "harkinnanvaraisuus-wrapper"
+    :label {:fi "Harkinnanvaraisuus"}
+    :children [(harkinnanvaraisuus-question metadata)]))

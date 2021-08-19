@@ -1304,6 +1304,9 @@
    :hakukohderyhmat                                 {:fi "Hakukohderyhmät"
                                                      :sv "Ansökningsmålsgrupp"
                                                      :en "Study programme groups"}
+   :harkinnanvaraisuus                              {:fi "Harkinnanvaraisuus"
+                                                     :sv "SV: Harkinnanvaraisuus"
+                                                     :en "EN: Harkinnanvaraisuus"}
    :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita ja hakukohderyhmiä"
                                                      :sv "Sök ansökningsmål och ansökningsmålsgrupper"
                                                      :en "Search for study programmes and study programme groups"}
