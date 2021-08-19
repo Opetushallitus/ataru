@@ -1,6 +1,8 @@
 (ns ataru.hakija.application.field-visibility
   (:require [clojure.set :as set]
-            [ataru.application.option-visibility :as option-visibility]))
+            [clojure.string :as string]
+            [ataru.application.option-visibility :as option-visibility]
+            [ataru.util :as u]))
 
 (defn- ylioppilastutkinto? [db]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
@@ -27,10 +29,29 @@
 
 (declare set-field-visibility)
 
-(defn- set-visibility-for-option-followups [db options show-option-followups? ylioppilastutkinto? hakukohteet-and-ryhmat]
+(defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
+  (let [field-id (-> field-descriptor :id keyword)
+        value (get-in db [:application :answers field-id :value])
+        fields-by-id (u/form-sections-by-id-memo (:form db))
+        remove-fn (fn [condition]
+                    (when show-followups?
+                      (or
+                        (string/blank? value)
+                        (option-visibility/non-blank-answer-satisfies-condition? value condition))))
+        conditional-sections (->> (:section-visibility-conditions field-descriptor)
+                                  (remove remove-fn)
+                                  (map (comp keyword :section-name))
+                                  (keep (partial get fields-by-id)))]
+    (as-> db db'
+          (set-field-visibility db' field-descriptor show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
+          (reduce #(u/set-nested-visibility %1 (:id %2) (show-conditional-followups-fn show-followups? %2))
+                  db'
+                  conditional-sections))))
+
+(defn- set-visibility-for-option-followups [db options show-followups-fn show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
   (reduce (fn [db option]
-            (let [show-followups? (show-option-followups? option)]
-              (reduce #(set-field-visibility %1 %2 show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
+            (let [show-followups? (show-followups-fn option)]
+              (reduce #(set-followup-visibility %1 %2 show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat)
                       db
                       (:followups option))))
           db
@@ -38,13 +59,20 @@
 
 (defn- set-followups-visibility
   [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
-  (let [answer-value       (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
+  (let [component-visibility (atom {})
+        answer-value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
         visibility-checker (option-visibility/visibility-checker field-descriptor answer-value)
-        show-followups?    #(and visible?
-                                 (visibility-checker %))]
+        show-followups-fn #(and visible?
+                                (visibility-checker %))
+        show-conditional-followups-fn (fn [show? field-descriptor]
+                                        (let [id (:id field-descriptor)
+                                              should-show? (or show? (get @component-visibility id false))]
+                                          (swap! component-visibility assoc id should-show?)
+                                          should-show?))]
     (set-visibility-for-option-followups db
                                          (:options field-descriptor)
-                                         show-followups?
+                                         show-followups-fn
+                                         show-conditional-followups-fn
                                          ylioppilastutkinto?
                                          hakukohteet-and-ryhmat)))
 

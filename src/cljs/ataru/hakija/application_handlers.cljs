@@ -210,9 +210,15 @@
 
 (defn set-field-visibilities
   [db]
-  (rules/run-all-rules
-   (reduce field-visibility/set-field-visibility db (get-in db [:form :content]))
-   (:flat-form-content db)))
+  (let [flat-content (:flat-form-content db)
+        visibility-conditions (->> (autil/visibility-conditions flat-content)
+                                   (map :section-name)
+                                   set)
+        content (->> (get-in db [:form :content])
+                     (remove #(visibility-conditions (:id %))))]
+    (rules/run-all-rules
+      (reduce field-visibility/set-field-visibility db content)
+      flat-content)))
 
 (defn- set-have-finnish-ssn
   [db flat-form-content]
@@ -379,10 +385,9 @@
                                         first
                                         :end)
         time-diff                  (if (some? server-date)
-                                     (- (if (some? server-date)
-                                          (->> (clojure.string/replace server-date " GMT" "")
-                                               (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
-                                               to-long))
+                                     (- (->> (clojure.string/replace server-date " GMT" "")
+                                             (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
+                                             to-long)
                                         (.getTime (js/Date.)))
                                      0)
         form                       (-> (languages->kwd form)
@@ -482,7 +487,8 @@
          :dispatch-n [[:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
                       [:application/validate-hakukohteet]
-                      [:application/fetch-koulutustyypit]]}
+                      [:application/fetch-koulutustyypit]
+                      [:application/hide-form-sections-with-text-component-visibility-rules]]}
         (when selection-limited
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
@@ -757,6 +763,41 @@
                        (assoc-in [:application :answers id :errors] errors))
        :dispatch-n [[:application/set-validator-processed id]
                     [:application/run-rules (:rules field-descriptor)]]})))
+
+(reg-event-db
+  :application/hide-form-sections-with-text-component-visibility-rules
+  (fn [db _]
+    (let [form-content (:flat-form-content db)
+          section-ids-with-visibility-rules (map :section-name (autil/visibility-conditions form-content))]
+      (reduce
+        #(autil/set-nested-visibility %1 %2 false)
+        db
+        section-ids-with-visibility-rules))))
+
+(defn- hide-sections-based-on-conditions [db value section-visibility-conditions]
+  (let [section-name->visibility-conditions (group-by :section-name section-visibility-conditions)
+        distinct-form-sections (keys section-name->visibility-conditions)
+        update-form-section-visibility (fn [db section-name]
+                                         (when section-name
+
+                                           (let [visibility-conditions (get section-name->visibility-conditions section-name)
+                                                 visible? (when (seq value)
+                                                            (not-any?
+                                                              #(option-visibility/non-blank-answer-satisfies-condition? value %)
+                                                              visibility-conditions))]
+                                             (autil/set-nested-visibility db section-name visible?))))]
+    (reduce
+      update-form-section-visibility
+      db
+      distinct-form-sections)))
+
+(reg-event-db
+  :application/handle-section-visibility-conditions
+  (fn [db [_ field-descriptor value]]
+    (let [visibility-conditions (:section-visibility-conditions field-descriptor)]
+      (if (seq visibility-conditions)
+        (hide-sections-based-on-conditions db value visibility-conditions)
+        db))))
 
 (reg-event-fx
   :application/set-repeatable-application-field

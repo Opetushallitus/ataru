@@ -1,6 +1,8 @@
 (ns ataru.tarjonta-service.tarjonta-parser
   (:require [clj-time.core :as t]
             [clojure.string]
+            [taoensso.timbre :as log]
+            [clojure.string :as string]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.koodisto.koodisto :refer [get-koodisto-options]]
             [ataru.organization-service.organization-service :as organization-service]
@@ -21,7 +23,7 @@
      :name                                                        (:name hakukohde)
      :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
-     :kohdejoukko-korkeakoulu?                                    (clojure.string/starts-with?
+     :kohdejoukko-korkeakoulu?                                    (string/starts-with?
                                                                    (:kohdejoukko-uri haku)
                                                                    "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
@@ -31,7 +33,8 @@
                                                                         (:koulutus-oids hakukohde))
      :koulutustyypit                                              (:koulutustyypit hakukohde)
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
-     :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus (:hakukelpoisuusvaatimus-uris hakukohde))
+     :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
+                                                                          (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))}))
 
 (defn- pohjakoulutukset-by-vaatimus
@@ -61,10 +64,15 @@
                                                ohjausparametrit-service
                                                haku-oid)
            pohjakoulutukset-by-vaatimus      (pohjakoulutukset-by-vaatimus
-                                              (get-koodisto-options koodisto-cache
-                                                                    "pohjakoulutusvaatimuskorkeakoulut"
-                                                                    1
-                                                                    false))
+                                               (concat
+                                                 (get-koodisto-options koodisto-cache
+                                                                       "pohjakoulutusvaatimuskouta"
+                                                                       1
+                                                                       false)
+                                                 (get-koodisto-options koodisto-cache
+                                                                       "pohjakoulutusvaatimuskorkeakoulut"
+                                                                       1
+                                                                       false)))
            tarjonta-hakukohteet              (tarjonta-protocol/get-hakukohteet tarjonta-service
                                                                                 included-hakukohde-oids)
            tarjonta-koulutukset              (->> tarjonta-hakukohteet
