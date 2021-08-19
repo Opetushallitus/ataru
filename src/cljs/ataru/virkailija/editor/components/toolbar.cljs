@@ -34,7 +34,8 @@
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
    [:lupatiedot component/lupatiedot]
-   [:guardian-contact-information component/huoltajan-yhteystiedot]])
+   [:guardian-contact-information component/huoltajan-yhteystiedot]
+   [:harkinnanvaraisuus component/harkinnanvaraisuus]])
 
 (def followup-toolbar-element-names
   #{:text-field
