@@ -140,6 +140,7 @@
 
 (defn- automatic-eligibility-if-yo-amm-in-hakukohderyhma?
   [hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache]
+  (log/error "automatic-eligibility-if-yo-amm-in-hakukohderyhma?")
   (let [hakukohderyhmat (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde hakukohderyhmapalvelu-service hakukohde)
         settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmat)]
     (log/error "hakukohde: " hakukohde)
@@ -148,6 +149,10 @@
     (log/error "result: " (pr-str (true? (some #(= (:yo-amm-autom-hakukelpoisuus %) true) settings))))
 
     (true? (some #(= (:yo-amm-autom-hakukelpoisuus %) true) settings))))
+
+(defn- is-tarjonta-haku?
+  [haku]
+  (< (count (:oid haku)) 28))
 
 (defn automatic-eligibility-if-ylioppilas
   [application
@@ -158,24 +163,15 @@
    ylioppilas-tai-ammatillinen?
    hakukohderyhmapalvelu-service
    hakukohderyhma-settings-cache]
-  (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
-    (->> hakukohteet
-         ;(filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
-         (keep (fn [hakukohde]
-                 ;(if ylioppilas-tai-ammatillinen?
-                 (if (or ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
-                   {:from        "unreviewed"
-                    :to          "eligible"
-                    :application application
-                    :hakukohde   hakukohde}
-                   {:from        "eligible"
-                    :to          "unreviewed"
-                    :application application
-                    :hakukohde   hakukohde})))))
-
-    (comment ->> hakukohteet
-         (keep (fn [hakukohde]
-                   (if (or ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
+  (log/error "automatic-eligibility-if-ylioppilas")
+  (log/error "is tarjontahaku?" (is-tarjonta-haku? haku))
+  (if (is-tarjonta-haku? haku)
+    (when (automatic-eligibility-if-ylioppilas-in-use? haku ohjausparametrit now)
+      (log/error "start automatic eligibility on tarjonta-haku!")
+      (->> hakukohteet
+           (filter :ylioppilastutkinto-antaa-hakukelpoisuuden?)
+           (keep (fn [hakukohde]
+                   (if ylioppilas-tai-ammatillinen?
                      {:from        "unreviewed"
                       :to          "eligible"
                       :application application
@@ -185,8 +181,24 @@
                       :application application
                       :hakukohde   hakukohde})))))
 
+    (doall
+      (map (fn [hakukohde]
+             (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
+               {:from        "unreviewed"
+                :to          "eligible"
+                :application application
+                :hakukohde   hakukohde}
+               {:from        "eligible"
+                :to          "unreviewed"
+                :application application
+                :hakukohde   hakukohde})
+             )hakukohteet) ))
+  (log/error "finished automatic-eligibility!"))
+
+
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
+  (log/error "start-automatic-eligibility-if-ylioppilas-job")
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (job/start-job job-runner
                    connection
