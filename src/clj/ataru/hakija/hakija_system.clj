@@ -160,6 +160,8 @@
                   :person-service
                   :tarjonta-service
                   :suoritus-service
+                  :hakukohderyhmapalvelu-service
+                  :hakukohderyhma-settings-cache
                   :audit-logger
                   :liiteri-cas-client])
 
