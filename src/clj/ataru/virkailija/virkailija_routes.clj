@@ -331,8 +331,7 @@
       (api/POST "/start-automatic-eligibility-if-ylioppilas-job/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])
-          (do (log/error "START ELIGIBILITY JOB!!!!")
-              (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
+          (do (automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job
                 job-runner
                 application-id)
               (response/ok {}))

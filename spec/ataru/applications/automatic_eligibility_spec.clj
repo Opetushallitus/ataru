@@ -74,8 +74,7 @@
    (:hakukohteet inputs)
    (:suoritus? inputs)
    hakukohderyhmapalvelu-service
-   hakukohderyhma-settings-cache
-   ))
+   hakukohderyhma-settings-cache))
 
 (defn- check [times prop]
   (let [result (tc/quick-check times prop)]
