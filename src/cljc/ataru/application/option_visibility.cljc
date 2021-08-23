@@ -14,6 +14,10 @@
            (operator (number/->int value) (:answer-compared-to condition)))
          true)))
 
+(defn answer-satisfies-condition-or-is-empty? [value option]
+  (or (string/blank? value)
+      (non-blank-answer-satisfies-condition? value option)))
+
 (defn- non-blank-answer-with-option-condition-satisfied-checker [value]
   (fn [option]
     (boolean
