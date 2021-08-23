@@ -7,7 +7,8 @@
                :cljs [cljs-time.core :as time])
             #?(:clj  [clj-time.coerce :refer [from-long]]
                :cljs [cljs-time.coerce :refer [from-long]])
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.application.option-visibility :as option-visibility])
   (:import #?(:clj [java.util UUID])))
 
 (defn is-question-group-answer? [value]
@@ -323,14 +324,33 @@
 (defn non-blank-option-label [option langs]
   (non-blank-val (:label option) langs))
 
+(defn visibility-conditions [content]
+  (->> content
+       (keep :section-visibility-conditions)
+       flatten))
+
+(defn is-field-hidden-by-section-visibility-conditions [db field]
+  (let [content (:flat-form-content db)
+        answers (get-in db [:application :answers])
+        is-visible? (fn [id] (get-in db [:application :ui (keyword id) :visible?]))
+        id (-> field :id keyword)
+        visibility-conditions (mapcat (fn [{conditions :section-visibility-conditions field-id :id}]
+                                        (keep (fn [visibility-condition]
+                                               (let [section-name (-> visibility-condition :section-name keyword)]
+                                                 (when (and (= section-name id) (is-visible? field-id))
+                                                   (assoc
+                                                     visibility-condition
+                                                     :value (get-in answers [(keyword field-id) :value])))))
+                                              conditions)) content)]
+    (when (seq visibility-conditions)
+      (->> visibility-conditions
+           (some (fn [{value :value :as option}]
+                   (not (option-visibility/answer-satisfies-condition-or-is-empty? value option))))
+           not))))
+
 (defn set-nested-visibility [db id visible?]
   (->> id
        (find-field (get-in db [:form :content]))
        (collect-ids [])
        (reduce (fn [acc-db cur-id]
                  (assoc-in acc-db [:application :ui (keyword cur-id) :visible?] visible?)) db)))
-
-(defn visibility-conditions [content]
-  (->> content
-       (keep :section-visibility-conditions)
-       flatten))

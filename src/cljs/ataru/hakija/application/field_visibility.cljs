@@ -27,6 +27,47 @@
     [(set/union selected-hakukohteet selected-hakukohderyhmat)
      (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
+(defn- belongs-to [field-descriptor]
+  (set (concat (:belongs-to-hakukohderyhma field-descriptor)
+               (:belongs-to-hakukohteet field-descriptor))))
+
+(defn- field-belongs-to [field-descriptor [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
+  (let [belongs-to (belongs-to field-descriptor)
+        jyemp? false]
+    (when (not (empty? belongs-to))
+      (not (empty? (set/intersection
+                     belongs-to
+                     (if jyemp?
+                       selected-ei-jyemp-hakukohteet-and-ryhmat
+                       selected-hakukohteet-and-ryhmat)))))))
+
+(defn- jyemp? [ylioppilastutkinto? db field-descriptor]
+  (let [excluded-attachment-ids-when-yo-and-jyemp (get-in db [:application :excluded-attachment-ids-when-yo-and-jyemp])]
+    (and ylioppilastutkinto?
+         (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))))
+
+(defn- nested-visilibity-inner [db {:keys [children options] :as field} visible? hakukohteet-and-ryhmat]
+  (let [id (-> field :id keyword)
+        belongs-to? (field-belongs-to field hakukohteet-and-ryhmat)
+        visible? (case belongs-to?
+                   nil visible?
+                   true visible?
+                   false false)
+        reduce-fn (fn [db child] (nested-visilibity-inner db child visible? hakukohteet-and-ryhmat))]
+    (as-> db db'
+          (assoc-in db' [:application :ui id :visible?] visible?)
+          (reduce reduce-fn db' (mapcat :followups options))
+          (reduce reduce-fn db' children))))
+
+(defn set-nested-visibility ([db id visible?]
+                             (set-nested-visibility db id visible? (selected-hakukohteet-and-ryhmat db)))
+  ([db id visible? hakukohteet-and-ryhmat]
+   (nested-visilibity-inner
+     db
+     (u/find-field (get-in db [:form :content]) id)
+     visible?
+     hakukohteet-and-ryhmat)))
+
 (declare set-field-visibility)
 
 (defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
@@ -44,7 +85,7 @@
                                   (keep (partial get fields-by-id)))]
     (as-> db db'
           (set-field-visibility db' field-descriptor show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
-          (reduce #(u/set-nested-visibility %1 (:id %2) (show-conditional-followups-fn show-followups? %2))
+          (reduce #(set-nested-visibility %1 %2 (show-conditional-followups-fn show-followups? %2) hakukohteet-and-ryhmat)
                   db'
                   conditional-sections))))
 
@@ -102,13 +143,14 @@
     [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
    (let [hakukohteet-and-ryhmat [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]
          id                     (keyword (:id field-descriptor))
-         belongs-to             (set (concat (:belongs-to-hakukohderyhma field-descriptor)
-                                             (:belongs-to-hakukohteet field-descriptor)))
-         excluded-attachment-ids-when-yo-and-jyemp (-> db :application :excluded-attachment-ids-when-yo-and-jyemp)
-         jyemp?                 (and ylioppilastutkinto?
-                                     (contains? excluded-attachment-ids-when-yo-and-jyemp (:id field-descriptor)))
+         hidden-by-conditions (u/is-field-hidden-by-section-visibility-conditions
+                                db
+                                field-descriptor)
+         belongs-to             (belongs-to field-descriptor)
+         jyemp?                 (jyemp? ylioppilastutkinto? db field-descriptor)
          visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
+                                     (not hidden-by-conditions)
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
                                      (or (empty? belongs-to)
                                          (not (empty? (set/intersection
