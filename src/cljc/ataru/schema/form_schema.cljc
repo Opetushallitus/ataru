@@ -249,7 +249,7 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus) s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))
