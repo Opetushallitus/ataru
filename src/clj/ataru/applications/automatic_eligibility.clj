@@ -219,9 +219,7 @@
                               hakukohteet
                               ylioppilas-tai-ammatillinen?
                               hakukohderyhmapalvelu-service
-                              hakukohderyhma-settings-cache)]
-                (update-application-hakukohde-review connection audit-logger update)))
-                                      )
+                              hakukohderyhma-settings-cache)]))
             {:transition {:id :final}})
           (person-info-module/muu-person-info-module?
            (form-store/fetch-by-id (:form-id application)))
