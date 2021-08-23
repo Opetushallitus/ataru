@@ -235,12 +235,14 @@
 (reg-event-fx
   :editor/set-required-to-all-in-path
   (fn [{db :db} [_ & path]]
-    (let [parent       (vec (drop-last 2 (flatten path)))
-          is-option?   (= :options (last (drop-last 1 (flatten path))))
-          content-path (current-form-content-path db [path :validators])
-          validators   (set (get-in db content-path))]
+    (let [parent              (vec (drop-last 2 (flatten path)))
+          is-option?          (= :options (last (drop-last 1 (flatten path))))
+          is-wrapper-element? (= "wrapperElement" (get-in db (current-form-content-path db [path :fieldClass])))
+          content-path        (current-form-content-path db [path :validators])
+          validators          (set (get-in db content-path))]
       {:db         db
        :dispatch-n [(when-not (or is-option?
+                                  is-wrapper-element?
                                   (contains? validators "required"))
                       [:editor/add-validator "required" (vec (flatten path))])
                     (when (seq parent)
