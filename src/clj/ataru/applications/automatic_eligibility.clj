@@ -102,7 +102,6 @@
 
 (defn- set-eligible
   [connection application hakukohde]
-  (log/error "set-eligible")
   (case (yesql-from-unreviewed-to-eligible!
          {:application_key (:key application)
           :hakukohde       (:oid hakukohde)}
@@ -131,7 +130,6 @@
 
 (defn update-application-hakukohde-review
   [connection audit-logger {:keys [application hakukohde from to]}]
-  (log/error "update-application-hakukohde-review!!!!")
   (when (case to
           "eligible"
           (set-eligible connection application hakukohde)
@@ -175,7 +173,6 @@
                       :hakukohde   hakukohde})))))
     (doall
       (map (fn [hakukohde]
-             (log/error "automatic-eligibility-if-yo-amm-in-hakukohderyhma?" (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
              (if (and ylioppilas-tai-ammatillinen? (automatic-eligibility-if-yo-amm-in-hakukohderyhma? hakukohde hakukohderyhmapalvelu-service hakukohderyhma-settings-cache))
                {:from        "unreviewed"
                 :to          "eligible"
@@ -190,7 +187,6 @@
 
 (defn start-automatic-eligibility-if-ylioppilas-job
   [job-runner application-id]
-  (log/error "start-automatic-eligibility-if-ylioppilas-job")
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
     (job/start-job job-runner
                    connection
@@ -224,9 +220,7 @@
                               ylioppilas-tai-ammatillinen?
                               hakukohderyhmapalvelu-service
                               hakukohderyhma-settings-cache)]
-                (log/error "UPDATE: " (pr-str update))
-                (update-application-hakukohde-review connection audit-logger update))
-                (log/error "DONE")
+                (update-application-hakukohde-review connection audit-logger update)))
                                       )
             {:transition {:id :final}})
           (person-info-module/muu-person-info-module?
