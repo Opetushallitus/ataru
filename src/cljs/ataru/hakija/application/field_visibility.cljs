@@ -31,9 +31,8 @@
   (set (concat (:belongs-to-hakukohderyhma field-descriptor)
                (:belongs-to-hakukohteet field-descriptor))))
 
-(defn- field-belongs-to [field-descriptor [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
-  (let [belongs-to (belongs-to field-descriptor)
-        jyemp? false]
+(defn- field-belongs-to [field-descriptor [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] jyemp?]
+  (let [belongs-to (belongs-to field-descriptor)]
     (when (not (empty? belongs-to))
       (not (empty? (set/intersection
                      belongs-to
@@ -48,7 +47,8 @@
 
 (defn- nested-visilibity-inner [db {:keys [children options] :as field} visible? hakukohteet-and-ryhmat]
   (let [id (-> field :id keyword)
-        belongs-to? (field-belongs-to field hakukohteet-and-ryhmat)
+        jyemp? (jyemp? (ylioppilastutkinto? db) db field)
+        belongs-to? (field-belongs-to field hakukohteet-and-ryhmat jyemp?)
         visible? (case belongs-to?
                    nil visible?
                    true visible?
@@ -67,18 +67,6 @@
      (u/find-field (get-in db [:form :content]) id)
      visible?
      hakukohteet-and-ryhmat)))
-
-(defn set-conditional-visibility ([db id visible?]
-                                        (set-nested-visibility db id visible? (selected-hakukohteet-and-ryhmat db)))
-  ([db id visible? hakukohteet-and-ryhmat]
-   (let [field (u/find-field (get-in db [:form :content]) id)
-         belongs-to? (field-belongs-to field hakukohteet-and-ryhmat)
-         visible? (case belongs-to?
-                    nil visible?
-                    true visible?
-                    false false)]
-     (as-> db db'
-           (assoc-in db' [:application :ui id :visible?] visible?)))))
 
 (declare set-field-visibility)
 
@@ -155,9 +143,7 @@
     [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
    (let [hakukohteet-and-ryhmat [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]
          id                     (keyword (:id field-descriptor))
-         hidden-by-conditions (u/is-field-hidden-by-section-visibility-conditions
-                                db
-                                field-descriptor)
+         hidden-by-conditions   (u/is-field-hidden-by-section-visibility-conditions db field-descriptor)
          belongs-to             (belongs-to field-descriptor)
          jyemp?                 (jyemp? ylioppilastutkinto? db field-descriptor)
          visible?               (and (not (get-in field-descriptor [:params :hidden]))
