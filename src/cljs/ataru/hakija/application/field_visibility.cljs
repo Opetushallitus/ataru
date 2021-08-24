@@ -47,12 +47,14 @@
 
 (defn- nested-visilibity-inner [db {:keys [children options] :as field} visible? hakukohteet-and-ryhmat]
   (let [id (-> field :id keyword)
-        jyemp? (jyemp? (ylioppilastutkinto? db) db field)
-        belongs-to? (field-belongs-to field hakukohteet-and-ryhmat jyemp?)
-        visible? (case belongs-to?
-                   nil visible?
-                   true visible?
-                   false false)
+        belongs-to-fn (fn []
+                        (->> (jyemp? (ylioppilastutkinto? db) db field)
+                             (field-belongs-to field hakukohteet-and-ryhmat)))
+        visible? (and visible?
+                      (case (belongs-to-fn)
+                        nil visible?
+                        true visible?
+                        false false))
         reduce-fn (fn [db child] (nested-visilibity-inner db child visible? hakukohteet-and-ryhmat))]
     (as-> db db'
           (assoc-in db' [:application :ui id :visible?] visible?)
@@ -143,12 +145,10 @@
     [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
    (let [hakukohteet-and-ryhmat [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]
          id                     (keyword (:id field-descriptor))
-         hidden-by-conditions   (u/is-field-hidden-by-section-visibility-conditions db field-descriptor)
          belongs-to             (belongs-to field-descriptor)
          jyemp?                 (jyemp? ylioppilastutkinto? db field-descriptor)
          visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
-                                     (not hidden-by-conditions)
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
                                      (or (empty? belongs-to)
                                          (not (empty? (set/intersection
@@ -156,7 +156,8 @@
                                                         (if jyemp?
                                                           selected-ei-jyemp-hakukohteet-and-ryhmat
                                                           selected-hakukohteet-and-ryhmat)))))
-                                     (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta]))))
+                                     (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
+                                     (not (u/is-field-hidden-by-section-visibility-conditions db field-descriptor)))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
                                           db
