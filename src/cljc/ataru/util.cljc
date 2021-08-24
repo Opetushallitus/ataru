@@ -329,19 +329,26 @@
        (keep :section-visibility-conditions)
        flatten))
 
+(defn- fields-with-visibility-rules [form]
+  (filter :section-visibility-conditions (flatten-form-fields (:content form))))
+
+(def fields-with-visibility-rules-memo
+  (memoize fields-with-visibility-rules))
+
 (defn is-field-hidden-by-section-visibility-conditions [db field]
-  (let [content (:flat-form-content db)
+  (let [form (:form db)
+        filtered-content (fields-with-visibility-rules-memo form)
         answers (get-in db [:application :answers])
         is-visible? (fn [id] (get-in db [:application :ui (keyword id) :visible?]))
         id (-> field :id keyword)
         visibility-conditions (mapcat (fn [{conditions :section-visibility-conditions field-id :id}]
                                         (keep (fn [visibility-condition]
-                                               (let [section-name (-> visibility-condition :section-name keyword)]
-                                                 (when (and (= section-name id) (is-visible? field-id))
-                                                   (assoc
-                                                     visibility-condition
-                                                     :value (get-in answers [(keyword field-id) :value])))))
-                                              conditions)) content)]
+                                                (let [section-name (-> visibility-condition :section-name keyword)]
+                                                  (when (and (= section-name id) (is-visible? field-id))
+                                                    (assoc
+                                                      visibility-condition
+                                                      :value (get-in answers [(keyword field-id) :value])))))
+                                              conditions)) filtered-content)]
     (when (seq visibility-conditions)
       (->> visibility-conditions
            (some (fn [{value :value :as option}]
