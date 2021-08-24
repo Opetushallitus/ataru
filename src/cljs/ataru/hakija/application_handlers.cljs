@@ -767,31 +767,10 @@
         db
         section-ids-with-visibility-rules))))
 
-(defn- hide-sections-based-on-conditions [db value section-visibility-conditions]
-  (let [section-name->visibility-conditions (group-by :section-name section-visibility-conditions)
-        distinct-form-sections (keys section-name->visibility-conditions)
-        update-form-section-visibility (fn [db section-name]
-                                         (when section-name
-
-                                           (let [visibility-conditions (get section-name->visibility-conditions section-name)
-                                                 visible? (if (seq value)
-                                                            (not-any?
-                                                              #(option-visibility/non-blank-answer-satisfies-condition? value %)
-                                                              visibility-conditions)
-                                                            false)]
-                                             (field-visibility/set-nested-visibility db section-name visible?))))]
-    (reduce
-      update-form-section-visibility
-      db
-      distinct-form-sections)))
-
 (reg-event-db
   :application/handle-section-visibility-conditions
-  (fn [db [_ field-descriptor value]]
-    (let [visibility-conditions (:section-visibility-conditions field-descriptor)]
-      (if (seq visibility-conditions)
-        (hide-sections-based-on-conditions db value visibility-conditions)
-        db))))
+  (fn [db _]
+    (set-field-visibilities db)))
 
 (reg-event-fx
   :application/set-repeatable-application-field

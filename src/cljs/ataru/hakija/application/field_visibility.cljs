@@ -68,6 +68,18 @@
      visible?
      hakukohteet-and-ryhmat)))
 
+(defn set-conditional-visibility ([db id visible?]
+                                        (set-nested-visibility db id visible? (selected-hakukohteet-and-ryhmat db)))
+  ([db id visible? hakukohteet-and-ryhmat]
+   (let [field (u/find-field (get-in db [:form :content]) id)
+         belongs-to? (field-belongs-to field hakukohteet-and-ryhmat)
+         visible? (case belongs-to?
+                    nil visible?
+                    true visible?
+                    false false)]
+     (as-> db db'
+           (assoc-in db' [:application :ui id :visible?] visible?)))))
+
 (declare set-field-visibility)
 
 (defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
@@ -85,7 +97,7 @@
                                   (keep (partial get fields-by-id)))]
     (as-> db db'
           (set-field-visibility db' field-descriptor show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
-          (reduce #(set-nested-visibility %1 %2 (show-conditional-followups-fn show-followups? %2) hakukohteet-and-ryhmat)
+          (reduce #(set-nested-visibility %1 (:id %2) (show-conditional-followups-fn show-followups? %2) hakukohteet-and-ryhmat)
                   db'
                   conditional-sections))))
 

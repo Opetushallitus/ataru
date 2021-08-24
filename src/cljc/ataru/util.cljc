@@ -347,10 +347,3 @@
            (some (fn [{value :value :as option}]
                    (not (option-visibility/answer-satisfies-condition-or-is-empty? value option))))
            not))))
-
-(defn set-nested-visibility [db id visible?]
-  (->> id
-       (find-field (get-in db [:form :content]))
-       (collect-ids [])
-       (reduce (fn [acc-db cur-id]
-                 (assoc-in acc-db [:application :ui (keyword cur-id) :visible?] visible?)) db)))
