@@ -641,3 +641,8 @@
       (let [changed? (fn [answer] (or (not= (:original-value answer) (:value answer))
                                       (some? (some #(= :deleting (:status %)) (:values answer)))))]
            (some? (some changed? (vals answers))))))
+
+(re-frame/reg-sub
+  :application/auto-expand-hakukohteet
+  (fn [db]
+    (get-in db [:form :properties :auto-expand-hakukohteet] false)))
