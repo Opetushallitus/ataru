@@ -12,6 +12,18 @@
 
 (defqueries "sql/form-queries.sql")
 
+;; Declare queries to keep linting happy
+(declare yesql-get-forms)
+(declare yesql-get-latest-version-organization-by-key)
+(declare yesql-get-latest-version-organization-by-id)
+(declare yesql-fetch-latest-version-by-id)
+(declare yesql-fetch-latest-version-by-id-lock-for-update)
+(declare yesql-get-by-id)
+(declare yesql-fetch-latest-version-by-key)
+(declare yesql-latest-id-by-key)
+(declare yesql-add-form<!)
+(declare yesql-get-latest-form-by-name)
+
 (defn- languages->vec [form]
   (update form :languages :languages))
 
@@ -114,17 +126,19 @@
               (dissoc :created-time :id)
               (assoc :key key)
               (assoc :used_hakukohderyhmas (form-used-hakukohderyhmas form))
-              (update :deleted identity))))))
+              (update :deleted identity)
+              (update :properties (fnil identity {})))))))
 
-(defn increment-version [{:keys [key id] :as form} conn]
+(defn increment-version [{:keys [key id] :as form} _]
   {:pre [(some? key)
          (some? id)]}
   (first
     (execute yesql-add-form<! (-> form
                                   (dissoc :created-time :id)
-                                  (assoc :used_hakukohderyhmas (form-used-hakukohderyhmas form))))))
+                                  (assoc :used_hakukohderyhmas (form-used-hakukohderyhmas form))
+                                  (update :properties (fnil identity {}))))))
 
-(defn create-form-or-increment-version! [{:keys [id organization-oid] :as form} session audit-logger]
+(defn create-form-or-increment-version! [{:keys [id] :as form} session audit-logger]
   (or
     (with-db-transaction [conn {:datasource (get-datasource :db)}]
       (when-let [latest-version (not-empty (and id (fetch-latest-version-and-lock-for-update id conn)))]

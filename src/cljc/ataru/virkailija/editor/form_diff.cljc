@@ -1,4 +1,5 @@
-(ns ataru.virkailija.editor.form-diff)
+(ns ataru.virkailija.editor.form-diff
+  (:require [clojure.set]))
 
 (defn- user-feedback-exception
   [message]
@@ -79,7 +80,7 @@
    :new-element element})
 
 (defn- form-details [form]
-  (select-keys form [:name :languages]))
+  (select-keys form [:name :languages :properties]))
 
 (defn as-update-form-details-operation [old-form form]
   (let [old-form-details (form-details old-form)

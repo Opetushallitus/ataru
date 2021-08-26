@@ -32,7 +32,8 @@ INSERT INTO forms (name,
                    deleted,
                    locked,
                    locked_by,
-                   used_hakukohderyhmas)
+                   used_hakukohderyhmas,
+                   properties)
 VALUES (:name,
         :content,
         :created_by,
@@ -42,7 +43,8 @@ VALUES (:name,
         :deleted,
         :locked::timestamp,
         :locked_by,
-        ARRAY[ :used_hakukohderyhmas ]::varchar[]);
+        ARRAY[ :used_hakukohderyhmas ]::varchar[],
+        :properties);
 
 -- name: yesql-get-by-id
 SELECT
@@ -54,7 +56,8 @@ SELECT
   created_time,
   languages,
   deleted,
-  organization_oid
+  organization_oid,
+  properties
 FROM forms
 WHERE id = :id;
 
@@ -70,6 +73,7 @@ SELECT
   f.deleted,
   f.organization_oid,
   f.locked,
+  f.properties,
   (CASE WHEN f.locked_by IS NULL THEN NULL ELSE CONCAT(first_name, ' ', last_name) END) as locked_by,
   (SELECT count(*)
    FROM latest_applications
@@ -91,7 +95,8 @@ SELECT
   created_time,
   languages,
   deleted,
-  organization_oid
+  organization_oid,
+  properties
 FROM latest_forms
 WHERE key = :key;
 
@@ -105,7 +110,8 @@ SELECT
   created_time,
   organization_oid,
   languages,
-  deleted
+  deleted,
+  properties
 FROM forms
 WHERE id = (SELECT max(id)
             FROM forms

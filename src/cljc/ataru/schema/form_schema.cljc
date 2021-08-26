@@ -149,9 +149,13 @@
   {:type   (s/eq "create-move-group")
    :groups [CreateMoveElement]})
 
+(s/defschema FormProperties
+  {(s/optional-key :auto-expand-hakukohteet) s/Bool})
+
 (s/defschema FormDetails
-  {:name                       localized-schema/LocalizedStringOptional
-   (s/optional-key :languages) [s/Str]})
+  {:name                        localized-schema/LocalizedStringOptional
+   (s/optional-key :languages)  [s/Str]
+   (s/optional-key :properties) FormProperties})
 
 (s/defschema UpdateFormDetailsOperation
   {:type (s/eq "update-form-details")

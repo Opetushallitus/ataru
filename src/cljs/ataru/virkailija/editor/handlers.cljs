@@ -1292,3 +1292,12 @@
           (-> db
               (update :editor dissoc :last-autosaved-form)
               (assoc-in [:editor :autosave] new-autosave)))))))
+
+(reg-event-db
+  :editor/toggle-auto-expand-hakukohteet
+  (fn [db _]
+    (let [form-path (-> (current-form-content-path db)
+                        butlast
+                        vec
+                        (conj :properties :auto-expand-hakukohteet))]
+      (update-in db form-path not))))

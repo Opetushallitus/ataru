@@ -170,7 +170,8 @@
                                                      :deleted              false
                                                      :locked               nil
                                                      :locked_by            nil
-                                                     :used_hakukohderyhmas []}
+                                                     :used_hakukohderyhmas []
+                                                     :properties           {}}
                                                     {:connection connection})))
           {:keys [id key]} (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                              (yesql-add-application<! {:form_id        form-id
