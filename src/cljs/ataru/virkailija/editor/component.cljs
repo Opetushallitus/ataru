@@ -351,7 +351,9 @@
 
 (defn hakukohteet-module [_ path]
   (let [virkailija-lang (subscribe [:editor/virkailija-lang])
-        value           (subscribe [:editor/get-component-value path])]
+        value           (subscribe [:editor/get-component-value path])
+        checkbox-id     "hakukohteet-show-hakukohde-in-hakukohde-questions"
+        component-locked (subscribe [:editor/component-locked? path])]
     (fn [content path]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id content) (get-in @value [:label @virkailija-lang]) path nil
@@ -362,6 +364,20 @@
         :data-test-id "hakukohteet-header"]
        [:div.editor-form__component-content-wrapper
         [:div.editor-form__module-fields
+         [:div.editor-form__text-field-checkbox-wrapper
+          [:div.editor-form__checkbox-container
+           [:input.editor-form__checkbox
+            {:id           checkbox-id
+             :type         "checkbox"
+             :disabled     @component-locked
+             :data-test-id "hakukohteet-auto-expand-toggle"
+             :checked      @(subscribe [:editor/auto-expand-hakukohteet])
+             :on-change    (fn [event]
+                             (.preventDefault event)
+                             (dispatch [:editor/toggle-auto-expand-hakukohteet]))}]
+           [:label.editor-form__checkbox-label
+            {:for checkbox-id}
+            @(subscribe [:editor/virkailija-translation :auto-expand-hakukohteet])]]]
          @(subscribe [:editor/virkailija-translation :hakukohde-info])]]])))
 
 (defn module [content path]
