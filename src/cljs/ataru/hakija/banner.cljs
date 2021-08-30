@@ -106,11 +106,11 @@
     (when (not submit-status)
       [:div.application__preview-toggle-container
        [:a.application__preview-link
-        {:class (when enabled? "application__preview-link--disabled")
+        {:class (when enabled? "application__preview-link--active")
          :on-click toggle-fn}
         (translations/get-hakija-translation :edit-answers lang)]
        [:a.application__preview-link
-        {:class (when-not enabled? "application__preview-link--disabled")
+        {:class (when-not enabled? "application__preview-link--active")
          :on-click toggle-fn}
         (translations/get-hakija-translation :preview-answers lang)]])))
 

@@ -19,3 +19,29 @@
 .a-button > * {
   margin-left: 5px;
 }
+        
+.secondary-button {
+  box-shadow: none;
+  padding: 5px;
+  background: @white;
+  color: @primary-green-700;
+  border-radius: 3px;
+  font-family: 'Open Sans', sans-serif;
+  cursor: pointer;
+  border: 2px solid @primary-green-700;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  &--active,
+  &:hover {
+    border-color: @primary-green-900;
+    color: @primary-green-900;
+  }
+  &:focus {
+    box-shadow: 0px 0px 0px 3px @primary-green-300;
+    outline: none;
+  }
+  &:disabled {
+    border-color: @neutral-grey-500;
+    color: @neutral-grey-500;
+    cursor: default;
+  }
+}
