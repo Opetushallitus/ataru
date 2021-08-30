@@ -133,7 +133,7 @@
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation :application-submitted lang)]]
        [:div.application__submitted-submit-notification-inner
-        [:a.application__send-feedback-button.application__send-feedback-button--enabled
+        [:button.application__send-feedback-button.application__send-feedback-button--enabled
          {:on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
@@ -188,14 +188,15 @@
                  :max-length  2000}]])
             (when (and (not submitted?)
                        rated?)
-              [:a.application__send-feedback-button.application__send-feedback-button--enabled
+              [:button.application__send-feedback-button.application__send-feedback-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
                             (dispatch [:application/rating-feedback-submit]))}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
-              [:a.application__send-feedback-button.application__send-feedback-button--disabled
+              [:button.application__send-feedback-button.application__send-feedback-button
+               {:disabled true}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (not submitted?)
               [:div.application-feedback-form__disclaimer (translations/get-hakija-translation :feedback-disclaimer @lang)])
