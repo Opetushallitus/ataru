@@ -20,7 +20,7 @@ body {
 .application__top-banner-container {
   display: flex;
   justify-content: center;
-  background-color: #149ecb;
+  background-color: @primary-green-700;
 }
 
 .application__virkailija-fill-ribbon {
@@ -44,7 +44,6 @@ body {
   font-size: 14px;
   width: @desktop-content-width;
   top: 0;
-  background-color: #149ecb;
   color: white;
   height: 82px;
   padding-top: 19px;
@@ -52,24 +51,24 @@ body {
 }
 
 .logo-fi {
-  background: url(/hakemus/images/opintopolku_large-fi.png) no-repeat;
+  background: url(/hakemus/images/OPO_Logo_Header_suomi.svg) no-repeat;
   background-size: 100%;
-  width: 225px;
-  height: 50px;
+  width: 160px;
+  height: 100%;
 }
 
 .logo-sv {
-  background: url(/hakemus/images/opintopolku_large-sv.png) no-repeat;
+  background: url(/hakemus/images/OPO_Logo_Header_ruotsi.svg) no-repeat;
   background-size: 100%;
-  width: 225px;
-  height: 50px;
+  width: 160px;
+  height: 100%;
 }
 
 .logo-en {
-  background: url(/hakemus/images/opintopolku_large-en.png) no-repeat;
+  background: url(/hakemus/images/OPO_Logo_Header_englanti.svg) no-repeat;
   background-size: 100%;
-  width: 225px;
-  height: 50px;
+  width: 160px;
+  height: 100%;
 }
 
 @send-button-width-mobile: 138px;
@@ -342,8 +341,8 @@ body {
 }
 
 .application__send-application-button {
-  background: #fff;
-  color: #149ECB;
+  background: @white;
+  color: @primary-green-700;
   border-radius: 3px;
   box-shadow :none;
   padding: 5px;
@@ -352,13 +351,20 @@ body {
   margin-right: 0;
   font-family: 'Open Sans', sans-serif;
   font-size: 14px;
-  border: none;
   cursor: pointer;
+  border: 2px solid @primary-green-700;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  &:hover {
+    border-color: @primary-green-900;
+    color: @primary-green-900;
+  }
+  &:focus {
+    box-shadow: inset 0px 0px 0px 2px @primary-green-300;
+  }
 }
 .application__send-application-button:disabled {
-  background: transparent;
-  color: white;
-  border: 1px solid white;
+  border-color: @neutral-grey-500;
+  color: @neutral-grey-500;
   cursor: default;
 }
 .application__sent-indicator {
