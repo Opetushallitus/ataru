@@ -1,6 +1,7 @@
 @import "vars";
 @import "mixins";
 @import "component-layout";
+@import "button-component";
 @field-margin-left: 245px;
 @form-select-width: 305px;
 @total-banner-height: 97px;
@@ -341,32 +342,13 @@ body {
 }
 
 .application__send-application-button {
-  background: @white;
-  color: @primary-green-700;
-  border-radius: 3px;
-  box-shadow :none;
-  padding: 5px;
   height: 40px;
   width: 210px;
   margin-right: 0;
-  font-family: 'Open Sans', sans-serif;
   font-size: 14px;
-  cursor: pointer;
-  border: 2px solid @primary-green-700;
-  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
-  &:hover {
-    border-color: @primary-green-900;
-    color: @primary-green-900;
-  }
-  &:focus {
-    box-shadow: inset 0px 0px 0px 2px @primary-green-300;
-  }
+  .secondary-button;
 }
-.application__send-application-button:disabled {
-  border-color: @neutral-grey-500;
-  color: @neutral-grey-500;
-  cursor: default;
-}
+
 .application__sent-indicator {
   margin-top: 3px;
   width: 210px;
@@ -1993,19 +1975,14 @@ th.application__readonly-adjacent--header {
 }
 
 .application__preview-link {
-  background: @white;
-  color: @pale-blue;
-  border-radius: 3px;
-  box-shadow: none;
-  padding: 5px 20px;
   height: 40px;
   width: 210px;
   margin-right: 0;
   font-size: 12px;
-  border: none;
-  cursor: pointer;
   text-transform: uppercase;
   user-select: none;
+  .secondary-button;
+  padding: 5px 20px;
 
   @media only screen and (max-width: @desktop-content-width) {
     padding: 5px 10px;
@@ -2019,11 +1996,6 @@ th.application__readonly-adjacent--header {
     height: auto;
     width: auto;
   }
-}
-
-.application__preview-link--disabled {
-  background: @disabled-header-button;
-  color: @white;
 }
 
 .application__hakuaika-left {
