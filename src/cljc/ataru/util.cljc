@@ -6,7 +6,9 @@
             #?(:clj  [clj-time.core :as time]
                :cljs [cljs-time.core :as time])
             #?(:clj  [clj-time.coerce :refer [from-long]]
-               :cljs [cljs-time.coerce :refer [from-long]]))
+               :cljs [cljs-time.coerce :refer [from-long]])
+            [clojure.string :as string]
+            [ataru.application.option-visibility :as option-visibility])
   (:import #?(:clj [java.util UUID])))
 
 (defn is-question-group-answer? [value]
@@ -89,6 +91,14 @@
        :content
        flatten-form-fields
        (group-by-first (comp keyword :id))))
+
+(defn- form-sections-by-id [form]
+  (->> form
+       :content
+       (filter #(= "wrapperElement" (:fieldClass %)))
+       (group-by-first (comp keyword :id))))
+
+(def form-sections-by-id-memo (memoize form-sections-by-id))
 
 (defn form-attachment-fields [form]
   (->> form
@@ -197,7 +207,7 @@
   (some #(= item %) vec))
 
 (defn not-blank? [s]
-  (not (clojure.string/blank? s)))
+  (not (string/blank? s)))
 
 (defn not-blank [s]
   (when (not-blank? s) s))
@@ -313,3 +323,34 @@
 
 (defn non-blank-option-label [option langs]
   (non-blank-val (:label option) langs))
+
+(defn visibility-conditions [content]
+  (->> content
+       (keep :section-visibility-conditions)
+       flatten))
+
+(defn- fields-with-visibility-rules [form]
+  (filter :section-visibility-conditions (flatten-form-fields (:content form))))
+
+(def fields-with-visibility-rules-memo
+  (memoize fields-with-visibility-rules))
+
+(defn is-field-hidden-by-section-visibility-conditions [db field]
+  (let [form (:form db)
+        filtered-content (fields-with-visibility-rules-memo form)
+        answers (get-in db [:application :answers])
+        is-visible? (fn [id] (get-in db [:application :ui (keyword id) :visible?]))
+        id (-> field :id keyword)
+        visibility-conditions (mapcat (fn [{conditions :section-visibility-conditions field-id :id}]
+                                        (keep (fn [visibility-condition]
+                                                (let [section-name (-> visibility-condition :section-name keyword)]
+                                                  (when (and (= section-name id) (is-visible? field-id))
+                                                    (assoc
+                                                      visibility-condition
+                                                      :value (get-in answers [(keyword field-id) :value])))))
+                                              conditions)) filtered-content)]
+    (when (seq visibility-conditions)
+      (->> visibility-conditions
+           (some (fn [{value :value :as option}]
+                   (not (option-visibility/answer-satisfies-condition-or-is-empty? value option))))
+           not))))
