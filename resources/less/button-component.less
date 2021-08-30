@@ -64,3 +64,18 @@
     cursor: default;
   }
 }
+
+.tertiary-button {
+  .button-mixin;
+  background: @white;
+  color: @primary-green-700;
+  &:hover {
+    color: @primary-green-900;
+  }
+  &:disabled,
+  &[disabled] {
+    color: @neutral-grey-600;
+    cursor: default;
+    pointer-events: none;
+  }
+}
