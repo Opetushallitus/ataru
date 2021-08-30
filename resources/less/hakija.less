@@ -967,10 +967,8 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-checkbox + label {
+  .primary-button;
   align-items: center;
-  background-color: @multiple-choice-not-selected-background;
-  border-radius: 2px;
-  color: @text-color;
   cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
@@ -981,18 +979,8 @@ textarea.application__form-text-area__size-large {
   font-size: 14px;
 }
 
-.application__form-checkbox + label:hover {
-  background-color: @application-form-list-hilight-background-color;
-}
-
-.application__form-checkbox + label.disabled {
-  background-color: @separator-color;
-  cursor: default;
-}
-
 .application__form-checkbox:checked + label {
-  background-color: @section-header-text;
-  color: @white;
+  background-color: @primary-green-900;
 }
 
 .application__form-checkbox:checked + label::before {
@@ -1067,10 +1055,8 @@ th.application__readonly-adjacent--header {
 }
 
 .application__form-single-choice-button + label {
+  .primary-button;
   align-items: center;
-  background-color: @multiple-choice-not-selected-background;
-  color: @text-color;
-  cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
   min-height: 43px;
@@ -1080,10 +1066,6 @@ th.application__readonly-adjacent--header {
   min-width: 120px;
   line-height: 120%;
   font-size: 14px;
-}
-
-.application__form-single-choice-button + label:hover {
-  background-color: @application-form-list-hilight-background-color;
 }
 
 .application__form-single-choice-button + label.disabled {
@@ -1124,8 +1106,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__form-single-choice-button:checked + label {
-  color: @white;
-  background-color: @section-header-text;
+  background-color: @primary-green-900;
 }
 .application__form-single-choice-button--verifying {
   margin-right: 5px;
@@ -1819,28 +1800,13 @@ th.application__readonly-adjacent--header {
 }
 
 .application__search-hit-hakukohde-row--select-button {
-  border: 0;
-  border-radius: 3px;
+  .primary-button;
   padding: 8px 20px;
-  color: @white;
-  background-color: @pale-blue;
   font-family: 'Open Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-size: 16px;
   cursor: pointer;
-  &:focus {
-    outline: none;
-  }
   &::-moz-focus-inner {
     border: 0;
-  }
-  &:hover {
-    border: 0;
-    background-color: @pale-blue;
-  }
-  &:disabled {
-    background-color: @sg-gray-lighten-3;
-    color: @white;
-    cursor: default;
   }
 }
 
