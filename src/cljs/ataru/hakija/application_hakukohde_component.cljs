@@ -60,7 +60,6 @@
                   #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
 
 (defn- prioritize-hakukohde-buttons
-  ;; TODO: Katso missä käytössä
   [hakukohde-oid disabled?]
   (let [priority-number @(subscribe [:application/hakukohde-priority-number hakukohde-oid])]
     [:div.application__selected-hakukohde-row--priority-changer
