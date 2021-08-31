@@ -184,7 +184,7 @@
                                                  :sv "Filstorleken är 0"}
    :filter-by-koulutustyyppi                    {:fi "Rajaa koulutustyypillä"
                                                  :en "EN: Rajaa koulutustyypillä"
-                                                 :sv "SV: Rajaa koulutustyypillä"}
+                                                 :sv "Avgränsa enligt utbildningstyp"}
    :uploading                                   {:fi "Ladataan"
                                                  :sv "Laddar upp"
                                                  :en "Uploading"}
@@ -387,7 +387,7 @@
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
    :search-application-options-or-education     {:fi "Etsi koulutusta tai oppilaitosta"
-                                                 :sv "SV: Etsi koulutusta tai oppilaitosta"
+                                                 :sv "Sök utbildningar eller läroanstalt"
                                                  :en "EN: Etsi koulutusta tai oppilaitosta"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
@@ -396,14 +396,14 @@
                                                  :en "seconds"
                                                  :sv "sekunder"}
    :select-max-n-application-options            {:fi ["Valitse enintään " " hakukohdetta"]
-                                                 :sv ["SV: Valitse enintään " " SV: hakukohdetta"]
-                                                 :en ["SV: Valitse enintään " " SV: hakukohdetta"]}
+                                                 :sv ["Välj högst " " SV: hakukohdetta"]
+                                                 :en ["EN: Valitse enintään " " ansökningsmål"]}
    :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
-                                                 :sv "SV: Voit valita vielä " " SV: hakukohdetta"
-                                                 :en "SV: Voit valita vielä " " SV: hakukohdetta"}
+                                                 :sv "Du kan välja ännu ett ansökningsmål"
+                                                 :en "EN: Voit valita vielä yhden hakukohteen"}
    :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
-                                                 :sv ["SV: Voit valita vielä " " SV: hakukohdetta"]
-                                                 :en ["SV: Voit valita vielä " " SV: hakukohdetta"]}
+                                                 :sv ["Du kan välja " " ansökningsmål"]
+                                                 :en ["EN: Voit valita vielä " " hakukohdetta"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
                                                  :sv "Visa mer..."}
