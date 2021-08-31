@@ -11,6 +11,7 @@ body {
   &.ataru-app__hakija {
     a {
       .tertiary-button;
+      padding: 0;
       &:hover {
         text-decoration: underline;
       }
@@ -859,11 +860,8 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-upload-label {
+  .primary-button;
   align-items: center;
-  background-color: @section-header-text;
-  border-radius: 3px;
-  color: @white;
-  cursor: pointer;
   display: flex;
   flex-flow: row nowrap;
   height: 43px;
@@ -1855,7 +1853,7 @@ th.application__readonly-adjacent--header {
 .application__validation-error-dialog {
   width: 610px;
   margin-top: 18px;
-  background: @pale-blue;
+  background: @primary-green-700;
   color: white;
   padding: 20px;
   font-size: 16px;
@@ -1870,7 +1868,7 @@ th.application__readonly-adjacent--header {
     margin-bottom: 0px;
   }
 
-  .arrow(top, @pale-blue, 16px, 38px);
+  .arrow(top, @primary-green-700, 16px, 38px);
 
   @media only screen and (max-width: @desktop-content-width) {
     width: 305px;
