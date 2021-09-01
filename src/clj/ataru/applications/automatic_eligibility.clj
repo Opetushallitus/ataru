@@ -211,15 +211,16 @@
                 now                          (time/now)]
             (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}
                                        {:isolation :serializable}]
-              (doseq [update (automatic-eligibility-if-ylioppilas
-                              application
-                              haku
-                              ohjausparametrit
-                              now
-                              hakukohteet
-                              ylioppilas-tai-ammatillinen?
-                              hakukohderyhmapalvelu-service
-                              hakukohderyhma-settings-cache)]))
+                                      (doseq [update (automatic-eligibility-if-ylioppilas
+                                                       application
+                                                       haku
+                                                       ohjausparametrit
+                                                       now
+                                                       hakukohteet
+                                                       ylioppilas-tai-ammatillinen?
+                                                       hakukohderyhmapalvelu-service
+                                                       hakukohderyhma-settings-cache)]
+                                        (update-application-hakukohde-review connection audit-logger update)))
             {:transition {:id :final}})
           (person-info-module/muu-person-info-module?
            (form-store/fetch-by-id (:form-id application)))
