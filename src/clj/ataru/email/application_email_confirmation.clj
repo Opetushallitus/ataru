@@ -268,12 +268,13 @@
                                                    ohjausparametrit-service
                                                    application-id
                                                    false))
-  (when-let [email (create-submit-email koodisto-cache tarjonta-service
-                                        organization-service
-                                        ohjausparametrit-service
-                                        application-id
-                                        true)]
-    (start-email-job job-runner email)))
+  (comment
+    (when-let [email (create-submit-email koodisto-cache tarjonta-service
+                                          organization-service
+                                          ohjausparametrit-service
+                                          application-id
+                                          true)]
+      (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
