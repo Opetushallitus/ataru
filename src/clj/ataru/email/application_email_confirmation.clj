@@ -196,7 +196,7 @@
                                               (filter (fn [answer]
                                                         (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
                                               (mapcat :value))
-         recipients                      (if-not (and minor? guardian?) applier-recipients guardian-recipients)
+         recipients                      (if-not guardian? applier-recipients (when minor? guardian-recipients))
          subject                         (if subject (subject lang) (email-template :subject))
          application-url                 (modify-link (:secret application))
          template-params                 (cond-> {:hakukohteet                (hakukohde-names tarjonta-info lang application)
