@@ -29,6 +29,7 @@
 (defonce autocomplete-off "new-password")
 
 (declare render-field)
+(declare render-duplicate-fields)
 
 (defn- text-field-size->class [size]
   (match size
@@ -432,7 +433,9 @@
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
              ^{:key (:id child)}
-             [render-field child nil]))]))
+             (if (:per-hakukohde child)
+               [render-duplicate-fields child (:children field-descriptor)]
+              [render-field child nil])))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
   (let [mouse-over?   (subscribe [:application/mouse-over-remove-question-group-button
@@ -990,7 +993,7 @@
           :idx              idx
           :render-field     render-field}]))))
 
-(defn render-duplicate-field [field-descriptor idx]
+(defn- render-duplicate-field [field-descriptor idx]
   (when (and field-descriptor (:duplikoitu-kysymys-hakukohde-oid field-descriptor))
     (let [visible?  @(subscribe [:application/visible? (keyword (:id field-descriptor))])]
       (when visible?
@@ -998,6 +1001,14 @@
          {:field-descriptor field-descriptor
           :idx              idx
           :render-field     render-field}]))))
+
+(defn- render-duplicate-fields
+  [field questions]
+  [:div.per-question-wrapper
+   [form-field-label-component/form-field-label field (application-field/form-field-id field nil)]
+   (for [duplicate-field (filter #(= (:original-question %) (:id field)) questions)]
+     ^{:key (str "duplicate-" (:id duplicate-field))}
+     [render-duplicate-field duplicate-field nil])])
 
 (defn editable-fields [_]
   (r/create-class
@@ -1008,9 +1019,5 @@
                                        :when @(subscribe [:application/visible? (keyword (:id field))])]
                                    ^{:key (:id field)}
                                    (if (:per-hakukohde field)
-                                     [:div.per-question-wrapper
-                                        [form-field-label-component/form-field-label field (application-field/form-field-id field nil)]
-                                        (for [duplicate-field (filter #(= (:original-question %) (:id field)) (:content form-data))]
-                                          ^{:key (str "duplicate-" (:id duplicate-field))}
-                                          [render-duplicate-field duplicate-field nil])]
+                                     [render-duplicate-fields field (:content form-data)]
                                      [render-field field nil]))))}))

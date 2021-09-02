@@ -1,5 +1,6 @@
 (ns ataru.hakija.handlers-util
-  (:require [ataru.application-common.application-field-common :refer [required-validators]]))
+  (:require [ataru.application-common.application-field-common :refer [required-validators]]
+            [ataru.util :as util]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
        [tarjonta-hakukohteet hakukohde-oid question]
@@ -7,15 +8,23 @@
              selected-hakukohde (some #(when (= (:oid %) hakukohde-oid) %) tarjonta-hakukohteet)]
          (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
 
+(defn- duplicate-question
+  [db hakukohde-oid questions question]
+  (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question (get-in db [:form :tarjonta :hakukohteet]) hakukohde-oid question))
+    (conj questions question (-> question
+                                 (dissoc :per-hakukohde)
+                                 (assoc :id (str (:id question) "_" hakukohde-oid)
+                                        :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
+                                        :original-question (:id question))))
+    (conj questions question)))
+
 (defn duplicate-questions-for-hakukohde
-       [db hakukohde-oid questions question]
-       (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question (get-in db [:form :tarjonta :hakukohteet]) hakukohde-oid question))
-         (conj questions question (-> question
-                                      (dissoc :per-hakukohde)
-                                      (assoc :id (str (:id question) "_" hakukohde-oid)
-                                             :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
-                                             :original-question (:id question))))
-         (conj questions question)))
+  [db hakukohde-oid questions question]
+  (if-let [children (seq (:children question))]
+    (let [copied-children (reduce (partial duplicate-question db hakukohde-oid) [] children)
+          updated-question (assoc question :children copied-children)]
+      (conj questions updated-question))
+    (duplicate-question db hakukohde-oid questions question)))
 
 (defn- duplicate-questions-for-hakukohde-inner
   [tarjonta-hakukohteet hakukohde-oids questions question]
@@ -41,7 +50,8 @@
 
 (defn fill-missing-answer-for-hakukohde
   [answers questions]
-    (let [missing-questions (filter #(and (:original-question %) (not (get answers (keyword (:id %))))) questions)
+    (let [flat-questions (util/flatten-form-fields questions)
+          missing-questions (filter #(and (:original-question %) (not (get answers (keyword (:id %))))) flat-questions)
           get-original-answer (fn [question]
                                 (get answers (keyword (:original-question question))))]
       (if (seq missing-questions)
