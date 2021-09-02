@@ -90,6 +90,17 @@
   (fn get-component-value [component [_ & path]]
     (get-in component (rest (flatten path)))))
 
+(re-frame/reg-sub
+  :editor/is-per-hakukohde-allowed
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn is-per-hakukohde-allowed [component [_ & path]]
+    (let [flattened-path (flatten path)
+          has-parent (string/includes? (str flattened-path) ":children")
+          too-deep (> (count flattened-path) 3)]
+      (and (not too-deep)
+           (or (not has-parent)
+               (= "wrapperElement" (:fieldClass component)))))))
 
 (re-frame/reg-sub
   :editor/get-range-value
