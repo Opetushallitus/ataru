@@ -17,18 +17,18 @@
              :original-question (:id question))))
 
 (defn- duplicate-question
-  [db hakukohde-oid questions question]
-  (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question (get-in db [:form :tarjonta :hakukohteet]) hakukohde-oid question))
+  [tarjonta-hakukohteet hakukohde-oid questions question]
+  (if (and (:per-hakukohde question) (is-hakukohde-in-hakukohderyhma-of-question tarjonta-hakukohteet hakukohde-oid question))
     (conj questions question (create-duplicate-question hakukohde-oid question))
     (conj questions question)))
 
 (defn duplicate-questions-for-hakukohde
-  [db hakukohde-oid questions question]
+  [tarjonta-hakukohteet hakukohde-oid questions question]
   (if-let [children (seq (:children question))]
-    (let [copied-children (reduce (partial duplicate-question db hakukohde-oid) [] children)
+    (let [copied-children (reduce (partial duplicate-question tarjonta-hakukohteet hakukohde-oid) [] children)
           updated-question (assoc question :children copied-children)]
       (conj questions updated-question))
-    (duplicate-question db hakukohde-oid questions question)))
+    (duplicate-question tarjonta-hakukohteet hakukohde-oid questions question)))
 
 (defn- duplicate-questions-for-hakukohde-inner
   [tarjonta-hakukohteet hakukohde-oids questions question]

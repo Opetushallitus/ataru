@@ -12,7 +12,8 @@
             [ataru.hakija.banner-test]
             [ataru.component-data.value-transformers-test]
             [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test]
-            [ataru.collections-test]))
+            [ataru.collections-test]
+            [ataru.hakija.handlers-util-test]))
 
 (doo-tests 'ataru.application-common.option-visibility-test
            'ataru.cljs-util-test
@@ -26,4 +27,5 @@
            'ataru.hakija.banner-test
            'ataru.component-data.value-transformers-test
            'ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test
-           'ataru.collections-test)
+           'ataru.collections-test
+           'ataru.hakija.handlers-util-test)
