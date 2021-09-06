@@ -4,7 +4,7 @@
     [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
-    [ataru.application_common.comparators :as comparators]
+    [ataru.application-common.comparators :as comparators]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))

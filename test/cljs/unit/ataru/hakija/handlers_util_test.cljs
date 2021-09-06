@@ -37,7 +37,7 @@
 
 (deftest duplicates-child-questions
   (let [duplicated-questions (util/duplicate-questions-for-hakukohde
-                               [hakukohde-in-ryhma] "hk1" [] {:children [per-hakukohde-question]} )
+                               [hakukohde-in-ryhma] "hk1" [] {:children [per-hakukohde-question]})
         children (:children (first duplicated-questions))
         duplicated-question (first-duplicated-question children)]
     (is (= 1 (count duplicated-questions)))
@@ -49,7 +49,7 @@
 
 (deftest does-not-duplicates-child-without-per-hakukohde
   (let [duplicated-questions (util/duplicate-questions-for-hakukohde
-                               [hakukohde-in-ryhma] "hk1" [] {:children [question]} )
+                               [hakukohde-in-ryhma] "hk1" [] {:children [question]})
         children (:children (first duplicated-questions))]
     (is (= 1 (count duplicated-questions)))
     (is (= 1 (count children)))
@@ -58,7 +58,7 @@
 
 (deftest does-not-duplicates-child-which-do-not-have-hakukohde-in-ryhma
   (let [duplicated-questions (util/duplicate-questions-for-hakukohde
-                               [hakukohde-in-another-ryhma] "hk2" [] {:children [per-hakukohde-question]} )
+                               [hakukohde-in-another-ryhma] "hk2" [] {:children [per-hakukohde-question]})
         children (:children (first duplicated-questions))]
     (is (= 1 (count duplicated-questions)))
     (is (= 1 (count children)))
@@ -69,13 +69,7 @@
   (let [duplicated-questions (util/duplicate-questions-for-hakukohteet
                                [hakukohde-in-ryhma hakukohde-in-another-ryhma] ["hk1" "hk2"]
                                [question per-hakukohde-question {:children [{:id 3} {:id 4 :per-hakukohde true :belongs-to-hakukohderyhma ["a2"]}]}])
-        duplicated-question (first-duplicated-question duplicated-questions)
-        children (->> duplicated-questions
-                             (filter #(seq? (:children %)))
-                             (first)
-                             (:children))
-        original-child (first (filter #(:per-hakukohde %) children))
-        duplicated-child (first-duplicated-question children)]
+        [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children}] duplicated-questions]
     (is (= 4 (count duplicated-questions)))
     (is (= 3 (count children)))
     (is (= 1 (:original-question duplicated-question)))
@@ -89,3 +83,15 @@
     (is (:per-hakukohde original-child))
     (is (nil? (:original-question original-child)))
     (is (nil? (::duplikoitu-kysymys-hakukohde-oid original-child)))))
+
+(deftest fill-missing-answer-for-hakukohde
+  (let [answers {:q1 {:value ""}}
+        questions [{:id "q1"} {:id "q2" :original-question "q1"}]
+        result (util/fill-missing-answer-for-hakukohde answers questions)]
+    (is (= {:q1 {:value ""} :q2 {:value "" :valid true}} result))))
+
+(deftest copied-answer-should-have-valid-false-when-question-is-required
+  (let [answers {:q1 {:value ""}}
+        questions [{:id "q1"} {:id "q2" :original-question "q1" :validators ["required"]}]
+        result (util/fill-missing-answer-for-hakukohde answers questions)]
+    (is (= false (:valid (:q2 result))))))
