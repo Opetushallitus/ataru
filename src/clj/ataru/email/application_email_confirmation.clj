@@ -147,8 +147,23 @@
                                (util/non-blank-val [lang :fi :sv :en]))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
-(defn- create-email ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
-                     (create-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
+(defn render-emails-for-applicant-and-guardian
+  [recipients guardian-recipients subject from-address template-params render-file-fn]
+  (let [construct-fn (fn [receivers guardian]
+                       (when (seq receivers)
+                         (let [body (render-file-fn (cond-> template-params
+                                                            guardian (dissoc :application-url :content-ending)))]
+                           {:from       from-address
+                            :recipients receivers
+                            :subject    subject
+                            :body       body}
+                           )))
+        email (construct-fn recipients false)
+        guardian-email (construct-fn guardian-recipients true)]
+      (filter (comp not nil?) [email guardian-email])))
+
+(defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
+                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
    (let [now                             (t/now)
          application                     (application-store/get-application application-id)
@@ -192,39 +207,32 @@
          applier-recipients              (->> (:answers application)
                                               (filter #(= "email" (:key %)))
                                               (map :value))
-         guardian-recipients             (->> (:answers application)
-                                              (filter (fn [answer]
-                                                        (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
-                                              (mapcat :value))
-         recipients                      (if-not guardian? applier-recipients (when minor? guardian-recipients))
+         guardian-recipients             (when (and minor? guardian?) (->>  (:answers application)
+                                                                            (filter (fn [answer]
+                                                                                      (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
+                                                                            (mapcat :value)))
          subject                         (if subject (subject lang) (email-template :subject))
          application-url                 (modify-link (:secret application))
-         template-params                 (cond-> {:hakukohteet                (hakukohde-names tarjonta-info lang application)
+         template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
                                                   :application-oid            (:key application)
                                                   :application-url            application-url
                                                   :content                    content
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
                                                   :signature                  signature}
-                                                 (and minor? guardian?) (dissoc :application-url :content-ending))
-         body                            (selmer/render-file
-                                           (template-name lang)
-                                           template-params)]
-     (when (seq recipients)
-       {:from       from-address
-        :recipients recipients
-        :subject    subject
-        :body       body}))))
+         construct-body-fn                (fn [template-params]
+                                            (selmer/render-file (template-name lang) template-params))]
+     (render-emails-for-applicant-and-guardian applier-recipients guardian-recipients subject from-address template-params construct-body-fn))))
 
 
 (defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
-  (create-email koodisto-cache tarjonta-service
-                organization-service
-                ohjausparametrit-service
-                nil
-                submit-email-template-filename
-                application-id
-                guardian?))
+  (create-emails koodisto-cache tarjonta-service
+                 organization-service
+                 ohjausparametrit-service
+                 nil
+                 submit-email-template-filename
+                 application-id
+                 guardian?))
 
 (defn preview-submit-emails [previews]
   (map
@@ -237,20 +245,20 @@
 
 
 (defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
-  (create-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                edit-email-subjects
-                #(str "templates/email_edit_confirmation_template_"
+  (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+                 edit-email-subjects
+                 #(str "templates/email_edit_confirmation_template_"
                       (name %)
                       ".html")
-                application-id
-                guardian?))
+                 application-id
+                 guardian?))
 
 (defn- create-refresh-secret-email
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                refresh-secret-email-subjects
-                #(str "templates/email_refresh_secret_template_" (name %) ".html")
-                application-id))
+  (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+                 refresh-secret-email-subjects
+                 #(str "templates/email_refresh_secret_template_" (name %) ".html")
+                 application-id))
 
 (defn start-email-job [job-runner email]
   (let [job-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -263,32 +271,25 @@
 
 (defn start-email-submit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-submit-email koodisto-cache tarjonta-service
-                                                   organization-service
-                                                   ohjausparametrit-service
-                                                   application-id
-                                                   false))
-  (when-let [email (create-submit-email koodisto-cache tarjonta-service
-                                        organization-service
-                                        ohjausparametrit-service
-                                        application-id
-                                        true)]
+  (for [email (create-submit-email koodisto-cache tarjonta-service
+                                   organization-service
+                                   ohjausparametrit-service
+                                   application-id
+                                   true)]
     (start-email-job job-runner email)))
 
 (defn start-email-edit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+  (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                  application-id
-                                                 false))
-  (when-let [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                                      application-id
-                                      true)]
+                                                 true)]
     (start-email-job job-runner email)))
 
 (defn start-email-refresh-secret-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                                                           application-id)))
+  (for [email (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+                                                           application-id)]
+    (start-email-job job-runner email)))
 
 (defn store-email-templates
   [form-key session templates]
