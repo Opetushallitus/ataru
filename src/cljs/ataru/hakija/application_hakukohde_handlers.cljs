@@ -5,7 +5,7 @@
     [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
-    [ataru.application_common.comparators :as comparators]
+    [ataru.application-common.comparators :as comparators]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))
@@ -119,8 +119,9 @@
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
           selected-hakukohteet (get-in db [:application :answers :hakukohteet :value])
+          tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
           update-questions (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
-                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions))
+                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde tarjonta-hakukohteet hakukohde-oid) [] questions))
           updated-answers (handlers-util/fill-missing-answer-for-hakukohde (get-in db [:application :answers]) update-questions)
           flat-form-content (util/flatten-form-fields update-questions)]
       {:db (-> db
@@ -206,11 +207,19 @@
 
 (defn- remove-question-duplicates-with-hakukohde
   [hakukohde-oid questions]
-  (filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid) questions))
+  (let [filterfn (partial filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
+        remove-duplicate-children (fn [question]
+                                    (if (seq (:children question))
+                                      (assoc question :children (filterfn (:children question)))
+                                      question))]
+    (->> questions
+        (filterfn)
+        (map remove-duplicate-children))))
 
 (defn- remove-duplicates-with-hakukohde
   [m questions hakukohde-oid]
   (let [duplicate-question-ids (->> questions
+                                    (util/flatten-form-fields)
                                     (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
                                     (map #(keyword (:id %))))]
     (apply dissoc m duplicate-question-ids )))

@@ -211,6 +211,7 @@
         selected-form-key        (subscribe [:editor/selected-form-key])
         koodisto-ordered-id      (util/new-uuid)
         component-locked?        (subscribe [:editor/component-locked? path])
+        is-per-hakukohde-allowed (subscribe [:editor/is-per-hakukohde-allowed path])
         allow-invalid-koodis-id  (util/new-uuid)]
     (fn [initial-content followups path {:keys [question-group-element?]}]
       (let [languages      @languages
@@ -251,7 +252,9 @@
                :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-              (when (and (seq (:belongs-to-hakukohderyhma initial-content)) (and (nil? @options-koodisto) (not (string/includes? (str path) ":children"))))
+              (when (and (seq (:belongs-to-hakukohderyhma initial-content))
+                         @is-per-hakukohde-allowed
+                         (nil? @options-koodisto))
                 [checkbox-component/checkbox path initial-content :per-hakukohde])
               (when @support-selection-limit?
                 [validator-checkbox-component/validator-checkbox path initial-content :selection-limit nil
