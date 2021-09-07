@@ -204,14 +204,14 @@
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
                                                   :signature                  signature}
-         applicant-email-data (email-util/make-email-data applier-recipients subject template-params)
-         guardian-email-data (email-util/make-email-data guardian-recipients subject template-params)
-         construct-body-fn                (fn [template-params]
+         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+         guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
+         render-file-fn                  (fn [template-params]
                                             (selmer/render-file (template-name lang) template-params))]
      (email-util/render-emails-for-applicant-and-guardian
        applicant-email-data
        guardian-email-data
-       construct-body-fn))))
+       render-file-fn))))
 
 
 (defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
