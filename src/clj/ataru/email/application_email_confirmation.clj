@@ -43,8 +43,6 @@
    :sv "Studieinfo: ny länk till din ansökan"
    :en "Studyinfo: your new application link"})
 
-(def from-address "no-reply@opintopolku.fi")
-
 (defn- ->string-array
   [& elements]
   (into-array String elements))
@@ -115,7 +113,7 @@
 
 (defn preview-submit-email
   [lang subject content content-ending signature]
-  {:from           from-address
+  {:from           email-util/from-address
    :subject        subject
    :content        content
    :content-ending content-ending
@@ -206,8 +204,8 @@
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
                                                   :signature                  signature}
-         applicant-email-data (email-util/make-email-data from-address applier-recipients subject template-params)
-         guardian-email-data (email-util/make-email-data from-address guardian-recipients subject template-params)
+         applicant-email-data (email-util/make-email-data applier-recipients subject template-params)
+         guardian-email-data (email-util/make-email-data guardian-recipients subject template-params)
          construct-body-fn                (fn [template-params]
                                             (selmer/render-file (template-name lang) template-params))]
      (email-util/render-emails-for-applicant-and-guardian

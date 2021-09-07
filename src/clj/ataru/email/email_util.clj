@@ -1,5 +1,7 @@
 (ns ataru.email.email-util)
 
+(def from-address "no-reply@opintopolku.fi")
+
 (defn- filter-template-params
   [template-params guardian?]
   (cond-> template-params
@@ -16,8 +18,8 @@
        :body body})))
 
 (defn make-email-data
-  [from recipients subject template-params]
-  {:from from
+  [recipients subject template-params]
+  {:from from-address
    :recipients recipients
    :subject subject
    :template-params template-params})
