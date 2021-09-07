@@ -7,6 +7,7 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.email.email-store :as email-store]
+            [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
@@ -147,21 +148,6 @@
                                (util/non-blank-val [lang :fi :sv :en]))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
-(defn render-emails-for-applicant-and-guardian
-  [recipients guardian-recipients subject from-address template-params render-file-fn]
-  (let [construct-fn (fn [receivers guardian]
-                       (when (seq receivers)
-                         (let [body (render-file-fn (cond-> template-params
-                                                            guardian (dissoc :application-url :content-ending)))]
-                           {:from       from-address
-                            :recipients receivers
-                            :subject    subject
-                            :body       body}
-                           )))
-        email (construct-fn recipients false)
-        guardian-email (construct-fn guardian-recipients true)]
-      (filter (comp not nil?) [email guardian-email])))
-
 (defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
                      (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
@@ -220,9 +206,14 @@
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
                                                   :signature                  signature}
+         applicant-email-data (email-util/make-email-data from-address applier-recipients subject template-params)
+         guardian-email-data (email-util/make-email-data from-address guardian-recipients subject template-params)
          construct-body-fn                (fn [template-params]
                                             (selmer/render-file (template-name lang) template-params))]
-     (render-emails-for-applicant-and-guardian applier-recipients guardian-recipients subject from-address template-params construct-body-fn))))
+     (email-util/render-emails-for-applicant-and-guardian
+       applicant-email-data
+       guardian-email-data
+       construct-body-fn))))
 
 
 (defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
