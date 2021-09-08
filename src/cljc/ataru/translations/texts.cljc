@@ -1052,6 +1052,12 @@
    :auto-expand-hakukohteet                         {:fi "Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :sv "SV: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :en "EN: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"}
+   :properties                                      {:fi "Yleiset asetukset"
+                                                     :sv "SV: Yleiset asetukset"
+                                                     :en "EN: Yleiset asetukset"}
+   :toggle-demo-form                                {:fi "Näytä demolinkki"
+                                                     :sv "SV: Näytä demolinkki"
+                                                     :en "EN: Näytä demolinkki"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
