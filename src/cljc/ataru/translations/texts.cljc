@@ -1058,6 +1058,9 @@
    :toggle-demo-form                                {:fi "Näytä demolinkki"
                                                      :sv "SV: Näytä demolinkki"
                                                      :en "EN: Näytä demolinkki"}
+   :demo-link                                       {:fi "Avaa demolomake"
+                                                     :sv "SV: Avaa demolomake"
+                                                     :en "EN: Avaa demolomake"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}

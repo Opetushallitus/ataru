@@ -240,7 +240,8 @@
        [:i.zmdi.zmdi-open-in-new]]]]))
 
 (defn- haku-preview-link [haku]
-  (let [user-info @(subscribe [:state-query [:editor :user-info]])]
+  (let [user-info @(subscribe [:state-query [:editor :user-info]])
+        demo-allowed? @(subscribe [:editor/demo-allowed])]
     [:div.editor-form__haku-preview-link
      [:a {:href   (str "/lomake-editori/api/preview/haku/"
                        (:oid haku)
@@ -254,7 +255,15 @@
           :target "_blank"}
       @(subscribe [:editor/virkailija-translation :form])]
      (when (:superuser? user-info)
-       (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]))
+       (link-to-feedback (str "/hakemus/haku/" (:oid haku))))
+     (when demo-allowed?
+       [:fragment
+        [:span " | "]
+        [:a {:href   (str "/lomake-editori/api/preview/haku/"
+                         (:oid haku)
+                         "?lang=fi")
+            :target "_blank"}
+          @(subscribe [:editor/virkailija-translation :demo-link])]])]))
 
 (defn- form-in-use-in-hakus [form-used-in-hakus]
   [:div.editor-form__form-link-container.animated.flash
