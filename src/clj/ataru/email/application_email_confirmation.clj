@@ -191,10 +191,12 @@
          applier-recipients              (->> (:answers application)
                                               (filter #(= "email" (:key %)))
                                               (map :value))
-         guardian-recipients             (when (and minor? guardian?) (->>  (:answers application)
-                                                                            (filter (fn [answer]
-                                                                                      (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
-                                                                            (mapcat :value)))
+         guardian-recipients             (when (and minor? guardian?)
+                                           (->> (:answers application)
+                                             (filter (fn [answer]
+                                                       (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
+                                             (mapcat :value)
+                                             (filter (comp not clojure.string/blank?))))
          subject                         (if subject (subject lang) (email-template :subject))
          application-url                 (modify-link (:secret application))
          template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
