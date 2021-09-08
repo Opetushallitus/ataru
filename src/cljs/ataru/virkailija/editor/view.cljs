@@ -308,12 +308,35 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
+(defn- properties []
+  (let [demo-toggle-id "demo-toggle"]
+    [:div.editor-form__component-wrapper
+     [:div.editor-form__header-wrapper
+      [:header.editor-form__component-header
+       [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
+     [:div.editor-form__component-content-wrapper
+      [:div.editor-form__module-fields
+       [:div.editor-form__text-field-checkbox-wrapper
+        [:div.editor-form__checkbox-container
+         [:input.editor-form__checkbox
+          {:id           demo-toggle-id
+           :type         "checkbox"
+           :data-test-id demo-toggle-id}]
+           ;:checked      @(subscribe [:editor/auto-expand-hakukohteet])
+           ;:on-change
+           ; (fn [event] (.preventDefault event) (dispatch [:editor/toggle-auto-expand-hakukohteet]))}]
+         [:label.editor-form__checkbox-label
+          {:for demo-toggle-id}
+          @(subscribe [:editor/virkailija-translation :toggle-demo-form])]]]
+   ]]]))
+
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container
    [close-form]
    [:div
     [editor-name]
     [form-usage form-key]]
+   [properties]
    [c/editor]])
 
 (defn editor []
