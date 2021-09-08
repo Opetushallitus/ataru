@@ -16,4 +16,5 @@
                                                                 :cljs s/Str)
                    (s/optional-key :application-count)       s/Int
                    (s/optional-key :deleted)                 (s/maybe s/Bool)
-                   (s/optional-key :properties)              {(s/optional-key :auto-expand-hakukohteet) s/Bool}})
+                   (s/optional-key :properties)              {(s/optional-key :auto-expand-hakukohteet) s/Bool
+                                                              (s/optional-key :demo-allowed)            s/Bool}})

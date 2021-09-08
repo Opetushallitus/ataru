@@ -1327,3 +1327,12 @@
                         vec
                         (conj :properties :auto-expand-hakukohteet))]
       (update-in db form-path not))))
+
+(reg-event-db
+  :editor/toggle-demo-allowed
+  (fn [db _]
+    (let [form-path (-> (current-form-content-path db)
+                        butlast
+                        vec
+                        (conj :properties :demo-allowed))]
+      (update-in db form-path not))))

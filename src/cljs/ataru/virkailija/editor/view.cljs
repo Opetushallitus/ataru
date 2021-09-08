@@ -319,12 +319,13 @@
        [:div.editor-form__text-field-checkbox-wrapper
         [:div.editor-form__checkbox-container
          [:input.editor-form__checkbox
-          {:id           demo-toggle-id
-           :type         "checkbox"
-           :data-test-id demo-toggle-id}]
-           ;:checked      @(subscribe [:editor/auto-expand-hakukohteet])
-           ;:on-change
-           ; (fn [event] (.preventDefault event) (dispatch [:editor/toggle-auto-expand-hakukohteet]))}]
+          {:id            demo-toggle-id
+           :type          "checkbox"
+           :data-test-id  demo-toggle-id
+           :checked       @(subscribe [:editor/demo-allowed])
+           :on-change     (fn [event]
+                            (.preventDefault event)
+                            (dispatch [:editor/toggle-demo-allowed]))}]
          [:label.editor-form__checkbox-label
           {:for demo-toggle-id}
           @(subscribe [:editor/virkailija-translation :toggle-demo-form])]]]

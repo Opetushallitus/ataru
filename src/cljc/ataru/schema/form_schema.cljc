@@ -152,7 +152,8 @@
    :groups [CreateMoveElement]})
 
 (s/defschema FormProperties
-  {(s/optional-key :auto-expand-hakukohteet) s/Bool})
+  {(s/optional-key :auto-expand-hakukohteet) s/Bool
+   (s/optional-key :demo-allowed)            s/Bool})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
