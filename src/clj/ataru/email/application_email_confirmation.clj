@@ -260,25 +260,28 @@
 
 (defn start-email-submit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (for [email (create-submit-email koodisto-cache tarjonta-service
-                                   organization-service
-                                   ohjausparametrit-service
-                                   application-id
-                                   true)]
-    (start-email-job job-runner email)))
+  (dorun
+    (for [email (create-submit-email koodisto-cache tarjonta-service
+                  organization-service
+                  ohjausparametrit-service
+                  application-id
+                  true)]
+      (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                                                 application-id
-                                                 true)]
-    (start-email-job job-runner email)))
+  (dorun
+    (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+                       application-id
+                       true)]
+           (start-email-job job-runner email))))
 
 (defn start-email-refresh-secret-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (for [email (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                                                           application-id)]
-    (start-email-job job-runner email)))
+  (dorun
+    (for [email (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+                  application-id)]
+      (start-email-job job-runner email))))
 
 (defn store-email-templates
   [form-key session templates]
