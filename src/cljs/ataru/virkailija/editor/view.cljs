@@ -262,7 +262,8 @@
         [:a {:href   (str js/config.applicant.service_url
                           "/hakemus/api/haku/" (:oid haku)
                           "/demo?lang=fi")
-            :target "_blank"}
+            :target "_blank"
+            :data-test-id "demo-link" }
           @(subscribe [:editor/virkailija-translation :demo-link])]])]))
 
 (defn- form-in-use-in-hakus [form-used-in-hakus]
@@ -321,7 +322,7 @@
   (let [demo-toggle-id "demo-toggle"]
     [:div.editor-form__component-wrapper
      [:div.editor-form__header-wrapper
-      [:header.editor-form__component-header
+      [:header.editor-form__component-header {:data-test-id "properties-header"}
        [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
      [:div.editor-form__component-content-wrapper
       [:div.editor-form__module-fields
@@ -331,6 +332,7 @@
           {:id            demo-toggle-id
            :type          "checkbox"
            :data-test-id  demo-toggle-id
+           :disabled      (or (not @(subscribe [:editor/content-loaded?])) @(subscribe [:editor/form-locked?]))
            :checked       @(subscribe [:editor/demo-allowed])
            :on-change     (fn [event]
                             (.preventDefault event)

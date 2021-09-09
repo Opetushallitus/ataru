@@ -84,6 +84,14 @@
     (get-in form [:content i])))
 
 (re-frame/reg-sub
+  :editor/content-loaded?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn content-loaded? [form]
+    (let [content (get form :content)]
+      (and content (> (count content) 0)))))
+
+(re-frame/reg-sub
   :editor/get-component-value
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
