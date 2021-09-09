@@ -145,6 +145,12 @@
                             "?role=hakija"))
             :handler [:application/handle-form]}}))
 
+(reg-event-db
+  :application/set-demo-requested
+  [check-schema-interceptor]
+  (fn [{:keys [db]}]
+    (assoc db :demo-requested true)))
+
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
