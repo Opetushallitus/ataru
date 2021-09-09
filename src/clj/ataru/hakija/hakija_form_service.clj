@@ -12,6 +12,8 @@
             [clj-time.core :as time]
             [clj-time.coerce :as t]
             [clj-time.format :as f]
+            [clojure.walk :as walk]
+            [clojure.string :as string]
             [cheshire.core :as json]
             [schema.core :as s]
             [schema.coerce :as sc]
@@ -46,7 +48,7 @@
   [multiple? yhteishaku? haku-oid form]
   (when-let [person-module-idx (util/first-index-of #(= (:module %) "person-info") (:content form))]
     (let [person-module     (nth (:content form) person-module-idx)
-          new-person-module (update person-module :children (partial clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
+          new-person-module (update person-module :children (partial walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
       (assoc-in form [:content person-module-idx] new-person-module))))
 
 (defn populate-can-submit-multiple-applications
@@ -58,7 +60,7 @@
       (update-ssn-and-email-fields-in-person-module multiple? yhteishaku? haku-oid form)
       (update form :content
               (fn [content]
-                (clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
+                (walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
 (defn- custom-deadline [field]
   (get-in field [:params :deadline]))
@@ -161,7 +163,7 @@
   (if (form-role/virkailija? roles)
     (update form :content
             (fn [content]
-              (clojure.walk/prewalk
+              (walk/prewalk
                 (fn [field]
                   (if (= "formField" (:fieldClass field))
                     (update field :validators (partial remove #{"required-hakija"}))
@@ -296,7 +298,7 @@
                                         hakukohderyhma-settings-cache]
   cache/CacheLoader
   (load [_ key]
-    (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
+    (let [[haku-oid _aips? & roles] (string/split key #"#")]
       (when-let [form (fetch-form-by-haku-oid form-by-id-cache
                                               tarjonta-service
                                               koodisto-cache
@@ -312,3 +314,9 @@
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
   (load-many-size [_] 1)
   (check-schema [_ _] nil))
+
+(defn is-demo-allowed
+  [form-by-haku-oid-str-cache haku-oid]
+  (let [form (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache haku-oid [:hakija])
+        parsed-form (json/parse-string form true)]
+    (get-in parsed-form [:properties :demo-allowed] false)))

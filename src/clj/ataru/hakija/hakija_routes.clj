@@ -167,6 +167,17 @@
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
         (response/not-found {})))
+    (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
+      :path-params [haku-oid :- s/Str]
+      :query-params [lang :- s/Str]
+      (log/info "Täällä ollaan")
+      (if (form-service/is-demo-allowed form-by-haku-oid-str-cache haku-oid)
+        (response/temporary-redirect
+          (str (-> config :public-config :applicant :service_url)
+               "/hakemus/haku/" haku-oid
+               "?demo=true"
+               "&lang=" lang))
+        (response/not-found {})))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]

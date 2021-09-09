@@ -257,11 +257,11 @@
      (when (:superuser? user-info)
        (link-to-feedback (str "/hakemus/haku/" (:oid haku))))
      (when demo-allowed?
-       [:fragment
+       [:<>
         [:span " | "]
-        [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                         (:oid haku)
-                         "?lang=fi")
+        [:a {:href   (str js/config.applicant.service_url
+                          "/hakemus/api/haku/" (:oid haku)
+                          "/demo?lang=fi")
             :target "_blank"}
           @(subscribe [:editor/virkailija-translation :demo-link])]])]))
 
