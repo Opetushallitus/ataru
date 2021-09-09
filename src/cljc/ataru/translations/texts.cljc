@@ -460,7 +460,10 @@
                                                  :en "Lisää valinnaisaine"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
-                                                 :en "Poista"}})
+                                                 :en "Poista"}
+   :demo                                        {:fi "Demo"
+                                                 :sv "Demo"
+                                                 :en "Demo"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

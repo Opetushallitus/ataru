@@ -781,3 +781,10 @@
           yhteishaku? (get-in db [:form :tarjonta :yhteishaku])]
       (and yhteishaku?
            (= kohdejoukko "haunkohdejoukko_11")))))
+
+(re-frame/reg-sub
+  :application/demo?
+  (fn [db]
+    (let [demo-requested (get db :demo-requested)
+          demo-allowed (get-in db [:form :properties :demo-allowed] false)]
+      (and demo-requested demo-allowed))))
