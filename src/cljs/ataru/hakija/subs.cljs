@@ -8,7 +8,8 @@
             [ataru.hakija.person-info-fields :as person-info-fields]
             [clojure.set :as cset]
             [clojure.string :as cstr]
-            [cemerick.url :as url]))
+            [cemerick.url :as url]
+            [ataru.hakija.demo :as demo]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -785,6 +786,4 @@
 (re-frame/reg-sub
   :application/demo?
   (fn [db]
-    (let [demo-requested (get db :demo-requested false)
-          demo-allowed (get-in db [:form :properties :demo-allowed] false)]
-      (and demo-requested demo-allowed))))
+    (demo/demo? db)))
