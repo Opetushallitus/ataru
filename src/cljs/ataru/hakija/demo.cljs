@@ -5,9 +5,17 @@
   [question]
   (= "ssn" (:id question)))
 
+(defn- is-email-question?
+  [question]
+  (= "email" (:id question)))
+
 (defn- remove-validators
   [question]
   (dissoc question :validators))
+
+(defn- remove-email-validator
+  [question]
+  (update question :validators (comp vec (partial filter #(not= "email" %)))))
 
 (defn- questions->zipper
   [questions]
@@ -19,24 +27,25 @@
   (:children (z/root zipper)))
 
 (defn- conditional-edit
-  [pred f zipper]
+  [zipper pred f]
   (let [node (z/node zipper)]
     (if (pred node)
-      (z/next (z/edit zipper f))
-      (z/next zipper))))
+      (z/edit zipper f)
+      zipper)))
 
 (defn- edit-question
   [zipper]
-  (->>
+  (->
     zipper
-    (conditional-edit is-ssn-question? remove-validators)))
+    (conditional-edit is-ssn-question? remove-validators)
+    (conditional-edit is-email-question? remove-email-validator)))
 
 (defn- edit-questions
   [zipper]
   (loop [current zipper]
     (if (z/end? current)
       current
-      (recur (edit-question current)))))
+      (recur (z/next (edit-question current))))))
 
 (defn demo?
   ([db]
