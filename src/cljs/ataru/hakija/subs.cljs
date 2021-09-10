@@ -785,6 +785,6 @@
 (re-frame/reg-sub
   :application/demo?
   (fn [db]
-    (let [demo-requested (get db :demo-requested)
+    (let [demo-requested (get db :demo-requested false)
           demo-allowed (get-in db [:form :properties :demo-allowed] false)]
       (and demo-requested demo-allowed))))

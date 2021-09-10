@@ -37,6 +37,8 @@
     (cljs-util/unset-query-param "modify")
     (cljs-util/unset-query-param "virkailija-secret")
     (cljs-util/unset-query-param "demo")
+    (when (and (u/not-blank? demo) (= "true" demo))
+      (re-frame/dispatch [:application/set-demo-requested]))
     (cond
       (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])
@@ -51,9 +53,7 @@
       (re-frame/dispatch [:application/get-application-by-hakija-secret hakija-secret])
 
       (u/not-blank? virkailija-secret)
-      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret]))
-    (when (and (u/not-blank? demo) (= "true" demo)))
-      (re-frame/dispatch [:application/set-demo-requested])))
+      (re-frame/dispatch [:application/get-application-by-virkailija-secret virkailija-secret]))))
 
 (defn mount-root []
   (schema-validation/enable-schema-fn-validation)
