@@ -170,7 +170,6 @@
     (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
       :path-params [haku-oid :- s/Str]
       :query-params [lang :- s/Str]
-      (log/info "Täällä ollaan")
       (if (form-service/is-demo-allowed form-by-haku-oid-str-cache haku-oid)
         (response/temporary-redirect
           (str (-> config :public-config :applicant :service_url)
