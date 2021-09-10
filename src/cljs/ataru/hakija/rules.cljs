@@ -5,6 +5,7 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.date :as date]
+            [ataru.hakija.demo :as demo]
             [clojure.string :as string])
   (:require-macros [cljs.core.match :refer [match]]))
 
@@ -84,7 +85,7 @@
   [db]
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
     (if (= "true" have-finnish-ssn)
-      (show-field db :ssn)
+      (show-field db :ssn (demo/demo? db))
       (hide-field db :ssn))))
 
 (defn- parse-birth-date-from-ssn
@@ -117,7 +118,8 @@
                                    :cannot-view))]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
-                                           (not-empty (:value ssn)))
+                                           (not-empty (:value ssn))
+                                           (not (demo/demo? db)))
                                       [(parse-birth-date-from-ssn (:value ssn))
                                        (parse-gender-from-ssn (:value ssn))]
                                       cannot-view?

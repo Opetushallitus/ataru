@@ -23,7 +23,8 @@
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
-            [cljs-time.coerce :refer [to-long]]))
+            [cljs-time.coerce :refer [to-long]]
+            [ataru.hakija.demo :as demo]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -415,7 +416,7 @@
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
-        questions                  (:content form)
+        questions                  (demo/apply-when-demo db form demo/remove-unwanted-validators (:content form))
         questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) (get-in db [:application :hakukohde]) questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
