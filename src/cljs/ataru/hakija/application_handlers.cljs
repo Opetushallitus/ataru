@@ -503,7 +503,7 @@
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
                       [:application/fetch-koulutustyypit]]}
-        (when selection-limited
+        (when (and selection-limited (not (demo/demo? db)))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
                   :handler [:application/handle-selection-limit]}})))))
@@ -818,6 +818,7 @@
                             :field-idx                    data-idx
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :try-selection                (partial try-selection
+                                                                   db
                                                                    form-key
                                                                    selection-id
                                                                    selection-group-id)

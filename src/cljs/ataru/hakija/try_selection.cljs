@@ -2,9 +2,10 @@
   (:require [cljs.core.async :as async]
             [ajax.core :refer [PUT]]
             [clojure.string]
-            [ataru.cljs-util :as util]))
+            [ataru.cljs-util :as util]
+            [ataru.hakija.demo :as demo]))
 
-(defn try-selection
+(defn- try-selection-with-api
   [form-key selection-id selection-group-id question-id answer-id]
   (let [url  (cond-> (str "/hakemus/api/selection-limit?form-key=" form-key)
                      selection-group-id (str "&selection-group-id=" selection-group-id)
@@ -25,3 +26,16 @@
        :response-format :json
        :keywords?       true})
     c))
+
+(defn- try-selection-demo
+  []
+  (let [c (async/chan 1)]
+    (async/put! c [true []])
+    (async/close! c)
+    c))
+
+(defn try-selection
+  [db & args]
+  (if (demo/demo? db)
+    (try-selection-demo)
+    (apply try-selection-with-api args)))
