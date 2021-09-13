@@ -43,12 +43,19 @@
 (defn sent-indicator []
   (let [submit-status     (subscribe [:state-query [:application :submit-status]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        lang              (subscribe [:application/form-language])]
+        lang              (subscribe [:application/form-language])
+        demo?             (subscribe [:application/demo?])]
     (fn []
       (match [@submit-status @virkailija-secret]
-             [:submitting _] [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
+             [:submitting _]
+             [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
+
              [:submitted (_ :guard #(nil? %))]
-             [:div.application__sent-indicator.animated.fadeIn (translations/get-hakija-translation :application-confirmation @lang)]
+             [:div.application__sent-indicator.animated.fadeIn
+              (translations/get-hakija-translation
+                (if @demo? :application-confirmation-demo :application-confirmation)
+                @lang)]
+
              :else nil))))
 
 (defn- edit-text [editing?
@@ -74,16 +81,18 @@
         validators-processing @(subscribe [:state-query [:application :validators-processing]])
         secret-expired?       @(subscribe [:state-query [:application :secret-expired?]])
         lang                  @(subscribe [:application/form-language])
-        invalid-fields?       @(subscribe [:application/invalid-fields?])]
+        invalid-fields?       @(subscribe [:application/invalid-fields?])
+        demo?                 @(subscribe [:application/demo?])]
     (match submit-status
       :submitted [:div.application__sent-placeholder.animated.fadeIn
                   [:i.zmdi.zmdi-check]
                   [:span.application__sent-placeholder-text
                    (translations/get-hakija-translation
-                    (if (and editing virkailija-secret)
-                      :modifications-saved
-                      :application-sent)
-                    lang)]]
+                     (cond
+                       (and editing virkailija-secret) :modifications-saved
+                       demo? :application-sent-demo
+                       :else :application-sent)
+                     lang)]]
       :else [:button.application__send-application-button
              {:disabled (or transmitting?
                             invalid-fields?
