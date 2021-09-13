@@ -155,7 +155,8 @@
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
 
-(defn send-application [db method]
+(defn- send-application-with-api
+  [db method]
   (when-not (-> db :application :submit-status)
     {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
      :http {:method        method
@@ -166,6 +167,15 @@
                                                          (:strict-warnings-on-unchanged-edits? db))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
+
+(defn- send-application-demo
+  []
+  {:dispatch [:application/handle-submit-response]})
+
+(defn send-application [db method]
+  (if (demo/demo? db)
+    (send-application-demo)
+    (send-application-with-api db method)))
 
 (reg-event-db
   :application/handle-submit-response

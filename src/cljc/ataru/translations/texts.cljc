@@ -35,6 +35,9 @@
    :application-confirmation                    {:fi "Saat vahvistuksen sähköpostiisi"
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
+   :application-confirmation-demo               {:fi "Tietojasi ei tallennettu"
+                                                 :sv "SV: Tietojasi ei tallennettu"
+                                                 :en "EN: Tietojasi ei tallennettu"}
    :application-edited-subject                  {:fi "Opintopolku - Hakemuksesi on päivitetty"
                                                  :sv "Studieinfo - Din ansökan har updaterats"
                                                  :en "Opintopolku - Your application has been received"}
@@ -86,9 +89,15 @@
    :application-sent                            {:fi "Hakemus lähetetty"
                                                  :sv "Ansökan har skickats"
                                                  :en "The application has been sent"}
+   :application-sent-demo                       {:fi "Harjoittelulomake täytetty"
+                                                 :sv "SV: Harjoittelulomake täytetty"
+                                                 :en "EN: Harjoittelulomake täytetty"}
    :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
+   :application-submitted-demo                  {:fi "Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
+                                                 :sv "SV: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
+                                                 :en "EN: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"}
    :application-submitted-ok                    {:fi "OK"
                                                  :sv "OK"
                                                  :en "OK"}

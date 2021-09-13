@@ -125,13 +125,15 @@
       (js/parseInt 10)))
 
 (defn- submit-notification
-  [hidden?]
+  [hidden? demo?]
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
-         (translations/get-hakija-translation :application-submitted lang)]]
+         (translations/get-hakija-translation
+           (if @demo? :application-submitted-demo :application-submitted)
+           lang)]]
        [:div.application__submitted-submit-notification-inner
         [:button.application__send-feedback-button.application__send-feedback-button--enabled
          {:on-click     #(reset! hidden? true)
@@ -209,14 +211,15 @@
   []
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
         submit-notification-hidden? (r/atom false)
-        feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])]
+        feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
+        demo?                       (subscribe [:application/demo?])]
     (fn []
       (when (and (= :submitted @submit-status)
                  (or (not @feedback-hidden?)
                      (not @submit-notification-hidden?)))
         [:div.application__submitted-overlay
          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
-         (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
+         (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden? demo?])]))))
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])
