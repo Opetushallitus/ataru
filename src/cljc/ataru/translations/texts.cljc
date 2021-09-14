@@ -470,9 +470,9 @@
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}
-   :demo                                        {:fi "Demo"
-                                                 :sv "Demo"
-                                                 :en "Demo"}})
+   :demo                                        {:fi "Harjoittelulomake"
+                                                 :sv "SV: Harjoittelulomake"
+                                                 :en "EN: Harjoittelulomake"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
