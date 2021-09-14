@@ -6,7 +6,8 @@
             [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.date :as date]
             [ataru.hakija.demo :as demo]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.hakija.ssn :as ssn])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -88,24 +89,6 @@
       (show-field db :ssn (demo/demo? db))
       (hide-field db :ssn))))
 
-(defn- parse-birth-date-from-ssn
-  [ssn]
-  (let [century-sign (nth ssn 6)
-        day          (subs ssn 0 2)
-        month        (subs ssn 2 4)
-        year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
-    (str day "." month "." century year)))
-
-(defn- parse-gender-from-ssn
-  [ssn]
-  (if (zero? (mod (js/parseInt (nth ssn 9)) 2))
-    "2"                                                     ;; based on koodisto-values
-    "1"))
-
 (defn- birth-date-and-gender
   ^{:dependencies [:have-finnish-ssn :ssn]}
   [db]
@@ -115,13 +98,13 @@
                               (->> (:flat-form-content db)
                                    (filter #(= "ssn" (:id %)))
                                    first
-                                   :cannot-view))]
+                                   :cannot-view))
+        demo?            (demo/demo? db)]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
-                                           (not-empty (:value ssn))
-                                           (not (demo/demo? db)))
-                                      [(parse-birth-date-from-ssn (:value ssn))
-                                       (parse-gender-from-ssn (:value ssn))]
+                                           (not-empty (:value ssn)))
+                                      [(ssn/parse-birth-date-from-ssn demo? (:value ssn))
+                                       (ssn/parse-gender-from-ssn demo? (:value ssn))]
                                       cannot-view?
                                       [(get-in db [:application :answers :birth-date :value])
                                        (get-in db [:application :answers :gender :value])]
@@ -143,11 +126,12 @@
                               (->> (:flat-form-content db)
                                    (filter #(= "ssn" (:id %)))
                                    first
-                                   :cannot-view))]
+                                   :cannot-view))
+        demo?            (demo/demo? db)]
     (if (= "true" have-finnish-ssn)
       (let [birth-date (cond (and (:valid ssn)
                                   (not-empty (:value ssn)))
-                             (parse-birth-date-from-ssn (:value ssn))
+                             (ssn/parse-birth-date-from-ssn demo? (:value ssn))
                              cannot-view?
                              (get-in db [:application :answers :birth-date :value])
                              :else

@@ -9,6 +9,7 @@
             [ataru.hakija.application-test]
             [ataru.hakija.application-validators-test]
             [ataru.hakija.rules-test]
+            [ataru.hakija.ssn-test]
             [ataru.hakija.banner-test]
             [ataru.component-data.value-transformers-test]
             [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test]
@@ -25,6 +26,7 @@
            'ataru.hakija.application-test
            'ataru.hakija.application-validators-test
            'ataru.hakija.rules-test
+           'ataru.hakija.ssn-test
            'ataru.hakija.banner-test
            'ataru.component-data.value-transformers-test
            'ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids-test
