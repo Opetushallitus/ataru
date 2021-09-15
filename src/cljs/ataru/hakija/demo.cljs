@@ -49,9 +49,9 @@
 
 (defn demo?
   ([db]
-   (and (get db :demo-requested) (get-in db [:form :properties :demo-allowed])))
+   (boolean (and (get db :demo-requested) (get-in db [:form :properties :demo-allowed]))))
   ([db form]
-   (and (get db :demo-requested) (get-in form [:properties :demo-allowed]))))
+   (boolean (and (get db :demo-requested) (get-in form [:properties :demo-allowed])))))
 
 (defn apply-when-demo
   [db form f x]
