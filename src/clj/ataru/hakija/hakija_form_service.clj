@@ -121,12 +121,19 @@
       (concat old-rajaavat transformed-to-rajaavat))
   )
 
+(defn- cannot-view-field?
+  [roles field]
+  (and
+    (or
+      (contains? viewing-forbidden-person-info-field-ids
+             (keyword (:id field)))
+      (boolean (:sensitive-answer field)))
+    (not (form-role/virkailija? roles))))
+
 (defn flag-uneditable-and-unviewable-field
   [now hakuajat roles application-in-processing-state? field-deadlines field]
   (if (= "formField" (:fieldClass field))
-    (let [cannot-view? (and (contains? viewing-forbidden-person-info-field-ids
-                                       (keyword (:id field)))
-                            (not (form-role/virkailija? roles)))
+    (let [cannot-view? (cannot-view-field? roles field)
           cannot-edit? (or cannot-view?
                            (uneditable?
                             now
