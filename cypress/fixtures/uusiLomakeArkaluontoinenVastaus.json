@@ -839,6 +839,31 @@
           }
         }
       ]
+    },
+    {
+      "fieldClass": "formField",
+      "fieldType": "textArea",
+      "label": {
+        "fi": "Salainen Tekstialue",
+        "sv": ""
+      },
+      "id": "ebc5ca7d-c4d6-49f7-8cc2-0a73cdb9853e",
+      "metadata": {
+        "created-by": {
+          "oid": "1.2.246.562.24.88548681369",
+          "name": "Jaakko Ketola",
+          "date": "2021-09-16T10:13:53Z"
+        },
+        "modified-by": {
+          "oid": "1.2.246.562.24.88548681369",
+          "name": "Jaakko Ketola",
+          "date": "2021-09-16T10:37:57Z"
+        }
+      },
+      "params": {
+        "max-length": "100"
+      },
+      "sensitive-answer": true
     }
   ],
   "languages": [
