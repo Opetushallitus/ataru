@@ -16,7 +16,7 @@ const luoLomakeJaAvaaHakijanNakyma = (lomakeFixture: string) => {
     )
 }
 
-const etsiInputTekstinPerusteella = (teksti: string) => {
+const etsiInputLabelinTekstinPerusteella = (teksti: string) => {
   return cy
     .contains(teksti)
     .invoke('attr', 'for')
@@ -34,17 +34,29 @@ describe('Hakemuksen muokkaus', () => {
     hakijanNakyma.tallennaMuokattuHakemus()
 
     hakijanNakyma.avaaUusinHakemusMuokkaustaVarten()
-    etsiInputTekstinPerusteella('Valinta2').should('be.checked')
+    etsiInputLabelinTekstinPerusteella('Valinta2').should('be.checked')
   })
 
-  it('Ei näytä vastausta kysymykseen, joka on merkitty arkaluontoiseksi', () => {
+  it('Ei näytä vastausta kysymyksiin, jotka on merkitty arkaluontoiseksi', () => {
     luoLomakeJaAvaaHakijanNakyma('uusiLomakeArkaluontoinenVastaus.json')
     hakijanNakyma.henkilotiedot.taytaTiedot()
+
     cy.contains('Valinta1').click()
+    etsiInputLabelinTekstinPerusteella('Salainen Tekstialue').type(
+      'Salainen vastaus'
+    )
+
     hakijanNakyma.lahetaHakemus()
     hakijanNakyma.avaaUusinHakemusMuokkaustaVarten()
 
-    etsiInputTekstinPerusteella('Valinta1').should('be.disabled')
-    etsiInputTekstinPerusteella('Valinta2').should('be.disabled')
+    etsiInputLabelinTekstinPerusteella('Valinta1').should('be.disabled')
+    etsiInputLabelinTekstinPerusteella('Valinta2').should('be.disabled')
+    etsiInputLabelinTekstinPerusteella('Salainen Tekstialue').should(
+      'be.disabled'
+    )
+    etsiInputLabelinTekstinPerusteella('Salainen Tekstialue').should(
+      'have.value',
+      '***********'
+    )
   })
 })
