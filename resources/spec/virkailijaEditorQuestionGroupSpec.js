@@ -204,7 +204,9 @@
             'Päätaso: B'
           ),
           clickElement(() =>
-            formComponents().find('.editor-form__checkbox + label')
+            formComponents().find(
+              '.editor-form__checkbox + label:contains("Pakollinen")'
+            )
           )
         )
         it('has expected contents', () => {
