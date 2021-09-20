@@ -396,6 +396,7 @@
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id idx nil])
             form-field-id   (application-field/form-field-id field-descriptor idx)
+            cannot-view?    @cannot-view?
             cannot-edit?    @cannot-edit?
             on-change       (if idx
                               (partial multi-value-field-change field-descriptor idx)
