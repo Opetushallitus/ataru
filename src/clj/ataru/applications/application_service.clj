@@ -445,7 +445,7 @@
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
   (save-application-review [this session review])
-  (mass-update-application-states [this session application-keys hakukohde-oid from-state to-state])
+  (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
   (send-modify-application-link-email [this application-key session])
   (add-review-note [this session note])
   (get-application-version-changes [this koodisto-cache session application-key])
@@ -580,7 +580,7 @@
         {:events (get-application-events organization-service application-key)})))
 
   (mass-update-application-states
-    [_ session application-keys hakukohde-oid from-state to-state]
+    [_ session application-keys hakukohde-oids from-state to-state]
     (when (aac/applications-access-authorized?
            organization-service
            tarjonta-service
@@ -590,7 +590,7 @@
       (application-store/mass-update-application-states
        session
        application-keys
-       hakukohde-oid
+       hakukohde-oids
        from-state
        to-state
        audit-logger)))
