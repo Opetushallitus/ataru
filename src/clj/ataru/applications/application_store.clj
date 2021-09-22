@@ -1116,7 +1116,6 @@
         existing-reviews (filter
                           #(= (:state %) from-state)
                           (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oids))
-
         new-reviews      (map
                           #(-> %
                                (assoc :state to-state)
@@ -1131,7 +1130,7 @@
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
        (if (not-empty existing-reviews)
-           (log/info (str "Updating reviews for application" application-key ": " (count existing-reviews)))
+           (log/info (str "Updating reviews for application" application-key ": " (count existing-reviews) ", " (set (map :hakukohde existing-reviews))))
            (log/info (str "Not updating application" application-key ""))
            )
     (doseq [new-review new-reviews]
@@ -1141,7 +1140,7 @@
     (when new-reviews
       {:new       new-event
        :id        {:applicationOid application-key
-                   :hakukohdeOids (str hakukohde-oids)
+                   :hakukohdeOids (clojure.string/join ", " (set (map :hakukohde existing-reviews)))
                    :requirement    "processing-state"}
        :operation audit-log/operation-modify
        :session   session})))
