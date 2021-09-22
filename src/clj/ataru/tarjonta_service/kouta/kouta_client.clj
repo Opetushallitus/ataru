@@ -141,7 +141,7 @@
   (when-let [hakukohde (some-> :kouta-internal.hakukohde
                                (url-helper/resolve-url hakukohde-oid)
                                (get-result cas-client))]
-    (let [tarjoajat (some->> (seq (:tarjoaja hakukohde))
+    (let [tarjoajat (some->> (seq [(:tarjoaja hakukohde)])
                              (organization-service/get-organizations-for-oids
                               organization-service))
           hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
