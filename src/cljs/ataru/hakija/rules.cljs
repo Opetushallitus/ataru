@@ -359,19 +359,25 @@
                  (arvosana-rivi-dropdown-without-answer? db oppimaara))
             hide)))
 
+(defn- arvosanat-module-visible?
+  [db]
+  (get-in db [:application :ui :arvosanat-peruskoulu :visible?]))
+
 (defn- toggle-arvosanat-module-aidinkieli-ja-kirjallisuus-oppiaineet
   [db _]
-  (if (swedish-nationality? db)
-    (-> db
+  (if (arvosanat-module-visible? db)
+    (if (swedish-nationality? db)
+      (-> db
         (show-field :A2)
         (show-field :oppimaara-kieli-A2)
         (show-field :arvosana-A2)
         (hide-kieli-oppiaine-row :B1))
-    (-> db
+      (-> db
         (show-field :B1)
         (show-field :oppimaara-kieli-B1)
         (show-field :arvosana-B1)
-        (hide-kieli-oppiaine-row :A2))))
+        (hide-kieli-oppiaine-row :A2)))
+    db))
 
 (defn- set-oppiaine-valinnainen-kieli-value
   [db _]
