@@ -904,7 +904,9 @@
      (re-frame/subscribe [:application/hakukohteet])])
   (fn [[haku-oid hakukohde-oids haut hakukohteet] _]
     (if-let [oids (or (seq hakukohde-oids) (seq (get-in haut [haku-oid :hakukohteet])))]
-      (some #(get-in hakukohteet [% :ylioppilastutkinto-antaa-hakukelpoisuuden?]) oids)
+      (or
+        (some #(get-in hakukohteet [% :ylioppilastutkinto-antaa-hakukelpoisuuden?]) oids)
+        (some #(get-in hakukohteet [% :yo-amm-autom-hakukelpoisuus]) oids))
       (not (contains? hakukohde-oids "form")))))
 
 (re-frame/reg-sub
