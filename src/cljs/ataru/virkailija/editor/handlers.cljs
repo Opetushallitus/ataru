@@ -32,10 +32,20 @@
 
 (reg-event-db :editor/get-user-info get-user-info)
 
+(defn- current-form-path
+  [db]
+  [:editor :forms (-> db :editor :selected-form-key)])
+
 (defn- current-form-content-path
   [db & further-path]
-  (-> [:editor :forms (-> db :editor :selected-form-key) :content]
-      (concat further-path)
+  (-> (current-form-path db)
+      (concat [:content further-path])
+      (flatten)))
+
+(defn- current-form-properties-path
+  [db & further-path]
+  (-> (current-form-path db)
+      (concat [:properties further-path])
       (flatten)))
 
 (defn- fold [db id]
@@ -1322,17 +1332,25 @@
 (reg-event-db
   :editor/toggle-auto-expand-hakukohteet
   (fn [db _]
-    (let [form-path (-> (current-form-content-path db)
-                        butlast
-                        vec
-                        (conj :properties :auto-expand-hakukohteet))]
+    (let [form-path (current-form-properties-path db [:auto-expand-hakukohteet])]
       (update-in db form-path not))))
 
 (reg-event-db
   :editor/toggle-demo-allowed
   (fn [db _]
-    (let [form-path (-> (current-form-content-path db)
-                        butlast
-                        vec
-                        (conj :properties :demo-allowed))]
+    (let [form-path (current-form-properties-path db [:demo-allowed])]
       (update-in db form-path not))))
+
+(reg-event-db
+  :editor/change-demo-validity-start
+  (fn [db [_ demo-validity-start]]
+    (let [path (-> (current-form-properties-path db [:demo-validity-start]))
+          value (if (string/blank? demo-validity-start) nil demo-validity-start)]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/change-demo-validity-end
+  (fn [db [_ demo-validity-end]]
+    (let [path (-> (current-form-properties-path db [:demo-validity-end]))
+          value (if (string/blank? demo-validity-end) nil demo-validity-end)]
+      (assoc-in db path value))))

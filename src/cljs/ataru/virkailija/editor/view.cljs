@@ -8,7 +8,8 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (defn form-row [key selected?]
   [:a.editor-form__row
@@ -318,6 +319,30 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
+(defn- demo-validity
+  []
+  (let [demo-validity-start     @(subscribe [:editor/demo-validity-start])
+        demo-validity-start-max @(subscribe [:editor/demo-validity-start-max])
+        demo-validity-end       @(subscribe [:editor/demo-validity-end])
+        demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min])]
+    [:<>
+     [date-time-picker/date-picker
+      "demo-validity-start"
+      "demo-validity-start"
+      demo-validity-start
+      "invalid"
+      #(dispatch [:editor/change-demo-validity-start %])
+      {:max demo-validity-start-max}
+      ]
+     [date-time-picker/date-picker
+      "demo-validity-end"
+      "demo-validity-end"
+      demo-validity-end
+      "invalid"
+      #(dispatch [:editor/change-demo-validity-end %])
+      {:min demo-validity-end-min}
+      ]]))
+
 (defn- properties []
   (let [demo-toggle-id "demo-toggle"]
     [:div.editor-form__component-wrapper
@@ -326,6 +351,7 @@
        [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
      [:div.editor-form__component-content-wrapper
       [:div.editor-form__module-fields
+       [demo-validity]
        [:div.editor-form__text-field-checkbox-wrapper
         [:div.editor-form__checkbox-container
          [:input.editor-form__checkbox

@@ -4,7 +4,9 @@
             [ataru.cljs-util :as cu]
             [clojure.set :as cset]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [cljs-time.format :as time-format]
+            [cljs-time.core :as time]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -485,15 +487,58 @@
     (some? (-> db :editor :autosave))))
 
 (re-frame/reg-sub
+  :editor/form-properties
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn [selected-form]
+    (get selected-form :properties)))
+
+(re-frame/reg-sub
   :editor/auto-expand-hakukohteet
-  (fn [db _]
-    (let [selected-form-key (get-in db [:editor :selected-form-key])
-          form-path [:editor :forms selected-form-key :properties :auto-expand-hakukohteet]]
-      (get-in db form-path false))))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :auto-expand-hakukohteet)))
 
 (re-frame/reg-sub
   :editor/demo-allowed
-  (fn [db _]
-    (let [selected-form-key (get-in db [:editor :selected-form-key])
-          form-path [:editor :forms selected-form-key :properties :demo-allowed]]
-      (get-in db form-path false))))
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :demo-allowed)))
+
+(re-frame/reg-sub
+  :editor/demo-validity-start
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :demo-validity-start)))
+
+(re-frame/reg-sub
+  :editor/demo-validity-end
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :demo-validity-end)))
+
+(re-frame/reg-sub
+  :editor/demo-validity-start-max
+  (fn [_ _]
+    (re-frame/subscribe [:editor/demo-validity-end]))
+  (fn [demo-validity-end]
+    (when demo-validity-end
+      (as-> demo-validity-end t
+        (time-format/parse t)
+        (time/minus t (time/days 1))
+        (time-format/unparse {:format-str "yyyy-MM-dd"} t)))))
+
+(re-frame/reg-sub
+  :editor/demo-validity-end-min
+  (fn [_ _]
+    (re-frame/subscribe [:editor/demo-validity-start]))
+  (fn [demo-validity-start]
+    (when demo-validity-start
+      (as-> demo-validity-start t
+        (time-format/parse t)
+        (time/plus t (time/days 1))
+        (time-format/unparse {:format-str "yyyy-MM-dd"} t)))))
