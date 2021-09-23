@@ -263,17 +263,16 @@
 
 (defn start-email-submit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (start-email-job job-runner (create-submit-email koodisto-cache tarjonta-service
-                                                   organization-service
-                                                   ohjausparametrit-service
-                                                   application-id
-                                                   false))
-  (when-let [email (create-submit-email koodisto-cache tarjonta-service
-                                        organization-service
-                                        ohjausparametrit-service
-                                        application-id
-                                        true)]
-    (start-email-job job-runner email)))
+  (start-email-job job-runner (or (create-submit-email koodisto-cache tarjonta-service
+                                                       organization-service
+                                                       ohjausparametrit-service
+                                                       application-id
+                                                       true)
+                                  (create-submit-email koodisto-cache tarjonta-service
+                                                       organization-service
+                                                       ohjausparametrit-service
+                                                       application-id
+                                                       false))))
 
 (defn start-email-edit-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
