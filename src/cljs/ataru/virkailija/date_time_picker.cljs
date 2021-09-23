@@ -50,50 +50,53 @@
             nil))))
 
 (defn date-picker
-  [id class value invalid on-change]
+  [id class value invalid on-change options]
   (let [supports-date?           (reagent/atom nil)
         input-value              (reagent/atom "")
         valid?                   (reagent/atom true)
         invalid-text             (reagent/atom invalid)
         invalid-date-format-i18n (re-frame/subscribe [:editor/virkailija-translation :invalid-date-format])]
     (reagent/create-class
-     {:component-did-mount
-      (fn [component]
-        (let [dom-node (reagent/dom-node component)]
-          (.setCustomValidity
-           dom-node
+      {:component-did-mount
+       (fn [component]
+         (let [dom-node (reagent/dom-node component)]
+           (.setCustomValidity
+             dom-node
+             (if (not @valid?)
+               @invalid-date-format-i18n
+               @invalid-text))
+           (reset! supports-date? (= "date" (.-type dom-node)))))
+       :component-did-update
+       (fn [component]
+         (.setCustomValidity
+           (reagent/dom-node component)
            (if (not @valid?)
              @invalid-date-format-i18n
-             @invalid-text))
-          (reset! supports-date? (= "date" (.-type dom-node)))))
-      :component-did-update
-      (fn [component]
-        (.setCustomValidity
-         (reagent/dom-node component)
-         (if (not @valid?)
-           @invalid-date-format-i18n
-           @invalid-text)))
-      :reagent-render
-      (fn [id class value invalid on-change]
-        (reset! invalid-text invalid)
-        [:input
-         {:id          id
-          :class       class
-          :type        "date"
-          :placeholder "p.k.vvvv"
-          :size        8
-          :value       (case @supports-date?
-                         nil   ""
-                         true  (if @valid? value @input-value)
-                         false (if @valid? (iso-date-string->finnish-date-string value) @input-value))
-          :on-change   (fn [e]
-                         (reset! input-value (.-value (.-target e)))
-                         (if-let [value (cond-> @input-value
-                                                (not= "date" (.-type (.-target e)))
-                                                finnish-date-string->iso-date-string)]
-                           (do (reset! valid? true)
-                               (on-change value))
-                           (reset! valid? false)))}])})))
+             @invalid-text)))
+       :reagent-render
+       (fn [id class value invalid on-change {min :min max :max}]
+         (reset! invalid-text invalid)
+         [:input
+          (merge
+            (if min {:min min} {})
+            (if max {:max max} {})
+            {:id          id
+             :class       class
+             :type        "date"
+             :placeholder "p.k.vvvv"
+             :size        8
+             :value       (case @supports-date?
+                            nil ""
+                            true (if @valid? value @input-value)
+                            false (if @valid? (iso-date-string->finnish-date-string value) @input-value))
+             :on-change   (fn [e]
+                            (reset! input-value (.-value (.-target e)))
+                            (if-let [value (cond-> @input-value
+                                             (not= "date" (.-type (.-target e)))
+                                             finnish-date-string->iso-date-string)]
+                              (do (reset! valid? true)
+                                  (on-change value))
+                              (reset! valid? false)))})])})))
 
 (defn time-picker
   [id class value invalid on-change]
