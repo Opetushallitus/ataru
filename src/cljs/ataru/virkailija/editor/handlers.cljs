@@ -19,7 +19,8 @@
             [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff])
+            [ataru.virkailija.editor.form-diff :as form-diff]
+            [cljs-time.format :as time-format])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -1345,12 +1346,16 @@
   :editor/change-demo-validity-start
   (fn [db [_ demo-validity-start]]
     (let [path (-> (current-form-properties-path db [:demo-validity-start]))
-          value (if (string/blank? demo-validity-start) nil demo-validity-start)]
+          value (if (string/blank? demo-validity-start)
+                  nil
+                  (time-format/parse demo-validity-start))]
       (assoc-in db path value))))
 
 (reg-event-db
   :editor/change-demo-validity-end
   (fn [db [_ demo-validity-end]]
     (let [path (-> (current-form-properties-path db [:demo-validity-end]))
-          value (if (string/blank? demo-validity-end) nil demo-validity-end)]
+          value (if (string/blank? demo-validity-end)
+                  nil
+                  (time-format/parse demo-validity-end))]
       (assoc-in db path value))))
