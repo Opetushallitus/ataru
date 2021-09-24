@@ -752,9 +752,9 @@
   (fn [[active-koulutustyyppi-filters hakukohde-hits remaining-hits hakukohteet form-language]]
     (let [all-hits (set (concat hakukohde-hits remaining-hits))
           hit-filter (fn [{oid :oid}] (all-hits oid))
-          koulutustyyppi-filter (fn [{koulutustyypit :koulutustyypit}]
+          koulutustyyppi-filter (fn [{koulutustyyppikoodi :koulutustyyppikoodi}]
                                   (or (empty? active-koulutustyyppi-filters)
-                                      (some active-koulutustyyppi-filters koulutustyypit)))
+                                      (some active-koulutustyyppi-filters [koulutustyyppikoodi])))
           sort-fn #(get-in % [:name form-language])]
       (->> hakukohteet
            (filter hit-filter)
