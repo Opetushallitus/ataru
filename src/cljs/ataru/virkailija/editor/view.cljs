@@ -5,6 +5,7 @@
             [clojure.string :as string]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
+            [ataru.virkailija.editor.demo.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch]]
