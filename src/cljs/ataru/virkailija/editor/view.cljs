@@ -321,10 +321,11 @@
 
 (defn- demo-validity
   []
-  (let [demo-validity-start     @(subscribe [:editor/demo-validity-start])
-        demo-validity-start-max @(subscribe [:editor/demo-validity-start-max])
-        demo-validity-end       @(subscribe [:editor/demo-validity-end])
-        demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min])]
+  (let [demo-validity-start     @(subscribe [:editor/demo-validity-start-str])
+        demo-validity-start-max @(subscribe [:editor/demo-validity-start-max-str])
+        demo-validity-end       @(subscribe [:editor/demo-validity-end-str])
+        demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min-str])
+        demo-validity-end-max   @(subscribe [:editor/demo-validity-end-max-str])]
     [:<>
      [date-time-picker/date-picker
       "demo-validity-start"
@@ -340,7 +341,8 @@
       demo-validity-end
       "invalid"
       #(dispatch [:editor/change-demo-validity-end %])
-      {:min demo-validity-end-min}
+      {:min demo-validity-end-min
+       :max demo-validity-end-max}
       ]]))
 
 (defn- properties []
