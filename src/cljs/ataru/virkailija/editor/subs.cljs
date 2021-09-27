@@ -4,7 +4,8 @@
             [ataru.cljs-util :as cu]
             [clojure.set :as cset]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [cljs-time.coerce :as time-coerce]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -497,3 +498,10 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
     (get form-properties :auto-expand-hakukohteet)))
+
+(re-frame/reg-sub
+  :editor/today
+  (fn [db _]
+    (-> db
+      (get-in [:editor :today])
+      (time-coerce/from-date))))
