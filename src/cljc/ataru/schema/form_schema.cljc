@@ -153,7 +153,8 @@
 
 (s/defschema FormProperties
   {(s/optional-key :auto-expand-hakukohteet) s/Bool
-   (s/optional-key :demo-allowed)            s/Bool})
+   (s/optional-key :demo-validity-start)     (s/maybe s/Str)
+   (s/optional-key :demo-validity-end)       (s/maybe s/Str)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional

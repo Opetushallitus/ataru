@@ -1,7 +1,20 @@
 (ns ataru.virkailija.editor.demo.subs
   (:require [re-frame.core :as re-frame]
             [cljs-time.core :as time]
-            [cljs-time.format :as time-format]))
+            [cljs-time.format :as time-format]
+            [clojure.string :as string]))
+
+(defn- str->date
+  [str]
+  (if (string/blank? str)
+    nil
+    (time-format/parse str)))
+
+(defn- date->str
+  [date]
+  (if (some? date)
+    (time-format/unparse {:format-str "yyyy-MM-dd"} date)
+    ""))
 
 (re-frame/reg-sub
   :editor/demo-allowed
@@ -15,14 +28,16 @@
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
-    (get form-properties :demo-validity-start)))
+    (-> (get form-properties :demo-validity-start)
+      str->date)))
 
 (re-frame/reg-sub
   :editor/demo-validity-end
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
-    (get form-properties :demo-validity-end)))
+    (-> (get form-properties :demo-validity-end)
+      str->date)))
 
 (defn- first-time
   [times]
@@ -72,12 +87,6 @@
   (fn [_ _]
     (re-frame/subscribe [:editor/last-possible-demo-date]))
   identity)
-
-(defn- date->str
-  [date]
-  (if (some? date)
-    (time-format/unparse {:format-str "yyyy-MM-dd"} date)
-    ""))
 
 (re-frame/reg-sub
   :editor/demo-validity-start-str
