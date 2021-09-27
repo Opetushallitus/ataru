@@ -1129,10 +1129,6 @@
                           :first_name               (:first-name session)
                           :last_name                (:last-name session)
                           :review_key               "processing-state"}]
-       (if (not-empty existing-reviews)
-           (log/info (str "Updating reviews for application" application-key ": " (count existing-reviews) ", " (set (map :hakukohde existing-reviews))))
-           (log/info (str "Not updating application" application-key ""))
-           )
     (doseq [new-review new-reviews]
       (queries/yesql-upsert-application-hakukohde-review! new-review {:connection connection})
       (queries/yesql-add-application-event<! (assoc new-event :hakukohde (:hakukohde new-review))
