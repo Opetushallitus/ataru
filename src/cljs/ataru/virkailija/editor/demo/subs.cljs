@@ -52,8 +52,7 @@
   [times]
   (->> times
     (remove nil?)
-    (sort time/before?)
-    first))
+    time/earliest))
 
 (re-frame/reg-sub
   :editor/first-hakuaika-start
