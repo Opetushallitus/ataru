@@ -17,13 +17,6 @@
     ""))
 
 (re-frame/reg-sub
-  :editor/demo-allowed
-  (fn [_ _]
-    (re-frame/subscribe [:editor/form-properties]))
-  (fn [form-properties]
-    (get form-properties :demo-allowed)))
-
-(re-frame/reg-sub
   :editor/demo-validity-start
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))
@@ -38,6 +31,22 @@
   (fn [form-properties]
     (-> (get form-properties :demo-validity-end)
       str->date)))
+
+(re-frame/reg-sub
+  :editor/demo-allowed
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/demo-validity-start])
+     (re-frame/subscribe [:editor/demo-validity-end])
+     (re-frame/subscribe [:editor/today])])
+  (fn [[demo-validity-start demo-validity-end today]]
+    (and
+      (some? demo-validity-start)
+      (some? demo-validity-end)
+      (let [first-valid-moment   (time/at-midnight demo-validity-start)
+            first-invalid-moment (time/at-midnight (time/plus demo-validity-end (time/days 1)))
+            valid-interval       (time/interval first-valid-moment first-invalid-moment)
+            today-at-midnight    (time/at-midnight today)]
+        (time/within? valid-interval today-at-midnight)))))
 
 (defn- first-time
   [times]
