@@ -1860,6 +1860,20 @@ th.application__readonly-adjacent--header {
   align-content: center;
   display: flex;
 }
+
+.application__demo-overlay {
+  background-color: @very-light-gray;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
 .application__submitted-submit-notification-inner {
   display: flex;
   justify-content: center;
@@ -1959,10 +1973,9 @@ th.application__readonly-adjacent--header {
   padding: 0 30px;
 }
 
-.application__send-feedback-button {
+.application__overlay-button {
   .primary-button;
   align-items: center;
-  border-radius: 3px;
   display: flex;
   height: 41px;
   justify-content: center;
