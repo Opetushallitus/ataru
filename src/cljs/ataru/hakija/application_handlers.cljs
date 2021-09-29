@@ -763,7 +763,7 @@
     (let [form-content (:flat-form-content db)
           section-ids-with-visibility-rules (map :section-name (autil/visibility-conditions form-content))]
       (reduce
-        #(field-visibility/set-nested-visibility %1 %2 false)
+        #(field-visibility/set-field-visibility %1 %2)
         db
         section-ids-with-visibility-rules))))
 
