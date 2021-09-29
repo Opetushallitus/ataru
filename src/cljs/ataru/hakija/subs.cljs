@@ -265,13 +265,20 @@
     (not (empty? (:invalid-fields valid-status)))))
 
 (re-frame/reg-sub
+  :application/demo?
+  (fn [db]
+    (demo/demo? db)))
+
+(re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
-     (re-frame/subscribe [:application/virkailija?])])
-  (fn [[hakukohteet virkailija?] _]
+     (re-frame/subscribe [:application/virkailija?])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[hakukohteet virkailija? demo?] _]
     (or (empty? hakukohteet)
         virkailija?
+        demo?
         (some #(get-in % [:hakuaika :on]) hakukohteet))))
 
 (re-frame/reg-sub

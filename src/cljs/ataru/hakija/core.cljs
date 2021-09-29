@@ -9,6 +9,7 @@
             [ataru.hakija.application-hakukohde-handlers]   ;; required although no explicit dependency
             [ataru.hakija.subs]                             ;; required although no explicit dependency
             [ataru.application-common.fx]                   ; ataru.application-common.fx must be required to have common fx handlers enabled
+            [ataru.application-common.cofx]
             [ataru.hakija.component-handlers.dropdown-component-handlers]
             [ataru.util :as u]
             [cemerick.url :as url]

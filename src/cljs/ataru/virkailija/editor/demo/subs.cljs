@@ -2,7 +2,8 @@
   (:require [re-frame.core :as re-frame]
             [cljs-time.core :as time]
             [cljs-time.format :as time-format]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [ataru.application-common.demo :as demo-common]))
 
 (defn- str->date
   [str]
@@ -39,20 +40,14 @@
      (re-frame/subscribe [:editor/demo-validity-end])
      (re-frame/subscribe [:editor/today])])
   (fn [[demo-validity-start demo-validity-end today]]
-    (and
-      (some? demo-validity-start)
-      (some? demo-validity-end)
-      (let [first-valid-moment   (time/at-midnight demo-validity-start)
-            first-invalid-moment (time/at-midnight (time/plus demo-validity-end (time/days 1)))
-            valid-interval       (time/interval first-valid-moment first-invalid-moment)
-            today-at-midnight    (time/at-midnight today)]
-        (time/within? valid-interval today-at-midnight)))))
+    (demo-common/demo-allowed? demo-validity-start demo-validity-end today)))
 
 (defn- first-time
   [times]
   (->> times
     (remove nil?)
-    time/earliest))
+    (sort time/before?)
+    first))
 
 (re-frame/reg-sub
   :editor/first-hakuaika-start

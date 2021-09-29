@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [clojure.string :as string]
-            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
+            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
             [ataru.application.option-visibility :as option-visibility]
@@ -146,11 +146,14 @@
                             "?role=hakija"))
             :handler [:application/handle-form]}}))
 
-(reg-event-db
+(reg-event-fx
   :application/set-demo-requested
-  [check-schema-interceptor]
-  (fn [{:keys [db]}]
-    (assoc db :demo-requested true)))
+  [check-schema-interceptor (inject-cofx :now)]
+  (fn [{:keys [db now]}]
+    {:db
+     (-> db
+       (assoc :demo-requested true)
+       (assoc :today now))}))
 
 (defn handle-submit [db _]
   (assoc-in db [:application :submit-status] :submitted))
