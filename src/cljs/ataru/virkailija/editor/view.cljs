@@ -347,29 +347,13 @@
       ]]))
 
 (defn- properties []
-  (let [demo-toggle-id "demo-toggle"]
-    [:div.editor-form__component-wrapper
-     [:div.editor-form__header-wrapper
-      [:header.editor-form__component-header {:data-test-id "properties-header"}
-       [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
-     [:div.editor-form__component-content-wrapper
-      [:div.editor-form__module-fields
-       [demo-validity]
-       [:div.editor-form__text-field-checkbox-wrapper
-        [:div.editor-form__checkbox-container
-         [:input.editor-form__checkbox
-          {:id            demo-toggle-id
-           :type          "checkbox"
-           :data-test-id  demo-toggle-id
-           :disabled      (or (not @(subscribe [:editor/content-loaded?])) @(subscribe [:editor/form-locked?]))
-           :checked       @(subscribe [:editor/demo-allowed])
-           :on-change     (fn [event]
-                            (.preventDefault event)
-                            (dispatch [:editor/toggle-demo-allowed]))}]
-         [:label.editor-form__checkbox-label
-          {:for demo-toggle-id}
-          @(subscribe [:editor/virkailija-translation :toggle-demo-form])]]]
-   ]]]))
+  [:div.editor-form__component-wrapper
+   [:div.editor-form__header-wrapper
+    [:header.editor-form__component-header {:data-test-id "properties-header"}
+     [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
+   [:div.editor-form__component-content-wrapper
+    [:div.editor-form__module-fields
+     [demo-validity]]]])
 
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container

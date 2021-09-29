@@ -1073,9 +1073,6 @@
    :properties                                      {:fi "Yleiset asetukset"
                                                      :sv "SV: Yleiset asetukset"
                                                      :en "EN: Yleiset asetukset"}
-   :toggle-demo-form                                {:fi "Näytä demolinkki"
-                                                     :sv "SV: Näytä demolinkki"
-                                                     :en "EN: Näytä demolinkki"}
    :demo-link                                       {:fi "Avaa demolomake"
                                                      :sv "SV: Avaa demolomake"
                                                      :en "EN: Avaa demolomake"}

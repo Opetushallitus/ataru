@@ -4,12 +4,6 @@
             [clojure.string :as string]))
 
 (re-frame/reg-event-db
-  :editor/toggle-demo-allowed
-  (fn [db _]
-    (let [form-path (db/current-form-properties-path db [:demo-allowed])]
-      (update-in db form-path not))))
-
-(re-frame/reg-event-db
   :editor/change-demo-validity-start
   (fn [db [_ demo-validity-start]]
     (let [path (-> (db/current-form-properties-path db [:demo-validity-start]))
