@@ -135,7 +135,7 @@
            (if @demo? :application-submitted-demo :application-submitted)
            lang)]]
        [:div.application__submitted-submit-notification-inner
-        [:button.application__send-feedback-button.application__send-feedback-button--enabled
+        [:button.application__overlay-button.application__overlay-button--enabled
          {:on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
@@ -190,14 +190,14 @@
                  :max-length  2000}]])
             (when (and (not submitted?)
                        rated?)
-              [:button.application__send-feedback-button.application__send-feedback-button--enabled
+              [:button.application__overlay-button.application__overlay-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
                             (dispatch [:application/rating-feedback-submit]))}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
-              [:button.application__send-feedback-button.application__send-feedback-button
+              [:button.application__overlay-button.application__overlay-button
                {:disabled true}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (not submitted?)
@@ -232,9 +232,24 @@
               [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
               [:div.application__message-display--details (translations/get-hakija-translation error-code @lang)]]))))
 
+(defn demo-overlay
+  []
+  (let [demo?   (subscribe [:application/demo?])
+        hidden? (r/atom false)
+        lang    (subscribe [:application/form-language])]
+    (fn []
+      (when (and @demo? (not @hidden?))
+        [:div.application__demo-overlay
+         [:h1 (translations/get-hakija-translation :demo-notification @lang)]
+         [:button.application__overlay-button.application__overlay-button--enabled
+          {:on-click #(reset! hidden? true)
+           :data-test-id "dismiss-demo-notification-button"}
+          (translations/get-hakija-translation :dismiss-demo-notification @lang)]]))))
+
 (defn form-view []
   [:div
    [banner]
    [error-display]
    [application-contents]
-   [submitted-overlay]])
+   [submitted-overlay]
+   [demo-overlay]])

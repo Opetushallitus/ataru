@@ -472,7 +472,13 @@
                                                  :en "Poista"}
    :demo                                        {:fi "Harjoittelulomake"
                                                  :sv "SV: Harjoittelulomake"
-                                                 :en "EN: Harjoittelulomake"}})
+                                                 :en "EN: Harjoittelulomake"}
+   :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
+                                                 :sv "SV: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
+                                                 :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
+   :dismiss-demo-notification                   {:fi "OK"
+                                                 :sv "OK"
+                                                 :en "OK"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
