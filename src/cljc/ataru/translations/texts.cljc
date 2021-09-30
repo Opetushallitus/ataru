@@ -476,9 +476,12 @@
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :sv "SV: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
-   :dismiss-demo-notification                   {:fi "OK"
-                                                 :sv "OK"
-                                                 :en "OK"}})
+   :dismiss-demo-notification                   {:fi "Jatka"
+                                                 :sv "SV: Jatka"
+                                                 :en "EN: Jatka"}
+   :demo-notification-title                     {:fi "Harjoittelulomake"
+                                                 :sv "SV: Harjoittelulomake"
+                                                 :en "EN: Harjoittelulomake"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
