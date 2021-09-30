@@ -1076,6 +1076,12 @@
    :demo-link                                       {:fi "Avaa demolomake"
                                                      :sv "SV: Avaa demolomake"
                                                      :en "EN: Avaa demolomake"}
+   :demo-validity-start                             {:fi "Demon voimassaolo alkaa"
+                                                     :sv "SV: Demon voimassaolo alkaa"
+                                                     :en "EN: Demon voimassaolo alkaa"}
+   :demo-validity-end                               {:fi "Demon voimassaolo päättyy"
+                                                     :sv "SV: Demon voimassaolo päättyy"
+                                                     :en "EN: Demon voimassaolo päättyy"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
