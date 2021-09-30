@@ -22,7 +22,8 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
             [ataru.util :as util :refer [assoc?]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.demo-config :as demo]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -171,6 +172,42 @@
                 content)))
     form))
 
+(defn- parse-date
+  [date-str]
+  (when (and (some? date-str) (not (string/blank? date-str)))
+    (f/parse (:date f/formatters) date-str)))
+
+(defn- before-hakuaika-and-grace-period?
+  [hakuajat now]
+  (let [hakuaika (hakuaika/first-by-start (vec (:uniques hakuajat)))
+        hakuaika-start (some-> hakuaika :start t/from-long)
+        grace-period (time/days demo/demo-validity-grace-period-days)
+        first-valid-moment (time/minus hakuaika-start grace-period)]
+    (time/before? now first-valid-moment)))
+
+(defn- within-demo-validity-period?
+  [form now]
+  (let [demo-validity-start (parse-date (get-in form [:properties :demo-validity-start]))
+        demo-validity-end   (parse-date (get-in form [:properties :demo-validity-end]))]
+    (boolean
+      (and
+        (some? demo-validity-start)
+        (some? demo-validity-end)
+        (let [first-valid-moment   (time/with-time-at-start-of-day demo-validity-start)
+              first-invalid-moment (time/with-time-at-start-of-day (time/plus demo-validity-end (time/days 1)))
+              valid-interval       (time/interval first-valid-moment first-invalid-moment)]
+          (time/within? valid-interval now))))))
+
+(defn- is-demo-allowed?
+  [form hakuajat now]
+  (and
+    (before-hakuaika-and-grace-period? hakuajat now)
+    (within-demo-validity-period? form now)))
+
+(defn- populate-demo-allowed
+  [form hakuajat now]
+  (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
+
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   [id :- s/Any
    roles :- [form-role/FormRole]
@@ -186,7 +223,8 @@
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
             (populate-attachment-deadlines now hakuajat field-deadlines)
-            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines))))))
+            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines)
+            (populate-demo-allowed hakuajat now))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
@@ -319,4 +357,4 @@
   [form-by-haku-oid-str-cache haku-oid]
   (let [form (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache haku-oid [:hakija])
         parsed-form (json/parse-string form true)]
-    (get-in parsed-form [:properties :demo-allowed] false)))
+    (get parsed-form :demo-allowed)))
