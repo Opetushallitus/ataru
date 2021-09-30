@@ -240,6 +240,8 @@
     (fn []
       (when (and @demo? (not @hidden?))
         [:div.application__demo-overlay
+         [:h1.application__demo-notification-title
+          (translations/get-hakija-translation :demo-notification-title @lang)]
          [:h1 (translations/get-hakija-translation :demo-notification @lang)]
          [:button.application__overlay-button.application__overlay-button--enabled
           {:on-click #(reset! hidden? true)
