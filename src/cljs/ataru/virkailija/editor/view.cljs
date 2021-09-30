@@ -327,24 +327,32 @@
         demo-validity-end       @(subscribe [:editor/demo-validity-end-str])
         demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min-str])
         demo-validity-end-max   @(subscribe [:editor/demo-validity-end-max-str])]
-    [:<>
-     [date-time-picker/date-picker
-      "demo-validity-start"
-      "demo-validity-start"
-      demo-validity-start
-      "invalid"
-      #(dispatch [:editor/change-demo-validity-start %])
-      {:max demo-validity-start-max}
-      ]
-     [date-time-picker/date-picker
-      "demo-validity-end"
-      "demo-validity-end"
-      demo-validity-end
-      "invalid"
-      #(dispatch [:editor/change-demo-validity-end %])
-      {:min demo-validity-end-min
-       :max demo-validity-end-max}
-      ]]))
+    [:div.editor-form__demo-validity-controls
+     [:div.editor-form__date-picker-container
+      [date-time-picker/date-picker
+       "demo-validity-start"
+       "editor-form__date-picker"
+       demo-validity-start
+       "invalid"
+       #(dispatch [:editor/change-demo-validity-start %])
+       {:max demo-validity-start-max}
+       ]
+      [:label.editor-form__date-picker-label
+       {:for "demo-validity-start"}
+       @(subscribe [:editor/virkailija-translation :demo-validity-start])]]
+     [:div.editor-form__date-picker-container
+      [date-time-picker/date-picker
+       "demo-validity-end"
+       "editor-form__date-picker"
+       demo-validity-end
+       "invalid"
+       #(dispatch [:editor/change-demo-validity-end %])
+       {:min demo-validity-end-min
+        :max demo-validity-end-max}
+       ]
+      [:label.editor-form__date-picker-label
+       {:for "demo-validity-end"}
+       @(subscribe [:editor/virkailija-translation :demo-validity-end])]]]))
 
 (defn- properties []
   [:div.editor-form__component-wrapper
