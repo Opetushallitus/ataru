@@ -6,12 +6,12 @@
 
 (defn current-form-content-path
   [db & further-path]
-  (-> (current-form-path db)
-    (concat [:content further-path])
+  (-> [(current-form-path db) :content]
+    (concat further-path)
     (flatten)))
 
 (defn current-form-properties-path
   [db & further-path]
-  (-> (current-form-path db)
-    (concat [:properties further-path])
+  (-> [(current-form-path db) :properties]
+    (concat further-path)
     (flatten)))
