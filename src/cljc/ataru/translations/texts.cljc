@@ -470,7 +470,7 @@
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}
-   :demo                                        {:fi "Harjoittelulomake"
+   :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta"
                                                  :sv "SV: Harjoittelulomake"
                                                  :en "EN: Harjoittelulomake"}
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
