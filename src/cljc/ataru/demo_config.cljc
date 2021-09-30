@@ -1,3 +1,3 @@
-(ns ataru.demo)
+(ns ataru.demo-config)
 
 (def demo-validity-grace-period-days 1)

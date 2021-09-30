@@ -1,8 +1,5 @@
 (ns ataru.hakija.demo
-  (:require [clojure.zip :as z]
-            [ataru.application-common.demo :as demo-common]
-            [clojure.string :as string]
-            [cljs-time.format :as time-format]))
+  (:require [clojure.zip :as z]))
 
 (defn- is-ssn-question?
   [question]
@@ -50,32 +47,11 @@
       current
       (recur (z/next (edit-question current))))))
 
-(defn- str->date
-  [str]
-  (if (string/blank? str)
-    nil
-    (time-format/parse str)))
-
-(defn- demo-validity-start
-  [form-properties]
-  (str->date (get form-properties :demo-validity-start)))
-
-(defn- demo-validity-end
-  [form-properties]
-  (str->date (get form-properties :demo-validity-end)))
-
 (defn- demo-requested-and-allowed?
   [db form]
-  (let [form-properties (get form :properties)
-        hakuaika-on? (-> form :tarjonta :hakuaika :on)]
-    (boolean
-      (and
-        (get db :demo-requested)
-        (not hakuaika-on?)
-        (demo-common/demo-allowed?
-          (demo-validity-start form-properties)
-          (demo-validity-end form-properties)
-          (get db :today))))))
+  (let [demo-requested? (get db :demo-requested)
+        demo-allowed? (get form :demo-allowed)]
+    (boolean (and demo-requested? demo-allowed?))))
 
 (defn demo?
   ([db]

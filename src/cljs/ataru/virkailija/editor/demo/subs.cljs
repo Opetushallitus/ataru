@@ -3,7 +3,8 @@
             [cljs-time.core :as time]
             [cljs-time.format :as time-format]
             [clojure.string :as string]
-            [ataru.application-common.demo :as demo-common]))
+            [ataru.application-common.demo :as demo-common]
+            [ataru.demo-config :as demo-config]))
 
 (defn- str->date
   [str]
@@ -67,7 +68,7 @@
     (re-frame/subscribe [:editor/first-hakuaika-start]))
   (fn [first-hakuaika-start]
     (when first-hakuaika-start
-      (time/minus first-hakuaika-start (time/days 2)))))
+      (time/minus first-hakuaika-start (time/days demo-config/demo-validity-grace-period-days)))))
 
 (re-frame/reg-sub
   :editor/demo-validity-start-max
