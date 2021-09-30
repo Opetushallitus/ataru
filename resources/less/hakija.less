@@ -4,7 +4,10 @@
 @import "button-component";
 @field-margin-left: 245px;
 @form-select-width: 305px;
-@total-banner-height: 97px;
+@notification-banner-height: 50px;
+@notification-banner-height-mobile: 23px;
+@total-banner-height: 97px + @notification-banner-height;
+@total-banner-height-mobile: 90px + @notification-banner-height-mobile;
 
 body {
   overflow-y: scroll;
@@ -36,6 +39,16 @@ body {
   display: flex;
   justify-content: center;
   background-color: @primary-green-700;
+}
+
+.application__notification-banner-container {
+  height: @notification-banner-height;
+  background-color: @banner-blue;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @white;
+  font-size: 24px;
 }
 
 .application__virkailija-fill-ribbon {
@@ -1219,8 +1232,12 @@ th.application__readonly-adjacent--header {
     margin-left: 10px;
     margin-right: 10px;
   }
+  .application__notification-banner-container {
+    height: @notification-banner-height-mobile;
+    font-size: 16px;
+  }
   .application__form-content-area {
-    margin-top: 90px;
+    margin-top: @total-banner-height-mobile;
     width: auto;
   }
   .application__form-text-input__size-large,

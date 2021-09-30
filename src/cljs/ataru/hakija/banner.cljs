@@ -175,21 +175,27 @@
     [:div.application__virkailija-fill-ribbon
      "Testihakemus / Virkailijatäyttö"]))
 
-(defn demo-fill-ribbon
+(defn- notification-banner
+  [text]
+  [:div.application__notification-banner-container
+   [:div.application__notification-banner
+    text]])
+
+(defn- demo-notification-banner
   []
-  (let [lang @(subscribe [:application/form-language])]
-    (when @(subscribe [:application/demo?])
-      [:div.application__virkailija-fill-ribbon
-       (translations/get-hakija-translation :demo lang)])))
+  (let [lang @(subscribe [:application/form-language])
+        demo? @(subscribe [:application/demo?])]
+    (when demo?
+      [notification-banner (translations/get-hakija-translation :demo lang)])))
 
 (defn banner []
   [:div.application__banner-container
    [virkailija-fill-ribbon]
-   [demo-fill-ribbon]
    [:div.application__top-banner-container
     [:div.application-top-banner
      [logo]
      [hakuaika-left]
      [:div.application__preview-control
       [preview-toggle]]
-     [status-controls]]]])
+     [status-controls]]]
+   [demo-notification-banner]])
