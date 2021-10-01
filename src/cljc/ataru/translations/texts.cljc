@@ -254,6 +254,9 @@
    :hakija-new-text                             {:fi "Lähetä hakemus"
                                                  :sv "Skicka ansökan"
                                                  :en "Submit application"}
+   :submit-demo                                 {:fi "Lähetä harjoitteluhakemus"
+                                                 :sv "SV: Lähetä harjoitteluhakemus"
+                                                 :en "EN: Lähetä harjoitteluhakemus"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
