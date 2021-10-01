@@ -10,7 +10,7 @@
       (->> date-s
            (f/parse (f/formatter "yyyy-MM-dd"))
            (f/unparse (f/formatter "d.M.yyyy")))
-      (catch js/Error e
+      (catch js/Error _e
         nil))))
 
 (defn- finnish-date-string->iso-date-string [date-s]
@@ -23,7 +23,7 @@
           (->> date-s
                (f/parse (f/formatter "d.M.yyyy"))
                (f/unparse (f/formatter "yyyy-MM-dd")))
-          (catch js/Error e
+          (catch js/Error _e
             nil))))
 
 (defn- iso-time-string->finnish-time-string [time-s]
@@ -33,7 +33,7 @@
       (->> time-s
            (f/parse (f/formatter "HH:mm"))
            (f/unparse (f/formatter "H.mm")))
-      (catch js/Error e
+      (catch js/Error _e
         nil))))
 
 (defn- finnish-time-string->iso-time-string [time-s]
@@ -46,11 +46,11 @@
           (->> time-s
                (f/parse (f/formatter "H.mm"))
                (f/unparse (f/formatter "HH:mm")))
-          (catch js/Error e
+          (catch js/Error _e
             nil))))
 
 (defn date-picker
-  [id class value invalid on-change options]
+  [_id _class _value invalid _on-change _options]
   (let [supports-date?           (reagent/atom nil)
         input-value              (reagent/atom "")
         valid?                   (reagent/atom true)
@@ -74,12 +74,13 @@
              @invalid-date-format-i18n
              @invalid-text)))
        :reagent-render
-       (fn [id class value invalid on-change {min :min max :max}]
+       (fn [id class value invalid on-change {min :min max :max data-test-id :data-test-id}]
          (reset! invalid-text invalid)
          [:input
           (merge
             (if min {:min min} {})
             (if max {:max max} {})
+            (if data-test-id {:data-test-id data-test-id} {})
             {:id          id
              :class       class
              :type        "date"
@@ -99,7 +100,7 @@
                               (reset! valid? false)))})])})))
 
 (defn time-picker
-  [id class value invalid on-change]
+  [_id _class _value invalid _on-change]
   (let [supports-time?           (reagent/atom nil)
         input-value              (reagent/atom "")
         valid?                   (reagent/atom true)

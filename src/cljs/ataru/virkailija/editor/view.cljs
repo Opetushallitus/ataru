@@ -335,7 +335,8 @@
        demo-validity-start
        "invalid"
        #(dispatch [:editor/change-demo-validity-start %])
-       {:max demo-validity-start-max}
+       {:max demo-validity-start-max
+        :data-test-id "demo-validity-start"}
        ]
       [:label.editor-form__date-picker-label
        {:for "demo-validity-start"}
@@ -348,7 +349,8 @@
        "invalid"
        #(dispatch [:editor/change-demo-validity-end %])
        {:min demo-validity-end-min
-        :max demo-validity-end-max}
+        :max demo-validity-end-max
+        :data-test-id "demo-validity-end"}
        ]
       [:label.editor-form__date-picker-label
        {:for "demo-validity-end"}

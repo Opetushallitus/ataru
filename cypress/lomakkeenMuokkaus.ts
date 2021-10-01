@@ -76,7 +76,8 @@ export const hakukohteet = {
 export const yleisetAsetukset = {
   haeOtsikko: () => cy.get('[data-test-id=properties-header]:visible'),
 
-  haeDemoCheckbox: () => cy.get('[data-test-id=demo-toggle]'),
+  haeDemoAlkaa: () => cy.get('[data-test-id=demo-validity-start]'),
+  haeDemoPaattyy: () => cy.get('[data-test-id=demo-validity-end]'),
 
   haeLinkkiDemoon: () => cy.get('[data-test-id=demo-link]'),
 }
