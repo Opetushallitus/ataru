@@ -181,9 +181,11 @@
   [hakuajat now]
   (let [hakuaika (hakuaika/first-by-start (vec (:uniques hakuajat)))
         hakuaika-start (some-> hakuaika :start t/from-long)
-        grace-period (time/days demo/demo-validity-grace-period-days)
-        first-valid-moment (time/minus hakuaika-start grace-period)]
-    (time/before? now first-valid-moment)))
+        grace-period (time/days demo/demo-validity-grace-period-days)]
+    (if (some? hakuaika-start)
+      (let [first-valid-moment (time/minus hakuaika-start grace-period)]
+        (time/before? now first-valid-moment))
+      true)))
 
 (defn- within-demo-validity-period?
   [form now]
