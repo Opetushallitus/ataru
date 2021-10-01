@@ -59,6 +59,7 @@
              :else nil))))
 
 (defn- edit-text [editing?
+                  demo?
                   hakija-secret
                   virkailija-secret
                   lang]
@@ -67,6 +68,9 @@
 
         (and editing? (some? virkailija-secret))
         (translations/get-hakija-translation :application-virkailija-edit-text lang)
+
+        demo?
+        (translations/get-hakija-translation :submit-demo lang)
 
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
@@ -104,7 +108,7 @@
                            (dispatch [:application/edit])
                            (dispatch [:application/submit]))
               :data-test-id "send-application-button"}
-             (edit-text editing secret virkailija-secret lang)])))
+             (edit-text editing demo? secret virkailija-secret lang)])))
 
 (defn- preview-toggle
   []
