@@ -9,22 +9,21 @@ describe('Lomake-editori Yleiset asetukset -osio', () => {
         yleisetAsetukset.haeOtsikko().should('have.text', 'Yleiset asetukset')
       })
 
-      it('Näyttää checkboxin demon togglaamiseen', () => {
-        yleisetAsetukset.haeDemoCheckbox().should('be.visible')
+      it('Näyttää demon alkamisajankohdan valinnan', () => {
+        yleisetAsetukset.haeDemoAlkaa().should('be.visible')
+      })
+
+      it('Näyttää demon päättymisajankohdan valinnan', () => {
+        yleisetAsetukset.haeDemoPaattyy().should('be.visible')
       })
 
       it('Demolinkkiä ei näytetä', () => {
         yleisetAsetukset.haeLinkkiDemoon().should('not.be.visible')
       })
 
-      it('Demo checkboxin asettaminen päälle toimii', () => {
-        yleisetAsetukset.haeDemoCheckbox().should('not.be.checked')
-        yleisetAsetukset
-          .haeDemoCheckbox()
-          .check()
-          .then(() => {
-            yleisetAsetukset.haeDemoCheckbox().should('be.checked')
-          })
+      it('Demon aikavälin asettaminen toimii', () => {
+        yleisetAsetukset.haeDemoAlkaa().type('2021-01-01')
+        yleisetAsetukset.haeDemoPaattyy().type('2021-12-31')
       })
     })
   })
