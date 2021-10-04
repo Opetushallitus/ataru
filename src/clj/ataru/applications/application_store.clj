@@ -1110,12 +1110,12 @@
        (into {})))
 
 (defn- update-hakukohde-process-state!
-  [connection session hakukohde-oid from-state to-state application-key]
+  [connection session hakukohde-oids from-state to-state application-key]
   (let [application      (get-latest-application-by-key-in-tx connection
                                                               application-key)
         existing-reviews (filter
                           #(= (:state %) from-state)
-                          (application-states/get-all-reviews-for-requirement "processing-state" application (when hakukohde-oid [hakukohde-oid])))
+                          (application-states/get-all-reviews-for-requirement "processing-state" application hakukohde-oids))
         new-reviews      (map
                           #(-> %
                                (assoc :state to-state)
@@ -1136,7 +1136,7 @@
     (when new-reviews
       {:new       new-event
        :id        {:applicationOid application-key
-                   :hakukohdeOid   hakukohde-oid
+                   :hakukohdeOids (clojure.string/join ", " (set (map :hakukohde existing-reviews)))
                    :requirement    "processing-state"}
        :operation audit-log/operation-modify
        :session   session})))
@@ -1152,11 +1152,11 @@
                 {:person_oids person-oids})))
 
 (defn mass-update-application-states
-  [session application-keys hakukohde-oid from-state to-state audit-logger]
-  (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohde" hakukohde-oid)
+  [session application-keys hakukohde-oids from-state to-state audit-logger]
+  (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohtees" hakukohde-oids)
   (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                             (mapv
-                             (partial update-hakukohde-process-state! connection session hakukohde-oid from-state to-state)
+                             (partial update-hakukohde-process-state! connection session hakukohde-oids from-state to-state)
                              application-keys))]
     (doseq [audit-log-entry (filter some? audit-log-entries)]
       (audit-log/log audit-logger audit-log-entry))

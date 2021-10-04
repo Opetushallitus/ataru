@@ -1,5 +1,5 @@
 (ns ataru.virkailija.application.mass-review.virkailija-mass-review-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx]]))
+  (:require [re-frame.core :refer [reg-event-db reg-event-fx subscribe]]))
 
 (reg-event-db
   :application/set-mass-update-popup-visibility
@@ -14,7 +14,8 @@
                                   :from-state       from-state
                                   :to-state         to-state
                                   :hakukohde-oid    (or (-> db :application :rajaus-hakukohteella)
-                                                        (-> db :application :selected-hakukohde))}
+                                                        (-> db :application :selected-hakukohde))
+                                  :hakukohde-oids-for-hakukohderyhma   @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])}
             :path                "/lomake-editori/api/applications/mass-update"
             :handler-or-dispatch :application/handle-mass-update-application-reviews}}))
 
