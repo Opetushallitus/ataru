@@ -273,18 +273,31 @@
       (and (not-empty value) (every? some? value)))
     (some? value)))
 
+(defn- is-question-group-value?
+  [value]
+  (and (vector? value) (or (vector? (first value)) (nil? (first value)))))
+
+(defn- merge-question-group-value
+  [field-descriptor value]
+  (mapv #(when (vector? %)
+           (if (and (= "oppiaineen-arvosanat-valinnaiset-kielet" (:children-of field-descriptor))
+                 (empty? %))
+             [{:value "" :valid true}]
+             (mapv (fn [value] {:valid true :value value}) %)))
+    value))
+
 (defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
-                                      (:per-hakukohde field-descriptor)
-                                      (:cannot-edit field-descriptor)
-                                      (is-answered? (sanitize-value field-descriptor value nil))))
+                                    (:per-hakukohde field-descriptor)
+                                    (:cannot-edit field-descriptor)
+                                    (is-answered? (sanitize-value field-descriptor value nil))))
                  :value  value
-                 :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
-                               (mapv #(when (vector? %)
-                                        (mapv (fn [value] {:valid true :value value}) %))
-                                     value)
+                 :values (cond (is-question-group-value? value)
+                               (merge-question-group-value field-descriptor value)
+
                                (vector? value)
                                (mapv (fn [value] {:valid true :value value}) value)
+
                                :else
                                {:value value
                                 :valid true})
