@@ -326,7 +326,8 @@
         demo-validity-start-max @(subscribe [:editor/demo-validity-start-max-str])
         demo-validity-end       @(subscribe [:editor/demo-validity-end-str])
         demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min-str])
-        demo-validity-end-max   @(subscribe [:editor/demo-validity-end-max-str])]
+        demo-validity-end-max   @(subscribe [:editor/demo-validity-end-max-str])
+        disabled?               @(subscribe [:editor/form-locked?])]
     [:div.editor-form__demo-validity-controls
      [:div.editor-form__date-picker-container
       [date-time-picker/date-picker
@@ -336,7 +337,8 @@
        "invalid"
        #(dispatch [:editor/change-demo-validity-start %])
        {:max demo-validity-start-max
-        :data-test-id "demo-validity-start"}
+        :data-test-id "demo-validity-start"
+        :disabled? disabled?}
        ]
       [:label.editor-form__date-picker-label
        {:for "demo-validity-start"}
@@ -350,7 +352,8 @@
        #(dispatch [:editor/change-demo-validity-end %])
        {:min demo-validity-end-min
         :max demo-validity-end-max
-        :data-test-id "demo-validity-end"}
+        :data-test-id "demo-validity-end"
+        :disabled? disabled?}
        ]
       [:label.editor-form__date-picker-label
        {:for "demo-validity-end"}
