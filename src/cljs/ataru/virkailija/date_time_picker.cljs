@@ -74,13 +74,14 @@
              @invalid-date-format-i18n
              @invalid-text)))
        :reagent-render
-       (fn [id class value invalid on-change {min :min max :max data-test-id :data-test-id}]
+       (fn [id class value invalid on-change {min :min max :max data-test-id :data-test-id disabled? :disabled?}]
          (reset! invalid-text invalid)
          [:input
           (merge
             (if min {:min min} {})
             (if max {:max max} {})
             (if data-test-id {:data-test-id data-test-id} {})
+            (if disabled? {:disabled disabled?} {})
             {:id          id
              :class       class
              :type        "date"
