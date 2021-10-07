@@ -60,7 +60,8 @@
                                                     :data-test-id
                                                     (str data-test-id "-oppimaara-" valinnainen-kieli-idx)})
                                :render-field     render-field
-                               :idx              valinnainen-kieli-idx}]
+                               :idx              valinnainen-kieli-idx
+                               :read-only?       true}]
 
                              :arvosana-column
                              [render-field

@@ -54,7 +54,8 @@
                                                                                         oppiaine-kieli-dropdown)
                                                                                       :data-test-id (str data-test-id "-oppimaara-" valinnainen-kieli-rivi-idx))
                                                              :render-field     render-field
-                                                             :idx              valinnainen-kieli-rivi-idx}]
+                                                             :idx              valinnainen-kieli-rivi-idx
+                                                             :read-only?       false}]
 
                                                            :arvosana-column
                                                            [render-field
