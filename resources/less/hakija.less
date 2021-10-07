@@ -1197,10 +1197,6 @@ th.application__readonly-adjacent--header {
   display: block;
 }
 
-.application__demo-notification-title {
-  font-size: 90px;
-}
-
 @media only screen and (max-width: @desktop-content-width) {
   .logo-fi, .logo-sv, .logo-en {
     background: url(/hakemus/images/opintopolku_small-fi.png) no-repeat;
@@ -1895,8 +1891,57 @@ th.application__readonly-adjacent--header {
   position: fixed;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+
+  .application__demo-container {
+    margin-top: 2 * @total-banner-height;
+    border: 3px solid @button-blue;
+    padding: 2rem 3rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__demo-notification-title {
+      font-size: 72px;
+    }
+
+    p,
+    .application__demo-button {
+      font-size: 24px;
+    }
+
+    .application__demo-button {
+      margin-top: 1rem;
+      padding-top: 0.6rem;
+      padding-bottom: 0.6rem;
+    }
+  }
+
+  @media only screen and (max-width: @mobile-width) {
+    .application__demo-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+
+      .application__demo-notification-title {
+        font-size: 26px;
+      }
+
+      p,
+      .application__demo-button {
+        font-size: 16px;
+      }
+
+      .application__demo-button {
+        margin-top: 0.5rem;
+      }
+    }
+  }
 }
 
 .application__submitted-submit-notification-inner {

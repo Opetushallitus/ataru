@@ -240,13 +240,14 @@
     (fn []
       (when (and @demo? (not @hidden?))
         [:div.application__demo-overlay
-         [:h1.application__demo-notification-title
-          (translations/get-hakija-translation :demo-notification-title @lang)]
-         [:h1 (translations/get-hakija-translation :demo-notification @lang)]
-         [:button.application__overlay-button.application__overlay-button--enabled
-          {:on-click #(reset! hidden? true)
-           :data-test-id "dismiss-demo-notification-button"}
-          (translations/get-hakija-translation :dismiss-demo-notification @lang)]]))))
+         [:div.application__demo-container
+          [:h1.application__demo-notification-title
+           (translations/get-hakija-translation :demo-notification-title @lang)]
+          [:p (translations/get-hakija-translation :demo-notification @lang)]
+          [:button.application__overlay-button.application__overlay-button--enabled.application__demo-button
+           {:on-click     #(reset! hidden? true)
+            :data-test-id "dismiss-demo-notification-button"}
+           (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]))))
 
 (defn form-view []
   [:div
