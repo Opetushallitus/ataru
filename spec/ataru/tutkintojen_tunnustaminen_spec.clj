@@ -218,7 +218,8 @@
                                                   :deleted              false
                                                   :locked               nil
                                                   :locked_by            nil
-                                                  :used_hakukohderyhmas []}
+                                                  :used_hakukohderyhmas []
+                                                  :properties           {}}
                                 {:connection connection})))
           form          (form-store/fetch-by-id form-id)
           wrong-form-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -231,7 +232,8 @@
                                                  :deleted              false
                                                  :locked               nil
                                                  :locked_by            nil
-                                                 :used_hakukohderyhmas []}
+                                                 :used_hakukohderyhmas []
+                                                 :properties           {}}
                                                 {:connection connection})))
           wrong-form    (form-store/fetch-by-id wrong-form-id)
           application   (application-store/get-application

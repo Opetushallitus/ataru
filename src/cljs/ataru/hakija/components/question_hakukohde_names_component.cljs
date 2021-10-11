@@ -8,7 +8,8 @@
   ([field-descriptor]
    [question-hakukohde-names field-descriptor :question-for-hakukohde])
   ([_ _]
-   (let [show-hakukohde-list? (reagent/atom false)]
+   (let [auto-expand-hakukohteet @(re-frame/subscribe [:application/auto-expand-hakukohteet])
+         show-hakukohde-list? (reagent/atom (boolean auto-expand-hakukohteet))]
      (fn [field-descriptor translation-key]
        (let [lang                           @(re-frame/subscribe [:application/form-language])
              selected-hakukohteet-for-field @(re-frame/subscribe [:application/selected-hakukohteet-for-field field-descriptor])]

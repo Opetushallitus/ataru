@@ -14,6 +14,20 @@ describe('Hakukohteet -moduuli', () => {
           .haeOtsikko()
           .should('have.text', 'Hakukohteet')
       })
+
+      it('Näyttää checkboxin hakukohteiden togglaamiseen', () => {
+        lomakkeenMuokkaus.hakukohteet.haeCheckbox().should('be.visible')
+      })
+
+      it('Checkboxin toggleaminen toimii', () => {
+        lomakkeenMuokkaus.hakukohteet.haeCheckbox().should('not.be.checked')
+        lomakkeenMuokkaus.hakukohteet
+          .haeCheckbox()
+          .check()
+          .then(() =>
+            lomakkeenMuokkaus.hakukohteet.haeCheckbox().should('be.checked')
+          )
+      })
     })
   })
 })

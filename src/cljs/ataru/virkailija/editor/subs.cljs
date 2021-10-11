@@ -464,3 +464,10 @@
   :editor/autosave-enabled?
   (fn [db _]
     (some? (-> db :editor :autosave))))
+
+(re-frame/reg-sub
+  :editor/auto-expand-hakukohteet
+  (fn [db _]
+    (let [selected-form-key (get-in db [:editor :selected-form-key])
+          form-path [:editor :forms selected-form-key :properties :auto-expand-hakukohteet]]
+      (get-in db form-path false))))
