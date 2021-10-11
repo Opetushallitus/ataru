@@ -2,13 +2,12 @@
   (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module :as base-education-module]
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
-            [ataru.feature-config :as fc]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [ataru.component-data.arvosanat-module :as arvosanat]))
 
 (defn- toolbar-elements []
-  [[:form-section component/form-section]
+  [[:form-section component/form-section {:data-test-id "component-toolbar-lomakeosio"}]
    [:single-choice-button component/single-choice-button]
    [:single-choice-button-koodisto (fn [metadata]
                                      (assoc (component/single-choice-button metadata)
@@ -35,7 +34,8 @@
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
    [:lupatiedot component/lupatiedot]
-   [:guardian-contact-information component/huoltajan-yhteystiedot]])
+   [:guardian-contact-information component/huoltajan-yhteystiedot]
+   [:harkinnanvaraisuus component/harkinnanvaraisuus]])
 
 (def followup-toolbar-element-names
   #{:text-field
@@ -117,8 +117,7 @@
 
 (defn add-component [path root-level-add-component?]
   (let [elements (cond-> (toolbar-elements)
-                         (and root-level-add-component?
-                              (fc/feature-enabled? :arvosanat))
+                         root-level-add-component?
                          (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
                                [:arvosanat-lukio arvosanat/arvosanat-lukio]))]
     [custom-add-component elements path

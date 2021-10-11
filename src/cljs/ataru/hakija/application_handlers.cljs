@@ -211,8 +211,8 @@
 (defn set-field-visibilities
   [db]
   (rules/run-all-rules
-   (reduce field-visibility/set-field-visibility db (get-in db [:form :content]))
-   (:flat-form-content db)))
+    (reduce field-visibility/set-field-visibility db (get-in db [:form :content]))
+    (:flat-form-content db)))
 
 (defn- set-have-finnish-ssn
   [db flat-form-content]
@@ -273,18 +273,31 @@
       (and (not-empty value) (every? some? value)))
     (some? value)))
 
+(defn- is-question-group-value?
+  [value]
+  (and (vector? value) (or (vector? (first value)) (nil? (first value)))))
+
+(defn- merge-question-group-value
+  [field-descriptor value]
+  (mapv #(when (vector? %)
+           (if (and (= "oppiaineen-arvosanat-valinnaiset-kielet" (:children-of field-descriptor))
+                 (empty? %))
+             [{:value "" :valid true}]
+             (mapv (fn [value] {:valid true :value value}) %)))
+    value))
+
 (defn- merge-value [answer field-descriptor value]
   (merge answer {:valid  (boolean (or (:valid answer)
-                                      (:per-hakukohde field-descriptor)
-                                      (:cannot-edit field-descriptor)
-                                      (is-answered? (sanitize-value field-descriptor value nil))))
+                                    (:per-hakukohde field-descriptor)
+                                    (:cannot-edit field-descriptor)
+                                    (is-answered? (sanitize-value field-descriptor value nil))))
                  :value  value
-                 :values (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
-                               (mapv #(when (vector? %)
-                                        (mapv (fn [value] {:valid true :value value}) %))
-                                     value)
+                 :values (cond (is-question-group-value? value)
+                               (merge-question-group-value field-descriptor value)
+
                                (vector? value)
                                (mapv (fn [value] {:valid true :value value}) value)
+
                                :else
                                {:value value
                                 :valid true})
@@ -379,10 +392,9 @@
                                         first
                                         :end)
         time-diff                  (if (some? server-date)
-                                     (- (if (some? server-date)
-                                          (->> (clojure.string/replace server-date " GMT" "")
-                                               (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
-                                               to-long))
+                                     (- (->> (clojure.string/replace server-date " GMT" "")
+                                             (f/parse (f/formatter "EEE, dd MMM yyyy HH:mm:ss"))
+                                             to-long)
                                         (.getTime (js/Date.)))
                                      0)
         form                       (-> (languages->kwd form)
@@ -481,7 +493,8 @@
         {:db         (assoc db :selection-limited selection-limited)
          :dispatch-n [[:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
-                      [:application/validate-hakukohteet]]}
+                      [:application/validate-hakukohteet]
+                      [:application/hide-form-sections-with-text-component-visibility-rules]]}
         (when selection-limited
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
@@ -756,6 +769,21 @@
                        (assoc-in [:application :answers id :errors] errors))
        :dispatch-n [[:application/set-validator-processed id]
                     [:application/run-rules (:rules field-descriptor)]]})))
+
+(reg-event-db
+  :application/hide-form-sections-with-text-component-visibility-rules
+  (fn [db _]
+    (let [form-content (:flat-form-content db)
+          section-ids-with-visibility-rules (map :section-name (autil/visibility-conditions form-content))]
+      (reduce
+        #(field-visibility/set-field-visibility %1 %2)
+        db
+        section-ids-with-visibility-rules))))
+
+(reg-event-db
+  :application/handle-section-visibility-conditions
+  (fn [db _]
+    (set-field-visibilities db)))
 
 (reg-event-fx
   :application/set-repeatable-application-field
