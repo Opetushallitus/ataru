@@ -198,17 +198,19 @@
   (fn [db _] db))
 
 (defn- retry-dispatch
-  [db application-key hakukohde-oid is-401? dispatch]
+  [db application-key hakukohde-oid needs-auth? dispatch]
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
-    {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (* 10 retry-delay))
-     :dispatch-later [{:ms       retry-delay
-                       :dispatch dispatch}]}
+    (if (<= retry-delay 5000)
+      {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
+       :dispatch-later [{:ms       retry-delay
+                         :dispatch dispatch}]}
+      {:dispatch-n [:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]})
     (merge
      {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 10)
       :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
-                   (when (not is-401?)
+                   (when (not needs-auth?)
                      dispatch)]}
-     (when is-401?
+     (when needs-auth?
        {:authenticate-to-valinta-tulos-service
         {:dispatch-after dispatch}}))))
 
@@ -272,7 +274,8 @@
        {:application-key application-key
         :hakukohde-oid   hakukohde-oid}}
       (retry-dispatch db application-key hakukohde-oid
-                      (= 401 (:status response))
+                      (or (= 401 (:status response))
+                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-hakukohteessa
                        application-key
                        hakukohde-oid]))))
@@ -305,7 +308,8 @@
                            [:hyvaksynnan-ehto/get-valintatapajono (name oid)])
                          (:body response))}
       (retry-dispatch db application-key hakukohde-oid
-                      (= 401 (:status response))
+                      (or (= 401 (:status response))
+                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
                        application-key
                        hakukohde-oid]))))
