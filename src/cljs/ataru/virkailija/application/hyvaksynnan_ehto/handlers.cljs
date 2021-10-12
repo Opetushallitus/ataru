@@ -98,9 +98,6 @@
          (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :request-in-flight?] true)
          :hyvaksynnan-ehto/get-ehto-hakukohteessa
          {:application-key application-key
-          :hakukohde-oid   hakukohde-oid}
-         :hyvaksynnan-ehto/get-ehto-hakukohteessa-muutoshistoria
-         {:application-key application-key
           :hakukohde-oid   hakukohde-oid}}))))
 
 (re-frame/reg-event-fx
