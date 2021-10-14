@@ -438,10 +438,9 @@
      (into [:div.application__wrapper-contents]
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
-             ^{:key (:id child)}
              (if (:per-hakukohde child)
-               [render-duplicate-fields child (:children field-descriptor)]
-              [render-field child nil])))]))
+               (with-meta [render-duplicate-fields child (:children field-descriptor)] {:key (:id child)})
+               (with-meta [render-field child nil] {:key (:id child)}))))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
   (let [mouse-over?   (subscribe [:application/mouse-over-remove-question-group-button

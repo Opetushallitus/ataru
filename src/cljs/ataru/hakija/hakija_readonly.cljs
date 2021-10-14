@@ -113,20 +113,20 @@
 (defn child-fields [children application lang ui question-group-id]
   (for [child children
         :when (visible? ui child)]
-    ^{:key (str (:id child)
-                (when question-group-id
-                  (str "-" question-group-id)))}
-    (if (:per-hakukohde child)
-      [:div.readonly__per-question-wrapper
-       [:div.application__form-field-label.application__form-field__original-question
-        (from-multi-lang (:label child) lang)]
-       (for [duplicate-field (filter #(= (:original-question %) (:id child)) children)]
-         ^{:key (str "duplicate-" (:id duplicate-field))}
-         [:section
-           [hakukohde-details-component duplicate-field]
-           [field duplicate-field application lang nil]])]
-      (when (not (:duplikoitu-kysymys-hakukohde-oid child))
-        [field child application lang question-group-id]))))
+    (let [metadata {:key (str (:id child)
+                              (when question-group-id
+                                (str "-" question-group-id)))}]
+      (if (:per-hakukohde child)
+        (with-meta [:div.readonly__per-question-wrapper
+         [:div.application__form-field-label.application__form-field__original-question
+          (from-multi-lang (:label child) lang)]
+         (for [duplicate-field (filter #(= (:original-question %) (:id child)) children)]
+           ^{:key (str "duplicate-" (:id duplicate-field))}
+           [:section
+             [hakukohde-details-component duplicate-field]
+             [field duplicate-field application lang nil]])] metadata)
+        (when (not (:duplikoitu-kysymys-hakukohde-oid child))
+          (with-meta [field child application lang question-group-id] metadata))))))
 
 (defn wrapper [_ _ _ _]
   (let [ui (subscribe [:state-query [:application :ui]])]
