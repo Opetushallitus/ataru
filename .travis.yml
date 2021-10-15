@@ -5,6 +5,7 @@ jdk:
 sudo: required
 services:
   - docker
+
 env:
   global:
     # AWS_ACCESS_KEY_ID
@@ -31,8 +32,8 @@ matrix:
         - source ci-tools/common/setup-tools.sh
 
       before_script:
-        - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-        - docker run -d --name ataru-test-redis -p 6380:6379 redis
+        - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/postgres:11
+        - docker run -d --name ataru-test-redis -p 6380:6379 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/redis:5.0
         - docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
 
       script: >-
@@ -61,8 +62,8 @@ matrix:
         - source ci-tools/common/setup-tools.sh
 
       before_script:
-        - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres
-        - docker run -d --name ataru-test-redis -p 6380:6379 redis
+        - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/postgres:11
+        - docker run -d --name ataru-test-redis -p 6380:6379 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/redis:5.0
         - docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
 
       script: >-
