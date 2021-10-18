@@ -251,6 +251,7 @@
                                                  (sort (comp - compare))
                                                  (first))
            original-question (:original-question field-descriptor)
+           original-followup (:original-followup field-descriptor)
            duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid field-descriptor)
            duplikoitu-followup-hakukohde-oid (:duplikoitu-followup-hakukohde-oid field-descriptor)]
           :when
@@ -268,6 +269,7 @@
          :fieldType (:fieldType field-descriptor)
          :label     (:label field-descriptor)}
         (some? original-question) (assoc :original-question original-question)
+        (some? original-followup) (assoc :original-followup original-followup)
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
         (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 

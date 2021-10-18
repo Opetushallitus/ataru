@@ -80,7 +80,9 @@
     (is (= "followup-1-id_hk1" (:id (first followups))))
     (is (= "followup-2-id_hk1" (:id (second followups))))
     (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (first followups))))
-    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (second followups))))))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (second followups))))
+    (is (= "followup-1-id" (:original-followup (first followups))))
+    (is (= "followup-2-id" (:original-followup (second followups))))))
 
 (deftest correctly-duplicates-questions-with-combined-cases
   (let [duplicated-questions (util/duplicate-questions-for-hakukohteet

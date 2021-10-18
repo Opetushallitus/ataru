@@ -331,7 +331,8 @@
    (s/optional-key :label)       (s/maybe (s/cond-pre
                                            localized-schema/LocalizedString
                                            s/Str))
-   (s/optional-key :duplikoitu-followup-hakukohde-oid) (s/maybe s/Str)})
+   (s/optional-key :duplikoitu-followup-hakukohde-oid) (s/maybe s/Str)
+   (s/optional-key :original-followup) (s/maybe s/Str)})
 
 (def review-requirement-values
   (->> review-states/hakukohde-review-types

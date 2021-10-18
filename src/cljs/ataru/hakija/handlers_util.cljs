@@ -14,7 +14,8 @@
   [followup hakukohde-oid]
   (-> followup
     (assoc :id (str (:id followup) "_" hakukohde-oid)
-           :duplikoitu-followup-hakukohde-oid hakukohde-oid)
+           :duplikoitu-followup-hakukohde-oid hakukohde-oid
+           :original-followup (:id followup))
     (change-followups-for-question hakukohde-oid)))
 
 (defn- change-followups-for-option
