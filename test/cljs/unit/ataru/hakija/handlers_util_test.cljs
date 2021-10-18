@@ -14,6 +14,13 @@
 (def question
   {:id 2 :per-hakukohde false :belongs-to-hakukohderyhma ["a1"]})
 
+(def per-hakukohde-question-with-followups
+  {:id 3
+   :per-hakukohde true
+   :belongs-to-hakukohderyhma ["a1"]
+   :options [{:followups [{:id "followup-1-id"}
+                          {:id "followup-2-id"}]}]})
+
 (defn first-duplicated-question
   [questions]
   (first (filter #(:original-question %) questions)))
@@ -65,12 +72,22 @@
     (is (nil? (:original-question (first children))))
     (is (nil? (:duplikoitu-kysymys-hakukohde-oid (first children))))))
 
+(deftest duplicates-followups
+  (let [duplicated-questions (util/duplicate-questions-for-hakukohde
+                               [hakukohde-in-ryhma] "hk1" [] per-hakukohde-question-with-followups)
+        followups (get-in (first duplicated-questions) [:options 0 :followups])]
+    (is (= 2 (count followups)))
+    (is (= "followup-1-id_hk1" (:id (first followups))))
+    (is (= "followup-2-id_hk1" (:id (second followups))))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (first followups))))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (second followups))))))
+
 (deftest correctly-duplicates-questions-with-combined-cases
   (let [duplicated-questions (util/duplicate-questions-for-hakukohteet
                                [hakukohde-in-ryhma hakukohde-in-another-ryhma] ["hk1" "hk2"]
-                               [question per-hakukohde-question {:children [{:id 3} {:id 4 :per-hakukohde true :belongs-to-hakukohderyhma ["a2"]}]}])
-        [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children}] duplicated-questions]
-    (is (= 4 (count duplicated-questions)))
+                               [question per-hakukohde-question {:children [{:id 3} {:id 4 :per-hakukohde true :belongs-to-hakukohderyhma ["a2"]}]} per-hakukohde-question-with-followups])
+        [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children} {[{followups :followups}] :options}] duplicated-questions]
+    (is (= 5 (count duplicated-questions)))
     (is (= 3 (count children)))
     (is (= 1 (:original-question duplicated-question)))
     (is (nil? (:per-hakukohde duplicated-question)))
@@ -82,7 +99,12 @@
     (is (= "4_hk2" (:id duplicated-child)))
     (is (:per-hakukohde original-child))
     (is (nil? (:original-question original-child)))
-    (is (nil? (::duplikoitu-kysymys-hakukohde-oid original-child)))))
+    (is (nil? (::duplikoitu-kysymys-hakukohde-oid original-child)))
+    (is (= 2 (count followups)))
+    (is (= "followup-1-id_hk1" (:id (first followups))))
+    (is (= "followup-2-id_hk1" (:id (second followups))))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (first followups))))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (second followups))))))
 
 (deftest fill-missing-answer-for-hakukohde
   (let [answers {:q1 {:value ""}}
