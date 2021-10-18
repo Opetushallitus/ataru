@@ -13,7 +13,8 @@
 (defn- change-followup-id
   [followup hakukohde-oid]
   (-> followup
-    (assoc :id (str (:id followup) "_" hakukohde-oid))
+    (assoc :id (str (:id followup) "_" hakukohde-oid)
+           :duplikoitu-followup-hakukohde-oid hakukohde-oid)
     (change-followups-for-question hakukohde-oid)))
 
 (defn- change-followups-for-option
