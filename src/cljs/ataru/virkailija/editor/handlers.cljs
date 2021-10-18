@@ -1042,17 +1042,20 @@
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohderyhma
   (fn [db [_ path oid]]
-    (let [content-path (conj (vec (current-form-content-path db path))
-                        :belongs-to-hakukohderyhma)
-          per-hakukohde-path (conj (vec (current-form-content-path db path))
-                                   :per-hakukohde)]
+    (let [content-path                                (conj (vec (current-form-content-path db path))
+                                                        :belongs-to-hakukohderyhma)
+          belongs-to-one-hakukohderyhma               (= (count (get-in db content-path)) 1)
+          remove-per-hakukohde-if-last-hakukohderyhma (fn [db]
+                                                        (if belongs-to-one-hakukohderyhma
+                                                          (update-in
+                                                            db
+                                                            (current-form-content-path db path)
+                                                            #(dissoc % :per-hakukohde))
+                                                          db))]
       (-> db
-          (update-in per-hakukohde-path (fn [per-hakukohde]
-                                          (if (= (count (get-in db content-path)) 1)
-                                            false
-                                            (or per-hakukohde false))))
-          (update-in content-path (fnil (comp vec #(disj % oid) set) []))
-          (update-modified-by [(remove-option-path path)])))))
+        (remove-per-hakukohde-if-last-hakukohderyhma)
+        (update-in content-path (fnil (comp vec #(disj % oid) set) []))
+        (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
   :editor/fold
