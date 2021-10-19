@@ -1520,6 +1520,9 @@
    :person-info-module-muu                          {:fi "Muu käyttö"
                                                      :en "Muu käyttö"
                                                      :sv "Annat bruk"}
+   :person-info-module-onr-2nd                      {:fi "Opiskelijavalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :en "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :sv "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"}
    :metadata-not-found                              {:fi "Hakijan liitteitä ei löytynyt"
                                                      :sv "Sökandes bilagor hittades inte"
                                                      :en "Applicant's attachements can't be found"}
