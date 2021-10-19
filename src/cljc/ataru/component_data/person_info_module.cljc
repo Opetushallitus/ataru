@@ -169,6 +169,10 @@
   [metadata]
   (text-field (:email person-info-module-texts) :id :email :validators [:required :email] :metadata metadata))
 
+(defn ^:private email-optional-component
+  [metadata]
+  (text-field (:email person-info-module-texts) :id :email :metadata metadata))
+
 (defn ^:private phone-component
   [metadata]
   (text-field (:phone person-info-module-texts) :id :phone :validators [:required :phone] :metadata metadata))
@@ -245,6 +249,24 @@
    (city-component metadata)
    (native-language-section metadata)])
 
+(defn onr-2nd-person-info-module [metadata]
+  [(first-name-section metadata)
+   (last-name-component metadata)
+   (nationality-component metadata true)
+   (have-finnish-ssn-component metadata true)
+   (ssn-birthdate-gender-wrapper metadata)
+   (birthplace metadata)
+   (passport-number metadata)
+   (national-id-number metadata)
+   (email-optional-component metadata)
+   (phone-component metadata)
+   (country-of-residence-component metadata)
+   (street-address-component metadata)
+   (postal-office-section metadata)
+   (home-town-component metadata)
+   (city-component metadata)
+   (native-language-section metadata)])
+
 (defn muu-person-info-module [metadata]
   [(first-name-section metadata)
    (last-name-component metadata)
@@ -273,9 +295,14 @@
            {:label           (:label person-info-module-texts)
             :label-amendment (:label-amendment person-info-module-texts)
             :id              (name version)
-            :children        (if (= version :muu)
+            :children        (cond
+                               (= version :muu)
                                (muu-person-info-module metadata)
-                               (onr-person-info-module metadata))
+
+                               (= version :onr-2nd)
+                               (onr-2nd-person-info-module metadata)
+
+                               :else (onr-person-info-module metadata))
             :module          :person-info}))))
 
 
