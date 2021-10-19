@@ -271,6 +271,8 @@
       {:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
        {:application-key application-key
         :hakukohde-oid   hakukohde-oid}}
+      nil
+      {}
       (retry-dispatch db application-key hakukohde-oid
                       (= 401 (:status response))
                       [:hyvaksynnan-ehto/get-ehto-hakukohteessa
