@@ -68,9 +68,13 @@
   (fn [db [_ application-key hakukohde-oid]]
     (-> db
         (update-in [:hyvaksynnan-ehto application-key hakukohde-oid]
-                   dissoc :error)
-        (update-in [:hyvaksynnan-ehto application-key hakukohde-oid]
-                   dissoc :retry-delay))))
+                   dissoc :error))))
+
+(re-frame/reg-event-fx
+  :hyvaksynnan-ehto/add-final-error
+  (fn [{db :db} [_ application-key hakukohde-oid]]
+      {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :error] :error)}))
+
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/flash-error
@@ -201,12 +205,13 @@
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
        :dispatch-later [{:ms       retry-delay
                          :dispatch dispatch}]}
-      {:dispatch-n [:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]})
+      {:db db
+       :dispatch [:hyvaksynnan-ehto/add-final-error application-key hakukohde-oid]})
     (merge
-     {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 10)
-      :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
-                   (when (not needs-auth?)
-                     dispatch)]}
+      {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 10)
+       :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
+                    (when (not needs-auth?)
+                          dispatch)]}
      (when needs-auth?
        {:authenticate-to-valinta-tulos-service
         {:dispatch-after dispatch}}))))
