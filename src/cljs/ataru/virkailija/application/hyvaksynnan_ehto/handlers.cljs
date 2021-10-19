@@ -91,6 +91,19 @@
     {:hyvaksynnan-ehto/get-koodit nil}))
 
 (re-frame/reg-event-fx
+  :hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
+  (fn [{db :db} [_ application-key hakukohde-oids]]
+      (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
+                        (map second)
+                        (apply set/union))]
+           (when (or (contains? rights :view-applications)
+                     (contains? rights :edit-applications))
+                 {:db
+                  (reduce (fn [db hakukohde-oid] (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :request-in-flight?] true)) db hakukohde-oids)
+                  :hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
+                  {:application-key application-key}}))))
+
+(re-frame/reg-event-fx
   :hyvaksynnan-ehto/get-ehto-hakukohteessa
   (fn [{db :db} [_ application-key hakukohde-oid]]
     (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
@@ -200,6 +213,7 @@
 
 (defn- retry-dispatch
   [db application-key hakukohde-oid needs-auth? dispatch]
+  (js/console.log (str "Retry-dispatch for application " application-key ", hakukohde " hakukohde-oid))
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
     (if (<= retry-delay 5000)
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
@@ -216,26 +230,89 @@
        {:authenticate-to-valinta-tulos-service
         {:dispatch-after dispatch}}))))
 
-(defn- update-ehto-hakukohteessa
-  [old response]
-  (let [koodi (get-in response [:body :koodi])
-        text  (case koodi
-                "muu"
-                (select-keys (:body response) [:fi :sv :en])
-                nil
-                {:fi "" :sv "" :en ""}
-                (get-in old [:hakukohteessa :ehto-text]))]
-    (-> old
-        (assoc :ehdollisesti-hyvaksyttavissa? (some? koodi))
-        (dissoc :valintatapajonoissa)
-        (assoc :hakukohteessa {:koodi     koodi
-                               :ehto-text {:fi (:fi text "")
-                                           :sv (:sv text "")
-                                           :en (:en text "")}})
-        (assoc :last-modified (get-in response [:headers "last-modified"]))
-        (dissoc :request-in-flight?))))
-
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
+
+(defn- update-ehto-hakukohteessa
+       [old ehto last-modified]
+       (js/console.log (str "Update ehto hakukohteessa " ehto ", lm " last-modified))
+       (let [koodi (get ehto :koodi)
+             text  (case koodi
+                         "muu"
+                         (select-keys ehto [:fi :sv :en])
+                         nil
+                         {:fi "" :sv "" :en ""}
+                         (get-in old [:hakukohteessa :ehto-text]))]
+            (-> old
+                (assoc :ehdollisesti-hyvaksyttavissa? (some? koodi))
+                (dissoc :valintatapajonoissa)
+                (assoc :hakukohteessa {:koodi     koodi
+                                       :ehto-text {:fi (:fi text "")
+                                                   :sv (:sv text "")
+                                                   :en (:en text "")}})
+                (assoc :last-modified last-modified)
+                (dissoc :request-in-flight?))))
+
+(defn- update-ehto-valintatapajonoissa
+       [old ehdot]
+       (js/console.log (str "Update ehto valintatapajonossa " ehdot))
+       (-> old
+           (assoc :ehdollisesti-hyvaksyttavissa? (not-empty ehdot))
+           (dissoc :hakukohteessa)
+           (assoc :valintatapajonoissa
+                  (->> ehdot
+                       (map (fn [[oid ehto]]
+                                [(name oid)
+                                 {:koodi     (:koodi ehto)
+                                  :ehto-text {:fi (:fi ehto "")
+                                              :sv (:sv ehto "")
+                                              :en (:en ehto "")}}]))
+                       (into {})))
+           (dissoc :last-modified)
+           (dissoc :request-in-flight?)))
+
+(defn- update-tiedot-hakukohteelle
+       [db hakemus-oid tiedot]
+       (let [{hakukohde-oid  :hakukohdeOid
+              ehto           :ehto
+              ehtoJonoissa   :ehtoJonoissa
+              muutoshistoria :muutoshistoria
+              last-modified  :lastModified}
+             tiedot]
+            (js/console.log (str "Update tiedot hakukohteelle " tiedot))
+            (cond-> db
+                    ehto
+                    (update-in [:hyvaksynnan-ehto hakemus-oid hakukohde-oid]
+                               update-ehto-hakukohteessa ehto last-modified)
+                    (not ehto)
+                    (update-in [:hyvaksynnan-ehto hakemus-oid hakukohde-oid]
+                               update-ehto-valintatapajonoissa ehtoJonoissa)
+                    (not-empty muutoshistoria)
+                    (assoc-in [:hyvaksynnan-ehto hakemus-oid hakukohde-oid :events]
+                              (mapv (fn [versio]
+                                        (merge
+                                          {:event-type      (if (contains? versio :arvo)
+                                                                "ehto-hakukohteessa-set"
+                                                                "ehto-hakukohteessa-unset")
+                                           :time            (->> (:alku versio)
+                                                                 (f/parse iso-formatter)
+                                                                 c/to-default-time-zone)
+                                           :id              -1
+                                           :application-key hakemus-oid
+                                           :hakukohde       hakukohde-oid
+                                           :first-name      nil
+                                           :last-name       nil}
+                                          (when (contains? versio :arvo)
+                                                {:ehto (:arvo versio)})))
+                                    muutoshistoria)))))
+
+(defn- update-ehdot-hakemukselle
+       [db response]
+       (let [hakemus-oid (get-in response [:body :hakemusOid])
+             tiedot (get-in response [:body :tiedot])]
+            (js/console.log (str "Update ehdot hakemukselle " hakemus-oid ": " tiedot))
+            (reduce (fn [db hakukohteen-tieto] (update-tiedot-hakukohteelle db hakemus-oid hakukohteen-tieto))
+                    db
+                    tiedot)))
 
 (re-frame/reg-event-db
   :hyvaksynnan-ehto/set-ehto-hakukohteessa-muutoshistoria
@@ -267,7 +344,7 @@
       (200 201 204 400 404)
       {:db
        (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
-                  update-ehto-hakukohteessa response)
+                  update-ehto-hakukohteessa (:body response) (get-in response [:headers "last-modified"]))
        :hyvaksynnan-ehto/get-ehto-hakukohteessa-muutoshistoria
        {:application-key application-key
         :hakukohde-oid   hakukohde-oid}}
@@ -282,22 +359,18 @@
                        application-key
                        hakukohde-oid]))))
 
-(defn- update-ehto-valintatapajonoissa
-  [old response]
-  (-> old
-      (assoc :ehdollisesti-hyvaksyttavissa? (not-empty (:body response)))
-      (dissoc :hakukohteessa)
-      (assoc :valintatapajonoissa
-             (->> (:body response)
-                  (map (fn [[oid ehto]]
-                         [(name oid)
-                          {:koodi     (:koodi ehto)
-                           :ehto-text {:fi (:fi ehto "")
-                                       :sv (:sv ehto "")
-                                       :en (:en ehto "")}}]))
-                  (into {})))
-      (dissoc :last-modified)
-      (dissoc :request-in-flight?)))
+(re-frame/reg-event-fx
+  :hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
+  (fn [{db :db} [_ application-key response]]
+      (js/console.log (str "Set ehdot koko hakemukselle " application-key ": " (:body response)))
+      (case (:status response)
+            (200 201 204 400 404) ;fixme ehkä
+            {:db (update-ehdot-hakemukselle db response)}
+            (retry-dispatch db application-key "kaikki-hakukohteet" ;fixme
+                            (or (= 401 (:status response))
+                                (= 403 (:status response)))
+                            [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
+                             application-key]))))
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/set-ehto-valintatapajonoissa
@@ -305,7 +378,7 @@
     (case (:status response)
       200
       {:db         (update-in db [:hyvaksynnan-ehto application-key hakukohde-oid]
-                              update-ehto-valintatapajonoissa response)
+                              update-ehto-valintatapajonoissa (:body response))
        :dispatch-n (mapv (fn [[oid _]]
                            [:hyvaksynnan-ehto/get-valintatapajono (name oid)])
                          (:body response))}
@@ -343,6 +416,19 @@
                            application-key
                            hakukohde-oid]
            :error-handler [:hyvaksynnan-ehto/ignore-error]})))
+
+(re-frame/reg-fx
+  :hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
+  (fn [{:keys [application-key]}]
+      (http (aget js/config "virkailija-caller-id")
+            {:method        :get
+             :url           (.url js/window
+                                  "valinta-tulos-service.hyvaksynnan-ehto.hakemukselle"
+                                  application-key)
+             :handler       [:hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
+                             application-key]
+             :error-handler [:hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
+                             application-key]})))
 
 (re-frame/reg-fx
   :hyvaksynnan-ehto/get-ehto-hakukohteessa
