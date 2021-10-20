@@ -77,16 +77,36 @@
   (some #(contains? required-validators %)
         (:validators question)))
 
+(defn- original-answer-id
+  [question]
+  (keyword (or (:original-question question) (:original-followup question))))
+
+(defn- duplicated-question?
+  [question]
+  (boolean (original-answer-id question)))
+
+(defn- no-answer?
+  [answers question]
+  (not (get answers (keyword (:id question)))))
+
+(defn- duplicated-questions-without-answer
+  [questions answers]
+  (filter #(and (duplicated-question? %) (no-answer? answers %)) questions))
+
+(defn- add-missing-answer
+  [answers question]
+  (let [answer-id (keyword (:id question))
+        answer    (assoc
+                    (get answers (original-answer-id question))
+                    :valid
+                    (not (is-duplicated-required question)))]
+    (assoc answers answer-id answer)))
+
 (defn fill-missing-answer-for-hakukohde
   [answers questions]
     (let [flat-questions (util/flatten-form-fields questions)
-          missing-questions (filter #(and (:original-question %) (not (get answers (keyword (:id %))))) flat-questions)
-          get-original-answer (fn [question]
-                                (get answers (keyword (:original-question question))))]
+          missing-questions (duplicated-questions-without-answer flat-questions answers)]
       (if (seq missing-questions)
-        (reduce (fn [answers question]
-                  (assoc answers (keyword (:id question))
-                                 (assoc (get-original-answer question) :valid (not (is-duplicated-required question)))))
-                answers missing-questions)
+        (reduce add-missing-answer answers missing-questions)
         answers)))
 
