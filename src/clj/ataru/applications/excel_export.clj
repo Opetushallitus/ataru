@@ -304,7 +304,7 @@
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (let [answer-key             (:key answer)
-          field-descriptor       (if (:duplikoitu-kysymys-hakukohde-oid answer)
+          field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
                                    (get form-fields-by-key (first (string/split answer-key #"_")))
                                    (get form-fields-by-key answer-key))
           column                 (:column (first (filter #(= answer-key (:id %)) headers)))
@@ -362,6 +362,13 @@
                                    (get form-fields-by-id)))]
       (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id parent))))
 
+(defn- is-per-hakukohde-followup?
+  [form-fields-by-id question]
+  (boolean
+    (and
+      (:followup-of question)
+      (get form-fields-by-id (:followup-of question)))))
+
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
   (let [should-include? (fn [field]
@@ -379,13 +386,14 @@
     (->> form-fields
          (filter should-include?)
          (filter #(not (:per-hakukohde %)))
+         (filter #(not (is-per-hakukohde-followup? form-fields-by-id %)))
          (map #(vector (:id %) (pick-header form-fields-by-id %))))))
 
 (defn- duplicate-header-per-hakukohde
   [form-fields answer application]
-  (let [field (first (filter #(= (:id %) (:original-question answer)) form-fields))
+  (let [field (first (filter #(= (:id %) (or (:original-question answer) (:original-followup answer))) form-fields))
         hakukohteet (:value (first (filter #(= (:key %) "hakukohteet") (:answers application))))
-        get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (:duplikoitu-kysymys-hakukohde-oid answer)) hakukohteet)))
+        get-hakukohde-for-answer (fn [answer] (first (filter #(string/includes? % (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))) hakukohteet)))
         remove-oid-from-hakukohde (fn [hakukohde] (-> hakukohde
                                                       (string/reverse)
                                                       (string/split #"\(" 2)
@@ -394,19 +402,36 @@
         label (str (util/non-blank-val (:label field) [:fi :sv :en]) "\n" (remove-oid-from-hakukohde (get-hakukohde-for-answer answer)))]
     (vector (:key answer) label)))
 
+(defn- original-question-id
+  [id]
+  (if (string/includes? id "_")
+    (first (string/split id #"_"))
+    id))
+
+(defn- application-header-comparator
+  [form-fields form-fields-by-id]
+  (fn [[a-key] [b-key]]
+    (let [a-field-id (original-question-id a-key)
+          b-field-id (original-question-id b-key)
+          a-field (get form-fields-by-id a-field-id)
+          b-field (get form-fields-by-id b-field-id)
+          a-field-idx (.indexOf form-fields a-field)
+          b-field-idx (.indexOf form-fields b-field)]
+      (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
   [form-fields form-fields-by-id skip-answers? applications]
   (->> applications
-       (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
-       (flatten)
-       (remove #(or (contains? form-fields-by-id (:key %))
-                    (and skip-answers?
-                         (not (answer-to-always-include? (:key %))))))
-       (map (fn [answer] (if (:original-question answer)
-               (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
-               (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
-       (distinct)))
+    (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
+    (flatten)
+    (remove #(or (contains? form-fields-by-id (:key %))
+               (and skip-answers?
+                 (not (answer-to-always-include? (:key %))))))
+    (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
+                        (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
+                        (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
+    (distinct)
+    (sort (application-header-comparator form-fields form-fields-by-id))))
 
 (defn- extract-headers
   [applications form form-field-belongs-to skip-answers? included-ids]
