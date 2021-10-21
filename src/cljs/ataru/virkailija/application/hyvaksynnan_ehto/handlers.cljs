@@ -364,9 +364,9 @@
   (fn [{db :db} [_ application-key response]]
       (js/console.log (str "Set ehdot koko hakemukselle " application-key ": " (:body response)))
       (case (:status response)
-            (200 201 204 400 404) ;fixme ehkä
+            200
             {:db (update-ehdot-hakemukselle db response)}
-            (retry-dispatch db application-key "kaikki-hakukohteet" ;fixme
+            (retry-dispatch db application-key "kaikki-hakukohteet"
                             (or (= 401 (:status response))
                                 (= 403 (:status response)))
                             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
