@@ -75,21 +75,20 @@
 (deftest duplicates-followups
   (let [duplicated-questions (util/duplicate-questions-for-hakukohde
                                [hakukohde-in-ryhma] "hk1" [] per-hakukohde-question-with-followups)
-        followups (get-in (first duplicated-questions) [:options 0 :followups])]
-    (is (= 2 (count followups)))
-    (is (= "followup-1-id_hk1" (:id (first followups))))
-    (is (= "followup-2-id_hk1" (:id (second followups))))
-    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (first followups))))
-    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid (second followups))))
-    (is (= "followup-1-id" (:original-followup (first followups))))
-    (is (= "followup-2-id" (:original-followup (second followups))))))
+        [_original {[{[followup-1 followup-2] :followups}] :options}] duplicated-questions]
+    (is (= "followup-1-id_hk1" (:id followup-1)))
+    (is (= "followup-2-id_hk1" (:id followup-2)))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid followup-1)))
+    (is (= "hk1" (:duplikoitu-followup-hakukohde-oid followup-2)))
+    (is (= "followup-1-id" (:original-followup followup-1)))
+    (is (= "followup-2-id" (:original-followup followup-2)))))
 
 (deftest correctly-duplicates-questions-with-combined-cases
   (let [duplicated-questions (util/duplicate-questions-for-hakukohteet
                                [hakukohde-in-ryhma hakukohde-in-another-ryhma] ["hk1" "hk2"]
                                [question per-hakukohde-question {:children [{:id 3} {:id 4 :per-hakukohde true :belongs-to-hakukohderyhma ["a2"]}]} per-hakukohde-question-with-followups])
-        [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children} {[{followups :followups}] :options}] duplicated-questions]
-    (is (= 5 (count duplicated-questions)))
+        [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children} _ {[{followups :followups}] :options}] duplicated-questions]
+    (is (= 6 (count duplicated-questions)))
     (is (= 3 (count children)))
     (is (= 1 (:original-question duplicated-question)))
     (is (nil? (:per-hakukohde duplicated-question)))

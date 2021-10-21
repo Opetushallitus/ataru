@@ -21,7 +21,8 @@
             [clojure.string :as string]
             [ataru.application_common.comparators :as comparators]
             [cljs.core.match :refer-macros [match]]
-            [goog.string :as s]))
+            [goog.string :as s]
+            [ataru.application-common.hakukohde-specific-questions :as hsq]))
 
 (declare field)
 
@@ -219,15 +220,6 @@
                      (required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
-(defn- set-id-for-per-hakukohde-followup
-  [question followup]
-  (if-let [hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid question)]
-    (update
-      followup
-      :id
-      (fn [followup-id] (str followup-id "_" hakukohde-oid)))
-    followup))
-
 (defn- selectable [content application hakukohteet-and-ryhmat lang question-group-idx]
   [:div.application__form-field
    [:div.application__form-field-label--selectable
@@ -256,8 +248,7 @@
             (from-multi-lang (:label option) lang)]
            (when (some #(visible? % application hakukohteet-and-ryhmat) (:followups option))
              [:div.application-handling__nested-container
-              (for [followup (:followups option)
-                    :let [followup (set-id-for-per-hakukohde-followup content followup)]]
+              (for [followup (:followups option)]
                 ^{:key (:id followup)}
                 [field followup application hakukohteet-and-ryhmat lang question-group-idx false])])]))
        (doall
@@ -408,7 +399,8 @@
                                            (dissoc :per-hakukohde)
                                            (assoc :id (:key %)
                                                   :original-question (:original-question %)
-                                                  :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %)))
+                                                  :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %))
+                                           (hsq/change-followups-for-question (:duplikoitu-kysymys-hakukohde-oid %)))
                                       (filter #(= (:original-question %) (:id question)) (vals (:answers application)))))]
        ^{:key (str "duplicate-" (:id duplicate-field))}
        [:section

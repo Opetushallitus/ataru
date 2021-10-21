@@ -1,39 +1,18 @@
 (ns ataru.hakija.handlers-util
   (:require [ataru.application-common.application-field-common :refer [required-validators]]
-            [ataru.util :as util]))
+            [ataru.util :as util]
+            [ataru.application-common.hakukohde-specific-questions :as hsq]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
-       [tarjonta-hakukohteet hakukohde-oid question]
-       (let [is-ryhma-in-hakukohderyhmat (fn [hakukohderyhma] (some #(= hakukohderyhma %) (:belongs-to-hakukohderyhma question)))
-             selected-hakukohde (some #(when (= (:oid %) hakukohde-oid) %) tarjonta-hakukohteet)]
-         (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
-
-(declare change-followups-for-question)
-
-(defn- change-followup-id
-  [followup hakukohde-oid]
-  (-> followup
-    (assoc :id (str (:id followup) "_" hakukohde-oid)
-           :duplikoitu-followup-hakukohde-oid hakukohde-oid
-           :original-followup (:id followup))
-    (change-followups-for-question hakukohde-oid)))
-
-(defn- change-followups-for-option
-  [option hakukohde-oid]
-  (if-let [followups (seq (:followups option))]
-    (assoc option :followups (map #(change-followup-id % hakukohde-oid) followups))
-    option))
-
-(defn- change-followups-for-question
-  [question hakukohde-oid]
-  (if-let [options (seq (:options question))]
-    (assoc question :options (map #(change-followups-for-option % hakukohde-oid) options))
-    question))
+  [tarjonta-hakukohteet hakukohde-oid question]
+  (let [is-ryhma-in-hakukohderyhmat (fn [hakukohderyhma] (some #(= hakukohderyhma %) (:belongs-to-hakukohderyhma question)))
+        selected-hakukohde          (some #(when (= (:oid %) hakukohde-oid) %) tarjonta-hakukohteet)]
+    (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
 
 (defn- create-duplicate-question
   [hakukohde-oid question]
   (-> question
-      (change-followups-for-question hakukohde-oid)
+      (hsq/change-followups-for-question hakukohde-oid)
       (dissoc :per-hakukohde)
       (assoc :id (str (:id question) "_" hakukohde-oid)
              :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
