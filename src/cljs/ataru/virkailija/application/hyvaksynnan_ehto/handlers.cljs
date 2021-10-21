@@ -234,7 +234,6 @@
 
 (defn- update-ehto-hakukohteessa
        [old ehto last-modified]
-       (js/console.log (str "Update ehto hakukohteessa " ehto ", lm " last-modified))
        (let [koodi (get ehto :koodi)
              text  (case koodi
                          "muu"
@@ -254,7 +253,6 @@
 
 (defn- update-ehto-valintatapajonoissa
        [old ehdot]
-       (js/console.log (str "Update ehto valintatapajonossa " ehdot))
        (-> old
            (assoc :ehdollisesti-hyvaksyttavissa? (not-empty ehdot))
            (dissoc :hakukohteessa)
@@ -278,7 +276,6 @@
               muutoshistoria :muutoshistoria
               last-modified  :lastModified}
              tiedot]
-            (js/console.log (str "Update tiedot hakukohteelle " tiedot))
             (cond-> db
                     ehto
                     (update-in [:hyvaksynnan-ehto hakemus-oid hakukohde-oid]
@@ -309,7 +306,6 @@
        [db response]
        (let [hakemus-oid (get-in response [:body :hakemusOid])
              tiedot (get-in response [:body :tiedot])]
-            (js/console.log (str "Update ehdot hakemukselle " hakemus-oid ": " tiedot))
             (reduce (fn [db hakukohteen-tieto] (update-tiedot-hakukohteelle db hakemus-oid hakukohteen-tieto))
                     db
                     tiedot)))
@@ -362,7 +358,6 @@
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
   (fn [{db :db} [_ application-key response]]
-      (js/console.log (str "Set ehdot koko hakemukselle " application-key ": " (:body response)))
       (case (:status response)
             200
             {:db (update-ehdot-hakemukselle db response)}
