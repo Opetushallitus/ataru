@@ -92,7 +92,7 @@
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
-  (fn [{db :db} [_ application-key hakukohde-oids]]
+  (fn [{db :db} [_ application-key]]
       (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
                         (map second)
                         (apply set/union))]
@@ -215,20 +215,20 @@
   [db application-key hakukohde-oid needs-auth? dispatch]
   (js/console.log (str "Retry-dispatch for application " application-key ", hakukohde " hakukohde-oid))
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
-    (if (<= retry-delay 5000)
+    (if (< retry-delay 5000)
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
        :dispatch-later [{:ms       retry-delay
                          :dispatch dispatch}]}
       {:db db
        :dispatch [:hyvaksynnan-ehto/add-final-error application-key hakukohde-oid]})
     (merge
-      {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 10)
+      {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 1000)
        :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
                     (when (not needs-auth?)
                           dispatch)]}
-     (when needs-auth?
-       {:authenticate-to-valinta-tulos-service
-        {:dispatch-after dispatch}}))))
+      (when needs-auth?
+        {:authenticate-to-valinta-tulos-service
+         {:dispatch-after dispatch}}))))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
 

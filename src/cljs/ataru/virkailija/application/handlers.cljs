@@ -33,14 +33,9 @@
                   conj)))
 
 (defn- hyvaksynnan-ehto-hakemukselle-dispatch [db]
-       (let [application-key (get-in db [:application :selected-key])
-             hakukohde-oids  (get-in db [:application
-                                         :selected-application-and-form
-                                         :application
-                                         :hakukohde])]
+       (let [application-key (get-in db [:application :selected-key])]
             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
-             application-key
-             hakukohde-oids]))
+             application-key]))
 
 (defn- hyvaksynnan-ehto-dispatch-vec [db]
   (let [application-key (get-in db [:application :selected-key])
