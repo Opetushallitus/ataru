@@ -365,9 +365,10 @@
 (defn- is-per-hakukohde-followup?
   [form-fields-by-id question]
   (boolean
-    (and
-      (:followup-of question)
-      (get form-fields-by-id (:followup-of question)))))
+    (some->> question
+      :followup-of
+      (get form-fields-by-id)
+      :per-hakukohde)))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
