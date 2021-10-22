@@ -325,7 +325,7 @@
   :application/handle-fetch-koulutustyypit
   [check-schema-interceptor]
   (fn [db [_ {koulutustyypit-response-body :body}]]
-    (let [relevant-koulutustyyyppi-ids #{"1" "2" "4" "5" "10" "40" "41"}
+    (let [relevant-koulutustyyyppi-ids #{"26" "2" "4" "5" "10" "40" "41"}
           koulutustyypit (filter #(relevant-koulutustyyyppi-ids (:value %))
                                  koulutustyypit-response-body)]
       (assoc-in db [:application :koulutustyypit] koulutustyypit))))
