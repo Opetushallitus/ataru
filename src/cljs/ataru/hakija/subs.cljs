@@ -773,4 +773,3 @@
           yhteishaku? (get-in db [:form :tarjonta :yhteishaku])]
       (and yhteishaku?
            (= kohdejoukko "haunkohdejoukko_11")))))
->>>>>>> HLE-1317 Luo tapahtumat 2-asteen hakukohteiden valinnalle
