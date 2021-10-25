@@ -32,7 +32,7 @@
      (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
   (fn [[hyvaksynnan-ehdot hakukohde-oids]]
     (into []
-          (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde hakukohde-oids)
+          (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde (conj hakukohde-oids "kaikki-hakukohteet"))
                 (map hyvaksynnan-ehto-error)
                 (filter (comp not nil?)))
           hyvaksynnan-ehdot)))

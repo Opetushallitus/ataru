@@ -32,6 +32,11 @@
                                 {:hakukohde-oid hakukohde-oid}])))
                   conj)))
 
+(defn- hyvaksynnan-ehto-hakemukselle-dispatch [db]
+       (let [application-key (get-in db [:application :selected-key])]
+            [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
+             application-key]))
+
 (defn- hyvaksynnan-ehto-dispatch-vec [db]
   (let [application-key (get-in db [:application :selected-key])
         hakukohde-oids  (get-in db [:application
@@ -613,7 +618,7 @@
                                         [:liitepyynto-information-request/get-deadlines application-key]
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
-                                       (hyvaksynnan-ehto-dispatch-vec db)
+                                       [(hyvaksynnan-ehto-hakemukselle-dispatch db)]
                                        [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                          {:application-key application-key
                                           :memoize         true}]]))]
