@@ -213,7 +213,6 @@
 
 (defn- retry-dispatch
   [db application-key hakukohde-oid needs-auth? dispatch]
-  (js/console.log (str "Retry-dispatch for application " application-key ", hakukohde " hakukohde-oid))
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
     (if (< retry-delay 5000)
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))

@@ -31,7 +31,6 @@
     [(re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
      (re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])])
   (fn [[hyvaksynnan-ehdot hakukohde-oids]]
-      (js/console.log (str "hyvaksynnan-ehto/errors " hyvaksynnan-ehdot ": " (conj hakukohde-oids "kaikki-hakukohteet")))
     (into []
           (comp (hx/filter-hyvaksynnan-ehdot-for-correct-hakukohde (conj hakukohde-oids "kaikki-hakukohteet"))
                 (map hyvaksynnan-ehto-error)
