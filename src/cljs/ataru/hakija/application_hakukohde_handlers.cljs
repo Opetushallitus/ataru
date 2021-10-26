@@ -4,7 +4,6 @@
     [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
-    [ataru.application-common.comparators :as comparators]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))
@@ -106,7 +105,7 @@
     (let [questions (get-in db [:form :content])
           selected-hakukohteet (get-in db [:application :answers :hakukohteet :value])
           tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
-          update-questions (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
+          update-questions (handlers-util/sort-questions-and-first-level-children selected-hakukohteet
                             (reduce (partial handlers-util/duplicate-questions-for-hakukohde tarjonta-hakukohteet hakukohde-oid) [] questions))
           updated-answers (handlers-util/fill-missing-answer-for-hakukohde (get-in db [:application :answers]) update-questions)
           flat-form-content (util/flatten-form-fields update-questions)]

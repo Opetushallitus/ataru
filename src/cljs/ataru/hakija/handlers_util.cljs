@@ -1,7 +1,8 @@
 (ns ataru.hakija.handlers-util
   (:require [ataru.application-common.application-field-common :refer [required-validators]]
             [ataru.util :as util]
-            [ataru.application-common.hakukohde-specific-questions :as hsq]))
+            [ataru.application-common.hakukohde-specific-questions :as hsq]
+            [ataru.application-common.comparators :as comparators]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
   [tarjonta-hakukohteet hakukohde-oid question]
@@ -89,3 +90,18 @@
         (reduce add-missing-answer answers missing-questions)
         answers)))
 
+(defn- apply-to-children
+  [f question]
+  (if (:children question)
+    (update question :children f)
+    question))
+
+(defn- apply-to-questions-and-first-level-children
+  [f questions]
+  (f (map (partial apply-to-children f) questions)))
+
+(defn sort-questions-and-first-level-children
+  [selected-hakukohteet questions]
+  (apply-to-questions-and-first-level-children
+    #(sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet) %)
+    questions))
