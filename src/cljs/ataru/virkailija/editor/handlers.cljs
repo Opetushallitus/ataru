@@ -1061,6 +1061,12 @@
         (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
+  :editor/set-prevent-submission
+  (fn [db [_ path prevent-submission]]
+    (let [prevent-submission-path (conj (vec (current-form-content-path db path)) :prevent-submission)]
+      (assoc-in db prevent-submission-path prevent-submission))))
+
+(reg-event-db
   :editor/fold
   (fn [db [_ id]]
     (fold db id)))
