@@ -1983,7 +1983,10 @@
                                                      :en "EN: Vastaus"}
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
                                                      :sv "Svarsalternativ valt"
-                                                     :en "EN: vastausvaihtoehtoa valittu"}})
+                                                     :en "EN: vastausvaihtoehtoa valittu"}
+   :prevent-submission                              {:fi "Valinta estää hakemuksen lähettämisen"
+                                                     :sv "SV: Valinta estää hakemuksen lähettämisen"
+                                                     :en "EN: Valinta estää hakemuksen lähettämisen"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
