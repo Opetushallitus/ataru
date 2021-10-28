@@ -68,6 +68,8 @@
             :params          {:file-id          file-id
                               :file-size        (.-size file)
                               :file-name        (normalizer/normalize-filename (.-name file))}
+            :headers         {"Caller-Id" (aget js/config "hakija-caller-id")
+                              "CSRF"      (util/csrf-token)}
             :handler         response-handler
             :error-handler   (fn [{:keys [status]}]
                                (dispatch (conj error-handler status)))})
