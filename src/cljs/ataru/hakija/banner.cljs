@@ -105,12 +105,12 @@
         lang          @(subscribe [:application/form-language])]
     (when (not submit-status)
       [:div.application__preview-toggle-container
-       [:a.application__preview-link
-        {:class (when enabled? "application__preview-link--disabled")
+       [:button.application__preview-link
+        {:disabled (not enabled?)
          :on-click toggle-fn}
         (translations/get-hakija-translation :edit-answers lang)]
-       [:a.application__preview-link
-        {:class (when-not enabled? "application__preview-link--disabled")
+       [:button.application__preview-link
+        {:disabled enabled?
          :on-click toggle-fn}
         (translations/get-hakija-translation :preview-answers lang)]])))
 

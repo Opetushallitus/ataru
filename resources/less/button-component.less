@@ -15,3 +15,70 @@
   user-select: none;
   white-space: nowrap;
 }
+
+.a-button > * {
+  margin-left: 5px;
+}
+
+.button-mixin {
+  box-shadow: none;
+  padding: 5px;
+  border-radius: 3px;
+  font-family: 'Open Sans', sans-serif;
+  cursor: pointer;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,box-shadow 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms,border 250ms cubic-bezier(0.4, 0, 0.2, 1) 0ms;
+  &:focus {
+    box-shadow: 0px 0px 0px 3px @primary-green-300;
+    outline: none;
+  }
+}
+
+.primary-button {
+  .button-mixin;
+  border: none;
+  font-weight: 600;
+  background: @primary-green-100;
+  color: @neutral-grey-900;
+  &--active,
+  &:hover {
+    background: @primary-green-700;
+    color: @white;
+  }
+  &:disabled {
+    background-color: @neutral-grey-500;
+    cursor: default;
+  }
+}
+
+.secondary-button {
+  .button-mixin;
+  font-weight: 600;
+  background: @white;
+  color: @primary-green-700;
+  border: 2px solid @primary-green-700;
+  &--active,
+  &:hover {
+    border-color: @primary-green-900;
+    color: @primary-green-900;
+  }
+  &:disabled {
+    border-color: @neutral-grey-500;
+    color: @neutral-grey-500;
+    cursor: default;
+  }
+}
+
+.tertiary-button {
+  .button-mixin;
+  background: @white;
+  color: @primary-green-700;
+  &:hover {
+    color: @primary-green-900;
+  }
+  &:disabled,
+  &[disabled] {
+    color: @neutral-grey-600;
+    cursor: default;
+    pointer-events: none;
+  }
+}

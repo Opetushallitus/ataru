@@ -236,9 +236,9 @@
    :guardian-phone                              {:fi "Huoltajan matkapuhelin"
                                                  :sv "Vårdnadshavarens mobiltelefonnummer"
                                                  :en "Guardians mobile phone number"}
-   :hakija-new-text                             {:fi "LÄHETÄ HAKEMUS"
-                                                 :sv "SKICKA ANSÖKAN"
-                                                 :en "SUBMIT APPLICATION"}
+   :hakija-new-text                             {:fi "Lähetä hakemus"
+                                                 :sv "Skicka ansökan"
+                                                 :en "Submit application"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
