@@ -1278,13 +1278,13 @@ th.application__readonly-adjacent--header {
 }
 
 .application__hakukohde-2nd-row__hakukohde-change-order-hidden {
-  color: @link-color;
+  color: @primary-green-700;
   cursor: initial;
 }
 
 .application__hakukohde-2nd-row__hakukohde-order {
   width: 40px;
-  background: @link-color;
+  background: @primary-green-700;
   color: @white;
   display: flex;
   flex-direction: column;
@@ -1307,7 +1307,7 @@ th.application__readonly-adjacent--header {
 
 .application__hakukohde-2nd-row__right {
   width: 100%;
-  background: #f7f8f9;
+  background: @primary-green-50;
   padding: 0 10px;
   display: flex;
   flex-direction: column;
@@ -1333,7 +1333,7 @@ th.application__readonly-adjacent--header {
   cursor: pointer;
 
   &:hover {
-    background-color: @paler-blue;
+    background-color: @primary-green-100;
   }
 
   &>input {
@@ -1363,7 +1363,7 @@ th.application__readonly-adjacent--header {
 
   &:hover {
     cursor: pointer;
-    background: @paler-blue;
+    background: @primary-green-100;
   }
 }
 
@@ -1430,7 +1430,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__hakukohde-2nd-max-amount-reached {
-  color: @pale-blue;
+  color: @primary-green-700;
   font-weight: 600;
 
   &>i {
@@ -1439,7 +1439,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__hakukohde-2nd-max-amount-msg {
-  color: @pale-blue;
+  color: @primary-green-700;
 }
 
 .application-hakukohde-2nd-row__name-wrapper {
@@ -1950,22 +1950,14 @@ th.application__readonly-adjacent--header {
 }
 
 .application_add-hakukohde-row-button {
+  .primary-button;
   align-items: center;
-  border-radius: 2px;
-  border: none;
   display: flex;
   height: 41px;
   width: 15em;
   align-self: center;
   justify-content: space-around;
   padding: 0 30px;
-  color: @white;
-  background-color: @link-color;
-  cursor: pointer;
-
-  &:hover {
-    background-color: @control-button-hover-blue;
-  }
 }
 
 .application__send-feedback-button {
