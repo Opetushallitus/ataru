@@ -347,6 +347,8 @@
       {:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
        {:application-key application-key
         :hakukohde-oid   hakukohde-oid}}
+      nil
+      {}
       (retry-dispatch db application-key hakukohde-oid
                       (or (= 401 (:status response))
                           (= 403 (:status response)))

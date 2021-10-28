@@ -29,15 +29,15 @@ INSERT INTO applications (
 );
 
 -- name: yesql-add-application-answers!
-INSERT INTO answers (application_id, key, field_type, value, original_question, duplikoitu_kysymys_hakukohde_oid)
-SELECT :application_id, t->>'key', t->>'fieldType', t->>'value', t->>'original-question', t->>'duplikoitu-kysymys-hakukohde-oid'
+INSERT INTO answers (application_id, key, field_type, value, original_question, duplikoitu_kysymys_hakukohde_oid, original_followup, duplikoitu_followup_hakukohde_oid)
+SELECT :application_id, t->>'key', t->>'fieldType', t->>'value', t->>'original-question', t->>'duplikoitu-kysymys-hakukohde-oid', t->>'original-followup', t->>'duplikoitu-followup-hakukohde-oid'
 FROM jsonb_array_elements(:answers) AS t
 WHERE jsonb_typeof(t->'value') = 'string' OR
       jsonb_typeof(t->'value') = 'null';
 
 -- name: yesql-add-application-multi-answers!
-INSERT INTO multi_answers (application_id, key, field_type, original_question, duplikoitu_kysymys_hakukohde_oid)
-SELECT :application_id, t->>'key', t->>'fieldType', t->>'original-question', t->>'duplikoitu-kysymys-hakukohde-oid'
+INSERT INTO multi_answers (application_id, key, field_type, original_question, duplikoitu_kysymys_hakukohde_oid, original_followup, duplikoitu_followup_hakukohde_oid)
+SELECT :application_id, t->>'key', t->>'fieldType', t->>'original-question', t->>'duplikoitu-kysymys-hakukohde-oid', t->>'original-followup', t->>'duplikoitu-followup-hakukohde-oid'
 FROM jsonb_array_elements(:answers) AS t
 WHERE jsonb_typeof(t->'value') = 'array' AND
       (jsonb_array_length(t->'value') = 0 OR

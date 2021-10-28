@@ -21,9 +21,12 @@
             [clojure.string :as string]
             [ataru.application_common.comparators :as comparators]
             [cljs.core.match :refer-macros [match]]
-            [goog.string :as s]))
+            [goog.string :as s]
+            [ataru.application-common.hakukohde-specific-questions :as hsq]))
 
 (declare field)
+
+(declare per-question-wrapper)
 
 (def exclude-always-included #(not (answer-to-always-include? %)))
 
@@ -177,7 +180,9 @@
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
-           [field child application hakukohteet-and-ryhmat lang nil false]))])
+           (if (:per-hakukohde child)
+            [per-question-wrapper child lang application hakukohteet-and-ryhmat]
+            [field child application hakukohteet-and-ryhmat lang nil false])))])
 
 (defn row-container [_ _ _ _ group-idx person-info-field?]
   (fn [application hakukohteet-and-ryhmat lang children]
@@ -382,29 +387,35 @@
         clojure.string/lower-case
         keyword)))
 
+(defn- per-question-wrapper
+  [question lang application hakukohteet-and-ryhmat]
+  (let [selected-hakukohteet (get-in application [:answers :hakukohteet :value])]
+    [:div.readonly__per-question-wrapper
+     [:div.application__form-field-label.application__form-field__original-question
+      [:span
+       (from-multi-lang (:label question) lang)]]
+     (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
+                                 (map #(-> question
+                                           (dissoc :per-hakukohde)
+                                           (assoc :id (:key %)
+                                                  :original-question (:original-question %)
+                                                  :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %))
+                                           (hsq/change-followups-for-question (:duplikoitu-kysymys-hakukohde-oid %)))
+                                      (filter #(= (:original-question %) (:id question)) (vals (:answers application)))))]
+       ^{:key (str "duplicate-" (:id duplicate-field))}
+       [:section
+        [:div.application__per-hakukohde.application__form-field
+         (str @(subscribe [:application/hakukohde-label (:duplikoitu-kysymys-hakukohde-oid duplicate-field)]) " ")]
+        [selectable duplicate-field application hakukohteet-and-ryhmat lang nil]])]))
+
 (defn readonly-fields [form application hakukohteet]
   (when form
     (let [lang (or (:selected-language form)                ; languages is set to form in the applicant side
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
-          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)
-          selected-hakukohteet (get-in application [:answers :hakukohteet :value])]
+          hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
       (into [:div.application__readonly-container]
-        (for [content (:content form)]
-          (if (:per-hakukohde content)
-            [:div.readonly__per-question-wrapper
-             [:div.application__form-field-label.application__form-field__original-question
-              [:span
-               (from-multi-lang (:label content) lang)]]
-             (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)(map #(-> content
-                                         (dissoc :per-hakukohde)
-                                         (assoc :id (:key %)
-                                                :original-question (:original-question %)
-                                                :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %)))
-                                        (filter #(= (:original-question %) (:id content)) (vals (:answers application)))))]
-               ^{:key (str "duplicate-" (:id duplicate-field))}
-               [:section
-                [:div.application__per-hakukohde.application__form-field
-                 (str @(subscribe [:application/hakukohde-label (:duplikoitu-kysymys-hakukohde-oid duplicate-field)]) " ")]
-                [selectable duplicate-field application hakukohteet-and-ryhmat lang nil]])]
-          [field content application hakukohteet-and-ryhmat lang nil]))))))
+        (for [question (:content form)]
+          (if (:per-hakukohde question)
+            [per-question-wrapper question lang application hakukohteet-and-ryhmat]
+          [field question application hakukohteet-and-ryhmat lang nil]))))))

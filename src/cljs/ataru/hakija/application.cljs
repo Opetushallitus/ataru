@@ -251,7 +251,9 @@
                                                  (sort (comp - compare))
                                                  (first))
            original-question (:original-question field-descriptor)
-           duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid field-descriptor)]
+           original-followup (:original-followup field-descriptor)
+           duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid field-descriptor)
+           duplikoitu-followup-hakukohde-oid (:duplikoitu-followup-hakukohde-oid field-descriptor)]
           :when
           (and (or (= :birth-date ans-key)
                    (= :gender ans-key)
@@ -267,7 +269,9 @@
          :fieldType (:fieldType field-descriptor)
          :label     (:label field-descriptor)}
         (some? original-question) (assoc :original-question original-question)
-        (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)))))
+        (some? original-followup) (assoc :original-followup original-followup)
+        (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
+        (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 
 (defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits?]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]

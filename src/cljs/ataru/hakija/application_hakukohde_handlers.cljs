@@ -4,7 +4,6 @@
     [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
     [ataru.util :as util]
     [ataru.hakija.handlers-util :as handlers-util]
-    [ataru.application_common.comparators :as comparators]
     [ataru.hakija.application-handlers :refer [set-field-visibilities
                                                set-validator-processing
                                                check-schema-interceptor]]))
@@ -61,7 +60,7 @@
 (reg-event-fx
   :application/hakukohde-query-change
   [check-schema-interceptor]
-  (fn [{db :db} [_ hakukohde-query-atom]]
+  (fn [{_db :db} [_ hakukohde-query-atom]]
     {:dispatch-debounced {:timeout  500
                           :id       :hakukohde-query
                           :dispatch [:application/hakukohde-query-process hakukohde-query-atom]}}))
@@ -96,7 +95,7 @@
                           :field-descriptor             (hakukohteet-field db)
                           :editing?                     (get-in db [:application :editing?])
                           :virkailija?                  (contains? (:application db) :virkailija-secret)
-                          :on-validated                 (fn [[valid? errors]]
+                          :on-validated                 (fn [[valid? _errors]]
                                                           (dispatch [:application/set-hakukohde-valid
                                                                      valid?]))}}))
 
@@ -105,8 +104,9 @@
   (fn [{db :db} [_ hakukohde-oid]]
     (let [questions (get-in db [:form :content])
           selected-hakukohteet (get-in db [:application :answers :hakukohteet :value])
-          update-questions (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
-                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde db hakukohde-oid) [] questions))
+          tarjonta-hakukohteet (get-in db [:form :tarjonta :hakukohteet])
+          update-questions (handlers-util/sort-questions-and-first-level-children selected-hakukohteet
+                            (reduce (partial handlers-util/duplicate-questions-for-hakukohde tarjonta-hakukohteet hakukohde-oid) [] questions))
           updated-answers (handlers-util/fill-missing-answer-for-hakukohde (get-in db [:application :answers]) update-questions)
           flat-form-content (util/flatten-form-fields update-questions)]
       {:db (-> db
@@ -140,12 +140,22 @@
 
 (defn- remove-question-duplicates-with-hakukohde
   [hakukohde-oid questions]
-  (filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid) questions))
+  (let [filterfn (partial filter #(not= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
+        remove-duplicate-children (fn [question]
+                                    (if (seq (:children question))
+                                      (assoc question :children (filterfn (:children question)))
+                                      question))]
+    (->> questions
+        (filterfn)
+        (map remove-duplicate-children))))
 
 (defn- remove-duplicates-with-hakukohde
   [m questions hakukohde-oid]
   (let [duplicate-question-ids (->> questions
-                                    (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid))
+                                    (util/flatten-form-fields)
+                                    (filter #(or
+                                               (= (:duplikoitu-kysymys-hakukohde-oid %) hakukohde-oid)
+                                               (= (:duplikoitu-followup-hakukohde-oid %) hakukohde-oid)))
                                     (map #(keyword (:id %))))]
     (apply dissoc m duplicate-question-ids )))
 
@@ -173,8 +183,7 @@
   :application/hakukohde-remove
   [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid]]
-    (let [field-descriptor     (hakukohteet-field db)
-          selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
+    (let [selected-hakukohteet (get-in db [:application :answers :hakukohteet :values] [])
           new-hakukohde-values (vec (remove #(= hakukohde-oid (:value %)) selected-hakukohteet))
           db                   (-> db
                                    (assoc-in [:application :answers :hakukohteet :values]

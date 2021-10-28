@@ -63,7 +63,9 @@
           :value     ""
           :fieldType "textField"
           :original-question nil
-          :duplikoitu-kysymys-hakukohde-oid nil}
+          :duplikoitu-kysymys-hakukohde-oid nil
+          :original-followup nil
+          :duplikoitu-followup-hakukohde-oid nil}
          with-properties))
 
 (describe "get application answers:"
