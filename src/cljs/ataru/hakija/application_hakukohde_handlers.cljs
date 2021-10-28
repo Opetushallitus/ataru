@@ -72,7 +72,7 @@
 (reg-event-fx
   :application/hakukohde-query-change
   [check-schema-interceptor]
-  (fn [{db :db} [_ hakukohde-query-atom idx]]
+  (fn [{_db :db} [_ hakukohde-query-atom idx]]
     {:dispatch-debounced {:timeout  500
                           :id       :hakukohde-query
                           :dispatch [:application/hakukohde-query-process
@@ -132,6 +132,7 @@
   :application/hakukohde-clear-selection
   (fn [{db :db} [_ idx]]
     (let [selected-hakukohteet (vec (get-in db [:application :answers :hakukohteet :values]))
+          hakukohde-oid (get-in selected-hakukohteet [idx :value])
           updated-hakukohteet (assoc selected-hakukohteet idx {:valid false :value ""})
           updated-db (-> db
                          (assoc-in [:application :answers :hakukohteet :values]
@@ -139,8 +140,9 @@
                          (assoc-in [:application :answers :hakukohteet :value]
                                    (mapv :value updated-hakukohteet))
                          set-field-visibilities)]
-      {:db updated-db
-       :dispatch [:application/validate-hakukohteet]})))
+      {:db         updated-db
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
 
 (reg-event-db
   :application/set-active-hakukohde-search
@@ -174,11 +176,12 @@
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
                                    set-field-visibilities)]
-      {:db                 (cond-> db
-                                   (and (some? max-hakukohteet)
-                                        (<= max-hakukohteet (count new-hakukohde-values)))
-                                   (assoc-in [:application :show-hakukohde-search] false))
-       :dispatch [:application/validate-hakukohteet]})))
+      {:db         (cond-> db
+                     (and (some? max-hakukohteet)
+                       (<= max-hakukohteet (count new-hakukohde-values)))
+                     (assoc-in [:application :show-hakukohde-search] false))
+       :dispatch-n [[:application/validate-hakukohteet]
+                    [:application/create-questions-per-hakukohde hakukohde-oid]]})))
 
 (reg-event-fx
   :application/hakukohde-add-selection
@@ -279,6 +282,7 @@
     (let [selected-hakukohteet (-> db
                                    (get-in [:application :answers :hakukohteet :values] [])
                                    vec) ;; Need to be vec because of subvec
+          hakukohde-oid        (get-in selected-hakukohteet [idx :value])
           new-hakukohde-values (vec (concat
                                       (subvec selected-hakukohteet 0 idx)
                                       (subvec selected-hakukohteet (inc idx))))
@@ -290,7 +294,8 @@
                                    set-field-visibilities)]
       {:db       db
        :dispatch-n [[:application/validate-hakukohteet]
-                    [:application/remove-koulutustyyppi-filter idx]]})))
+                    [:application/remove-koulutustyyppi-filter idx]
+                    [:application/remove-questions-per-hakukohde hakukohde-oid]]})))
 
 (reg-event-fx
   :application/hakukohde-remove-selection
