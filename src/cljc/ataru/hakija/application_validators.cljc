@@ -79,31 +79,45 @@
             [true []]))))
 
 (defn- email?
-  [{:keys [has-applied answers-by-key field-descriptor]}]
-  (let [multiple?      (get-in field-descriptor [:params :can-submit-multiple-applications] true)
-        haku-oid       (get-in field-descriptor [:params :haku-oid])
-        this-answer    (get answers-by-key (keyword (:id field-descriptor)))
-        preferred-name (:preferred-name answers-by-key)
-        original-value (:original-value this-answer)
-        modifying?     (some? original-value)
-        value          (:value this-answer)
-        verify-value   (:verify this-answer)]
-    (async/go
-      (cond (or (not (email/email? value))
-                (and verify-value
-                     (not= verify-value value)))
-            [false []]
-            (and modifying? (= value original-value))
-            [true []]
-            (and (not multiple?)
-                 (async/<! (has-applied haku-oid {:email value})))
-            [false
-             [((if modifying?
-                 texts/email-applied-error-when-modifying
-                 texts/email-applied-error) value (when (:valid preferred-name)
-                                                    (:value preferred-name)))]]
-            :else
-            [true []]))))
+  ([{:keys [has-applied answers-by-key field-descriptor]}]
+    (email? has-applied answers-by-key field-descriptor))
+  ([has-applied answers-by-key field-descriptor]
+    (let [multiple?      (get-in field-descriptor [:params :can-submit-multiple-applications] true)
+          haku-oid       (get-in field-descriptor [:params :haku-oid])
+          this-answer    (get answers-by-key (keyword (:id field-descriptor)))
+          preferred-name (:preferred-name answers-by-key)
+          original-value (:original-value this-answer)
+          modifying?     (some? original-value)
+          value          (:value this-answer)
+          verify-value   (:verify this-answer)]
+      (async/go
+        (cond (or (not (email/email? value))
+                  (and verify-value
+                       (not= verify-value value)))
+              [false []]
+              (and modifying? (= value original-value))
+              [true []]
+              (and (not multiple?)
+                   (async/<! (has-applied haku-oid {:email value})))
+              [false
+               [((if modifying?
+                   texts/email-applied-error-when-modifying
+                   texts/email-applied-error) value (when (:valid preferred-name)
+                                                      (:value preferred-name)))]]
+              :else
+              [true []])))))
+
+(defn- email-optional?
+  [{:keys [value has-applied answers-by-key field-descriptor]}]
+  (let [this-answer  (get answers-by-key (keyword (:id field-descriptor)))
+        verify (:verify this-answer)]
+    (cond
+      (and (clojure.string/blank? value) (clojure.string/blank? verify))
+      (async/go [true []])
+      (not= verify value)
+      (async/go [false []])
+      :else
+      (email? has-applied answers-by-key field-descriptor))))
 
 (defn- email-simple?
   [{:keys [value]}]
@@ -294,7 +308,8 @@
 
 (def async-validators {:selection-limit selection-limit?
                        :ssn ssn?
-                       :email email?})
+                       :email email?
+                       :email-optional email-optional?})
 
 (defn validate
   [{:keys [validator] :as params}]
