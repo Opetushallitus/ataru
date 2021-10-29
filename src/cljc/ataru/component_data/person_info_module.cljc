@@ -171,7 +171,7 @@
 
 (defn ^:private email-optional-component
   [metadata]
-  (text-field (:email person-info-module-texts) :id :email :metadata metadata :validators []))
+  (text-field (:email person-info-module-texts) :id :email :metadata metadata :validators [:email-optional]))
 
 (defn ^:private phone-component
   [metadata]
