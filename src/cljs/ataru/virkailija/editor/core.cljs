@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.core
   (:require [ataru.virkailija.editor.component :as ec]
             [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
+            [ataru.virkailija.editor.components.modal-info-element :as mie]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
@@ -65,6 +66,9 @@
 
                    {:fieldClass "infoElement"}
                    [ec/info-element content path]
+
+                   {:fieldClass "modalInfoElement"}
+                   [mie/modal-info-element content path]
 
                    {:fieldClass "formField"
                     :fieldType  "singleChoice"}

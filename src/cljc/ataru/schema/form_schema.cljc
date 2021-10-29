@@ -4,6 +4,7 @@
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
             [ataru.schema.info-element-schema :as info-element-schema]
+            [ataru.schema.modal-info-element-schema :as modal-info-element-schema]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -92,6 +93,7 @@
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
+   #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
    :else info-element-schema/InfoElement))
 
 (s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])

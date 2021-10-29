@@ -92,7 +92,7 @@
 
 (re-frame/reg-event-fx
   :hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
-  (fn [{db :db} [_ application-key]]
+  (fn [{db :db} [_ application-key hakukohde-oids]]
       (let [rights (->> (get-in db [:application :selected-application-and-form :application :rights-by-hakukohde])
                         (map second)
                         (apply set/union))]

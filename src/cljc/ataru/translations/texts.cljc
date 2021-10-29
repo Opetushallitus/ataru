@@ -1391,6 +1391,9 @@
    :info-element                                    {:fi "Infoteksti"
                                                      :sv "Infotext"
                                                      :en "Info element"}
+   :modal-info-element                              {:fi "Infoteksti, koko ruutu"
+                                                     :sv "SV: Infoteksti, koko ruutu"
+                                                     :en "EN: Infoteksti, koko ruutu"}
    :information-request-sent                        {:fi "Täydennyspyyntö lähetetty"
                                                      :sv "Begäran om komplettering har skickats"
                                                      :en "Information request email has been sent"}
@@ -1986,7 +1989,10 @@
                                                      :en "EN: vastausvaihtoehtoa valittu"}
    :prevent-submission                              {:fi "Valinta estää hakemuksen lähettämisen"
                                                      :sv "SV: Valinta estää hakemuksen lähettämisen"
-                                                     :en "EN: Valinta estää hakemuksen lähettämisen"}})
+                                                     :en "EN: Valinta estää hakemuksen lähettämisen"}
+   :button-text                                     {:fi "Painikkeen teksti"
+                                                     :sv "SV: Painikkeen teksti"
+                                                     :en "EN: Painikkeen teksti"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
