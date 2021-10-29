@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
+            [ataru.application-common.application-field-common :refer [markdown-paragraph]]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
@@ -7,7 +8,8 @@
             [re-frame.core :refer [subscribe dispatch]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [ataru.util :as util]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -225,6 +227,34 @@
          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
          (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden? demo?])]))))
 
+(defn- modal-info-element-overlay-inner
+  [field]
+  (let [modal-hidden (r/atom false)]
+    (fn []
+      (let [languages              (subscribe [:application/default-languages])
+            application-identifier (subscribe [:application/application-identifier])
+            header                 (util/non-blank-val (:label field) @languages)
+            text                   (util/non-blank-val (:text field) @languages)
+            button-text            (util/non-blank-val (:button-text field) @languages)]
+        (when (and field (not @modal-hidden))
+          [:div.application__submitted-overlay
+           [:div.application__submitted-submit-notification
+            [:div.application__submitted-submit-notification-inner
+             [:h1.application__submitted-submit-notification-heading
+              (when (not-empty header)
+                header)]]
+            [:div.application__submitted-submit-notification-inner
+             [markdown-paragraph text (-> field :params :info-text-collapse) @application-identifier]]
+            [:div.application__submitted-submit-notification-inner
+             [:button.application__send-feedback-button.application__send-feedback-button--enabled
+              {:on-click #(reset! modal-hidden true)}
+              button-text]]]])))))
+
+(defn- modal-info-element-overlay
+  []
+  (when-let [field @(subscribe [:application/first-visible-modal-info-element])]
+    [modal-info-element-overlay-inner field]))
+
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])
         lang       (subscribe [:application/form-language])]
@@ -259,4 +289,5 @@
    [error-display]
    [application-contents]
    [submitted-overlay]
-   [demo-overlay]])
+   [demo-overlay]
+   [modal-info-element-overlay]])

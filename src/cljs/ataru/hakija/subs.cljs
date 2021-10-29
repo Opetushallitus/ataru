@@ -805,3 +805,22 @@
   :application/demo?
   (fn [db]
     (demo/demo? db)))
+
+(re-frame/reg-sub
+  :application/modal-info-elements
+  (fn [_ _]
+    (re-frame/subscribe [:application/flat-form-content]))
+  (fn [questions _]
+    (filter #(= "modalInfoElement" (:fieldClass %)) questions)))
+
+(re-frame/reg-sub
+  :application/first-visible-modal-info-element
+  (fn [_ _]
+    (re-frame/subscribe [:application/modal-info-elements]))
+  (fn [modal-info-elements _]
+    (first
+      (for [element modal-info-elements
+            :let [id      (:id element)
+                  visible @(re-frame/subscribe [:application/visible? id])]
+            :when visible]
+        element))))

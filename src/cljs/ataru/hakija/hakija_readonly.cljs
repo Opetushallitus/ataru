@@ -282,6 +282,7 @@
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "pohjakoulutusristiriita"} nil
          {:fieldClass "infoElement"} nil
+         {:fieldClass "modalInfoElement"} nil
          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable field-descriptor application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text field-descriptor application lang question-group-index]

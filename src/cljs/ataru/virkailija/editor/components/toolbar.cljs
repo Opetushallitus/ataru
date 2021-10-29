@@ -29,6 +29,7 @@
    [:attachment component/attachment]
    [:question-group component/question-group]
    [:info-element component/info-element]
+   [:modal-info-element component/modal-info-element]
    [:base-education-module base-education-module/module]
    [:kk-base-education-module kk-base-education-module/module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
@@ -47,6 +48,7 @@
     :multiple-choice
     :multiple-choice-koodisto
     :info-element
+    :modal-info-element
     :attachment
     :adjacent-fieldset
     :question-group})
@@ -61,6 +63,7 @@
     :multiple-choice
     :multiple-choice-koodisto
     :info-element
+    :modal-info-element
     :attachment
     :adjacent-fieldset})
 
