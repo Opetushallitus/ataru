@@ -304,6 +304,11 @@
                  (or (nil? max-value)
                      (lte value max-value)))))))
 
+(defn- invalid-values
+  [{:keys [value field-descriptor]}]
+  (let [invalid-values (get-in field-descriptor [:params :invalid-values])]
+    (not (contains? (set invalid-values) value))))
+
 (def pure-validators {:required                       required?
                       :required-valinnainen-oppimaara required-valinnainen-oppimaara
                       :required-hakija                required-hakija?
@@ -317,7 +322,8 @@
                       :city                           city?
                       :hakukohteet                    hakukohteet?
                       :numeric                        numeric?
-                      :email-simple                   email-simple?})
+                      :email-simple                   email-simple?
+                      :invalid-values                 invalid-values})
 
 (def async-validators {:selection-limit selection-limit?
                        :ssn ssn?

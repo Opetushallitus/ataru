@@ -100,6 +100,13 @@
     (get-in component (rest (flatten path)))))
 
 (re-frame/reg-sub
+  :editor/get-component-param
+  (fn [[_ _ & path] _]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ param & _]]
+    (get-in component [:params param])))
+
+(re-frame/reg-sub
   :editor/is-per-hakukohde-allowed
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
@@ -519,3 +526,15 @@
     (-> db
       (get-in [:editor :today])
       (time-coerce/from-date))))
+
+(re-frame/reg-sub
+  :editor/invalid-option-validator-present?
+  (fn [[_ & option-path] _]
+    (let [parent-path (pop (pop (into [] (flatten option-path))))]
+      [(re-frame/subscribe [:editor/has-validator? "invalid-values" parent-path])
+       (re-frame/subscribe [:editor/get-component-param :invalid-values parent-path])
+       (re-frame/subscribe [:editor/get-component-value option-path])]))
+  (fn [[parent-has-validator invalid-values option-component]]
+    (and
+      parent-has-validator
+      (contains? (set invalid-values) (:value option-component)))))
