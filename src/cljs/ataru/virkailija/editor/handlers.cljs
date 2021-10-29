@@ -1338,3 +1338,21 @@
   (fn [db _]
     (let [form-path (db/current-form-properties-path db [:auto-expand-hakukohteet])]
       (update-in db form-path not))))
+
+(reg-event-fx
+  :editor/add-invalid-value-validator
+  (fn [{db :db} [_ option-value parent-path]]
+    {:dispatch [:editor/add-validator "invalid-values" parent-path]
+     :db (update-in
+           db
+           (current-form-content-path db [parent-path :params :invalid-values])
+           #(conj % option-value))}))
+
+(reg-event-fx
+  :editor/remove-invalid-value-validator
+  (fn [{db :db} [_ option-value parent-path]]
+    {:dispatch [:editor/remove-validator "invalid-values" parent-path]
+     :db       (update-in
+                 db
+                 (current-form-content-path db [parent-path :params :invalid-values])
+                 #(filter (partial not= option-value) %))}))
