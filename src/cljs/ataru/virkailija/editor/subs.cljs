@@ -351,10 +351,10 @@
 (re-frame/reg-sub
   :editor/dropdown-with-selection-limit?
   (fn [[_ & path] _]
-    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
-  (fn get-component-value [component [_ & path]]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ & path]]
     (and
-     (= (:fieldType (get-in component (rest (flatten path)))) "singleChoice")
+     (= (:fieldType component) "singleChoice")
      (not
        (loop [part (butlast (rest (flatten path)))]
          (if-let [parent (get-in component part)]
@@ -364,11 +364,18 @@
                (recur (butlast part))))))))))
 
 (re-frame/reg-sub
+  :editor/has-validator?
+  (fn [[_ _ & path] _]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ validator & _]]
+    (contains? (set (:validators component)) validator)))
+
+(re-frame/reg-sub
   :editor/selection-limit?
   (fn [[_ & path] _]
-    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
-  (fn get-component-value [component [_ & path]]
-    (contains? (set (:validators (get-in component (rest (flatten path))))) "selection-limit")))
+    (re-frame/subscribe [:editor/has-validator? "selection-limit" path]))
+  (fn [has-validator _]
+    has-validator))
 
 (re-frame/reg-sub
   :editor/this-form-locked?
