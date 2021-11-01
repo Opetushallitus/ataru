@@ -309,20 +309,24 @@
   :application/change-hakukohde-priority
   [check-schema-interceptor]
   (fn [{db :db} [_ hakukohde-oid index-change original-index]]
-    (let [hakukohteet     (-> db :application :answers :hakukohteet :values vec)
-          current-index   (if hakukohde-oid
-                            (first (keep-indexed #(when (= hakukohde-oid (:value %2))
-                                                  %1)
-                                   hakukohteet))
-                            original-index)
-          new-index       (+ current-index index-change)
-          new-hakukohteet (assoc hakukohteet
-                            current-index (nth hakukohteet new-index)
-                            new-index (nth hakukohteet current-index))
-          db              (-> db
-                              (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
-                              (assoc-in [:application :answers :hakukohteet :value] (mapv :value new-hakukohteet)))]
-      {:db                 db
+    (let [hakukohteet          (-> db :application :answers :hakukohteet :values vec)
+          current-index        (if hakukohde-oid
+                                 (first (keep-indexed #(when (= hakukohde-oid (:value %2))
+                                                         %1)
+                                          hakukohteet))
+                                 original-index)
+          new-index            (+ current-index index-change)
+          new-hakukohteet      (assoc hakukohteet
+                                 current-index (nth hakukohteet new-index)
+                                 new-index (nth hakukohteet current-index))
+          new-hakukohteet-oids (mapv :value new-hakukohteet)
+          questions            (get-in db [:form :content])
+          sorted-questions     (handlers-util/sort-questions-and-first-level-children new-hakukohteet-oids questions)
+          db                   (-> db
+                                 (assoc-in [:application :answers :hakukohteet :values] new-hakukohteet)
+                                 (assoc-in [:application :answers :hakukohteet :value] new-hakukohteet-oids)
+                                 (assoc-in [:form :content] sorted-questions))]
+      {:db         db
        :dispatch-n [[:application/validate-hakukohteet]
                     [:application/change-koulutustyyppi-filter-priority current-index index-change]]})))
 
