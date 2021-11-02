@@ -427,13 +427,17 @@
           expect(
             formComponents()
               .eq(3)
-              .find('.editor-form__multi-options-container input')
+              .find(
+                '.editor-form__multi-options-container input.editor-form__text-field'
+              )
               .not('.editor-form__followup-question-overlay input').length
           ).to.equal(4)
           const options = _.map(
             formComponents()
               .eq(3)
-              .find('.editor-form__multi-options-container input')
+              .find(
+                '.editor-form__multi-options-container input.editor-form__text-field'
+              )
               .not('.editor-form__followup-question-overlay input'),
             (inputField) => $(inputField).val()
           )
