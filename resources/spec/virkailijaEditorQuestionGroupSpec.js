@@ -248,6 +248,7 @@
             'Liitepyyntö',
             'Kysymysryhmä',
             'Infoteksti',
+            'Infoteksti, koko ruutu',
           ])
         })
       })
@@ -309,6 +310,7 @@
             'Vierekkäiset tekstikentät',
             'Liitepyyntö',
             'Infoteksti',
+            'Infoteksti, koko ruutu',
           ])
         })
       })
