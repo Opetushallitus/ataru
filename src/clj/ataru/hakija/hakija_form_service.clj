@@ -19,7 +19,8 @@
             [ataru.schema.form-schema :as form-schema]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
-            [ataru.util :as util :refer [assoc?]]))
+            [ataru.util :as util :refer [assoc?]]
+            [taoensso.timbre :as log]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -229,13 +230,14 @@
                        hakukohteet
                        application-in-processing-state?
                        field-deadlines)]
-    (when (and (some? form) (some? tarjonta-info))
+    (if (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
           (assoc? :priorisoivat-hakukohderyhmat priorisoivat)
           (assoc? :rajaavat-hakukohderyhmat rajaavat)
           (populate-hakukohde-answer-options tarjonta-info)
-          (populate-can-submit-multiple-applications tarjonta-info)))))
+          (populate-can-submit-multiple-applications tarjonta-info))
+      (log/warn "Form (id: " id ", haku-oid: " haku-oid ", hakukohteet: " hakukohteet ") cannot be fetched. Possible reason can be missing hakukohteet."))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid :- s/Any
   [form-by-id-cache :- s/Any
