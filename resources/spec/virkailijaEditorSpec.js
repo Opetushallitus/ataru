@@ -38,10 +38,12 @@
   }
 
   const clickLomakeForEdit = (name) =>
-    clickElement(() =>
-      formListItems().find(
-        '.editor-form__list-form-name:contains("' + name + '")'
-      )
+    clickElement(
+      () =>
+        formListItems().find(
+          '.editor-form__list-form-name:contains("' + name + '")'
+        ),
+      'clickLomakeForEdit: ' + name
     )
 
   const clickCopyFormComponent = (name) => () => {
