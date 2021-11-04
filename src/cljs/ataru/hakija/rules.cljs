@@ -5,7 +5,9 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.date :as date]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.hakija.form-tools :as form-tools]
+            [ataru.hakija.application-validators :as validators])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -61,6 +63,32 @@
                      (update-in [:application :answers id] set-empty-validity cannot-view? valid?))))
      db)))
 
+(defn- toggle-require-field
+  [db id required?]
+  (println "FIELD " (form-tools/get-field-from-content db id))
+  (if-let [field (form-tools/get-field-from-content db id)]
+    (let [remove-required (fn [validators] (filter #(not= "required" %) validators))
+          add-required (fn [validators] (conj validators "required"))
+          fn-to-use (if required?
+                      add-required
+                      remove-required)
+          modified-validators (-> (:validators field)
+                                  (fn-to-use)
+                                  (distinct))
+          updated-field (assoc field :validators modified-validators)]
+        (println "Modified validators: " modified-validators)
+        (println "Updated field" updated-field)
+        (as-> db db'
+              (form-tools/update-field-in-db db' updated-field)
+              (let [answer (get-in db [:application :answers (keyword id)])]
+                (cond
+                  (and required? (blank-value? (:value answer)))
+                  (assoc-in db' [:application :answers (keyword id) :valid] false)
+
+                  (and (not required?) (blank-value? (:value answer)))
+                  (assoc-in db' [:application :answers (keyword id) :valid] true)))))
+    db))
+
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
   [db]
@@ -86,6 +114,15 @@
     (if (= "true" have-finnish-ssn)
       (show-field db :ssn)
       (hide-field db :ssn))))
+
+(defn- optional-email
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (if (some? (form-tools/get-field-from-flat-form-content db "onr-2nd"))
+    (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
+          is-required-needed (not= "true" have-finnish-ssn)]
+      (toggle-require-field db "email" is-required-needed))
+    db))
 
 (defn- parse-birth-date-from-ssn
   [ssn]
@@ -232,6 +269,7 @@
   (-> db
       have-finnish-ssn
       ssn
+      optional-email
       passport-number
       national-id-number
       birthplace
@@ -243,6 +281,7 @@
   (-> db
       have-finnish-ssn
       ssn
+      optional-email
       passport-number
       national-id-number
       birthplace

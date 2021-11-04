@@ -110,12 +110,24 @@
 (defn- email-optional?
   [{:keys [value has-applied answers-by-key field-descriptor]}]
   (let [this-answer  (get answers-by-key (keyword (:id field-descriptor)))
-        verify (:verify this-answer)]
+        verify (:verify this-answer)
+        have-finnish-ssn? (= "true" (:value (get answers-by-key (keyword :have-finnish-ssn))))]
     (cond
-      (and (clojure.string/blank? value) (clojure.string/blank? verify))
+      (and
+        (clojure.string/blank? value)
+        (clojure.string/blank? verify)
+        have-finnish-ssn?)
       (async/go [true []])
+
+      (and
+        (clojure.string/blank? value)
+        (clojure.string/blank? verify)
+        (not have-finnish-ssn?))
+      (async/go [false []])
+
       (not= verify value)
       (async/go [false []])
+
       :else
       (email? has-applied answers-by-key field-descriptor))))
 
