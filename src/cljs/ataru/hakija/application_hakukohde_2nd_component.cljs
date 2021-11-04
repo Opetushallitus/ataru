@@ -49,7 +49,7 @@
             (for [{uri :uri :as koulutustyyppi} @koulutustyypit]
               (let [is-selected (boolean (koulutustyypit-filters' uri))
                     on-select #(dispatch [:application/toggle-koulutustyyppi-filter idx uri])
-                    label (u/non-blank-val (:label koulutustyyppi) [lang :fi :sv :en])]
+                    label (u/non-blank-val (:label koulutustyyppi) [@lang :fi :sv :en])]
                 ^{:key uri}
                 [koulutustyyppi-filter-row label is-selected on-select]))])]))))
 
