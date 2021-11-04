@@ -237,18 +237,15 @@
             text                   (util/non-blank-val (:text field) @languages)
             button-text            (util/non-blank-val (:button-text field) @languages)]
         (when (and field (not @modal-hidden))
-          [:div.application__submitted-overlay
-           [:div.application__submitted-submit-notification
-            [:div.application__submitted-submit-notification-inner
-             [:h1.application__submitted-submit-notification-heading
-              (when (not-empty header)
-                header)]]
-            [:div.application__submitted-submit-notification-inner
-             [markdown-paragraph text (-> field :params :info-text-collapse) @application-identifier]]
-            [:div.application__submitted-submit-notification-inner
-             [:button.application__send-feedback-button.application__send-feedback-button--enabled
-              {:on-click #(reset! modal-hidden true)}
-              button-text]]]])))))
+          [:div.application__notification-overlay
+           [:div.application__notification-container
+            [:h1.application__notification-title
+             (when (not-empty header)
+               header)]
+            [markdown-paragraph text (-> field :params :info-text-collapse) @application-identifier]
+            [:button.application__notification-button.application__notification-button--enabled
+             {:on-click #(reset! modal-hidden true)}
+             button-text]]])))))
 
 (defn- modal-info-element-overlay
   []
