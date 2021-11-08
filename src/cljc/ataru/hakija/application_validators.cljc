@@ -111,21 +111,22 @@
   [{:keys [value has-applied answers-by-key field-descriptor]}]
   (let [this-answer  (get answers-by-key (keyword (:id field-descriptor)))
         verify (:verify this-answer)
-        have-finnish-ssn? (= "true" (:value (get answers-by-key (keyword :have-finnish-ssn))))]
+        have-ssn? (not (clojure.string/blank? (:value (get answers-by-key (keyword :ssn)))))]
     (cond
       (and
         (clojure.string/blank? value)
         (clojure.string/blank? verify)
-        have-finnish-ssn?)
+        have-ssn?)
       (async/go [true []])
 
       (and
         (clojure.string/blank? value)
         (clojure.string/blank? verify)
-        (not have-finnish-ssn?))
+        (not have-ssn?))
       (async/go [false []])
 
-      (not= verify value)
+      (and verify
+           (not= verify value))
       (async/go [false []])
 
       :else
