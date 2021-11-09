@@ -18,11 +18,11 @@
             [clj-time.core :as t]
             [clojure.java.jdbc :as jdbc]
             [clojure.set]
-            [clojure.string]
             [markdown.core :as md]
             [medley.core :refer [find-first]]
             [selmer.parser :as selmer]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [clojure.string :as string])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages #{:fi :sv :en})
@@ -86,7 +86,7 @@
                                     (set (:hakukohde application))
                                     (set (map :oid hakukohteet))))]
         (throw (new RuntimeException
-                    (str "Hakukohteet " (clojure.string/join ", " missing-oids)
+                    (str "Hakukohteet " (string/join ", " missing-oids)
                          " not found"))))
       (map-indexed (fn [i {:keys [name tarjoaja-name]}]
                      (str (when (:prioritize-hakukohteet tarjonta-info)
@@ -190,6 +190,7 @@
          minor?                          (date/minor? (get-in answers-by-key [:birth-date :value]))
          applier-recipients              (->> (:answers application)
                                               (filter #(= "email" (:key %)))
+                                              (filter #(not (string/blank? (:value %))))
                                               (map :value))
          guardian-recipients             (when (and minor? guardian?)
                                            (->> (:answers application)
