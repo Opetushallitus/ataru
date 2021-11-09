@@ -6,8 +6,7 @@
             [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.date :as date]
             [clojure.string :as string]
-            [ataru.hakija.form-tools :as form-tools]
-            [ataru.hakija.application-validators :as validators])
+            [ataru.hakija.form-tools :as form-tools])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -65,7 +64,6 @@
 
 (defn- toggle-require-field
   [db id required?]
-  (println "FIELD " (form-tools/get-field-from-content db id))
   (if-let [field (form-tools/get-field-from-content db id)]
     (let [remove-required (fn [validators] (filter #(not= "required" %) validators))
           add-required (fn [validators] (conj validators "required"))
@@ -75,18 +73,21 @@
           modified-validators (-> (:validators field)
                                   (fn-to-use)
                                   (distinct))
-          updated-field (assoc field :validators modified-validators)]
-        (println "Modified validators: " modified-validators)
-        (println "Updated field" updated-field)
-        (as-> db db'
-              (form-tools/update-field-in-db db' updated-field)
-              (let [answer (get-in db [:application :answers (keyword id)])]
-                (cond
-                  (and required? (blank-value? (:value answer)))
-                  (assoc-in db' [:application :answers (keyword id) :valid] false)
+          updated-field (assoc field :validators modified-validators)
+          answer (get-in db [:application :answers (keyword id)])
+          set-validity-if-blank (fn [db]
+                                  (cond
+                                    (and required? (blank-value? (:value answer)))
+                                    (assoc-in db [:application :answers (keyword id) :valid] false)
 
-                  (and (not required?) (blank-value? (:value answer)))
-                  (assoc-in db' [:application :answers (keyword id) :valid] true)))))
+                                    (and (not required?) (blank-value? (:value answer)))
+                                    (assoc-in db [:application :answers (keyword id) :valid] true)
+
+                                    :else
+                                    db))]
+        (-> db
+              (form-tools/update-field-in-db updated-field)
+              (set-validity-if-blank)))
     db))
 
 (defn- have-finnish-ssn
