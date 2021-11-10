@@ -978,7 +978,8 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]]
     (resumable-upload/upload-file
-      "/hakemus/api/files/resumable"
+      "/hakemus/api/files/signed-upload"
+      "/hakemus/api/files/mark-upload-delivered"
       file
       (:id field-descriptor)
       attachment-idx

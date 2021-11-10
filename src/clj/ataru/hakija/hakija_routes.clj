@@ -20,7 +20,6 @@
             [ataru.selection-limit.selection-limit-service :as selection-limit]
             [compojure.api.exception :as ex]
             [compojure.api.sweet :as api]
-            [compojure.api.upload :as upload]
             [ring.swagger.upload]
             [compojure.route :as route]
             [environ.core :refer [env]]
@@ -34,8 +33,10 @@
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
+            [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
-            [string-normalizer.filename-normalizer-middleware :as normalizer]))
+            [string-normalizer.filename-normalizer-middleware :as normalizer])
+  (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
 
@@ -278,41 +279,26 @@
          (:old-secret request))
         (response/ok {})))
     (api/context "/files" []
-      (api/GET "/resumable" []
-        :summary "Check if this part has already been uploaded"
-        :query-params [file-part-number :- s/Int
-                       file-size :- s/Int
-                       file-id :- s/Str
+      (api/GET "/signed-upload" []
+        :summary "Permission to upload"
+        :query-params [file-size :- s/Int
                        file-name :- s/Str]
         :middleware [normalizer/wrap-query-params-filename-normalizer]
-        (let [[exists? next-is-last?] (resumable-file/file-part-exists? temp-file-store file-id file-name file-size file-part-number)]
-          (if exists?
-            (response/ok {:next-is-last next-is-last?})
-            (response/not-found {}))))
-      (api/POST "/resumable" []
-        :summary "Upload file part"
-        :query-params [{file-part-number :- s/Any nil}
-                       {file-size :- s/Any nil}
-                       {file-id :- s/Any nil}
-                       {file-part :- s/Any nil}
-                       {file-name :- s/Any nil}]
-        :multipart-params [file-part :- upload/TempFileUpload
-                           file-part-number :- s/Int
-                           file-size :- s/Int
-                           file-id :- s/Str]
-        :middleware [upload/wrap-multipart-params normalizer/wrap-multipart-filename-normalizer]
-        :return {(s/optional-key :stored-file) ataru-schema/File}
-        (try
-          (let [[status stored-file] (resumable-file/store-file-part! liiteri-cas-client temp-file-store file-id file-size file-part-number file-part)]
-            (log/info "File upload" file-part-number "of" file-size "bytes:" status)
+        (response/ok
+          (let [key (str (UUID/randomUUID))]
+            {:key        key
+             :signed-url (signed-upload/signed-url-for-direct-upload temp-file-store file-name file-size key)})))
+      (api/PUT "/mark-upload-delivered" []
+        :summary "Permission to upload"
+        :query-params [file-id :- s/Str
+                       file-name :- s/Str]
+        :middleware [normalizer/wrap-query-params-filename-normalizer]
+        (let [[status stored-file] (resumable-file/mark-upload-delivered-to-liiteri liiteri-cas-client file-id file-name)]
+            (log/info "Upload delivered" file-name "bytes:" status)
             (case status
-              :send-next (response/ok {})
-              :retransmit (response/conflict {})
               :complete (response/created "" {:stored-file stored-file})
               :bad-request (response/bad-request {})
-              :liiteri-error (response/internal-server-error {})))
-          (finally
-            (io/delete-file (:tempfile file-part) true))))
+              :liiteri-error (response/internal-server-error {}))))
       (api/GET "/:key" []
         :summary "Download a file"
         :path-params [key :- s/Str]
