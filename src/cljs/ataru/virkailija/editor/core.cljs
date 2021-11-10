@@ -1,6 +1,7 @@
 (ns ataru.virkailija.editor.core
   (:require [ataru.virkailija.editor.component :as ec]
             [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
+            [ataru.virkailija.editor.components.dropdown-component :as dc]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
@@ -54,10 +55,10 @@
                    [ec/text-area content followups path]
 
                    {:fieldClass "formField" :fieldType "dropdown"}
-                   [ec/dropdown content followups path args]
+                   [dc/dropdown content followups path args]
 
                    {:fieldClass "formField" :fieldType "multipleChoice"}
-                   [ec/dropdown content followups path args]
+                   [dc/dropdown content followups path args]
 
                    {:fieldClass "pohjakoulutusristiriita"
                     :fieldType  "pohjakoulutusristiriita"}
@@ -68,7 +69,7 @@
 
                    {:fieldClass "formField"
                     :fieldType  "singleChoice"}
-                   [ec/dropdown content followups path args]
+                   [dc/dropdown content followups path args]
 
                    {:fieldClass "formField"
                     :fieldType  "attachment"}
