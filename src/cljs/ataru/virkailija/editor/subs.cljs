@@ -521,6 +521,13 @@
       (time-coerce/from-date))))
 
 (re-frame/reg-sub
+  :editor/visibility-condition-section-name
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (:section-name visibility-condition)))
+
+(re-frame/reg-sub
   :editor/invalid-option-validator-present?
   (fn [[_ & option-path] _]
     (let [parent-path (pop (pop (into [] (flatten option-path))))]
