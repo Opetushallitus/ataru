@@ -72,9 +72,3 @@
     (-> fields
         questions->zipper
         (find-from-fields id))))
-
-(defn get-field-from-fields
-  [fields id]
-  (-> fields
-    questions->zipper
-    (find-from-fields id)))
