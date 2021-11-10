@@ -712,9 +712,17 @@
     (get-in db [:application :active-hakukohde-search])))
 
 (re-frame/reg-sub
-  :application/koulutustyypit
+  :application/koulutustyypit-raw
   (fn [db _]
     (get-in db [:application :koulutustyypit])))
+
+(re-frame/reg-sub
+  :application/koulutustyypit
+  (fn [_ _]
+    [(re-frame/subscribe [:application/koulutustyypit-raw])
+     (re-frame/subscribe [:application/form-language])])
+  (fn [[koulutustyypit language] _]
+    (sort-by (comp language :label) koulutustyypit)))
 
 (re-frame/reg-sub
   :application/hakukohde-koulutustyypit-filters
