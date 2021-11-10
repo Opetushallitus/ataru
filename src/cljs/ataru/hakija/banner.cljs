@@ -3,7 +3,8 @@
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
             [cljs.core.match :refer-macros [match]]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [clojure.string :as string]))
 
 (defn logo []
   (let [lang (subscribe [:application/form-language])]
@@ -43,18 +44,24 @@
 (defn sent-indicator []
   (let [submit-status     (subscribe [:state-query [:application :submit-status]])
         virkailija-secret (subscribe [:state-query [:application :virkailija-secret]])
-        lang              (subscribe [:application/form-language])
-        demo?             (subscribe [:application/demo?])]
+        demo?             (subscribe [:application/demo?])
+        answers           (subscribe [:state-query [:application :answers]])
+        lang              (subscribe [:application/form-language])]
     (fn []
       (match [@submit-status @virkailija-secret]
              [:submitting _]
              [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
 
              [:submitted (_ :guard #(nil? %))]
-             [:div.application__sent-indicator.animated.fadeIn
-              (translations/get-hakija-translation
-                (if @demo? :application-confirmation-demo :application-confirmation)
-                @lang)]
+             (if @demo?
+               [:div.application__sent-indicator.animated.fadeIn
+                (translations/get-hakija-translation :application-confirmation-demo @lang)]
+               (when (-> @answers
+                         (get-in [:email :value])
+                         (string/blank?)
+                         not)
+                 [:div.application__sent-indicator.animated.fadeIn
+                  (translations/get-hakija-translation :application-confirmation @lang)]))
 
              :else nil))))
 
