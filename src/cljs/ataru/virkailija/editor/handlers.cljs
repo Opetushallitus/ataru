@@ -407,7 +407,8 @@
                                  (let [params (assoc? params
                                                       :mail-attachment? mail-attachment?
                                                       :info-text (when mail-attachment?
-                                                                   (assoc (:info-text params) :enabled? true)))]
+                                                                   (assoc (:info-text params) :enabled? true))
+                                                      :fetch-info-from-kouta? (when (not mail-attachment?) false))]
                                    (assoc? field
                                            :params params
                                            :validators (when mail-attachment?
