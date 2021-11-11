@@ -1061,6 +1061,9 @@
    :attachment-info-text                            {:fi "Liitepyyntö sisältää ohjetekstin"
                                                      :sv "Begäran om bilagor innehåller anvisningar"
                                                      :en "EN: Liitepyyntö sisältää ohjetekstin"}
+   :fetch-info-from-kouta                           {:fi "Haetaan osoitetiedot koulutustarjonnasta"
+                                                     :sv "SV: Haetaan osoitetiedot koulutustarjonnasta"
+                                                     :en "EN: Haetaan osoitetiedot koulutustarjonnasta"}
    :mail-attachment-text                            {:fi "Postitettava liitepyyntö"
                                                      :sv "Begäran om bilagor som kan postas"
                                                      :en "EN: Postitettava liitepyyntö"}
