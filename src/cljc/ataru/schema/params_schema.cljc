@@ -22,6 +22,7 @@
                      (s/optional-key :haku-oid)                         s/Str
                      (s/optional-key :placeholder)                      localized-schema/LocalizedString
                      (s/optional-key :mail-attachment?)                 (s/maybe s/Bool)
+                     (s/optional-key :fetch-info-from-kouta?)           (s/maybe s/Bool)
                      (s/optional-key :info-text)                        (s/maybe info-text-schema/InfoText)
                      (s/optional-key :info-text-collapse)               (s/maybe s/Bool)
                      (s/optional-key :invalid-values)                   [s/Str]})

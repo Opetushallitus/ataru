@@ -318,6 +318,7 @@
 (defn attachment-textarea [path]
   (let [checked?         (subscribe [:editor/get-component-value path :params :info-text :enabled?])
         mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        fetch-info-from-kouta? (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
         collapse?        (subscribe [:editor/get-component-value path :params :info-text-collapse])
         languages        (subscribe [:editor/languages])
         component-locked?      (subscribe [:editor/component-locked? path])]
@@ -352,6 +353,22 @@
              {:for   id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :attachment-info-text])]]))
+       (when @mail-attachment?
+         (let [id (util/new-uuid)]
+           [:div.editor-form__info-addon-checkbox
+            [:input {:id        id
+                     :type      "checkbox"
+                     :checked   @fetch-info-from-kouta?
+                     :disabled  @component-locked?
+                     :on-change (fn toggle-attachment-textarea [event]
+                                  (.preventDefault event)
+                                  (let [checked? (.. event -target -checked)]
+                                    (dispatch [:editor/set-component-value checked? path :params :fetch-info-from-kouta?])))}]
+            [:label
+             {:for  id
+              :class (when @component-locked? "editor-form__checkbox-label--disabled")}
+             @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]
+            ]))
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
