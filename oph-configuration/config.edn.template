@@ -16,7 +16,7 @@
                                                            :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
                                                            :user               "{{ataru_tutkintojen_tunnustaminen_ftp_user}}"
                                                            :password           "{{ataru_tutkintojen_tunnustaminen_ftp_password}}"
-                                                           :verify-certificate true
+                                                           :verify-certificate {{ataru_tutkintojen_tunnustaminen_ftp_verify_certificate | default(true)}}
                                                            :path               "{{ataru_tutkintojen_tunnustaminen_ftp_path}}"
                                                            :timeout-seconds    {{ataru_tutkintojen_tunnustaminen_ftp_timeout_seconds | default('300')}}}}
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
