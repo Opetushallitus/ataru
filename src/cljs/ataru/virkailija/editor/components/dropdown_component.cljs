@@ -178,36 +178,26 @@
   [{:keys [path]}]
   (let [component-locked? (subscribe [:editor/component-locked? path])
         id                (util/new-uuid)
-        local-state       (r/atom {:focused? false
-                                   :value    ""})
         dropdown-options  (subscribe [:editor/get-component-value path :options])]
-    (fn [{:keys [condition visibility-condition-index path]}]
-      (let [initialize-state (fn [value]
-                               (swap! local-state
-                                 assoc
-                                 :valid? true
-                                 :value value))]
-        (when (not (:focused? @local-state))
-          (let [value (str (-> condition :answer-compared-to))]
-            (initialize-state value)))
-        [:div.editor-form__text-field-option-condition
-         [:label.editor-form__text-field-option-condition-label
-          {:for   id
-           :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
-          @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
-         [:select.editor-form__text-field-option-condition-comparison-operator
-          {:disabled     @component-locked?
-           :on-change    (fn [event]
-                           (dispatch [:editor/set-visibility-condition-value
-                                      path
-                                      visibility-condition-index
-                                      (get-val event)]))
-           :data-test-id "tekstikenttä-lisäkysymys-arvon-perusteella-ehto-operaattori"}
-          (for [option @dropdown-options
-                :let [value (:value option)
-                      label (:fi (:label option))]]
-            ^{:key (:value option)}
-            [:option {:value value} label])]]))))
+    (fn [{:keys [visibility-condition-index path]}]
+      [:div.editor-form__text-field-option-condition
+       [:label.editor-form__text-field-option-condition-label
+        {:for   id
+         :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
+        @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
+       [:select.editor-form__text-field-option-condition-comparison-operator
+        {:disabled     @component-locked?
+         :on-change    (fn [event]
+                         (dispatch [:editor/set-visibility-condition-value
+                                    path
+                                    visibility-condition-index
+                                    (get-val event)]))
+         :data-test-id "tekstikenttä-lisäkysymys-arvon-perusteella-ehto-operaattori"}
+        (for [option @dropdown-options
+              :let [value (:value option)
+                    label (:fi (:label option))]]
+          ^{:key (:value option)}
+          [:option {:value value} label])]])))
 
 (defn- visibility-condition-section-selector
   [{:keys [path
