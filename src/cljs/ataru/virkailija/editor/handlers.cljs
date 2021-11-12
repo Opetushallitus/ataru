@@ -113,7 +113,11 @@
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (add-section-visibility-condition db path {:condition {:comparison-operator "<"}})))
+    (add-section-visibility-condition
+      db
+      path
+      {:condition {:comparison-operator "<"
+                   :data-type           "int"}})))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-piilotettavan-osion-nimi
@@ -135,7 +139,11 @@
 (reg-event-db
   :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (add-section-visibility-condition db path {:condition {:comparison-operator "="}})))
+    (add-section-visibility-condition
+      db
+      path
+      {:condition {:comparison-operator "="
+                   :data-type           "str"}})))
 
 (reg-event-db
   :editor/remove-visibility-condition

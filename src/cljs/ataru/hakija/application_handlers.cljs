@@ -839,7 +839,8 @@
                                  (field-visibility/set-field-visibility field-descriptor)
                                  (set-validator-processing id))]
       {:db                 db
-       :dispatch           [:application/set-followup-values field-descriptor]
+       :dispatch-n         [[:application/set-followup-values field-descriptor]
+                            [:application/handle-section-visibility-conditions]]
        :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])

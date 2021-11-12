@@ -16,13 +16,27 @@
 
 (defn answer-satisfies-condition-or-is-empty? [value option]
   (or (string/blank? value)
-      (non-blank-answer-satisfies-condition? value option)))
+    (non-blank-answer-satisfies-condition? value option)))
+
+(defn- str-answer-satisfies-condition?
+  [value condition]
+  (let [operator (case (:comparison-operator condition)
+                   "=" =)]
+    (operator value (:answer-compared-to condition))))
+
+(defn answer-satisfies-condition?
+  [value option]
+  (if-let [condition (:condition option)]
+    (case (:data-type condition)
+      "int" (answer-satisfies-condition-or-is-empty? value option)
+      "str" (str-answer-satisfies-condition? value condition))
+    true))
 
 (defn- non-blank-answer-with-option-condition-satisfied-checker [value]
   (fn [option]
     (boolean
       (some #(non-blank-answer-satisfies-condition? % option)
-            (answer-values value)))))
+        (answer-values value)))))
 
 (defn- answer-values [value]
   (cond (and (vector? value) (or (vector? (first value)) (nil? (first value))))
