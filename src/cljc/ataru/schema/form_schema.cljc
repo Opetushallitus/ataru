@@ -87,6 +87,7 @@
 
 (s/defschema TextFieldOptionCondition
   {:comparison-operator                 (s/enum "<" "=" ">")
+   (s/optional-key :data-type)          (s/eq "int")
    (s/optional-key :answer-compared-to) s/Int})
 
 (s/defschema TextField
@@ -94,6 +95,7 @@
 
 (s/defschema ChoiceFieldOptionCondition
   {:comparison-operator                 (s/enum "=")
+   (s/optional-key :data-type)          (s/eq "str")
    (s/optional-key :answer-compared-to) s/Str})
 
 (s/defschema ChoiceField
