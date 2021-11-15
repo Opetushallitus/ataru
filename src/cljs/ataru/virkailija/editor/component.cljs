@@ -316,12 +316,15 @@
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [path]
-  (let [checked?         (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-        mail-attachment? (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        fetch-info-from-kouta? (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
-        collapse?        (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages        (subscribe [:editor/languages])
-        component-locked?      (subscribe [:editor/component-locked? path])]
+(let [checked?                      (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+        mail-attachment?            (subscribe [:editor/get-component-value path :params :mail-attachment?])
+        fetch-info-from-kouta?      (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
+        selected-attachment-type?   (subscribe [:editor/get-component-value path :params :attachment-type])
+        attachment-types-koodisto?  (subscribe [:editor/get-attachment-types-koodisto])
+        collapse?                   (subscribe [:editor/get-component-value path :params :info-text-collapse])
+        languages                   (subscribe [:editor/languages])
+        lang                        (subscribe [:editor/virkailija-lang])
+        component-locked?           (subscribe [:editor/component-locked? path])]
     (fn [path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -363,12 +366,38 @@
                      :on-change (fn toggle-attachment-textarea [event]
                                   (.preventDefault event)
                                   (let [checked? (.. event -target -checked)]
+                                    (dispatch [:editor/fetch-attachment-types-koodisto])
                                     (dispatch [:editor/set-component-value checked? path :params :fetch-info-from-kouta?])))}]
             [:label
              {:for  id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]
             ]))
+       (when (and @fetch-info-from-kouta? (seq @attachment-types-koodisto?))
+         (let [id (util/new-uuid)]
+           [:div.editor-form__koodisto-options
+            [:label.editor-form__select-koodisto-dropdown-label
+             {:for id}
+             @(subscribe [:editor/virkailija-translation :attachment-type])]
+            [:div.editor-form__select-koodisto-dropdown-wrapper
+             [:select.editor-form__select-koodisto-dropdown
+              {:id        id
+               :class     (if (string/blank? (:uri @selected-attachment-type?))
+                            "editor-form__select-koodisto-dropdown--invalid"
+                            "editor-form__select-koodisto-dropdown--regular")
+               :value     (:uri @selected-attachment-type?)
+               :on-change (fn select-attachment-type [event]
+                            (.preventDefault event)
+                            (dispatch [:editor/set-component-value (.. event -target -value) path :params :attachment-type]))
+               :data-test-id "editor-form__select-koodisto-dropdown"}
+              (when (not (seq @selected-attachment-type?))
+                [:option {:value "" :disabled true} ""])
+              (for [{:keys [uri label]} @attachment-types-koodisto?]
+                ^{:key (str "attachment-type-" id "-" uri)}
+                [:option {:value uri} (get label @lang)])]
+             [:div.editor-form__select-koodisto-dropdown-arrow
+              [:i.zmdi.zmdi-chevron-down]]
+            ]]))
        (when @checked?
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
