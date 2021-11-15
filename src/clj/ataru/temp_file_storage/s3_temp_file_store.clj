@@ -2,37 +2,25 @@
   (:require [ataru.config.core :refer [config]]
             [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]]
             [taoensso.timbre :as log])
-  (:import (java.io File FileOutputStream)
-           (org.apache.commons.io IOUtils)))
+  (:import (com.amazonaws HttpMethod)
+           (java.util Date)))
 
 (defn- bucket-name []
-  (get-in config [:aws :temp-files :bucket]))
+  (get-in config [:aws :liiteri-files :bucket]))
 
 (defrecord S3TempFileStore [s3-client config]
   TempFileStorage
 
-  (put-file [_ file file-name]
-    (log/info "Putting file:" (bucket-name) "/" file-name (.length file))
-    (.putObject (:s3-client s3-client) (bucket-name) file-name file))
-
-  (delete-file [_ file-name]
-    (log/info "Deleting file:" (bucket-name) "/" file-name)
-    (.deleteObject (:s3-client s3-client) (bucket-name) file-name))
-
-  (get-file [_ file-name]
-    (log/info "Getting file:" (bucket-name) "/" file-name)
-    (-> (.getObject (:s3-client s3-client) (bucket-name) file-name)
-        (.getObjectContent)))
+  (signed-upload-url [_ file-name]
+    (let [bucket-name (bucket-name)
+          expiration  (Date. (+ (System/currentTimeMillis) (* 1000 60 60 24)))
+          method      HttpMethod/PUT
+          url         (.generatePresignedUrl (:s3-client s3-client) bucket-name file-name expiration method)]
+      (log/info "Signed upload link: " url " expires" expiration)
+      (.toString url)))
 
   (file-exists? [_ file-name]
-    (.doesObjectExist (:s3-client s3-client) (bucket-name) file-name))
-
-  (filenames-with-prefix [_ prefix]
-    (log/info "Getting filenames:" (bucket-name) prefix)
-    (->>
-      (.listObjects (:s3-client s3-client) (bucket-name) prefix)
-      (.getObjectSummaries)
-      (map #(.getKey %)))))
+    (.doesObjectExist (:s3-client s3-client) (bucket-name) file-name)))
 
 (defn new-store []
   (map->S3TempFileStore {}))

@@ -105,7 +105,7 @@
                 (s3-client/new-client)
                 [:credentials-provider])
 
-    :temp-file-store (if (get-in config [:aws :temp-files])
+    :temp-file-store (if (get-in config [:aws :liiteri-files])
                        (component/using
                         (s3-temp-file-store/new-store)
                         [:s3-client])
