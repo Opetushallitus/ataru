@@ -349,23 +349,33 @@
           conditions))
       fields-with-visibility-rules)))
 
-(defn condition-quantifier
+(defn- condition-quantifier
   [condition]
   (case (:data-type (:condition condition))
     "str" :some
     "int" :every))
 
+(defn- every-condition-satisfied
+  [conditions]
+  (and
+    (seq conditions)
+    (every?
+      (fn [{value :value :as condition}]
+        (option-visibility/answer-satisfies-condition? value condition))
+      conditions)))
+
+(defn- some-condition-satisfied
+  [conditions]
+  (and
+    (seq conditions)
+    (some
+      (fn [{value :value :as condition}]
+        (option-visibility/answer-satisfies-condition? value condition))
+      conditions)))
+
 (defn is-field-hidden-by-section-visibility-conditions [db field]
   (let [visibility-conditions (visibility-conditions-on-field db field)
-        by-quantifier         (group-by condition-quantifier visibility-conditions)
-        some-conditions       (seq (:some by-quantifier))
-        every-conditions      (seq (:every by-quantifier))]
-    (and
-      (every?
-        (fn [{value :value :as condition}]
-          (option-visibility/answer-satisfies-condition? value condition))
-        every-conditions)
-      (some
-        (fn [{value :value :as condition}]
-          (option-visibility/answer-satisfies-condition? value condition))
-        some-conditions))))
+        by-quantifier         (group-by condition-quantifier visibility-conditions)]
+    (or
+      (every-condition-satisfied (seq (:every by-quantifier)))
+      (some-condition-satisfied (seq (:some by-quantifier))))))
