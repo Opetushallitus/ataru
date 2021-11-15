@@ -692,6 +692,9 @@
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
         {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
+        {:dispatch-debounced {:timeout 500
+                              :id :fetch-attachment-types
+                              :dispatch [:editor/fetch-attachment-types-koodisto]}}
         (when (and (some? previous-form-key)
                    (not= previous-form-key form-key))
           {:stop-autosave (get-in db [:editor :autosave])})
@@ -1014,6 +1017,24 @@
                                         component))
           updated-form              (walk/prewalk find-koodisto-component form)]
       (assoc-in db [:editor :forms key :content] updated-form))))
+
+(reg-event-fx
+  :editor/fetch-attachment-types-koodisto
+  (fn [{db :db}]
+    (when (not (seq (get-in db [:editor :attachment-types-koodisto])))
+      {:http {:method               :get
+              :path                 (str "/lomake-editori/api/koodisto/liitetyypitamm/1?allow-invalid=false")
+              :handler-or-dispatch  :editor/set-attachment-types-koodisto}})))
+
+(reg-event-db
+  :editor/set-attachment-types-koodisto
+  (fn [db [_ koodisto]]
+    (let [lang             (keyword (get-in db [:editor :user-info :lang]))
+          attachment-types (->> koodisto
+                                (map #(select-keys % [:value :label :uri]))
+                                (sort-by (comp lang :label))
+                                vec)]
+      (assoc-in db [:editor :attachment-types-koodisto] attachment-types))))
 
 (reg-event-fx
   :editor/show-belongs-to-hakukohteet-modal

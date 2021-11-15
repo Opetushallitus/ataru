@@ -107,6 +107,11 @@
     (get-in component [:params param])))
 
 (re-frame/reg-sub
+  :editor/get-attachment-types-koodisto
+  (fn [db]
+    (get-in db [:editor :attachment-types-koodisto])))
+
+(re-frame/reg-sub
   :editor/is-per-hakukohde-allowed
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))

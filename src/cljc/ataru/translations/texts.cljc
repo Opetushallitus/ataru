@@ -1064,6 +1064,9 @@
    :fetch-info-from-kouta                           {:fi "Haetaan osoitetiedot koulutustarjonnasta"
                                                      :sv "SV: Haetaan osoitetiedot koulutustarjonnasta"
                                                      :en "EN: Haetaan osoitetiedot koulutustarjonnasta"}
+   :attachment-type                                 {:fi "Liitetiedoston tyyppi"
+                                                     :sv "SV: Liitetiedoston tyyppi"
+                                                     :en "EN: Liitetiedoston tyyppi"}
    :mail-attachment-text                            {:fi "Postitettava liitepyyntö"
                                                      :sv "Begäran om bilagor som kan postas"
                                                      :en "EN: Postitettava liitepyyntö"}
