@@ -404,17 +404,30 @@
   :editor/update-mail-attachment
   (fn [db [_ mail-attachment? & path]]
     (let [flip-mail-attachment (fn [{:keys [params validators] :as field}]
-                                 (let [params (assoc? params
+                                 (let [params (-> params
+                                                  (dissoc :attachment-type :fetch-info-from-kouta?)
+                                                  (assoc?
                                                       :mail-attachment? mail-attachment?
                                                       :info-text (when mail-attachment?
-                                                                   (assoc (:info-text params) :enabled? true))
-                                                      :fetch-info-from-kouta? (when (not mail-attachment?) false))]
+                                                                   (assoc (:info-text params) :enabled? true))))]
                                    (assoc? field
                                            :params params
                                            :validators (when mail-attachment?
                                                          (filter #(not= "required" %) validators)))))]
       (-> db
           (update-in (db/current-form-content-path db [path]) flip-mail-attachment)
+          (update-modified-by path)))))
+
+(reg-event-db
+  :editor/update-fetch-info-from-kouta
+  (fn [db [_ fetch-info-from-kouta? & path]]
+    (let [flip-kouta-info-attachment (fn [{:keys [params] :as field}]
+                                 (let [params (-> params
+                                                  (assoc :fetch-info-from-kouta? fetch-info-from-kouta?)
+                                                  (dissoc :attachment-type))]
+                                   (assoc? field :params params)))]
+      (-> db
+          (update-in (current-form-content-path db [path]) flip-kouta-info-attachment)
           (update-modified-by path)))))
 
 (defn generate-component
