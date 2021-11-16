@@ -1,10 +1,12 @@
 (ns ataru.hakija.application-hakukohde-component
   (:require
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+    [clojure.string]
+    [re-frame.core :refer [subscribe dispatch]]
     [ataru.application-common.application-field-common :refer [scroll-to-anchor]]
     [ataru.util :as util]
     [ataru.translations.translation-util :as translations]
-    [reagent.core :as r]))
+    [reagent.core :as r]
+    [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
@@ -237,3 +239,10 @@
      [select-new-hakukohde-row]
      (when @(subscribe [:application/show-hakukohde-search])
        [hakukohde-selection-search])]]])
+
+(defn hakukohteet-picker
+  [field-descriptor idx]
+  (let [toisen-asteen-yhteishaku @(subscribe [:application/toisen-asteen-yhteishaku?])]
+    (if toisen-asteen-yhteishaku
+      [hakukohde-2nd/hakukohteet field-descriptor idx]
+      [hakukohteet field-descriptor idx])))
