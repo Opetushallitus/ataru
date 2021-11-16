@@ -826,7 +826,9 @@
 
 (defn- handle-section-visibility-conditions-on-change?
   [field-descriptor]
-  (#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType field-descriptor)))
+  (and
+    (seq (:section-visibility-conditions field-descriptor))
+    (#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType field-descriptor))))
 
 (reg-event-fx
   :application/set-repeatable-application-field
