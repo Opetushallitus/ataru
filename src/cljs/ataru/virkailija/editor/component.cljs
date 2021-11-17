@@ -366,7 +366,6 @@
                      :on-change (fn toggle-attachment-textarea [event]
                                   (.preventDefault event)
                                   (let [checked? (.. event -target -checked)]
-                                    (dispatch [:editor/fetch-attachment-types-koodisto])
                                     (dispatch [:editor/set-component-value checked? path :params :fetch-info-from-kouta?])))}]
             [:label
              {:for  id
@@ -390,8 +389,8 @@
                             (.preventDefault event)
                             (dispatch [:editor/set-component-value (.. event -target -value) path :params :attachment-type]))
                :data-test-id "editor-form__select-koodisto-dropdown"}
-              (when (not (seq @selected-attachment-type?))
-                [:option {:value "" :disabled true} ""])
+              (when (string/blank? @selected-attachment-type?)
+                [:option {:value @selected-attachment-type?} ""])
               (for [{:keys [uri label]} @attachment-types-koodisto?]
                 ^{:key (str "attachment-type-" id "-" uri)}
                 [:option {:value uri} (get label @lang)])]
