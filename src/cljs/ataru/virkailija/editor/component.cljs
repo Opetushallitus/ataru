@@ -315,7 +315,7 @@
                                                                            :allow-decimals?      true}]]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
-(defn attachment-textarea [path]
+(defn attachment-textarea [_ path]
 (let [checked?                      (subscribe [:editor/get-component-value path :params :info-text :enabled?])
         mail-attachment?            (subscribe [:editor/get-component-value path :params :mail-attachment?])
         fetch-info-from-kouta?      (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
@@ -324,8 +324,9 @@
         collapse?                   (subscribe [:editor/get-component-value path :params :info-text-collapse])
         languages                   (subscribe [:editor/languages])
         lang                        (subscribe [:editor/virkailija-lang])
+        is-per-hakukohde-allowed    (subscribe [:editor/is-per-hakukohde-allowed path])
         component-locked?           (subscribe [:editor/component-locked? path])]
-    (fn [path]
+    (fn [initial-content path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
          [:div.editor-form__info-addon-checkbox
@@ -356,7 +357,12 @@
              {:for   id
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :attachment-info-text])]]))
-       (when @mail-attachment?
+       (when (and (seq (:belongs-to-hakukohderyhma initial-content))
+                  @is-per-hakukohde-allowed)
+         [checkbox-component/checkbox path initial-content :per-hakukohde
+            (fn [] (dispatch [:editor/set-component-value false path :params :fetch-info-from-kouta?]))])
+       (when (and @mail-attachment?
+                  (-> initial-content :per-hakukohde boolean))
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
             [:input {:id        id
@@ -372,7 +378,8 @@
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :fetch-info-from-kouta])]
             ]))
-       (when (and @fetch-info-from-kouta? (seq @attachment-types-koodisto?))
+       (when (and @fetch-info-from-kouta?
+                  (seq @attachment-types-koodisto?))
          (let [id (util/new-uuid)]
            [:div.editor-form__koodisto-options
             [:label.editor-form__select-koodisto-dropdown-label
@@ -391,9 +398,9 @@
                :data-test-id "editor-form__select-koodisto-dropdown"}
               (when (string/blank? @selected-attachment-type?)
                 [:option {:value @selected-attachment-type?} ""])
-              (for [{:keys [uri label]} @attachment-types-koodisto?]
+              (doall (for [{:keys [uri label]} @attachment-types-koodisto?]
                 ^{:key (str "attachment-type-" id "-" uri)}
-                [:option {:value uri} (get label @lang)])]
+                [:option {:value uri} (get label @lang)]))]
              [:div.editor-form__select-koodisto-dropdown-arrow
               [:i.zmdi.zmdi-chevron-down]]
             ]]))
@@ -496,4 +503,4 @@
             [:div.editor-form__checkbox-wrapper
              [validator-checkbox-component/validator-checkbox path content :required (required-disabled content)]])
           [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]
-         [attachment-textarea path]]]])))
+         [attachment-textarea content path]]]])))
