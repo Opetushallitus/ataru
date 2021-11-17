@@ -283,7 +283,11 @@
               .find('.editor-form__button-group div:eq(2) label')
           ),
           clickElement(() =>
-            formComponents().eq(2).find('.editor-form__checkbox-wrapper label')
+            formComponents()
+              .eq(2)
+              .find(
+                '.editor-form__checkbox-wrapper label:contains("Pakollinen")'
+              )
           ),
           setTextFieldValue(
             () =>
@@ -575,7 +579,7 @@
             formComponents()
               .eq(5)
               .find(
-                '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:first'
+                '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:contains("Pakollinen")'
               )
           ),
           clickSubComponentMenuItem('Vierekkäiset tekstikentät', () =>
@@ -771,7 +775,11 @@
           ),
           clickSubComponentMenuItem('Tekstialue', () => formSections().eq(0)),
           clickElement(() =>
-            formSections().eq(0).find('.editor-form__checkbox-wrapper label')
+            formSections()
+              .eq(0)
+              .find(
+                '.editor-form__checkbox-wrapper label:contains("Pakollinen")'
+              )
           ),
           setTextFieldValue(
             () => formSections().eq(0).find('.editor-form__text-field').eq(1),
@@ -923,7 +931,7 @@
             formComponents()
               .eq(11)
               .find(
-                '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label'
+                '.editor-form__followup-question-overlay .editor-form__checkbox + .editor-form__checkbox-label:contains("Pakollinen")'
               )
           ),
           clickElement(() =>
