@@ -473,9 +473,9 @@
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}
-   :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta"
-                                                 :sv "SV: Harjoittelulomake"
-                                                 :en "EN: Harjoittelulomake"}
+   :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
+                                                 :sv "SV: Harjoittelulomake — Tietojasi ei tallenneta!"
+                                                 :en "EN: Harjoittelulomake — Tietojasi ei tallenneta!"}
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :sv "SV: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
