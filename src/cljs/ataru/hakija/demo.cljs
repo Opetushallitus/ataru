@@ -13,9 +13,9 @@
   [question]
   (dissoc question :validators))
 
-(defn- remove-email-validator
+(defn- remove-email-validators
   [question]
-  (update question :validators (comp vec (partial filter #(not= "email" %)))))
+  (update question :validators (comp vec (partial remove #{"email" "email-optional"}))))
 
 (defn- questions->zipper
   [questions]
@@ -38,7 +38,7 @@
   (->
     zipper
     (conditional-edit is-ssn-question? remove-validators)
-    (conditional-edit is-email-question? remove-email-validator)))
+    (conditional-edit is-email-question? remove-email-validators)))
 
 (defn- edit-questions
   [zipper]
