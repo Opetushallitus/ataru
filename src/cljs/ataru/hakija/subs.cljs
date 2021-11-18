@@ -749,10 +749,11 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
      (re-frame/subscribe [:application/selected-hakukohteet])
-     (re-frame/subscribe [:application/virkailija?])])
-  (fn [[hakukohteet selected-hakukohteet virkailija]]
+     (re-frame/subscribe [:application/virkailija?])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[hakukohteet selected-hakukohteet virkailija demo]]
     (let [selected-filter (fn [{oid :oid}] ((set selected-hakukohteet) oid))
-          hakuaika-filter #(or virkailija (get-in % [:hakuaika :on]))]
+          hakuaika-filter #(or virkailija demo (get-in % [:hakuaika :on]))]
       (->> hakukohteet
            (remove selected-filter)
            (filter hakuaika-filter)))))
