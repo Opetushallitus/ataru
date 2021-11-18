@@ -262,7 +262,7 @@
        [:<>
         [:span " | "]
         [:a {:href   (str js/config.applicant.service_url
-                          "/hakemus/api/haku/" (:oid haku)
+                          "/hakemus/haku/" (:oid haku)
                           "/demo?lang=fi")
             :target "_blank"
             :data-test-id "demo-link" }

@@ -167,16 +167,6 @@
         (response/content-type (response/ok form-with-tarjonta)
                                "application/json")
         (response/not-found {})))
-    (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
-      :path-params [haku-oid :- s/Str]
-      :query-params [lang :- s/Str]
-      (if (form-service/is-demo-allowed form-by-haku-oid-str-cache haku-oid)
-        (response/temporary-redirect
-          (str (-> config :public-config :applicant :service_url)
-               "/hakemus/haku/" haku-oid
-               "?demo=true"
-               "&lang=" lang))
-        (response/not-found {})))
     (api/GET ["/hakukohde/:hakukohde-oid", :hakukohde-oid #"[0-9\.]+"] []
       :summary "Gets form for hakukohde"
       :path-params [hakukohde-oid :- s/Str]
@@ -419,6 +409,16 @@
                                  (api/middleware [session-client/wrap-session-client-headers]
                                   test-routes
                                   (api-routes this)
+                                  (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
+                                    :path-params [haku-oid :- s/Str]
+                                    :query-params [lang :- s/Str]
+                                    (if (form-service/is-demo-allowed (:form-by-haku-oid-str-cache this) haku-oid)
+                                      (response/temporary-redirect
+                                        (str (-> config :public-config :applicant :service_url)
+                                          "/hakemus/haku/" haku-oid
+                                          "?demo=true"
+                                          "&lang=" lang))
+                                      (response/not-found {})))
                                   (route/resources "/")
                                   (api/undocumented
                                     (api/GET "/haku/:oid" []
