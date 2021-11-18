@@ -6,8 +6,8 @@
 @form-select-width: 305px;
 @notification-banner-height: 70px;
 @notification-banner-height-mobile: 23px;
-@total-banner-height: 97px + @notification-banner-height;
-@total-banner-height-mobile: 90px + @notification-banner-height-mobile;
+@total-banner-height: 97px;
+@total-banner-height-mobile: 90px;
 
 body {
   overflow-y: scroll;
@@ -539,6 +539,10 @@ body {
   margin-left: auto;
   margin-bottom: 150px;
   width: @desktop-content-width;
+
+  &.application__form-content-area--demo {
+    margin-top: @total-banner-height + @notification-banner-height;
+  }
 }
 
 .application__editable-content {
@@ -1239,6 +1243,10 @@ th.application__readonly-adjacent--header {
   .application__form-content-area {
     margin-top: @total-banner-height-mobile;
     width: auto;
+
+    &.application__form-content-area--demo {
+      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
+    }
   }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,

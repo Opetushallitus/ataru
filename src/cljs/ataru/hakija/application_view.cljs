@@ -90,33 +90,37 @@
         expired                (subscribe [:state-query [:application :secret-expired?]])
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
-        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])]
+        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
+        demo?                  (subscribe [:application/demo?])]
     (fn []
-      [:div.application__form-content-area
-       (when-not (or @load-failure?
+      (let [root-element (if @demo?
+                           :div.application__form-content-area.application__form-content-area--demo
+                           :div.application__form-content-area)]
+        [root-element
+         (when-not (or @load-failure?
                      @form)
-         [:div.application__form-loading-spinner
-          [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
-       (when @expired
-         [:div.application__secret-expired
-          [:div.application__secret-expired-icon
-           [:i.zmdi.zmdi-lock-outline]]
-          [:h2 (translations/get-hakija-translation :expired-secret-heading @lang)]
-          [:p (translations/get-hakija-translation :expired-secret-paragraph @lang secret-link-valid-days)]
-          [:button.application__secret-resend-button
-           {:disabled (some? @delivery-status)
-            :on-click #(dispatch [:application/send-new-secret])}
-           (if (= :completed @delivery-status)
-             (translations/get-hakija-translation :expired-secret-sent @lang)
-             (translations/get-hakija-translation :expired-secret-button @lang))]
-          [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
+           [:div.application__form-loading-spinner
+            [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
+         (when @expired
+           [:div.application__secret-expired
+            [:div.application__secret-expired-icon
+             [:i.zmdi.zmdi-lock-outline]]
+            [:h2 (translations/get-hakija-translation :expired-secret-heading @lang)]
+            [:p (translations/get-hakija-translation :expired-secret-paragraph @lang secret-link-valid-days)]
+            [:button.application__secret-resend-button
+             {:disabled (some? @delivery-status)
+              :on-click #(dispatch [:application/send-new-secret])}
+             (if (= :completed @delivery-status)
+               (translations/get-hakija-translation :expired-secret-sent @lang)
+               (translations/get-hakija-translation :expired-secret-button @lang))]
+            [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
 
-       ^{:key (:id @form)}
-       [application-header]
+         ^{:key (:id @form)}
+         [application-header]
 
-       (when (or @can-apply? @editing?)
-         ^{:key "form-fields"}
-         [render-fields @form])])))
+         (when (or @can-apply? @editing?)
+           ^{:key "form-fields"}
+           [render-fields @form])]))))
 
 (defn- star-number-from-event
   [event]
