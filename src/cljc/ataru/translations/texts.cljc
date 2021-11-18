@@ -36,7 +36,7 @@
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
    :application-confirmation-demo               {:fi "Tietojasi ei tallennettu"
-                                                 :sv "SV: Tietojasi ei tallennettu"
+                                                 :sv "Dina uppgifter har inte sparats"
                                                  :en "EN: Tietojasi ei tallennettu"}
    :application-edited-subject                  {:fi "Opintopolku - Hakemuksesi on päivitetty"
                                                  :sv "Studieinfo - Din ansökan har updaterats"
@@ -90,13 +90,13 @@
                                                  :sv "Ansökan har skickats"
                                                  :en "The application has been sent"}
    :application-sent-demo                       {:fi "Harjoittelulomake täytetty"
-                                                 :sv "SV: Harjoittelulomake täytetty"
+                                                 :sv "Övningsblanketten är ifylld"
                                                  :en "EN: Harjoittelulomake täytetty"}
    :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
    :application-submitted-demo                  {:fi "Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
-                                                 :sv "SV: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
+                                                 :sv "Det här är en övningsblankett. Dina uppgifter sparades inte!"
                                                  :en "EN: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"}
    :application-submitted-ok                    {:fi "OK"
                                                  :sv "OK"
@@ -255,7 +255,7 @@
                                                  :sv "Skicka ansökan"
                                                  :en "Submit application"}
    :submit-demo                                 {:fi "Lähetä harjoitteluhakemus"
-                                                 :sv "SV: Lähetä harjoitteluhakemus"
+                                                 :sv "Skicka övningsansökan"
                                                  :en "EN: Lähetä harjoitteluhakemus"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
@@ -474,16 +474,16 @@
                                                  :sv "Radera"
                                                  :en "Poista"}
    :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
-                                                 :sv "SV: Harjoittelulomake — Tietojasi ei tallenneta!"
+                                                 :sv "Övningsblankett – Dina uppgifter sparas inte!"
                                                  :en "EN: Harjoittelulomake — Tietojasi ei tallenneta!"}
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
-                                                 :sv "SV: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
+                                                 :sv "Det här är en övningsblankett. De uppgifter som du fyller i sparas inte."
                                                  :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
    :dismiss-demo-notification                   {:fi "Jatka"
-                                                 :sv "SV: Jatka"
+                                                 :sv "Fortsätt"
                                                  :en "EN: Jatka"}
    :demo-notification-title                     {:fi "Harjoittelulomake"
-                                                 :sv "SV: Harjoittelulomake"
+                                                 :sv "Övningsblankett"
                                                  :en "EN: Harjoittelulomake"}})
 
 (def oppiaine-translations
@@ -1080,13 +1080,13 @@
                                                      :sv "SV: Yleiset asetukset"
                                                      :en "EN: Yleiset asetukset"}
    :demo-link                                       {:fi "Avaa demolomake"
-                                                     :sv "SV: Avaa demolomake"
+                                                     :sv "Öppna demoblanketten"
                                                      :en "EN: Avaa demolomake"}
    :demo-validity-start                             {:fi "Demon voimassaolo alkaa"
-                                                     :sv "SV: Demon voimassaolo alkaa"
+                                                     :sv "Demoversionen är giltig från och med"
                                                      :en "EN: Demon voimassaolo alkaa"}
    :demo-validity-end                               {:fi "Demon voimassaolo päättyy"
-                                                     :sv "SV: Demon voimassaolo päättyy"
+                                                     :sv "Demoversionen avslutas"
                                                      :en "EN: Demon voimassaolo päättyy"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."

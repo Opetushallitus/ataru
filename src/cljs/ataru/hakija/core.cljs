@@ -37,7 +37,6 @@
         demo              (:demo query-params)]
     (cljs-util/unset-query-param "modify")
     (cljs-util/unset-query-param "virkailija-secret")
-    (cljs-util/unset-query-param "demo")
     (when (and (u/not-blank? demo) (= "true" demo))
       (re-frame/dispatch [:application/set-demo-requested]))
     (cond
