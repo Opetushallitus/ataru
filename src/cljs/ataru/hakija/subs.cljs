@@ -690,13 +690,23 @@
             (str "/hakemus/api/files/" attachment-key "?virkailija-secret=" virkailija-secret)))))
 
 (re-frame/reg-sub
+  :application/virkailija-secret
+  (fn [db _]
+    (get-in db [:application :virkailija-secret])))
+
+(re-frame/reg-sub
   :application/language-version-link
-  (fn [db [_ language]]
-    (let [url               (url/url (.. js/window -location -href))
-          virkailija-secret (get-in db [:application :virkailija-secret])]
+  (fn [_ _]
+    [(re-frame/subscribe [:application/virkailija-secret])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[virkailija-secret demo?] [_ language]]
+    (let [url (url/url (.. js/window -location -href))]
       (-> (cond-> url
                   (some? virkailija-secret)
-                  (assoc-in [:query "virkailija-secret"] virkailija-secret))
+                  (assoc-in [:query "virkailija-secret"] virkailija-secret)
+
+                  demo?
+                  (assoc-in [:query "demo"] "true"))
           (assoc-in [:query "lang"] (name language))
           str))))
 
