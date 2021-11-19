@@ -121,7 +121,9 @@
 (defn- optional-email
   ^{:dependencies [:have-finnish-ssn]}
   [db]
-  (if (some? (form-tools/get-field-from-flat-form-content db "onr-2nd"))
+  (if (and
+        (some? (form-tools/get-field-from-flat-form-content db "onr-2nd"))
+        (not (demo/demo? db)))
     (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
           is-required-needed (not= "true" have-finnish-ssn)]
       (toggle-require-field db "email" is-required-needed))
