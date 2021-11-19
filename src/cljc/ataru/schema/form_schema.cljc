@@ -268,6 +268,13 @@
    :hakukohderyhma? (s/eq true)
    :active?         s/Bool})
 
+(s/defschema HakukohdeLiite
+  {:tyyppi                s/Str
+   :toimitusaika          org.joda.time.DateTime
+   :toimitetaan-erikseen  s/Bool
+   :toimitusosoite        {:osoite        localized-schema/LocalizedStringOptional
+                           :postinumero   {:koodiUri  s/Str
+                                           :nimi      localized-schema/LocalizedStringOptional}}})
 (s/defschema Hakukohde
   {:oid                                                                          s/Str
    :hakukohteen-tiedot-url                                                       s/Str
@@ -286,7 +293,8 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                    [HakukohdeLiite]})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))

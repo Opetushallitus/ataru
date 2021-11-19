@@ -77,6 +77,18 @@
           (str "Unknown hakukohteen tila " (:tila hakukohde)
                " in hakukohde " (:oid hakukohde))))))
 
+(defn- parse-hakukohde-liitteet
+  [hakukohde]
+  (let [parse-liite (fn [liite]
+                      {:tyyppi               (get-in liite [:tyyppi :koodiUri])
+                       :toimitusaika         (:toimitusaika liite)
+                       :toimitetaan-erikseen (= "osoite" (:toimitustapa liite))
+                       :toimitusosoite       {:osoite      (get-in liite [:toimitusosoite :osoite :osoite])
+                                              :postinumero (get-in liite [:toimitusosoite :osoite :postinumero])}})]
+  (->> hakukohde
+       (:liitteet)
+       (map #(parse-liite %)))))
+
 (defn- parse-hakukohde
   [hakukohde tarjoajat hakukohderyhmas settings]
   (merge
@@ -93,7 +105,9 @@
     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))
     :yo-amm-autom-hakukelpoisuus                                 (boolean (some #(:yo-amm-autom-hakukelpoisuus %) settings))
-    :koulutustyyppikoodi                                              (:koulutustyyppikoodi hakukohde)}
+    :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
+    :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
+    }
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
