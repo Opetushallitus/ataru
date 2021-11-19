@@ -51,6 +51,41 @@
                                                                                       :haku-oid                         "dummy-haku-oid"}}})))))
            (done))))
 
+(deftest email-optional-validation
+  (async done
+    (asyncm/go
+      (is (true? (first (async/<! (validator/validate {:has-applied       has-never-applied
+                                                       :validator         "email-optional"
+                                                       :value             nil
+                                                       :answers-by-key    {:email {:value nil :verify nil}
+                                                                           :ssn {:value "081195-433H"}}
+                                                       :field-descriptor  {:id :email}})))))
+      (is (false? (first (async/<! (validator/validate {:has-applied       has-never-applied
+                                                       :validator         "email-optional"
+                                                       :value             nil
+                                                       :answers-by-key    {:email {:value nil :verify nil}
+                                                                           :ssn {:value nil}}
+                                                       :field-descriptor  {:id :email}})))))
+      (is (false? (first (async/<! (validator/validate {:has-applied       has-never-applied
+                                                        :validator         "email-optional"
+                                                        :value             "aaaa"
+                                                        :answers-by-key    {:email {:value "aaaa" :verify "bbbb"}
+                                                                            :ssn {:value nil}}
+                                                        :field-descriptor  {:id :email}})))))
+      (is (false? (first (async/<! (validator/validate {:has-applied       has-never-applied
+                                                       :validator         "email-optional"
+                                                       :value             "aaa@"
+                                                       :answers-by-key    {:email {:value "aaa@" :verify "aaa@"}
+                                                                           :ssn {:value nil}}
+                                                       :field-descriptor  {:id :email}})))))
+      (is (true? (first (async/<! (validator/validate {:has-applied       has-never-applied
+                                                        :validator         "email-optional"
+                                                        :value             "aaa@bbb.ccc"
+                                                        :answers-by-key    {:email {:value "aaa@bbb.ccc" :verify "aaa@bbb.ccc"}
+                                                                            :ssn {:value nil}}
+                                                        :field-descriptor  {:id :email}})))))
+      (done))))
+
 (deftest email-simple-validation
   (async done
     (asyncm/go
