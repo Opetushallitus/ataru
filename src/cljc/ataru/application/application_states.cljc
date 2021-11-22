@@ -1,5 +1,6 @@
 (ns ataru.application.application-states
-  (:require [ataru.application.review-states :as review-states]))
+  (:require [ataru.application.review-states :as review-states]
+            [clojure.set :as set]))
 
 (defn get-review-state-label-by-name
   [states name lang]
@@ -25,7 +26,7 @@
                                            (or (empty? hakukohde-filter)
                                                (contains? hakukohde-filter (:hakukohde %))))
                                         (:application-hakukohde-reviews application))
-        unreviewed-targets      (clojure.set/difference review-targets (set (map :hakukohde relevant-states)))
+        unreviewed-targets      (set/difference review-targets (set (map :hakukohde relevant-states)))
         default-state-name      (-> (filter #(= (keyword review-requirement-name) (first %))
                                             review-states/hakukohde-review-types)
                                     (first)
@@ -48,6 +49,6 @@
 
 (defn attachment-reviews-with-no-requirements [application]
   (let [reviews (:application-attachment-reviews application)
-        no-reqs (clojure.set/difference (set (:hakukohde application))
-                                        (set (map :hakukohde reviews)))]
+        no-reqs (set/difference (set (:hakukohde application))
+                  (set (map :hakukohde reviews)))]
     (concat reviews (map (fn [oid] {:hakukohde oid :state review-states/no-attachment-requirements}) no-reqs))))
