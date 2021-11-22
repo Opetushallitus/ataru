@@ -157,7 +157,7 @@
                              (prevent-default evt)
                              (when (-> evt .-target .-checked)
                                (dispatch [:editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto path]))))
-           :data-test-id "dropdown-valinta-lomakeosion-nayttaminen-arvon-perusteella"}]
+           :data-test-id "dropdown-lomakeosion-nayttaminen-arvon-perusteella"}]
          [:label.editor-form__text-field-checkbox-label
           {:for   id
            :class (when disabled? "editor-form__text-field-checkbox-label--disabled")}
@@ -183,14 +183,14 @@
         {:for   id
          :class (when @component-locked? "editor-form__textfield-option-condition--disabled")}
         @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto])]
-       [:select.editor-form__text-field-option-condition-comparison-operator
+       [:select.editor-form__text-field-option-condition-answer-compared-to
         {:disabled     @component-locked?
          :on-change    (fn [event]
                          (dispatch [:editor/set-visibility-condition-value
                                     path
                                     visibility-condition-index
                                     (get-val event)]))
-         :data-test-id "tekstikenttä-lisäkysymys-arvon-perusteella-ehto-operaattori"}
+         :data-test-id "dropdown-lomakeosion-piilottaminen-arvon-perusteella-vertailuarvo"}
         (for [option @dropdown-options
               :let [value (:value option)
                     label (:fi (:label option))]]
@@ -216,7 +216,7 @@
                                   (get-val event)]))
        :value        (some #(when (= section-name (:id %)) (:id %))
                        hideable-form-sections)
-       :data-test-id "tekstikenttä-arvon-perusteella-piilotettavan-osion-nimi"}
+       :data-test-id "dropdown-lomakeosion-piilottaminen-arvon-perusteella-osio"}
       (for [form-section hideable-form-sections]
         ^{:key (:id form-section)}
         [:option {:value (:id form-section)} (-> form-section :label lang)])]]))
@@ -358,7 +358,8 @@
                                                       :lang        lang
                                                       :dispatch-fn #(dispatch-sync [:editor/set-component-value
                                                                                     (-> % .-target .-value)
-                                                                                    path :label lang])}])
+                                                                                    path :label lang])
+                                                      :data-test-id (str "editor-form__" field-type "-label")}])
                 languages
                 :header? true)]
              [:div.editor-form__checkbox-wrapper
