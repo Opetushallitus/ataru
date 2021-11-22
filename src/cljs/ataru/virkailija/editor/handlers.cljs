@@ -411,6 +411,7 @@
                                                       :info-text (when mail-attachment?
                                                                    (assoc (:info-text params) :enabled? true))))]
                                    (assoc? field
+                                           :per-hakukohde false
                                            :params params
                                            :validators (when mail-attachment?
                                                          (filter #(not= "required" %) validators)))))]

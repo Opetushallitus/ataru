@@ -358,7 +358,8 @@
               :class (when @component-locked? "editor-form__checkbox-label--disabled")}
              @(subscribe [:editor/virkailija-translation :attachment-info-text])]]))
        (when (and (seq (:belongs-to-hakukohderyhma initial-content))
-                  @is-per-hakukohde-allowed)
+                  @is-per-hakukohde-allowed
+                  @mail-attachment?)
          [checkbox-component/checkbox path initial-content :per-hakukohde
             (fn [] (dispatch [:editor/set-component-value false path :params :fetch-info-from-kouta?]))])
        (when (and @mail-attachment?
