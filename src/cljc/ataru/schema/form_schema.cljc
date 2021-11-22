@@ -216,6 +216,14 @@
    :tutkintonimike-names      [localized-schema/LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
+(s/defschema HakukohdeLiite
+  {(s/optional-key :tyyppi)                (s/maybe s/Str)
+   (s/optional-key :toimitusaika)          (s/maybe org.joda.time.DateTime)
+   (s/optional-key :toimitetaan-erikseen)  (s/maybe s/Bool)
+   (s/optional-key :toimitusosoite)        {(s/optional-key :osoite)        (s/maybe localized-schema/LocalizedStringOptional)
+                                            (s/optional-key :postinumero)   (s/maybe {(s/optional-key :koodiUri) (s/maybe s/Str)
+                                                                                      (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})}})
+
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
    :name                                                                         localized-schema/LocalizedStringOptional
@@ -230,7 +238,8 @@
    :applicable-base-educations                                                   [s/Str]
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus) s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                 [HakukohdeLiite]})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
@@ -268,13 +277,6 @@
    :hakukohderyhma? (s/eq true)
    :active?         s/Bool})
 
-(s/defschema HakukohdeLiite
-  {:tyyppi                s/Str
-   :toimitusaika          org.joda.time.DateTime
-   :toimitetaan-erikseen  s/Bool
-   :toimitusosoite        {:osoite        localized-schema/LocalizedStringOptional
-                           :postinumero   {:koodiUri  s/Str
-                                           :nimi      localized-schema/LocalizedStringOptional}}})
 (s/defschema Hakukohde
   {:oid                                                                          s/Str
    :hakukohteen-tiedot-url                                                       s/Str
