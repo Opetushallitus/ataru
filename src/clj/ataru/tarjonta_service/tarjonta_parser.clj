@@ -33,7 +33,8 @@
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
                                                                           (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
-     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))}))
+     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))
+     :liitteet                                                    (:liitteet hakukohde)}))
 
 (defn- pohjakoulutukset-by-vaatimus
   [pohjakoulutusvaatimuskorkeakoulut]
