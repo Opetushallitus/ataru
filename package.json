@@ -12,6 +12,7 @@
     "lint:clj": "clj-kondo --lint src",
     "lint:clj:lint-staged": "clj-kondo --lint",
     "lint:js": "eslint '**/*.{ts,js}'",
+    "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
     "tsc:type-check": "./bin/type-check.sh"
   },
   "husky": {
