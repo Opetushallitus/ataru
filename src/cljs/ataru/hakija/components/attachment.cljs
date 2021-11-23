@@ -182,6 +182,7 @@
     field-descriptor component-id question-group-idx attachment-idx]])
 
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
+  (println field-descriptor)
   (let [languages              @(subscribe [:application/default-languages])
         text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
         attachments            @(subscribe [:application/attachments id question-group-idx])
@@ -201,8 +202,11 @@
                       [attachment-row field-descriptor id attachment-idx question-group-idx (:status attachment)])
                     visible-attachments))])
      (if (get-in field-descriptor [:params :mail-attachment?])
-       (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
-         [:div.application__mail-attachment--deadline
-          [deadline-info deadline]])
+       [:<>
+        (when-let [address @(subscribe [:application/attachment-address field-descriptor])]
+          [application-field/markdown-paragraph address])
+        (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+          [:div.application__mail-attachment--deadline
+           [deadline-info deadline]])]
        (when-not @(subscribe [:application/cannot-edit? (keyword id)])
          [attachment-upload field-descriptor id attachment-count question-group-idx]))]))
