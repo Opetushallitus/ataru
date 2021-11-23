@@ -9,6 +9,7 @@
             [clojure.set :as cset]
             [clojure.string :as cstr]
             [cemerick.url :as url]
+            [ataru.hakukohde.liitteet :as liitteet]
             [ataru.hakija.demo :as demo]))
 
 (defonce attachment-modify-grace-period-days
@@ -176,6 +177,19 @@
     (when koulutus-oid
       (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
         (str konfo-base "/konfo/" (name lang) "/toteutus/" koulutus-oid)))))
+
+(re-frame/reg-sub
+  :application/attachment-address
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-language]))
+  (fn [_selected-language-TODO [_ field]]
+    (let [attachment-type (get-in field [:params :attachment-type])
+          _ (println attachment-type)
+          hakukohde @(re-frame/subscribe [:application/get-hakukohde (:duplikoitu-kysymys-hakukohde-oid field)])
+          _ (println hakukohde)
+          attachment (liitteet/attachment-for-hakukohde attachment-type hakukohde)
+          _ (println attachment)]
+      (liitteet/attachment-address attachment))))
 
 (re-frame/reg-sub
   :application/attachment-deadline
