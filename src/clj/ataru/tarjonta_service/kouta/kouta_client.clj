@@ -81,7 +81,8 @@
   [hakukohde]
   (let [parse-liite (fn [liite]
                       {:tyyppi               (get-in liite [:tyyppi :koodiUri])
-                       :toimitusaika         (parse-date-time (:toimitusaika liite))
+                       :toimitusaika         (when (seq (:toimitusaika liite))
+                                               (parse-date-time (:toimitusaika liite)))
                        :toimitetaan-erikseen (= "osoite" (:toimitustapa liite))
                        :toimitusosoite       {:osoite      (get-in liite [:toimitusosoite :osoite :osoite])
                                               :postinumero (get-in liite [:toimitusosoite :osoite :postinumero])}})]
