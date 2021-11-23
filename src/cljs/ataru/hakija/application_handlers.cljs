@@ -424,7 +424,7 @@
                                        (assoc :hakuaika-end hakuaika-end)
                                        (assoc :time-delta-from-server time-diff))
         valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
-                                             (filter #(get-in % [:hakuaika :on]))
+                                             (filter #(or (demo/demo? db form) (get-in % [:hakuaika :on])))
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
