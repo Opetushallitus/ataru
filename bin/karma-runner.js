@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const { spawn } = require("child_process");
 const args = process.argv;
 const app = args[2];
 const cookie = args[3];
@@ -17,7 +18,28 @@ const startsWith = (haystack, needle) => {
 const takeScreenshot = page => {
     const filename = '/tmp/ataru-fail-' + new Date().getTime() + '.png';
     console.log('Taking screenshot', filename);
-    return page.screenshot({path: filename, fullPage: true})
+    return page.screenshot({path: filename, fullPage: true}).then(done => {
+        console.log('Moving screenshot to S3');
+        const {
+            TRAVIS_REPO_SLUG: slugName,
+            TRAVIS_BUILD_NUMBER: buildNumber,
+            TRAVIS_JOB_NUMBER: jobNumber,
+            TRAVIS_BUILD_DIR: buildDir
+        } = process.env;
+        const upload = spawn("artifacts",
+            ["upload",
+                "--target-paths",
+                `artifacts/${slugName}/${buildNumber}/${jobNumber}/`,
+                filename],
+            {cwd: buildDir, env: process.env});
+        upload.stdout.on('data', function(msg){
+            console.log(msg.toString())
+        });
+        upload.on('error', (error) => {
+                console.log(error);
+        });
+        console.log(`The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-travis-artifacts/artifacts/${slugName}/${buildNumber}/${jobNumber}/tmp/`);
+    });
 };
 
 const onConsoleMessage = (message, page) => {
