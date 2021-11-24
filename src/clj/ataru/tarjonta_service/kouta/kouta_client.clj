@@ -20,6 +20,8 @@
 (def hakukohde-search-checker (s/checker [s/Str]))
 (def hakukohderyhma-settings-checker (s/checker form-schema/HakukohderyhmaSettings))
 
+(def KOUTA_OID_LENGTH 35)
+
 (defn- parse-date-time
   [s]
 
@@ -117,14 +119,15 @@
 (s/defn ^:always-validate get-haku :- (s/maybe form-schema/Haku)
   [haku-oid :- s/Str
    cas-client]
-  (when-let [haku (some-> :kouta-internal.haku
-                          (url-helper/resolve-url haku-oid)
-                          (get-result cas-client))]
-    (let [hakukohteet      (some-> :kouta-internal.hakukohde-search
-                                   (url-helper/resolve-url {"haku" haku-oid})
-                                   (get-result cas-client))
-          ohjausparametrit (ohjausparametrit-client/get-ohjausparametrit haku-oid)]
-      (parse-haku haku hakukohteet ohjausparametrit))))
+  (when (= (count haku-oid) KOUTA_OID_LENGTH)
+    (when-let [haku (some-> :kouta-internal.haku
+                            (url-helper/resolve-url haku-oid)
+                            (get-result cas-client))]
+      (let [hakukohteet      (some-> :kouta-internal.hakukohde-search
+                                     (url-helper/resolve-url {"haku" haku-oid})
+                                     (get-result cas-client))
+            ohjausparametrit (ohjausparametrit-client/get-ohjausparametrit haku-oid)]
+        (parse-haku haku hakukohteet ohjausparametrit)))))
 
 (s/defn ^:always-validate get-hakus-by-form-key :- [s/Str]
   [cas-client form-key]
@@ -139,16 +142,17 @@
    hakukohderyhmapalvelu-service
    cas-client
    hakukohderyhma-settings-cache]
-  (when-let [hakukohde (some-> :kouta-internal.hakukohde
-                               (url-helper/resolve-url hakukohde-oid)
-                               (get-result cas-client))]
-    (let [tarjoajat (some->> (seq [(:tarjoaja hakukohde)])
-                             (organization-service/get-organizations-for-oids
-                              organization-service))
-          hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
-                            hakukohderyhmapalvelu-service hakukohde-oid)
-          settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmas)]
-      (parse-hakukohde hakukohde tarjoajat hakukohderyhmas settings))))
+  (when (= (count hakukohde-oid) KOUTA_OID_LENGTH)
+    (when-let [hakukohde (some-> :kouta-internal.hakukohde
+                                 (url-helper/resolve-url hakukohde-oid)
+                                 (get-result cas-client))]
+      (let [tarjoajat (some->> (seq [(:tarjoaja hakukohde)])
+                               (organization-service/get-organizations-for-oids
+                                organization-service))
+            hakukohderyhmas (hakukohderyhmapalvelu-service/get-hakukohderyhma-oids-for-hakukohde
+                              hakukohderyhmapalvelu-service hakukohde-oid)
+            settings (map #(cache-service/get-from hakukohderyhma-settings-cache %) hakukohderyhmas)]
+        (parse-hakukohde hakukohde tarjoajat hakukohderyhmas settings)))))
 
 (s/defn ^:always-validate get-hakukohderyhma-settings :- (s/maybe s/Any)
   [hakukohderyhma-oid :- s/Str
@@ -160,13 +164,14 @@
   [cas-client
    query :- {:haku-oid                      s/Str
              (s/optional-key :tarjoaja-oid) s/Str}]
-  (some-> :kouta-internal.hakukohde-search
-          (url-helper/resolve-url
-           (cond-> {"haku" (:haku-oid query)}
-                   (contains? query :tarjoaja-oid)
-                   (assoc "tarjoaja" (:tarjoaja-oid query))))
-          (get-result cas-client)
-          ((fn [result] (mapv :oid result)))))
+  (when (= (count (:haku-oid query)) KOUTA_OID_LENGTH)
+    (some-> :kouta-internal.hakukohde-search
+            (url-helper/resolve-url
+             (cond-> {"haku" (:haku-oid query)}
+                     (contains? query :tarjoaja-oid)
+                     (assoc "tarjoaja" (:tarjoaja-oid query))))
+            (get-result cas-client)
+            ((fn [result] (mapv :oid result))))))
 
 (s/defn ^:always-validate get-toteutus :- (s/maybe form-schema/Koulutus)
   [toteutus-oid :- s/Str]
