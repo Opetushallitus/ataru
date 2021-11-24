@@ -1664,6 +1664,9 @@
    :required                                        {:fi "Pakollinen tieto"
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
+   :sensitive-answer                                {:fi "Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"
+                                                     :sv "SV: Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"
+                                                     :en "EN: Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"}
    :per-hakukohde                                   {:fi "Vastaukset ovat hakukohdekohtaisia"
                                                      :sv "Svaren ges enligt ansökningsmål"
                                                      :en "Answers are specific to application options"}
