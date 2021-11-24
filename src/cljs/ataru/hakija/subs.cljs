@@ -184,11 +184,11 @@
     (re-frame/subscribe [:application/selected-language]))
   (fn [_selected-language-TODO [_ field]]
     (let [attachment-type (get-in field [:params :attachment-type])
-          _ (println attachment-type)
+          _ (println "field attachment type:" attachment-type)
           hakukohde @(re-frame/subscribe [:application/get-hakukohde (:duplikoitu-kysymys-hakukohde-oid field)])
-          _ (println hakukohde)
+          _ (println "hakukohde:" hakukohde)
           attachment (liitteet/attachment-for-hakukohde attachment-type hakukohde)
-          _ (println attachment)]
+          _ (println "attachment for hakukohde:" attachment)]
       (liitteet/attachment-address attachment))))
 
 (re-frame/reg-sub
