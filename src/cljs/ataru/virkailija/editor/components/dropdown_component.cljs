@@ -190,6 +190,7 @@
                                     path
                                     visibility-condition-index
                                     (get-val event)]))
+         :value        (or @(subscribe [:editor/visibility-condition-value path visibility-condition-index]) "")
          :data-test-id "dropdown-lomakeosion-piilottaminen-arvon-perusteella-vertailuarvo"}
         (for [option @dropdown-options
               :let [value (:value option)
