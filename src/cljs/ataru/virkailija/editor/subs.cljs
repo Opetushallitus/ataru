@@ -521,6 +521,13 @@
       (time-coerce/from-date))))
 
 (re-frame/reg-sub
+  :editor/visibility-condition-value
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (some-> visibility-condition :condition :answer-compared-to)))
+
+(re-frame/reg-sub
   :editor/visibility-condition-section-name
   (fn [[_ path visibility-condition-index] _]
     (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))

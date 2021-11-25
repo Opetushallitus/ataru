@@ -139,11 +139,15 @@
 (reg-event-db
   :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (add-section-visibility-condition
-      db
-      path
-      {:condition {:comparison-operator "="
-                   :data-type           "str"}})))
+    (let [field                      @(subscribe [:editor/get-component-value path])
+          default-answer-compared-to (some-> field :options first :value)
+          condition                  {:condition {:comparison-operator "="
+                                                  :data-type           "str"
+                                                  :answer-compared-to  default-answer-compared-to}}]
+      (add-section-visibility-condition
+        db
+        path
+        condition))))
 
 (reg-event-db
   :editor/remove-visibility-condition
