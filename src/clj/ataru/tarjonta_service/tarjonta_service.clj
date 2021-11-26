@@ -76,7 +76,14 @@
     (cache/get-from koulutus-cache koulutus-oid))
 
   (get-koulutukset [this koulutus-oids]
-    (cache/get-many-from koulutus-cache koulutus-oids)))
+    (cache/get-many-from koulutus-cache koulutus-oids))
+
+  (clear-haku-caches [this haku-oid]
+    (let [haku (get-haku this haku-oid)
+          hakukohde-oids (:hakukohteet haku)]
+      (cache/remove-from haku-cache haku-oid)
+      (doseq [hakukohde-oid hakukohde-oids]
+        (cache/remove-from hakukohde-cache hakukohde-oid)))))
 
 (defn new-tarjonta-service
   []
