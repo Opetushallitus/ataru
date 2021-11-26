@@ -92,23 +92,28 @@
 
 (defn- parse-hakukohde
   [hakukohde tarjoajat hakukohderyhmas settings]
+  (log/info hakukohde)
   (merge
-   {:oid                                                         (:oid hakukohde)
-    :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))
-    :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
-    :haku-oid                                                    (:hakuOid hakukohde)
-    :koulutus-oids                                               [(:toteutusOid hakukohde)]
-    :name                                                        (:nimi hakukohde)
-    :tarjoaja-name                                               (or (:name (first tarjoajat)) {})
-    :tarjoaja-oids                                               (mapv :oid tarjoajat)
-    :ryhmaliitokset                                              hakukohderyhmas
-    :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
-    :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
-    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))
-    :yo-amm-autom-hakukelpoisuus                                 (boolean (some #(:yo-amm-autom-hakukelpoisuus %) settings))
-    :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
-    :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
-    }
+    {:oid                                                         (:oid hakukohde)
+     :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))
+     :can-be-applied-to?                                          (parse-can-be-applied-to? hakukohde)
+     :haku-oid                                                    (:hakuOid hakukohde)
+     :koulutus-oids                                               [(:toteutusOid hakukohde)]
+     :name                                                        (:nimi hakukohde)
+     :tarjoaja-name                                               (or (:name (first tarjoajat)) {})
+     :tarjoaja-oids                                               (mapv :oid tarjoajat)
+     :ryhmaliitokset                                              hakukohderyhmas
+     :hakukelpoisuusvaatimus-uris                                 (:pohjakoulutusvaatimusKoodiUrit hakukohde)
+     :ylioppilastutkinto-antaa-hakukelpoisuuden?                  false
+     :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (some #(:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja %) settings))
+     :yo-amm-autom-hakukelpoisuus                                 (boolean (some #(:yo-amm-autom-hakukelpoisuus %) settings))
+     :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
+     :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
+     :liitteet-onko-sama-toimitusosoite?                          (:liitteetOnkoSamaToimitusosoite hakukohde)
+     :liitteiden-toimitusosoite                                   (some-> hakukohde :liitteidenToimitusosoite :osoite)
+     :liitteet-onko-sama-toimitusaika?                            (:liitteetOnkoSamaToimitusaika hakukohde)
+     :liitteiden-toimitusaika                                     (some-> hakukohde :liitteidenToimitusaika parse-date-time)
+     }
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]

@@ -22,19 +22,23 @@
      :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?                                    (string/starts-with?
-                                                                   (:kohdejoukko-uri haku)
-                                                                   "haunkohdejoukko_12#")
+                                                                    (:kohdejoukko-uri haku)
+                                                                    "haunkohdejoukko_12#")
      :tarjoaja-name                                               (:tarjoaja-name hakukohde)
      :form-key                                                    (:ataru-form-key haku)
      :koulutukset                                                 (mapv #(or (get tarjonta-koulutukset %)
-                                                                             (throw (new RuntimeException (str "Koulutus " % " not found"))))
-                                                                        (:koulutus-oids hakukohde))
-     :koulutustyyppikoodi                                              (:koulutustyyppikoodi hakukohde)
+                                                                           (throw (new RuntimeException (str "Koulutus " % " not found"))))
+                                                                    (:koulutus-oids hakukohde))
+     :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
      :hakuaika                                                    (hakuaika/hakukohteen-hakuaika now haku ohjausparametrit hakukohde)
      :applicable-base-educations                                  (mapcat pohjakoulutukset-by-vaatimus
-                                                                          (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
+                                                                    (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))
-     :liitteet                                                    (:liitteet hakukohde)}))
+     :liitteet                                                    (:liitteet hakukohde)
+     :liitteet-onko-sama-toimitusosoite?                          (:liitteet-onko-sama-toimitusosoite? hakukohde)
+     :liitteiden-toimitusosoite                                   (:liitteiden-toimitusosoite hakukohde)
+     :liitteet-onko-sama-toimitusaika?                            (:liitteet-onko-sama-toimitusaika? hakukohde)
+     :liitteiden-toimitusaika                                     (:liitteiden-toimitusaika hakukohde)}))
 
 (defn- pohjakoulutukset-by-vaatimus
   [pohjakoulutusvaatimuskorkeakoulut]

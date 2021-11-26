@@ -38,15 +38,23 @@
   [post-office]
   post-office)
 
-(defn attachment-address
-  [liite]
-  ; TODO: LOCALIZATION
-  (let [toimitusosoite (:toimitusosoite liite)
-        street-address (:fi (:osoite toimitusosoite))
-        postal-code    (:koodiUri (:postinumero toimitusosoite))
-        post-office    (:fi (:nimi (:postinumero toimitusosoite)))]
+(defn- hakukohde-common-address
+  [hakukohde]
+  (when (:liitteet-onko-sama-toimitusosoite? hakukohde)
+    (:liitteiden-toimitusosoite hakukohde)))
+
+(defn- format-address
+  [lang address]
+  (let [street-address (lang (:osoite address))
+        postal-code    (:koodiUri (:postinumero address))
+        post-office    (lang (:nimi (:postinumero address)))]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (format-street-address street-address) "\n\n"
         (format-postal-code postal-code) "\n\n"
         (format-post-office post-office)))))
+
+(defn attachment-address
+  [lang attachment hakukohde]
+  (let [address (or (hakukohde-common-address hakukohde) (:toimitusosoite attachment))]
+    (format-address lang address)))
