@@ -904,7 +904,9 @@
           (set-repeatable-field-values id nil nil "")
           (set-repeatable-field-value id)
           (set-repeatable-application-repeated-field-valid id nil nil false)
-          (set-repeatable-application-field-top-level-valid id false)))))
+          (set-repeatable-application-field-top-level-valid id false)
+          (update-in [:application :answers :postal-code]
+                     merge {:valid false})))))
 
 (reg-event-fx
   :application/set-multiple-choice-option-valid
