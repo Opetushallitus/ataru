@@ -4,7 +4,8 @@
             [ataru.cljs-util :as cu]
             [clojure.set :as cset]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [cljs-time.coerce :as time-coerce]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -82,6 +83,14 @@
     (re-frame/subscribe [:editor/selected-form]))
   (fn top-level-content [form [_ i]]
     (get-in form [:content i])))
+
+(re-frame/reg-sub
+  :editor/content-loaded?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn content-loaded? [form]
+    (let [content (get form :content)]
+      (and content (> (count content) 0)))))
 
 (re-frame/reg-sub
   :editor/get-component-value
@@ -477,8 +486,22 @@
     (some? (-> db :editor :autosave))))
 
 (re-frame/reg-sub
+  :editor/form-properties
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn [selected-form]
+    (get selected-form :properties)))
+
+(re-frame/reg-sub
   :editor/auto-expand-hakukohteet
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :auto-expand-hakukohteet)))
+
+(re-frame/reg-sub
+  :editor/today
   (fn [db _]
-    (let [selected-form-key (get-in db [:editor :selected-form-key])
-          form-path [:editor :forms selected-form-key :properties :auto-expand-hakukohteet]]
-      (get-in db form-path false))))
+    (-> db
+      (get-in [:editor :today])
+      (time-coerce/from-date))))

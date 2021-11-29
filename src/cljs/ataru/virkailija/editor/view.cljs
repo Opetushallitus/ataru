@@ -5,10 +5,12 @@
             [clojure.string :as string]
             [ataru.virkailija.editor.core :as c]
             [ataru.virkailija.editor.subs]
+            [ataru.virkailija.editor.demo.subs]
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (defn form-row [key selected?]
   [:a.editor-form__row
@@ -240,7 +242,8 @@
        [:i.zmdi.zmdi-open-in-new]]]]))
 
 (defn- haku-preview-link [haku]
-  (let [user-info @(subscribe [:state-query [:editor :user-info]])]
+  (let [user-info @(subscribe [:state-query [:editor :user-info]])
+        demo-allowed? @(subscribe [:editor/demo-allowed])]
     [:div.editor-form__haku-preview-link
      [:a {:href   (str "/lomake-editori/api/preview/haku/"
                        (:oid haku)
@@ -254,7 +257,16 @@
           :target "_blank"}
       @(subscribe [:editor/virkailija-translation :form])]
      (when (:superuser? user-info)
-       (link-to-feedback (str "/hakemus/haku/" (:oid haku))))]))
+       (link-to-feedback (str "/hakemus/haku/" (:oid haku))))
+     (when demo-allowed?
+       [:<>
+        [:span " | "]
+        [:a {:href   (str js/config.applicant.service_url
+                          "/hakemus/haku/" (:oid haku)
+                          "/demo?lang=fi")
+            :target "_blank"
+            :data-test-id "demo-link" }
+          @(subscribe [:editor/virkailija-translation :demo-link])]])]))
 
 (defn- form-in-use-in-hakus [form-used-in-hakus]
   [:div.editor-form__form-link-container.animated.flash
@@ -308,12 +320,61 @@
    [:div.close-details-button
     [:i.zmdi.zmdi-close.close-details-button-mark]]])
 
+(defn- demo-validity
+  []
+  (let [demo-validity-start     @(subscribe [:editor/demo-validity-start-str])
+        demo-validity-start-max @(subscribe [:editor/demo-validity-start-max-str])
+        demo-validity-end       @(subscribe [:editor/demo-validity-end-str])
+        demo-validity-end-min   @(subscribe [:editor/demo-validity-end-min-str])
+        demo-validity-end-max   @(subscribe [:editor/demo-validity-end-max-str])
+        disabled?               @(subscribe [:editor/form-locked?])]
+    [:div.editor-form__demo-validity-controls
+     [:div.editor-form__date-picker-container
+      [date-time-picker/date-picker
+       "demo-validity-start"
+       "editor-form__date-picker"
+       demo-validity-start
+       "invalid"
+       #(dispatch [:editor/change-demo-validity-start %])
+       {:max demo-validity-start-max
+        :data-test-id "demo-validity-start"
+        :disabled? disabled?}
+       ]
+      [:label.editor-form__date-picker-label
+       {:for "demo-validity-start"}
+       @(subscribe [:editor/virkailija-translation :demo-validity-start])]]
+     [:div.editor-form__date-picker-container
+      [date-time-picker/date-picker
+       "demo-validity-end"
+       "editor-form__date-picker"
+       demo-validity-end
+       "invalid"
+       #(dispatch [:editor/change-demo-validity-end %])
+       {:min demo-validity-end-min
+        :max demo-validity-end-max
+        :data-test-id "demo-validity-end"
+        :disabled? disabled?}
+       ]
+      [:label.editor-form__date-picker-label
+       {:for "demo-validity-end"}
+       @(subscribe [:editor/virkailija-translation :demo-validity-end])]]]))
+
+(defn- properties []
+  [:div.editor-form__component-wrapper
+   [:div.editor-form__header-wrapper
+    [:header.editor-form__component-header {:data-test-id "properties-header"}
+     [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
+   [:div.editor-form__component-content-wrapper
+    [:div.editor-form__module-fields
+     [demo-validity]]]])
+
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container
    [close-form]
    [:div
     [editor-name]
     [form-usage form-key]]
+   [properties]
    [c/editor]])
 
 (defn editor []

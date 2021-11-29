@@ -12,6 +12,8 @@
             [clj-time.core :as time]
             [clj-time.coerce :as t]
             [clj-time.format :as f]
+            [clojure.walk :as walk]
+            [clojure.string :as string]
             [cheshire.core :as json]
             [schema.core :as s]
             [schema.coerce :as sc]
@@ -20,7 +22,8 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.hakija.form-role :as form-role]
             [ataru.util :as util :refer [assoc?]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.demo-config :as demo]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -46,7 +49,7 @@
   [multiple? yhteishaku? haku-oid form]
   (when-let [person-module-idx (util/first-index-of #(= (:module %) "person-info") (:content form))]
     (let [person-module     (nth (:content form) person-module-idx)
-          new-person-module (update person-module :children (partial clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
+          new-person-module (update person-module :children (partial walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid)))]
       (assoc-in form [:content person-module-idx] new-person-module))))
 
 (defn populate-can-submit-multiple-applications
@@ -58,7 +61,7 @@
       (update-ssn-and-email-fields-in-person-module multiple? yhteishaku? haku-oid form)
       (update form :content
               (fn [content]
-                (clojure.walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
+                (walk/prewalk (set-submit-multiple-and-yhteishaku-if-ssn-or-email-field multiple? yhteishaku? haku-oid) content))))))
 
 (defn- custom-deadline [field]
   (get-in field [:params :deadline]))
@@ -161,13 +164,51 @@
   (if (form-role/virkailija? roles)
     (update form :content
             (fn [content]
-              (clojure.walk/prewalk
+              (walk/prewalk
                 (fn [field]
                   (if (= "formField" (:fieldClass field))
                     (update field :validators (partial remove #{"required-hakija"}))
                     field))
                 content)))
     form))
+
+(defn- parse-date
+  [date-str]
+  (when (and (some? date-str) (not (string/blank? date-str)))
+    (f/parse (:date f/formatters) date-str)))
+
+(defn- before-hakuaika-and-grace-period?
+  [hakuajat now]
+  (let [hakuaika (hakuaika/first-by-start (vec (:uniques hakuajat)))
+        hakuaika-start (some-> hakuaika :start t/from-long)
+        grace-period (time/days demo/demo-validity-grace-period-days)]
+    (if (some? hakuaika-start)
+      (let [first-valid-moment (time/minus hakuaika-start grace-period)]
+        (time/before? now first-valid-moment))
+      true)))
+
+(defn- within-demo-validity-period?
+  [form now]
+  (let [demo-validity-start (parse-date (get-in form [:properties :demo-validity-start]))
+        demo-validity-end   (parse-date (get-in form [:properties :demo-validity-end]))]
+    (boolean
+      (and
+        (some? demo-validity-start)
+        (some? demo-validity-end)
+        (let [first-valid-moment   (time/with-time-at-start-of-day demo-validity-start)
+              first-invalid-moment (time/with-time-at-start-of-day (time/plus demo-validity-end (time/days 1)))
+              valid-interval       (time/interval first-valid-moment first-invalid-moment)]
+          (time/within? valid-interval now))))))
+
+(defn- is-demo-allowed?
+  [form hakuajat now]
+  (and
+    (before-hakuaika-and-grace-period? hakuajat now)
+    (within-demo-validity-period? form now)))
+
+(defn- populate-demo-allowed
+  [form hakuajat now]
+  (assoc form :demo-allowed (is-demo-allowed? form hakuajat now)))
 
 (s/defn ^:always-validate fetch-form-by-id :- s/Any
   [id :- s/Any
@@ -184,7 +225,8 @@
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
             (populate-attachment-deadlines now hakuajat field-deadlines)
-            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines))))))
+            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines)
+            (populate-demo-allowed hakuajat now))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
   [key :- s/Any
@@ -296,7 +338,7 @@
                                         hakukohderyhma-settings-cache]
   cache/CacheLoader
   (load [_ key]
-    (let [[haku-oid aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
+    (let [[haku-oid _aips? & roles] (string/split key #"#")]
       (when-let [form (fetch-form-by-haku-oid form-by-id-cache
                                               tarjonta-service
                                               koodisto-cache
@@ -312,3 +354,9 @@
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
   (load-many-size [_] 1)
   (check-schema [_ _] nil))
+
+(defn is-demo-allowed
+  [form-by-haku-oid-str-cache haku-oid]
+  (let [form (fetch-form-by-haku-oid-str-cached form-by-haku-oid-str-cache haku-oid [:hakija])
+        parsed-form (json/parse-string form true)]
+    (get parsed-form :demo-allowed)))

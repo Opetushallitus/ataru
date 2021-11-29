@@ -8,7 +8,8 @@
             [ataru.hakija.person-info-fields :as person-info-fields]
             [clojure.set :as cset]
             [clojure.string :as cstr]
-            [cemerick.url :as url]))
+            [cemerick.url :as url]
+            [ataru.hakija.demo :as demo]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -264,13 +265,20 @@
     (not (empty? (:invalid-fields valid-status)))))
 
 (re-frame/reg-sub
+  :application/demo?
+  (fn [db]
+    (demo/demo? db)))
+
+(re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
-     (re-frame/subscribe [:application/virkailija?])])
-  (fn [[hakukohteet virkailija?] _]
+     (re-frame/subscribe [:application/virkailija?])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[hakukohteet virkailija? demo?] _]
     (or (empty? hakukohteet)
         virkailija?
+        demo?
         (some #(get-in % [:hakuaika :on]) hakukohteet))))
 
 (re-frame/reg-sub
@@ -682,13 +690,23 @@
             (str "/hakemus/api/files/" attachment-key "?virkailija-secret=" virkailija-secret)))))
 
 (re-frame/reg-sub
+  :application/virkailija-secret
+  (fn [db _]
+    (get-in db [:application :virkailija-secret])))
+
+(re-frame/reg-sub
   :application/language-version-link
-  (fn [db [_ language]]
-    (let [url               (url/url (.. js/window -location -href))
-          virkailija-secret (get-in db [:application :virkailija-secret])]
+  (fn [_ _]
+    [(re-frame/subscribe [:application/virkailija-secret])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[virkailija-secret demo?] [_ language]]
+    (let [url (url/url (.. js/window -location -href))]
       (-> (cond-> url
                   (some? virkailija-secret)
-                  (assoc-in [:query "virkailija-secret"] virkailija-secret))
+                  (assoc-in [:query "virkailija-secret"] virkailija-secret)
+
+                  demo?
+                  (assoc-in [:query "demo"] "true"))
           (assoc-in [:query "lang"] (name language))
           str))))
 
@@ -741,10 +759,11 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
      (re-frame/subscribe [:application/selected-hakukohteet])
-     (re-frame/subscribe [:application/virkailija?])])
-  (fn [[hakukohteet selected-hakukohteet virkailija]]
+     (re-frame/subscribe [:application/virkailija?])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[hakukohteet selected-hakukohteet virkailija demo]]
     (let [selected-filter (fn [{oid :oid}] ((set selected-hakukohteet) oid))
-          hakuaika-filter #(or virkailija (get-in % [:hakuaika :on]))]
+          hakuaika-filter #(or virkailija demo (get-in % [:hakuaika :on]))]
       (->> hakukohteet
            (remove selected-filter)
            (filter hakuaika-filter)))))
@@ -781,3 +800,8 @@
           yhteishaku? (get-in db [:form :tarjonta :yhteishaku])]
       (and yhteishaku?
            (= kohdejoukko "haunkohdejoukko_11")))))
+
+(re-frame/reg-sub
+  :application/demo?
+  (fn [db]
+    (demo/demo? db)))

@@ -105,5 +105,3 @@
                     (rules/run-all-rules {:form                {:content test-content}
                                           :rules-that-have-ran []}
                                          (util/flatten-form-fields test-content))))))))))
-
-

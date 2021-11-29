@@ -1,10 +1,12 @@
 (ns ataru.tarjonta-service.hakuaika
   (:require
-   [clj-time.core :as t]
-   [clj-time.coerce :as c]
-   [clj-time.format :as f]
-   [clojure.core.match :refer [match]]
-   [ataru.config.core :refer [config]]))
+    [clj-time.core :as t]
+    [clj-time.coerce :as c]
+    [clj-time.format :as f]
+    [clojure.core.match :refer [match]]
+    [ataru.config.core :refer [config]]
+    [clojure.string :as string]
+    [clojure.set :as set]))
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (defn new-formatter [fmt-str]
@@ -35,7 +37,7 @@
   (f/parse time-formatter str))
 
 (defn- jatkuva-haku? [haku]
-  (clojure.string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
+  (string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
 
 (defn ended?
   [now end]
@@ -76,7 +78,7 @@
                       (> %1 %2)))
             hakuajat)))
 
-(defn- first-by-start
+(defn first-by-start
   [hakuajat]
   (first
    (sort-by :start
@@ -89,7 +91,7 @@
   [hakukohteet]
   (reduce (fn [{:keys [uniques by-oid]} {:keys [oid hakuaika hakukohderyhmat]}]
             {:uniques (conj uniques hakuaika)
-             :by-oid  (reduce #(merge-with clojure.set/union %1 {%2 #{hakuaika}})
+             :by-oid  (reduce #(merge-with set/union %1 {%2 #{hakuaika}})
                               by-oid
                               (cons oid hakukohderyhmat))})
           {:uniques #{}

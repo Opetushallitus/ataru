@@ -5,7 +5,10 @@
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.hakija.arvosanat.valinnainen-oppiaine-koodi :as vok]
             [ataru.date :as date]
-            [clojure.string :as string])
+            [ataru.hakija.demo :as demo]
+            [clojure.string :as string]
+            [ataru.hakija.ssn :as ssn]
+            [ataru.hakija.form-tools :as form-tools])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -61,6 +64,34 @@
                      (update-in [:application :answers id] set-empty-validity cannot-view? valid?))))
      db)))
 
+(defn- toggle-require-field
+  [db id required?]
+  (if-let [field (form-tools/get-field-from-content db id)]
+    (let [remove-required (fn [validators] (filter #(not= "required" %) validators))
+          add-required (fn [validators] (conj validators "required"))
+          fn-to-use (if required?
+                      add-required
+                      remove-required)
+          modified-validators (-> (:validators field)
+                                  (fn-to-use)
+                                  (distinct))
+          updated-field (assoc field :validators modified-validators)
+          answer (get-in db [:application :answers (keyword id)])
+          set-validity-if-blank (fn [db]
+                                  (cond
+                                    (and required? (blank-value? (:value answer)))
+                                    (assoc-in db [:application :answers (keyword id) :valid] false)
+
+                                    (and (not required?) (blank-value? (:value answer)))
+                                    (assoc-in db [:application :answers (keyword id) :valid] true)
+
+                                    :else
+                                    db))]
+        (-> db
+              (form-tools/update-field-in-db updated-field)
+              (set-validity-if-blank)))
+    db))
+
 (defn- have-finnish-ssn
   ^{:dependencies [:nationality]}
   [db]
@@ -84,26 +115,19 @@
   [db]
   (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])]
     (if (= "true" have-finnish-ssn)
-      (show-field db :ssn)
+      (show-field db :ssn (demo/demo? db))
       (hide-field db :ssn))))
 
-(defn- parse-birth-date-from-ssn
-  [ssn]
-  (let [century-sign (nth ssn 6)
-        day          (subs ssn 0 2)
-        month        (subs ssn 2 4)
-        year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
-    (str day "." month "." century year)))
-
-(defn- parse-gender-from-ssn
-  [ssn]
-  (if (zero? (mod (js/parseInt (nth ssn 9)) 2))
-    "2"                                                     ;; based on koodisto-values
-    "1"))
+(defn- optional-email
+  ^{:dependencies [:have-finnish-ssn]}
+  [db]
+  (if (and
+        (some? (form-tools/get-field-from-flat-form-content db "onr-2nd"))
+        (not (demo/demo? db)))
+    (let [have-finnish-ssn (get-in db [:application :answers :have-finnish-ssn :value])
+          is-required-needed (not= "true" have-finnish-ssn)]
+      (toggle-require-field db "email" is-required-needed))
+    db))
 
 (defn- birth-date-and-gender
   ^{:dependencies [:have-finnish-ssn :ssn]}
@@ -114,12 +138,13 @@
                               (->> (:flat-form-content db)
                                    (filter #(= "ssn" (:id %)))
                                    first
-                                   :cannot-view))]
+                                   :cannot-view))
+        demo?            (demo/demo? db)]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
                                            (not-empty (:value ssn)))
-                                      [(parse-birth-date-from-ssn (:value ssn))
-                                       (parse-gender-from-ssn (:value ssn))]
+                                      [(ssn/parse-birth-date-from-ssn demo? (:value ssn))
+                                       (ssn/parse-gender-from-ssn demo? (:value ssn))]
                                       cannot-view?
                                       [(get-in db [:application :answers :birth-date :value])
                                        (get-in db [:application :answers :gender :value])]
@@ -141,11 +166,12 @@
                               (->> (:flat-form-content db)
                                    (filter #(= "ssn" (:id %)))
                                    first
-                                   :cannot-view))]
+                                   :cannot-view))
+        demo?            (demo/demo? db)]
     (if (= "true" have-finnish-ssn)
       (let [birth-date (cond (and (:valid ssn)
                                   (not-empty (:value ssn)))
-                             (parse-birth-date-from-ssn (:value ssn))
+                             (ssn/parse-birth-date-from-ssn demo? (:value ssn))
                              cannot-view?
                              (get-in db [:application :answers :birth-date :value])
                              :else
@@ -232,6 +258,7 @@
   (-> db
       have-finnish-ssn
       ssn
+      optional-email
       passport-number
       national-id-number
       birthplace
@@ -243,6 +270,7 @@
   (-> db
       have-finnish-ssn
       ssn
+      optional-email
       passport-number
       national-id-number
       birthplace
