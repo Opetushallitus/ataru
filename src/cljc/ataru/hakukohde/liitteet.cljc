@@ -43,6 +43,11 @@
   (when (:liitteet-onko-sama-toimitusosoite? hakukohde)
     (:liitteiden-toimitusosoite hakukohde)))
 
+(defn- hakukohde-common-deadline
+  [hakukohde]
+  (when (:liitteet-onko-sama-toimitusaika? hakukohde)
+    (:liitteiden-toimitusaika hakukohde)))
+
 (defn- format-address
   [lang address]
   (let [street-address (lang (:osoite address))
@@ -58,3 +63,8 @@
   [lang attachment hakukohde]
   (let [address (or (hakukohde-common-address hakukohde) (:toimitusosoite attachment))]
     (format-address lang address)))
+
+(defn attachment-deadline
+  [attachment hakukohde]
+  (let [deadline (or (hakukohde-common-deadline hakukohde) (:toimitusaika attachment))]
+     deadline))
