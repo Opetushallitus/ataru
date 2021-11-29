@@ -219,6 +219,12 @@
 
 (reg-event-db :editor/add-validator add-validator)
 
+(defn- remove-selection-limits-from-options
+  [db path]
+  (let [content-path (db/current-form-content-path db path)
+        remove-selection-limit (fn [option] (dissoc option :selection-limit))]
+    (update-in db content-path (fn [field] (update field :options (partial mapv remove-selection-limit))))))
+
 (reg-event-fx
   :editor/set-selection-group-id
   (fn [{db :db} [_ selection-group-id & path]]
@@ -228,6 +234,7 @@
                                                  (if selection-group-id
                                                    (assoc params :selection-group-id selection-group-id)
                                                    (dissoc params :selection-group-id))))
+                       (remove-selection-limits-from-options path)
                        (update-modified-by path))
        :dispatch-n [(when selection-group-id
                       [:editor/set-required-to-all-in-path path])]})))
