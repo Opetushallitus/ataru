@@ -10,6 +10,7 @@
      [:input.editor-form__checkbox {:type      "checkbox"
                                     :id        id
                                     :checked   checked?
+                                    :data-test-id (str "checkbox-" (name key))
                                     :on-change (fn [event]
                                                  (dispatch [:editor/set-component-value (-> event .-target .-checked) path key]))}]
      [:label.editor-form__checkbox-label

@@ -252,6 +252,7 @@
                :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
+              [checkbox-component/checkbox path initial-content :sensitive-answer]
               (when (and (seq (:belongs-to-hakukohderyhma initial-content))
                          @is-per-hakukohde-allowed
                          (nil? @options-koodisto))

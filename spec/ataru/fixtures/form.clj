@@ -96,7 +96,13 @@
                        :id                     "164954b5-7b23-4774-bd44-dee14071316b"
                        :params                 {}
                        :options                []
-                       :fieldType              "attachment"}]})
+                       :fieldType              "attachment"}
+                      {:fieldClass       "formField"
+                       :fieldType        "textArea"
+                       :metadata         metadata
+                       :label            {:fi "Salainen kysymys" :sv ""}
+                       :id               "87834771-34da-40a4-a9f6-sensitive"
+                       :sensitive-answer true}]})
 
 (def form-with-followup-inside-a-question-group
   {:id               2147483646
