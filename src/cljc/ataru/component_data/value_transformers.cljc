@@ -12,13 +12,23 @@
                             :cljs [day month year])))))
 
 (defn update-options-while-keeping-existing-followups [newest-options existing-options]
-  (if (empty? existing-options)
-    newest-options
-    (let [existing-values                 (set (map :value existing-options))
-          options-that-didnt-exist-before (filter #(not (contains? existing-values (:value %))) newest-options)]
-      (vec (concat options-that-didnt-exist-before
-                   (map (fn [existing-option]
-                          (if-let [new-option (first (filter #(= (:value %) (:value existing-option)) newest-options))]
-                            (assoc existing-option :label (:label new-option))
-                            existing-option))
-                        existing-options))))))
+  (let [options (if (empty? existing-options)
+                  newest-options
+                  (let [existing-values (set (map :value existing-options))
+                        options-that-didnt-exist-before (filter #(not (contains? existing-values (:value %))) newest-options)]
+                    (vec (concat options-that-didnt-exist-before
+                                 (map (fn [existing-option]
+                                        (if-let [new-option (first (filter #(= (:value %) (:value existing-option)) newest-options))]
+                                          (assoc existing-option :label (:label new-option))
+                                          existing-option))
+                                      existing-options)))))
+        identical (fn [{:keys [value]}]
+                    (keep-indexed (fn [index option]
+                                    (when (= value (:value option))
+                                      [index option]))
+                                  options))]
+    (vec (remove nil? (map-indexed (fn [index option]
+                                     (let [last-option (first (last (identical option)))]
+                                       (when (= index last-option)
+                                         option)))
+                                   options)))))
