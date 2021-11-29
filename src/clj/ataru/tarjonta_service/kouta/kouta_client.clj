@@ -11,7 +11,8 @@
             [clj-time.format :as f]
             [schema.core :as s]
             [clojure.string :as string]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]))
 
 (def haku-checker (s/checker form-schema/Haku))
 (def hakukohde-checker (s/checker form-schema/Hakukohde))
@@ -82,7 +83,9 @@
   (let [parse-liite (fn [liite]
                       {:tyyppi               (get-in liite [:tyyppi :koodiUri])
                        :toimitusaika         (when (seq (:toimitusaika liite))
-                                               (parse-date-time (:toimitusaika liite)))
+                                               (-> (:toimitusaika liite)
+                                                   (hakuaika/basic-date-time-str->date-time)
+                                                   (hakuaika/date-time->localized-date-time)))
                        :toimitetaan-erikseen (= "osoite" (:toimitustapa liite))
                        :toimitusosoite       {:osoite      (get-in liite [:toimitusosoite :osoite :osoite])
                                               :postinumero (get-in liite [:toimitusosoite :osoite :postinumero])}})]
@@ -112,8 +115,10 @@
      :liitteet-onko-sama-toimitusosoite?                          (:liitteetOnkoSamaToimitusosoite hakukohde)
      :liitteiden-toimitusosoite                                   (some-> hakukohde :liitteidenToimitusosoite :osoite)
      :liitteet-onko-sama-toimitusaika?                            (:liitteetOnkoSamaToimitusaika hakukohde)
-     :liitteiden-toimitusaika                                     (some-> hakukohde :liitteidenToimitusaika parse-date-time)
-     }
+     :liitteiden-toimitusaika                                     (some-> hakukohde
+                                                                          :liitteidenToimitusaika
+                                                                          (hakuaika/basic-date-time-str->date-time)
+                                                                          (hakuaika/date-time->localized-date-time))}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]

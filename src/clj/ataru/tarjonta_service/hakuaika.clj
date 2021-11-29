@@ -9,6 +9,7 @@
     [clojure.set :as set]))
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
+(def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
 (defn new-formatter [fmt-str]
   (f/formatter fmt-str (t/time-zone-for-id "Europe/Helsinki")))
 
@@ -35,6 +36,10 @@
 (defn str->date-time
   [str]
   (f/parse time-formatter str))
+
+(defn basic-date-time-str->date-time
+  [str]
+  (f/parse basic-date-time-formatter str))
 
 (defn- jatkuva-haku? [haku]
   (string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
@@ -109,7 +114,7 @@
    now
    (if-let [field-hakukohde-and-group-oids (seq (concat (:belongs-to-hakukohteet field)
                                                         (:belongs-to-hakukohderyhma field)))]
-     (reduce #(clojure.set/union %1 (by-oid %2))
+     (reduce #(set/union %1 (by-oid %2))
              #{}
              field-hakukohde-and-group-oids)
      uniques)))
