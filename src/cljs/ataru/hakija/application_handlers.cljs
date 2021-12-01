@@ -428,9 +428,27 @@
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
+        form-hakukohde-oids        (->> (:content form)
+                                     (filter #(= "hakukohteet" (:id %)))
+                                     first
+                                     :options
+                                     (mapv :value))
+        preselected-hakukohde-oids (cond
+                                     (> (count preselected-hakukohde-oids) 0)
+                                     preselected-hakukohde-oids
+
+                                     ; Jos lomakkeella on vain yksi hakukohde, käytetään sitä
+                                     (= 1 (count form-hakukohde-oids))
+                                     form-hakukohde-oids
+
+                                     :else
+                                     [])
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
         questions                  (demo/apply-when-demo db form demo/remove-unwanted-validators (:content form))
-        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) (get-in db [:application :hakukohde]) questions)
+        hakukohde-oids-to-duplicate (if-let [application-hakukohde-oids (get-in db [:application :hakukohde])]
+                                      application-hakukohde-oids
+                                      preselected-hakukohde-oids)
+        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db

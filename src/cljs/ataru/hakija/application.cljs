@@ -11,12 +11,8 @@
         (fn [_ field]
           (match [field]
             [{:id      "hakukohteet"
-              :label   label
-              :options options}]
-            (let [values (cond (= 1 (count options))
-                               [{:value (:value (first options))
-                                 :valid true}]
-                               (some? preselected-hakukohteet)
+              :label   label}]
+            (let [values (cond (some? preselected-hakukohteet)
                                (mapv (fn [oid] {:value oid :valid true}) preselected-hakukohteet)
                                :else
                                [])]
