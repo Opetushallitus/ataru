@@ -374,7 +374,8 @@
    [:div
     [editor-name]
     [form-usage form-key]]
-   [properties]
+   (when @(subscribe [:editor/show-demo-config])
+     [properties])
    [c/editor]])
 
 (defn editor []

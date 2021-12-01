@@ -19,6 +19,13 @@
     ""))
 
 (re-frame/reg-sub
+  :editor/show-demo-config
+  (fn [_ _]
+    (re-frame/subscribe [:editor/yhteishaku?]))
+  (fn [yhteishaku? _]
+    yhteishaku?))
+
+(re-frame/reg-sub
   :editor/demo-validity-start
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))
