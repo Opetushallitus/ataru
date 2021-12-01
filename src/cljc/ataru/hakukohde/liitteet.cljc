@@ -38,6 +38,10 @@
   [post-office]
   post-office)
 
+(defn- format-website
+  [website]
+  (str "[" website "]" "(" website ")"))
+
 (defn- hakukohde-common-address
   [hakukohde]
   (when (:liitteet-onko-sama-toimitusosoite? hakukohde)
@@ -52,12 +56,15 @@
   [lang address]
   (let [street-address (lang (:osoite address))
         postal-code    (:koodiUri (:postinumero address))
-        post-office    (lang (:nimi (:postinumero address)))]
+        post-office    (lang (:nimi (:postinumero address)))
+        website        (:verkkosivu address)]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (format-street-address street-address) "\n\n"
         (format-postal-code postal-code) "\n\n"
-        (format-post-office post-office)))))
+        (format-post-office post-office)
+        (when website
+          (str "\n\n" (format-website website)))))))
 
 (defn attachment-address
   [lang attachment hakukohde]

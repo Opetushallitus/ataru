@@ -78,6 +78,12 @@
           (str "Unknown hakukohteen tila " (:tila hakukohde)
                " in hakukohde " (:oid hakukohde))))))
 
+(defn- parse-liite-toimitusosoite
+  [toimitusosoite]
+  {:osoite      (get-in toimitusosoite [:osoite :osoite])
+   :postinumero (get-in toimitusosoite [:osoite :postinumero])
+   :verkkosivu  (:verkkosivu toimitusosoite)})
+
 (defn- parse-hakukohde-liitteet
   [hakukohde]
   (let [parse-liite (fn [liite]
@@ -87,8 +93,7 @@
                                                    (hakuaika/basic-date-time-str->date-time)
                                                    (hakuaika/date-time->localized-date-time)))
                        :toimitetaan-erikseen (= "osoite" (:toimitustapa liite))
-                       :toimitusosoite       {:osoite      (get-in liite [:toimitusosoite :osoite :osoite])
-                                              :postinumero (get-in liite [:toimitusosoite :osoite :postinumero])}})]
+                       :toimitusosoite       (parse-liite-toimitusosoite (:toimitusosoite liite))})]
   (->> hakukohde
        (:liitteet)
        (map #(parse-liite %)))))
@@ -113,7 +118,9 @@
      :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
      :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
      :liitteet-onko-sama-toimitusosoite?                          (:liitteetOnkoSamaToimitusosoite hakukohde)
-     :liitteiden-toimitusosoite                                   (some-> hakukohde :liitteidenToimitusosoite :osoite)
+     :liitteiden-toimitusosoite                                   (some-> hakukohde
+                                                                          :liitteidenToimitusosoite
+                                                                          (parse-liite-toimitusosoite))
      :liitteet-onko-sama-toimitusaika?                            (:liitteetOnkoSamaToimitusaika hakukohde)
      :liitteiden-toimitusaika                                     (some-> hakukohde
                                                                           :liitteidenToimitusaika
