@@ -811,7 +811,7 @@
                           :en "Preferred first/given name"}
    :surname              {:fi "Sukunimi"
                           :sv "Efternamn"
-                          :en "Last name"}
+                          :en "Surname/Family name"}
    :nationality          {:fi "Kansalaisuus"
                           :sv "Medborgarskap"
                           :en "Nationality"}
