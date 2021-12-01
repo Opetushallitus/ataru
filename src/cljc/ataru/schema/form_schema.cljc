@@ -219,7 +219,8 @@
 (s/defschema Toimitusosoite
   {(s/optional-key :osoite)      (s/maybe localized-schema/LocalizedStringOptional)
    (s/optional-key :postinumero) (s/maybe {(s/optional-key :koodiUri) (s/maybe s/Str)
-                                           (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})})
+                                           (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})
+   (s/optional-key :verkkosivu)   (s/maybe s/Str)})
 
 (s/defschema HakukohdeLiite
   {(s/optional-key :tyyppi)                (s/maybe s/Str)
