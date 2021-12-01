@@ -245,10 +245,11 @@
   (let [user-info @(subscribe [:state-query [:editor :user-info]])
         demo-allowed? @(subscribe [:editor/demo-allowed])]
     [:div.editor-form__haku-preview-link
-     [:a {:href   (str "/lomake-editori/api/preview/haku/"
-                       (:oid haku)
-                       "?lang=fi")
-          :target "_blank"}
+     [:a {:href         (str "/lomake-editori/api/preview/haku/"
+                          (:oid haku)
+                          "?lang=fi")
+          :target       "_blank"
+          :data-test-id "application-preview-link-fi"}
       @(subscribe [:editor/virkailija-translation :test-application])]
      [:span " | "]
      [:a {:href   (str js/config.applicant.service_url
