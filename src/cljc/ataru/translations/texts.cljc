@@ -484,7 +484,13 @@
                                                  :en "EN: Jatka"}
    :demo-notification-title                     {:fi "Harjoittelulomake"
                                                  :sv "Övningsblankett"
-                                                 :en "EN: Harjoittelulomake"}})
+                                                 :en "EN: Harjoittelulomake"}
+   :toimitusosoite                              {:fi "Toimitusosoite"
+                                                 :sv "SV: Toimitusosoite"
+                                                 :en "EN: Toimitusosoite"}
+   :verkkosivu                                  {:fi "Verkkosivu"
+                                                 :sv "SV: Verkkosivu"
+                                                 :en "EN: Verkkosivu"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

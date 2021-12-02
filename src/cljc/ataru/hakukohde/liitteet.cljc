@@ -1,5 +1,6 @@
 (ns ataru.hakukohde.liitteet
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [ataru.translations.texts :as texts]))
 
 (defn use-kouta-info-for-liite
   [liite required-attachment-type]
@@ -23,7 +24,7 @@
 
 (defn- format-street-address
   [street-address]
-  (string/replace street-address "\n" "\n\n"))
+  (string/replace street-address "\n" ", "))
 
 (defn- format-postal-code
   [postal-code]
@@ -60,11 +61,12 @@
         website        (:verkkosivu address)]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
-        (format-street-address street-address) "\n\n"
-        (format-postal-code postal-code) "\n\n"
+        (lang (:toimitusosoite texts/translation-mapping)) ": "
+        (format-street-address street-address) ", "
+        (format-postal-code postal-code) " "
         (format-post-office post-office)
         (when website
-          (str "\n\n" (format-website website)))))))
+          (str "\n\n" (lang (:verkkosivu texts/translation-mapping)) ": " (format-website website)))))))
 
 (defn attachment-address
   [lang attachment hakukohde]
