@@ -35,9 +35,9 @@
                                                                     (map #(first (string/split % #"#")) (:hakukelpoisuusvaatimus-uris hakukohde)))
      :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? (boolean (:jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja? hakukohde))
      :liitteet                                                    (:liitteet hakukohde)
-     :liitteet-onko-sama-toimitusosoite?                          (:liitteet-onko-sama-toimitusosoite? hakukohde)
+     :liitteet-onko-sama-toimitusosoite?                          (boolean (:liitteet-onko-sama-toimitusosoite? hakukohde))
      :liitteiden-toimitusosoite                                   (:liitteiden-toimitusosoite hakukohde)
-     :liitteet-onko-sama-toimitusaika?                            (:liitteet-onko-sama-toimitusaika? hakukohde)
+     :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteet-onko-sama-toimitusaika? hakukohde))
      :liitteiden-toimitusaika                                     (:liitteiden-toimitusaika hakukohde)}))
 
 (defn- pohjakoulutukset-by-vaatimus
