@@ -60,6 +60,7 @@ matrix:
       install:
         - git clone https://github.com/Opetushallitus/ci-tools.git
         - source ci-tools/common/setup-tools.sh
+        - curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
       before_script:
         - docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/postgres:11
