@@ -117,15 +117,15 @@
      :yo-amm-autom-hakukelpoisuus                                 (boolean (some #(:yo-amm-autom-hakukelpoisuus %) settings))
      :koulutustyyppikoodi                                         (:koulutustyyppikoodi hakukohde)
      :liitteet                                                    (parse-hakukohde-liitteet hakukohde)
-     :liitteet-onko-sama-toimitusosoite?                          (:liitteetOnkoSamaToimitusosoite hakukohde)
+     :liitteet-onko-sama-toimitusosoite?                          (boolean (:liitteetOnkoSamaToimitusosoite hakukohde))
      :liitteiden-toimitusosoite                                   (some-> hakukohde
-                                                                          :liitteidenToimitusosoite
-                                                                          (parse-liite-toimitusosoite))
-     :liitteet-onko-sama-toimitusaika?                            (:liitteetOnkoSamaToimitusaika hakukohde)
+                                                                    :liitteidenToimitusosoite
+                                                                    (parse-liite-toimitusosoite))
+     :liitteet-onko-sama-toimitusaika?                            (boolean (:liitteetOnkoSamaToimitusaika hakukohde))
      :liitteiden-toimitusaika                                     (some-> hakukohde
-                                                                          :liitteidenToimitusaika
-                                                                          (hakuaika/basic-date-time-str->date-time)
-                                                                          (hakuaika/date-time->localized-date-time))}
+                                                                    :liitteidenToimitusaika
+                                                                    (hakuaika/basic-date-time-str->date-time)
+                                                                    (hakuaika/date-time->localized-date-time))}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
