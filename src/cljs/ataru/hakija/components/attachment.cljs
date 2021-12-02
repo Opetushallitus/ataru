@@ -187,8 +187,10 @@
         attachments            @(subscribe [:application/attachments id question-group-idx])
         visible-attachments    @(subscribe [:application/visible-attachments id question-group-idx])
         attachment-count       (count attachments)
-        application-identifier @(subscribe [:application/application-identifier])]
-    [:div.application__form-field
+        application-identifier @(subscribe [:application/application-identifier])
+        extra-class            (when (:original-question field-descriptor)
+                                 ".application__form-field--attachment-with-address")]
+    [(keyword (str "div.application__form-field" extra-class))
      [generic-label-component/generic-label field-descriptor question-group-idx]
      (when (application-field/belongs-to-hakukohde-or-ryhma? field-descriptor)
        [hakukohde-names-component/question-hakukohde-names field-descriptor :liitepyynto-for-hakukohde])
