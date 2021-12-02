@@ -182,7 +182,6 @@
     field-descriptor component-id question-group-idx attachment-idx]])
 
 (defn attachment [{:keys [id] :as field-descriptor} question-group-idx]
-  (println field-descriptor)
   (let [languages              @(subscribe [:application/default-languages])
         text                   (util/non-blank-val (get-in field-descriptor [:params :info-text :value]) languages)
         attachments            @(subscribe [:application/attachments id question-group-idx])

@@ -184,8 +184,9 @@
     (re-frame/subscribe [:application/selected-language]))
   (fn [lang [_ field]]
     (let [attachment-type (get-in field [:params :attachment-type])
-          hakukohde @(re-frame/subscribe [:application/get-hakukohde (:duplikoitu-kysymys-hakukohde-oid field)])
-          attachment (liitteet/attachment-for-hakukohde attachment-type hakukohde)]
+          hakukohde-oid   (or (:duplikoitu-kysymys-hakukohde-oid field) (:duplikoitu-followup-hakukohde-oid field))
+          hakukohde       @(re-frame/subscribe [:application/get-hakukohde hakukohde-oid])
+          attachment      (liitteet/attachment-for-hakukohde attachment-type hakukohde)]
       (when (seq hakukohde)
         (liitteet/attachment-address lang attachment hakukohde)))))
 
@@ -195,7 +196,8 @@
     (re-frame/subscribe [:application/selected-language]))
   (fn [selected-language [_ field]]
     (let [attachment-type   (get-in field [:params :attachment-type])
-          hakukohde         @(re-frame/subscribe [:application/get-hakukohde (:duplikoitu-kysymys-hakukohde-oid field)])
+          hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid field) (:duplikoitu-followup-hakukohde-oid field))
+          hakukohde         @(re-frame/subscribe [:application/get-hakukohde hakukohde-oid])
           attachment        (liitteet/attachment-for-hakukohde attachment-type hakukohde)
           default-deadline  (-> field :params :deadline-label)
           deadline          (or (liitteet/attachment-deadline attachment hakukohde) default-deadline)]
