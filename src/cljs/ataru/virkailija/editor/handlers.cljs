@@ -1145,13 +1145,18 @@
   [previews]
   (map #(assoc % :stored-content (dissoc % :stored-content)) previews))
 
+(defn- nils-to-string [m]
+  (into {} (for [[k v] m] [k (or v "")])))
+
 (defn- preview-map-to-list
   [previews]
   (let [contents              (->> previews
                                    vals
                                    (map #(select-keys % [:lang :content :content-ending :subject :signature])))
         contents-changed      @(subscribe [:editor/email-templates-altered])
-        only-changed-contents (filter #(get contents-changed (:lang %)) contents)]
+        only-changed-contents (->> contents
+                                   (filter #(get contents-changed (:lang %)))
+                                   (map nils-to-string))]
     only-changed-contents))
 
 (defn- preview-list-to-map
