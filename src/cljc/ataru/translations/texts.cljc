@@ -1030,7 +1030,7 @@
                                                      :en "Applications"}
    :asiointikieli                                   {:fi "Asiointikieli"
                                                      :sv "Kontaktspråk"
-                                                     :en "Contact language"}
+                                                     :en "Language of communication"}
    :attachment                                      {:fi "Liitepyyntö"
                                                      :sv "Begäran om bilagor"
                                                      :en "Attachment"}
