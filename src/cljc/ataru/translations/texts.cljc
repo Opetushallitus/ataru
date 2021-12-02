@@ -485,12 +485,12 @@
    :demo-notification-title                     {:fi "Harjoittelulomake"
                                                  :sv "Övningsblankett"
                                                  :en "EN: Harjoittelulomake"}
-   :toimitusosoite                              {:fi "Toimitusosoite"
-                                                 :sv "SV: Toimitusosoite"
-                                                 :en "EN: Toimitusosoite"}
-   :verkkosivu                                  {:fi "Verkkosivu"
-                                                 :sv "SV: Verkkosivu"
-                                                 :en "EN: Verkkosivu"}})
+   :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
+                                                 :sv "SV: Lähetä liite osoitteeseen"
+                                                 :en "EN: Lähetä liite osoitteeseen"}
+   :verkkosivu                                  {:fi "Tai käytä"
+                                                 :sv "SV: Tai käytä"
+                                                 :en "EN: Tai käytä"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
