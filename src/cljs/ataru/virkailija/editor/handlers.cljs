@@ -1144,6 +1144,37 @@
         (update-modified-by [(remove-option-path path)])))))
 
 (reg-event-db
+  :editor/clean-per-hakukohde-followups
+  (let [is-mail-attachment?
+        (fn [field]
+          (and
+            (= "attachment" (:fieldType field))
+            (get-in field [:params :mail-attachment?])))
+
+        remove-mail-attachment-per-hakukohde-info
+        (fn [field]
+          (update field :params #(dissoc % :fetch-info-from-kouta? :attachment-type)))
+
+        clean-followups
+        (fn [followup]
+          (if (is-mail-attachment? followup)
+            (remove-mail-attachment-per-hakukohde-info followup)
+            followup))
+
+        clean-options
+        (fn [option]
+          (update option :followups (comp vec (partial map clean-followups))))
+
+        clean-field
+        (fn [field]
+          (update field :options (comp vec (partial map clean-options))))]
+    (fn [db [_ path]]
+      (let [field-path (current-form-content-path db [path])
+            field      (get-in db field-path)
+            new-field  (clean-field field)]
+        (assoc-in db field-path new-field)))))
+
+(reg-event-db
   :editor/fold
   (fn [db [_ id]]
     (fold db id)))

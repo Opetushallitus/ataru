@@ -371,7 +371,8 @@
               (when (and (seq (:belongs-to-hakukohderyhma initial-content))
                       @is-per-hakukohde-allowed
                       (nil? @options-koodisto))
-                [checkbox-component/checkbox path initial-content :per-hakukohde])
+                [checkbox-component/checkbox path initial-content :per-hakukohde
+                 #(dispatch [:editor/clean-per-hakukohde-followups path])])
               (when @support-selection-limit?
                 [validator-checkbox-component/validator-checkbox path initial-content :selection-limit nil
                  #(dispatch [:editor/set-selection-group-id (when % @selected-form-key) path])])

@@ -316,16 +316,17 @@
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet path content]]]])))
 
 (defn attachment-textarea [_ path]
-(let [checked?                      (subscribe [:editor/get-component-value path :params :info-text :enabled?])
-        mail-attachment?            (subscribe [:editor/get-component-value path :params :mail-attachment?])
-        fetch-info-from-kouta?      (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
-        selected-attachment-type?   (subscribe [:editor/get-component-value path :params :attachment-type])
-        attachment-types-koodisto?  (subscribe [:editor/get-attachment-types-koodisto])
-        collapse?                   (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        languages                   (subscribe [:editor/languages])
-        lang                        (subscribe [:editor/virkailija-lang])
-        is-per-hakukohde-allowed    (subscribe [:editor/is-per-hakukohde-allowed path])
-        component-locked?           (subscribe [:editor/component-locked? path])]
+(let [checked?                   (subscribe [:editor/get-component-value path :params :info-text :enabled?])
+      mail-attachment?           (subscribe [:editor/get-component-value path :params :mail-attachment?])
+      fetch-info-from-kouta?     (subscribe [:editor/get-component-value path :params :fetch-info-from-kouta?])
+      selected-attachment-type?  (subscribe [:editor/get-component-value path :params :attachment-type])
+      attachment-types-koodisto? (subscribe [:editor/get-attachment-types-koodisto])
+      collapse?                  (subscribe [:editor/get-component-value path :params :info-text-collapse])
+      languages                  (subscribe [:editor/languages])
+      lang                       (subscribe [:editor/virkailija-lang])
+      is-per-hakukohde-allowed   (subscribe [:editor/is-per-hakukohde-allowed path])
+      component-locked?          (subscribe [:editor/component-locked? path])
+      has-parent-per-hakukohde   (subscribe [:editor/has-parent-per-hakukohde path])]
     (fn [initial-content path]
       [:div.editor-form__info-addon-wrapper
        (let [id (util/new-uuid)]
@@ -363,7 +364,8 @@
          [checkbox-component/checkbox path initial-content :per-hakukohde
             (fn [] (dispatch [:editor/set-component-value false path :params :fetch-info-from-kouta?]))])
        (when (and @mail-attachment?
-                  (-> initial-content :per-hakukohde boolean))
+               (or (-> initial-content :per-hakukohde boolean)
+                 @has-parent-per-hakukohde))
          (let [id (util/new-uuid)]
            [:div.editor-form__info-addon-checkbox
             [:input {:id        id
