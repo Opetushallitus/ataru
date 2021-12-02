@@ -271,7 +271,8 @@
           [:option {:value ">"} @(subscribe [:editor/virkailija-translation :lisakysymys-arvon-perusteella-ehto-suurempi])]]
          [:input.editor-form__text-field-option-condition-answer-compared-to
           {:disabled     @component-locked?
-           :class        (when (not (:valid? @local-state))
+           :class        (when (or (not (:valid? @local-state))
+                                   (string/blank? (:value @local-state)))
                            "editor-form__text-field-option-condition-answer-compared-to--invalid")
            :id           id
            :on-blur      (partial on-blur-fn path)
