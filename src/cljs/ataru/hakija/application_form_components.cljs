@@ -24,7 +24,7 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]
-            [ataru.hakija.components.attachment :refer [attachment]]))
+            [ataru.hakija.components.attachment :refer [attachment-readonly]]))
 
 (defonce autocomplete-off "new-password")
 
@@ -788,7 +788,7 @@
          {:fieldClass "formField" :fieldType "dropdown"} [dropdown-component/dropdown field-descriptor idx render-field]
          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor idx]
          {:fieldClass "formField" :fieldType "singleChoice"} [single-choice-button field-descriptor idx]
-         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor idx]
+         {:fieldClass "formField" :fieldType "attachment"} [attachment-readonly field-descriptor idx]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet-picker field-descriptor idx]
          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
