@@ -211,3 +211,31 @@
            [deadline-info deadline]])]
        (when-not @(subscribe [:application/cannot-edit? (keyword id)])
          [attachment-upload field-descriptor id attachment-count question-group-idx]))]))
+
+(defn- attachment-list-readonly [attachments]
+  (let [visible-attachments (filter #(not= (:status %) :deleting) attachments)]
+    [:div
+     (map (fn [value]
+            ^{:key (str "attachment-" (:value value))}
+            [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
+       visible-attachments)]))
+
+(defn attachment-readonly [field-descriptor application lang question-group-index]
+  (let [answer-key (keyword (application-field/answer-key field-descriptor))
+        values     (if question-group-index
+                     (-> application
+                       :answers
+                       answer-key
+                       :values
+                       (nth question-group-index nil))
+                     (-> application :answers answer-key :values))]
+    [:div.application__form-field
+     [:div.application__form-field-label
+      (str (util/from-multi-lang (:label field-descriptor) lang)
+        (application-field/required-hint field-descriptor))]
+     (when-let [address @(subscribe [:application/attachment-address field-descriptor])]
+       [application-field/markdown-paragraph address])
+     (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]
+       [:div.application__mail-attachment--deadline
+        [deadline-info deadline]])
+     [attachment-list-readonly values]]))

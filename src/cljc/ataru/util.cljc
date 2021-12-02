@@ -227,6 +227,9 @@
 (defn non-blank-val [m ks]
   (some #(not-blank (get m %)) ks))
 
+(defn from-multi-lang [text lang]
+  (non-blank-val text [lang :fi :sv :en]))
+
 (defn indices-of [f coll]
   (keep-indexed #(if (f %2) %1 nil) coll))
 
