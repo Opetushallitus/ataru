@@ -3,22 +3,28 @@
             [cljs.test :refer-macros [deftest is testing]]
             [clojure.string :as string]))
 
+(def deadline-1
+  {:fi "31.3.2022 klo 00:00",
+   :sv "31.3.2022 kl. 00:00 EEST",
+   :en "Mar. 31, 2022 at 12:00 AM EEST"})
+
 (def liite-1
   {:tyyppi               "liitetyypitamm_6#1",
-   :toimitusaika         {:fi "31.3.2022 klo 00:00",
-                          :sv "31.3.2022 kl. 00:00 EEST",
-                          :en "Mar. 31, 2022 at 12:00 AM EEST"},
+   :toimitusaika         deadline-1,
    :toimitetaan-erikseen true,
    :toimitusosoite       {:osoite      {:fi "Hiushalkojantie 4"},
                           :postinumero {:koodiUri "posti_00100#2",
                                         :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
                           :verkkosivu  "https://liite-hius.fi"}})
 
+(def deadline-2
+  {:fi "28.2.2022 klo 00:00",
+   :sv "28.2.2022 kl. 00:00 EET",
+   :en "Feb. 28, 2022 at 12:00 AM EET"})
+
 (def liite-2
   {:tyyppi               "liitetyypitamm_7#1",
-   :toimitusaika         {:fi "28.2.2022 klo 00:00",
-                          :sv "28.2.2022 kl. 00:00 EET",
-                          :en "Feb. 28, 2022 at 12:00 AM EET"},
+   :toimitusaika         deadline-2,
    :toimitetaan-erikseen true,
    :toimitusosoite       {:osoite      {:fi "Hiuskatu 2"},
                           :postinumero {:koodiUri "posti_00500#2",
@@ -44,6 +50,16 @@
                                                       :nimi     {:fi "HELSINKI", :sv "HELSINGFORS"}},
                                         :verkkosivu  "https://elintie-liite.fi"}
    :liitteet                           [liite-1 liite-2]})
+
+(def common-deadline
+  {:fi "31.1.2022 klo 12:00",
+   :sv "31.1.2022 kl. 12:00 EET",
+   :en "Jan. 31, 2022 at 12:00 PM EET"})
+
+(def hakukohde-with-common-attachment-deadline
+  {:liitteet-onko-sama-toimitusaika? true
+   :liitteiden-toimitusaika          common-deadline
+   :liitteet                         [liite-1 liite-2]})
 
 (deftest attachment-for-hakukohde-test
   (let [hakukohde {:liitteet [liite-1 liite-2]}]
@@ -78,3 +94,13 @@
       (is (string/includes? address "Elintie 5"))
       (is (string/includes? address "00100 HELSINKI"))
       (is (string/includes? address "https://elintie-liite.fi")))))
+
+(deftest attachment-deadline-test
+  (testing "deadline from single attachment"
+    (let [hakukohde {:litteet [liite-1 liite-2]}
+          deadline  (liitteet/attachment-deadline liite-2 hakukohde)]
+      (is (= deadline-2 deadline))))
+
+  (testing "deadline from common attachment deadline"
+    (let [deadline (liitteet/attachment-deadline liite-2 hakukohde-with-common-attachment-deadline)]
+      (is (= common-deadline deadline)))))
