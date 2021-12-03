@@ -167,6 +167,7 @@
                                               (util/group-by-first :field-id))
          form                            (-> (forms/fetch-by-id (:form application))
                                              (hakukohde/populate-attachment-deadlines now hakuajat field-deadlines))
+         flat-form-fields                (util/flatten-form-fields (:content form))
          lang                            (keyword (:lang application))
          attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                               (map :attachment-key)
@@ -174,12 +175,17 @@
                                                            (= [] (:value ((keyword %) answers-by-key)))
                                                            (nil? (:value ((keyword %) answers-by-key)))))
                                               set)
-         attachments-without-answer      (->> form
-                                              :content
-                                              util/flatten-form-fields
+         attachments-without-answer      (->> flat-form-fields
                                               (filter #(and (contains? attachment-keys-without-answers (:id %))
                                                             (not (:per-hakukohde %))))
                                               (map #(attachment-with-deadline application lang %)))
+         attachments-info-from-kouta     (->> answers-by-key
+                                              (keep (fn [[_ val]]
+                                                      (let [original-question (or (:original-question val) (:original-followup val))
+                                                            hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid val) (:duplikoitu-followup-hakukohde-oid val))]
+                                                        (when (and (= "attachment" (:fieldType val)) original-question)
+                                                          {:original-field original-question :hakukohde-oid hakukohde-oid}))))
+                                              (filter #(:fetch-info-from-kouta? ((keyword (:original-field %)) flat-form-fields))))
          email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
          content                         (-> email-template
                                              :content
