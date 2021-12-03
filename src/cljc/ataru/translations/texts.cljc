@@ -108,7 +108,7 @@
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s study programmes "}
    :arvosana                                    {:fi "Arvosana"
-                                                 :sv "Arvosana"
+                                                 :sv "Vitsord"
                                                  :en "Arvosana"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
@@ -408,13 +408,13 @@
                                                  :en "seconds"
                                                  :sv "sekunder"}
    :select-max-n-application-options            {:fi ["Valitse enintään " " hakukohdetta"]
-                                                 :sv ["Välj högst " " SV: hakukohdetta"]
+                                                 :sv ["Välj högst " " ansökningsmål"]
                                                  :en ["EN: Valitse enintään " " ansökningsmål"]}
    :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
                                                  :sv "Du kan välja ännu ett ansökningsmål"
                                                  :en "EN: Voit valita vielä yhden hakukohteen"}
    :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
-                                                 :sv ["Du kan välja " " ansökningsmål"]
+                                                 :sv ["Du kan välja ännu " " ansökningsmål"]
                                                  :en ["EN: Voit valita vielä " " hakukohdetta"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
