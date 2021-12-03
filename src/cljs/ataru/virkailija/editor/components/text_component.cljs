@@ -14,7 +14,8 @@
     [cljs.core.match :refer-macros [match]]
     [clojure.string :as string]
     [reagent.core :as r]
-    [re-frame.core :refer [subscribe dispatch dispatch-sync]]))
+    [re-frame.core :refer [subscribe dispatch dispatch-sync]]
+    [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -486,6 +487,8 @@
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
+           (when text-area?
+             [checkbox-component/checkbox path initial-content :sensitive-answer])
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
            (when-not text-area?
