@@ -98,9 +98,9 @@
 (deftest attachment-deadline-test
   (testing "deadline from single attachment"
     (let [hakukohde {:litteet [liite-1 liite-2]}
-          deadline  (liitteet/attachment-deadline liite-2 hakukohde)]
-      (is (= deadline-2 deadline))))
+          deadline  (liitteet/attachment-deadline :fi liite-2 hakukohde)]
+      (is (string/includes? "28.2.2022 klo 00:00" deadline))))
 
   (testing "deadline from common attachment deadline"
-    (let [deadline (liitteet/attachment-deadline liite-2 hakukohde-with-common-attachment-deadline)]
-      (is (= common-deadline deadline)))))
+    (let [deadline (liitteet/attachment-deadline :fi liite-2 hakukohde-with-common-attachment-deadline)]
+      (is (string/includes? "31.1.2022 klo 12:00" deadline)))))
