@@ -199,9 +199,9 @@
           hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid field) (:duplikoitu-followup-hakukohde-oid field))
           hakukohde         @(re-frame/subscribe [:application/get-hakukohde hakukohde-oid])
           attachment        (liitteet/attachment-for-hakukohde attachment-type hakukohde)
-          default-deadline  (-> field :params :deadline-label)
-          deadline          (or (liitteet/attachment-deadline attachment hakukohde) default-deadline)]
-      (get deadline selected-language))))
+          default-deadline  (-> field :params :deadline-label (get selected-language))
+          deadline          (or (liitteet/attachment-deadline selected-language attachment hakukohde) default-deadline)]
+      deadline)))
 
 (re-frame/reg-sub
   :application/haku-end-time

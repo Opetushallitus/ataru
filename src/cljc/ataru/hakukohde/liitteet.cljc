@@ -74,7 +74,12 @@
   (let [address (or (hakukohde-common-address hakukohde) (:toimitusosoite attachment))]
     (format-address lang address)))
 
+(defn attachment-address-with-hakukohde
+  [lang attachment hakukohde]
+  (let [address (attachment-address lang attachment hakukohde)]
+    (str (util/from-multi-lang (:name hakukohde) lang) "\n\n" address)))
+
 (defn attachment-deadline
-  [attachment hakukohde]
+  [lang attachment hakukohde]
   (let [deadline (or (hakukohde-common-deadline hakukohde) (:toimitusaika attachment))]
-     deadline))
+     (get deadline lang)))

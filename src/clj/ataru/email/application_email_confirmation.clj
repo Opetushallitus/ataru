@@ -22,6 +22,7 @@
             [medley.core :refer [find-first]]
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
+            [ataru.hakukohde.liitteet :as liitteet]
             [clojure.string :as string])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
@@ -146,6 +147,26 @@
                                (util/non-blank-val [lang :fi :sv :en]))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
+(defn- attachment-with-info-from-kouta
+  [lang field hakukohde-oid hakukohteet]
+  (let [hakukohde  (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+        attachment (liitteet/attachment-for-hakukohde (get-in field [:params :attachment-type]) hakukohde)
+        address    (liitteet/attachment-address-with-hakukohde lang attachment hakukohde)
+        deadline   (liitteet/attachment-deadline lang attachment hakukohde)]
+    {:label address :deadline deadline}))
+
+(defn- create-attachment-info-utilizing-kouta
+  [answers-by-key flat-form-fields lang hakukohteet]
+  (let [find-original-field (fn [original-field-oid] (first (filter #(= (:id %) original-field-oid) flat-form-fields)))]
+    (->> answers-by-key
+         (keep (fn [[_ val]]
+                 (let [original-question (or (:original-question val) (:original-followup val))
+                       hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid val) (:duplikoitu-followup-hakukohde-oid val))]
+                   (when (and (= "attachment" (:fieldType val)) original-question)
+                     {:original-field original-question :hakukohde-oid hakukohde-oid}))))
+         (filter #(get-in (find-original-field (:original-field %)) [:params :fetch-info-from-kouta?]))
+         (map #(attachment-with-info-from-kouta lang (find-original-field (:original-field %)) (:hakukohde-oid %) hakukohteet)))))
+
 (defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
                      (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
   ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
@@ -160,7 +181,8 @@
                                              (:haku application)
                                              (:hakukohde application)))
          answers-by-key                  (-> application :answers util/answers-by-key)
-         hakuajat                        (hakuaika/index-hakuajat (:hakukohteet tarjonta-info))
+         hakukohteet                     (:hakukohteet tarjonta-info)
+         hakuajat                        (hakuaika/index-hakuajat hakukohteet)
          field-deadlines                 (->> (:key application)
                                               field-deadline/get-field-deadlines
                                               (map #(dissoc % :last-modified))
@@ -179,13 +201,7 @@
                                               (filter #(and (contains? attachment-keys-without-answers (:id %))
                                                             (not (:per-hakukohde %))))
                                               (map #(attachment-with-deadline application lang %)))
-         attachments-info-from-kouta     (->> answers-by-key
-                                              (keep (fn [[_ val]]
-                                                      (let [original-question (or (:original-question val) (:original-followup val))
-                                                            hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid val) (:duplikoitu-followup-hakukohde-oid val))]
-                                                        (when (and (= "attachment" (:fieldType val)) original-question)
-                                                          {:original-field original-question :hakukohde-oid hakukohde-oid}))))
-                                              (filter #(:fetch-info-from-kouta? ((keyword (:original-field %)) flat-form-fields))))
+         attachments-info-from-kouta     (create-attachment-info-utilizing-kouta answers-by-key flat-form-fields lang hakukohteet)
          email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
          content                         (-> email-template
                                              :content
@@ -214,7 +230,7 @@
                                                   :application-url            application-url
                                                   :content                    content
                                                   :content-ending             content-ending
-                                                  :attachments-without-answer attachments-without-answer
+                                                  :attachments-without-answer (concat attachments-without-answer attachments-info-from-kouta)
                                                   :signature                  signature}
          applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
