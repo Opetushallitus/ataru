@@ -149,10 +149,11 @@
 
 (defn- attachment-with-info-from-kouta
   [lang field hakukohde-oid hakukohteet]
-  (let [hakukohde  (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
-        attachment (liitteet/attachment-for-hakukohde (get-in field [:params :attachment-type]) hakukohde)
-        address    (liitteet/attachment-address-with-hakukohde lang attachment hakukohde)
-        deadline   (liitteet/attachment-deadline lang attachment hakukohde)]
+  (let [hakukohde        (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+        attachment       (liitteet/attachment-for-hakukohde (get-in field [:params :attachment-type]) hakukohde)
+        address          (liitteet/attachment-address-with-hakukohde lang attachment hakukohde)
+        default-deadline (-> field :params :deadline-label (get lang))
+        deadline   (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)]
     {:label address :deadline deadline}))
 
 (defn- create-attachment-info-utilizing-kouta
