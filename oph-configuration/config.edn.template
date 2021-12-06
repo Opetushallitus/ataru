@@ -12,6 +12,9 @@
                              :form-key                    "{{ataru_tutkintojen_tunnustaminen_form_key}}"
                              :country-question-id         "{{ataru_tutkintojen_tunnustaminen_country_question_id}}"
                              :attachment-total-size-limit {{ataru_tutkintojen_tunnustaminen_size_limit}}
+                             :maksut                      {:enabled?                {{ataru_tutkintojen_tunnustaminen_maksut_enabled}}
+                                                           :poll-interval-minutes   {{ataru_tutkintojen_tunnustaminen_maksut_poll_interval}}
+                                                           :form-key      			    "{{ataru_tutkintojen_tunnustaminen_maksut_form_key}}"}
                              :ftp                         {:host               "{{ataru_tutkintojen_tunnustaminen_ftp_host}}"
                                                            :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
                                                            :user               "{{ataru_tutkintojen_tunnustaminen_ftp_user}}"
@@ -40,6 +43,7 @@
                             :schema-validation {{ ataru_schema_validation | default('false') }}
                             :arvosanat {{ ataru_arvosanat | default('false') }}}
                  :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
+                 :tutu-payment-form-key "{{ataru_tutu_payment_form_key}}"
                  :attachment-modify-grace-period-days 14
                  :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}

@@ -994,6 +994,17 @@ textarea.application__form-text-area__size-large {
   color: @white;
 }
 
+.application__maksut-button {
+  margin-top: 50px;
+  align-items: center;
+  border-radius: 3px;
+  display: flex;
+  height: 41px;
+  justify-content: center;
+  padding: 0 30px;
+  color: @white;
+}
+
 .application__form-checkbox:checked + label::before {
   content: url('../../images/icon_check-white.png');
   margin-bottom: 2px;
@@ -1853,6 +1864,20 @@ th.application__readonly-adjacent--header {
   display: flex;
   flex-flow: column nowrap;
 }
+
+.application__submitted-submit-payment {
+  background-color: @dark-overlay;
+  align-self: flex-start;
+  flex: 1 1 auto;
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  width: 100%;
+  margin: auto;
+  display: flex;
+  flex-flow: column nowrap;
+}
+
 .application__form-loading-spinner {
   width: 100%;
   margin: auto;
@@ -1863,6 +1888,44 @@ th.application__readonly-adjacent--header {
 .application__submitted-submit-notification-inner {
   display: flex;
   justify-content: center;
+}
+
+.application__submitted-submit-payment-inner {
+  background-color: @white;
+  width: 800px;
+  padding: 50px;
+}
+
+.application__submitted-submit-payment-button-container {
+  display: flex;
+  justify-content: center;
+}
+
+.application__submitted-submit-payment-icon {
+    background-color: @kevyt-valinta-unchecked-color;
+    border-radius: 22px;  //( border*2 + height + padding ) / 2
+    font-weight: 600;
+    font-size: 15px;
+    text-align: center;
+    height: 45px;
+    padding: 11px 3px 0 0;
+    min-width: 40px;
+    width: min-content;
+    margin: auto;
+    color: @white;
+}
+
+.application__submitted-icon {
+    align-self: center;
+    display: inline-block;
+    padding-left: 5px;
+    min-width: 40px;
+
+    color: @white;
+}
+
+.application__submitted-submit-payment-icon > span {
+    line-height: 25px;
 }
 
 .application__submitted-submit-notification-heading {

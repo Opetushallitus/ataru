@@ -145,9 +145,6 @@
                             "?role=hakija"))
             :handler [:application/handle-form]}}))
 
-(defn handle-submit [db _]
-  (assoc-in db [:application :submit-status] :submitted))
-
 (defn send-application [db method]
   (when-not (-> db :application :submit-status)
     {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
@@ -163,7 +160,12 @@
 (reg-event-db
   :application/handle-submit-response
   [check-schema-interceptor]
-  handle-submit)
+  (fn [db [_ response]]
+    ;(prn "ZZZ adding payment" (-> response :body :payment))
+    (let [payment (-> response :body :payment)]
+      (-> db
+        (assoc-in [:application :submit-status] :submitted)
+        (cond-> payment (assoc-in [:application :submit-details] payment))))))
 
 (defn response->error-message [db response]
   (assoc db :error {:code    (keyword (get-in response [:body :code] "internal-server-error"))
@@ -1267,6 +1269,13 @@
   [check-schema-interceptor]
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(reg-event-fx
+ :application/redirect-to-maksut
+ [check-schema-interceptor]
+ (fn [{:keys [db]}]
+   (when-let [url (get-in db [:application :submit-details :url])]
+     (set! (.. js/window -location -href) url))))
 
 (reg-event-fx
   :application/set-page-title

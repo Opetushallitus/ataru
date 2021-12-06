@@ -27,6 +27,7 @@
             [ataru.middleware.cache-control :as cache-control]
             [ataru.middleware.session-timeout :as session-timeout]
             [clj-ring-db-session.session.session-client :as session-client]
+            [ataru.maksut.maksut-protocol :as maksut-protocol]
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -197,6 +198,7 @@
                           job-runner
                           ohjausparametrit-service
                           localizations-cache
+                          maksut-service
                           statistics-month-cache
                           statistics-week-cache
                           statistics-day-cache
@@ -361,7 +363,8 @@
                 organization-service
                 ohjausparametrit-service
                 job-runner
-                application-id)
+                application-id
+                nil)
               (response/ok {}))
           (response/unauthorized {}))))
 
@@ -783,6 +786,41 @@
                                                                                                        hakukohde-oid))]
           (response/ok {:hakukohde-oid   hakukohde-oid
                         :valintalaskenta valintalaskenta-enabled?}))))
+
+    ;TODO this might not be needed here in the end if client can directly call this API
+    (api/context "/maksut" []
+      :tags ["maksut-api"]
+      (api/POST "/maksupyynto" {session :session}
+        :body [input {:application-key             s/Str
+                      :first-name                  s/Str
+                      :last-name                   s/Str
+                      :email                       s/Str
+                      :amount                      s/Str
+                      :due_date                    (s/maybe s/Str)
+                      :index                       s/Int}]
+        ;:return ataru-schema/KayttaaValintalaskentaaResponse
+        :summary "Välittää maksuluonto-pyynnön Maksut -palvelulle"
+        (let [{:keys [application-key]} input
+              input2 (-> input
+                         (dissoc :due_date))
+              invoice (maksut-protocol/create-paatos-lasku maksut-service input2)
+              ]
+
+          (log/warn "Input" input "key" application-key "invoice" invoice)
+
+          ;TODO assuming everything went well, change status (if needed)
+          ;TODO ensure that this is a "other form", and form-key = tutu-form
+          (if-let [result (application-service/payment-triggered-processing-state-change
+                            application-service
+                            session
+                            application-key
+                            "decision-fee-outstanding")]
+            (do
+              (log/warn "Review result" result)
+              (response/ok result))
+            (response/unauthorized {:error (str "Hakemuksen "
+                                                (:application-key application-key)
+                                                " käsittely ei ole sallittu")})))))
 
     (api/context "/valintaperusteet" []
       :tags ["valintaperusteet-api"]

@@ -8,6 +8,7 @@
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.http.server :as server]
+            [ataru.maksut.maksut-service :as maksut-service]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-client :as person-client]
             [environ.core :refer [env]]
@@ -90,6 +91,15 @@
                                          :tarjonta-service
                                          :hakukohderyhma-settings-cache])
 
+    :maksut-cas-client (cas/new-client "/maksut"
+                                       "auth/cas"
+                                       "ring-session"
+                                       (-> config :public-config :virkailija-caller-id))
+
+    :maksut-service (component/using
+                       (maksut-service/new-maksut-service)
+                       [:maksut-cas-client])
+
     :person-service (component/using
                      (person-service/new-person-service)
                      [:henkilo-cache :oppijanumerorekisteri-cas-client])
@@ -135,6 +145,7 @@
                (into [:tarjonta-service
                       :job-runner
                       :liiteri-cas-client
+                      :maksut-service
                       :organization-service
                       :ohjausparametrit-service
                       :person-service

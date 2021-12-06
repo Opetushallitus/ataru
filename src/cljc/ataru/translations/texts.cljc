@@ -2052,6 +2052,21 @@
    :attachment-missing     {:fi "Liite puuttuu"
                             :sv "Liite puuttuu (sv) TODO"
                             :en "Liite puuttuu (en) TODO"}
+   :processing-fee-overdue {:fi "Käsittely maksamatta"
+                            :sv "Käsittely maksamatta (sv) TODO"
+                            :en "Käsittely maksamatta (en) TODO"}
+   :processing-fee-paid    {:fi "Käsittely maksettu"
+                            :sv "Käsittely maksettu (sv) TODO"
+                            :en "Käsittely maksettu (en) TODO"}
+   :decision-fee-outstanding {:fi "Päätösmaksu avoin"
+                              :sv "Päätösmaksu avoin (sv) TODO"
+                              :en "Päätösmaksu avoin (en) TODO"}
+   :decision-fee-overdue   {:fi "Päätös maksamatta"
+                            :sv "Päätös maksamatta (sv) TODO"
+                            :en "Päätös maksamatta (en) TODO"}
+   :decision-fee-paid      {:fi "Päätös maksettu"
+                            :sv "Päätös maksettu (sv) TODO"
+                            :en "Päätös maksettu (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
                             :en "Multiple values"}})

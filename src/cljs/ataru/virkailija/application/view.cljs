@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
+            [ataru.virkailija.date-time-picker :as date-time-picker]
             [ataru.cljs-util :as cljs-util]
             [ataru.util :as util]
             [ataru.virkailija.application.application-list.virkailija-application-list-view :as application-list]
@@ -11,6 +12,8 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
+            [ataru.virkailija.application.tutu-payment.tutu-payment-handlers]
+            [ataru.virkailija.application.tutu-payment.tutu-payment-subs]
             [ataru.virkailija.application.hyvaksynnan-ehto.view :as hyvaksynnan-ehto]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
@@ -941,6 +944,215 @@
           {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
           @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])]]))))
 
+(defn- date-picker [application-key]
+  (let [value     (subscribe [:tutu-payment/duedate-input application-key])
+        on-change (fn [value]
+                    (dispatch [:tutu-payment/set-duedate application-key value]))]
+    [date-time-picker/date-picker
+     (str "application-handling__tutu-payment-duedate-input-"
+          application-key)
+     "application-handling__tutu-payment-duedate-input"
+     @value
+     (if (= "" @value) @(subscribe [:editor/virkailija-translation :required]) "")
+     on-change]))
+
+(defn- decision-payment-note [application-key]
+  (let [value       (subscribe [:tutu-payment/note-input application-key])]
+    (fn []
+      [:div.application-handling__review-row.application-handling__review-row--notes-row
+       [:textarea.application-handling__review-note-input
+        {:type      "text"
+         :value     @value
+         ;:placeholder "Hei, tutkinnon tunnustamisen käsittelyvaihe on nyt valmis. Päätöstä varten sinun tulee vielä maksaa päätösmaksu."
+         :on-change #(dispatch [:tutu-payment/set-note-input
+                                application-key
+                                (.. % -target -value)])}]])))
+
+(defn amount-input
+  [application-key placeholder disabled?]
+  (let [amount @(subscribe [:tutu-payment/amount-input application-key])]
+    [(if disabled?
+       :div.question-search-search-input.question-search-search-input--disabled
+       :div.question-search-search-input)
+     [:input.question-search-search-input__input
+      {:type        "text"
+       :value       amount
+       :placeholder placeholder
+       ;:pattern     "[0-9]{1,4}([.][0-9]{1,2})?"
+       :pattern     "[0-9]{1,4}"
+       :title       "Anna summa muodossa 123 tai 123.00"
+       :disabled    disabled?
+       :on-change   #(dispatch [:tutu-payment/set-amount
+                                         application-key
+                                         (.. % -target -value)])}]
+     [:span (str "€")]
+     ]))
+
+(defn- single-payment-status-row [header payments key]
+  (let [payment    (get @payments key)
+        status     (keyword (:status payment))
+        icon       (case (keyword status)
+                         :active  icons/tutu-payment-outstanding
+                         :paid    icons/tutu-payment-paid
+                         :overdue icons/tutu-payment-overdue)
+        label      (if (or (empty? payment) (nil? status))
+                     (str "Maksun tietoja ei löydy")
+                     (case (keyword status)
+                           :active "Avoin"
+                           :paid    (str "Maksettu " (:paid_at payment))
+                           :overdue (str "Eräpäivä ylitetty " (:due_date payment))
+                           (str "Maksun tilaa ei tiedetä")))]
+    (prn "single-row" payment)
+    [:<>
+      [:div header]
+      [:div [icon] (str label)]
+    ]
+  ))
+
+(defn- send-decision-invoice-button [application-key decision-pay-status]
+  (let [filled?           (subscribe [:tutu-payment/inputs-filled? application-key])
+        enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
+        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
+    [:button.application-handling__tutu-payment-send-button.application-handling__button
+     {:style {:grid-column "span 2"}
+      :on-click #(dispatch [:tutu-payment/send-decision-invoice application-key])
+      :disabled (not filled?)
+                ;(or (not @enabled?)
+                ;    (not @can-edit?)
+                ;    @settings-visible?)
+      :class    (str (if (and @enabled? @can-edit?)
+                       "application-handling__send-information-request-button--enabled"
+                       "application-handling__send-information-request-button--disabled")
+                     (if (or @settings-visible? (not @can-edit?))
+                       " application-handling__send-information-request-button--cursor-default"
+                       " application-handling__send-information-request-button--cursor-pointer"))}
+     ;[:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
+     [:div (if (= :active decision-pay-status)
+             "Uudelleenlähetä"
+             "Lähetä maksupyyntö")]
+     [:div.application-handling__resend-modify-application-link-email-text]]))
+
+(defn- application-tutu-payment-status []
+  (let [;window-visible?      true;(subscribe [:state-query [:application :information-request :visible?]])
+        ;request-window-open? true ;(reaction (if-some [visible? @window-visible?]
+                             ;            visible?
+                             ;            false))
+
+        ;request-state        (subscribe [:state-query [:application :information-request :state]])
+        application-key      @(subscribe [:state-query [:application :review :application-key]])
+        processing-state     @(subscribe [:state-query [:application :review :hakukohde-reviews :form :processing-state]])
+        payments             (subscribe [:tutu-payment/payments application-key])
+        {:keys [processing decision]} @payments
+        decision-pay-status  (keyword (:status decision))
+        ]
+
+    (fn []
+      (let [state                (or (keyword processing-state) :unprocessed)
+;            show-dialog?         (case state
+;                                       :unprocessed true
+;                                       :processing-fee-paid true
+;                                       :processing true
+;                                       :decision-fee-outstanding true
+;                                       :decision-fee-paid true
+;                                       false)
+            email                (str "testi@gmail.com")
+            amount-label         (case state
+                                       :unprocessed "Maksun määrä"
+                                       :processing-fee-paid "Maksun määrä"
+                                       :processing "Maksun määrä"
+                                       :decision-fee-outstanding "Maksun määrä"
+                                       :decision-fee-paid "Yhteissumma"
+                                       nil)
+            amount-value         (case state
+                                       :unprocessed (:amount processing)
+                                       :processing-fee-paid (:amount processing)
+                                       :processing :input
+                                       :decision-fee-outstanding :input
+                                       :decision-fee-paid (+ (:amount processing) (:amount decision))
+                                       nil)
+            due-label         (case state
+                                       :unprocessed "Eräpäivä"
+                                       :processing-fee-paid nil
+                                       :processing "Eräpäivä"
+                                       :decision-fee-outstanding "Eräpäivä"
+                                       :decision-fee-paid nil
+                                       nil)
+            due-value         (case state
+                                    :unprocessed (:due_date processing)
+                                    :processing-fee-paid nil
+                                    :processing :input
+                                    :decision-fee-outstanding (:due_date decision)
+                                    :decision-fee-paid nil
+                                    nil)
+
+            ]
+        ;(prn "state2" state "show-dialog?" show-dialog?)
+
+        [:div {:style {:backgroundColor "white" :padding "6px" :border "1px solid #e6e6e6"
+                     :display "grid"
+                     :justify-content "space-between"
+
+                     :line-height "38px"
+                     :margin-bottom "10px"
+                     ;padding-top "0px"
+
+                     :grid-template-columns "1fr 1fr"}}
+       [:span {:style {:grid-column "span 2"}} [:b (str "Maksupyyntö " ;state
+                                                        )]]
+
+       [single-payment-status-row "Käsittelymaksu:" payments :processing]
+       [single-payment-status-row "Päätösmaksu:" payments :decision]
+
+       [:div "Vastaanottaja:"]
+       [:div email]
+
+       (when amount-label
+         [:<>
+           [:div (str amount-label ":")]
+           [:div (cond
+                    (string? amount-value) (str amount-value " €")
+                    (number? amount-value) (str amount-value " €")
+                    (= amount-value :input) [amount-input application-key "Summa" false])]
+          ])
+
+       (when due-label
+           [:<>
+             [:div (str due-label ":")]
+             [:div (cond
+                     (number? due-value) (str due-value)
+                     (string? due-value) due-value
+                     ;TODO if decision-invoice not created, default to today+14, otherwise :due_date
+                     (= due-value :input) [date-picker application-key])]])
+
+       (when (cond
+               (= :paid decision-pay-status) false
+               (= :overdue decision-pay-status) false
+               (#{:processing :decision-fee-outstanding} state) true)
+             [:<>
+              [:div "Viesti:"]
+              [decision-payment-note application-key]
+
+              [send-decision-invoice-button application-key decision-pay-status]
+              ])
+       ])
+      ;      (if @request-window-open?
+;        (let [container [:div.application-handling__information-request-container]]
+;          (let [request-state (subscribe [:state-query [:application :information-request :state]])]
+;            [:div.application-handling__information-request-header
+;             @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])
+;             (when (nil? @request-state)
+;                   [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
+;                    {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])])
+;
+;          )
+;        [:div.application-handling__information-request-show-container-link
+;         [:a
+;          {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
+;          @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])]])
+
+      )))
+
 (defn- application-resend-modify-link []
   (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
@@ -1129,6 +1341,7 @@
        :reagent-render
        (fn []
          (let [selected-review-hakukohde        @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+               tutu-form?                       @(subscribe [:tutu-payment/show-review-ui?])
                attachment-reviews-for-hakukohde (->> @(subscribe [:virkailija-attachments/liitepyynnot-for-selected-hakukohteet])
                                                      (map (fn [liitepyynto]
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
@@ -1171,7 +1384,11 @@
                      (gstring/format "%s (%d)"
                                      @(subscribe [:editor/virkailija-translation :attachments])
                                      (count (keys attachment-reviews-for-hakukohde)))]])
-                 [application-hakukohde-review-inputs review-states/hakukohde-review-types]])
+                 [application-hakukohde-review-inputs (if tutu-form?
+                                                        review-states/hakukohde-review-types
+                                                        review-states/hakukohde-review-types-normal)]])
+              (when tutu-form?
+                [application-tutu-payment-status])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
               [application-review-inputs]

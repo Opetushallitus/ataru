@@ -25,6 +25,8 @@
             [ataru.background-job.job :as job]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
+            [ataru.maksut.maksut-service :as maksut-service]
+            [ataru.background-job.maksut-poller :as maksut-poller]
             [ataru.person-service.person-client :as person-client]
             [ataru.person-service.person-service :as person-service]
             [ataru.person-service.person-integration :as person-integration]
@@ -152,6 +154,23 @@
                              (kayttooikeus-service/->HttpKayttooikeusService nil)
                              [:kayttooikeus-cas-client]))
 
+    :maksut-cas-client (cas/new-client "/maksut"
+                        "auth/cas"
+                        "ring-session"
+                        (-> config :public-config :virkailija-caller-id))
+
+    :maksut-service (component/using
+                     (maksut-service/new-maksut-service)
+                     [:maksut-cas-client])
+
+    :maksut-poller (component/using
+                    (maksut-poller/map->MaksutPollWorker
+                     {:enabled?      true ;TODO (-> config :tutkintojen-tunnustaminen :maksut :enabled? boolean)
+                      })
+                    [:job-runner
+                     :application-service
+                     :maksut-service])
+
     :oppijanumerorekisteri-cas-client (cas/new-client "/oppijanumerorekisteri-service" "j_spring_cas_security_check"
                                                       "JSESSIONID" (-> config :public-config :virkailija-caller-id))
 
@@ -201,6 +220,7 @@
                             :valintaperusteet-service
                             :valinta-tulos-service
                             :job-runner
+                            :maksut-service
                             :ohjausparametrit-service
                             :person-service
                             :kayttooikeus-service

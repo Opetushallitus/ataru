@@ -5,6 +5,8 @@
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.field-deadline :as field-deadline]
     [ataru.background-job.job :as job]
+    [ataru.cache.cache-service :as cache]
+    [ataru.config.url-helper :as url-helper]
     [ataru.db.db :as db]
     [ataru.email.application-email-confirmation :as application-email]
     [ataru.files.file-store :as file-store]
@@ -13,6 +15,7 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.hakija.validator :as validator]
     [ataru.log.audit-log :as audit-log]
+    [ataru.maksut.maksut-protocol :as maksut-protocol]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
@@ -355,12 +358,13 @@
                              (:type attachment-finalizer-job/job-definition)
                              {:application-id application-id}))))
 
-(defn start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+(defn start-submit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (application-email/start-email-submit-confirmation-job koodisto-cache tarjonta-service
                                                          organization-service
                                                          ohjausparametrit-service
                                                          job-runner
-                                                         application-id)
+                                                         application-id
+                                                         payment-url)
   (start-person-creation-job job-runner application-id)
   (start-attachment-finalizer-job job-runner application-id)
   (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-submit-job
@@ -380,10 +384,11 @@
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
-                                                       application-id)
+                                                       application-id
+                                                       payment-url)
   (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
    job-runner
    application-id)
@@ -403,8 +408,10 @@
    audit-logger
    application
    session
-   liiteri-cas-client]
+   liiteri-cas-client
+   maksut-service]
   (log/info "Application submitted:" application)
+
   (let [{:keys [passed? id]
          :as   result}
         (validate-and-store liiteri-cas-client
@@ -418,20 +425,52 @@
                             application
                             false
                             session)
+        app-key (-> (application-store/get-application id) :key)
+        form (:form application)
+        get-field  (fn [key] (->> (:answers application)
+                                  (filter #(= key (:key %)))
+                                  (map :value)
+                                  first))
+        info {:application-key app-key
+              :first-name (get-field "first-name")
+              :last-name (get-field "last-name")
+              :email (get-field "email")
+              :amount "70.00" ;TODO get from config
+              }
+        tutu-key "384f3a1b-7dc8-4686-a7cc-19ab5c5c9714"
+        form-key (when (some? form)
+                       (-> (cache/get-from form-by-id-cache (str form)) :key))
+        tutu-form? (and (some? tutu-key) (= tutu-key form-key))
         virkailija-secret (:virkailija-secret application)]
+    (log/info "xxx form-by-id-cache:" (:form application) form-key tutu-form?)
+    (log/info "xxx app:" app-key)
+    (log/info "xxx form:" info)
+
+    ;"last-name", "first-name", "email"
+
     (if passed?
       (do
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
-        (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
+
+        ;TODO only do this if TUTU-form
+        (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service info))
+              secret (:secret invoice)
+              url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret)]
+          (log/info "maksut info" invoice)
+
+          (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
+          (-> result
+              (cond-> tutu-form? (assoc :payment {:url url})))))
       (do
         (audit-log/log audit-logger
                        {:new       application
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:email (util/extract-email application)}})
-        (log/warn "Application failed verification" result)))
-    result))
+        (log/warn "Application failed verification" result)
+        result))
+    ))
 
 (defn handle-application-edit
   [form-by-id-cache
@@ -444,7 +483,9 @@
    audit-logger
    input-application
    session
-   liiteri-cas-client]
+   liiteri-cas-client
+   ;maksut-service
+   ]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application key]
          :as   result}
@@ -466,7 +507,8 @@
           virkailija-secret
           id
           application)
-        (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id))
+        ;TODO do we need to retrieve a working maksut-url to here too?
+        (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
       (do
         (audit-log/log audit-logger
                        {:new       input-application

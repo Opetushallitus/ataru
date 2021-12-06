@@ -143,6 +143,7 @@
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
+                          maksut-service
                           organization-service
                           ohjausparametrit-service
                           application-service
@@ -209,9 +210,13 @@
               audit-logger
               application
               session
-              liiteri-cas-client)
+              liiteri-cas-client
+              maksut-service)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
+
+             {:passed? true :id application-id :payment payment}
+             (response/ok {:id application-id :payment payment})
 
              {:passed? true :id application-id}
              (response/ok {:id application-id})))
@@ -229,7 +234,8 @@
               audit-logger
               application
               session
-              liiteri-cas-client)
+              liiteri-cas-client
+              maksut-service)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 

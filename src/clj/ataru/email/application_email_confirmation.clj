@@ -147,8 +147,8 @@
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
-                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
-  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
+                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id nil false))
+  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id payment-url guardian?]
    (let [now                             (t/now)
          application                     (application-store/get-application application-id)
          tarjonta-info                   (:tarjonta
@@ -202,6 +202,7 @@
          template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
                                                   :application-oid            (:key application)
                                                   :application-url            application-url
+                                                  :payment-url                payment-url
                                                   :content                    content
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
@@ -216,13 +217,14 @@
        render-file-fn))))
 
 
-(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id payment-url guardian?]
   (create-emails koodisto-cache tarjonta-service
                  organization-service
                  ohjausparametrit-service
                  nil
                  submit-email-template-filename
                  application-id
+                 payment-url
                  guardian?))
 
 (defn preview-submit-emails [previews]
@@ -235,13 +237,14 @@
       (preview-submit-email lang subject content content-ending signature)) previews))
 
 
-(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id payment-url guardian?]
   (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                  edit-email-subjects
                  #(str "templates/email_edit_confirmation_template_"
                       (name %)
                       ".html")
                  application-id
+                 payment-url
                  guardian?))
 
 (defn- create-refresh-secret-email
@@ -261,20 +264,22 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
     (for [email (create-submit-email koodisto-cache tarjonta-service
                   organization-service
                   ohjausparametrit-service
                   application-id
+                  payment-url
                   true)]
       (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
     (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                        application-id
+                       payment-url
                        true)]
            (start-email-job job-runner email))))
 

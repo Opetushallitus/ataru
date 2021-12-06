@@ -1,7 +1,7 @@
 (ns ataru.virkailija.routes
   (:require-macros [secretary.core :refer [defroute]])
-  (:import [goog Uri])
   (:require [ataru.cljs-util :refer [dispatch-after-state]]
+            [clojure.string]
             [secretary.core :as secretary]
             [re-frame.core :refer [dispatch]]
             [accountant.core :as accountant]))
@@ -120,7 +120,7 @@
     (common-actions)
     (common-actions-for-applications-route)
     (dispatch [:application/close-search-control])
-    (dispatch [:application/set-filters-from-query])
+    (dispatch [:application/set-filters-from-query key])
     (dispatch [:application/select-form key]))
 
   (defroute #"^/lomake-editori/virhe?"
