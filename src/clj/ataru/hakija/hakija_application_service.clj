@@ -484,7 +484,7 @@
    input-application
    session
    liiteri-cas-client
-   ;maksut-service
+   _ ;maksut-service
    ]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application key]
