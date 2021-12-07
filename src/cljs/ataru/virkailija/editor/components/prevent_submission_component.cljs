@@ -2,8 +2,6 @@
   (:require [re-frame.core :refer [subscribe dispatch]]
             [ataru.cljs-util :as util]))
 
-(def prevent-submission-key :prevent-submission)
-
 (defn- parent-field-path
   [option-path]
   (pop (pop option-path)))
@@ -30,4 +28,4 @@
                                     :on-change (on-change-handler path)}]
      [:label.editor-form__checkbox-label
       {:for id}
-      @(subscribe [:editor/virkailija-translation prevent-submission-key])]]))
+      @(subscribe [:editor/virkailija-translation :prevent-submission])]]))
