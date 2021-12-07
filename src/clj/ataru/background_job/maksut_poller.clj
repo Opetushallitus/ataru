@@ -2,7 +2,7 @@
   (:require
    [com.stuartsierra.component :as component]
    [taoensso.timbre :as log]
-   ;[ataru.config.core :refer [config]]
+   [ataru.config.core :refer [config]]
    [ataru.background-job.maksut-poller-job :as maksut-poller-job]
    [ataru.db.db :as db]
    [yesql.core :refer [defqueries]])
@@ -111,47 +111,14 @@
 
 (defn- find-applications
   [application-service job-runner]
-  (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_key "384f3a1b-7dc8-4686-a7cc-19ab5c5c9714"}))]
-    (do
-      (log/info "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
-      (start-maksut-poller-job application-service job-runner apps))
-    (log/info "No applications in need of Maksut-polling found"))
-
-;  (try
-;    (some->> message
-;             .getBody
-;             (sns/handle-message sns-message-manager)
-;             .getMessage
-;             parse-henkilo-modified-message
-;             (start-jobs-for-person job-runner))
-;
-;    message
-;    (catch Exception e
-;      (if drain-failed?
-;        (do (log/error e "Handling henkilö modified message failed, deleting" message)
-;            message)
-;        (log/warn e "Handling henkilö modified message failed"))))
-
-  )
-
-;(defn- try-handle-messages
-;  [amazon-sqs
-;   job-runner
-;   sns-message-manager
-;   drain-failed?
-;   queue-url
-;   receive-wait]
-;  (try
-;    (->> (repeatedly #(sqs/batch-receive amazon-sqs queue-url receive-wait))
-;         (take-while not-empty)
-;         (map (partial keep (partial try-handle-message
-;                                     job-runner
-;                                     sns-message-manager
-;                                     drain-failed?)))
-;         (map (partial sqs/batch-delete amazon-sqs queue-url))
-;         dorun)
-;    (catch Exception e
-;      (log/warn e "Handling henkilö modified messages failed"))))
+  (try
+    (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_key (-> config :tutkintojen-tunnustaminen :maksut :form-key)}))]
+      (do
+        (log/info "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
+        (start-maksut-poller-job application-service job-runner apps))
+      (log/info "No applications in need of Maksut-polling found"))
+    (catch Exception e
+      (log/error e "Maksut polling failed"))))
 
 (defrecord MaksutPollWorker [job-runner
                              application-service

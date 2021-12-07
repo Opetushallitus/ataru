@@ -6,6 +6,7 @@
     [ataru.applications.field-deadline :as field-deadline]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
+    [ataru.config.core :refer [config]]
     [ataru.config.url-helper :as url-helper]
     [ataru.db.db :as db]
     [ataru.email.application-email-confirmation :as application-email]
@@ -437,14 +438,14 @@
               :email (get-field "email")
               :amount "70.00" ;TODO get from config
               }
-        tutu-key "384f3a1b-7dc8-4686-a7cc-19ab5c5c9714"
+        tutu-key (-> config :tutkintojen-tunnustaminen :maksut :form-key)
         form-key (when (some? form)
                        (-> (cache/get-from form-by-id-cache (str form)) :key))
         tutu-form? (and (some? tutu-key) (= tutu-key form-key))
         virkailija-secret (:virkailija-secret application)]
     (log/info "xxx form-by-id-cache:" (:form application) form-key tutu-form?)
     (log/info "xxx app:" app-key)
-    (log/info "xxx form:" info)
+    (log/info "xxx form:" info " tutu-key: " tutu-key)
 
     ;"last-name", "first-name", "email"
 
