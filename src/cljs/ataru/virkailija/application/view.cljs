@@ -989,7 +989,7 @@
      ]))
 
 (defn- single-payment-status-row [header payments key]
-  (prn "single-payment-status-row" (get @payments key))
+  (prn "single-payment-status-row " (get @payments key))
   (let [payment    (get @payments key)
         status     (keyword (:status payment))
         icon       (case (keyword status)
