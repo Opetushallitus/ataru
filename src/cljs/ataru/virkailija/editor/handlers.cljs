@@ -1340,7 +1340,7 @@
     {:dispatch [:editor/add-validator "invalid-values" parent-path]
      :db (update-in
            db
-           (current-form-content-path db [parent-path :params :invalid-values])
+           (db/current-form-content-path db [parent-path :params :invalid-values])
            #(conj % option-value))}))
 
 (reg-event-fx
@@ -1349,5 +1349,5 @@
     {:dispatch [:editor/remove-validator "invalid-values" parent-path]
      :db       (update-in
                  db
-                 (current-form-content-path db [parent-path :params :invalid-values])
+                 (db/current-form-content-path db [parent-path :params :invalid-values])
                  #(filter (partial not= option-value) %))}))
