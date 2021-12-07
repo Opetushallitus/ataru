@@ -28,11 +28,6 @@ describe('Lomakeosion näkyvyys painikkeen perusteella', () => {
                 )
               )
               .then(() =>
-                painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaVertailuarvo(
-                  'B'
-                )
-              )
-              .then(() =>
                 painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaOsio(
                   'Henkilötiedot'
                 )
