@@ -304,13 +304,6 @@
     (get-in ui [id :belongs-to-hakukohteet :modal haku-oid :show-more-value] 15)))
 
 (re-frame/reg-sub
-  :editor/get-prevent-submission
-  (fn [[_ path] _]
-    (re-frame/subscribe [:editor/get-component-value (conj path :prevent-submission)]))
-  (fn [prevent-submission _]
-    (boolean prevent-submission)))
-
-(re-frame/reg-sub
   :editor/folded?
   (fn [_ _]
     (re-frame/subscribe [:editor/ui]))
