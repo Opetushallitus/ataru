@@ -55,7 +55,8 @@
                                 :email-template-lang "fi"
                                 :organizations       {:org-select-organizations    true
                                                       :org-select-hakukohde-groups true
-                                                      :results-page                0}}
+                                                      :results-page                0}
+                                :today               (js/Date.)}
    ; Initial active panel on page load.
    :active-panel               :editor
    :application                {:applications                      []

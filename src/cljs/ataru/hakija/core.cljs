@@ -9,6 +9,7 @@
             [ataru.hakija.application-hakukohde-handlers]   ;; required although no explicit dependency
             [ataru.hakija.subs]                             ;; required although no explicit dependency
             [ataru.application-common.fx]                   ; ataru.application-common.fx must be required to have common fx handlers enabled
+            [ataru.application-common.cofx]
             [ataru.hakija.component-handlers.dropdown-component-handlers]
             [ataru.util :as u]
             [cemerick.url :as url]
@@ -32,9 +33,12 @@
         query-params      (cljs-util/extract-query-params)
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)
-        hakukohteet       (string/split (:hakukohteet query-params) #",")]
+        hakukohteet       (string/split (:hakukohteet query-params) #",")
+        demo              (:demo query-params)]
     (cljs-util/unset-query-param "modify")
     (cljs-util/unset-query-param "virkailija-secret")
+    (when (and (u/not-blank? demo) (= "true" demo))
+      (re-frame/dispatch [:application/set-demo-requested]))
     (cond
       (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])

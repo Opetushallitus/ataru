@@ -35,6 +35,9 @@
    :application-confirmation                    {:fi "Saat vahvistuksen sähköpostiisi"
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
+   :application-confirmation-demo               {:fi "Tietojasi ei tallennettu"
+                                                 :sv "Dina uppgifter har inte sparats"
+                                                 :en "EN: Tietojasi ei tallennettu"}
    :application-edited-subject                  {:fi "Opintopolku - Hakemuksesi on päivitetty"
                                                  :sv "Studieinfo - Din ansökan har updaterats"
                                                  :en "Opintopolku - Your application has been received"}
@@ -86,9 +89,15 @@
    :application-sent                            {:fi "Hakemus lähetetty"
                                                  :sv "Ansökan har skickats"
                                                  :en "The application has been sent"}
+   :application-sent-demo                       {:fi "Harjoittelulomake täytetty"
+                                                 :sv "Övningsblanketten är ifylld"
+                                                 :en "EN: Harjoittelulomake täytetty"}
    :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
+   :application-submitted-demo                  {:fi "Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
+                                                 :sv "Det här är en övningsblankett. Dina uppgifter sparades inte!"
+                                                 :en "EN: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"}
    :application-submitted-ok                    {:fi "OK"
                                                  :sv "OK"
                                                  :en "OK"}
@@ -99,7 +108,7 @@
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s study programmes "}
    :arvosana                                    {:fi "Arvosana"
-                                                 :sv "Arvosana"
+                                                 :sv "Vitsord"
                                                  :en "Arvosana"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
@@ -245,6 +254,9 @@
    :hakija-new-text                             {:fi "Lähetä hakemus"
                                                  :sv "Skicka ansökan"
                                                  :en "Submit application"}
+   :submit-demo                                 {:fi "Lähetä harjoitteluhakemus"
+                                                 :sv "Skicka övningsansökan"
+                                                 :en "EN: Lähetä harjoitteluhakemus"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
@@ -396,13 +408,13 @@
                                                  :en "seconds"
                                                  :sv "sekunder"}
    :select-max-n-application-options            {:fi ["Valitse enintään " " hakukohdetta"]
-                                                 :sv ["Välj högst " " SV: hakukohdetta"]
+                                                 :sv ["Välj högst " " ansökningsmål"]
                                                  :en ["EN: Valitse enintään " " ansökningsmål"]}
    :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
                                                  :sv "Du kan välja ännu ett ansökningsmål"
                                                  :en "EN: Voit valita vielä yhden hakukohteen"}
    :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
-                                                 :sv ["Du kan välja " " ansökningsmål"]
+                                                 :sv ["Du kan välja ännu " " ansökningsmål"]
                                                  :en ["EN: Voit valita vielä " " hakukohdetta"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
@@ -460,7 +472,19 @@
                                                  :en "Lisää valinnaisaine"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
-                                                 :en "Poista"}})
+                                                 :en "Poista"}
+   :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
+                                                 :sv "Övningsblankett – Dina uppgifter sparas inte!"
+                                                 :en "EN: Harjoittelulomake — Tietojasi ei tallenneta!"}
+   :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
+                                                 :sv "Det här är en övningsblankett. De uppgifter som du fyller i sparas inte."
+                                                 :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
+   :dismiss-demo-notification                   {:fi "Jatka"
+                                                 :sv "Fortsätt"
+                                                 :en "EN: Jatka"}
+   :demo-notification-title                     {:fi "Harjoittelulomake"
+                                                 :sv "Övningsblankett"
+                                                 :en "EN: Harjoittelulomake"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -1052,6 +1076,18 @@
    :auto-expand-hakukohteet                         {:fi "Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :sv "SV: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :en "EN: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"}
+   :properties                                      {:fi "Yleiset asetukset"
+                                                     :sv "SV: Yleiset asetukset"
+                                                     :en "EN: Yleiset asetukset"}
+   :demo-link                                       {:fi "Avaa demolomake"
+                                                     :sv "Öppna demoblanketten"
+                                                     :en "EN: Avaa demolomake"}
+   :demo-validity-start                             {:fi "Demon voimassaolo alkaa"
+                                                     :sv "Demoversionen är giltig från och med"
+                                                     :en "EN: Demon voimassaolo alkaa"}
+   :demo-validity-end                               {:fi "Demon voimassaolo päättyy"
+                                                     :sv "Demoversionen avslutas"
+                                                     :en "EN: Demon voimassaolo päättyy"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
@@ -1520,6 +1556,9 @@
    :person-info-module-muu                          {:fi "Muu käyttö"
                                                      :en "Muu käyttö"
                                                      :sv "Annat bruk"}
+   :person-info-module-onr-2nd                      {:fi "Opiskelijavalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :en "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :sv "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"}
    :metadata-not-found                              {:fi "Hakijan liitteitä ei löytynyt"
                                                      :sv "Sökandes bilagor hittades inte"
                                                      :en "Applicant's attachements can't be found"}

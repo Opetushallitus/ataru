@@ -73,6 +73,15 @@ export const hakukohteet = {
   haeCheckbox: () => cy.get('[data-test-id=hakukohteet-auto-expand-toggle]'),
 }
 
+export const yleisetAsetukset = {
+  haeOtsikko: () => cy.get('[data-test-id=properties-header]:visible'),
+
+  haeDemoAlkaa: () => cy.get('[data-test-id=demo-validity-start]'),
+  haeDemoPaattyy: () => cy.get('[data-test-id=demo-validity-end]'),
+
+  haeLinkkiDemoon: () => cy.get('[data-test-id=demo-link]'),
+}
+
 export const henkilotiedot = {
   haeOtsikko: () =>
     cy.get('[data-test-id=henkilotietomoduuli-header-label]:visible'),
