@@ -353,7 +353,7 @@
   [condition]
   (case (:data-type (:condition condition))
     "str" :some
-    "int" :every))
+    :every))
 
 (defn- every-condition-satisfied
   [conditions]
