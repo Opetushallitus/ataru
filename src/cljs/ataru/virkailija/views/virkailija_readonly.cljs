@@ -62,6 +62,7 @@
                                 (:belongs-to-hakukohteet field-descriptor)))]
     (and (not (get-in field-descriptor [:params :hidden] false))
          (not= "infoElement" (:fieldClass field-descriptor))
+         (not= "modalInfoElement" (:fieldClass field-descriptor))
          (not (:exclude-from-answers field-descriptor))
          (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
          (or (and (empty? (:belongs-to-hakukohteet field-descriptor))
