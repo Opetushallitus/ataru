@@ -187,8 +187,25 @@ export const lahetaHakemus = () => {
   return cy.wait('@postApplication')
 }
 
+export const tallennaMuokattuHakemus = () => {
+  cy.server()
+  cy.route('PUT', reitit.hakija.haeHakemuksenLahettamisenOsoite()).as(
+    'putApplication'
+  )
+  cy.get('[data-test-id=send-application-button]').click()
+  return cy.wait('@putApplication')
+}
+
 export const painaOkPalautenakymassa = () =>
   cy.get('[data-test-id=send-feedback-button]').click()
 
 export const suljePalaute = () =>
   cy.get('[data-test-id=close-feedback-form-button]').click()
+
+export const avaaUusinHakemusMuokkaustaVarten = () =>
+  cy
+    .request('/hakemus/latest-application-secret')
+    .then((response) => response.body)
+    .then((salainenKoodi) =>
+      cy.visit(reitit.hakija.haeHakemuksenMuokkauksenOsoite(salainenKoodi))
+    )

@@ -389,12 +389,14 @@
         size         (-> field-descriptor :params :size)
         size-class   (text-area-size->class size)
         max-length   (parse-max-length field-descriptor)
+        cannot-view? (subscribe [:application/cannot-view? id])
         cannot-edit? (subscribe [:application/cannot-edit? id])
         local-state  (r/atom {:focused? false :value nil})]
     (fn [field-descriptor idx]
       (let [{:keys [value
                     valid]} @(subscribe [:application/answer id idx nil])
             form-field-id   (application-field/form-field-id field-descriptor idx)
+            cannot-view?    @cannot-view?
             cannot-edit?    @cannot-edit?
             on-change       (if idx
                               (partial multi-value-field-change field-descriptor idx)
@@ -409,9 +411,9 @@
           (merge {:id           form-field-id
                   :class        size-class
                   :maxLength    max-length
-                  :value        (if (:focused? @local-state)
-                                  (:value @local-state)
-                                  value)
+                  :value        (cond cannot-view? "***********"
+                                      (:focused? @local-state) (:value @local-state)
+                                      :else value)
                   :on-blur      (fn [_]
                                   (swap! local-state assoc
                                          :focused? false))

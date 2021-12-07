@@ -251,9 +251,9 @@
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (filter cannot-edit? fields))
-                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
+                   ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "87834771-34da-40a4-a9f6-sensitive"])
            (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   ["ssn" "birth-date" "87834771-34da-40a4-a9f6-sensitive"])))))
 
   (it "should get form as virkailija"
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
@@ -261,7 +261,7 @@
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -273,7 +273,7 @@
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    [])
           (should= (map :id (filter cannot-view? fields))
@@ -287,9 +287,9 @@
           (should= (map :id (remove cannot-edit? fields))
                    ["164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "87834771-34da-40a4-a9f6-sensitive"])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   ["ssn" "birth-date" "87834771-34da-40a4-a9f6-sensitive"])))))
 
   (it "should get application with hakuaika ended as virkailija"
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-within-grace-period]
@@ -297,7 +297,7 @@
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -311,9 +311,9 @@
           (should= (map :id (remove cannot-edit? fields))
                    ["birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city"])
           (should= (map :id (filter cannot-edit? fields))
-                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
+                   ["hakukohteet" "first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-view? fields))
-                   ["ssn" "birth-date"])))))
+                   ["ssn" "birth-date" "87834771-34da-40a4-a9f6-sensitive"])))))
 
   (it "should get application with hakuaika ended but hakukierros ongoing as virkailija"
     (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ended-grace-period-passed-hakukierros-ongoing]
@@ -321,7 +321,7 @@
         (should= 200 (:status resp))
         (let [fields (->> resp :body :content util/flatten-form-fields (filter util/answerable?))]
           (should= (map :id (remove cannot-edit? fields))
-                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "164954b5-7b23-4774-bd44-hidden"])
+                   ["hakukohteet" "birthplace" "passport-number" "national-id-number" "email" "phone" "country-of-residence" "address" "postal-code" "postal-office" "home-town" "city" "b0839467-a6e8-4294-b5cc-830756bbda8a" "164954b5-7b23-4774-bd44-dee14071316b" "87834771-34da-40a4-a9f6-sensitive" "164954b5-7b23-4774-bd44-hidden"])
           (should= (map :id (filter cannot-edit? fields))
                    ["first-name" "preferred-name" "last-name" "nationality" "have-finnish-ssn" "ssn" "birth-date" "gender" "language"])
           (should= (map :id (filter cannot-view? fields))
@@ -466,7 +466,14 @@
           (should (-> (get-in resp [:body :form])
                       util/form-fields-by-id
                       (get-in [:b0839467-a6e8-4294-b5cc-830756bbda8a
-                               :cannot-edit])))))))
+                               :cannot-edit]))))))
+
+    (it "should hide answer for question marked as sensitive-answer"
+      (with-get-response "12345" resp
+        (should= 200 (:status resp))
+        (should (-> (get-in resp [:body :application])
+                  (get-answer "87834771-34da-40a4-a9f6-sensitive")
+                  nil?)))))
 
   (describe "PUT application"
     (around [spec]
