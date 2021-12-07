@@ -270,12 +270,12 @@
         lang    (subscribe [:application/form-language])]
     (fn []
       (when (and @demo? (not @hidden?))
-        [:div.application__demo-overlay
-         [:div.application__demo-container
-          [:h1.application__demo-notification-title
+        [:div.application__notification-overlay
+         [:div.application__notification-container
+          [:h1.application__notification-title
            (translations/get-hakija-translation :demo-notification-title @lang)]
           [:p (translations/get-hakija-translation :demo-notification @lang)]
-          [:button.application__overlay-button.application__overlay-button--enabled.application__demo-button
+          [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
            {:on-click     #(reset! hidden? true)
             :data-test-id "dismiss-demo-notification-button"}
            (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]))))
