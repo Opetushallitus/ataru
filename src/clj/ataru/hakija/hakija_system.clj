@@ -15,6 +15,7 @@
             [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
             [ataru.config.core :refer [config]]
+            [ataru.config.url-helper :refer [resolve-url]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
@@ -91,7 +92,7 @@
                                          :tarjonta-service
                                          :hakukohderyhma-settings-cache])
 
-    :maksut-cas-client (cas/new-client "/maksut"
+    :maksut-cas-client (cas/new-client (resolve-url :maksut-service)
                                        "auth/cas"
                                        "ring-session"
                                        (-> config :public-config :virkailija-caller-id))

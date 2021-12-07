@@ -29,12 +29,8 @@
 ;          ;:error-handler [:liitepyynto-information-request/unset-deadline application-key]
 ;          })
 
-(defn- request [maksut-cas-client service lasku]
-  ;url-key required for CAS ticket validation, as same service is accessed from two hostnames - and tickets are not valid between them
-  (let [url-key   (case service
-                      :hakija  :maksut-service.hakija-create
-                      :editori :maksut-service.virkailija-create)
-        url       (url/resolve-url url-key)
+(defn- request [maksut-cas-client lasku]
+  (let [url       (url/resolve-url :maksut-service.virkailija-create)
         result    (cas/cas-authenticated-post maksut-cas-client url lasku)]
     (match/match result
                  {:status 200 :body body}
@@ -49,11 +45,11 @@
   MaksutServiceProtocol
 
   (create-kasittely-lasku [this lasku]
-    (request maksut-cas-client :hakija
+    (request maksut-cas-client
              (assoc lasku :index 1)))
 
   (create-paatos-lasku [this lasku]
-    (request maksut-cas-client :editori
+    (request maksut-cas-client
              (assoc lasku :index 2))))
 
 (defn new-maksut-service []
