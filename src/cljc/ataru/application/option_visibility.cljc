@@ -28,8 +28,8 @@
   [value option]
   (if-let [condition (:condition option)]
     (case (:data-type condition)
-      "int" (answer-satisfies-condition-or-is-empty? value option)
-      "str" (str-answer-satisfies-condition? value condition))
+      "str" (str-answer-satisfies-condition? value condition)
+      (answer-satisfies-condition-or-is-empty? value option))
     true))
 
 (defn- non-blank-answer-with-option-condition-satisfied-checker [value]
