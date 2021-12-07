@@ -29,7 +29,7 @@
 ;          ;:error-handler [:liitepyynto-information-request/unset-deadline application-key]
 ;          })
 
-(defn- request [maksut-cas-client lasku]
+(defn- request-post [maksut-cas-client lasku]
   (let [url       (url/resolve-url :maksut-service.virkailija-create)
         result    (cas/cas-authenticated-post maksut-cas-client url lasku)]
     (match/match result
@@ -41,16 +41,31 @@
                                          "response body: "
                                          (:body result))))))
 
+(defn- list-get [maksut-cas-client application-key]
+  (let [url    (url/resolve-url :maksut-service.virkailija-list application-key)
+        result (cas/cas-authenticated-get maksut-cas-client url)]
+    (match/match result
+                 {:status 200 :body body}
+                 (json/parse-string body true)
+
+                 :else (throw-error (str "Could not create list laskut for " application-key ", "
+                                         "status: " (:status result)
+                                         "response body: " (:body result))))))
+
+
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
   (create-kasittely-lasku [this lasku]
-    (request maksut-cas-client
-             (assoc lasku :index 1)))
+    (request-post maksut-cas-client
+                  (assoc lasku :index 1)))
 
   (create-paatos-lasku [this lasku]
-    (request maksut-cas-client
-             (assoc lasku :index 2))))
+    (request-post maksut-cas-client
+                  (assoc lasku :index 2)))
+
+  (list-laskut-by-application-key [this application-key]
+      (list-get maksut-cas-client application-key)))
 
 (defn new-maksut-service []
   (map->MaksutService {}))

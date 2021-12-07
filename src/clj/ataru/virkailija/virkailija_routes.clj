@@ -790,6 +790,26 @@
     ;TODO this might not be needed here in the end if client can directly call this API
     (api/context "/maksut" []
       :tags ["maksut-api"]
+      (api/GET "/list/:application-key" {session :session}
+        :path-params [application-key :- s/Str]
+        :return [s/Any]
+;           :body [input {:application-key             s/Str
+;                         :first-name                  s/Str
+;                         :last-name                   s/Str
+;                         :email                       s/Str
+;                         :amount                      s/Str
+;                         :due_date                    (s/maybe s/Str)
+;                         :index                       s/Int}]
+
+        ;:return ataru-schema/KayttaaValintalaskentaaResponse
+        :summary "Listaa hakemukseen liittyvät maksut"
+        (if-let [list (maksut-protocol/list-laskut-by-application-key maksut-service application-key)]
+          (do
+            (log/warn "List respose" list)
+            (response/ok list))
+          (response/not-found
+              {:error (str "Hakemukseen " application-key " liittyvien laskujen listaus epäonnistui")})))
+
       (api/POST "/maksupyynto" {session :session}
         :body [input {:application-key             s/Str
                       :first-name                  s/Str

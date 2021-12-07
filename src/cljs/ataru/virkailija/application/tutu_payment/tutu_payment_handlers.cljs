@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.tutu-payment.tutu-payment-handlers
-  (:require [ataru.application-common.fx :refer [http]]
-            [clojure.string :refer [ends-with?]]
+  (:require [clojure.string :refer [ends-with?]]
             [ataru.virkailija.virkailija-ajax :as ajax]
             ;[cljs-time.core :as c]
             [cljs-time.format :as f]
@@ -125,9 +124,7 @@
          application (get-in db [:application :selected-application-and-form :application])
          get-field  (fn [key] (->> (:answers application) key :value))
          amount     @(re-frame/subscribe [:tutu-payment/amount-input application-key])
-         ;review-id  (get-in db [:application :review :id]) ;TODO might need to pass the full review?
-         data {;:review-id review-id
-               :application-key application-key
+         data {:application-key application-key
                :first-name (get-field :first-name)
                :last-name (get-field :last-name)
                :email (get-field :email)
@@ -140,10 +137,8 @@
 
      (ajax/http :post
                 "/lomake-editori/api/maksut/maksupyynto"
-                ;:application/review-updated
                 :tutu-payment/handle-decision-invoice
                 :override-args {:params data})
-
 
 ;     (http (aget js/config "virkailija-caller-id")
 ;            {:method        :post
@@ -266,18 +261,21 @@
 ;                          application-key
 ;                          liitepyynto-key]})))
 
-
-;TODO call /maksut service
 (re-frame/reg-fx
  :tutu-payment/fetch-payments
  (fn [{:keys [application-key]}]
    (prn "XXX dispatching :tutu-payment/handle-fetch-payments" application-key)
-   (http (aget js/config "virkailija-caller-id")
-         {:method        :get
-          :url           (str "/maksut/api/lasku-tutu/" application-key)
-          :handler       [:tutu-payment/handle-fetch-payments application-key]
-          ;:error-handler [:liitepyynto-information-request/unset-deadline application-key]
-          })
+   (ajax/http :get
+              (str "/lomake-editori/api/maksut/list/" application-key)
+              [:tutu-payment/handle-fetch-payments application-key])
+
+;   (http (aget js/config "virkailija-caller-id")
+;         {:method        :get
+;          ;:url           (str "/maksut/api/lasku-tutu/" application-key)
+;          :url           (str "/lomake-editori/api/maksut/list/" application-key)
+;          :handler       [:tutu-payment/handle-fetch-payments application-key]
+;          ;:error-handler [:liitepyynto-information-request/unset-deadline application-key]
+;          })
 
    ))
 

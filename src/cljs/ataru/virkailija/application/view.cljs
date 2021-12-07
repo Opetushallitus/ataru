@@ -989,7 +989,7 @@
      ]))
 
 (defn- single-payment-status-row [header payments key]
-  (prn "single-payment-status-row " (get @payments key))
+  (prn "single-payment-status-row  " (get @payments key))
   (let [payment    (get @payments key)
         status     (keyword (:status payment))
         icon       (case (keyword status)
@@ -1007,7 +1007,7 @@
     (prn "single-row" payment)
     [:<>
       [:div header]
-      [:div [icon] (str label)]
+      [:div (when icon [icon]) (str label)]
     ]
   ))
 
@@ -1109,7 +1109,7 @@
        [:div "Vastaanottaja:"]
        [:div email]
 
-       (when amount-label
+       (when (and amount-label amount-value)
          [:<>
            [:div (str amount-label ":")]
            [:div (cond
@@ -1118,7 +1118,7 @@
                     (= amount-value :input) [amount-input application-key "Summa" false])]
           ])
 
-       (when due-label
+       (when (and due-label due-value)
            [:<>
              [:div (str due-label ":")]
              [:div (cond
