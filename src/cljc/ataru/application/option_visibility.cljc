@@ -7,11 +7,15 @@
 (defn non-blank-answer-satisfies-condition? [value option]
   (and (not (string/blank? value))
        (if-let [condition (:condition option)]
-         (let [operator (case (:comparison-operator condition)
-                          "<" <
-                          "=" =
-                          ">" >)]
-           (operator (number/->int value) (:answer-compared-to condition)))
+         (let [operator    (case (:comparison-operator condition)
+                             "<" <
+                             "=" =
+                             ">" >)
+               input       (number/->int value)
+               compared-to (:answer-compared-to condition)]
+           (and input
+                compared-to
+                (operator input compared-to)))
          true)))
 
 (defn answer-satisfies-condition-or-is-empty? [value option]
