@@ -989,12 +989,14 @@
      ]))
 
 (defn- single-payment-status-row [header payments key]
+  (prn "single-payment-status-row" (get @payments key))
   (let [payment    (get @payments key)
         status     (keyword (:status payment))
         icon       (case (keyword status)
                          :active  icons/tutu-payment-outstanding
                          :paid    icons/tutu-payment-paid
-                         :overdue icons/tutu-payment-overdue)
+                         :overdue icons/tutu-payment-overdue
+                         nil)
         label      (if (or (empty? payment) (nil? status))
                      (str "Maksun tietoja ei löydy")
                      (case (keyword status)

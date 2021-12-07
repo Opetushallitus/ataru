@@ -24,7 +24,7 @@
          payments {:processing (oid-suffix-matcher "-1")
                    :decision (oid-suffix-matcher "-2")}]
      ;(prn "GOT response" response)
-     ;(prn "GOT body" (type body) body)
+     (prn "GOT body" (type body) body)
      ;(prn "store to " application-key payments)
 
      {:db       (assoc-in db [:tutu-payment :applications application-key] payments)
