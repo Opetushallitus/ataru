@@ -398,9 +398,9 @@
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
-   :search-application-options-or-education     {:fi "Etsi koulutusta tai oppilaitosta"
-                                                 :sv "Sök utbildningar eller läroanstalt"
-                                                 :en "EN: Etsi koulutusta tai oppilaitosta"}
+   :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
+                                                 :sv "Sök läroanstalt eller utbildningar"
+                                                 :en "EN: Etsi oppilaitosta tai koulutusta"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}
