@@ -13,7 +13,8 @@
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
             [ataru.virkailija.editor.components.followup-question :as followup-question]
             [clojure.string :as string]
-            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]))
+            [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
+            [ataru.virkailija.editor.components.prevent-submission-component :as prevent-submission-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
@@ -106,6 +107,7 @@
                                                :value-fn    (fn [v] (:selection-limit v))}]])
         [followup-question/followup-question option-index followups show-followups]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet-option parent-key option-index option-path]
+        [prevent-submission-component/prevent-submission-option option-path]
         (when editable?
           [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
        [followup-question/followup-question-overlay option-index followups path show-followups]])))
