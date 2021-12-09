@@ -988,10 +988,9 @@
      [:span (str "€")]
      ]))
 
-(defn- single-payment-status-row [header payments key]
-  (prn "single-payment-status-row  " (get @payments key))
-  (let [payment    (get @payments key)
-        status     (keyword (:status payment))
+(defn- single-payment-status-row [header payment]
+  ;(prn "single-payment-status-row  " payment)
+  (let [status     (keyword (:status payment))
         icon       (case (keyword status)
                          :active  icons/tutu-payment-outstanding
                          :paid    icons/tutu-payment-paid
@@ -1044,17 +1043,17 @@
         ;request-state        (subscribe [:state-query [:application :information-request :state]])
         application-key      @(subscribe [:state-query [:application :review :application-key]])
         processing-state     @(subscribe [:state-query [:application :review :hakukohde-reviews :form :processing-state]])
-        {:keys [processing decision]} @payments
+        {:keys [processing decision]} payments
 
         decision-pay-status  (keyword (:status decision))
         state                (or (keyword processing-state) :unprocessed)
-;            show-dialog?         (case state
-;                                       :unprocessed true
-;                                       :processing-fee-paid true
-;                                       :processing true
-;                                       :decision-fee-outstanding true
-;                                       :decision-fee-paid true
-;                                       false)
+        show-dialog?         (case state
+                                   :unprocessed true
+                                   :processing-fee-paid true
+                                   :processing true
+                                   :decision-fee-outstanding true
+                                   :decision-fee-paid true
+                                   false)
         email                (str "testi@gmail.com")
         amount-label         (case state
                                    :unprocessed "Maksun määrä"
@@ -1068,7 +1067,7 @@
                                    :processing-fee-paid (:amount processing)
                                    :processing :input
                                    :decision-fee-outstanding :input
-                                   :decision-fee-paid (+ (:amount processing) (:amount decision))
+                                   :decision-fee-paid (str (:amount processing) " + " (:amount decision))
                                    nil)
         due-label         (case state
                                    :unprocessed "Eräpäivä"
@@ -1086,7 +1085,7 @@
                                 nil)
 
             ]
-        ;(prn "state2" state "show-dialog?" show-dialog?)
+        (prn "state2" state "show-dialog?" show-dialog?)
 
         [:div {:style {:backgroundColor "white" :padding "6px" :border "1px solid #e6e6e6"
                      :display "grid"
@@ -1100,8 +1099,9 @@
        [:span {:style {:grid-column "span 2"}} [:b (str "Maksupyyntö " ;state
                                                         )]]
 
-       [single-payment-status-row "Käsittelymaksu:" payments :processing]
-       [single-payment-status-row "Päätösmaksu:" payments :decision]
+       [single-payment-status-row "Käsittelymaksu:" (:processing payments)]
+       (when-let [p (:decision payments)]
+         [single-payment-status-row "Päätösmaksu:" p])
 
        [:div "Vastaanottaja:"]
        [:div email]
@@ -1389,7 +1389,7 @@
                                                         review-states/hakukohde-review-types
                                                         review-states/hakukohde-review-types-normal)]])
               (when tutu-form?
-                [application-tutu-payment-status payments])
+                [application-tutu-payment-status @payments])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
               [application-review-inputs]

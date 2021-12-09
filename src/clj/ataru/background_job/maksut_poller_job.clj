@@ -23,7 +23,6 @@
           key-state (into {} (map (fn [{:keys [key state]}] [key state]) apps))
           body      {:keys keys}
           response  (http-util/do-post url {:headers      {"content-type" "application/json"}
-                                            :query-params {:sanitize "false"}
                                             :body         (json/generate-string body)})
           maksut    (json/parse-string (:body response) true)
           ]

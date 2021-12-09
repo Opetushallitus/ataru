@@ -15,20 +15,19 @@
 
 (re-frame/reg-event-fx
  :tutu-payment/handle-fetch-payments
- (fn [{db :db} [_ application-key response]]
-   (let [body (-> response
-                  :body
-                  (js->clj :keywordize-keys true))
-         oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
+ (fn [{db :db} [_ body {:keys [application-key]}]]
+   (let [oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
          payments {:processing (oid-suffix-matcher "-1")
                    :decision (oid-suffix-matcher "-2")}]
      ;(prn "GOT response" response)
-     (prn "GOT body" (type body) body)
+     (prn "GOT body" application-key (type body) body)
      ;(prn "store to " application-key payments)
 
      {:db       (assoc-in db [:tutu-payment :applications application-key] payments)
       ;:dispatch [:liitepyynto-information-request/show-deadline application-key liitepyynto-key]
-      })))
+      })
+
+   ))
 
 
 ;(re-frame/reg-event-fx
@@ -93,16 +92,16 @@
 
 (re-frame/reg-event-fx
  :tutu-payment/handle-decision-invoice
- (fn [_ [_ response]]
+ (fn [_ [_ response {:keys [application-key]}]]
    (let [{:keys [hakukohde-reviews]} response
          state-name :processing-state
          state-value (-> hakukohde-reviews :form state-name)]
-     ;(prn "last event" (last events))
      ;(prn "revs" hakukohde-reviews)
      ;(prn "revs2" state-value)
 
      {:dispatch-n [[:application/update-review-field state-name state-value]
-                   [:application/review-updated response]]
+                   [:application/review-updated response]
+                   [:tutu-payment/fetch-payments application-key]]
 
      })))
 
@@ -138,6 +137,7 @@
      (ajax/http :post
                 "/lomake-editori/api/maksut/maksupyynto"
                 :tutu-payment/handle-decision-invoice
+                :handler-args  {:application-key application-key}
                 :override-args {:params data})
 
 ;     (http (aget js/config "virkailija-caller-id")
@@ -264,10 +264,18 @@
 (re-frame/reg-fx
  :tutu-payment/fetch-payments
  (fn [{:keys [application-key]}]
-   (prn "XXX dispatching :tutu-payment/handle-fetch-payments" application-key)
+   (prn "XXX3 dispatching :tutu-payment/handle-fetch-payments" application-key)
    (ajax/http :get
               (str "/lomake-editori/api/maksut/list/" application-key)
-              [:tutu-payment/handle-fetch-payments application-key])
+              ;[:tutu-payment/handle-fetch-payments application-key]
+              ;:handler-or-dispatch
+              :tutu-payment/handle-fetch-payments
+              :handler-args        {:application-key application-key}
+;              (fn [db response handler-args]
+;                (prn "GOT XXX " response handler-args)
+;              )
+              )
+
 
 ;   (http (aget js/config "virkailija-caller-id")
 ;         {:method        :get
