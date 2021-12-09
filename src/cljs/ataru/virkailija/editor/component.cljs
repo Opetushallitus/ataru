@@ -280,7 +280,7 @@
          [:div.editor-form__adjacent-fieldset-container
           children
           (when (and (not @component-locked?)
-                     (-> (count children) (< 3)))
+                     (-> (count children) (< 2)))
             [toolbar/adjacent-fieldset-toolbar
              (concat path [:children])
              (fn [component-fn]
