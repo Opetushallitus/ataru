@@ -1,12 +1,6 @@
 (ns ataru.util
   (:require #?(:cljs [ataru.cljs-util :as util])
-            #?(:clj  [clojure.core.match :refer [match]]
-               :cljs [cljs.core.match :refer-macros [match]])
             #?(:cljs [goog.string :as gstring])
-            #?(:clj  [clj-time.core :as time]
-               :cljs [cljs-time.core :as time])
-            #?(:clj  [clj-time.coerce :refer [from-long]]
-               :cljs [cljs-time.coerce :refer [from-long]])
             [clojure.string :as string]
             [ataru.application.option-visibility :as option-visibility])
   (:import #?(:clj [java.util UUID])))
@@ -150,11 +144,10 @@
 
 (defn group-answers-by-wrapperelement [wrapper-fields answers-by-key]
   (into {}
-    (for [{:keys [id children] :as field} wrapper-fields
-          :let [top-level-children children
-                section-id id]]
+    (for [{:keys [id children]} wrapper-fields
+          :let [top-level-children children]]
       {id (loop [acc []
-                 [{:keys [id children] :as field} & rest-of-fields] top-level-children]
+                 [{:keys [id children]} & rest-of-fields] top-level-children]
             (if (not-empty children)
               (recur acc (concat children rest-of-fields))
               ; this is the ANSWER id, NOT section/wrapperElement id
@@ -335,21 +328,54 @@
 (def fields-with-visibility-rules-memo
   (memoize fields-with-visibility-rules))
 
+(defn- visibility-condition-applies-to-field?
+  [visibility-condition field]
+  (let [field-name (-> field :id keyword)
+        section-name (-> visibility-condition :section-name keyword)]
+    (= section-name field-name)))
+
+(defn- visibility-conditions-on-field
+  [db field]
+  (let [answers (get-in db [:application :answers])
+        form                         (:form db)
+        fields-with-visibility-rules (fields-with-visibility-rules-memo form)]
+    (mapcat
+      (fn [{conditions :section-visibility-conditions condition-owner-id :id}]
+        (keep
+          (fn [visibility-condition]
+            (when (visibility-condition-applies-to-field? visibility-condition field)
+              (let [answer (get-in answers [(keyword condition-owner-id) :value])]
+                (assoc visibility-condition :value answer))))
+          conditions))
+      fields-with-visibility-rules)))
+
+(defn- condition-quantifier
+  [condition]
+  (case (:data-type (:condition condition))
+    "str" :some
+    :every))
+
+(defn- every-condition-satisfied
+  [conditions]
+  (and
+    (seq conditions)
+    (every?
+      (fn [{value :value :as condition}]
+        (option-visibility/answer-satisfies-condition? value condition))
+      conditions)))
+
+(defn- some-condition-satisfied
+  [conditions]
+  (and
+    (seq conditions)
+    (some
+      (fn [{value :value :as condition}]
+        (option-visibility/answer-satisfies-condition? value condition))
+      conditions)))
+
 (defn is-field-hidden-by-section-visibility-conditions [db field]
-  (let [form (:form db)
-        filtered-content (fields-with-visibility-rules-memo form)
-        answers (get-in db [:application :answers])
-        id (-> field :id keyword)
-        visibility-conditions (mapcat (fn [{conditions :section-visibility-conditions field-id :id}]
-                                        (keep (fn [visibility-condition]
-                                                (let [section-name (-> visibility-condition :section-name keyword)]
-                                                  (when (= section-name id)
-                                                    (assoc
-                                                      visibility-condition
-                                                      :value (get-in answers [(keyword field-id) :value])))))
-                                              conditions)) filtered-content)]
-    (when (seq visibility-conditions)
-      (->> visibility-conditions
-           (some (fn [{value :value :as option}]
-                   (not (option-visibility/answer-satisfies-condition-or-is-empty? value option))))
-           not))))
+  (let [visibility-conditions (visibility-conditions-on-field db field)
+        by-quantifier         (group-by condition-quantifier visibility-conditions)]
+    (or
+      (every-condition-satisfied (seq (:every by-quantifier)))
+      (some-condition-satisfied (seq (:some by-quantifier))))))

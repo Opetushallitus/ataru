@@ -42,50 +42,73 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema OptionCondition {:comparison-operator                 (s/enum "<" "=" ">")
-                              (s/optional-key :answer-compared-to) s/Int})
+(defn form-field-schema
+  [option-condition-schema]
+  {:fieldClass                                      (s/eq "formField")
+   :id                                              s/Str
+   :fieldType                                       (apply s/enum form-fields)
+   :metadata                                        element-metadata-schema/ElementMetadata
+   (s/optional-key :cannot-view)                    s/Bool
+   (s/optional-key :cannot-edit)                    s/Bool
+   (s/optional-key :validators)                     [validator-schema/Validator]
+   (s/optional-key :rules)                          {s/Keyword s/Any}
+   (s/optional-key :blur-rules)                     {s/Keyword s/Any}
+   (s/optional-key :label)                          localized-schema/LocalizedString
+   (s/optional-key :label-amendment)                localized-schema/LocalizedString
+   (s/optional-key :unselected-label)               localized-schema/LocalizedString
+   (s/optional-key :unselected-label-icon)          [(s/one s/Str "icon component")]
+   (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
+   (s/optional-key :params)                         params-schema/Params
+   (s/optional-key :no-blank-option)                s/Bool
+   (s/optional-key :exclude-from-answers)           s/Bool
+   (s/optional-key :exclude-from-answers-if-hidden) s/Bool
+   (s/optional-key :version)                        s/Str
+   (s/optional-key :koodisto-ordered-by-user)       s/Bool
+   (s/optional-key :sort-by-label)                  s/Bool
+   (s/optional-key :koodisto-source)                {:uri                             s/Str
+                                                     :version                         s/Int
+                                                     (s/optional-key :default-option) s/Any
+                                                     (s/optional-key :title)          s/Str
+                                                     (s/optional-key :allow-invalid?) s/Bool}
+   (s/optional-key :section-visibility-conditions)  [{:section-name s/Str
+                                                      :condition    option-condition-schema}]
+   (s/optional-key :options)                        [{:value                                      s/Str
+                                                      (s/optional-key :label)                     localized-schema/LocalizedStringOptional
+                                                      (s/optional-key :description)               localized-schema/LocalizedStringOptional
+                                                      (s/optional-key :selection-limit)           (s/maybe s/Int)
+                                                      (s/optional-key :default-value)             (s/maybe s/Bool)
+                                                      (s/optional-key :condition)                 option-condition-schema
+                                                      (s/optional-key :belongs-to-hakukohteet)    [s/Str]
+                                                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
+                                                      (s/optional-key :followups)                 [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
+   (s/optional-key :belongs-to-hakukohteet)         [s/Str]
+   (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
+   (s/optional-key :per-hakukohde)                  s/Bool
+   (s/optional-key :sensitive-answer)               s/Bool})
 
-(s/defschema FormField {:fieldClass                                      (s/eq "formField")
-                        :id                                              s/Str
-                        :fieldType                                       (apply s/enum form-fields)
-                        :metadata                                        element-metadata-schema/ElementMetadata
-                        (s/optional-key :cannot-view)                    s/Bool
-                        (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [validator-schema/Validator]
-                        (s/optional-key :rules)                          {s/Keyword s/Any}
-                        (s/optional-key :blur-rules)                     {s/Keyword s/Any}
-                        (s/optional-key :label)                          localized-schema/LocalizedString
-                        (s/optional-key :label-amendment)                localized-schema/LocalizedString
-                        (s/optional-key :unselected-label)               localized-schema/LocalizedString
-                        (s/optional-key :unselected-label-icon)          [(s/one s/Str "icon component")]
-                        (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
-                        (s/optional-key :params)                         params-schema/Params
-                        (s/optional-key :no-blank-option)                s/Bool
-                        (s/optional-key :exclude-from-answers)           s/Bool
-                        (s/optional-key :exclude-from-answers-if-hidden) s/Bool
-                        (s/optional-key :version)                        s/Str
-                        (s/optional-key :koodisto-ordered-by-user)       s/Bool
-                        (s/optional-key :sort-by-label)                  s/Bool
-                        (s/optional-key :koodisto-source)                {:uri                             s/Str
-                                                                          :version                         s/Int
-                                                                          (s/optional-key :default-option) s/Any
-                                                                          (s/optional-key :title)          s/Str
-                                                                          (s/optional-key :allow-invalid?) s/Bool}
-                        (s/optional-key :section-visibility-conditions)  [{:section-name s/Str
-                                                                           :condition OptionCondition}]
-                        (s/optional-key :options)                        [{:value                            s/Str
-                                                                           (s/optional-key :label)           localized-schema/LocalizedStringOptional
-                                                                           (s/optional-key :description)     localized-schema/LocalizedStringOptional
-                                                                           (s/optional-key :selection-limit) (s/maybe s/Int)
-                                                                           (s/optional-key :default-value)   (s/maybe s/Bool)
-                                                                           (s/optional-key :condition)       OptionCondition
-                                                                           (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                                                                           (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
-                                                                           (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]
-                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
-                        (s/optional-key :per-hakukohde)                  s/Bool
-                        (s/optional-key :sensitive-answer)               s/Bool})
+(s/defschema TextFieldOptionCondition
+  {:comparison-operator                 (s/enum "<" "=" ">")
+   (s/optional-key :data-type)          (s/eq "int")
+   (s/optional-key :answer-compared-to) s/Int})
+
+(s/defschema TextField
+  (form-field-schema TextFieldOptionCondition))
+
+(s/defschema ChoiceFieldOptionCondition
+  {:comparison-operator                 (s/enum "=")
+   (s/optional-key :data-type)          (s/eq "str")
+   (s/optional-key :answer-compared-to) s/Str})
+
+(s/defschema ChoiceField
+  (form-field-schema ChoiceFieldOptionCondition))
+
+(s/defschema FormField
+  (s/conditional
+    #(#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType %))
+    ChoiceField
+
+    :else
+    TextField))
 
 (s/defschema BasicElement
   (s/conditional

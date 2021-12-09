@@ -100,20 +100,24 @@
           (update-in text-field-path into [component])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
-(defn text-field-section-visibility-condition [section-name]
-  {:section-name section-name
-   :condition {:comparison-operator "<"}})
+(defn- add-section-visibility-condition
+  [db path condition]
+  (let [text-field-path (db/current-form-content-path db [path :section-visibility-conditions])
+        hideable-form-sections @(subscribe [:editor/current-lomakeosiot])
+        default-hidden-section-name (-> hideable-form-sections first :id)
+        section-visibility (merge condition {:section-name default-hidden-section-name})]
+    (-> db
+      (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
+      (update-in (drop-last text-field-path) set-non-koodisto-option-values))))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (let [text-field-path (db/current-form-content-path db [path :section-visibility-conditions])
-          hideable-form-sections @(subscribe [:editor/current-lomakeosiot])
-          default-hidden-section-name (-> hideable-form-sections first :id)
-          section-visibility (text-field-section-visibility-condition default-hidden-section-name)]
-      (-> db
-          (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
-          (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
+    (add-section-visibility-condition
+      db
+      path
+      {:condition {:comparison-operator "<"
+                   :data-type           "int"}})))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-piilotettavan-osion-nimi
@@ -131,6 +135,48 @@
                  condition-path
                  (fn [condition]
                    (assoc condition :comparison-operator value))))))
+
+(reg-event-db
+  :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
+  (fn [db [_ path]]
+    (let [field                      @(subscribe [:editor/get-component-value path])
+          default-answer-compared-to (some-> field :options first :value)
+          condition                  {:condition {:comparison-operator "="
+                                                  :data-type           "str"
+                                                  :answer-compared-to  default-answer-compared-to}}]
+      (add-section-visibility-condition
+        db
+        path
+        condition))))
+
+(reg-event-db
+  :editor/remove-visibility-condition
+  (fn [db [_ path visibility-condition-index]]
+    (let [visibility-conditions-path (db/current-form-content-path db [path :section-visibility-conditions])]
+      (update-in db visibility-conditions-path util/remove-nth visibility-condition-index))))
+
+(reg-event-db
+  :editor/set-visibility-condition-value
+  (fn [db [_ component-path visibility-condition-index value]]
+    (let [path (db/current-form-content-path
+                 db
+                 [component-path
+                  :section-visibility-conditions
+                  visibility-condition-index
+                  :condition
+                  :answer-compared-to])]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/set-visibility-condition-section
+  (fn [db [_ component-path visibility-condition-index value]]
+    (let [path (db/current-form-content-path
+                 db
+                 [component-path
+                  :section-visibility-conditions
+                  visibility-condition-index
+                  :section-name])]
+      (assoc-in db path value))))
 
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo

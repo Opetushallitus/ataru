@@ -14,9 +14,9 @@
                  lang
                  idx
                  read-only?]} :- (-> render-field-schema/RenderFieldArgs
-                                 (st/merge {:lang        lang-schema/Lang
-                                            :application s/Any
-                                            :read-only?  s/Bool}))]
+                                 (st/merge {(s/optional-key :lang)        lang-schema/Lang
+                                            (s/optional-key :application) s/Any
+                                            :read-only?                   s/Bool}))]
         (let [oppiaine (some-> @(re-frame/subscribe [:application/answer
                                                      :oppiaine-valinnainen-kieli
                                                      idx])

@@ -824,6 +824,12 @@
   (fn [db _]
     (set-field-visibilities db)))
 
+(defn- handle-section-visibility-conditions-on-change?
+  [field-descriptor]
+  (and
+    (seq (:section-visibility-conditions field-descriptor))
+    (#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType field-descriptor))))
+
 (reg-event-fx
   :application/set-repeatable-application-field
   [check-schema-interceptor]
@@ -839,7 +845,9 @@
                                  (field-visibility/set-field-visibility field-descriptor)
                                  (set-validator-processing id))]
       {:db                 db
-       :dispatch           [:application/set-followup-values field-descriptor]
+       :dispatch-n         [[:application/set-followup-values field-descriptor]
+                            (when (handle-section-visibility-conditions-on-change? field-descriptor)
+                              [:application/handle-section-visibility-conditions])]
        :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])

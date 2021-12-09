@@ -531,3 +531,17 @@
     (and
       parent-has-validator
       (contains? (set invalid-values) (:value option-component)))))
+
+(re-frame/reg-sub
+  :editor/visibility-condition-value
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (some-> visibility-condition :condition :answer-compared-to)))
+
+(re-frame/reg-sub
+  :editor/visibility-condition-section-name
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (:section-name visibility-condition)))
