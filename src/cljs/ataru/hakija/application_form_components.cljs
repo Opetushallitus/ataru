@@ -77,6 +77,9 @@
        [hakukohde-names-component/question-hakukohde-names field-descriptor :info-for-hakukohde])
      [markdown-paragraph text (-> field-descriptor :params :info-text-collapse) @application-identifier]]))
 
+(defn modal-info-element [field-descriptor _]
+  [info-element field-descriptor])
+
 (defn- event->value [handler]
   (fn [evt]
     (let [value (-> evt .-target .-value)]
@@ -984,6 +987,7 @@
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohde/hakukohteet-picker field-descriptor idx]
          {:fieldClass "pohjakoulutusristiriita" :fieldType "pohjakoulutusristiriita"} [pohjakoulutusristiriita/pohjakoulutusristiriita field-descriptor idx]
          {:fieldClass "infoElement"} [info-element field-descriptor idx]
+         {:fieldClass "modalInfoElement"} [modal-info-element field-descriptor idx]
          {:fieldClass "wrapperElement" :fieldType "adjacentfieldset"} [adjacent-text-fields field-descriptor idx]))
 
 (defn render-field [field-descriptor idx]

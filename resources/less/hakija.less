@@ -1890,7 +1890,8 @@ th.application__readonly-adjacent--header {
   display: flex;
 }
 
-.application__demo-overlay {
+
+.application__notification-overlay {
   background-color: @very-light-gray;
   top: 0;
   bottom: 0;
@@ -1901,9 +1902,10 @@ th.application__readonly-adjacent--header {
   flex-direction: column;
   align-items: center;
 
-  .application__demo-container {
+  .application__notification-container {
     margin-top: 2 * @total-banner-height;
-    border: 3px solid @primary-green-900;
+    width: 60%;
+    border: 3px solid @primary-green-700;
     padding: 2rem 3rem;
     box-shadow: 0 6px 6px rgba(0,0,0,0.60);
     display: flex;
@@ -1912,39 +1914,40 @@ th.application__readonly-adjacent--header {
     align-items: center;
     text-align: center;
 
-    .application__demo-notification-title {
-      font-size: 72px;
+    .application__notification-title {
+      font-size: 36px;
     }
 
     p,
-    .application__demo-button {
+    .application__notification-button {
       font-size: 24px;
     }
 
-    .application__demo-button {
+    .application__notification-button {
+      .primary-button;
       margin-top: 1rem;
-      padding-top: 0.6rem;
-      padding-bottom: 0.6rem;
+      padding: 0.6rem 2rem;
     }
   }
 
   @media only screen and (max-width: @mobile-width) {
-    .application__demo-container {
+    .application__notification-container {
       margin-top: @total-banner-height-mobile + 20px;
       width: 92%;
       padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
       box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
 
-      .application__demo-notification-title {
+      .application__notification-title {
         font-size: 26px;
       }
 
       p,
-      .application__demo-button {
+      .application__notification-button {
         font-size: 16px;
       }
 
-      .application__demo-button {
+      .application__notification-button {
         margin-top: 0.5rem;
       }
     }

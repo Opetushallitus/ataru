@@ -96,6 +96,15 @@
    :label      {:fi ""}   ; LocalizedString
    :text       {:fi ""}}) ; LocalizedString
 
+(defn modal-info-element [metadata]
+  {:fieldClass "modalInfoElement"
+   :fieldType  "p"
+   :id         (util/component-id)
+   :params     {}
+   :metadata   metadata
+   :label      {:fi ""}   ; LocalizedString
+   :text       {:fi ""}}) ; LocalizedString
+
 (defn adjacent-fieldset [metadata]
   {:id         (util/component-id)
    :fieldClass "wrapperElement"

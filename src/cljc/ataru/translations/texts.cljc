@@ -398,9 +398,9 @@
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
-   :search-application-options-or-education     {:fi "Etsi koulutusta tai oppilaitosta"
-                                                 :sv "Sök utbildningar eller läroanstalt"
-                                                 :en "EN: Etsi koulutusta tai oppilaitosta"}
+   :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
+                                                 :sv "Sök läroanstalt eller utbildningar"
+                                                 :en "EN: Etsi oppilaitosta tai koulutusta"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}
@@ -1391,6 +1391,9 @@
    :info-element                                    {:fi "Infoteksti"
                                                      :sv "Infotext"
                                                      :en "Info element"}
+   :modal-info-element                              {:fi "Infoteksti, koko ruutu"
+                                                     :sv "SV: Infoteksti, koko ruutu"
+                                                     :en "EN: Infoteksti, koko ruutu"}
    :information-request-sent                        {:fi "Täydennyspyyntö lähetetty"
                                                      :sv "Begäran om komplettering har skickats"
                                                      :en "Information request email has been sent"}
@@ -1983,7 +1986,13 @@
                                                      :en "EN: Vastaus"}
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
                                                      :sv "Svarsalternativ valt"
-                                                     :en "EN: vastausvaihtoehtoa valittu"}})
+                                                     :en "EN: vastausvaihtoehtoa valittu"}
+   :prevent-submission                              {:fi "Valinta estää hakemuksen lähettämisen"
+                                                     :sv "SV: Valinta estää hakemuksen lähettämisen"
+                                                     :en "EN: Valinta estää hakemuksen lähettämisen"}
+   :button-text                                     {:fi "Painikkeen teksti"
+                                                     :sv "SV: Painikkeen teksti"
+                                                     :en "EN: Painikkeen teksti"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
