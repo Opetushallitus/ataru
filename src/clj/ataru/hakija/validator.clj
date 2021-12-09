@@ -133,7 +133,8 @@
                             (into results)))
 
                 (or (:exclude-from-answers field)
-                    (= "infoElement" (:fieldClass field)))
+                    (= "infoElement" (:fieldClass field))
+                    (= "modalInfoElement" (:fieldClass field)))
                 (recur (rest fields)
                        (if-let [answer (get answers-by-key id)]
                          (assoc results id answer)

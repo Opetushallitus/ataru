@@ -27,6 +27,7 @@
 (defn visible? [field fields answers hakutoiveet hakukohteet]
   (and (not (get-in field [:params :hidden]))
        (not= "infoElement" (:fieldClass field))
+       (not= "modalInfoElement" (:fieldClass field))
        (not (:exclude-from-answers field))
        (or (and (empty? (:belongs-to-hakukohteet field))
                 (empty? (:belongs-to-hakukohderyhma field)))

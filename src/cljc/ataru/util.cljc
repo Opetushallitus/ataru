@@ -56,7 +56,7 @@
   (vec (mapcat flatten-form-field fields)))
 
 (defn answerable? [field]
-  (not (contains? #{"infoElement" "wrapperElement" "questionGroup"}
+  (not (contains? #{"infoElement" "modalInfoElement" "wrapperElement" "questionGroup"}
                   (:fieldClass field))))
 
 (defn find-field [fields id]

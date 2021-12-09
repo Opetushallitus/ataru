@@ -209,8 +209,9 @@
   (let [content-path (db/current-form-content-path db [path :validators])]
     (-> db
         (update-in content-path (fn [validators]
-                                  (when-not (some #(= % validator) validators)
-                                    (conj validators validator))))
+                                  (if-not (some #(= % validator) validators)
+                                    (conj validators validator)
+                                    validators)))
         (update-modified-by path))))
 
 (reg-event-db :editor/add-validator add-validator)
@@ -1332,3 +1333,31 @@
   (fn [db _]
     (let [form-path (db/current-form-properties-path db [:auto-expand-hakukohteet])]
       (update-in db form-path not))))
+
+(reg-event-db
+  :editor/add-invalid-value-validator
+  (fn [db [_ option-value parent-path]]
+    (println :editor/add-invalid-value-validator option-value parent-path)
+    (-> db
+      (update-in
+        (db/current-form-content-path db [parent-path :params :invalid-values])
+        (fn [invalid-values]
+          (-> invalid-values
+            set
+            (conj option-value)
+            vec)))
+      (add-validator [nil "invalid-values" parent-path]))))
+
+(reg-event-db
+  :editor/remove-invalid-value-validator
+  (fn [db [_ option-value parent-path]]
+    (println :editor/remove-invalid-value-validator option-value parent-path)
+    (let [invalid-values-path    (db/current-form-content-path db [parent-path :params :invalid-values])
+          invalid-values         (get-in db invalid-values-path)
+          updated-invalid-values (->> invalid-values
+                                   (remove #(= option-value %))
+                                   vec)
+          updated-db             (assoc-in db invalid-values-path updated-invalid-values)]
+      (if (empty? updated-invalid-values)
+        (remove-validator updated-db [nil "invalid-values" parent-path])
+        updated-db))))
