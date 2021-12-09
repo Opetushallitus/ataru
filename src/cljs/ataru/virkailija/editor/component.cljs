@@ -125,7 +125,7 @@
         [followup-question/followup-question option-index followups show-followups]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet-option parent-key option-index option-path]
         (when editable?
-          [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
+          [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 2)) parent-key option-value question-group-element?])]
        [followup-question/followup-question-overlay option-index followups path show-followups]])))
 
 (defn- select-koodisto-dropdown
