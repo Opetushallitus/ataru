@@ -12,10 +12,10 @@
 
 (defqueries "sql/maksut-queries.sql")
 
-(defn- start-maksut-poller-job [application-service _ apps]
+(defn- start-maksut-poller-job [application-service maksut-service _ apps]
   ;TODO maybe no need for full bg-job style execution, as this service will be anyways ran hourly?
 
-   (maksut-poller-job/poll-maksut application-service apps)
+   (maksut-poller-job/poll-maksut application-service maksut-service apps)
 
 ;  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
 ;    (job/start-job job-runner
@@ -110,12 +110,12 @@
 ;                (str "Could not find key oidHenkilo from message '" s "'")))))
 
 (defn- find-applications
-  [application-service job-runner]
+  [application-service maksut-service job-runner]
   (try
     (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_key (-> config :tutkintojen-tunnustaminen :maksut :form-key)}))]
       (do
         (log/info "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
-        (start-maksut-poller-job application-service job-runner apps))
+        (start-maksut-poller-job application-service maksut-service job-runner apps))
       (log/info "No applications in need of Maksut-polling found"))
     (catch Exception e
       (log/error e "Maksut polling failed"))))
@@ -137,6 +137,7 @@
          executor
          (partial find-applications
                   application-service
+                  maksut-service
                   job-runner)
          0 5 TimeUnit/MINUTES)
         (assoc this :executor executor))

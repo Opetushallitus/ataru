@@ -5,4 +5,6 @@
 
   (create-paatos-lasku [this lasku])
 
+  (list-lasku-statuses [this keys])
+
   (list-laskut-by-application-key [this application-key]))

@@ -426,6 +426,7 @@
                             application
                             false
                             session)
+        ;TODO refactor TuTu-maksut logic to separate function
         app-key (-> (application-store/get-application id) :key)
         form (:form application)
         get-field  (fn [key] (->> (:answers application)

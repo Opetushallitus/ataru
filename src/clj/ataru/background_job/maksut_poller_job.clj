@@ -1,11 +1,9 @@
 (ns ataru.background-job.maksut-poller-job
   "Polls Maksut-services for paid and overdue invoices, linked to applications."
   (:require [clojure.core.match :refer [match]]
-            [ataru.config.url-helper :refer [resolve-url]]
-            [ataru.util.http-util :as http-util]
             [ataru.applications.application-service :as application-service]
+            [ataru.maksut.maksut-protocol :as maksut-protocol]
             ;[ataru.db.db :as db]
-            [cheshire.core :as json]
             ;[clj-time.core :as time]
             [clojure.string :refer [ends-with?]]
             [taoensso.timbre :as log]
@@ -14,21 +12,11 @@
 
 ;(defqueries "sql/maksut-queries.sql")
 
-(defn- maksut-status-check-url []
-  (resolve-url :maksut-service.background-lasku-status))
-
-(defn poll-maksut [application-service apps]
-    (let [url       (maksut-status-check-url)
-          keys      (map :key apps)
+(defn poll-maksut [application-service maksut-service apps]
+    (let [keys      (map :key apps)
           key-state (into {} (map (fn [{:keys [key state]}] [key state]) apps))
-          body      {:keys keys}
-          response  (http-util/do-post url {:headers      {"content-type" "application/json"}
-                                            :body         (json/generate-string body)})
-          maksut    (json/parse-string (:body response) true)
-          ]
+          maksut    (maksut-protocol/list-lasku-statuses maksut-service keys)]
 
-      (when (not= 200 (:status response))
-        (throw (Exception. (str "Could not poll Maksut-services for keys " (apply str keys)))))
       (log/info "Received statuses for" (count maksut) "invoices")
 
       (let [terminal (filter #(some #{(:status %)} '("paid" "overdue")) maksut)

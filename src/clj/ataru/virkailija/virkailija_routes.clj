@@ -31,6 +31,7 @@
             [ataru.middleware.user-feedback :as user-feedback]
             [ataru.schema.form-schema :as ataru-schema]
             [ataru.schema.form-element-schema :as form-schema]
+            [ataru.schema.maksut-schema :as maksut-schema]
             [ataru.schema.priorisoiva-hakukohderyhma-schema :as priorisoiva-hakukohderyhma-schema]
             [ataru.statistics.statistics-service :as statistics-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
@@ -792,39 +793,18 @@
       :tags ["maksut-api"]
       (api/GET "/list/:application-key" {session :session}
         :path-params [application-key :- s/Str]
-        :return [s/Any]
-;           :body [input {:application-key             s/Str
-;                         :first-name                  s/Str
-;                         :last-name                   s/Str
-;                         :email                       s/Str
-;                         :amount                      s/Str
-;                         :due_date                    (s/maybe s/Str)
-;                         :index                       s/Int}]
-
-        ;:return ataru-schema/KayttaaValintalaskentaaResponse
+        :return maksut-schema/Laskut
         :summary "Listaa hakemukseen liittyvät maksut"
         (if-let [list (maksut-protocol/list-laskut-by-application-key maksut-service application-key)]
-          (do
-            (log/warn "List respose" list)
-            (response/ok list))
+          (response/ok list)
           (response/not-found
               {:error (str "Hakemukseen " application-key " liittyvien laskujen listaus epäonnistui")})))
 
       (api/POST "/maksupyynto" {session :session}
-        :body [input {:application-key             s/Str
-                      :first-name                  s/Str
-                      :last-name                   s/Str
-                      :email                       s/Str
-                      :amount                      s/Str
-                      :due_date                    (s/maybe s/Str)
-                      :index                       s/Int}]
-        ;:return ataru-schema/KayttaaValintalaskentaaResponse
-        :summary "Välittää maksuluonto-pyynnön Maksut -palvelulle"
+        :body [input maksut-schema/TutuLaskuCreate]
+        :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
         (let [{:keys [application-key]} input
-              input2 (-> input
-                         (dissoc :due_date))
-              invoice (maksut-protocol/create-paatos-lasku maksut-service input2)
-              ]
+              invoice (maksut-protocol/create-paatos-lasku maksut-service input)]
 
           (log/warn "Input" input "key" application-key "invoice" invoice)
 
