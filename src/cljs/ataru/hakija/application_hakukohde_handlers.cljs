@@ -126,7 +126,8 @@
       {:db (-> db
                (assoc-in [:form :content] update-questions)
                (assoc-in [:application :answers] updated-answers)
-               (assoc :flat-form-content flat-form-content))})))
+               (assoc :flat-form-content flat-form-content)
+               set-field-visibilities)})))
 
 (reg-event-fx
   :application/hakukohde-clear-selection
