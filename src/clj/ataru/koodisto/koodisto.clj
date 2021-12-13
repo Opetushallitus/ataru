@@ -57,12 +57,18 @@
 (def attachment-type-koodisto-uri "liitetyypitamm")
 (def attachment-type-koodisto-version 1)
 
+(defn get-attachment-type-label
+  [koodisto-cache attachment-type]
+  (->> (get-koodisto-options koodisto-cache attachment-type-koodisto-uri attachment-type-koodisto-version true)
+    (filter #(= attachment-type (:uri %)))
+    first
+    :label))
+
 (defn- populate-attachment-field-from-koodisto
   [koodisto-cache field]
   (let [attachment-type (-> field :params :attachment-type)
-        koodis          (get-koodisto-options koodisto-cache attachment-type-koodisto-uri attachment-type-koodisto-version true)
-        koodi           (first (filter #(= attachment-type (:uri %)) koodis))]
-    (assoc field :label (:label koodi))))
+        label (get-attachment-type-label koodisto-cache attachment-type)]
+    (assoc field :label label)))
 
 (defn- populate-form-koodisto-field
   [koodisto-cache field]
