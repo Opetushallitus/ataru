@@ -100,7 +100,6 @@
 
 (defn- parse-hakukohde
   [hakukohde tarjoajat hakukohderyhmas settings]
-  (log/info hakukohde)
   (merge
     {:oid                                                         (:oid hakukohde)
      :hakukohteen-tiedot-url                                      (url-helper/resolve-url :kouta-app.hakukohde (:oid hakukohde))

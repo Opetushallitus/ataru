@@ -23,7 +23,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [ataru.hakukohde.liitteet :as liitteet]
-            [clojure.string :as string])
+            [clojure.string :as string]
+            [ataru.koodisto.koodisto :as koodisto])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages #{:fi :sv :en})
@@ -144,20 +145,22 @@
 (defn- attachment-with-deadline [_ lang field]
   (let [attachment {:label (-> field
                                :label
-                               (util/non-blank-val [lang :fi :sv :en]))}]
+                               (util/from-multi-lang lang))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- attachment-with-info-from-kouta
-  [lang field hakukohde-oid hakukohteet]
-  (let [hakukohde        (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
-        attachment       (liitteet/attachment-for-hakukohde (get-in field [:params :attachment-type]) hakukohde)
-        address          (liitteet/attachment-address-with-hakukohde lang attachment hakukohde)
-        default-deadline (-> field :params :deadline-label (get lang))
-        deadline   (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)]
-    {:label address :deadline deadline}))
+  [koodisto-cache lang field hakukohde-oid hakukohteet]
+  (let [hakukohde            (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+        attachment-type      (get-in field [:params :attachment-type])
+        attachment-type-text (util/from-multi-lang (koodisto/get-attachment-type-label koodisto-cache attachment-type) lang)
+        attachment           (liitteet/attachment-for-hakukohde attachment-type hakukohde)
+        address              (md/md-to-html-string (liitteet/attachment-address-with-hakukohde lang attachment hakukohde))
+        default-deadline     (-> field :params :deadline-label (get lang))
+        deadline             (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)]
+    {:attachment-type attachment-type-text :label address :deadline deadline}))
 
 (defn- create-attachment-info-utilizing-kouta
-  [answers-by-key flat-form-fields lang hakukohteet]
+  [koodisto-cache answers-by-key flat-form-fields lang hakukohteet]
   (let [find-original-field (fn [original-field-oid] (first (filter #(= (:id %) original-field-oid) flat-form-fields)))]
     (->> answers-by-key
          (keep (fn [[_ val]]
@@ -166,7 +169,8 @@
                    (when (and (= "attachment" (:fieldType val)) original-question)
                      {:original-field original-question :hakukohde-oid hakukohde-oid}))))
          (filter #(get-in (find-original-field (:original-field %)) [:params :fetch-info-from-kouta?]))
-         (map #(attachment-with-info-from-kouta lang (find-original-field (:original-field %)) (:hakukohde-oid %) hakukohteet)))))
+         (map #(attachment-with-info-from-kouta koodisto-cache lang (find-original-field (:original-field %)) (:hakukohde-oid %) hakukohteet))
+         (group-by :attachment-type))))
 
 (defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
                      (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
@@ -199,7 +203,7 @@
          attachments-without-answer      (->> flat-form-fields
                                               (filter #(contains? attachment-keys-without-answers (:id %)))
                                               (map #(attachment-with-deadline application lang %)))
-         attachments-info-from-kouta     (create-attachment-info-utilizing-kouta answers-by-key flat-form-fields lang hakukohteet)
+         attachments-info-from-kouta     (create-attachment-info-utilizing-kouta koodisto-cache answers-by-key flat-form-fields lang hakukohteet)
          email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
          content                         (-> email-template
                                              :content
@@ -223,13 +227,14 @@
                                              (filter (comp not clojure.string/blank?))))
          subject                         (if subject (subject lang) (email-template :subject))
          application-url                 (modify-link (:secret application))
-         template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
-                                                  :application-oid            (:key application)
-                                                  :application-url            application-url
-                                                  :content                    content
-                                                  :content-ending             content-ending
-                                                  :attachments-without-answer (concat attachments-without-answer attachments-info-from-kouta)
-                                                  :signature                  signature}
+         template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
+                                          :application-oid            (:key application)
+                                          :application-url            application-url
+                                          :content                    content
+                                          :content-ending             content-ending
+                                          :attachments-without-answer attachments-without-answer
+                                          :kouta-attachments-by-type  attachments-info-from-kouta
+                                          :signature                  signature}
          applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
          render-file-fn                  (fn [template-params]
