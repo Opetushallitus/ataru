@@ -2170,9 +2170,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Huomasimme, että "
-         [:strong "olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus 
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
@@ -2185,10 +2187,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "Vi märkte att "
-         [:strong "du redan har skickat en ansökning"]
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
          " i denna ansökan och därför kan du inte skicka en annan
-          ansökning."]
+          ansökning. Om du skickar in flera beaktas endast den som 
+          du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
@@ -2202,11 +2205,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "we noticed that "
-         [:strong "you have already submitted an application"]
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
-          will be taken into consideration and all others will be discarded."]
+          will be taken into consideration and all others will be deleted."]
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
@@ -2224,27 +2227,56 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Antamallasi sähköpostiosoitteella "
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus 
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
+        [:p "Jos haluat "
+         [:strong "muuttaa hakemustasi"]
+         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
+         jättäessäsi edellisen hakemuksen."]
+        [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
-         " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
-          on varmasti oikein."]]
+         " on varmasti oikein."]
+        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]
    :sv [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "En ansökning med den e-postadress du angett "
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
+         " i denna ansökan och därför kan du inte skicka en annan
+          ansökning. Om du skickar in flera beaktas endast den som 
+          du skickat in senast och alla tidigare ansökningar raderas."]
+        [:p "Om du vill "
+         [:strong "ändra din ansökning"]
+         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
+          du skickade din tidigare ansökning."]
+        [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
-         " har redan gjorts. Kontrollera att e-postadressen du har angett
-          säkert är korrekt."]]
+         " säkert är korrekt."]
+        [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
+             söker till."]]
    :en [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "the email address "
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
+         " to this admission and therefore cannot submit another
+          application. If you submit several applications, only the latest one
+          will be taken into consideration and all others will be deleted."]
+        [:p "If you want to "
+         [:strong "make changes"]
+         " to your previous application, you can do so by clicking the link
+          in the confirmation email you have received with your earlier
+          application."]
+        [:p "Please also check that the email address "
          [:strong email]
-         " you have given in your application has already been used by
-          another applicant. Please check that the email address you have
-          given is correct."]]})
+         " you have given is correct."]
+        [:p "If you have any problems, please contact the educational
+             institution you are applying to."]]})
 
 (defn ssn-applied-error
   [preferred-name]
@@ -2252,39 +2284,43 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Huomasimme, että "
-         [:strong "olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus 
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-           jättäessäsi edellisen hakemuksen."]
+         jättäessäsi edellisen hakemuksen."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "Vi märkte att "
-         [:strong "du redan har skickat en ansökning"]
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
          " i denna ansökan och därför kan du inte skicka en annan
-           ansökning."]
+          ansökning. Om du skickar in flera beaktas endast den som 
+          du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-           du skickade din tidigare ansökning."]
+          du skickade din tidigare ansökning."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "we noticed that "
-         [:strong "you have already submitted an application"]
-         " to this admission. Therefore, you cannot submit another
-          application to the same admission."]
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
+         " to this admission and therefore cannot submit another
+          application. If you submit several applications, only the latest one
+          will be taken into consideration and all others will be deleted."]
         [:p "If you want to "
          [:strong "make changes"]
-         " to your previous application, you can do so, by clicking the link
+         " to your previous application, you can do so by clicking the link
           in the confirmation email you have received with your earlier
           application."]
         [:p "If you have any problems, please contact the educational
