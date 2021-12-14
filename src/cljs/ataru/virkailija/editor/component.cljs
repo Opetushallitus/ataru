@@ -21,7 +21,8 @@
     [ataru.virkailija.editor.components.text-component :as text-component]
     [ataru.virkailija.editor.components.text-header-component :as text-header-component]
     [ataru.virkailija.editor.components.validator-checkbox-component :as validator-checkbox-component]
-    [clojure.string :as string]))
+    [clojure.string :as string]
+    [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]))
 
 (defn- required-disabled [initial-content]
   (contains? (-> initial-content :validators set) "required-hakija"))
