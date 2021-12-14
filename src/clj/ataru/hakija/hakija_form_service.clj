@@ -318,7 +318,7 @@
   [haku-oid roles]
   (apply str
     haku-oid
-    "#" false ;; TODO remove with care, keys linger in Redis
+    "#" false
     (sort (map #(str "#" (name %)) roles))))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
@@ -356,7 +356,7 @@
                                         hakukohderyhma-settings-cache]
   cache/CacheLoader
   (load [_ key]
-    (let [[haku-oid _aips? & roles] (clojure.string/split key #"#")] ;; TODO remove aips? with care, keys linger in Redis
+    (let [[haku-oid _aips? & roles] (clojure.string/split key #"#")]
       (when-let [form (fetch-form-by-haku-oid form-by-id-cache
                                               tarjonta-service
                                               koodisto-cache
