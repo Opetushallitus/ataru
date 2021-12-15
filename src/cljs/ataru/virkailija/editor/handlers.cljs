@@ -419,18 +419,6 @@
           (update-in (db/current-form-content-path db [path]) flip-mail-attachment)
           (update-modified-by path)))))
 
-(reg-event-db
-  :editor/update-fetch-info-from-kouta
-  (fn [db [_ fetch-info-from-kouta? & path]]
-    (let [flip-kouta-info-attachment (fn [{:keys [params] :as field}]
-                                 (let [params (-> params
-                                                  (assoc :fetch-info-from-kouta? fetch-info-from-kouta?)
-                                                  (dissoc :attachment-type))]
-                                   (assoc? field :params params)))]
-      (-> db
-          (update-in (current-form-content-path db [path]) flip-kouta-info-attachment)
-          (update-modified-by path)))))
-
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
@@ -1169,7 +1157,7 @@
         (fn [field]
           (update field :options (comp vec (partial map clean-options))))]
     (fn [db [_ path]]
-      (let [field-path (current-form-content-path db [path])
+      (let [field-path (db/current-form-content-path db [path])
             field      (get-in db field-path)
             new-field  (clean-field field)]
         (assoc-in db field-path new-field)))))
