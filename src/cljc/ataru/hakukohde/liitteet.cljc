@@ -77,7 +77,7 @@
 (defn attachment-address-with-hakukohde
   [lang attachment hakukohde]
   (let [address (attachment-address lang attachment hakukohde)]
-    (str (util/from-multi-lang (:name hakukohde) lang) "\n\n" address)))
+    (str (util/from-multi-lang (:name hakukohde) lang) " - " (util/from-multi-lang (:tarjoaja-name hakukohde) lang) "\n\n" address)))
 
 (defn attachment-deadline
   [lang attachment hakukohde]
