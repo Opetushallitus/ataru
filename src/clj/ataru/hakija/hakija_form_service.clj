@@ -314,15 +314,26 @@
                                    field-deadlines
                                    roles)))
 
+(defn- form-by-haku-oid-cache-key
+  [haku-oid roles]
+  (apply str
+    haku-oid
+    "#" false
+    (sort (map #(str "#" (name %)) roles))))
+
 (s/defn ^:always-validate fetch-form-by-haku-oid-str-cached :- s/Any
   [form-by-haku-oid-str-cache :- s/Any
    haku-oid :- s/Str
    roles :- [form-role/FormRole]]
   (cache/get-from form-by-haku-oid-str-cache
-                  (apply str
-                         haku-oid
-                         "#" false ;; TODO remove with care, keys linger in Redis
-                         (sort (map #(str "#" (name %)) roles)))))
+    (form-by-haku-oid-cache-key haku-oid roles)))
+
+(s/defn ^:always-validate clear-form-by-haku-oid-str-cache :- s/Any
+  [form-by-haku-oid-str-cache :- s/Any
+   haku-oid :- s/Str
+   roles :- [form-role/FormRole]]
+  (cache/remove-from form-by-haku-oid-str-cache
+    (form-by-haku-oid-cache-key haku-oid roles)))
 
 (s/defn ^:always-validate fetch-form-by-hakukohde-oid-str-cached :- s/Any
   [tarjonta-service :- s/Any
@@ -345,7 +356,7 @@
                                         hakukohderyhma-settings-cache]
   cache/CacheLoader
   (load [_ key]
-    (let [[haku-oid _aips? & roles] (string/split key #"#")]
+    (let [[haku-oid _aips? & roles] (clojure.string/split key #"#")]
       (when-let [form (fetch-form-by-haku-oid form-by-id-cache
                                               tarjonta-service
                                               koodisto-cache

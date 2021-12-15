@@ -9,6 +9,7 @@
             [clojure.set :as cset]
             [clojure.string :as cstr]
             [cemerick.url :as url]
+            [ataru.hakukohde.liitteet :as liitteet]
             [ataru.hakija.demo :as demo]))
 
 (defonce attachment-modify-grace-period-days
@@ -178,11 +179,29 @@
         (str konfo-base "/konfo/" (name lang) "/toteutus/" koulutus-oid)))))
 
 (re-frame/reg-sub
+  :application/attachment-address
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-language]))
+  (fn [lang [_ field]]
+    (let [attachment-type (get-in field [:params :attachment-type])
+          hakukohde-oid   (or (:duplikoitu-kysymys-hakukohde-oid field) (:duplikoitu-followup-hakukohde-oid field))
+          hakukohde       @(re-frame/subscribe [:application/get-hakukohde hakukohde-oid])
+          attachment      (liitteet/attachment-for-hakukohde attachment-type hakukohde)]
+      (when (seq hakukohde)
+        (liitteet/attachment-address lang attachment hakukohde)))))
+
+(re-frame/reg-sub
   :application/attachment-deadline
   (fn [_ _]
     (re-frame/subscribe [:application/selected-language]))
   (fn [selected-language [_ field]]
-    (-> field :params :deadline-label selected-language)))
+    (let [attachment-type   (get-in field [:params :attachment-type])
+          hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid field) (:duplikoitu-followup-hakukohde-oid field))
+          hakukohde         @(re-frame/subscribe [:application/get-hakukohde hakukohde-oid])
+          attachment        (liitteet/attachment-for-hakukohde attachment-type hakukohde)
+          default-deadline  (-> field :params :deadline-label (get selected-language))
+          deadline          (or (liitteet/attachment-deadline selected-language attachment hakukohde) default-deadline)]
+      deadline)))
 
 (re-frame/reg-sub
   :application/haku-end-time

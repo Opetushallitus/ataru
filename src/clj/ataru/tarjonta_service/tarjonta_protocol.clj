@@ -9,4 +9,5 @@
   (hakus-by-form-key [this form-key])
   (get-haku-name [this haku-oid])
   (get-koulutus [this haku-oid])
-  (get-koulutukset [this koulutus-oids]))
+  (get-koulutukset [this koulutus-oids])
+  (clear-haku-caches [this haku-oid]))

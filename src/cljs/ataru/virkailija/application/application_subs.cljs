@@ -11,9 +11,6 @@
             [clojure.string :as string]
             [re-frame.core :as re-frame]))
 
-(defn- from-multi-lang [text lang]
-  (u/non-blank-val text [lang :fi :sv :en]))
-
 (re-frame/reg-sub
   :application/selected-form
   (fn selected-form [db _]
@@ -126,9 +123,9 @@
          selected-form-key  (get-in db [:application :selected-form-key])
          forms              (get-in db [:application :forms])
          applications       (get-in db [:application :applications])]
-     (or (from-multi-lang (:name (get forms selected-form-key)) :fi)
-         (from-multi-lang (:name selected-hakukohde) :fi)
-         (from-multi-lang (:name selected-haku) :fi)
+     (or (u/from-multi-lang (:name (get forms selected-form-key)) :fi)
+         (u/from-multi-lang (:name selected-hakukohde) :fi)
+         (u/from-multi-lang (:name selected-haku) :fi)
          (when (sequential? applications)
            (str "Löytyi " (count applications) " hakemusta"))))))
 
@@ -321,13 +318,13 @@
 
 (defn- haku-name [haut fetching-haut haku-oid lang]
   (if-let [haku (get haut haku-oid)]
-    (or (from-multi-lang (:name haku) lang) haku-oid)
+    (or (u/from-multi-lang (:name haku) lang) haku-oid)
     (when (zero? fetching-haut)
       haku-oid)))
 
 (defn- hakukohde-name [hakukohteet fetching-hakukohteet hakukohde-oid lang]
   (if-let [hakukohde (get hakukohteet hakukohde-oid)]
-    (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
+    (or (u/from-multi-lang (:name hakukohde) lang) hakukohde-oid)
     (when (zero? fetching-hakukohteet)
       hakukohde-oid)))
 
@@ -345,7 +342,7 @@
 
 (defn- sort-by-form-name [direct-form-haut lang]
   (sort-by (comp string/lower-case
-                 #(or (from-multi-lang (:name %) lang) ""))
+                 #(or (u/from-multi-lang (:name %) lang) ""))
            direct-form-haut))
 
 (defn- incomplete-haut [application-haut]
@@ -465,7 +462,7 @@
     [(re-frame/subscribe [:application/form-field form-key field-id])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn [[field lang] _]
-    (from-multi-lang (:label field) lang)))
+    (u/from-multi-lang (:label field) lang)))
 
 (re-frame/reg-sub
   :application/form-field-options-labels
@@ -474,7 +471,7 @@
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn [[field lang] _]
     (cond->> (mapv (fn [{:keys [value label]}]
-                     {:label (from-multi-lang label lang)
+                     {:label (u/from-multi-lang label lang)
                       :value value})
                    (:options field))
              (and (:koodisto-source field)
@@ -532,8 +529,8 @@
   (fn hakukohde-and-tarjoaja-name
     [[hakukohteet fetching-hakukohteet lang] [_ hakukohde-oid]]
     (if-let [hakukohde (get hakukohteet hakukohde-oid)]
-      (str (or (from-multi-lang (:name hakukohde) lang) hakukohde-oid)
-           (when-let [tarjoaja-name (from-multi-lang (:tarjoaja-name hakukohde) lang)]
+      (str (or (u/from-multi-lang (:name hakukohde) lang) hakukohde-oid)
+           (when-let [tarjoaja-name (u/from-multi-lang (:tarjoaja-name hakukohde) lang)]
              (str " - " tarjoaja-name)))
       (when (zero? fetching-hakukohteet)
         hakukohde-oid))))
@@ -542,13 +539,13 @@
   :application/tarjoaja-name
   (fn [db [_ hakukohde-oid]]
     (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
-      (from-multi-lang (:tarjoaja-name hakukohde) :fi))))
+      (u/from-multi-lang (:tarjoaja-name hakukohde) :fi))))
 
 (re-frame/reg-sub
   :application/hakukohderyhma-name
   (fn [db [_ hakukohderyhma-oid]]
     (when-let [hakukohderyhma (get-in db [:hakukohderyhmat hakukohderyhma-oid])]
-      (or (from-multi-lang (:name hakukohderyhma) :fi) hakukohderyhma-oid))))
+      (or (u/from-multi-lang (:name hakukohderyhma) :fi) hakukohderyhma-oid))))
 
 (re-frame/reg-sub
   :application/haku-name
@@ -571,7 +568,7 @@
     [(re-frame/subscribe [:application/hakukohteet-field])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn hakukohteet-header [[hakukohteet-field lang] _]
-    (from-multi-lang (:label hakukohteet-field) lang)))
+    (u/from-multi-lang (:label hakukohteet-field) lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-label
@@ -579,7 +576,7 @@
     [(re-frame/subscribe [:application/hakukohde-options-by-oid])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn hakukohde-label [[hakukohde-options lang] [_ hakukohde-oid]]
-    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :label]) lang)))
+    (u/from-multi-lang (get-in hakukohde-options [hakukohde-oid :label]) lang)))
 
 (re-frame/reg-sub
   :application/hakukohde-description
@@ -587,7 +584,7 @@
     [(re-frame/subscribe [:application/hakukohde-options-by-oid])
      (re-frame/subscribe [:editor/virkailija-lang])])
   (fn hakukohde-description [[hakukohde-options lang] [_ hakukohde-oid]]
-    (from-multi-lang (get-in hakukohde-options [hakukohde-oid :description]) lang)))
+    (u/from-multi-lang (get-in hakukohde-options [hakukohde-oid :description]) lang)))
 
 (re-frame/reg-sub
   :application/hakutoiveet
@@ -785,7 +782,7 @@
             (conj (vec (butlast parent-breadcrumb))
                   (conj (last parent-breadcrumb) value)))
           [])
-        [(from-multi-lang (:label field) lang)]))
+        [(u/from-multi-lang (:label field) lang)]))
 
 (re-frame.core/reg-sub
   :application/current-history-items

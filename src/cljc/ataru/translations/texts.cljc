@@ -484,7 +484,13 @@
                                                  :en "EN: Jatka"}
    :demo-notification-title                     {:fi "Harjoittelulomake"
                                                  :sv "Övningsblankett"
-                                                 :en "EN: Harjoittelulomake"}})
+                                                 :en "EN: Harjoittelulomake"}
+   :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
+                                                 :sv "SV: Lähetä liite osoitteeseen"
+                                                 :en "EN: Lähetä liite osoitteeseen"}
+   :verkkosivu                                  {:fi "Tai käytä"
+                                                 :sv "SV: Tai käytä"
+                                                 :en "EN: Tai käytä"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -1061,6 +1067,12 @@
    :attachment-info-text                            {:fi "Liitepyyntö sisältää ohjetekstin"
                                                      :sv "Begäran om bilagor innehåller anvisningar"
                                                      :en "EN: Liitepyyntö sisältää ohjetekstin"}
+   :fetch-info-from-kouta                           {:fi "Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"
+                                                     :sv "SV: Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"
+                                                     :en "EN: Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"}
+   :attachment-type                                 {:fi "Liitetiedoston tyyppi"
+                                                     :sv "SV: Liitetiedoston tyyppi"
+                                                     :en "EN: Liitetiedoston tyyppi"}
    :mail-attachment-text                            {:fi "Postitettava liitepyyntö"
                                                      :sv "Begäran om bilagor som kan postas"
                                                      :en "EN: Postitettava liitepyyntö"}
