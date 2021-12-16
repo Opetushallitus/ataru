@@ -145,8 +145,9 @@
         attachment           (liitteet/attachment-for-hakukohde attachment-type hakukohde)
         address              (md/md-to-html-string (liitteet/attachment-address-with-hakukohde lang attachment hakukohde))
         default-deadline     (-> field :params :deadline-label (get lang))
-        deadline             (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)]
-    {:attachment-type attachment-type-text :label address :deadline deadline}))
+        deadline             (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)
+        info-text            (-> field :params :info-text :value (get lang))]
+    {:attachment-type attachment-type-text :label address :deadline deadline :info-text info-text}))
 
 (defn- create-attachment-info-utilizing-kouta
   [get-attachment-type answers-by-key flat-form-fields lang hakukohteet]

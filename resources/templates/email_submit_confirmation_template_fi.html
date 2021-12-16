@@ -67,6 +67,8 @@
             {% for type,attachments in kouta-attachments-by-type|not-empty %}
             <li>
               {{type}}
+              <br><br>
+              {{attachments.0.info-text}}
               <ul>
                 {% for attachment in attachments %}
                   <li>
