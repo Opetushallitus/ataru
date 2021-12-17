@@ -10,7 +10,8 @@
             [clojure.string :as cstr]
             [cemerick.url :as url]
             [ataru.hakukohde.liitteet :as liitteet]
-            [ataru.hakija.demo :as demo]))
+            [ataru.hakija.demo :as demo]
+            [ataru.tarjonta.haku :as haku]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -811,14 +812,7 @@
 (re-frame/reg-sub
   :application/toisen-asteen-yhteishaku?
   (fn [db]
-    (let [kohdejoukko-uri (get-in db [:form :tarjonta :kohdejoukko-uri])
-          kohdejoukko (when (some? kohdejoukko-uri)
-                        (-> kohdejoukko-uri
-                            (cstr/split #"#")
-                            first))
-          yhteishaku? (get-in db [:form :tarjonta :yhteishaku])]
-      (and yhteishaku?
-           (= kohdejoukko "haunkohdejoukko_11")))))
+    (haku/toisen-asteen-yhteishaku? (get-in db [:form :tarjonta]))))
 
 (re-frame/reg-sub
   :application/demo?
