@@ -1,12 +1,13 @@
 (ns ataru.forms.form-access-control
   (:require
-   [ataru.forms.form-store :as form-store]
-   [ataru.schema.form-schema :as form-schema]
-   [clojure.walk :refer [prewalk]]
-   [ataru.virkailija.editor.form-diff :as form-diff]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-   [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.middleware.user-feedback :refer [user-feedback-exception]]))
+    [ataru.forms.form-store :as form-store]
+    [ataru.schema.form-schema :as form-schema]
+    [clojure.walk :refer [prewalk]]
+    [ataru.virkailija.editor.form-diff :as form-diff]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
+    [ataru.organization-service.session-organizations :as session-orgs]
+    [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+    [ataru.tarjonta.haku :as haku]))
 
 (defn- form-allowed-by-id?
   [authorized-organization-oids form-id]
@@ -22,12 +23,14 @@
 
 (defn- form-allowed-by-haku?
   [tarjonta-service authorized-organization-oids form-key]
-  (->> form-key
-       (tarjonta-protocol/hakus-by-form-key tarjonta-service)
-       (mapcat :hakukohteet)
-       (tarjonta-protocol/get-hakukohteet tarjonta-service)
-       (some #(authorized-by-tarjoaja? authorized-organization-oids %))
-       boolean))
+  (let [hakus (tarjonta-protocol/hakus-by-form-key tarjonta-service form-key)]
+    (and
+      (not-any? haku/toisen-asteen-yhteishaku? hakus)
+      (->> hakus
+        (mapcat :hakukohteet)
+        (tarjonta-protocol/get-hakukohteet tarjonta-service)
+        (some #(authorized-by-tarjoaja? authorized-organization-oids %))
+        boolean))))
 
 (defn get-organizations-with-edit-rights
   [session]
