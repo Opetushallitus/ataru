@@ -170,12 +170,15 @@
          lang                            (keyword (:lang application))
          attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
                                               (map :attachment-key)
-                                              (filter #(not (contains? answers-by-key (keyword %))))
+                                              (filter #(or (not (contains? answers-by-key (keyword %)))
+                                                           (= [] (:value ((keyword %) answers-by-key)))
+                                                           (nil? (:value ((keyword %) answers-by-key)))))
                                               set)
          attachments-without-answer      (->> form
                                               :content
                                               util/flatten-form-fields
-                                              (filter #(contains? attachment-keys-without-answers (:id %)))
+                                              (filter #(and (contains? attachment-keys-without-answers (:id %))
+                                                            (not (:per-hakukohde %))))
                                               (map #(attachment-with-deadline application lang %)))
          email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
          content                         (-> email-template
