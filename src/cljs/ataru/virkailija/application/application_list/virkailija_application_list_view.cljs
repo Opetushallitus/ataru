@@ -542,7 +542,8 @@
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
         filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
-        lang                                      (subscribe [:editor/virkailija-lang])]
+        lang                                      (subscribe [:editor/virkailija-lang])
+        organizations                             (subscribe [:state-query [:editor :organizations :select]])]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -618,6 +619,22 @@
                   (-> general-texts :no (get @lang))
                   :eligibility-set-automatically
                   :no]]])]]
+           [:div.application-handling__popup-column--large
+            [:div.application-handling__filter-group
+             [:div.application-handling__filter-group-title
+              @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
+             [:div.application-handling__filters-attachment-search-input
+              [:input
+               {:type "text"
+                :on-change (fn [event]
+                             (let [value (-> event .-target .-value)]
+                               (when (> (count value) 2)
+                                 (dispatch [:application/do-organization-query-for-select value]))))}]
+              [:select
+               (for [org @organizations]
+                 [:option {:value (:oid org)}
+                  (some #(-> (:name org) %) [:fi :sv :en])])]
+              ]]]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
