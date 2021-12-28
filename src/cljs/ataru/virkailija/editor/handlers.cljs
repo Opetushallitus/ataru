@@ -1360,9 +1360,23 @@
             :handler-or-dispatch :editor/update-organization-query-results}}))
 
 (reg-event-fx
+  :application/do-organization-query-for-select
+  (fn [_ [_ query]]
+    {:http {:method               :get
+            :path                 (str "/lomake-editori/api/organization/user-organizations?query="
+                                       query
+                                       "&organizations=true&hakukohde-groups=false&results-page=10000")
+            :handler-or-dispatch  :editor/update-organization-query-results-for-select}}))
+
+(reg-event-fx
   :editor/update-organization-query-results
   (fn [{db :db} [_ results]]
     {:db (assoc-in db [:editor :organizations :matches] results)}))
+
+(reg-event-fx
+  :editor/update-organization-query-results-for-select
+  (fn [{db :db} [_ results]]
+    {:db (assoc-in db [:editor :organizations :select] results)}))
 
 (reg-event-fx
   :editor/select-organization

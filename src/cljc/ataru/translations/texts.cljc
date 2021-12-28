@@ -1274,6 +1274,9 @@
    :eligibility-set-automatically                   {:fi "Hakukelpoisuus asetettu automaattisesti"
                                                      :sv "Ansökningsbehörigheten har satts automatiskt"
                                                      :en "Eligibility set automatically"}
+   :applicants-school-of-departure                  {:fi "Hakeneiden lähtökoulu"
+                                                     :sv "Sökandenas avgångsskola"
+                                                     :en "Applicants' school of departure"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
                                                      :en "Guardians contact information"}
