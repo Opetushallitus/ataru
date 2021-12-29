@@ -24,10 +24,11 @@
   [:div
    [btn/button {:label    label
                 :on-click on-click-fn
-                :on-blur  on-blur-fn}]
+                :on-blur  on-blur-fn
+                :id       "koulutustyyppi-btn"}]
    (if is-open?
      [:i.zmdi.zmdi-caret-up]
-     [:i.zmdi.zmdi-caret-down])])
+     [:label {:for "koulutustyyppi-btn"} [:i.zmdi.zmdi-caret-down]])])
 
 (defn- koulutustyypit-filter [idx]
   (let [is-open (r/atom false)
