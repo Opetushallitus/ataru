@@ -37,18 +37,6 @@
             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
              application-key]))
 
-(defn- hyvaksynnan-ehto-dispatch-vec [db]
-  (let [application-key (get-in db [:application :selected-key])
-        hakukohde-oids  (get-in db [:application
-                                    :selected-application-and-form
-                                    :application
-                                    :hakukohde])]
-    (mapv (fn [hakukohde-oid]
-            [:hyvaksynnan-ehto/get-ehto-hakukohteessa
-             application-key
-             hakukohde-oid])
-          hakukohde-oids)))
-
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
@@ -251,7 +239,8 @@
                                                                                   question-answer-filter))
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                        :filters                      (get-in db [:application :filters])}}
+                                                                        :filters                      (get-in db [:application :filters])
+                                                                        :school-filter                (get-in db [:application :school-filter])}}
                                             search-term
                                             form
                                             haku
