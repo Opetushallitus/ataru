@@ -239,7 +239,8 @@
                                                                                   question-answer-filter))
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                        :filters                      (get-in db [:application :filters])}}
+                                                                        :filters                      (get-in db [:application :filters])
+                                                                        :school-filter                (get-in db [:application :school-filter])}}
                                             search-term
                                             form
                                             haku

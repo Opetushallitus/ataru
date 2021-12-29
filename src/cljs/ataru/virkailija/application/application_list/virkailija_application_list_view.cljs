@@ -631,8 +631,10 @@
                                (when (> (count value) 2)
                                  (dispatch [:application/do-organization-query-for-select value]))))}]
               [:select
+               {:on-change #(dispatch [:application/set-school-filter (-> % .-target .-value)])}
                (for [org @organizations]
-                 [:option {:value (:oid org)}
+                 [:option {:value (:oid org)
+                           :key (:oid org)}
                   (some #(-> (:name org) %) [:fi :sv :en])])]
               ]]]
            (when @has-base-education-answers
