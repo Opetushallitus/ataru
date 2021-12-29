@@ -13,6 +13,7 @@
   (fn [{:keys [db]} _]
     {:db       (-> db
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
+                   (assoc-in [:application :school-filter] (get-in db [:application :school-filter-value]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
                    (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
      :dispatch [:application/reload-applications]}))
@@ -23,6 +24,8 @@
     {:db       (-> db
                    (assoc-in [:application :filters] initial-db/default-filters)
                    (assoc-in [:application :filters-checkboxes] initial-db/default-filters)
+                   (assoc-in [:application :school-filter] nil)
+                   (assoc-in [:application :school-filter-value] nil)
                    (assoc-in [:application :ensisijaisesti?] false)
                    (assoc-in [:application :ensisijaisesti?-checkbox] false)
                    (assoc-in [:application :rajaus-hakukohteella] nil)
@@ -53,6 +56,7 @@
   [db]
   (-> db
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
+      (assoc-in [:application :school-filter-value] (get-in db [:application :school-filter]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
       (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
 
@@ -66,6 +70,11 @@
     (update-in db [:application :selected-time-column] #(if (= "created-time" %)
                                                           "submitted"
                                                           "created-time"))))
+
+(reg-event-db
+  :application/set-school-filter
+  (fn [db [_ oid]]
+    (assoc-in db [:application :school-filter-value] oid)))
 
 (reg-event-fx
   :application/update-sort

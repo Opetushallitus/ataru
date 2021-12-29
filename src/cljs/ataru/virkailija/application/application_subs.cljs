@@ -252,7 +252,9 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value]))
+        (not= (get-in db [:application :school-filter])
+              (get-in db [:application :school-filter-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
