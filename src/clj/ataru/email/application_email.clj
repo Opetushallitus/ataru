@@ -198,8 +198,7 @@
          attachment-keys-without-answers (->> application-attachment-reviews
                                               (map :attachment-key)
                                               (filter #(or (not (contains? answers-by-key (keyword %)))
-                                                           (= [] (:value ((keyword %) answers-by-key)))
-                                                           (nil? (:value ((keyword %) answers-by-key)))))
+                                                           (empty? (:value ((keyword %) answers-by-key)))))
                                               set)
          attachments-without-answer      (->> flat-form-fields
                                               (filter #(and (contains? attachment-keys-without-answers (:id %))
