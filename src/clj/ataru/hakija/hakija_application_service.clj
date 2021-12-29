@@ -6,7 +6,7 @@
     [ataru.applications.field-deadline :as field-deadline]
     [ataru.background-job.job :as job]
     [ataru.db.db :as db]
-    [ataru.email.application-email-confirmation :as application-email]
+    [ataru.email.application-email-jobs :as application-email]
     [ataru.files.file-store :as file-store]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]

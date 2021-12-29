@@ -404,11 +404,14 @@
   :editor/update-mail-attachment
   (fn [db [_ mail-attachment? & path]]
     (let [flip-mail-attachment (fn [{:keys [params validators] :as field}]
-                                 (let [params (assoc? params
+                                 (let [params (-> params
+                                                  (dissoc :attachment-type :fetch-info-from-kouta?)
+                                                  (assoc?
                                                       :mail-attachment? mail-attachment?
                                                       :info-text (when mail-attachment?
-                                                                   (assoc (:info-text params) :enabled? true)))]
+                                                                   (assoc (:info-text params) :enabled? true))))]
                                    (assoc? field
+                                           :per-hakukohde false
                                            :params params
                                            :validators (when mail-attachment?
                                                          (filter #(not= "required" %) validators)))))]
@@ -691,6 +694,9 @@
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
         {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
+        {:dispatch-debounced {:timeout 500
+                              :id :fetch-attachment-types
+                              :dispatch [:editor/fetch-attachment-types-koodisto]}}
         (when (and (some? previous-form-key)
                    (not= previous-form-key form-key))
           {:stop-autosave (get-in db [:editor :autosave])})
@@ -1015,6 +1021,24 @@
       (assoc-in db [:editor :forms key :content] updated-form))))
 
 (reg-event-fx
+  :editor/fetch-attachment-types-koodisto
+  (fn [{db :db}]
+    (when (not (seq (get-in db [:editor :attachment-types-koodisto])))
+      {:http {:method               :get
+              :path                 (str "/lomake-editori/api/koodisto/liitetyypitamm/1?allow-invalid=false")
+              :handler-or-dispatch  :editor/set-attachment-types-koodisto}})))
+
+(reg-event-db
+  :editor/set-attachment-types-koodisto
+  (fn [db [_ koodisto]]
+    (let [lang             (keyword (get-in db [:editor :user-info :lang]))
+          attachment-types (->> koodisto
+                                (map #(select-keys % [:value :label :uri]))
+                                (sort-by (comp lang :label))
+                                vec)]
+      (assoc-in db [:editor :attachment-types-koodisto] attachment-types))))
+
+(reg-event-fx
   :editor/show-belongs-to-hakukohteet-modal
   (fn [{db :db} [_ id]]
     (cond-> {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] true)}
@@ -1106,6 +1130,37 @@
         (remove-per-hakukohde-if-last-hakukohderyhma)
         (update-in content-path (fnil (comp vec #(disj % oid) set) []))
         (update-modified-by [(remove-option-path path)])))))
+
+(reg-event-db
+  :editor/clean-per-hakukohde-followups
+  (let [is-mail-attachment?
+        (fn [field]
+          (and
+            (= "attachment" (:fieldType field))
+            (get-in field [:params :mail-attachment?])))
+
+        remove-mail-attachment-per-hakukohde-info
+        (fn [field]
+          (update field :params #(dissoc % :fetch-info-from-kouta? :attachment-type)))
+
+        clean-followups
+        (fn [followup]
+          (if (is-mail-attachment? followup)
+            (remove-mail-attachment-per-hakukohde-info followup)
+            followup))
+
+        clean-options
+        (fn [option]
+          (update option :followups (comp vec (partial map clean-followups))))
+
+        clean-field
+        (fn [field]
+          (update field :options (comp vec (partial map clean-options))))]
+    (fn [db [_ path]]
+      (let [field-path (db/current-form-content-path db [path])
+            field      (get-in db field-path)
+            new-field  (clean-field field)]
+        (assoc-in db field-path new-field)))))
 
 (reg-event-db
   :editor/fold

@@ -1,11 +1,7 @@
-(ns ataru.email.application-email-confirmation
-  "Application-specific email confirmation init logic"
+(ns ataru.email.application-email
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
-            [ataru.background-job.email-job :as email-job]
-            [ataru.background-job.job :as job]
             [ataru.config.core :refer [config]]
-            [ataru.db.db :as db]
             [ataru.email.email-store :as email-store]
             [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
@@ -16,22 +12,17 @@
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
-            [clojure.java.jdbc :as jdbc]
             [clojure.set]
             [markdown.core :as md]
             [medley.core :refer [find-first]]
             [selmer.parser :as selmer]
-            [taoensso.timbre :as log]
-            [clojure.string :as string])
+            [ataru.hakukohde.liitteet :as liitteet]
+            [clojure.string :as string]
+            [ataru.koodisto.koodisto :as koodisto])
   (:import [org.owasp.html HtmlPolicyBuilder ElementPolicy]))
 
 (def languages #{:fi :sv :en})
 (def languages-map {:fi nil :sv nil :en nil})
-
-(def submit-email-subjects
-  {:fi "Opintopolku: hakemuksesi on vastaanotettu"
-   :sv "Studieinfo: Din ansökan har mottagits"
-   :en "Studyinfo: Your application has been received"})
 
 (def edit-email-subjects
   {:fi "Opintopolku: Muutokset hakemukseesi on tallennettu"
@@ -83,8 +74,8 @@
     (let [tarjonta-hakukohteet (util/group-by-first :oid (:hakukohteet tarjonta-info))
           hakukohteet          (keep #(get tarjonta-hakukohteet %) (:hakukohde application))]
       (when-let [missing-oids (seq (clojure.set/difference
-                                    (set (:hakukohde application))
-                                    (set (map :oid hakukohteet))))]
+                                     (set (:hakukohde application))
+                                     (set (map :oid hakukohteet))))]
         (throw (new RuntimeException
                     (str "Hakukohteet " (string/join ", " missing-oids)
                          " not found"))))
@@ -101,13 +92,13 @@
         (util/group-by-first (comp keyword :lang) x)
         (merge languages-map x)
         (map (fn [el]
-                 (let [lang     (first el)
-                       template (second el)]
-                   {:lang           (name lang)
-                    :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
-                    :content        (get template :content "")
-                    :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))
-                    :signature      (get template :signature (get-in email-default-texts [:email-submit-confirmation-template :signature lang]))}))
+               (let [lang     (first el)
+                     template (second el)]
+                 {:lang           (name lang)
+                  :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
+                  :content        (get template :content "")
+                  :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))
+                  :signature      (get template :signature (get-in email-default-texts [:email-submit-confirmation-template :signature lang]))}))
              x)))
 
 
@@ -143,44 +134,77 @@
 (defn- attachment-with-deadline [_ lang field]
   (let [attachment {:label (-> field
                                :label
-                               (util/non-blank-val [lang :fi :sv :en]))}]
+                               (util/from-multi-lang lang))}]
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
-(defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
-                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
-  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
+(defn- attachment-with-info-from-kouta
+  [get-attachment-type lang field hakukohde-oid hakukohteet]
+  (let [hakukohde            (first (filter #(= (:oid %) hakukohde-oid) hakukohteet))
+        attachment-type      (get-in field [:params :attachment-type])
+        attachment-type-text (util/from-multi-lang (get-attachment-type attachment-type) lang)
+        attachment           (liitteet/attachment-for-hakukohde attachment-type hakukohde)
+        address              (md/md-to-html-string (liitteet/attachment-address-with-hakukohde lang attachment hakukohde))
+        default-deadline     (-> field :params :deadline-label (get lang))
+        deadline             (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)
+        info-text            (-> field :params :info-text :value (get lang))]
+    {:attachment-type attachment-type-text :label address :deadline deadline :info-text info-text}))
+
+(defn- create-attachment-info-utilizing-kouta
+  [get-attachment-type answers-by-key flat-form-fields lang hakukohteet]
+  (let [find-original-field (fn [original-field-oid] (first (filter #(= (:id %) original-field-oid) flat-form-fields)))]
+    (->> answers-by-key
+         (keep (fn [[_ val]]
+                 (let [original-question (or (:original-question val) (:original-followup val))
+                       hakukohde-oid     (or (:duplikoitu-kysymys-hakukohde-oid val) (:duplikoitu-followup-hakukohde-oid val))]
+                   (when (and (= "attachment" (:fieldType val)) original-question)
+                     {:original-field original-question :hakukohde-oid hakukohde-oid}))))
+         (filter #(get-in (find-original-field (:original-field %)) [:params :fetch-info-from-kouta?]))
+         (map #(attachment-with-info-from-kouta get-attachment-type lang (find-original-field (:original-field %)) (:hakukohde-oid %) hakukohteet))
+         (group-by :attachment-type))))
+
+(defn- get-application
+  [application-id]
+  (application-store/get-application application-id))
+
+(defn- get-tarjonta-info
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application]
+    (:tarjonta
+      (tarjonta-parser/parse-tarjonta-info-by-haku
+        koodisto-cache
+        tarjonta-service
+        organization-service
+        ohjausparametrit-service
+        (:haku application)
+        (:hakukohde application))))
+
+(defn- get-attachment-type-fn
+  [koodisto-cache]
+  (fn [attachment-type]
+    (koodisto/get-attachment-type-label koodisto-cache attachment-type)))
+
+(defn create-emails
+  [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian?]
    (let [now                             (t/now)
-         application                     (application-store/get-application application-id)
-         tarjonta-info                   (:tarjonta
-                                           (tarjonta-parser/parse-tarjonta-info-by-haku
-                                             koodisto-cache
-                                             tarjonta-service
-                                             organization-service
-                                             ohjausparametrit-service
-                                             (:haku application)
-                                             (:hakukohde application)))
          answers-by-key                  (-> application :answers util/answers-by-key)
-         hakuajat                        (hakuaika/index-hakuajat (:hakukohteet tarjonta-info))
+         hakukohteet                     (:hakukohteet tarjonta-info)
+         hakuajat                        (hakuaika/index-hakuajat hakukohteet)
          field-deadlines                 (->> (:key application)
                                               field-deadline/get-field-deadlines
                                               (map #(dissoc % :last-modified))
                                               (util/group-by-first :field-id))
-         form                            (-> (forms/fetch-by-id (:form application))
-                                             (hakukohde/populate-attachment-deadlines now hakuajat field-deadlines))
+         form                            (hakukohde/populate-attachment-deadlines raw-form now hakuajat field-deadlines)
+         flat-form-fields                (util/flatten-form-fields (:content form))
          lang                            (keyword (:lang application))
-         attachment-keys-without-answers (->> (application-store/get-application-attachment-reviews (:key application))
+         attachment-keys-without-answers (->> application-attachment-reviews
                                               (map :attachment-key)
                                               (filter #(or (not (contains? answers-by-key (keyword %)))
-                                                           (= [] (:value ((keyword %) answers-by-key)))
-                                                           (nil? (:value ((keyword %) answers-by-key)))))
+                                                           (empty? (:value ((keyword %) answers-by-key)))))
                                               set)
-         attachments-without-answer      (->> form
-                                              :content
-                                              util/flatten-form-fields
+         attachments-without-answer      (->> flat-form-fields
                                               (filter #(and (contains? attachment-keys-without-answers (:id %))
                                                             (not (:per-hakukohde %))))
                                               (map #(attachment-with-deadline application lang %)))
-         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key form)))
+         attachments-info-from-kouta     (create-attachment-info-utilizing-kouta get-attachment-type answers-by-key flat-form-fields lang hakukohteet)
          content                         (-> email-template
                                              :content
                                              (->safe-html))
@@ -197,107 +221,63 @@
                                               (map :value))
          guardian-recipients             (when (and minor? guardian?)
                                            (->> (:answers application)
-                                             (filter (fn [answer]
-                                                       (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
-                                             (mapcat :value)
-                                             (filter (comp not clojure.string/blank?))))
+                                                (filter (fn [answer]
+                                                          (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
+                                                (mapcat :value)
+                                                (filter (comp not clojure.string/blank?))))
          subject                         (if subject (subject lang) (email-template :subject))
          application-url                 (modify-link (:secret application))
-         template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
-                                                  :application-oid            (:key application)
-                                                  :application-url            application-url
-                                                  :content                    content
-                                                  :content-ending             content-ending
-                                                  :attachments-without-answer attachments-without-answer
-                                                  :signature                  signature}
+         template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
+                                          :application-oid            (:key application)
+                                          :application-url            application-url
+                                          :content                    content
+                                          :content-ending             content-ending
+                                          :attachments-without-answer attachments-without-answer
+                                          :kouta-attachments-by-type  attachments-info-from-kouta
+                                          :signature                  signature}
          applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
          guardian-email-data             (email-util/make-email-data guardian-recipients subject template-params)
          render-file-fn                  (fn [template-params]
-                                            (selmer/render-file (template-name lang) template-params))]
+                                           (selmer/render-file (template-name lang) template-params))]
      (email-util/render-emails-for-applicant-and-guardian
        applicant-email-data
        guardian-email-data
-       render-file-fn))))
+       render-file-fn)))
 
+(defn- create-emails-by-gathering-data
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
+  (let [application                     (get-application application-id)
+        tarjonta-info                   (get-tarjonta-info koodisto-cache tarjonta-service organization-service ohjausparametrit-service application)
+        raw-form                        (forms/fetch-by-id (:form application))
+        application-attachment-reviews  (application-store/get-application-attachment-reviews (:key application))
+        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form)))
+        get-attachment-type             (get-attachment-type-fn koodisto-cache)]
+    (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian?)))
 
-(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
-  (create-emails koodisto-cache tarjonta-service
-                 organization-service
-                 ohjausparametrit-service
+(defn create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+  (create-emails-by-gathering-data koodisto-cache
+                 tarjonta-service organization-service ohjausparametrit-service
                  nil
                  submit-email-template-filename
                  application-id
                  guardian?))
 
-(defn preview-submit-emails [previews]
-  (map
-   #(let [lang           (:lang %)
-          subject        (:subject %)
-          content        (:content %)
-          content-ending (:content-ending %)
-          signature      (:signature %)]
-      (preview-submit-email lang subject content content-ending signature)) previews))
-
-
-(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
-  (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+(defn create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+  (create-emails-by-gathering-data koodisto-cache
+                 tarjonta-service organization-service ohjausparametrit-service
                  edit-email-subjects
                  #(str "templates/email_edit_confirmation_template_"
-                      (name %)
-                      ".html")
+                       (name %)
+                       ".html")
                  application-id
                  guardian?))
 
-(defn- create-refresh-secret-email
+(defn create-refresh-secret-email
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
-  (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
+  (create-emails-by-gathering-data koodisto-cache
+                 tarjonta-service organization-service ohjausparametrit-service
                  refresh-secret-email-subjects
                  #(str "templates/email_refresh_secret_template_" (name %) ".html")
-                 application-id))
+                 application-id
+                 false))
 
-(defn start-email-job [job-runner email]
-  (let [job-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                 (job/start-job job-runner
-                                connection
-                                (:type email-job/job-definition)
-                                email))]
-    (log/info "Started application confirmation email job (to viestintäpalvelu) with job id" job-id ":")
-    (log/info email)))
-
-(defn start-email-submit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (dorun
-    (for [email (create-submit-email koodisto-cache tarjonta-service
-                  organization-service
-                  ohjausparametrit-service
-                  application-id
-                  true)]
-      (start-email-job job-runner email))))
-
-(defn start-email-edit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (dorun
-    (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                       application-id
-                       true)]
-           (start-email-job job-runner email))))
-
-(defn start-email-refresh-secret-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
-  (dorun
-    (for [email (create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
-                  application-id)]
-      (start-email-job job-runner email))))
-
-(defn store-email-templates
-  [form-key session templates]
-  (let [stored-templates (mapv #(email-store/create-or-update-email-template
-                                  form-key
-                                  (:lang %)
-                                  (-> session :identity :oid)
-                                  (:subject %)
-                                  (:content %)
-                                  (:content-ending %)
-                                  (:signature %))
-                           templates)]
-    (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %) (:signature %)) stored-templates)))

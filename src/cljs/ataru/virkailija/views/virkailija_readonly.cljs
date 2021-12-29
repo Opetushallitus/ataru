@@ -30,9 +30,6 @@
 
 (def exclude-always-included #(not (answer-to-always-include? %)))
 
-(defn- from-multi-lang [text lang]
-  (util/non-blank-val text [lang :fi :sv :en]))
-
 (defn- ylioppilastutkinto? [application]
   (boolean (some #(or (= "pohjakoulutus_yo" %)
                       (= "pohjakoulutus_yo_ammatillinen" %)
@@ -107,7 +104,7 @@
 (defn- text-form-field-label [id field-descriptor lang]
   [:label.application__form-field-label
    [:span
-    (str (from-multi-lang (:label field-descriptor) lang)
+    (str (util/from-multi-lang (:label field-descriptor) lang)
          (required-hint field-descriptor))
     [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
 
@@ -169,7 +166,7 @@
     [:div.application__form-field
      [:label.application__form-field-label
       [:span
-       (str (from-multi-lang (:label field-descriptor) lang)
+       (str (util/from-multi-lang (:label field-descriptor) lang)
             (required-hint field-descriptor))
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
@@ -177,7 +174,7 @@
 (defn wrapper [content application hakukohteet-and-ryhmat lang children]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
-    [:h2 (from-multi-lang (:label content) lang)]
+    [:h2 (util/from-multi-lang (:label content) lang)]
     [scroll-to-anchor content]]
    (into [:div.application__wrapper-contents]
          (for [child children]
@@ -210,14 +207,14 @@
                                   (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
+      (str (util/from-multi-lang (:label field-descriptor) lang)
            (required-hint field-descriptor))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
              (for [child children]
                [:th.application__readonly-adjacent--header
-                (str (from-multi-lang (:label child) lang)
+                (str (util/from-multi-lang (:label child) lang)
                      (required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
@@ -226,7 +223,7 @@
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
      [:span
-      (from-multi-lang (:label content) lang)
+      (util/from-multi-lang (:label content) lang)
       [copy-link (:id content) :shared-use-warning? false :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
@@ -246,7 +243,7 @@
           ^{:key (:value option)}
           [:div
            [:p.application__text-field-paragraph
-            (from-multi-lang (:label option) lang)]
+            (util/from-multi-lang (:label option) lang)]
            (when (some #(visible? % application hakukohteet-and-ryhmat) (:followups option))
              [:div.application-handling__nested-container
               (for [followup (:followups option)]
@@ -313,7 +310,7 @@
   [:div.application__person-info-wrapper.application__wrapper-element
    [:div.application__wrapper-element.application__wrapper-element--border
     [:div.application__wrapper-heading
-     [:h2 (from-multi-lang (:label content) lang)]
+     [:h2 (util/from-multi-lang (:label content) lang)]
      (when (-> application :person :turvakielto)
        [:p.security-block
         [:i.zmdi.zmdi-account-o]
@@ -336,7 +333,7 @@
 (defn- question-group [content application hakukohteet-and-ryhmat lang children]
   [:div.application__question-group
    [:h3.application__question-group-heading
-    (from-multi-lang (:label content) lang)]
+    (util/from-multi-lang (:label content) lang)]
    (for [idx (range (repeat-count application children))]
      ^{:key (str "question-group-" (:id content) "-" idx)}
      [:div.application__question-group-repeat
@@ -355,7 +352,7 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      (str (from-multi-lang (:label field) lang)
+      (str (util/from-multi-lang (:label field) lang)
            (required-hint field))]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
@@ -394,7 +391,7 @@
     [:div.readonly__per-question-wrapper
      [:div.application__form-field-label.application__form-field__original-question
       [:span
-       (from-multi-lang (:label question) lang)]]
+       (util/from-multi-lang (:label question) lang)]]
      (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
                                  (map #(-> question
                                            (dissoc :per-hakukohde)

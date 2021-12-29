@@ -9,7 +9,7 @@
             [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.forms.form-store :as form-store]
-            [ataru.email.application-email-confirmation :as application-email]
+            [ataru.email.application-email-jobs :as application-email]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]

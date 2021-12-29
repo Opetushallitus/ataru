@@ -5,6 +5,7 @@
             [clojure.set :as cset]
             [clojure.string :as string]
             [ataru.translations.translation-util :as translations]
+            [cljs.core.match :refer-macros [match]]
             [cljs-time.coerce :as time-coerce]))
 
 (re-frame/reg-sub
@@ -107,6 +108,11 @@
     (get-in component [:params param])))
 
 (re-frame/reg-sub
+  :editor/get-attachment-types-koodisto
+  (fn [db]
+    (get-in db [:editor :attachment-types-koodisto])))
+
+(re-frame/reg-sub
   :editor/is-per-hakukohde-allowed
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
@@ -117,6 +123,22 @@
       (and (not too-deep)
            (or (not has-parent)
                (= "wrapperElement" (:fieldClass component)))))))
+
+(defn- followup-parent-path
+  [followup-path]
+  (match (vec (reverse followup-path))
+    [_ :followups _ :options & rest]
+    (vec (reverse rest))
+
+    :else
+    nil))
+
+(re-frame/reg-sub
+  :editor/has-parent-per-hakukohde
+  (fn [_ [_ path]]
+    (when-let [parent-path (followup-parent-path path)]
+      (let [parent @(re-frame/subscribe [:editor/get-component-value parent-path])]
+        (:per-hakukohde parent)))))
 
 (re-frame/reg-sub
   :editor/get-range-value

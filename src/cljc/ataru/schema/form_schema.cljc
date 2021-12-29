@@ -216,6 +216,18 @@
    :tutkintonimike-names      [localized-schema/LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
+(s/defschema Toimitusosoite
+  {(s/optional-key :osoite)      (s/maybe localized-schema/LocalizedStringOptional)
+   (s/optional-key :postinumero) (s/maybe {(s/optional-key :koodiUri) (s/maybe s/Str)
+                                           (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})
+   (s/optional-key :verkkosivu)   (s/maybe s/Str)})
+
+(s/defschema HakukohdeLiite
+  {(s/optional-key :tyyppi)                (s/maybe s/Str)
+   (s/optional-key :toimitusaika)          (s/maybe localized-schema/LocalizedDateTime)
+   (s/optional-key :toimitetaan-erikseen)  (s/maybe s/Bool)
+   (s/optional-key :toimitusosoite)        Toimitusosoite})
+
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
    :name                                                                         localized-schema/LocalizedStringOptional
@@ -230,7 +242,12 @@
    :applicable-base-educations                                                   [s/Str]
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus) s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                    [HakukohdeLiite]
+   (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
+   (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
+   (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
@@ -286,7 +303,12 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                    [HakukohdeLiite]
+   (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
+   (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
+   (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))

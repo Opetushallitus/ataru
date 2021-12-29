@@ -132,6 +132,15 @@ body {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+
+  &--attachment-with-address {
+    background-color: @neutral-grey-50;
+    padding: 6px 3px;
+
+    .application__form-info-text a {
+      background: none;
+    }
+  }
 }
 
 @media only screen and (max-width: @mobile-width) {
