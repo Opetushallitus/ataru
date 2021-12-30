@@ -319,16 +319,17 @@
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
 (defn dropdown [_ _ path _]
-  (let [languages                (subscribe [:editor/languages])
-        options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
-        koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
-        value                    (subscribe [:editor/get-component-value path])
-        support-selection-limit? (subscribe [:editor/dropdown-with-selection-limit? path])
-        selected-form-key        (subscribe [:editor/selected-form-key])
-        koodisto-ordered-id      (util/new-uuid)
-        component-locked?        (subscribe [:editor/component-locked? path])
-        is-per-hakukohde-allowed (subscribe [:editor/is-per-hakukohde-allowed path])
-        allow-invalid-koodis-id  (util/new-uuid)]
+  (let [languages                 (subscribe [:editor/languages])
+        options-koodisto          (subscribe [:editor/get-component-value path :koodisto-source])
+        koodisto-ordered-by-user  (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
+        value                     (subscribe [:editor/get-component-value path])
+        support-selection-limit?  (subscribe [:editor/dropdown-with-selection-limit? path])
+        selected-form-key         (subscribe [:editor/selected-form-key])
+        koodisto-ordered-id       (util/new-uuid)
+        component-locked?         (subscribe [:editor/component-locked? path])
+        is-per-hakukohde-allowed  (subscribe [:editor/is-per-hakukohde-allowed path])
+        allow-invalid-koodis-id   (util/new-uuid)
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
       (let [languages      @languages
             field-type     (:fieldType @value)
@@ -369,7 +370,8 @@
                 :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-              [checkbox-component/checkbox path initial-content :sensitive-answer]
+              (when @toisen-asteen-yhteishaku?
+                [checkbox-component/checkbox path initial-content :sensitive-answer])
               (when (and (seq (:belongs-to-hakukohderyhma initial-content))
                       @is-per-hakukohde-allowed
                       (nil? @options-koodisto))
