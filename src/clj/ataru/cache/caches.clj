@@ -102,6 +102,20 @@
          :lock-timeout  [60 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :oppilaitoksen-opiskelijat-cache-loader})]
+   [:oppilaitoksen-luokat-cache-loader
+    (component/using
+      (suoritus-service/map->OppilaitoksenLuokatCacheLoader {})
+      {:cas-client    :suoritusrekisteri-cas-client})]
+   [:oppilaitoksen-luokat-cache
+    (component/using
+      (redis/map->Cache
+        {:name          "oppilaitoksenluokat"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [1 TimeUnit/HOURS]
+         :lock-timeout  [60 TimeUnit/SECONDS]})
+      {:redis   :redis
+       :loader  :oppilaitoksen-luokat-cache-loader})]
+
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache
