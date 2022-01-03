@@ -207,7 +207,8 @@
                             :kayttooikeus-service
                             :audit-logger
                             :application-service
-                            :session-store]
+                            :session-store
+                            :suoritus-service]
                            (map first caches))))
 
     :server-setup {:port      http-port
@@ -220,7 +221,8 @@
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client
-                        :oppilaitoksen-opiskelijat-cache])
+                        :oppilaitoksen-opiskelijat-cache
+                        :oppilaitoksen-luokat-cache])
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
