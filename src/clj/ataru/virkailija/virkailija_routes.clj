@@ -78,7 +78,8 @@
             [ataru.user-rights :as user-rights]
             [ataru.util :as util]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
-            [ataru.temp-file-storage.temp-file-store :as temp-file-store])
+            [ataru.temp-file-storage.temp-file-store :as temp-file-store]
+            [ataru.suoritus.suoritus-service :as suoritus-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -210,7 +211,8 @@
                           person-service
                           get-haut-cache
                           audit-logger
-                          application-service]
+                          application-service
+                          suoritus-service]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -424,6 +426,12 @@
                           body)]
           (response/ok result)
           (response/bad-request)))
+
+      (api/GET "/oppilaitos/:oppilaitos-oid/luokat" {session :session}
+        :path-params [oppilaitos-oid :- String]
+        :summary "Returns classes of given school"
+        :return [String]
+        (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid)))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
