@@ -99,7 +99,8 @@
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
-                       [:suoritusrekisteri-cas-client])
+                       [:suoritusrekisteri-cas-client
+                        :oppilaitoksen-opiskelijat-cache])
 
     :s3-client (component/using
                 (s3-client/new-client)
