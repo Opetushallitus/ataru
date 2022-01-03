@@ -13,6 +13,7 @@
             [ataru.ohjausparametrit.ohjausparametrit-client :as ohjausparametrit-client]
             [ataru.statistics.statistics-service :as stats]
             [ataru.koodisto.koodisto-db-cache :as koodisto-cache]
+            [ataru.suoritus.suoritus-service :as suoritus-service]
             [ataru.config.core :refer [config]]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
@@ -86,6 +87,21 @@
          :lock-timeout  [20 TimeUnit/SECONDS]})
       {:redis   :redis
        :loader  :hakukohderyhma-settings-cache-loader})]
+   [:suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
+                                                 "JSESSIONID" (-> config :public-config :virkailija-caller-id))]
+   [:oppilaitoksen-opiskelijat-cache-loader
+    (component/using
+      (suoritus-service/map->OppilaitoksenOpiskelijatCacheLoader {})
+      {:cas-client    :suoritusrekisteri-cas-client})]
+   [:oppilaitoksen-opiskelijat-cache
+    (component/using
+      (redis/map->Cache
+        {:name          "oppilaitoksenopiskelijat"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [1 TimeUnit/HOURS]
+         :lock-timeout  [60 TimeUnit/SECONDS]})
+      {:redis   :redis
+       :loader  :oppilaitoksen-opiskelijat-cache-loader})]
    [:hakukohde-cache
     (component/using
      (two-layer/map->Cache

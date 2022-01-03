@@ -417,9 +417,7 @@
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse
         (if-let [result (application-service/query-applications-paged
-                          organization-service
-                          person-service
-                          tarjonta-service
+                          application-service
                           session
                           body)]
           (response/ok result)
