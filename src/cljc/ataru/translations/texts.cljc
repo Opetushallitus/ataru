@@ -1277,6 +1277,9 @@
    :applicants-school-of-departure                  {:fi "Hakeneiden lähtökoulu"
                                                      :sv "Sökandenas avgångsskola"
                                                      :en "Applicants' school of departure"}
+   :applicants-classes                              {:fi "Luokka / Luokat"
+                                                     :sv "Klass / Klasser"
+                                                     :en "Class / Classes"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
                                                      :en "Guardians contact information"}

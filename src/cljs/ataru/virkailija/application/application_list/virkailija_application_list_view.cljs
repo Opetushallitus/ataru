@@ -522,6 +522,51 @@
   (let [form-key (subscribe [:application/selected-form-key])]
     (subscribe [:application/form-fields-by-id @form-key])))
 
+(defn- multi-select-dropdown
+  [options]
+  [:div
+   (for [option options]
+     ^{:key (str "multi-select-dropdown-" option)}
+     [:span option])])
+
+(defn- school-and-class-filters
+  []
+  (let [organizations              (subscribe [:state-query [:editor :organizations :select]])
+        classes-of-selected-school (subscribe [:application/classes-of-selected-school])
+        pending-classes-of-school  @(subscribe [:application/pending-classes-of-school])
+        classes-options            (map (fn [luokka]
+                                          (let [checked            (boolean (some #(= luokka %) pending-classes-of-school))
+                                                on-change-argument [luokka checked]]
+                                            [checked luokka on-change-argument]))
+                                     @classes-of-selected-school)
+        classes-on-change (fn [[luokka checked]]
+                            (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
+    [:div.application-handling__popup-column.application-handling__popup-column--large
+     [:div.application-handling__filter-group
+      [:div.application-handling__filter-group-title
+       @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
+      [:div.application-handling__filters-attachment-search-input
+       [:input
+        {:type      "text"
+         :on-change (fn [event]
+                      (let [value (-> event .-target .-value)]
+                        (when (> (count value) 2)
+                          (dispatch [:application/do-organization-query-for-select value]))))}]
+       [:select
+        {:on-change #(dispatch [:application/set-school-filter (-> % .-target .-value)])}
+        (for [org @organizations]
+          [:option {:value (:oid org)
+                    :key   (:oid org)}
+           (some #(-> (:name org) %) [:fi :sv :en])])]]]
+     [:div.application-handling__filter-group
+      [:div.application-handling__filter-group-title
+       @(subscribe [:editor/virkailija-translation :applicants-classes])]
+      [:div.application-handling__filters-attachment-search-input
+       [dropdown/multi-option
+        "FOOBAR LABEL"
+        classes-options
+        classes-on-change]]]]))
+
 (defn- application-filters
   []
   (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
@@ -541,8 +586,7 @@
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
         filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
-        lang                                      (subscribe [:editor/virkailija-lang])
-        organizations                             (subscribe [:state-query [:editor :organizations :select]])]
+        lang                                      (subscribe [:editor/virkailija-lang])]
     (fn []
       [:span.application-handling__filters
        [:a
@@ -618,24 +662,7 @@
                   (-> general-texts :no (get @lang))
                   :eligibility-set-automatically
                   :no]]])]]
-           [:div.application-handling__popup-column--large
-            [:div.application-handling__filter-group
-             [:div.application-handling__filter-group-title
-              @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
-             [:div.application-handling__filters-attachment-search-input
-              [:input
-               {:type "text"
-                :on-change (fn [event]
-                             (let [value (-> event .-target .-value)]
-                               (when (> (count value) 2)
-                                 (dispatch [:application/do-organization-query-for-select value]))))}]
-              [:select
-               {:on-change #(dispatch [:application/set-school-filter (-> % .-target .-value)])}
-               (for [org @organizations]
-                 [:option {:value (:oid org)
-                           :key (:oid org)}
-                  (some #(-> (:name org) %) [:fi :sv :en])])]
-              ]]]
+           [school-and-class-filters]
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
