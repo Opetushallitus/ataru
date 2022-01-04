@@ -254,7 +254,7 @@
         (not= (get-in db [:application :rajaus-hakukohteella])
               (get-in db [:application :rajaus-hakukohteella-value]))
         (not= (get-in db [:application :school-filter])
-              (get-in db [:application :school-filter-value])))))
+              (get-in db [:application :school-filter-pending-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -998,3 +998,13 @@
   (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
     (and (some? hakemuksen-valinnan-tulokset)
          (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
+
+(re-frame/reg-sub
+  :application/classes-of-selected-school
+  (fn [db _]
+    (get-in db [:application :selected-school-classes])))
+
+(re-frame/reg-sub
+  :application/pending-classes-of-school
+  (fn [db _]
+    (get-in db [:application :classes-of-school-pending-value])))
