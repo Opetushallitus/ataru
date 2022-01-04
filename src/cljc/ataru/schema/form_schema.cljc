@@ -786,10 +786,11 @@
    :attachment-review-states              QueryAttachmentReviewStates
    (s/optional-key :option-answers)       OptionAnswers
    :sort                                  Sort
-   (s/optional-key :states-and-filters)   {:filters                         {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
-                                           :attachment-states-to-include    [s/Str]
-                                           :processing-states-to-include    [s/Str]
-                                           (s/optional-key :school-filter)  (s/maybe s/Str)}})
+   (s/optional-key :states-and-filters)   {:filters                             {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
+                                           :attachment-states-to-include        [s/Str]
+                                           :processing-states-to-include        [s/Str]
+                                           (s/optional-key :school-filter)      (s/maybe s/Str)
+                                           (s/optional-key :classes-of-school)  (s/maybe [s/Str])}})
 
 (s/defschema ApplicationQueryResponse
   {:sort         Sort
