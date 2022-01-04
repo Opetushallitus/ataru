@@ -27,7 +27,8 @@
     [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
     [ataru.dob :as dob]
-    [ataru.suoritus.suoritus-service :as suoritus-service])
+    [ataru.suoritus.suoritus-service :as suoritus-service]
+    [ataru.applications.suoritus-filter :as suoritus-filter])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -688,22 +689,14 @@
                                                        hakukohde-oid
                                                        hakukohderyhma-oid
                                                        rajaus-hakukohteella
-                                                       ryhman-hakukohteet))
-              school-filter                (:school-filter states-and-filters)
-              oppilaitoksen-opiskelijat-ja-luokat (when school-filter
-                                                    (suoritus-service/oppilaitoksen-opiskelijat suoritus-service school-filter))
-              valitut-koulun-luokat        (set (:classes-of-school states-and-filters))
-              oppilaitoksen-opiskelijat    (when school-filter
-                                             (->> oppilaitoksen-opiskelijat-ja-luokat
-                                                  (filter #(or
-                                                             (empty? valitut-koulun-luokat)
-                                                             (contains? valitut-koulun-luokat (:luokka %) )))
-                                                  (map :person-oid)
-                                                  (set)))
-              filter-by-school (fn [applications] (filter #(contains? oppilaitoksen-opiskelijat (get-in % [:person :oid])) applications))]
-          (if school-filter
-            (update applications :applications filter-by-school)
-            applications))))))
+                                                       ryhman-hakukohteet))]
+          (update
+            applications
+            :applications
+            suoritus-filter/filter-applications-by-oppilaitos-and-luokat
+            (fn [oppilaitos-oid] (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid))
+            (:school-filter states-and-filters)
+            (:classes-of-school states-and-filters)))))))
 
 (s/defn ^:always-validate query-applications-paged
   [application-service
