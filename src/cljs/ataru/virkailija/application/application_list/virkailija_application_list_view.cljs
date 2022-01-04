@@ -1,20 +1,20 @@
 (ns ataru.virkailija.application.application-list.virkailija-application-list-view
   (:require [ataru.application.application-states :as application-states]
-              [ataru.application.review-states :as review-states]
-              [ataru.cljs-util :as cljs-util]
-              [ataru.translations.texts :refer [general-texts]]
-              [ataru.util :as util]
-              [ataru.virkailija.application.view.virkailija-application-names :as names]
-              [ataru.virkailija.dropdown :as dropdown]
-              [ataru.virkailija.question-search.handlers :as qsh]
-              [ataru.virkailija.question-search.view :as question-search]
-              [ataru.virkailija.temporal :as temporal]
-              [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
-              [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
-              [clojure.string :as string]
-              [goog.string :as gstring]
-              [reagent.core :as r]
-              [re-frame.core :refer [subscribe dispatch]]))
+            [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as cljs-util]
+            [ataru.translations.texts :refer [general-texts]]
+            [ataru.util :as util]
+            [ataru.virkailija.application.view.virkailija-application-names :as names]
+            [ataru.virkailija.dropdown :as dropdown]
+            [ataru.virkailija.question-search.handlers :as qsh]
+            [ataru.virkailija.question-search.view :as question-search]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
+            [clojure.string :as string]
+            [goog.string :as gstring]
+            [reagent.core :as r]
+            [re-frame.core :refer [subscribe dispatch]]))
 
 (defn- application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
@@ -522,13 +522,6 @@
   (let [form-key (subscribe [:application/selected-form-key])]
     (subscribe [:application/form-fields-by-id @form-key])))
 
-(defn- multi-select-dropdown
-  [options]
-  [:div
-   (for [option options]
-     ^{:key (str "multi-select-dropdown-" option)}
-     [:span option])])
-
 (defn- school-and-class-filters
   []
   (let [organizations              (subscribe [:state-query [:editor :organizations :select]])
@@ -539,8 +532,9 @@
                                                 on-change-argument [luokka checked]]
                                             [checked luokka on-change-argument]))
                                      @classes-of-selected-school)
-        classes-on-change (fn [[luokka checked]]
-                            (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
+        classes-label               (string/join ", " pending-classes-of-school)
+        classes-on-change           (fn [[luokka checked]]
+                                      (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
     [:div.application-handling__popup-column.application-handling__popup-column--large
      [:div.application-handling__filter-group
       [:div.application-handling__filter-group-title
@@ -563,7 +557,7 @@
        @(subscribe [:editor/virkailija-translation :applicants-classes])]
       [:div.application-handling__filters-attachment-search-input
        [dropdown/multi-option
-        "FOOBAR LABEL"
+        classes-label
         classes-options
         classes-on-change]]]]))
 
