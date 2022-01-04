@@ -1093,3 +1093,15 @@
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
      :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
+
+(reg-event-fx
+  :application/fetch-classes-of-school
+  (fn fetch-classes-of-school [_ [_ oppilaitos-oid]]
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/applications/oppilaitos/" oppilaitos-oid "/luokat")
+            :handler-or-dispatch :application/handle-fetch-classes-of-school-response}}))
+
+(reg-event-db
+  :application/handle-fetch-classes-of-school-response
+  (fn handle-fetch-classes-of-school-response [db [_ classes]]
+    (assoc-in db [:application :selected-school-classes] classes)))
