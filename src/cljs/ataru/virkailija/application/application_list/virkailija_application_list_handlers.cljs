@@ -14,6 +14,7 @@
     {:db       (-> db
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
                    (assoc-in [:application :school-filter] (get-in db [:application :school-filter-pending-value]))
+                   (assoc-in [:application :classes-of-school] (get-in db [:application :classes-of-school-pending-value]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
                    (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
      :dispatch [:application/reload-applications]}))
@@ -26,6 +27,8 @@
                    (assoc-in [:application :filters-checkboxes] initial-db/default-filters)
                    (assoc-in [:application :school-filter] nil)
                    (assoc-in [:application :school-filter-pending-value] nil)
+                   (assoc-in [:application :classes-of-school] nil)
+                   (assoc-in [:application :classes-of-school-pending-value] nil)
                    (assoc-in [:application :ensisijaisesti?] false)
                    (assoc-in [:application :ensisijaisesti?-checkbox] false)
                    (assoc-in [:application :rajaus-hakukohteella] nil)
@@ -58,7 +61,8 @@
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
       (assoc-in [:application :school-filter-pending-value] (get-in db [:application :school-filter]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
-      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
+      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
+      (assoc-in [:application :classes-of-school-pending-value] (get-in db [:application :classes-of-school]))))
 
 (reg-event-db
   :application/undo-filters
