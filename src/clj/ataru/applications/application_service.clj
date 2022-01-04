@@ -688,12 +688,7 @@
           ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
                                          (filter (fn [hakukohde]
                                                    (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
-                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))
-          school-filter                (:school-filter states-and-filters)
-          oppilaitoksen-opiskelijat    (when school-filter
-                                         (->> (suoritus-service/oppilaitoksen-opiskelijat suoritus-service school-filter)
-                                              (map :person-oid)
-                                              (set)))]
+                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
       (when-let [query (->and-query
                          (cond (some? form-key)
                                (->form-query form-key)
@@ -736,8 +731,18 @@
                                                        hakukohderyhma-oid
                                                        rajaus-hakukohteella
                                                        ryhman-hakukohteet))
+              school-filter                (:school-filter states-and-filters)
+              oppilaitoksen-opiskelijat-ja-luokat (when school-filter
+                                                    (suoritus-service/oppilaitoksen-opiskelijat suoritus-service school-filter))
+              valitut-koulun-luokat        (set (:classes-of-school states-and-filters))
+              oppilaitoksen-opiskelijat    (when school-filter
+                                             (->> oppilaitoksen-opiskelijat-ja-luokat
+                                                  (filter #(or
+                                                             (empty? valitut-koulun-luokat)
+                                                             (contains? valitut-koulun-luokat (:luokka %) )))
+                                                  (map :person-oid)
+                                                  (set)))
               filter-by-school (fn [applications] (filter #(contains? oppilaitoksen-opiskelijat (get-in % [:person :oid])) applications))]
-          (println "applications" (:applications applications))
           (if school-filter
             (update applications :applications filter-by-school)
             applications))))))
