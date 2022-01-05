@@ -7,8 +7,8 @@
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
-  (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi])
-  (oppilaitoksen-luokat [this oppilaitos-oid vuosi]))
+  (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
+  (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
@@ -21,11 +21,13 @@
   (ylioppilas-tai-ammatillinen? [_ person-oid]
     (some #(= :valmis (:tila %))
           (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil)))
-  (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi]
-    (let [cache-key (str oppilaitos-oid "#" vuosi)]
+  (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi luokkatasot]
+    (let [luokkatasot-str (string/join "," luokkatasot)
+          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)))
-  (oppilaitoksen-luokat [_ oppilaitos-oid vuosi]
-    (let [cache-key (str oppilaitos-oid "#" vuosi)]
+  (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
+    (let [luokkatasot-str (string/join "," luokkatasot)
+          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-luokat-cache cache-key))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
@@ -34,8 +36,8 @@
   cache/CacheLoader
 
   (load [_ key]
-    (let [[oid vuosi] (string/split key #"#")]
-      (client/oppilaitoksen-opiskelijat cas-client oid vuosi)))
+    (let [[oid vuosi luokkatasot] (string/split key #"#")]
+      (client/oppilaitoksen-opiskelijat cas-client oid vuosi luokkatasot)))
 
   (load-many [this oppilaitos-oids]
     (cache/default-load-many this oppilaitos-oids))
@@ -51,8 +53,8 @@
   cache/CacheLoader
 
   (load [_ key]
-    (let [[oid vuosi] (string/split key #"#")]
-      (client/oppilaitoksen-luokat cas-client oid vuosi)))
+    (let [[oid vuosi luokkatasot] (string/split key #"#")]
+      (client/oppilaitoksen-luokat cas-client oid vuosi luokkatasot)))
 
   (load-many [this oppilaitos-oids]
     (cache/default-load-many this oppilaitos-oids))
