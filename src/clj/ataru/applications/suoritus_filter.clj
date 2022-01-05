@@ -1,4 +1,9 @@
-(ns ataru.applications.suoritus-filter)
+(ns ataru.applications.suoritus-filter
+  (:require [clj-time.core :as time]))
+
+(defn year-for-suoritus-filter
+  [now]
+  (time/year now))
 
 (defn filter-applications-by-oppilaitos-and-luokat
   [applications get-oppilaitoksen-opiskelijat oppilaitos-oid luokat]

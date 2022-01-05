@@ -28,7 +28,8 @@
     [schema.core :as s]
     [ataru.dob :as dob]
     [ataru.suoritus.suoritus-service :as suoritus-service]
-    [ataru.applications.suoritus-filter :as suoritus-filter])
+    [ataru.applications.suoritus-filter :as suoritus-filter]
+    [clj-time.core :as time])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -694,7 +695,9 @@
             applications
             :applications
             suoritus-filter/filter-applications-by-oppilaitos-and-luokat
-            (fn [oppilaitos-oid] (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid))
+            (fn [oppilaitos-oid]
+              (let [year (suoritus-filter/year-for-suoritus-filter (time/now))]
+                (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year)))
             (:school-filter states-and-filters)
             (:classes-of-school states-and-filters)))))))
 
