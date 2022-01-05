@@ -62,20 +62,23 @@
                      (str "Fetching ylioppilas suoritukset failed: " r)))))
 
 (defn oppilaitoksen-opiskelijat
-  [cas-client oppilaitos-oid vuosi]
-  (match [(cas-client/cas-authenticated-get
-            cas-client
-            (url/resolve-url
+  [cas-client oppilaitos-oid vuosi luokkatasot]
+  (let [url (url/resolve-url
               "suoritusrekisteri.oppilaitoksenopiskelijat"
               oppilaitos-oid
               (cond-> {}
                 (some? vuosi)
-                (assoc "vuosi" vuosi))))]
-    [{:status 200 :body body}]
-    (map ->student-ja-luokka (json/parse-string body true))
-    [r]
-    (throw (new RuntimeException
-             (str "Fetching oppilaitoksen opiskelijat failed: " r)))))
+                (assoc "vuosi" vuosi)
+                (some? luokkatasot)
+                (assoc "luokkaTasot" luokkatasot)))]
+    (match [(cas-client/cas-authenticated-get
+              cas-client
+              url)]
+      [{:status 200 :body body}]
+      (map ->student-ja-luokka (json/parse-string body true))
+      [r]
+      (throw (new RuntimeException
+               (str "Fetching oppilaitoksen opiskelijat failed: " r))))))
 
 (defn ylioppilas-ja-ammatilliset-suoritukset [cas-client person-oid modified-since]
   (mapcat (partial suoritukset-for-komo cas-client person-oid modified-since)
@@ -85,17 +88,20 @@
            erikoisammattitutkinto-komo]))
 
 (defn oppilaitoksen-luokat
-  [cas-client oppilaitos-oid vuosi]
-  (match [(cas-client/cas-authenticated-get
-            cas-client
-            (url/resolve-url
+  [cas-client oppilaitos-oid vuosi luokkatasot]
+  (let [url (url/resolve-url
               "suoritusrekisteri.oppilaitoksenluokat"
               oppilaitos-oid
               (cond-> {}
                 (some? vuosi)
-                (assoc "vuosi" vuosi))))]
-    [{:status 200 :body body}]
-    (json/parse-string body true)
-    [r]
-    (throw (new RuntimeException
-             (str "Fetching oppilaitoksen luokat failed: " r)))))
+                (assoc "vuosi" vuosi)
+                (some? luokkatasot)
+                (assoc "luokkaTasot" luokkatasot)))]
+    (match [(cas-client/cas-authenticated-get
+              cas-client
+              url)]
+      [{:status 200 :body body}]
+      (json/parse-string body true)
+      [r]
+      (throw (new RuntimeException
+               (str "Fetching oppilaitoksen luokat failed: " r))))))

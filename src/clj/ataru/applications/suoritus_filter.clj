@@ -5,6 +5,10 @@
   [now]
   (time/year now))
 
+(defn luokkatasot-for-suoritus-filter
+  []
+  ["9" "10" "VALMA" "TELMA"])
+
 (defn filter-applications-by-oppilaitos-and-luokat
   [applications get-oppilaitoksen-opiskelijat oppilaitos-oid luokat]
   (if oppilaitos-oid

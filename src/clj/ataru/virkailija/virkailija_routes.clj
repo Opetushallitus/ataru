@@ -431,8 +431,9 @@
         :path-params [oppilaitos-oid :- String]
         :summary "Returns classes of given school"
         :return [String]
-        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))]
-          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year))))
+        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
+              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year luokkatasot))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
