@@ -79,7 +79,9 @@
             [ataru.util :as util]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
-            [ataru.suoritus.suoritus-service :as suoritus-service])
+            [ataru.suoritus.suoritus-service :as suoritus-service]
+            [clj-time.core :as time]
+            [ataru.applications.suoritus-filter :as suoritus-filter])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -431,7 +433,8 @@
         :path-params [oppilaitos-oid :- String]
         :summary "Returns classes of given school"
         :return [String]
-        (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid)))
+        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))]
+          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings

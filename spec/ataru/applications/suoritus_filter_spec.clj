@@ -1,6 +1,7 @@
 (ns ataru.applications.suoritus-filter-spec
   (:require [speclj.core :refer [it describe tags should= should-contain should-not-contain]]
-            [ataru.applications.suoritus-filter :as sf]))
+            [ataru.applications.suoritus-filter :as sf]
+            [clj-time.format :as time-format]))
 
 (defn- fake-get-oppilaitoksen-opiskelijat
   [oppilaitos-oid]
@@ -56,3 +57,11 @@
       (should-contain application-1 result)
       (should-contain application-2 result)
       (should-not-contain application-3 result))))
+
+(describe "year-for-suoritus-filter"
+  (tags :unit)
+
+  (it "returns the current year"
+    (let [now (time-format/parse-local-date "2042-07-03")
+          result (sf/year-for-suoritus-filter now)]
+      (should= 2042 result))))
