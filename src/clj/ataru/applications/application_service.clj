@@ -696,8 +696,9 @@
             :applications
             suoritus-filter/filter-applications-by-oppilaitos-and-luokat
             (fn [oppilaitos-oid]
-              (let [year (suoritus-filter/year-for-suoritus-filter (time/now))]
-                (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year)))
+              (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
+                    luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+                (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
             (:school-filter states-and-filters)
             (:classes-of-school states-and-filters)))))))
 
