@@ -3262,6 +3262,41 @@ th.application__readonly-adjacent--header {
   margin-bottom: 10px;
 }
 
+.school-filter__selected-filter {
+  display: inline-block;
+}
+
+.school-filter__options {
+  position: absolute;
+  background: @white;
+  z-index: 5;
+  max-height: 400px;
+  width: 420px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  box-sizing: border-box;
+  border-radius: 3px;
+  padding: 0.1rem 0 0.1rem 0.5rem;
+  margin-top: 0.4rem;
+  text-align: start;
+  .school-filter__option {
+    :hover,
+    :focus {
+      background: @primary-green-100;
+    }
+
+    span {
+      width: 400px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      line-height: 1.3rem
+    }
+  }
+}
+
 .application__message-display {
   margin-top: 0;
   margin-left: 0;

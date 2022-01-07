@@ -999,6 +999,12 @@
     (and (some? hakemuksen-valinnan-tulokset)
          (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
 
+
+(re-frame/reg-sub
+  :application/pending-selected-school
+  (fn [db _]
+    (get-in db [:application :school-filter-pending-value])))
+
 (re-frame/reg-sub
   :application/classes-of-selected-school
   (fn [db _]
@@ -1008,3 +1014,8 @@
   :application/pending-classes-of-school
   (fn [db _]
     (get-in db [:application :classes-of-school-pending-value])))
+
+(re-frame/reg-sub
+  :application/organizations-for-select
+  (fn [db _]
+    (get-in db [:editor :organizations :select])))
