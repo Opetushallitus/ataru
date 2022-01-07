@@ -81,6 +81,11 @@
     {:db (assoc-in db [:application :school-filter-pending-value] oid)
      :dispatch [:application/fetch-classes-of-school oid]}))
 
+(reg-event-db
+  :application/remove-selected-school-pending
+  (fn [db _]
+    (assoc-in db [:application :school-filter-pending-value] nil)))
+
 (reg-event-fx
   :application/update-sort
   (fn [{:keys [db]} [_ column-id]]

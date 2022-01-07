@@ -23,6 +23,9 @@
    :add-row                                     {:fi "Lisää rivi"
                                                  :sv "Lägg till rad"
                                                  :en "Add row"}
+   :search-placeholder                          {:fi "Hae.."
+                                                 :sv "Söka.."
+                                                 :en "Search.."}
    :allow-publishing-of-results-online          {:fi "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan."
                                                  :sv "Om jag blir antagen, får läroanstalen publicera mitt namn på sin webbplats."
                                                  :en "Education institution may publish my admission results on their web page."}
