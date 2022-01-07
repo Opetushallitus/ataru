@@ -524,7 +524,8 @@
 
 (defn- school-and-class-filters
   []
-  (let [organizations              (subscribe [:state-query [:editor :organizations :select]])
+  (let [organizations              (subscribe [:application/organizations-for-select])
+        selected-school            (subscribe [:application/pending-selected-school])
         classes-of-selected-school (subscribe [:application/classes-of-selected-school])
         pending-classes-of-school  @(subscribe [:application/pending-classes-of-school])
         classes-options            (map (fn [luokka]
@@ -534,32 +535,60 @@
                                      @classes-of-selected-school)
         classes-label               (string/join ", " pending-classes-of-school)
         classes-on-change           (fn [[luokka checked]]
-                                      (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
-    [:div.application-handling__popup-column.application-handling__popup-column--large
-     [:div.application-handling__filter-group
-      [:div.application-handling__filter-group-title
-       @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
-      [:div.application-handling__filters-attachment-search-input
-       [:input
-        {:type      "text"
-         :on-change (fn [event]
-                      (let [value (-> event .-target .-value)]
-                        (when (> (count value) 2)
-                          (dispatch [:application/do-organization-query-for-select value]))))}]
-       [:select
-        {:on-change #(dispatch [:application/set-school-filter (-> % .-target .-value)])}
-        (for [org @organizations]
-          [:option {:value (:oid org)
-                    :key   (:oid org)}
-           (some #(-> (:name org) %) [:fi :sv :en])])]]]
-     [:div.application-handling__filter-group
-      [:div.application-handling__filter-group-title
-       @(subscribe [:editor/virkailija-translation :applicants-classes])]
-      [:div.application-handling__filters-attachment-search-input
-       [dropdown/multi-option
-        classes-label
-        classes-options
-        classes-on-change]]]]))
+                                      (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))
+        get-school-name             (fn [school]
+                                      (some #(-> (:name school) %) [:fi :sv :en]))
+        selected-school-name        (fn [school orgs]
+                                      (->> orgs
+                                           (filter #(= school (:oid %)))
+                                           (first)
+                                           (get-school-name)))
+        set-school-filter           (fn [org]
+                                      (dispatch [:application/set-school-filter (:oid org)]))]
+    (fn []
+      [:div.application-handling__popup-column.application-handling__popup-column--large
+       [:div.application-handling__filter-group
+        [:div.application-handling__filter-group-title
+         @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
+        [:div.application-handling__filters-attachment-search-input
+         (if (not @selected-school)
+          [:input
+            {:type        "text"
+             :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
+             :on-change (fn [event]
+                          (let [value (-> event .-target .-value)]
+                            (when (> (count value) 2)
+                              (dispatch [:application/do-organization-query-for-select value]))))}]
+          [:div.school-filter__selected-filter
+           [:span
+            (selected-school-name @selected-school @organizations)]
+            [:button.virkailija-close-button.application-handling__filters-popup-close-button
+             {:on-click #(dispatch [:application/remove-selected-school-pending nil])}
+             [:i.zmdi.zmdi-close]]])
+         (when (and (not @selected-school)
+                    (> (count @organizations) 0))
+           [:div.school-filter__options
+            {:tab-index -1}
+            (for [org @organizations]
+              [:div.school-filter__option
+               {:on-click #(set-school-filter org)
+                :on-key-up (fn [event]
+                             (when (= 13 (.-keyCode event))
+                               (set-school-filter org)))
+                :key (:oid org)
+                :id (str "school-filter-option-" (:oid org))}
+               [:span
+                {:title (get-school-name org)
+                 :tab-index 0}
+                (get-school-name org)]])])]]
+       [:div.application-handling__filter-group
+        [:div.application-handling__filter-group-title
+         @(subscribe [:editor/virkailija-translation :applicants-classes])]
+        [:div.application-handling__filters-attachment-search-input
+         [dropdown/multi-option
+          classes-label
+          classes-options
+          classes-on-change]]]])))
 
 (defn- application-filters
   []
