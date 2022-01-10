@@ -23,9 +23,6 @@
    :add-row                                     {:fi "Lisää rivi"
                                                  :sv "Lägg till rad"
                                                  :en "Add row"}
-   :search-placeholder                          {:fi "Hae.."
-                                                 :sv "Söka.."
-                                                 :en "Search.."}
    :allow-publishing-of-results-online          {:fi "Jos tulen hyväksytyksi, oppilaitos voi julkaista nimeni omilla verkkosivuillaan."
                                                  :sv "Om jag blir antagen, får läroanstalen publicera mitt namn på sin webbplats."
                                                  :en "Education institution may publish my admission results on their web page."}
@@ -929,6 +926,9 @@
    :valinnan-tila                                   {:fi "Valinnan tila"
                                                      :sv "Antagningens status"
                                                      :en "Valinnan tila"}
+   :search-placeholder                              {:fi "Hae.."
+                                                     :sv "Söka.."
+                                                     :en "Search.."}
    :valinnan-tila-ladattu-valinnoista               {:fi "Valintatieto tuotu valintarekisteristä"
                                                      :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                      :en "Valintatieto tuotu valintarekisteristä"}
