@@ -31,6 +31,7 @@
             [cljs.core.match :refer-macros [match]]
             [clojure.set :as set]
             [clojure.string :as string]
+            [cljs-time.format :as format]
             [goog.string :as gstring]
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
@@ -988,8 +989,21 @@
      [:span (str "€")]
      ]))
 
+
+(def date-formatter (format/formatters :date))
+(def fi-formatter (format/formatter "dd.MM.yyyy"))
+
+(defn iso-date-str->date [date-str]
+  (when-not (string/blank? date-str)
+            (try
+              (format/parse-local date-formatter date-str)
+              (catch js/Error _))))
+
+(defn format-date [iso-date-str]
+  (when-let [date (iso-date-str->date iso-date-str)]
+       (format/unparse fi-formatter date)))
+
 (defn- single-payment-status-row [header payment]
-  ;(prn "single-payment-status-row  " payment)
   (let [status     (keyword (:status payment))
         icon       (case (keyword status)
                          :active  icons/tutu-payment-outstanding
@@ -1000,8 +1014,8 @@
                      (str "Maksun tietoja ei löydy")
                      (case (keyword status)
                            :active "Avoin"
-                           :paid    (str "Maksettu " (:paid_at payment))
-                           :overdue (str "Eräpäivä ylitetty " (:due_date payment))
+                           :paid    (str "Maksettu " (format-date (:paid_at payment)))
+                           :overdue (str "Eräpäivä ylitetty " (format-date (:due_date payment)))
                            (str "Maksun tilaa ei tiedetä")))]
     (prn "single-row" payment)
     [:<>
@@ -1030,7 +1044,7 @@
                        " application-handling__send-information-request-button--cursor-pointer"))}
      ;[:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
      [:div (if (= :active decision-pay-status)
-             "Uudelleenlähetä"
+             "Lähetä uudelleen"
              "Lähetä maksupyyntö")]
      [:div.application-handling__resend-modify-application-link-email-text]]))
 
@@ -1041,6 +1055,7 @@
                              ;            false))
 
         ;request-state        (subscribe [:state-query [:application :information-request :state]])
+        email                @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         application-key      @(subscribe [:state-query [:application :review :application-key]])
         processing-state     @(subscribe [:state-query [:application :review :hakukohde-reviews :form :processing-state]])
         {:keys [processing decision]} payments
@@ -1054,7 +1069,6 @@
                                    :decision-fee-outstanding true
                                    :decision-fee-paid true
                                    false)
-        email                (str "testi@gmail.com")
         amount-label         (case state
                                    :unprocessed "Maksun määrä"
                                    :processing-fee-paid "Maksun määrä"
@@ -1077,10 +1091,10 @@
                                    :decision-fee-paid nil
                                    nil)
         due-value         (case state
-                                :unprocessed (:due_date processing)
+                                :unprocessed (format-date (:due_date processing))
                                 :processing-fee-paid nil
                                 :processing :input
-                                :decision-fee-outstanding (:due_date decision)
+                                :decision-fee-outstanding (format-date (:due_date decision))
                                 :decision-fee-paid nil
                                 nil)
 
@@ -1121,7 +1135,6 @@
              [:div (cond
                      (number? due-value) (str due-value)
                      (string? due-value) due-value
-                     ;TODO if decision-invoice not created, default to today+14, otherwise :due_date
                      (= due-value :input) [date-picker application-key])]])
 
        (when (cond
