@@ -458,6 +458,15 @@
    :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
                                                  :sv "Lägg till valfritt ämne"
                                                  :en "Lisää valinnaisaine"}
+   :application-submitted-payment               {:fi "Hakemuksesi on tallentunut"
+                                                 :sv "Din ansökan har sparats."
+                                                 :en "Your application has been saved."}
+   :application-submitted-payment-text          {:fi "Saat vahvistuksen sähköpostiisi."
+                                                 :sv "Du får en bekräftelse till din epost."
+                                                 :en "You will receive a confirmation by email."}
+   :payment-button                              {:fi "Siirry maksamaan"
+                                                 :sv "Gå till betalningen"
+                                                 :en "Go to the payment"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}})

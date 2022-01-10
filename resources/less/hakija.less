@@ -994,7 +994,22 @@ textarea.application__form-text-area__size-large {
   color: @white;
 }
 
-.application__maksut-button {
+button.application__maksut-button {
+  .button-mixin;
+  margin-top: 50px;
+  padding-right: 20px;
+  border: none;
+  font-weight: 600;
+  background: @primary-green-700;
+  color: @white;
+  &--active,
+  &:hover {
+    background: @primary-green-900;
+  }
+
+/*
+  .primary-button;
+  //.secondary-button;
   margin-top: 50px;
   align-items: center;
   border-radius: 3px;
@@ -1002,7 +1017,9 @@ textarea.application__form-text-area__size-large {
   height: 41px;
   justify-content: center;
   padding: 0 30px;
-  color: @white;
+*/
+  //color: @white;
+  //background-color: @primary-green-700;
 }
 
 .application__form-checkbox:checked + label::before {
@@ -1902,7 +1919,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__submitted-submit-payment-icon {
-    background-color: @kevyt-valinta-unchecked-color;
+    background-color: @primary-green-700;
     border-radius: 22px;  //( border*2 + height + padding ) / 2
     font-weight: 600;
     font-size: 15px;

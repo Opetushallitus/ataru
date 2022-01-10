@@ -142,32 +142,24 @@
 (defn- submit-notification-payment
   [_ _]
   (fn []
-    ;(let [lang @(subscribe [:application/form-language])]
+    (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-payment
        [:div.application__submitted-submit-payment-inner
         [:div.application__submitted-submit-payment-icon
           [icons/icon-check]]
-        ;[:div.application__submitted-submit-payment-inner2
           [:h1.application__submitted-submit-notification-heading
-           "Hakemuksesi on lähetetty!"
-           ;(translations/get-hakija-translation :application-submitted lang)
-           ]
+           (translations/get-hakija-translation :application-submitted-payment lang)]
           [:div.application__submitted-submit-notification-heading
-           "Saat vahvistuksen sähköpostiisi."]
-          [:div.application__submitted-submit-notification-heading
-           "Pieni hetki, sinut ohjataan automaattisesti maksutapahtumiin."]
+            (translations/get-hakija-translation :application-submitted-payment-text lang)]
 
           [:div.application__submitted-submit-payment-button-container
-            [:a.application__maksut-button.application__send-feedback-button--enabled
-             {:on-click     #(dispatch [:application/redirect-to-maksut]) ;#(reset! hidden? true)
+            [:button.application__maksut-button
+             {:on-click     #(dispatch [:application/redirect-to-maksut])
               :data-test-id "maksut-button"}
-             [icons/icon-card] "Siirry maksutapahtumiin"
-             ;(translations/get-hakija-translation :application-submitted-ok lang)
-             ]
+             [icons/icon-card] (translations/get-hakija-translation :payment-button lang)]
            ]
-         ;]
         ]]
-      ;)
+      )
     ))
 
 (defn feedback-form
