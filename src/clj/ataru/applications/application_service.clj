@@ -446,7 +446,7 @@
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
-  (payment-triggered-processing-state-change [this session application-key state])
+  (payment-triggered-processing-state-change [this session application-key message payment-url state])
   (payment-poller-processing-state-change [this application-key state])
   (send-modify-application-link-email [this application-key session])
   (add-review-note [this session note])
@@ -582,7 +582,7 @@
         {:events (get-application-events organization-service application-key)})))
 
   (payment-triggered-processing-state-change
-    [_ session application-key state]
+    [_ session application-key message payment-url state]
     (let [hakukohde   "form"
           requirement "processing-state"]
       (when (aac/applications-access-authorized?
@@ -599,6 +599,10 @@
                state
                session
                audit-logger)
+        (log/info "Before email sending" message)
+        (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
+          (email/start-tutu-decision-email-job job-runner application-id message payment-url))
+
         (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
               events            (future (get-application-events organization-service application-key))]
           (util/remove-nil-values {:events            @events

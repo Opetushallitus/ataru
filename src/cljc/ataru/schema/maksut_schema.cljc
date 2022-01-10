@@ -7,6 +7,12 @@
     :paid
     :overdue))
 
+(s/defschema Locale
+  (s/enum
+    "fi"
+    "sv"
+    "en"))
+
 (s/defschema LaskuStatus
   {:order-id s/Str
    :reference s/Str
@@ -31,5 +37,7 @@
    :last-name s/Str
    :email s/Str
    :amount s/Str
-   (s/optional-key :due_date) (s/maybe s/Str)
+   (s/optional-key :locale) (s/maybe Locale)
+   (s/optional-key :due-date) (s/maybe s/Str)
+   (s/optional-key :message) (s/maybe s/Str)
    :index (s/constrained s/Int #(<= 1 % 2) 'valid-tutu-maksu-index)})

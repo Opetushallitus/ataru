@@ -433,6 +433,7 @@
                                   (filter #(= key (:key %)))
                                   (map :value)
                                   first))
+        lang (:lang application)
         info {:application-key app-key
               :first-name (get-field "first-name")
               :last-name (get-field "last-name")
@@ -444,11 +445,6 @@
                        (-> (cache/get-from form-by-id-cache (str form)) :key))
         tutu-form? (and (some? tutu-key) (= tutu-key form-key))
         virkailija-secret (:virkailija-secret application)]
-    (log/info "xxx form-by-id-cache:" (:form application) form-key tutu-form?)
-    (log/info "xxx app:" app-key)
-    (log/info "xxx form:" info " tutu-key: " tutu-key)
-
-    ;"last-name", "first-name", "email"
 
     (if passed?
       (do
@@ -458,8 +454,9 @@
         ;TODO only do this if TUTU-form
         (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service info))
               secret (:secret invoice)
-              url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret)]
+              url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)]
           (log/info "maksut info" invoice)
+          (log/info "Generate maksut-link for email" url)
 
           (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
           (-> result
@@ -509,7 +506,6 @@
           virkailija-secret
           id
           application)
-        ;TODO do we need to retrieve a working maksut-url to here too?
         (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
       (do
         (audit-log/log audit-logger

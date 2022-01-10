@@ -1,5 +1,8 @@
 (ns ataru.virkailija.application.tutu-payment.tutu-payment-subs
-  (:require [re-frame.core :as re-frame]))
+  (:require
+    [cljs-time.core :as time]
+    [cljs-time.format :as format]
+    [re-frame.core :as re-frame]))
 
 ;(re-frame/reg-sub
 ;  :liitepyynto-information-request/deadline-toggle-on?
@@ -45,12 +48,12 @@
 (re-frame/reg-sub
   :tutu-payment/duedate-input
   (fn [db [_ application-key]]
-    ;TODO pitäiskö REST-response camel-casettaa?
 
     (or
       (get-in db [:tutu-payment :inputs application-key :due_date])
       (get-in db [:tutu-payment :applications application-key :decision :due_date])
-      "")))
+      (let [date (time/from-now (time/days 14))]
+        (format/unparse (format/formatters :date) date)))))
 
 (re-frame/reg-sub
  :tutu-payment/amount-input

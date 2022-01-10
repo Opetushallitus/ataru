@@ -122,13 +122,16 @@
    (let [{:keys [due_date]} (get-in db [:tutu-payment :inputs application-key])
          application (get-in db [:application :selected-application-and-form :application])
          get-field  (fn [key] (->> (:answers application) key :value))
+         message    @(re-frame/subscribe [:tutu-payment/note-input application-key])
          amount     @(re-frame/subscribe [:tutu-payment/amount-input application-key])
          data {:application-key application-key
                :first-name (get-field :first-name)
                :last-name (get-field :last-name)
                :email (get-field :email)
+               :locale (:lang application)
                :amount amount
-               :due_date due_date
+               :message message
+               :due-date due_date
                :index 2}
          ]
      (prn "send-decision-invoice" (:answers application))

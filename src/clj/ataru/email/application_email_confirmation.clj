@@ -12,7 +12,7 @@
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.translations.texts :refer [email-default-texts tutu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -216,6 +216,28 @@
        guardian-email-data
        render-file-fn))))
 
+(defn- create-tutu-decision-email [application-id message payment-url]
+   (let [application                     (application-store/get-application application-id)
+         template-name                   (fn [_] "templates/tutu_decision_email_template.html")
+         lang                            (keyword (:lang application))
+         applier-recipients              (->> (:answers application)
+                                              (filter #(= "email" (:key %)))
+                                              (map :value))
+         translations                    (reduce-kv #(assoc %1 %2 (get %3 lang))
+                                                    {}
+                                                    tutu-decision-email)
+         template-params                 (merge
+                                            {:application-oid            (:key application)
+                                             :payment-url                payment-url
+                                             :message                    (->safe-html message)
+                                             :decision-info-email        "recognition@oph.fi"}
+                                            translations)
+         subject                         (str (:subject-prefix translations) ": " (:header translations))
+         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+         render-file-fn                  (fn [template-params]
+                                           (selmer/render-file (template-name lang) template-params))]
+     (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
+
 
 (defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id payment-url guardian?]
   (create-emails koodisto-cache tarjonta-service
@@ -282,6 +304,15 @@
                        payment-url
                        true)]
            (start-email-job job-runner email))))
+
+(defn start-tutu-decision-email-job
+  [job-runner application-id message payment-url]
+  (log/info "start-tutu-decision-email-job" application-id payment-url)
+  (dorun
+   (for [email (create-tutu-decision-email application-id message payment-url)]
+     (do
+       (log/info "Before email job" email)
+       (start-email-job job-runner email)))))
 
 (defn start-email-refresh-secret-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]

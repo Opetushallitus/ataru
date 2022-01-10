@@ -2071,6 +2071,45 @@
                             :sv "Multipla värden"
                             :en "Multiple values"}})
 
+(def tutu-decision-email
+  {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"
+                           :sv "Beslut om erkännande av din examen har fattats"
+                           :en "Decision on the recognition of your qualification has been made"}
+   :subject-prefix        {:fi "Opintopolku"
+                           :sv "Studieinfo"
+                           :en "Studyinfo"}
+
+   :decision-header       {:fi "Päätösmaksu"
+                           :sv "Beslutsavgiften"
+                           :en "Decision fee"}
+
+   :decision-text-1       {:fi "Lähetämme päätöksen sinulle, kun olet maksanut päätösmaksun."
+                           :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
+                           :en "We will send you the decision once you have paid the decision fee."}
+   :decision-text-2       {:fi "Voit maksaa päätösmaksun ja tarkastella maksusi tietoja seuraavasta linkistä."
+                           :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
+                           :en "You can pay the decision fee and view the details of your payment through the following link."}
+   :decision-text-3       {:fi "Jos et suorita päätösmaksua 14 vuorokauden sisällä, lähetämme sinulle päätösmaksusta erillisen laskun. Maksu on ulosottokelpoinen ilman tuomiota tai päätöstä (valtion maksuperustelaki (150/1992) 11§ 1.mom.)."
+                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                           :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
+
+   :decision-info         {:fi "Lisätietoja päätöksistä ja maksuista on nettisivuillamme:"
+                           :sv "Mer information om besluten och avgifterna finns på vår webbplats:"
+                           :en "More information on the decisions and fees is available on our website:"}
+   :decision-info-url     {:fi "https://www.oph.fi/fi/palvelut/tutkintojen-tunnustaminen"
+                           :sv "https://www.oph.fi/sv/tjanster/erkannande-av-examina"
+                           :en "https://www.oph.fi/en/services/recognition-and-international-comparability-qualifications"}
+
+   :decision-info-noreply {:fi "Älä vastaa tähän viestiin – viesti on lähetetty automaattisesti. Jos sinulla on kysyttävää, otathan meihin yhteyttä sähköpostitse osoitteessa "
+                           :sv "Svara inte på detta meddelande, det har skickats automatiskt. Om du har frågor, vänligen kontakta oss per epost via "
+                           :en "This is an automatically generated email, please do not reply. If you have any questions, please send us an email at "}
+
+   :signature-header      {:fi "Ystävällisin terveisin"
+                           :sv "Med vänliga hälsningar,"
+                           :en "Best regards"}
+   :signature-name        {:fi "Opetushallitus"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"

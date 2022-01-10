@@ -803,8 +803,15 @@
       (api/POST "/maksupyynto" {session :session}
         :body [input maksut-schema/TutuLaskuCreate]
         :summary "Välittää maksunluonti-pyynnön Maksut -palvelulle"
-        (let [{:keys [application-key]} input
-              invoice (maksut-protocol/create-paatos-lasku maksut-service input)]
+
+        (let [{:keys [application-key locale message]} input
+              lasku-input (-> input
+                              (dissoc :message)
+                              (dissoc :locale))
+              invoice     (maksut-protocol/create-paatos-lasku maksut-service lasku-input)
+              secret      (:secret invoice)
+              lang        (or locale "fi")
+              payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)]
 
           (log/warn "Input" input "key" application-key "invoice" invoice)
 
@@ -814,6 +821,8 @@
                             application-service
                             session
                             application-key
+                            message
+                            payment-url
                             "decision-fee-outstanding")]
             (do
               (log/warn "Review result" result)
