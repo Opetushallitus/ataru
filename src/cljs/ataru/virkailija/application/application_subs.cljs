@@ -254,7 +254,9 @@
         (not= (get-in db [:application :rajaus-hakukohteella])
               (get-in db [:application :rajaus-hakukohteella-value]))
         (not= (get-in db [:application :school-filter])
-              (get-in db [:application :school-filter-pending-value])))))
+              (get-in db [:application :school-filter-pending-value]))
+        (not= (get-in db [:application :classes-of-school])
+              (get-in db [:application :classes-of-school-pending-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
