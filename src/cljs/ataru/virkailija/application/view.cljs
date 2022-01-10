@@ -981,7 +981,7 @@
        :placeholder placeholder
        ;:pattern     "[0-9]{1,4}([.][0-9]{1,2})?"
        :pattern     "[0-9]{1,4}"
-       :title       "Anna summa muodossa 123 tai 123.00"
+       :title       @(subscribe [:editor/virkailija-translation :tutu-amount-input-placeholder])
        :disabled    disabled?
        :on-change   #(dispatch [:tutu-payment/set-amount
                                          application-key
@@ -1011,12 +1011,12 @@
                          :overdue icons/tutu-payment-overdue
                          nil)
         label      (if (or (empty? payment) (nil? status))
-                     (str "Maksun tietoja ei löydy")
+                     @(subscribe [:editor/virkailija-translation :tutu-invoice-notfound])
                      (case (keyword status)
-                           :active "Avoin"
-                           :paid    (str "Maksettu " (format-date (:paid_at payment)))
-                           :overdue (str "Eräpäivä ylitetty " (format-date (:due_date payment)))
-                           (str "Maksun tilaa ei tiedetä")))]
+                           :active  @(subscribe [:editor/virkailija-translation :tutu-payment-active])
+                           :paid    (str @(subscribe [:editor/virkailija-translation :tutu-payment-paid]) " " (format-date (:paid_at payment)))
+                           :overdue (str @(subscribe [:editor/virkailija-translation :tutu-payment-overdue]) " " (format-date (:due_date payment)))
+                           @(subscribe [:editor/virkailija-translation :tutu-payment-unknown])))]
     (prn "single-row" payment)
     [:<>
       [:div header]
@@ -1044,8 +1044,8 @@
                        " application-handling__send-information-request-button--cursor-pointer"))}
      ;[:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
      [:div (if (= :active decision-pay-status)
-             "Lähetä uudelleen"
-             "Lähetä maksupyyntö")]
+             @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-again-button])
+             @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-send-button]))]
      [:div.application-handling__resend-modify-application-link-email-text]]))
 
 (defn- application-tutu-payment-status [payments]
@@ -1070,11 +1070,11 @@
                                    :decision-fee-paid true
                                    false)
         amount-label         (case state
-                                   :unprocessed "Maksun määrä"
-                                   :processing-fee-paid "Maksun määrä"
-                                   :processing "Maksun määrä"
-                                   :decision-fee-outstanding "Maksun määrä"
-                                   :decision-fee-paid "Yhteissumma"
+                                   :unprocessed @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                                   :processing-fee-paid @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                                   :processing @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                                   :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :tutu-amount-label])
+                                   :decision-fee-paid @(subscribe [:editor/virkailija-translation :tutu-total-paid-label])
                                    nil)
         amount-value         (case state
                                    :unprocessed (:amount processing)
@@ -1084,10 +1084,10 @@
                                    :decision-fee-paid (str (:amount processing) " + " (:amount decision))
                                    nil)
         due-label         (case state
-                                   :unprocessed "Eräpäivä"
+                                   :unprocessed @(subscribe [:editor/virkailija-translation :tutu-due-label])
                                    :processing-fee-paid nil
-                                   :processing "Eräpäivä"
-                                   :decision-fee-outstanding "Eräpäivä"
+                                   :processing @(subscribe [:editor/virkailija-translation :tutu-due-label])
+                                   :decision-fee-outstanding @(subscribe [:editor/virkailija-translation :tutu-due-label])
                                    :decision-fee-paid nil
                                    nil)
         due-value         (case state
@@ -1110,14 +1110,13 @@
                      ;padding-top "0px"
 
                      :grid-template-columns "1fr 1fr"}}
-       [:span {:style {:grid-column "span 2"}} [:b (str "Maksupyyntö " ;state
-                                                        )]]
+       [:span {:style {:grid-column "span 2"}} [:b @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-header])]]
 
-       [single-payment-status-row "Käsittelymaksu:" (:processing payments)]
+       [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-processing-header]) (:processing payments)]
        (when-let [p (:decision payments)]
-         [single-payment-status-row "Päätösmaksu:" p])
+         [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-decision-header]) p])
 
-       [:div "Vastaanottaja:"]
+       [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-recipient])]
        [:div email]
 
        (when (and amount-label amount-value)
@@ -1126,7 +1125,7 @@
            [:div (cond
                     (string? amount-value) (str amount-value " €")
                     (number? amount-value) (str amount-value " €")
-                    (= amount-value :input) [amount-input application-key "Summa" false])]
+                    (= amount-value :input) [amount-input application-key @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-amount]) false])]
           ])
 
        (when (and due-label due-value)
@@ -1142,7 +1141,7 @@
                (= :overdue decision-pay-status) false
                (#{:processing :decision-fee-outstanding} state) true)
              [:<>
-              [:div "Viesti:"]
+              [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-message])]
               [decision-payment-note application-key]
 
               [send-decision-invoice-button application-key decision-pay-status]

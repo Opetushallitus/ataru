@@ -1941,7 +1941,62 @@
                                                      :en "EN: Vastaus"}
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
                                                      :sv "Svarsalternativ valt"
-                                                     :en "EN: vastausvaihtoehtoa valittu"}})
+                                                     :en "EN: vastausvaihtoehtoa valittu"}
+
+   :tutu-amount-label                               {:fi "Maksun määrä"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-total-paid-label                           {:fi "Yhteissumma"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-due-label                                  {:fi "Eräpäivä"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-maksupyynto-header                         {:fi "Maksupyyntö"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-processing-header                          {:fi "Käsittelymaksu:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-decision-header                            {:fi "Päätösmaksu:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-recipient                      {:fi "Vastaanottaja:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-amount                         {:fi "Summa"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-message                        {:fi "Viesti:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-send-button                    {:fi "Lähetä maksupyyntö"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-again-button                   {:fi "Lähetä uudelleen"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-invoice-notfound                           {:fi "Maksun tietoja ei löydy"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-active                             {:fi "Avoin"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-paid                               {:fi "Maksettu"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-overdue                            {:fi "Eräpäivä ylitetty"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-unknown                            {:fi "Maksun tilaa ei tiedetä"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-amount-input-placeholder                   {:fi "Anna summa muodossa 123 tai 123.00"
+                                                     :sv ""
+                                                     :en ""}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
