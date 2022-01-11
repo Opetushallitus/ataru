@@ -6,33 +6,40 @@
       "nimi": {
         "fi": "Telajärven seudun koulutuskuntayhtymä"
       },
+      "organisaatiotyypit": ["KOULUTUSTOIMIJA"],
       "children": [
         {
           "oid": "1.2.246.562.10.1234334543",
           "nimi": {
             "fi": "Telajärven aikuislukio"
           },
-          "children": []
+          "children": [],
+          "organisaatiotyypit": ["OPPILAITOS"],
+          "oppilaitostyyppi": "oppilaitostyyppi_15#1"
         },
         {
           "oid": "1.2.246.562.10.932489234",
           "nimi": {
             "fi": "Telajärven aikuisopisto"
           },
+          "organisaatiotyypit": ["OPPILAITOS"],
+          "oppilaitostyyppi": "oppilaitostyyppi_64#1",
           "children": [
             {
               "oid": "1.2.246.562.10.123943342",
               "nimi": {
                 "fi": "Telajärven aikuisopisto, Äyhtävä"
               },
-              "children": []
+              "children": [],
+              "organisaatiotyypit": ["TOIMIPISTE"]
             },
             {
               "oid": "1.2.246.562.10.938234",
               "nimi": {
                 "fi": "Telajärven aikuisopisto, Prunkila"
               },
-              "children": []
+              "children": [],
+              "organisaatiotyypit": ["TOIMIPISTE"]
             }
           ]
         },
@@ -41,20 +48,24 @@
           "nimi": {
             "fi": "Telajärven työväenopisto"
           },
+          "organisaatiotyypit": ["OPPILAITOS"],
+          "oppilaitostyyppi": "oppilaitostyyppi_64#1",
           "children": [
             {
               "oid": "1.2.246.562.10.423834",
               "nimi": {
                 "sv": "Telajärven hierontaopisto"
               },
-              "children": []
+              "children": [],
+              "organisaatiotyypit": ["TOIMIPISTE"]
             },
             {
               "oid": "1.2.246.562.10.323412",
               "nimi": {
                 "fi": "Telajärven kaupungin työväenopisto"
               },
-              "children": []
+              "children": [],
+              "organisaatiotyypit": ["TOIMIPISTE"]
             }
           ]
         }

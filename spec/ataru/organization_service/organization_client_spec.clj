@@ -1,6 +1,5 @@
 (ns ataru.organization-service.organization-client-spec
   (:require
-   [clojure.java.io :as io]
    [cheshire.core :as json]
    [speclj.core :refer [describe it should= tags around]]
    [ataru.organization-service.organization-client :as org-client]
@@ -8,30 +7,41 @@
    [clj-http.client :as http]))
 
 (def organization-hierarchy-data (slurp (io/resource "organisaatio_service/organization-hierarchy1.json")))
-(def expected-flat-organizations '({:name {:fi "Telajärven seudun koulutuskuntayhtymä"},
-                                    :oid "1.2.246.562.10.3242342"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven aikuislukio"}
-                                    :oid "1.2.246.562.10.1234334543"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven aikuisopisto"}
-                                    :oid "1.2.246.562.10.932489234"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven aikuisopisto, Äyhtävä"}
-                                    :oid "1.2.246.562.10.123943342"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven aikuisopisto, Prunkila"}
-                                    :oid "1.2.246.562.10.938234"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven työväenopisto"}
-                                    :oid "1.2.246.562.10.9239423"
-                                    :type :organization}
-                                   {:name {:sv "Telajärven hierontaopisto"}
-                                    :oid "1.2.246.562.10.423834"
-                                    :type :organization}
-                                   {:name {:fi "Telajärven kaupungin työväenopisto"}
-                                    :oid "1.2.246.562.10.323412"
-                                    :type :organization}))
+(def expected-flat-organizations '({:name               {:fi "Telajärven seudun koulutuskuntayhtymä"},
+                                    :oid                "1.2.246.562.10.3242342"
+                                    :type               :organization
+                                    :organisaatiotyypit ["KOULUTUSTOIMIJA"]}
+                                   {:name               {:fi "Telajärven aikuislukio"}
+                                    :oid                "1.2.246.562.10.1234334543"
+                                    :type               :organization
+                                    :organisaatiotyypit ["OPPILAITOS"]
+                                    :oppilaitostyyppi   "oppilaitostyyppi_15#1"}
+                                   {:name               {:fi "Telajärven aikuisopisto"}
+                                    :oid                "1.2.246.562.10.932489234"
+                                    :type               :organization
+                                    :organisaatiotyypit ["OPPILAITOS"]
+                                    :oppilaitostyyppi   "oppilaitostyyppi_64#1"}
+                                   {:name               {:fi "Telajärven aikuisopisto, Äyhtävä"}
+                                    :oid                "1.2.246.562.10.123943342"
+                                    :type               :organization
+                                    :organisaatiotyypit ["TOIMIPISTE"]}
+                                   {:name               {:fi "Telajärven aikuisopisto, Prunkila"}
+                                    :oid                "1.2.246.562.10.938234"
+                                    :type               :organization
+                                    :organisaatiotyypit ["TOIMIPISTE"]}
+                                   {:name               {:fi "Telajärven työväenopisto"}
+                                    :oid                "1.2.246.562.10.9239423"
+                                    :type               :organization
+                                    :organisaatiotyypit ["OPPILAITOS"]
+                                    :oppilaitostyyppi   "oppilaitostyyppi_64#1"}
+                                   {:name               {:sv "Telajärven hierontaopisto"}
+                                    :oid                "1.2.246.562.10.423834"
+                                    :type               :organization
+                                    :organisaatiotyypit ["TOIMIPISTE"]}
+                                   {:name               {:fi "Telajärven kaupungin työväenopisto"}
+                                    :oid                "1.2.246.562.10.323412"
+                                    :type               :organization
+                                    :organisaatiotyypit ["TOIMIPISTE"]}))
 
 (def oph-oid "1.2.246.562.10.00000000001")
 
@@ -61,7 +71,8 @@
   (it "Returns the organization in normal case (numHits 1)"
     (should= {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
               :oid  "1.2.246.562.10.3242342"
-              :type :organization}
+              :type :organization
+              :organisaatiotyypit ["KOULUTUSTOIMIJA"]}
              (org-client/get-organization "1.2.246.562.10.3242342")))
   (it "Returns groups"
     (with-redefs [http/request fake-groups]
