@@ -15,20 +15,38 @@
             [cheshire.core :as json]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ring.mock.request :as mock]
-            [speclj.core :refer [before describe it run-specs should should-not-be-nil should= tags with]]))
+            [speclj.core :refer [before describe it run-specs should should-not-be-nil should= tags with]]
+            [com.stuartsierra.component :as component]))
 
 (def virkailija-routes
-  (delay (->
-          (v/new-handler)
-          (assoc :organization-service (org-service/->FakeOrganizationService))
-          (assoc :tarjonta-service (tarjonta-service/->MockTarjontaService))
-          (assoc :person-service (person-service/->FakePersonService))
-          (assoc :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService))
-          (assoc :application-service (application-service/new-application-service))
-          (assoc :audit-logger (audit-log/new-dummy-audit-logger))
-          (assoc :session-store (create-session-store (ataru-db/get-datasource :db)))
-          .start
-          :routes)))
+  (delay
+    (-> (component/system-map
+          :organization-service (org-service/->FakeOrganizationService)
+          :tarjonta-service (tarjonta-service/->MockTarjontaService)
+          :session-store (create-session-store (ataru-db/get-datasource :db))
+          :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
+          :person-service (person-service/->FakePersonService)
+          :audit-logger (audit-log/new-dummy-audit-logger)
+          :session-store (create-session-store (ataru-db/get-datasource :db))
+          :application-service (component/using
+                                 (application-service/new-application-service)
+                                 [:organization-service
+                                  :tarjonta-service
+                                  :audit-logger
+                                  :person-service])
+          :virkailija-routes (component/using
+                               (v/new-handler)
+                               [:organization-service
+                                :tarjonta-service
+                                :session-store
+                                :kayttooikeus-service
+                                :person-service
+                                :application-service
+                                :audit-logger
+                                :session-store]))
+      component/start
+      :virkailija-routes
+      :routes)))
 
 (defmacro with-static-resource
   [name path]
