@@ -19,15 +19,22 @@
     :else
     (= (-> organization :hakukohderyhma? boolean) include-hakukohde-groups?)))
 
+(defn- filter-organizations
+  [{:keys [include-organizations? include-hakukohde-groups? perusaste-only? oppilaitos-only?]} organizations]
+  (cond->> organizations
+    true (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
+    perusaste-only? (filter organization-service/is-perusaste-organization?)
+    oppilaitos-only? (filter organization-service/is-oppilaitos-organization?)))
+
 (defn query-organization
-  [organization-service session query include-organizations? include-hakukohde-groups? page-num]
+  [organization-service session query filter-flags page-num]
   (let [page-size 20
         superuser?    (-> session :identity :superuser (boolean))
         organizations (->> (if superuser?
-                             (all-organizations organization-service)
-                             (-> session :identity :organizations vals))
-                           (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
-                           (sort-by #(some (fn [lang] (-> % :name lang not-empty)) [:fi :sv :en])))]
+                                 (all-organizations organization-service)
+                                 (-> session :identity :organizations vals))
+                        (filter-organizations filter-flags)
+                        (sort-by #(some (fn [lang] (-> % :name lang not-empty)) [:fi :sv :en])))]
     (take (inc (* page-size (inc page-num)))
           (if (or (string/blank? query)
                   (< (count query) 2))

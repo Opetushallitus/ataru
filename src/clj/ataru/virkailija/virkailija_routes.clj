@@ -912,13 +912,17 @@
         :query-params [{query :- s/Str nil}
                        organizations :- s/Bool
                        hakukohde-groups :- s/Bool
+                       {perusaste-only :- s/Bool false}
+                       {oppilaitos-only :- s/Bool false}
                        results-page :- s/Int]
         (ok (organization-selection/query-organization
               organization-service
               session
               query
-              organizations
-              hakukohde-groups
+              {:include-organizations?    organizations
+               :include-hakukohde-groups? hakukohde-groups
+               :perusaste-only?           perusaste-only
+               :oppilaitos-only?          oppilaitos-only}
               results-page)))
 
       (api/POST "/user-organization/:oid" {session :session}

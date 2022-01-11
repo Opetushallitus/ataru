@@ -11,9 +11,12 @@
   [resp]
   (-> resp :body (json/parse-string true)))
 
-(defn- org-node->map [org-node] {:name (:nimi org-node)
-                                 :oid  (:oid org-node)
-                                 :type :organization})
+(defn- org-node->map [org-node]
+  {:name               (:nimi org-node)
+   :oid                (:oid org-node)
+   :type               :organization
+   :organisaatiotyypit (:organisaatiotyypit org-node)
+   :oppilaitostyyppi   (:oppilaitostyyppi org-node)})
 
 (defn- group->map [group] {:name            (:nimi group)
                            :oid             (:oid group)
