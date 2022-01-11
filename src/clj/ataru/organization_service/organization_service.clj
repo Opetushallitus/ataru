@@ -95,3 +95,18 @@
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeOrganizationService)
     (->IntegratedOrganizationService nil nil)))
+
+(def oppilaitostyyppi-peruskoulut "oppilaitostyyppi_11#1")
+(def oppilaitostyyppi-peruskouluasteen-erityiskoulut "oppilaitostyyppi_12#1")
+(def oppilaitostyyppi-perus-ja-lukioasteen-koulut "oppilaitostyyppi_19#1")
+
+(defn is-perusaste-organization?
+  [organization]
+  (#{oppilaitostyyppi-peruskoulut
+     oppilaitostyyppi-peruskouluasteen-erityiskoulut
+     oppilaitostyyppi-perus-ja-lukioasteen-koulut}
+   (:oppilaitostyyppi organization)))
+
+(defn is-oppilaitos-organization?
+  [organization]
+  (some #(= "OPPILAITOS" %) (:organisaatiotyypit organization)))

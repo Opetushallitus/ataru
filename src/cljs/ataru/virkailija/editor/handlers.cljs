@@ -1365,7 +1365,7 @@
     {:http {:method               :get
             :path                 (str "/lomake-editori/api/organization/user-organizations?query="
                                        query
-                                       "&organizations=true&hakukohde-groups=false&results-page=10000")
+                                       "&organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000")
             :handler-or-dispatch  :editor/update-organization-query-results-for-select}}))
 
 (reg-event-fx
