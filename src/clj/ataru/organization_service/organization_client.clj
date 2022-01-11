@@ -12,11 +12,14 @@
   (-> resp :body (json/parse-string true)))
 
 (defn- org-node->map [org-node]
-  {:name               (:nimi org-node)
-   :oid                (:oid org-node)
-   :type               :organization
-   :organisaatiotyypit (:organisaatiotyypit org-node)
-   :oppilaitostyyppi   (:oppilaitostyyppi org-node)})
+  (merge
+    {:name (:nimi org-node)
+     :oid  (:oid org-node)
+     :type :organization}
+    (when-let [organisaatiotyypit (:organisaatiotyypit org-node)]
+      {:organisaatiotyypit organisaatiotyypit})
+    (when-let [oppilaitostyyppi (:oppilaitostyyppi org-node)]
+      {:oppilaitostyyppi oppilaitostyyppi})))
 
 (defn- group->map [group] {:name            (:nimi group)
                            :oid             (:oid group)
