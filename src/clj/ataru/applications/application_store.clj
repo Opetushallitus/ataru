@@ -1034,11 +1034,7 @@
                              :henkiloOid (:person-oid %)
                              :asiointikieli (:asiointikieli %)
                              :email (:email %)
-                             :paymentObligation
-                             (case (:status (:payment-obligation %))
-                               "unreviewed" "NOT_CHECKED"
-                               "obligated" "REQUIRED"
-                               "not-obligated" "NOT_REQUIRED"))
+                             :paymentObligations (:payment-obligations %))
                   (queries/yesql-valinta-tulos-service-applications
                     {:haku_oid      haku-oid
                      :hakukohde_oid hakukohde-oid
