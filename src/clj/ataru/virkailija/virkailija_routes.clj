@@ -1136,12 +1136,13 @@
                       {hakukohdeOid :- s/Str nil}
                       {hakemusOids :- [s/Str] nil}
                       {offset :- s/Str nil}]
-        :return {:applications            [{:oid           s/Str
-                                            :hakuOid       s/Str
-                                            :hakukohdeOids [s/Str]
-                                            :henkiloOid    s/Str
-                                            :asiointikieli s/Str
-                                            :email         s/Str}]
+        :return {:applications            [{:oid                  s/Str
+                                            :hakuOid              s/Str
+                                            :hakukohdeOids        [s/Str]
+                                            :henkiloOid           s/Str
+                                            :asiointikieli        s/Str
+                                            :email                s/Str
+                                            :paymentObligations   {s/Keyword s/Str}}]
                  (s/optional-key :offset) s/Str}
         (cond (and (nil? hakuOid) (nil? hakukohdeOid) (nil? (seq hakemusOids)))
               (response/bad-request {:error "No query parameter given"})
