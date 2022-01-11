@@ -1033,15 +1033,20 @@
                              :hakukohdeOids (:hakukohde %)
                              :henkiloOid (:person-oid %)
                              :asiointikieli (:asiointikieli %)
-                             :email (:email %))
+                             :email (:email %)
+                             :paymentObligation
+                             (case (:status (:payment-obligation %))
+                               "unreviewed" "NOT_CHECKED"
+                               "obligated" "REQUIRED"
+                               "not-obligated" "NOT_REQUIRED"))
                   (queries/yesql-valinta-tulos-service-applications
-                   {:haku_oid      haku-oid
-                    :hakukohde_oid hakukohde-oid
-                    :hakemus_oids  (some->> (seq hakemus-oids)
-                                            to-array
-                                            (.createArrayOf (:connection connection) "text"))
-                    :offset        offset}
-                   {:connection connection})))]
+                    {:haku_oid      haku-oid
+                     :hakukohde_oid hakukohde-oid
+                     :hakemus_oids  (some->> (seq hakemus-oids)
+                                             to-array
+                                             (.createArrayOf (:connection connection) "text"))
+                     :offset        offset}
+                    {:connection connection})))]
     (merge {:applications as}
            (when-let [a (first (drop 999 as))]
              {:offset (:oid a)}))))
