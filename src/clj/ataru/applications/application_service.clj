@@ -748,7 +748,7 @@
   [application-service
    session
    params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
-  (ataru.applications.application-service/get-applications-paged application-service session params))
+  (get-applications-paged application-service session params))
 
 (defn remove-review-note [note-id]
   (application-store/remove-review-note note-id))
