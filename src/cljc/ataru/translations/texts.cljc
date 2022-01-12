@@ -461,7 +461,7 @@
    :application-submitted-payment               {:fi "Hakemuksesi on tallentunut"
                                                  :sv "Din ansökan har sparats."
                                                  :en "Your application has been saved."}
-   :application-submitted-payment-text          {:fi "Saat vahvistuksen sähköpostiisi."
+   :application-submitted-payment-text          {:fi "Saat vahvistuksen sähköpostiisi. Siirry nyt maksamaan käsittelymaksu. Pääset maksamaan käsittelymaksun myös sähköpostitse saamasi linkin kautta."
                                                  :sv "Du får en bekräftelse till din epost."
                                                  :en "You will receive a confirmation by email."}
    :payment-button                              {:fi "Siirry maksamaan"
