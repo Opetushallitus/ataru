@@ -422,6 +422,7 @@
     (when-let [application (aac/get-latest-application-by-key
                              organization-service
                              tarjonta-service
+                             suoritus-service
                              audit-logger
                              session
                              application-key)]
@@ -585,6 +586,7 @@
     (when-let [application-id (:id (aac/get-latest-application-by-key
                                     organization-service
                                     tarjonta-service
+                                    suoritus-service
                                     audit-logger
                                     session
                                     application-key))]
@@ -701,12 +703,7 @@
                                          (fn [] (constantly false))
                                          (fn [oids] #(contains? oids %))
                                          (fn [] (constantly true)))
-          opo-authorized-organization-oids (->> (session-orgs/select-organizations-for-rights
-                                                 organization-service
-                                                 session
-                                                 [:opinto-ohjaaja])
-                                             (map :oid)
-                                             set)
+          opo-authorized-organization-oids (aac/organization-oids-for-opo organization-service session)
           ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
                                          (filter (fn [hakukohde]
                                                    (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
