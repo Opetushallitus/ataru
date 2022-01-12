@@ -115,6 +115,15 @@
             (or (seq (:hakukohde application))
                 [{:oid "form"}]))))
 
+(defn organization-oids-for-opo
+  [organization-service session]
+  (->> (session-orgs/select-organizations-for-rights
+         organization-service
+         session
+         [:opinto-ohjaaja])
+    (map :oid)
+    set))
+
 (defn- can-edit-application?
   [rights-by-hakukohde]
   (->> rights-by-hakukohde
@@ -122,18 +131,23 @@
        (true?)))
 
 (defn get-latest-application-by-key
-  [organization-service tarjonta-service audit-logger session application-key]
+  [organization-service tarjonta-service suoritus-service audit-logger session application-key]
   (let [application         (application-store/get-latest-application-by-key application-key)
         rights-by-hakukohde (some->> application
                                      vector
                                      (populate-applications-hakukohteet tarjonta-service)
                                      first
                                      (rights-by-hakukohde organization-service session))]
-    (when (some #(not-empty
-                  (set/intersection
-                   #{:view-applications :edit-applications}
-                   (val %)))
+    (when (or (some #(not-empty
+                       (set/intersection
+                         #{:view-applications :edit-applications}
+                         (val %)))
                 rights-by-hakukohde)
+              (seq
+                (filter-applications-by-lahtokoulu
+                  suoritus-service
+                  (organization-oids-for-opo organization-service session)
+                  [application])))
       (audit-log/log audit-logger
                      {:new       (dissoc application :answers)
                       :id        {:applicationOid application-key}
