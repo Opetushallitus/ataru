@@ -1,15 +1,18 @@
 (ns ataru.applications.application-access-control
   (:require
-   [ataru.log.audit-log :as audit-log]
-   [ataru.organization-service.session-organizations :as session-orgs]
-   [ataru.user-rights :as user-rights]
-   [ataru.applications.application-store :as application-store]
-   [ataru.odw.odw-service :as odw-service]
-   [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-   [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
-   [ataru.valintapiste.valintapiste-service :as valintapiste-service]
-   [ataru.util :as util]
-   [clojure.set :as set]))
+    [ataru.log.audit-log :as audit-log]
+    [ataru.organization-service.session-organizations :as session-orgs]
+    [ataru.user-rights :as user-rights]
+    [ataru.applications.application-store :as application-store]
+    [ataru.odw.odw-service :as odw-service]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
+    [ataru.valintapiste.valintapiste-service :as valintapiste-service]
+    [ataru.util :as util]
+    [clojure.set :as set]
+    [ataru.suoritus.suoritus-service :as suoritus-service]
+    [ataru.applications.suoritus-filter :as suoritus-filter]
+    [clj-time.core :as time]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
@@ -52,6 +55,29 @@
        (filter predicate)
        (map depopulate-application-hakukohteet)
        (map remove-organization-oid)))
+
+(defn- person-oids-for-oppilaitos
+  [suoritus-service oppilaitos-oid]
+  (let [now (time/now)]
+    (->>
+      (suoritus-service/oppilaitoksen-opiskelijat
+        suoritus-service
+        oppilaitos-oid
+        (suoritus-filter/year-for-suoritus-filter now)
+        (suoritus-filter/luokkatasot-for-suoritus-filter))
+      (map :person-oid))))
+
+(defn- authorized-by-person-oid?
+  [authorized-person-oids application]
+  (let [application-person-oid (:person-oid application)]
+    (some #(= application-person-oid %) authorized-person-oids)))
+
+(defn filter-applications-by-lahtokoulu
+  [suoritus-service authorized-organization-oids applications]
+  (let [authorized-person-oids (mapcat (partial person-oids-for-oppilaitos suoritus-service) authorized-organization-oids)]
+    (->> applications
+      (filter (partial authorized-by-person-oid? authorized-person-oids))
+      (map remove-organization-oid))))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
