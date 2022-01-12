@@ -3,11 +3,12 @@
 
 (def ^:private
   oikeus-to-right
-  {{:palvelu "ATARU_EDITORI" :oikeus "CRUD"}         :form-edit
-   {:palvelu "ATARU_HAKEMUS" :oikeus "READ"}         :view-applications
-   {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"}         :edit-applications
-   {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_READ"} :view-valinta
-   {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_CRUD"} :edit-valinta})
+  {{:palvelu "ATARU_EDITORI" :oikeus "CRUD"}           :form-edit
+   {:palvelu "ATARU_HAKEMUS" :oikeus "READ"}           :view-applications
+   {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"}           :edit-applications
+   {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_READ"}   :view-valinta
+   {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_CRUD"}   :edit-valinta
+   {:palvelu "ATARU_HAKEMUS" :oikeus "opinto-ohjaaja"} :opinto-ohjaaja})
 
 (def right-names (vals oikeus-to-right))
 
