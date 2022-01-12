@@ -1430,12 +1430,12 @@
    :eligibility-set-automatically                   {:fi "Hakukelpoisuus asetettu automaattisesti"
                                                      :sv "Ansökningsbehörigheten har satts automatiskt"
                                                      :en "Eligibility set automatically"}
-   :applicants-school-of-departure                  {:fi "Hakeneiden lähtökoulu"
-                                                     :sv "Sökandenas avgångsskola"
-                                                     :en "Applicants' school of departure"}
-   :applicants-classes                              {:fi "Luokka / Luokat"
-                                                     :sv "Klass / Klasser"
-                                                     :en "Class / Classes"}
+   :applicants-school-of-departure                  {:fi "Lähtökoulu"
+                                                     :sv "Avgångsskola"
+                                                     :en "School of departure"}
+   :applicants-classes                              {:fi "Luokka"
+                                                     :sv "Klass"
+                                                     :en "Class"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
                                                      :en "Guardians contact information"}
