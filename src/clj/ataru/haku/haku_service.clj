@@ -10,7 +10,9 @@
     [ataru.hakukohde.hakukohde-store :as hakukohde-store]
     [clj-time.core :as t]
     [clj-time.coerce :as c]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [ataru.tarjonta.haku :as haku]
+    [ataru.user-rights :as user-rights]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -77,16 +79,32 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(->> (cache/get-from get-haut-cache :haut)
-         (remove-if-hakukierros-paattynyt ohjausparametrit-service
-                                          show-hakukierros-paattynyt?)
-         (map (fn [h] (update h :hakukohde vector)))
-         (aac/filter-authorized tarjonta-service
-                                (some-fn (partial aac/authorized-by-form? %)
-                                         (partial aac/authorized-by-tarjoajat? %)))
-         (map (fn [h] (update h :hakukohde first)))
-         handle-hakukohteet)
-   #(->> (cache/get-from get-haut-cache :haut)
+    (fn [organization-oids]
+      (let [haut                          (->> (cache/get-from get-haut-cache :haut)
+                                            (remove-if-hakukierros-paattynyt ohjausparametrit-service
+                                              show-hakukierros-paattynyt?))
+            normal-haut                   (->> haut
+                                            (map (fn [h] (update h :hakukohde vector)))
+                                            (aac/filter-authorized tarjonta-service
+                                              (some-fn (partial aac/authorized-by-form? organization-oids)
+                                                (partial aac/authorized-by-tarjoajat? organization-oids)))
+                                            (map (fn [h] (update h :hakukohde first))))
+            normal-haku?                  (set (map :haku normal-haut))
+            toisen-asteen-yhteishaut-oids (when (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+                                            (->> haut
+                                              (map :haku)
+                                              distinct
+                                              (remove normal-haku?)
+                                              (map (partial tarjonta/get-haku tarjonta-service))
+                                              (filter haku/toisen-asteen-yhteishaku?)
+                                              (map :oid)
+                                              set))
+            toisen-asteen-yhteishaut      (if (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+                                            (filter (comp toisen-asteen-yhteishaut-oids :haku) haut)
+                                            [])]
+        (-> (concat toisen-asteen-yhteishaut normal-haut)
+          handle-hakukohteet)))
+    #(->> (cache/get-from get-haut-cache :haut)
          (remove-if-hakukierros-paattynyt ohjausparametrit-service
                                           show-hakukierros-paattynyt?)
          (map remove-organization-oid)
