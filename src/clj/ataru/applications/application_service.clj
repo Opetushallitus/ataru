@@ -315,34 +315,18 @@
         (assoc application :application-hakukohde-reviews relevant-hakukohde-reviews))
       application)))
 
-(defn- opo-filter
-  [suoritus-service opo-authorized-organization-oids applications authorized-applications]
-  (if (and
-        (some? opo-authorized-organization-oids)
-        (not= (count applications) (count authorized-applications)))
-    (let [authorized-application-oid? (set (map :oid authorized-applications))
-          unauthorized-applications (remove (comp authorized-application-oid? :oid) applications)]
-      (aac/filter-applications-by-lahtokoulu suoritus-service opo-authorized-organization-oids unauthorized-applications))
-    []))
-
 (defn- get-application-list-by-query
     [person-service
+     organization-service
      tarjonta-service
      suoritus-service
-     organization-oid-authorized?
-     opo-authorized-organization-oids
+     session
      query
      sort
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          normally-authorized-applications (aac/filter-authorized
-                                   tarjonta-service
-                                   (some-fn (partial aac/authorized-by-form? organization-oid-authorized?)
-                                            (partial aac/authorized-by-tarjoajat? organization-oid-authorized?))
-                                   applications)
-          opo-authorized-applications (opo-filter suoritus-service opo-authorized-organization-oids applications normally-authorized-applications)
-          authorized-applications (concat normally-authorized-applications opo-authorized-applications)]
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
       {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
                        (application-filtering/filter-applications
                         (populate-applications-with-person-data person-service authorized-applications)
@@ -703,7 +687,6 @@
                                          (fn [] (constantly false))
                                          (fn [oids] #(contains? oids %))
                                          (fn [] (constantly true)))
-          opo-authorized-organization-oids (aac/organization-oids-for-opo organization-service session)
           ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
                                          (filter (fn [hakukohde]
                                                    (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
@@ -740,10 +723,10 @@
                          (->option-answers-query option-answers))]
         (let [applications (get-application-list-by-query
                              person-service
+                             organization-service
                              tarjonta-service
                              suoritus-service
-                             organization-oid-authorized?
-                             opo-authorized-organization-oids
+                             session
                              query
                              sort
                              (add-selected-hakukohteet states-and-filters
