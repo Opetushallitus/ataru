@@ -6,7 +6,8 @@
             [clojure.string :as string]
             [ataru.translations.translation-util :as translations]
             [cljs.core.match :refer-macros [match]]
-            [cljs-time.coerce :as time-coerce]))
+            [cljs-time.coerce :as time-coerce]
+            [ataru.tarjonta.haku :as haku]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -303,6 +304,13 @@
     [(re-frame/subscribe [:editor/used-by-haut-haut])])
   (fn [[haut] [_]]
     (boolean (some :yhteishaku (vals haut)))))
+
+(re-frame/reg-sub
+  :editor/toisen-asteen-yhteishaku?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/used-by-haut-haut])])
+  (fn [[haut] [_]]
+    (some haku/toisen-asteen-yhteishaku? (vals haut))))
 
 (re-frame/reg-sub
   :editor/show-belongs-to-hakukohteet-modal
