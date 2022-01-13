@@ -1034,7 +1034,12 @@
                              :henkiloOid (:person-oid %)
                              :asiointikieli (:asiointikieli %)
                              :email (:email %)
-                             :paymentObligations (:payment-obligations %))
+                             :paymentObligations (zipmap (vec (map (fn [x] (key x)) (:payment-obligations %)))
+                                                         (vec (map (fn [x] (case (val x)
+                                                                             "unreviewed" "NOT_CHECKED"
+                                                                             "obligated" "REQUIRED"
+                                                                             "not-obligated" "NOT_REQUIRED"))
+                                                                   (:payment-obligations %)))))
                   (queries/yesql-valinta-tulos-service-applications
                     {:haku_oid      haku-oid
                      :hakukohde_oid hakukohde-oid
