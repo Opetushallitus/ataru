@@ -23,3 +23,12 @@
                                    (keep oikeus-to-right kayttooikeudet))))
                     (reduce (partial merge-with concat) {}))
                rights))
+
+(defn has-opinto-ohjaaja-right-for-any-organization?
+  [session]
+  (-> session
+    :identity
+    :user-right-organizations
+    :opinto-ohjaaja
+    seq
+    boolean))
