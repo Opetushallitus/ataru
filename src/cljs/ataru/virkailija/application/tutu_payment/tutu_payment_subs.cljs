@@ -2,6 +2,7 @@
   (:require
     [cljs-time.core :as time]
     [cljs-time.format :as format]
+    [clojure.string :as string]
     [re-frame.core :as re-frame]))
 
 ;(re-frame/reg-sub
@@ -66,12 +67,17 @@
 
 (re-frame/reg-sub
  :tutu-payment/inputs-filled?
- (fn [db [_ application-key]]
-
-   ;TODO make sure these fields are validated when the are written
-   (let [{:keys [amount due_date]} (get-in db [:tutu-payment :inputs application-key])]
+ (fn [[_ application-key]]
+   [(re-frame/subscribe [:state-query [:tutu-payment :inputs application-key]])
+    (re-frame/subscribe [:state-query [:tutu-payment :applications application-key :decision :amount]])
+    (re-frame/subscribe [:tutu-payment/duedate-input])])
+ (fn [[{:keys [note amount]} decision-amount due_date]]
+   (let [amount (or amount decision-amount)]
      (and
-        (some? amount)
+        (string? amount)
+        (some? (re-matches #"\d{1,5}([.]\d{1,2})?" amount))
+        (string? note)
+        (not (-> note string/trim string/blank?))
         (some? due_date)))))
 
 (re-frame/reg-sub

@@ -32,7 +32,7 @@
   [Lasku])
 
 (s/defschema TutuLaskuCreate
-  {:application-key s/Str ;TODO validate proper oid-syntax
+  {:application-key s/Str
    :first-name s/Str
    :last-name s/Str
    :email s/Str
@@ -41,3 +41,7 @@
    (s/optional-key :due-date) (s/maybe s/Str)
    (s/optional-key :message) (s/maybe s/Str)
    :index (s/constrained s/Int #(<= 1 % 2) 'valid-tutu-maksu-index)})
+
+(s/defschema TutuProcessingEmailRequest
+  {:application-key s/Str
+   :locale Locale})

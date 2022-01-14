@@ -1,6 +1,26 @@
 @import "vars";
 @import "mixins";
 
+.application-handling__tutu-payment-maksupyynto-box {
+    background-color: white;
+    padding: 6px;
+    border: 1px solid #e6e6e6;
+
+    display: grid;
+    justify-content: space-between;
+
+    line-height: 38px;
+    margin-bottom: 10px;
+
+    grid-template-columns: 1fr 1fr;
+}
+
+.application-handling__tutu-payment-maksupyynto-spinner {
+    grid-column: span 2;
+    margin: auto;
+    font-size: 36px;
+}
+
 .application-handling__tutu-payment-duedate-input {
   font-size: 14px;
   .light;
@@ -31,9 +51,13 @@
     .application-handling__tutu-payment-icon();
 }
 
+.application-handling__tutu-payment--span-2 {
+    grid-column: span 2;
+}
 
 .application-handling__tutu-payment-send-button {
   color: @white;
+  grid-column: span 2;
   border-radius: 3px;
   box-shadow :none;
   padding: 5px;

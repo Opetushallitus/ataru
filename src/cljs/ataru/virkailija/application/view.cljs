@@ -1024,29 +1024,37 @@
     ]
   ))
 
-(defn- send-decision-invoice-button [application-key decision-pay-status]
-  (let [filled?           (subscribe [:tutu-payment/inputs-filled? application-key])
-        enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
+(defn- resend-processing-invoice-button []
+  (let [loading?          (subscribe [:state-query [:request-handles :resend-processing-invoice]])
         can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
     [:button.application-handling__tutu-payment-send-button.application-handling__button
-     {:style {:grid-column "span 2"}
-      :on-click #(dispatch [:tutu-payment/send-decision-invoice application-key])
-      :disabled (not filled?)
-                ;(or (not @enabled?)
-                ;    (not @can-edit?)
-                ;    @settings-visible?)
-      :class    (str (if (and @enabled? @can-edit?)
+     {:on-click #(dispatch [:tutu-payment/resend-processing-invoice])
+      :disabled (or @loading? (not @can-edit?))
+      :class    (str (if (and (not @loading?) @can-edit?)
                        "application-handling__send-information-request-button--enabled"
                        "application-handling__send-information-request-button--disabled")
-                     (if (or @settings-visible? (not @can-edit?))
+                     (if (not @can-edit?)
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     ;[:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
-     [:div (if (= :active decision-pay-status)
-             @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-again-button])
-             @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-send-button]))]
-     [:div.application-handling__resend-modify-application-link-email-text]]))
+     [:div (if @loading?
+             [:span [:i.zmdi.zmdi-spinner.spin]]
+             @(subscribe [:editor/virkailija-translation :tutu-kasittelymaksu-button]))]]))
+
+(defn- send-decision-invoice-button [application-key decision-pay-status]
+  (let [filled?           (subscribe [:tutu-payment/inputs-filled? application-key])
+        loading?          (subscribe [:state-query [:request-handles :send-decision-invoice]])
+        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
+    [:button.application-handling__tutu-payment-send-button.application-handling__button
+     {:on-click #(dispatch [:tutu-payment/send-decision-invoice application-key])
+      :disabled (or @loading? (not @filled?) (not @can-edit?))
+      :class    (if (and @filled? @can-edit? (not @loading?))
+                    "application-handling__send-information-request-button--enabled application-handling__send-information-request-button--cursor-pointer"
+                    "application-handling__send-information-request-button--disabled application-handling__send-information-request-button--cursor-default")
+                     }
+     [:div (cond
+              @loading? [:span [:i.zmdi.zmdi-spinner.spin]]
+              (= :active decision-pay-status) @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-again-button])
+              :else @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-send-button]))]]))
 
 (defn- application-tutu-payment-status [payments]
   (let [;window-visible?      true;(subscribe [:state-query [:application :information-request :visible?]])
@@ -1055,11 +1063,13 @@
                              ;            false))
 
         ;request-state        (subscribe [:state-query [:application :information-request :state]])
+        loading?             @(subscribe [:state-query [:request-handles :fetch-payments]])
         email                @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         application-key      @(subscribe [:state-query [:application :review :application-key]])
         processing-state     @(subscribe [:state-query [:application :review :hakukohde-reviews :form :processing-state]])
         {:keys [processing decision]} payments
 
+        processing-pay-status (keyword (:status processing))
         decision-pay-status  (keyword (:status decision))
         state                (or (keyword processing-state) :unprocessed)
         show-dialog?         (case state
@@ -1101,68 +1111,52 @@
             ]
         (prn "state2" state "show-dialog?" show-dialog?)
 
-        [:div {:style {:backgroundColor "white" :padding "6px" :border "1px solid #e6e6e6"
-                     :display "grid"
-                     :justify-content "space-between"
+        [:div.application-handling__tutu-payment-maksupyynto-box
+        [:span.application-handling__tutu-payment--span-2
+          [:b @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-header])]]
 
-                     :line-height "38px"
-                     :margin-bottom "10px"
-                     ;padding-top "0px"
+        (if loading?
+          [:div.application-handling__tutu-payment-maksupyynto-spinner
+           [:i.zmdi.zmdi-spinner.spin]]
+          [:<>
+            [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-processing-header]) (:processing payments)]
+            (when-let [p (:decision payments)]
+              [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-decision-header]) p])
 
-                     :grid-template-columns "1fr 1fr"}}
-       [:span {:style {:grid-column "span 2"}} [:b @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-header])]]
+            [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-recipient])]
+            [:div email]
 
-       [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-processing-header]) (:processing payments)]
-       (when-let [p (:decision payments)]
-         [single-payment-status-row @(subscribe [:editor/virkailija-translation :tutu-decision-header]) p])
-
-       [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-recipient])]
-       [:div email]
-
-       (when (and amount-label amount-value)
-         [:<>
-           [:div (str amount-label ":")]
-           [:div (cond
-                    (string? amount-value) (str amount-value " €")
-                    (number? amount-value) (str amount-value " €")
-                    (= amount-value :input) [amount-input application-key @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-amount]) false])]
-          ])
-
-       (when (and due-label due-value)
-           [:<>
-             [:div (str due-label ":")]
-             [:div (cond
-                     (number? due-value) (str due-value)
-                     (string? due-value) due-value
-                     (= due-value :input) [date-picker application-key])]])
-
-       (when (cond
-               (= :paid decision-pay-status) false
-               (= :overdue decision-pay-status) false
-               (#{:processing :decision-fee-outstanding} state) true)
+            (when (and amount-label amount-value)
              [:<>
-              [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-message])]
-              [decision-payment-note application-key]
-
-              [send-decision-invoice-button application-key decision-pay-status]
+               [:div (str amount-label ":")]
+               [:div (cond
+                        (string? amount-value) (str amount-value " €")
+                        (number? amount-value) (str amount-value " €")
+                        (= amount-value :input) [amount-input application-key @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-amount]) false])]
               ])
-       ])
-      ;      (if @request-window-open?
-;        (let [container [:div.application-handling__information-request-container]]
-;          (let [request-state (subscribe [:state-query [:application :information-request :state]])]
-;            [:div.application-handling__information-request-header
-;             @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])
-;             (when (nil? @request-state)
-;                   [:i.zmdi.zmdi-close-circle.application-handling__information-request-close-button
-;                    {:on-click #(dispatch [:application/set-information-request-window-visibility false])}])])
-;
-;          )
-;        [:div.application-handling__information-request-show-container-link
-;         [:a
-;          {:on-click #(dispatch [:application/set-information-request-window-visibility true])}
-;          @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])]])
 
-      )
+            (when (and due-label due-value)
+               [:<>
+                 [:div (str due-label ":")]
+                 [:div (cond
+                         (number? due-value) (str due-value)
+                         (string? due-value) due-value
+                         (= due-value :input) [date-picker application-key])]])
+
+            (when (= :active processing-pay-status)
+                 [resend-processing-invoice-button])
+
+            (when (cond
+                   (= :paid decision-pay-status) false
+                   (= :overdue decision-pay-status) false
+                   (#{:processing :decision-fee-outstanding} state) true)
+                 [:<>
+                  [:div @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-message])]
+                  [decision-payment-note application-key]
+
+                  [send-decision-invoice-button application-key decision-pay-status]
+                  ])])
+            ]))
 
 (defn- application-resend-modify-link []
   (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])

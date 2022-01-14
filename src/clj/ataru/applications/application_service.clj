@@ -448,7 +448,7 @@
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
   (payment-triggered-processing-state-change [this session application-key message payment-url state])
   (payment-poller-processing-state-change [this application-key state])
-  (send-modify-application-link-email [this application-key session])
+  (send-modify-application-link-email [this application-key payment-url session])
   (add-review-note [this session note])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
@@ -638,7 +638,7 @@
        audit-logger)))
 
   (send-modify-application-link-email
-    [_ application-key session]
+    [_ application-key payment-url session]
     (when-let [application-id (:id (aac/get-latest-application-by-key
                                     organization-service
                                     tarjonta-service
@@ -646,7 +646,7 @@
                                     session
                                     application-key))]
       (application-store/add-new-secret-to-application application-key)
-      (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id nil)
+      (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url)
       (enrich-virkailija-organizations
        organization-service
        (application-store/add-application-event {:application-key application-key

@@ -17,7 +17,7 @@
           key-state (into {} (map (fn [{:keys [key state]}] [key state]) apps))
           maksut    (maksut-protocol/list-lasku-statuses maksut-service keys)]
 
-      (log/info "Received statuses for" (count maksut) "invoices")
+      (log/debug "Received statuses for" (count maksut) "invoices")
 
       (let [terminal (filter #(some #{(:status %)} '("paid" "overdue")) maksut)
             raw      (map (fn [{:keys [reference status order_id]}]
@@ -33,8 +33,8 @@
                                  :app-status (val key-match)})))
                           terminal)
             items    (filter some? raw)]
-        (log/info "Out of which in terminal-state are" (count terminal) "invoices")
-        (log/info (pr-str "Invoices" items))
+        (log/debug "Out of which in terminal-state are" (count terminal) "invoices")
+        (log/debug (pr-str "Invoices" items))
         (doseq [item items]
           (let [{:keys [reference type app-status maksu-status]} item
                 ;TODO also pass old app-status to the method so that this change is only done if status has not changed in between, as there is no locking
@@ -46,9 +46,9 @@
                                 [:processing "unprocessed" "overdue"] (toggle "processing-fee-overdue")
                                 [:decision   "decision-fee-outstanding" "paid"] (toggle "decision-fee-paid")
                                 [:decision   "decision-fee-outstanding" "overdue"] (toggle "decision-fee-overdue")
-                                :else (log/info "Invalid application&payment state combo, will not do anything" item))
+                                :else (log/debug "Invalid application&payment state combo, will not do anything" item))
                 ]
-              (log/info "Process result:" response)
+              (when response (log/info "Process result:" response))
             )))
 
         ;(prn "items" items)

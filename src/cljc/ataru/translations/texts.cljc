@@ -1986,6 +1986,9 @@
    :tutu-maksupyynto-again-button                   {:fi "Lähetä uudelleen"
                                                      :sv ""
                                                      :en ""}
+   :tutu-kasittelymaksu-button                      {:fi "Uudelleenlähetä käsittelymaksu"
+                                                     :sv ""
+                                                     :en ""}
 
    :tutu-invoice-notfound                           {:fi "Maksun tietoja ei löydy"
                                                      :sv ""

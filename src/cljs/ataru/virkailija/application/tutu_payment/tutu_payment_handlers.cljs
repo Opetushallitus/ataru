@@ -89,6 +89,12 @@
  (fn [db [_ application-key value]]
    (assoc-in db [:tutu-payment :inputs application-key :amount] value)))
 
+(re-frame/reg-event-fx
+ :tutu-payment/handle-processing-invoice
+ (fn [_ [_ response _]]
+   (prn "processing-invoice email" response)
+   {}))
+
 
 (re-frame/reg-event-fx
  :tutu-payment/handle-decision-invoice
@@ -115,6 +121,22 @@
 ;{:db       (assoc-in db [:application :review :hakukohde-reviews] (:hakukohde-reviews response))
 ; :dispatch [:application/review-updated response]})))
 
+(re-frame/reg-event-fx
+ :tutu-payment/resend-processing-invoice
+ (fn [{db :db} _]
+   (let [application (get-in db [:application :selected-application-and-form :application])
+         key (:key application)
+         data {:application-key key
+               :locale (:lang application)}]
+
+     (ajax/http :post
+                "/lomake-editori/api/maksut/resend-maksu-link"
+                :tutu-payment/handle-processing-invoice
+
+                :id :resend-processing-invoice
+                :handler-args  {:application-key key}
+                :override-args {:params data}))
+     {}))
 
 (re-frame/reg-event-fx
  :tutu-payment/send-decision-invoice
@@ -132,194 +154,23 @@
                :amount amount
                :message message
                :due-date due_date
-               :index 2}
-         ]
-     (prn "send-decision-invoice" (:answers application))
-     (prn "data" data)
+               :index 2}]
 
      (ajax/http :post
                 "/lomake-editori/api/maksut/maksupyynto"
                 :tutu-payment/handle-decision-invoice
+
+                :id :send-decision-invoice
                 :handler-args  {:application-key application-key}
-                :override-args {:params data})
-
-;     (http (aget js/config "virkailija-caller-id")
-;            {:method        :post
-;             :url           "http://localhost:8350/lomake-editori/api/maksut/maksupyynto"
-;             ;:url           "http://localhost:9099/maksut/api/lasku-tutu"
-;             ;{:deadline (f/unparse iso-formatter deadline)}
-;             :post-data     data
-;             :handler       [:tutu-payment/handle-decision-invoice]
-;             ;:error-handler [:liitepyynto-information-request/re-fetch-and-show-error application-key]
-;             })
-
-     )
-   {}
-
-   ))
-
-;(re-frame/reg-event-db
-;  :liitepyynto-information-request/hide-deadline-error
-;  (fn [db [_ application-key liitepyynto-key]]
-;    (assoc-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :error?] false)))
-;
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/show-deadline-error
-;  (fn [{db :db} [_ application-key liitepyynto-key]]
-;    {:db             (assoc-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :error?] true)
-;     :dispatch-later [{:ms       5000
-;                       :dispatch [:liitepyynto-information-request/hide-deadline-error
-;                                  application-key
-;                                  liitepyynto-key]}]}))
-
-;(defn- parse-deadline [deadline]
-;  (let [datetime (->> deadline
-;                      (f/parse iso-formatter)
-;                      c/to-default-time-zone)]
-;    [(f/unparse date-formatter datetime)
-;     (f/unparse time-formatter datetime)]))
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/set-deadlines
-;  (fn [{db :db} [_ application-key response]]
-;    (let [last-modified (get-in response [:headers "last-modified"])]
-;      {:db         (reduce (fn [db deadline]
-;                             (let [liitepyynto-key           (keyword (:field-id deadline))
-;                                   [date-string time-string] (parse-deadline (:deadline deadline))]
-;                               (set-deadline db application-key liitepyynto-key date-string time-string last-modified)))
-;                           db
-;                           (:body response))
-;       :dispatch-n (map (fn [deadline]
-;                          [:liitepyynto-information-request/show-deadline
-;                           application-key
-;                           (keyword (:field-id deadline))])
-;                        (:body response))})))
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/set-deadline
-;  (fn [{db :db} [_ application-key response]]
-;    (let [[date-string time-string] (parse-deadline (get-in response [:body :deadline]))]
-;      {:db       (set-deadline-date db application-key date-string)
-;       :dispatch [:liitepyynto-information-request/show-deadline
-;                  application-key
-;                  liitepyynto-key]})))
-
-;(re-frame/reg-event-db
-;  :liitepyynto-information-request/ignore-error
-;  (fn [db _] db))
-;
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/re-fetch-and-show-error
-;  (fn [_ [_ application-key liitepyynto-key _]]
-;    {:liitepyynto-information-request/get-deadline
-;     {:application-key application-key
-;      :liitepyynto-key liitepyynto-key}
-;     :dispatch [:liitepyynto-information-request/show-deadline-error
-;                application-key
-;                liitepyynto-key]}))
-
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/debounced-save-deadline
-;  (fn [_ [_ application-key liitepyynto-key]]
-;    {:dispatch-debounced
-;     {:timeout  500
-;      :id       [:liitepyynto-information-request/save-deadline
-;                 application-key
-;                 liitepyynto-key]
-;      :dispatch [:liitepyynto-information-request/save-deadline
-;                 application-key
-;                 liitepyynto-key]}}))
-;
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/save-deadline
-;  (fn [{db :db} [_ application-key liitepyynto-key]]
-;    (let [date          (get-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :date])
-;          time          (get-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :time])
-;          last-modified (get-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :last-modified])]
-;      (when-let [datetime (try
-;                            (->> (str date " " time)
-;                                 (f/parse-local datetime-formatter)
-;                                 c/to-utc-time-zone)
-;                            (catch js/Error e
-;                              nil))]
-;        {:liitepyynto-information-request/save-deadline
-;         {:application-key application-key
-;          :liitepyynto-key liitepyynto-key
-;          :deadline        datetime
-;          :last-modified   last-modified}}))))
-
-
-;(re-frame/reg-fx
-; :liitepyynto-information-request/get-deadline
-; (fn [{:keys [application-key liitepyynto-key]}]
-;   (http (aget js/config "virkailija-caller-id")
-;         {:method        :get
-;          :url           (str "/lomake-editori/api/applications/" application-key
-;                              "/field-deadline/" (name liitepyynto-key))
-;          :handler       [:liitepyynto-information-request/set-deadline
-;                          application-key
-;                          liitepyynto-key]
-;          :error-handler [:liitepyynto-information-request/unset-deadline
-;                          application-key
-;                          liitepyynto-key]})))
+                :override-args {:params data}))
+   {}))
 
 (re-frame/reg-fx
  :tutu-payment/fetch-payments
  (fn [{:keys [application-key]}]
-   (prn "XXX3 dispatching :tutu-payment/handle-fetch-payments" application-key)
+   (prn "Ladataan hakemukseen liittyviä maksuja")
    (ajax/http :get
               (str "/lomake-editori/api/maksut/list/" application-key)
-              ;[:tutu-payment/handle-fetch-payments application-key]
-              ;:handler-or-dispatch
               :tutu-payment/handle-fetch-payments
-              :handler-args        {:application-key application-key}
-;              (fn [db response handler-args]
-;                (prn "GOT XXX " response handler-args)
-;              )
-              )
-
-
-;   (http (aget js/config "virkailija-caller-id")
-;         {:method        :get
-;          ;:url           (str "/maksut/api/lasku-tutu/" application-key)
-;          :url           (str "/lomake-editori/api/maksut/list/" application-key)
-;          :handler       [:tutu-payment/handle-fetch-payments application-key]
-;          ;:error-handler [:liitepyynto-information-request/unset-deadline application-key]
-;          })
-
-   ))
-
-
-;(re-frame/reg-fx
-; :liitepyynto-information-request/save-deadline
-; (fn [{:keys [application-key liitepyynto-key deadline last-modified]}]
-;   (http (aget js/config "virkailija-caller-id")
-;         {:method        :put
-;          :url           (str "/lomake-editori/api/applications/" application-key
-;                              "/field-deadline/" (name liitepyynto-key))
-;          :post-data     {:deadline (f/unparse iso-formatter deadline)}
-;          :headers       (if (some? last-modified)
-;                           {"If-Unmodified-Since" last-modified}
-;                           {"If-None-Match" "*"})
-;          :handler       [:liitepyynto-information-request/set-deadline
-;                          application-key
-;                          liitepyynto-key]
-;          :error-handler [:liitepyynto-information-request/re-fetch-and-show-error
-;                          application-key
-;                          liitepyynto-key]})))
-;
-;(re-frame/reg-fx
-; :liitepyynto-information-request/delete-deadline
-; (fn [{:keys [application-key liitepyynto-key last-modified]}]
-;   (http (aget js/config "virkailija-caller-id")
-;         {:method        :delete
-;          :url           (str "/lomake-editori/api/applications/" application-key
-;                              "/field-deadline/" (name liitepyynto-key))
-;          :headers       {"If-Unmodified-Since" last-modified}
-;          :handler       [:liitepyynto-information-request/unset-deadline
-;                          application-key
-;                          liitepyynto-key]
-;          :error-handler [:liitepyynto-information-request/re-fetch-and-show-error
-;                          application-key
-;                          liitepyynto-key]})))
+              :id :fetch-payments
+              :handler-args        {:application-key application-key})))
