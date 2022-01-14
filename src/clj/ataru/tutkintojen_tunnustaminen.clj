@@ -216,12 +216,13 @@
                 (with-open [w (new OutputStreamWriter (new PipedOutputStream stdin) "UTF-8")]
                   (xml/emit message w)))
         lftp  (future
-                (sh "lftp" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
+                (sh "lftp" "-d" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
                                      (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
                                      "&& set ftp:ssl-protect-data true"
                                      (format "&& cd %s" (:path config))
                                      (format "&& put /dev/stdin -o %s.part" filename)
                                      (format "&& mv %s.part %s" filename filename))
+                    ">>/tmp/output.txt" "2>&1"
                     :in stdin
                     :env {"LFTP_PASSWORD" (:password config)}))
         r     (try
