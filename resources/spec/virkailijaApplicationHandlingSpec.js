@@ -869,10 +869,9 @@
 
           expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
-      })*/
+      })*
 
-      //TODO Check with Jussi, ^
-      /*describe('selecting to-state and submitting', () => {
+      describe('selecting to-state and submitting', () => {
         before(
           clickElement(() => {
             return massUpdateFromStateSelectionOpened().find(
@@ -896,10 +895,9 @@
         it('closes popup', () => {
           expect(massUpdatePopup().is(':visible')).to.equal(false)
         })
-      })*/
+      })
 
-      //TODO Check with Jussi, ^
-      /*describe('updates applications', () => {
+      describe('updates applications', () => {
         before(
           wait.until(() => {
             return _.includes(applicationHakukohdeStates(), 'Käsitelty')
@@ -912,7 +910,7 @@
             'Käsittelyssä',
           ])
         })
-      })*/
+      })
     })
 
     describe('Mass send information requests', () => {
