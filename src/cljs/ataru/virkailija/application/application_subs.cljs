@@ -1018,6 +1018,6 @@
     (get-in db [:application :classes-of-school-pending-value])))
 
 (re-frame/reg-sub
-  :application/organizations-for-select
+  :application/schools-of-departure-filtered
   (fn [db _]
-    (get-in db [:editor :organizations :select])))
+    (get-in db [:editor :organizations :schools-of-departure-filtered])))
