@@ -219,10 +219,11 @@
                 (sh "lftp" "-d" "-c" (str (format "open --user %s --env-password %s:%d" (:user config) (:host config) (:port config))
                                      (format "&& set ssl:verify-certificate %b" (:verify-certificate config true))
                                      "&& set ftp:ssl-protect-data true"
+                                     "&& set net:timeout 30"
+                                     "&& set net:max-retries 2"
                                      (format "&& cd %s" (:path config))
                                      (format "&& put /dev/stdin -o %s.part" filename)
                                      (format "&& mv %s.part %s" filename filename))
-                    ">>/tmp/output.txt" "2>&1"
                     :in stdin
                     :env {"LFTP_PASSWORD" (:password config)}))
         r     (try
@@ -230,8 +231,12 @@
                 (catch TimeoutException _
                   (future-cancel emit)
                   (future-cancel lftp)
-                  {:exit 1 :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))]
+                  {:exit 1 :out "" :err (str "Writing timed out after " (:timeout-seconds config) " seconds")}))]
     (when-not (zero? (:exit r))
+      (log/error (str "Writing file " filename " failed: "
+                      (:err r)))
+      (log/error (str "Writing file " filename " failed: "
+                      (:out r)))
       (throw (new RuntimeException (str "Writing file " filename " failed: "
                                         (:err r)))))))
 
