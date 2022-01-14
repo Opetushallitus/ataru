@@ -524,7 +524,7 @@
 
 (defn- school-and-class-filters
   []
-  (let [organizations              (subscribe [:application/organizations-for-select])
+  (let [organizations              (subscribe [:application/schools-of-departure-filtered])
         selected-school            (subscribe [:application/pending-selected-school])
         classes-of-selected-school (subscribe [:application/classes-of-selected-school])
         pending-classes-of-school  (subscribe [:application/pending-classes-of-school])
@@ -547,10 +547,9 @@
             [:input
               {:type        "text"
                :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
-               :on-change (fn [event]
-                            (let [value (-> event .-target .-value)]
-                              (when (> (count value) 2)
-                                (dispatch [:application/do-organization-query-for-select value]))))}]
+               :on-change   (fn [event]
+                              (let [value (-> event .-target .-value)]
+                                (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
             [:div.school-filter__selected-filter
               [:span
                {:title (selected-school-name @selected-school @organizations)}
@@ -614,6 +613,7 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(do
+                      (dispatch [:application/do-organization-query-for-select ""])
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
         [:span
