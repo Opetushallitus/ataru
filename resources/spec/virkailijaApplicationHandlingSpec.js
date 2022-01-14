@@ -809,10 +809,7 @@
           })
         )
 
-        //TODO Check this with Jussi. It's likely that the added new review-states cause this problem,
-        //TODO but unsure if it only breaks this test or the actual logic too.
-        //TODO Commenting the test to get code deployed to untuva.
-        /*it('has expected data in applications and popup', () => {
+        it('has expected data in applications and popup', () => {
           expect(applicationHakukohdeStates()).to.eql([
             'Käsittelemättä',
             'Käsittelemättä',
@@ -824,11 +821,10 @@
           expect(massUpdateToStateSelectionClosed().text()).to.equal(
             'Käsittelemättä (2)'
           )
-        })*/
+        })
       })
 
-      //TODO Check with Jussi, ^
-      /*describe('state selection boxes', () => {
+      describe('state selection boxes', () => {
         before(
           clickElement(massUpdateFromStateSelectionClosed),
           clickElement(massUpdateToStateSelectionClosed)
@@ -869,7 +865,7 @@
 
           expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
-      })*
+      })
 
       describe('selecting to-state and submitting', () => {
         before(
