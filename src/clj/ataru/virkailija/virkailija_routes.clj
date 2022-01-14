@@ -505,6 +505,7 @@
         (if-let [resend-event (application-service/send-modify-application-link-email
                                 application-service
                                 application-key
+                                nil
                                 session)]
           (response/ok resend-event)
           (response/bad-request)))
@@ -799,6 +800,28 @@
           (response/ok list)
           (response/not-found
               {:error (str "Hakemukseen " application-key " liittyvien laskujen listaus epäonnistui")})))
+
+      (api/POST "/resend-maksu-link" {session :session}
+        :body [input maksut-schema/TutuProcessingEmailRequest]
+        :return ataru-schema/Event
+        :summary "Uudelleenlähettää maksu-linkin sähköpostilla käyttäjälle"
+        (let [{:keys [application-key locale]} input
+              secret (->> (maksut-protocol/list-laskut-by-application-key maksut-service application-key)
+                          (filter #(= (:status %) :active))
+                          first
+                          :secret)
+              payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret locale)]
+          (log/info "Sending Maksut-link email again")
+          (if secret
+            (if-let [resend-event (application-service/send-modify-application-link-email
+                                   application-service
+                                   application-key
+                                   payment-url
+                                   session)]
+              (response/ok resend-event)
+              (response/bad-request))
+            (response/not-found
+              {:error (str "Hakemukseen " application-key " liittyviä laskuja ei löydy")}))))
 
       (api/POST "/maksupyynto" {session :session}
         :body [input maksut-schema/TutuLaskuCreate]
