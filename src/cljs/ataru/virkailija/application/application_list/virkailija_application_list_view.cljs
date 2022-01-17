@@ -524,18 +524,19 @@
 
 (defn- school-and-class-filters
   []
-  (let [organizations              (subscribe [:application/schools-of-departure-filtered])
+  (let [schools                    (subscribe [:application/schools-of-departure])
+        filtered-schools           (subscribe [:application/schools-of-departure-filtered])
         selected-school            (subscribe [:application/pending-selected-school])
         classes-of-selected-school (subscribe [:application/classes-of-selected-school])
         pending-classes-of-school  (subscribe [:application/pending-classes-of-school])
-        get-school-name             (fn [school]
-                                      (some #(-> (:name school) %) [:fi :sv :en]))
-        selected-school-name        (fn [school orgs]
-                                      (->> orgs
-                                           (filter #(= school (:oid %)))
-                                           (first)
-                                           (get-school-name)))
-        set-school-filter           (fn [org]
+        get-school-name            (fn [school]
+                                     (some #(-> (:name school) %) [:fi :sv :en]))
+        selected-school-name       (fn [school orgs]
+                                     (->> orgs
+                                          (filter #(= school (:oid %)))
+                                          (first)
+                                          (get-school-name)))
+        set-school-filter          (fn [org]
                                       (dispatch [:application/set-school-filter (:oid org)]))]
     (fn []
       [:div.application-handling__popup-column.application-handling__popup-column--large
@@ -552,16 +553,17 @@
                                 (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
             [:div.school-filter__selected-filter
               [:span
-               {:title (selected-school-name @selected-school @organizations)}
-                (selected-school-name @selected-school @organizations)]
+               {:title (selected-school-name @selected-school @filtered-schools)}
+                (selected-school-name @selected-school @filtered-schools)]
+             (when (not= (count @schools) 1)
               [:button.virkailija-close-button.application-handling__filters-popup-close-button
                {:on-click #(dispatch [:application/remove-selected-school-pending nil])}
-               [:i.zmdi.zmdi-close]]])
+               [:i.zmdi.zmdi-close]])])
            (when (and (not @selected-school)
-                      (> (count @organizations) 0))
+                      (> (count @filtered-schools) 0))
              [:div.school-filter__options
               {:tab-index -1}
-              (for [org @organizations]
+              (for [org @filtered-schools]
                 [:div.school-filter__option
                  {:on-click #(set-school-filter org)
                   :on-key-up (fn [event]
@@ -613,7 +615,7 @@
       [:span.application-handling__filters
        [:a
         {:on-click #(do
-                      (dispatch [:application/do-organization-query-for-select ""])
+                      (dispatch [:application/do-organization-query-for-schools-of-departure ""])
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
         [:span
