@@ -1360,7 +1360,7 @@
             :handler-or-dispatch :editor/update-organization-query-results}}))
 
 (reg-event-fx
-  :application/do-organization-query-for-select
+  :application/do-organization-query-for-schools-of-departure
   (fn [{db :db} [_]]
     (when (empty? (get-in db [:editor :organizations :select]))
       {:http {:method              :get
@@ -1373,10 +1373,15 @@
   (fn [{db :db} [_ results]]
     {:db (assoc-in db [:editor :organizations :matches] results)}))
 
-(reg-event-db
+(reg-event-fx
   :editor/update-organization-query-results-for-schools-of-departure
-  (fn [db [_ results]]
-    (assoc-in db [:editor :organizations :schools-of-departure] results)))
+  (fn [{db :db} [_ results]]
+    (if (= (count results) 1)
+      {:db (-> db
+               (assoc-in [:editor :organizations :schools-of-departure] results)
+               (assoc-in [:editor :organizations :schools-of-departure-filtered] results))
+       :dispatch [:application/set-school-filter (:oid (first results))]}
+      {:db (assoc-in db [:editor :organizations :schools-of-departure] results)})))
 
 (defn- filter-organizations
   [orgs query lang]
