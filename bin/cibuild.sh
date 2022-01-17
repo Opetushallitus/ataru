@@ -171,15 +171,14 @@ run-tests-and-create-uberjar() {
 }
 
 run-browser-tests() {
-    echo "NOT Starting browser test run"
-    #echo "Starting browser test run"
-    #clean
-    #npm-dependencies
-    #nuke-test-db
-    #run-migrations
-    #compile-less
-    #build-clojurescript
-    #test-browser
+    echo "Starting browser test run"
+    clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript
+    test-browser
 }
 
 run-spec-and-mocha-tests() {
@@ -197,15 +196,14 @@ run-spec-and-mocha-tests() {
 }
 
 run-browser-tests-cypress() {
-    echo "NOT Starting cypress browser test run"
-    #echo "Starting cypress browser test run"
-    #clean
-    #npm-dependencies
-    #nuke-test-db
-    #run-migrations
-    #compile-less
-    #build-clojurescript
-    #test-browser-cypress
+    echo "Starting cypress browser test run"
+    clean
+    npm-dependencies
+    nuke-test-db
+    run-migrations
+    compile-less
+    build-clojurescript
+    test-browser-cypress
 }
 
 command="$1"
