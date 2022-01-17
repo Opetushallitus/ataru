@@ -1013,6 +1013,11 @@
     (get-in db [:application :classes-of-school-pending-value])))
 
 (re-frame/reg-sub
+  :application/schools-of-departure
+  (fn [db _]
+    (get-in db [:editor :organizations :schools-of-departure])))
+
+(re-frame/reg-sub
   :application/schools-of-departure-filtered
   (fn [db _]
     (get-in db [:editor :organizations :schools-of-departure-filtered])))
