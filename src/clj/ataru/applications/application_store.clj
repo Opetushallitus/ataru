@@ -505,7 +505,8 @@
 
 (defn get-application-heading-list
   [query sort]
-  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+  (prn query)
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db true)}]
     (let [db-query (query->db-query connection query sort)]
       (try
         (jdbc/query connection db-query)

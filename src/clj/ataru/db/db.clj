@@ -1,18 +1,23 @@
 (ns ataru.db.db
   (:require [ataru.config.core :refer [config config-name]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as string]
-            [hikari-cp.core :refer :all]
+            [hikari-cp.core :refer [make-datasource]]
+            [environ.core :refer [env]]
             [ataru.db.extensions]
-            [pandect.algo.sha256 :refer :all]
-            [taoensso.timbre :as log])
-  (:import [java.security SecureRandom]))
+            [clojure.string :as string]
+            [taoensso.timbre :as log]))
+
+(defn- read-only-query? [query]
+  (not (string/ends-with? query "!")))
+
+(defn- ataru-editori? []
+  (= "ataru-editori" (:app env)))
 
 (defn- datasource-spec
   "Merge configuration defaults and db config. Latter overrides the defaults"
-  [ds-key]
+  [ds-key read-only?]
   (merge {:auto-commit        false
-          :read-only          false
+          :read-only          read-only?
           :connection-timeout 30000
           :validation-timeout 5000
           :idle-timeout       600000
@@ -27,17 +32,25 @@
 
 (defonce datasource (atom {}))
 
-(defn get-datasource [ds-key]
-  (swap! datasource (fn [datasources]
-                      (if (not (contains? datasources ds-key))
-                        (let [ds (make-datasource (datasource-spec ds-key))]
-                          (assoc datasources ds-key ds))
-                        datasources)))
-  (ds-key @datasource))
+(defn get-datasource
+  ([ds-key]
+   (get-datasource ds-key false))
+  ([ds-key read-only?]
+   (when (not read-only?)
+     (log/warn (str "Not read-only query: " (nth (.getStackTrace (Thread/currentThread)) 3) (nth (.getStackTrace (Thread/currentThread)) 4))))
+   (let [ds-key (if read-only?
+                  :db-read-only
+                  ds-key)]
+     (swap! datasource (fn [datasources]
+                         (if (not (contains? datasources ds-key))
+                           (let [ds (make-datasource (datasource-spec ds-key read-only?))]
+                             (assoc datasources ds-key ds))
+                           datasources)))
+     (ds-key @datasource))))
 
-(defn get-next-exception-or-original [original-exception]
+(defn- get-next-exception-or-original [original-exception]
   (try (.getNextException original-exception)
-       (catch IllegalArgumentException iae
+       (catch IllegalArgumentException _
          original-exception)))
 
 (defn clear-db! [ds-key schema-name]
@@ -51,11 +64,11 @@
                                      "check that you run with correct mode. "
                                      "Current config name is " (config-name)))))))
 
+(defn use-read-only-datasource? [query]
+  (and (read-only-query? query)
+       (ataru-editori?)))
+
 (defmacro exec [ds-key query params]
-  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
+  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key (use-read-only-datasource? (-> ~query meta :name)))}]
      (~query ~params {:connection connection#})))
 
-(defmacro exec-all [ds-key query-list]
-  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
-     (last (for [[query# params#] (partition 2 ~query-list)]
-             (query# params# {:connection connection#})))))
