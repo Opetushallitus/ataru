@@ -11,6 +11,7 @@ describe('Hakemuksen tietojen tarkastelu', () => {
       cy.fixture('hakemukset.json').as('hakemuslistaus')
       cy.fixture('lahtokoulu.json').as('lahtokoulu')
       cy.fixture('lahtokoulut.json').as('lahtokoulut')
+      cy.fixture('lahtokoulunLuokat.json').as('luokat')
 
       cy.server()
       cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
@@ -36,6 +37,11 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         '/lomake-editori/api/applications/list',
         '@hakemuslistaus'
       ).as('listApplications')
+      cy.route(
+        'GET',
+        '/lomake-editori/api/applications/oppilaitos/1.2.3.4.6/luokat',
+        '@luokat'
+      )
     })
 
     afterEach(() => {
@@ -89,10 +95,17 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.get('#school-search').should('not.exist')
       })
 
-      it('Lähtökoulu valinnan voi poistaa', () => {
+      it('Hakijoiden luokat voi valita lähtökoulusta', () => {
+        cy.get('.multi-option-dropdown__dropdown').click()
+        cy.get('li.multi-option-dropdown__option').its('length').should('be', 4)
+      })
+
+      it('Lähtökoulu valinnan voi poistaa jolloin myös valittavat luokat poistuu', () => {
         cy.get('#remove-selected-school-button').click()
         cy.get('#selected-school').should('not.exist')
         cy.get('#school-search').should('exist')
+        cy.get('.multi-option-dropdown__dropdown').click()
+        cy.get('li.multi-option-dropdown__option').should('not.exist')
       })
 
       it('Hakemusten rajauksessa on valittu lähtökouluksi käyttäjän ainoa organisaatio', () => {
