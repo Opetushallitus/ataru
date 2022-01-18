@@ -23,6 +23,16 @@
       (not-empty tutu-form)
       (= tutu-form current-form)))))
 
+(re-frame.core/reg-sub
+ :tutu-payment/tutu-form-selected?
+ (fn [db _]
+   (let [selected-form (get-in db [:application :selected-form-key])
+         tutu-form    (aget js/config "tutu-payment-form-key")]
+
+     (and
+      (not-empty tutu-form)
+      (= tutu-form selected-form)))))
+
 (re-frame/reg-sub
  :tutu-payment/note-input
  (fn [db [_ application-key]]
