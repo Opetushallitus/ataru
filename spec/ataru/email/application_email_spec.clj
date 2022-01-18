@@ -55,6 +55,27 @@
         (should= true (str/includes? body "Tai käytä: <a href='https://hampaat-liitteena.fi'>https://hampaat-liitteena.fi</a>"))
       ))
 
+  (it "creates email with payment-url"
+      (let [template-name-fn (constantly "templates/email_submit_confirmation_template_fi.html")
+            application-attachment-reviews []
+            payment-url "https://localhost/maksut?secret=foobar"
+            get-attachment-type (fn [attachment-type] {:fi attachment-type
+                                                       :sv attachment-type
+                                                       :en attachment-type})
+            [email] (email/create-emails email/edit-email-subjects
+                                         template-name-fn
+                                         fixtures/application
+                                         fixtures/tarjonta-info
+                                         fixtures/form
+                                         application-attachment-reviews
+                                         fixtures/email-template
+                                         get-attachment-type
+                                         false
+                                         payment-url)
+            body    (:body email)]
+        (should= true (str/includes? body (str "href=\"" payment-url "\"")))
+      ))
+
   (it "creates email with regular attachment notifications"
       (let [template-name-fn (constantly "templates/email_submit_confirmation_template_fi.html")
             application-attachment-reviews [{:attachment-key "9b00783c-5f4e-4ef9-bca4-c2e57b443d3c"}
