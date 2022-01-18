@@ -547,17 +547,20 @@
            (if (not @selected-school)
             [:input
               {:type        "text"
+               :id          "school-search"
                :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
                :on-change   (fn [event]
                               (let [value (-> event .-target .-value)]
                                 (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
             [:div.school-filter__selected-filter
               [:span
-               {:title (selected-school-name @selected-school @filtered-schools)}
+               {:title (selected-school-name @selected-school @filtered-schools)
+                :id    "selected-school"}
                 (selected-school-name @selected-school @filtered-schools)]
              (when (not= (count @schools) 1)
               [:button.virkailija-close-button.application-handling__filters-popup-close-button
-               {:on-click #(dispatch [:application/remove-selected-school-pending nil])}
+               {:id       "remove-selected-school-button"
+                :on-click #(dispatch [:application/remove-selected-school-pending nil])}
                [:i.zmdi.zmdi-close]])])
            (when (and (not @selected-school)
                       (> (count @filtered-schools) 0))
@@ -614,7 +617,8 @@
     (fn []
       [:span.application-handling__filters
        [:a
-        {:on-click #(do
+        {:id       "open-application-filters"
+         :on-click #(do
                       (dispatch [:application/do-organization-query-for-schools-of-departure ""])
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}

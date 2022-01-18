@@ -328,7 +328,7 @@
     (count decimals)))
 
 (defn- format-range [value]
-  (clojure.string/replace (clojure.string/trim (or value "")) "." ","))
+  (string/replace (string/trim (or value "")) "." ","))
 
 (defn valid-range? [value decimals]
                      (let [clean (format-range value)]
@@ -1385,9 +1385,10 @@
 
 (defn- filter-organizations
   [orgs query lang]
-  (let [pred (fn [org]
-               (or (clojure.string/includes? (str "" (get-in org (:name lang))) query)
-                   (clojure.string/includes? (str "" (:oid org)) query)))]
+  (let [query-lower-case (string/lower-case query)
+        pred             (fn [org]
+                           (or (string/includes? (string/lower-case (str "" (get-in org (:name lang)))) query-lower-case)
+                               (string/includes? (str "" (:oid org)) query)))]
     (filter pred orgs)))
 
 (reg-event-db
@@ -1405,7 +1406,7 @@
             :path                (str "/lomake-editori/api/organization/user-organization/"
                                       oid
                                       "?rights="
-                                      (clojure.string/join "&rights=" (map name user-rights/right-names)))
+                                      (string/join "&rights=" (map name user-rights/right-names)))
             :handler-or-dispatch :editor/update-selected-organization}
      :db   (assoc-in db [:editor :user-info :selected-organization :rights] user-rights/right-names)}))
 
@@ -1443,7 +1444,7 @@
               :path                (str "/lomake-editori/api/organization/user-organization/"
                                         (-> db :editor :user-info :selected-organization :oid)
                                         (when rights
-                                          (str "?rights=" (clojure.string/join "&rights=" rights))))
+                                          (str "?rights=" (string/join "&rights=" rights))))
               :handler-or-dispatch :editor/update-selected-organization}})))
 
 (reg-event-db
