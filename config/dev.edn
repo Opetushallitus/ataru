@@ -4,7 +4,7 @@
                    :username      "oph"
                    :password      "oph"
                    :server-name   "localhost"
-                   :port-number   15433
+                   :port-number   5433
                    :schema        "public"}
  :aws             {:region "eu-west-1"
                    :henkilo-modified-queue {:enabled?      false
