@@ -8,7 +8,7 @@
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.translations.texts :refer [email-default-texts tutu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -183,7 +183,7 @@
     (koodisto/get-attachment-type-label koodisto-cache attachment-type)))
 
 (defn create-emails
-  [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian?]
+  [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url]
    (let [now                             (t/now)
          answers-by-key                  (-> application :answers util/answers-by-key)
          hakukohteet                     (:hakukohteet tarjonta-info)
@@ -232,6 +232,7 @@
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
                                           :application-url            application-url
+                                          :payment-url                payment-url
                                           :content                    content
                                           :content-ending             content-ending
                                           :attachments-without-answer attachments-without-answer
@@ -247,22 +248,23 @@
        render-file-fn)))
 
 (defn- create-emails-by-gathering-data
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian? payment-url]
   (let [application                     (get-application application-id)
         tarjonta-info                   (get-tarjonta-info koodisto-cache tarjonta-service organization-service ohjausparametrit-service application)
         raw-form                        (forms/fetch-by-id (:form application))
         application-attachment-reviews  (application-store/get-application-attachment-reviews (:key application))
         email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form)))
         get-attachment-type             (get-attachment-type-fn koodisto-cache)]
-    (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian?)))
+    (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url)))
 
-(defn create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+(defn create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian? payment-url]
   (create-emails-by-gathering-data koodisto-cache
                  tarjonta-service organization-service ohjausparametrit-service
                  nil
                  submit-email-template-filename
                  application-id
-                 guardian?))
+                 guardian?
+                 payment-url))
 
 (defn create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
   (create-emails-by-gathering-data koodisto-cache
@@ -272,7 +274,8 @@
                        (name %)
                        ".html")
                  application-id
-                 guardian?))
+                 guardian?
+                 nil))
 
 (defn create-refresh-secret-email
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id]
@@ -281,5 +284,29 @@
                  refresh-secret-email-subjects
                  #(str "templates/email_refresh_secret_template_" (name %) ".html")
                  application-id
-                 false))
+                 false
+                 nil))
+
+(defn create-tutu-decision-email
+  [application-id message payment-url]
+  (let [application                     (application-store/get-application application-id)
+        template-name                   (fn [_] "templates/tutu_decision_email_template.html")
+        lang                            (keyword (:lang application))
+        applier-recipients              (->> (:answers application)
+                                             (filter #(= "email" (:key %)))
+                                             (map :value))
+        translations                    (reduce-kv #(assoc %1 %2 (get %3 lang))
+                                                   {}
+                                                   tutu-decision-email)
+        template-params                 (merge
+                                         {:application-oid            (:key application)
+                                          :payment-url                payment-url
+                                          :message                    (->safe-html message)
+                                          :decision-info-email        "recognition@oph.fi"}
+                                         translations)
+        subject                         (str (:subject-prefix translations) ": " (:header translations))
+        applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+        render-file-fn                  (fn [template-params]
+                                          (selmer/render-file (template-name lang) template-params))]
+    (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
 

@@ -19,7 +19,8 @@
                                        application-attachment-reviews
                                        fixtures/email-template
                                        get-attachment-type
-                                       false)
+                                       false
+                                       nil)
             body    (:body email)]
         (should= ["tiina@testaaja.fi"] (:recipients email))
         (should= (:fi email/edit-email-subjects) (:subject email))
@@ -43,7 +44,8 @@
                                          application-attachment-reviews
                                          fixtures/email-template
                                          get-attachment-type
-                                         false)
+                                         false
+                                         nil)
             body    (:body email)]
         (should= true (str/includes? body "Lähetä liite osoitteeseen: Toimisto, Elintie 5, 00100 HELSINKI"))
         (should= true (str/includes? body "Palautettava viimeistään 28.2.2022 klo 00:00"))
@@ -68,7 +70,8 @@
                                          application-attachment-reviews
                                          fixtures/email-template
                                          get-attachment-type
-                                         false)
+                                         false
+                                         nil)
             body    (:body email)]
           (should= true (str/includes? body "Upload liite"))
           (should= true (str/includes? body "Perinteinen liitepyyntö"))))
@@ -89,7 +92,8 @@
                                        application-attachment-reviews
                                        fixtures/email-template
                                        get-attachment-type
-                                       false)
+                                       false
+                                       nil)
           body    (:body email)]
       (should= false (str/includes? body "Upload liite"))
       (should= true (str/includes? body "Perinteinen liitepyyntö")))))
