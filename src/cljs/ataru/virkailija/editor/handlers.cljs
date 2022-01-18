@@ -19,7 +19,9 @@
             [ataru.user-rights :as user-rights]
             [ataru.cljs-util :as cu]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff])
+            [ataru.virkailija.editor.form-diff :as form-diff]
+            [ataru.virkailija.editor.db :as db]
+            [ataru.virkailija.editor.demo.handlers])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -32,12 +34,6 @@
 
 (reg-event-db :editor/get-user-info get-user-info)
 
-(defn- current-form-content-path
-  [db & further-path]
-  (-> [:editor :forms (-> db :editor :selected-form-key) :content]
-      (concat further-path)
-      (flatten)))
-
 (defn- fold [db id]
   (assoc-in db [:editor :ui id :folded?] true))
 
@@ -45,7 +41,7 @@
   (assoc-in db [:editor :ui id :folded?] false))
 
 (defn fold-all [db]
-  (->> (get-in db (vec (current-form-content-path db)))
+  (->> (get-in db (vec (db/current-form-content-path db)))
        (reduce collect-ids [])
        (reduce fold db)))
 
@@ -59,14 +55,14 @@
 (reg-event-db
   :editor/remove-dropdown-option
   (fn [db [_ & path]]
-    (let [option-path (current-form-content-path db [path])]
+    (let [option-path (db/current-form-content-path db [path])]
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/add-dropdown-option
   (fn [db [_ & path]]
-    (let [dropdown-path (current-form-content-path db [path :options])
+    (let [dropdown-path (db/current-form-content-path db [path :options])
           component     (component/dropdown-option nil)]
       (-> db
           (update-in dropdown-path into [component])
@@ -75,14 +71,14 @@
 (reg-event-db
   :editor/remove-text-field-option
   (fn [db [_ path]]
-    (let [option-path (current-form-content-path db [path])]
+    (let [option-path (db/current-form-content-path db [path])]
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/add-text-field-option
   (fn [db [_ path]]
-    (let [text-field-path (current-form-content-path db [path :options])
+    (let [text-field-path (db/current-form-content-path db [path :options])
           component       (component/text-field-option)]
       (-> db
           (update-in text-field-path into [component])
@@ -91,38 +87,42 @@
 (reg-event-db
   :editor/poista-tekstikentän-arvon-perusteella-optio
   (fn [db [_ path]]
-    (let [option-path (current-form-content-path db [path])]
+    (let [option-path (db/current-form-content-path db [path])]
       (-> db
           (update-in (drop-last option-path) util/remove-nth (last option-path))))))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-optio
   (fn [db [_ path]]
-    (let [text-field-path (current-form-content-path db [path :options])
+    (let [text-field-path (db/current-form-content-path db [path :options])
           component       (component/text-field-conditional-option)]
       (-> db
           (update-in text-field-path into [component])
           (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
 
-(defn text-field-section-visibility-condition [section-name]
-  {:section-name section-name
-   :condition {:comparison-operator "<"}})
+(defn- add-section-visibility-condition
+  [db path condition]
+  (let [text-field-path (db/current-form-content-path db [path :section-visibility-conditions])
+        hideable-form-sections @(subscribe [:editor/current-lomakeosiot])
+        default-hidden-section-name (-> hideable-form-sections first :id)
+        section-visibility (merge condition {:section-name default-hidden-section-name})]
+    (-> db
+      (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
+      (update-in (drop-last text-field-path) set-non-koodisto-option-values))))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
-    (let [text-field-path (current-form-content-path db [path :section-visibility-conditions])
-          hideable-form-sections @(subscribe [:editor/current-lomakeosiot])
-          default-hidden-section-name (-> hideable-form-sections first :id)
-          section-visibility (text-field-section-visibility-condition default-hidden-section-name)]
-      (-> db
-          (update-in text-field-path (fnil #(conj %1 %2) []) section-visibility)
-          (update-in (drop-last text-field-path) set-non-koodisto-option-values)))))
+    (add-section-visibility-condition
+      db
+      path
+      {:condition {:comparison-operator "<"
+                   :data-type           "int"}})))
 
 (reg-event-db
   :editor/lisää-tekstikentän-arvon-perusteella-piilotettavan-osion-nimi
   (fn [db [_ path option-index value]]
-    (let [section-name-path (current-form-content-path db [path option-index :section-name])]
+    (let [section-name-path (db/current-form-content-path db [path option-index :section-name])]
       (assoc-in db
                  section-name-path
                  value))))
@@ -130,16 +130,58 @@
 (reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-operaattori
   (fn [db [_ path option-index value]]
-    (let [condition-path (current-form-content-path db [path option-index :condition])]
+    (let [condition-path (db/current-form-content-path db [path option-index :condition])]
       (update-in db
                  condition-path
                  (fn [condition]
                    (assoc condition :comparison-operator value))))))
 
 (reg-event-db
+  :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
+  (fn [db [_ path]]
+    (let [field                      @(subscribe [:editor/get-component-value path])
+          default-answer-compared-to (some-> field :options first :value)
+          condition                  {:condition {:comparison-operator "="
+                                                  :data-type           "str"
+                                                  :answer-compared-to  default-answer-compared-to}}]
+      (add-section-visibility-condition
+        db
+        path
+        condition))))
+
+(reg-event-db
+  :editor/remove-visibility-condition
+  (fn [db [_ path visibility-condition-index]]
+    (let [visibility-conditions-path (db/current-form-content-path db [path :section-visibility-conditions])]
+      (update-in db visibility-conditions-path util/remove-nth visibility-condition-index))))
+
+(reg-event-db
+  :editor/set-visibility-condition-value
+  (fn [db [_ component-path visibility-condition-index value]]
+    (let [path (db/current-form-content-path
+                 db
+                 [component-path
+                  :section-visibility-conditions
+                  visibility-condition-index
+                  :condition
+                  :answer-compared-to])]
+      (assoc-in db path value))))
+
+(reg-event-db
+  :editor/set-visibility-condition-section
+  (fn [db [_ component-path visibility-condition-index value]]
+    (let [path (db/current-form-content-path
+                 db
+                 [component-path
+                  :section-visibility-conditions
+                  visibility-condition-index
+                  :section-name])]
+      (assoc-in db path value))))
+
+(reg-event-db
   :editor/aseta-lisäkysymys-arvon-perusteella-vertailuarvo
   (fn [db [_ path option-index value]]
-    (let [condition-path (current-form-content-path db [path option-index :condition])]
+    (let [condition-path (db/current-form-content-path db [path option-index :condition])]
       (update-in db
                  condition-path
                  (fn [condition]
@@ -150,19 +192,19 @@
 (reg-event-db
   :editor/set-ordered-by-user
   (fn [db [_ value & path]]
-    (let [component-path (current-form-content-path db [path])]
+    (let [component-path (db/current-form-content-path db [path])]
       (update-in db component-path assoc :koodisto-ordered-by-user (not value)))))
 
 (reg-event-db
   :editor/set-dropdown-option-value
   (fn [db [_ value & path]]
-    (let [label-path (current-form-content-path db [path])]
+    (let [label-path (db/current-form-content-path db [path])]
       (assoc-in db label-path value))))
 
 (reg-event-db
   :editor/set-dropdown-option-selection-limit
   (fn [db [_ value & path]]
-    (let [label-path (current-form-content-path db [path])]
+    (let [label-path (db/current-form-content-path db [path])]
       (assoc-in db label-path value))))
 
 (defn- swap-vector [v i1 i2]
@@ -173,14 +215,14 @@
   (fn [db [_ path index]]
     (if (= 0 index)
       db
-      (let [options-path (current-form-content-path db [path :options])]
+      (let [options-path (db/current-form-content-path db [path :options])]
         (-> db
             (update-in options-path swap-vector index (dec index)))))))
 
 (reg-event-db
   :editor/move-option-down
   (fn [db [_ path index]]
-    (let [options-path    (current-form-content-path db [path :options])
+    (let [options-path    (db/current-form-content-path db [path :options])
           options         (get-in db options-path)
           is-last-option? (= (inc index) (count options))]
       (if is-last-option?
@@ -193,7 +235,7 @@
   (fn [{db :db} [_ uri path allow-invalid?]]
     (when-let [koodisto (some #(when (= uri (:uri %)) %) koodisto-whitelist/koodisto-whitelist)]
       (let [koodisto      (assoc koodisto :allow-invalid? (boolean allow-invalid?))
-            dropdown-path (current-form-content-path db [path])
+            dropdown-path (db/current-form-content-path db [path])
             id            (get-in db (concat dropdown-path [:id]))]
         {:db       (update-in db dropdown-path assoc
                               :koodisto-source koodisto
@@ -202,7 +244,7 @@
 
 (defn- update-modified-by
   [db path]
-  (let [metadata-path (current-form-content-path db (conj (first path) :metadata :modified-by))
+  (let [metadata-path (db/current-form-content-path db (conj (first path) :metadata :modified-by))
         user-info     (-> db :editor :user-info)]
     (assoc-in db metadata-path {:oid  (:oid user-info)
                                 :name (:name user-info)
@@ -210,24 +252,32 @@
 
 (defn add-validator
   [db [_ validator & path]]
-  (let [content-path (current-form-content-path db [path :validators])]
+  (let [content-path (db/current-form-content-path db [path :validators])]
     (-> db
         (update-in content-path (fn [validators]
-                                  (when-not (some #(= % validator) validators)
-                                    (conj validators validator))))
+                                  (if-not (some #(= % validator) validators)
+                                    (conj validators validator)
+                                    validators)))
         (update-modified-by path))))
 
 (reg-event-db :editor/add-validator add-validator)
 
+(defn- remove-selection-limits-from-options
+  [db path]
+  (let [content-path (db/current-form-content-path db path)
+        remove-selection-limit (fn [option] (dissoc option :selection-limit))]
+    (update-in db content-path (fn [field] (update field :options (partial mapv remove-selection-limit))))))
+
 (reg-event-fx
   :editor/set-selection-group-id
   (fn [{db :db} [_ selection-group-id & path]]
-    (let [content-path (current-form-content-path db [path :params])]
+    (let [content-path (db/current-form-content-path db [path :params])]
       {:db         (-> db
                        (update-in content-path (fn [params]
                                                  (if selection-group-id
                                                    (assoc params :selection-group-id selection-group-id)
                                                    (dissoc params :selection-group-id))))
+                       (remove-selection-limits-from-options path)
                        (update-modified-by path))
        :dispatch-n [(when selection-group-id
                       [:editor/set-required-to-all-in-path path])]})))
@@ -237,8 +287,8 @@
   (fn [{db :db} [_ & path]]
     (let [parent              (vec (drop-last 2 (flatten path)))
           is-option?          (= :options (last (drop-last 1 (flatten path))))
-          is-wrapper-element? (= "wrapperElement" (get-in db (current-form-content-path db [path :fieldClass])))
-          content-path        (current-form-content-path db [path :validators])
+          is-wrapper-element? (= "wrapperElement" (get-in db (db/current-form-content-path db [path :fieldClass])))
+          content-path        (db/current-form-content-path db [path :validators])
           validators          (set (get-in db content-path))]
       {:db         db
        :dispatch-n [(when-not (or is-option?
@@ -249,12 +299,12 @@
                       [:editor/set-required-to-all-in-path parent])]})))
 
 (defn any-child-is-selection-limit? [db path]
-  (let [field (get-in db (current-form-content-path db [path]))]
+  (let [field (get-in db (db/current-form-content-path db [path]))]
     (first (filter :selection-group-id (tree-seq coll? seq field)))))
 
 (defn remove-validator
   [db [_ validator & path]]
-  (let [content-path (current-form-content-path db [path :validators])
+  (let [content-path (db/current-form-content-path db [path :validators])
         validators   (get-in db content-path)]
     (if (and (not (nil? validators))
              (not (and (= validator "required") (any-child-is-selection-limit? db path))))
@@ -270,7 +320,7 @@
   :editor/set-component-value
   (fn [db [_ value & path]]
     (-> db
-        (assoc-in (current-form-content-path db [path]) value)
+        (assoc-in (db/current-form-content-path db [path]) value)
         (update-modified-by path))))
 
 (defn- number-of-decimals [v]
@@ -304,22 +354,22 @@
   :editor/set-decimals-value
   (fn [db [_ id value & path]]
     (let [path             (concat path [:params])
-          min-value        (get-in db (current-form-content-path db [path :min-value]))
-          max-value        (get-in db (current-form-content-path db [path :max-value]))
+          min-value        (get-in db (db/current-form-content-path db [path :min-value]))
+          max-value        (get-in db (db/current-form-content-path db [path :max-value]))
           [min? max?]      (validate-min-max min-value max-value value)]
       (cond-> (-> db
-                  (assoc-in (current-form-content-path db [path :decimals]) value)
+                  (assoc-in (db/current-form-content-path db [path :decimals]) value)
                   (update-modified-by path)
                   (assoc-in [:editor :ui id :min-value :invalid?] (not min?))
                   (assoc-in [:editor :ui id :max-value :invalid?] (not max?)))
 
 
               (not min?)
-              (update-in (current-form-content-path db path) (fn [params]
+              (update-in (db/current-form-content-path db path) (fn [params]
                                                                (dissoc params :min-value)))
 
               (not max?)
-              (update-in (current-form-content-path db path) (fn [params]
+              (update-in (db/current-form-content-path db path) (fn [params]
                                                                (dissoc params :max-value)))))))
 
 (reg-event-db
@@ -332,7 +382,7 @@
           opposing-range (if min-range?
                            :max-value
                            :min-value)
-          opposing-value (get-in db (current-form-content-path db [path opposing-range]) "")
+          opposing-value (get-in db (db/current-form-content-path db [path opposing-range]) "")
           [min? max?] (if min-range?
                         (validate-min-max value opposing-value decimals)
                         (validate-min-max opposing-value value decimals))]
@@ -343,33 +393,36 @@
                   (assoc-in [:editor :ui id :max-value :invalid?] (not max?)))
 
               (empty? clean-value)
-              (update-in (current-form-content-path db path) (fn [params]
+              (update-in (db/current-form-content-path db path) (fn [params]
                                                                  (dissoc params range)))
 
               (and (not (empty? clean-value)) (if min-range? min? max?))
-              (assoc-in (current-form-content-path db path range) clean-value)))))
+              (assoc-in (db/current-form-content-path db path range) clean-value)))))
 
 
 (reg-event-db
   :editor/update-mail-attachment
   (fn [db [_ mail-attachment? & path]]
     (let [flip-mail-attachment (fn [{:keys [params validators] :as field}]
-                                 (let [params (assoc? params
+                                 (let [params (-> params
+                                                  (dissoc :attachment-type :fetch-info-from-kouta?)
+                                                  (assoc?
                                                       :mail-attachment? mail-attachment?
                                                       :info-text (when mail-attachment?
-                                                                   (assoc (:info-text params) :enabled? true)))]
+                                                                   (assoc (:info-text params) :enabled? true))))]
                                    (assoc? field
+                                           :per-hakukohde false
                                            :params params
                                            :validators (when mail-attachment?
                                                          (filter #(not= "required" %) validators)))))]
       (-> db
-          (update-in (current-form-content-path db [path]) flip-mail-attachment)
+          (update-in (db/current-form-content-path db [path]) flip-mail-attachment)
           (update-modified-by path)))))
 
 (defn generate-component
   [db [_ generate-fn sub-path]]
   (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
-        parent-component-path (cond-> (current-form-content-path db)
+        parent-component-path (cond-> (db/current-form-content-path db)
                                       (not (number? sub-path))
                                       (concat (butlast sub-path)))
         user-info             (-> db :editor :user-info)
@@ -419,7 +472,7 @@
 (reg-event-db
   :editor/remove-component
   (fn [db [_ path]]
-    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+    (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       (-> db
           (update-in [:editor :ui id] dissoc :remove)
           (remove-component path)))))
@@ -427,7 +480,7 @@
 (reg-event-fx
   :editor/confirm-remove-component
   (fn [{db :db} [_ path]]
-    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+    (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       {:db             (assoc-in db [:editor :ui id :remove] :disabled)
        :dispatch       [:editor/fold id]
        :dispatch-later [{:ms 310 :dispatch [:editor/remove-component path]}]})))
@@ -435,13 +488,13 @@
 (reg-event-db
   :editor/start-remove-component
   (fn [db [_ path]]
-    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+    (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       (assoc-in db [:editor :ui id :remove] :confirm))))
 
 (reg-event-db
   :editor/cancel-remove-component
   (fn [db [_ path]]
-    (let [id (get-in db (vec (current-form-content-path db [path :id])))]
+    (let [id (get-in db (vec (db/current-form-content-path db [path :id])))]
       (update-in db [:editor :ui id] dissoc :remove))))
 
 (defn stamp-user-organization [is-user-organization-fn hakukohderyhma]
@@ -641,6 +694,9 @@
                      true
                      (assoc-in [:editor :selected-form-key] form-key))}
         {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
+        {:dispatch-debounced {:timeout 500
+                              :id :fetch-attachment-types
+                              :dispatch [:editor/fetch-attachment-types-koodisto]}}
         (when (and (some? previous-form-key)
                    (not= previous-form-key form-key))
           {:stop-autosave (get-in db [:editor :autosave])})
@@ -885,7 +941,7 @@
                                               :copy-component-path       path
                                               :copy-component-cut?       cut?
                                               :copy-component-content    selected-content
-                                              :copy-component-unique-ids (->> (get-in db (current-form-content-path db path))
+                                              :copy-component-unique-ids (->> (get-in db (db/current-form-content-path db path))
                                                                               (collect-ids [])
                                                                               (remove cu/valid-uuid?)
                                                                               set)}))))
@@ -965,6 +1021,24 @@
       (assoc-in db [:editor :forms key :content] updated-form))))
 
 (reg-event-fx
+  :editor/fetch-attachment-types-koodisto
+  (fn [{db :db}]
+    (when (not (seq (get-in db [:editor :attachment-types-koodisto])))
+      {:http {:method               :get
+              :path                 (str "/lomake-editori/api/koodisto/liitetyypitamm/1?allow-invalid=false")
+              :handler-or-dispatch  :editor/set-attachment-types-koodisto}})))
+
+(reg-event-db
+  :editor/set-attachment-types-koodisto
+  (fn [db [_ koodisto]]
+    (let [lang             (keyword (get-in db [:editor :user-info :lang]))
+          attachment-types (->> koodisto
+                                (map #(select-keys % [:value :label :uri]))
+                                (sort-by (comp lang :label))
+                                vec)]
+      (assoc-in db [:editor :attachment-types-koodisto] attachment-types))))
+
+(reg-event-fx
   :editor/show-belongs-to-hakukohteet-modal
   (fn [{db :db} [_ id]]
     (cond-> {:db (assoc-in db [:editor :ui id :belongs-to-hakukohteet :modal :show] true)}
@@ -1001,7 +1075,7 @@
 (reg-event-db
   :editor/toggle-element-visibility-on-form
   (fn [db [_ path]]
-    (let [content-path (conj (vec (current-form-content-path db path))
+    (let [content-path (conj (vec (db/current-form-content-path db path))
                          :params :hidden)]
       (-> db
           (update-in content-path #(boolean (not %)))
@@ -1015,7 +1089,7 @@
 (reg-event-db
   :editor/add-to-belongs-to-hakukohteet
   (fn [db [_ path oid]]
-    (let [content-path (conj (vec (current-form-content-path db path))
+    (let [content-path (conj (vec (db/current-form-content-path db path))
                          :belongs-to-hakukohteet)]
       (-> db
           (update-in content-path (fnil (comp vec #(conj % oid) set) []))
@@ -1024,7 +1098,7 @@
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohteet
   (fn [db [_ path oid]]
-    (let [content-path (conj (vec (current-form-content-path db path))
+    (let [content-path (conj (vec (db/current-form-content-path db path))
                         :belongs-to-hakukohteet)]
       (-> db
           (update-in content-path (fnil (comp vec #(disj % oid) set) []))
@@ -1033,7 +1107,7 @@
 (reg-event-db
   :editor/add-to-belongs-to-hakukohderyhma
   (fn [db [_ path oid]]
-    (let [content-path (conj (vec (current-form-content-path db path))
+    (let [content-path (conj (vec (db/current-form-content-path db path))
                         :belongs-to-hakukohderyhma)]
       (-> db
           (update-in content-path (fnil (comp vec #(conj % oid) set) []))
@@ -1042,20 +1116,51 @@
 (reg-event-db
   :editor/remove-from-belongs-to-hakukohderyhma
   (fn [db [_ path oid]]
-    (let [content-path                                (conj (vec (current-form-content-path db path))
+    (let [content-path                                (conj (vec (db/current-form-content-path db path))
                                                         :belongs-to-hakukohderyhma)
           belongs-to-one-hakukohderyhma               (= (count (get-in db content-path)) 1)
           remove-per-hakukohde-if-last-hakukohderyhma (fn [db]
                                                         (if belongs-to-one-hakukohderyhma
                                                           (update-in
                                                             db
-                                                            (current-form-content-path db path)
+                                                            (db/current-form-content-path db path)
                                                             #(dissoc % :per-hakukohde))
                                                           db))]
       (-> db
         (remove-per-hakukohde-if-last-hakukohderyhma)
         (update-in content-path (fnil (comp vec #(disj % oid) set) []))
         (update-modified-by [(remove-option-path path)])))))
+
+(reg-event-db
+  :editor/clean-per-hakukohde-followups
+  (let [is-mail-attachment?
+        (fn [field]
+          (and
+            (= "attachment" (:fieldType field))
+            (get-in field [:params :mail-attachment?])))
+
+        remove-mail-attachment-per-hakukohde-info
+        (fn [field]
+          (update field :params #(dissoc % :fetch-info-from-kouta? :attachment-type)))
+
+        clean-followups
+        (fn [followup]
+          (if (is-mail-attachment? followup)
+            (remove-mail-attachment-per-hakukohde-info followup)
+            followup))
+
+        clean-options
+        (fn [option]
+          (update option :followups (comp vec (partial map clean-followups))))
+
+        clean-field
+        (fn [field]
+          (update field :options (comp vec (partial map clean-options))))]
+    (fn [db [_ path]]
+      (let [field-path (db/current-form-content-path db [path])
+            field      (get-in db field-path)
+            new-field  (clean-field field)]
+        (assoc-in db field-path new-field)))))
 
 (reg-event-db
   :editor/fold
@@ -1132,11 +1237,11 @@
 (reg-event-db
   :editor/toggle-component-lock
   (fn [db [_ path]]
-    (let [field      (get-in db (vec (current-form-content-path db path)))
+    (let [field      (get-in db (vec (db/current-form-content-path db path)))
           new-locked (not (get-in field [:metadata :locked]))]
       (reduce (fn [db path]
                 (-> db
-                    (assoc-in (vec (current-form-content-path db [path :metadata :locked])) new-locked)
+                    (assoc-in (vec (db/current-form-content-path db [path :metadata :locked])) new-locked)
                     (update-modified-by [path])))
               db
               (descendant-paths field (vec path))))))
@@ -1145,13 +1250,18 @@
   [previews]
   (map #(assoc % :stored-content (dissoc % :stored-content)) previews))
 
+(defn- nils-to-string [m]
+  (into {} (for [[k v] m] [k (or v "")])))
+
 (defn- preview-map-to-list
   [previews]
   (let [contents              (->> previews
                                    vals
                                    (map #(select-keys % [:lang :content :content-ending :subject :signature])))
         contents-changed      @(subscribe [:editor/email-templates-altered])
-        only-changed-contents (filter #(get contents-changed (:lang %)) contents)]
+        only-changed-contents (->> contents
+                                   (filter #(get contents-changed (:lang %)))
+                                   (map nils-to-string))]
     only-changed-contents))
 
 (defn- preview-list-to-map
@@ -1322,8 +1432,33 @@
 (reg-event-db
   :editor/toggle-auto-expand-hakukohteet
   (fn [db _]
-    (let [form-path (-> (current-form-content-path db)
-                        butlast
-                        vec
-                        (conj :properties :auto-expand-hakukohteet))]
+    (let [form-path (db/current-form-properties-path db [:auto-expand-hakukohteet])]
       (update-in db form-path not))))
+
+(reg-event-db
+  :editor/add-invalid-value-validator
+  (fn [db [_ option-value parent-path]]
+    (println :editor/add-invalid-value-validator option-value parent-path)
+    (-> db
+      (update-in
+        (db/current-form-content-path db [parent-path :params :invalid-values])
+        (fn [invalid-values]
+          (-> invalid-values
+            set
+            (conj option-value)
+            vec)))
+      (add-validator [nil "invalid-values" parent-path]))))
+
+(reg-event-db
+  :editor/remove-invalid-value-validator
+  (fn [db [_ option-value parent-path]]
+    (println :editor/remove-invalid-value-validator option-value parent-path)
+    (let [invalid-values-path    (db/current-form-content-path db [parent-path :params :invalid-values])
+          invalid-values         (get-in db invalid-values-path)
+          updated-invalid-values (->> invalid-values
+                                   (remove #(= option-value %))
+                                   vec)
+          updated-db             (assoc-in db invalid-values-path updated-invalid-values)]
+      (if (empty? updated-invalid-values)
+        (remove-validator updated-db [nil "invalid-values" parent-path])
+        updated-db))))

@@ -4,7 +4,9 @@
             [ataru.cljs-util :as cu]
             [clojure.set :as cset]
             [clojure.string :as string]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [cljs.core.match :refer-macros [match]]
+            [cljs-time.coerce :as time-coerce]))
 
 (re-frame/reg-sub
   :editor/virkailija-texts
@@ -84,11 +86,31 @@
     (get-in form [:content i])))
 
 (re-frame/reg-sub
+  :editor/content-loaded?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn content-loaded? [form]
+    (let [content (get form :content)]
+      (and content (> (count content) 0)))))
+
+(re-frame/reg-sub
   :editor/get-component-value
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
   (fn get-component-value [component [_ & path]]
     (get-in component (rest (flatten path)))))
+
+(re-frame/reg-sub
+  :editor/get-component-param
+  (fn [[_ _ & path] _]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ param & _]]
+    (get-in component [:params param])))
+
+(re-frame/reg-sub
+  :editor/get-attachment-types-koodisto
+  (fn [db]
+    (get-in db [:editor :attachment-types-koodisto])))
 
 (re-frame/reg-sub
   :editor/is-per-hakukohde-allowed
@@ -101,6 +123,22 @@
       (and (not too-deep)
            (or (not has-parent)
                (= "wrapperElement" (:fieldClass component)))))))
+
+(defn- followup-parent-path
+  [followup-path]
+  (match (vec (reverse followup-path))
+    [_ :followups _ :options & rest]
+    (vec (reverse rest))
+
+    :else
+    nil))
+
+(re-frame/reg-sub
+  :editor/has-parent-per-hakukohde
+  (fn [_ [_ path]]
+    (when-let [parent-path (followup-parent-path path)]
+      (let [parent @(re-frame/subscribe [:editor/get-component-value parent-path])]
+        (:per-hakukohde parent)))))
 
 (re-frame/reg-sub
   :editor/get-range-value
@@ -335,10 +373,10 @@
 (re-frame/reg-sub
   :editor/dropdown-with-selection-limit?
   (fn [[_ & path] _]
-    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
-  (fn get-component-value [component [_ & path]]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ & path]]
     (and
-     (= (:fieldType (get-in component (rest (flatten path)))) "singleChoice")
+     (= (:fieldType component) "singleChoice")
      (not
        (loop [part (butlast (rest (flatten path)))]
          (if-let [parent (get-in component part)]
@@ -348,11 +386,18 @@
                (recur (butlast part))))))))))
 
 (re-frame/reg-sub
+  :editor/has-validator?
+  (fn [[_ _ & path] _]
+    (re-frame/subscribe [:editor/get-component-value path]))
+  (fn [component [_ validator & _]]
+    (contains? (set (:validators component)) validator)))
+
+(re-frame/reg-sub
   :editor/selection-limit?
   (fn [[_ & path] _]
-    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
-  (fn get-component-value [component [_ & path]]
-    (contains? (set (:validators (get-in component (rest (flatten path))))) "selection-limit")))
+    (re-frame/subscribe [:editor/has-validator? "selection-limit" path]))
+  (fn [has-validator _]
+    has-validator))
 
 (re-frame/reg-sub
   :editor/this-form-locked?
@@ -477,8 +522,48 @@
     (some? (-> db :editor :autosave))))
 
 (re-frame/reg-sub
+  :editor/form-properties
+  (fn [_ _]
+    (re-frame/subscribe [:editor/selected-form]))
+  (fn [selected-form]
+    (get selected-form :properties)))
+
+(re-frame/reg-sub
   :editor/auto-expand-hakukohteet
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :auto-expand-hakukohteet)))
+
+(re-frame/reg-sub
+  :editor/today
   (fn [db _]
-    (let [selected-form-key (get-in db [:editor :selected-form-key])
-          form-path [:editor :forms selected-form-key :properties :auto-expand-hakukohteet]]
-      (get-in db form-path false))))
+    (-> db
+      (get-in [:editor :today])
+      (time-coerce/from-date))))
+
+(re-frame/reg-sub
+  :editor/visibility-condition-value
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (some-> visibility-condition :condition :answer-compared-to)))
+
+(re-frame/reg-sub
+  :editor/visibility-condition-section-name
+  (fn [[_ path visibility-condition-index] _]
+    (re-frame/subscribe [:editor/get-component-value path :section-visibility-conditions visibility-condition-index]))
+  (fn [visibility-condition _]
+    (:section-name visibility-condition)))
+
+(re-frame/reg-sub
+  :editor/invalid-option-validator-present?
+  (fn [[_ & option-path] _]
+    (let [parent-path (pop (pop (into [] (flatten option-path))))]
+      [(re-frame/subscribe [:editor/has-validator? "invalid-values" parent-path])
+       (re-frame/subscribe [:editor/get-component-param :invalid-values parent-path])
+       (re-frame/subscribe [:editor/get-component-value option-path])]))
+  (fn [[parent-has-validator invalid-values option-component]]
+    (and
+      parent-has-validator
+      (contains? (set invalid-values) (:value option-component)))))

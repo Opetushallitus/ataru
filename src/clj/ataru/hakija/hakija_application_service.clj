@@ -9,7 +9,7 @@
     [ataru.config.core :refer [config]]
     [ataru.config.url-helper :as url-helper]
     [ataru.db.db :as db]
-    [ataru.email.application-email-confirmation :as application-email]
+    [ataru.email.application-email-jobs :as application-email]
     [ataru.files.file-store :as file-store]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
@@ -58,9 +58,12 @@
                            (util/group-by-first :id))]
     (update application :answers
             (partial map (fn [answer]
-                           (cond-> answer
-                                   (:cannot-view (fields-by-key (:key answer)))
-                                   (assoc :value nil)))))))
+                           (let [original-question-field  (fields-by-key (:original-question answer))
+                                 field                    (fields-by-key (:key answer))
+                                 original-followup-field  (fields-by-key (:original-followup answer))]
+                             (cond-> answer
+                                     (or (:cannot-view field) (:cannot-view original-question-field) (:cannot-view original-followup-field))
+                                     (assoc :value nil))))))))
 
 (defn- merge-unviewable-answers-from-previous
   [new-application
@@ -69,12 +72,20 @@
   (let [fields-by-key      (->> (:content form)
                                 util/flatten-form-fields
                                 (util/group-by-first :id))
-        old-answers-by-key (util/group-by-first :key (:answers old-application))]
-    (update new-application :answers
-            (partial keep (fn [answer]
-                            (if (:cannot-view (fields-by-key (:key answer)))
-                              (old-answers-by-key (:key answer))
-                              answer))))))
+        old-answers-by-key (util/group-by-first :key (:answers old-application))
+        original-followups-not-in-new (filter #(and (seq (:original-followup %))
+                                                    (nil? (get-in new-application [:answers (keyword (:key %))]))
+                                                    (:cannot-view (fields-by-key (:original-followup %)))) (:answers old-application))
+        if-cannot-view-use-old (fn [answer]
+                                 (let [original-question-field   (fields-by-key (:original-question answer))
+                                       field                     (fields-by-key (:key answer))
+                                       original-followup-field   (fields-by-key (:original-followup answer))]
+                                   (if (or (:cannot-view field) (:cannot-view original-question-field) (:cannot-view original-followup-field))
+                                     (old-answers-by-key (:key answer))
+                                     answer)))]
+    (assoc new-application :answers
+            (concat (keep if-cannot-view-use-old (:answers new-application))
+                    original-followups-not-in-new))))
 
 (defn- merge-uneditable-answers-from-previous
   [new-application

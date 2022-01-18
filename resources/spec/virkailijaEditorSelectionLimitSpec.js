@@ -33,26 +33,6 @@
     )
   }
 
-  const formComponents = () => {
-    return (
-      testFrame()
-        .find('.editor-form__component-wrapper')
-        // exclude followup question components
-        .not(
-          '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-        )
-        // exclude hakukohteet
-        .not(
-          (i, node) => $(node).find("header:contains('Hakukohteet')").length > 0
-        )
-        // exclude henkilötiedot
-        .not(
-          (i, node) =>
-            $(node).find("header:contains('Henkilötiedot')").length > 0
-        )
-    )
-  }
-
   const menuItem = (title) => {
     triggerEvent(
       testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
@@ -117,10 +97,14 @@
             'Rajoitettu valinta'
           ),
           clickElement(() =>
-            formComponents().find('.editor-form__checkbox:eq(0) + label')
+            formComponents().find(
+              '.editor-form__checkbox + label:contains("Pakollinen")'
+            )
           ), // required
           clickElement(() =>
-            formComponents().find('.editor-form__checkbox:eq(1) + label')
+            formComponents().find(
+              '.editor-form__checkbox + label:contains("Rajoitettu valinta")'
+            )
           ), // selection limit
           clickElement(() =>
             formComponents().find(

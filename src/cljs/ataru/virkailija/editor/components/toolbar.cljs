@@ -8,7 +8,7 @@
 
 (defn- toolbar-elements []
   [[:form-section component/form-section {:data-test-id "component-toolbar-lomakeosio"}]
-   [:single-choice-button component/single-choice-button]
+   [:single-choice-button component/single-choice-button {:data-test-id "component-toolbar-painikkeet-yksi-valittavissa"}]
    [:single-choice-button-koodisto (fn [metadata]
                                      (assoc (component/single-choice-button metadata)
                                             :koodisto-source {:uri "" :title "" :version 1}
@@ -29,6 +29,7 @@
    [:attachment component/attachment]
    [:question-group component/question-group]
    [:info-element component/info-element]
+   [:modal-info-element component/modal-info-element]
    [:base-education-module base-education-module/module]
    [:kk-base-education-module kk-base-education-module/module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
@@ -47,6 +48,7 @@
     :multiple-choice
     :multiple-choice-koodisto
     :info-element
+    :modal-info-element
     :attachment
     :adjacent-fieldset
     :question-group})
@@ -61,6 +63,7 @@
     :multiple-choice
     :multiple-choice-koodisto
     :info-element
+    :modal-info-element
     :attachment
     :adjacent-fieldset})
 

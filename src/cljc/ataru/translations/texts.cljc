@@ -35,6 +35,9 @@
    :application-confirmation                    {:fi "Saat vahvistuksen sähköpostiisi"
                                                  :sv "Du får en bekräftelse till din e-post"
                                                  :en "Confirmation email will be sent to the email address you've provided"}
+   :application-confirmation-demo               {:fi "Tietojasi ei tallennettu"
+                                                 :sv "Dina uppgifter har inte sparats"
+                                                 :en "EN: Tietojasi ei tallennettu"}
    :application-edited-subject                  {:fi "Opintopolku - Hakemuksesi on päivitetty"
                                                  :sv "Studieinfo - Din ansökan har updaterats"
                                                  :en "Opintopolku - Your application has been received"}
@@ -86,9 +89,15 @@
    :application-sent                            {:fi "Hakemus lähetetty"
                                                  :sv "Ansökan har skickats"
                                                  :en "The application has been sent"}
+   :application-sent-demo                       {:fi "Harjoittelulomake täytetty"
+                                                 :sv "Övningsblanketten är ifylld"
+                                                 :en "EN: Harjoittelulomake täytetty"}
    :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
+   :application-submitted-demo                  {:fi "Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
+                                                 :sv "Det här är en övningsblankett. Dina uppgifter sparades inte!"
+                                                 :en "EN: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"}
    :application-submitted-ok                    {:fi "OK"
                                                  :sv "OK"
                                                  :en "OK"}
@@ -99,7 +108,7 @@
                                                  :sv "I denna ansökan kan du söka till %s ansökningsmål"
                                                  :en "In this application you can apply to %s study programmes "}
    :arvosana                                    {:fi "Arvosana"
-                                                 :sv "Arvosana"
+                                                 :sv "Vitsord"
                                                  :en "Arvosana"}
    :best-regards                                {:fi "Ystävällisin terveisin"
                                                  :sv "Med vänliga hälsningar"
@@ -245,6 +254,9 @@
    :hakija-new-text                             {:fi "Lähetä hakemus"
                                                  :sv "Skicka ansökan"
                                                  :en "Submit application"}
+   :submit-demo                                 {:fi "Lähetä harjoitteluhakemus"
+                                                 :sv "Skicka övningsansökan"
+                                                 :en "EN: Lähetä harjoitteluhakemus"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
@@ -386,23 +398,23 @@
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
-   :search-application-options-or-education     {:fi "Etsi koulutusta tai oppilaitosta"
-                                                 :sv "Sök utbildningar eller läroanstalt"
-                                                 :en "EN: Etsi koulutusta tai oppilaitosta"}
+   :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
+                                                 :sv "Sök läroanstalt eller utbildningar"
+                                                 :en "EN: Etsi oppilaitosta tai koulutusta"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}
    :seconds                                     {:fi "sekuntia"
                                                  :en "seconds"
                                                  :sv "sekunder"}
-   :select-max-n-application-options            {:fi ["Valitse enintään " " hakukohdetta"]
-                                                 :sv ["Välj högst " " SV: hakukohdetta"]
+   :select-max-n-application-options            {:fi ["Voit valita enintään " " hakukohdetta."]
+                                                 :sv ["Du kan välja högst " " ansökningsmål."]
                                                  :en ["EN: Valitse enintään " " ansökningsmål"]}
    :select-still-1-application-option           {:fi "Voit valita vielä yhden hakukohteen"
                                                  :sv "Du kan välja ännu ett ansökningsmål"
                                                  :en "EN: Voit valita vielä yhden hakukohteen"}
    :select-still-n-application-options          {:fi ["Voit valita vielä " " hakukohdetta"]
-                                                 :sv ["Du kan välja " " ansökningsmål"]
+                                                 :sv ["Du kan välja ännu " " ansökningsmål"]
                                                  :en ["EN: Voit valita vielä " " hakukohdetta"]}
    :show-more                                   {:fi "Näytä lisää..."
                                                  :en "Show more..."
@@ -469,7 +481,25 @@
                                                  :en "Go to payment"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
-                                                 :en "Poista"}})
+                                                 :en "Poista"}
+   :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
+                                                 :sv "Övningsblankett – Dina uppgifter sparas inte!"
+                                                 :en "EN: Harjoittelulomake — Tietojasi ei tallenneta!"}
+   :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
+                                                 :sv "Det här är en övningsblankett. De uppgifter som du fyller i sparas inte."
+                                                 :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
+   :dismiss-demo-notification                   {:fi "Jatka"
+                                                 :sv "Fortsätt"
+                                                 :en "EN: Jatka"}
+   :demo-notification-title                     {:fi "Harjoittelulomake"
+                                                 :sv "Övningsblankett"
+                                                 :en "EN: Harjoittelulomake"}
+   :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
+                                                 :sv "SV: Lähetä liite osoitteeseen"
+                                                 :en "EN: Lähetä liite osoitteeseen"}
+   :verkkosivu                                  {:fi "Tai käytä"
+                                                 :sv "SV: Tai käytä"
+                                                 :en "EN: Tai käytä"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -971,8 +1001,8 @@
    :arvosana-kotitalous                             {:fi "Kotitalous"
                                                      :sv "Huslig ekonomi"
                                                      :en "Kotitalous"}
-   :arvosanat-info                                  {:fi "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
-                                                     :sv "Ange vitsorden från det betyg, enligt vilket du söker till utbildningen. Du kan ange höjda vitsord, om du har fått ett officiellt intyg över höjningen. Om du har avlagt gymnasiets lärokurs, kan du inte söka med avgångsbetyget över grundläggande utbildning. Du kan inte söka enligt en yrkesinriktad grundexamen. Läroanstalterna kontrollerar betygen för de sökande som godkänns till utbildning.\n\nOBS! Om du söker med den grundläggande utbildningens avgångsbetyg ska du komma ihåg att fylla i vitsorden över valfria ämnen. Ange ändå vitsorden bara om du studerat ämnet i minst två årsveckotimmar under årsklasser 7-9."
+   :arvosanat-info                                  {:fi "Merkitse arvosanat perusopetuksen päättötodistuksestasi. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."
+                                                     :sv "Ange vitsorden enligt ditt avgångsbetyg från den grundläggande utbildningen. Du kan ange höjda vitsord, om du har fått ett officiellt intyg över höjningen. Om du har avlagt gymnasiets lärokurs, kan du inte söka med avgångsbetyget över grundläggande utbildning. Du kan inte söka enligt en yrkesinriktad grundexamen. Läroanstalterna kontrollerar betygen för de sökande som godkänns till utbildning.\n\nOBS! Om du söker med den grundläggande utbildningens avgångsbetyg ska du komma ihåg att fylla i vitsorden över valfria ämnen. Ange ändå vitsorden bara om du studerat ämnet i minst två årsveckotimmar under årsklasser 7-9."
                                                      :en "Merkitse arvosanat sitä todistuksesta, jolla haet koulutukseen. Korotetut arvosanat voit merkitä, mikäli olet saanut korotuksista virallisen todistuksen. Jos olet suorittanut lukion oppimäärän, et voi hakea perusopetuksen päättötodistuksella. Ammatillisella perustutkinnolla et voi hakea. Oppilaitokset tarkistavat todistukset hyväksytyksi tulleilta hakijoilta.\n\nHuom! Jos haet perusopetuksen päättötodistuksella, muista täyttää myös valinnaisaineiden arvosanat. Valinnaisaineiden arvosanat merkitään vain mikäli olet opiskellut niitä vähintään kaksi vuosiviikkotuntia perusopetuksen vuosiluokkien 7-9 aikana."}
    :show-hakukierros-paattynyt                      {:fi "Näytä haut joissa hakukierros päättynyt"
                                                      :sv "Visa ansökningar där ansökningsperioden har avslutats"
@@ -1046,6 +1076,12 @@
    :attachment-info-text                            {:fi "Liitepyyntö sisältää ohjetekstin"
                                                      :sv "Begäran om bilagor innehåller anvisningar"
                                                      :en "EN: Liitepyyntö sisältää ohjetekstin"}
+   :fetch-info-from-kouta                           {:fi "Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"
+                                                     :sv "SV: Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"
+                                                     :en "EN: Haetaan osoitetiedot ja palautuspäivämäärä koulutustarjonnasta"}
+   :attachment-type                                 {:fi "Liitetiedoston tyyppi"
+                                                     :sv "SV: Liitetiedoston tyyppi"
+                                                     :en "EN: Liitetiedoston tyyppi"}
    :mail-attachment-text                            {:fi "Postitettava liitepyyntö"
                                                      :sv "Begäran om bilagor som kan postas"
                                                      :en "EN: Postitettava liitepyyntö"}
@@ -1061,6 +1097,18 @@
    :auto-expand-hakukohteet                         {:fi "Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :sv "SV: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"
                                                      :en "EN: Näytä hakukohteet hakukohdekohtaisissa kysymyksissä"}
+   :properties                                      {:fi "Yleiset asetukset"
+                                                     :sv "SV: Yleiset asetukset"
+                                                     :en "EN: Yleiset asetukset"}
+   :demo-link                                       {:fi "Avaa demolomake"
+                                                     :sv "Öppna demoblanketten"
+                                                     :en "EN: Avaa demolomake"}
+   :demo-validity-start                             {:fi "Demon voimassaolo alkaa"
+                                                     :sv "Demoversionen är giltig från och med"
+                                                     :en "EN: Demon voimassaolo alkaa"}
+   :demo-validity-end                               {:fi "Demon voimassaolo päättyy"
+                                                     :sv "Demoversionen avslutas"
+                                                     :en "EN: Demon voimassaolo päättyy"}
    :submitted-content-search-placeholder            {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                      :sv "Sök enligt fråga eller begäran om bilaga..."
                                                      :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
@@ -1364,6 +1412,9 @@
    :info-element                                    {:fi "Infoteksti"
                                                      :sv "Infotext"
                                                      :en "Info element"}
+   :modal-info-element                              {:fi "Infoteksti, koko ruutu"
+                                                     :sv "SV: Infoteksti, koko ruutu"
+                                                     :en "EN: Infoteksti, koko ruutu"}
    :information-request-sent                        {:fi "Täydennyspyyntö lähetetty"
                                                      :sv "Begäran om komplettering har skickats"
                                                      :en "Information request email has been sent"}
@@ -1529,6 +1580,9 @@
    :person-info-module-muu                          {:fi "Muu käyttö"
                                                      :en "Muu käyttö"
                                                      :sv "Annat bruk"}
+   :person-info-module-onr-2nd                      {:fi "Opiskelijavalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :en "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"
+                                                     :sv "Opiskelivalinta, perusopetuksen jälkeinen yhteishaku"}
    :metadata-not-found                              {:fi "Hakijan liitteitä ei löytynyt"
                                                      :sv "Sökandes bilagor hittades inte"
                                                      :en "Applicant's attachements can't be found"}
@@ -1634,6 +1688,9 @@
    :required                                        {:fi "Pakollinen tieto"
                                                      :sv "Obligatorisk uppgift"
                                                      :en "Mandatory information"}
+   :sensitive-answer                                {:fi "Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"
+                                                     :sv "SV: Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"
+                                                     :en "EN: Tämän kysymyksen vastaus piilotetetaan hakijalta muokkauslinkistä"}
    :per-hakukohde                                   {:fi "Vastaukset ovat hakukohdekohtaisia"
                                                      :sv "Svaren ges enligt ansökningsmål"
                                                      :en "Answers are specific to application options"}
@@ -1951,7 +2008,6 @@
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
                                                      :sv "Svarsalternativ valt"
                                                      :en "EN: vastausvaihtoehtoa valittu"}
-
    :tutu-amount-label                               {:fi "Maksun määrä"
                                                      :sv ""
                                                      :en ""}
@@ -1961,7 +2017,6 @@
    :tutu-due-label                                  {:fi "Eräpäivä"
                                                      :sv ""
                                                      :en ""}
-
    :tutu-maksupyynto-header                         {:fi "Maksupyyntö"
                                                      :sv ""
                                                      :en ""}
@@ -1989,7 +2044,6 @@
    :tutu-kasittelymaksu-button                      {:fi "Uudelleenlähetä käsittelymaksu"
                                                      :sv ""
                                                      :en ""}
-
    :tutu-invoice-notfound                           {:fi "Maksun tietoja ei löydy"
                                                      :sv ""
                                                      :en ""}
@@ -2005,10 +2059,15 @@
    :tutu-payment-unknown                            {:fi "Maksun tilaa ei tiedetä"
                                                      :sv ""
                                                      :en ""}
-
    :tutu-amount-input-placeholder                   {:fi "Anna summa muodossa 123 tai 123.00"
                                                      :sv ""
-                                                     :en ""}})
+                                                     :en ""}
+   :prevent-submission                              {:fi "Valinta estää hakemuksen lähettämisen"
+                                                     :sv "SV: Valinta estää hakemuksen lähettämisen"
+                                                     :en "EN: Valinta estää hakemuksen lähettämisen"}
+   :button-text                                     {:fi "Painikkeen teksti"
+                                                     :sv "SV: Painikkeen teksti"
+                                                     :en "EN: Painikkeen teksti"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2240,9 +2299,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Huomasimme, että "
-         [:strong "olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
@@ -2255,10 +2316,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "Vi märkte att "
-         [:strong "du redan har skickat en ansökning"]
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
          " i denna ansökan och därför kan du inte skicka en annan
-          ansökning."]
+          ansökning. Om du skickar in flera beaktas endast den som
+          du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
@@ -2272,11 +2334,11 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "we noticed that "
-         [:strong "you have already submitted an application"]
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
-          will be taken into consideration and all others will be discarded."]
+          will be taken into consideration and all others will be deleted."]
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
@@ -2294,27 +2356,56 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Antamallasi sähköpostiosoitteella "
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
+        [:p "Jos haluat "
+         [:strong "muuttaa hakemustasi"]
+         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
+         jättäessäsi edellisen hakemuksen."]
+        [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
-         " on jo jätetty hakemus. Tarkista, että syöttämäsi sähköpostiosoite
-          on varmasti oikein."]]
+         " on varmasti oikein."]
+        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]
    :sv [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "En ansökning med den e-postadress du angett "
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
+         " i denna ansökan och därför kan du inte skicka en annan
+          ansökning. Om du skickar in flera beaktas endast den som
+          du skickat in senast och alla tidigare ansökningar raderas."]
+        [:p "Om du vill "
+         [:strong "ändra din ansökning"]
+         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
+          du skickade din tidigare ansökning."]
+        [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
-         " har redan gjorts. Kontrollera att e-postadressen du har angett
-          säkert är korrekt."]]
+         " säkert är korrekt."]
+        [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
+             söker till."]]
    :en [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "the email address "
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
+         " to this admission and therefore cannot submit another
+          application. If you submit several applications, only the latest one
+          will be taken into consideration and all others will be deleted."]
+        [:p "If you want to "
+         [:strong "make changes"]
+         " to your previous application, you can do so by clicking the link
+          in the confirmation email you have received with your earlier
+          application."]
+        [:p "Please also check that the email address "
          [:strong email]
-         " you have given in your application has already been used by
-          another applicant. Please check that the email address you have
-          given is correct."]]})
+         " you have given is correct."]
+        [:p "If you have any problems, please contact the educational
+             institution you are applying to."]]})
 
 (defn ssn-applied-error
   [preferred-name]
@@ -2322,39 +2413,43 @@
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
-        [:p "Huomasimme, että "
-         [:strong "olet jo lähettänyt hakemuksen"]
-         " tähän hakuun ja siksi et voi lähettää toista hakemusta."]
+        [:p "Tässä haussa voit lähettää vain yhden (1) hakemuksen. "
+         [:strong "Olet jo lähettänyt hakemuksen"]
+         " tähän hakuun ja siksi et voi lähettää toista hakemusta.
+         Jos lähetät useampia hakemuksia, viimeisin jätetty hakemus
+         jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-           jättäessäsi edellisen hakemuksen."]
+         jättäessäsi edellisen hakemuksen."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
-        [:p "Vi märkte att "
-         [:strong "du redan har skickat en ansökning"]
+        [:p "I denna ansökan kan du skicka in endast en (1) ansökan."
+         [:strong "Du redan har skickat en ansökning"]
          " i denna ansökan och därför kan du inte skicka en annan
-           ansökning."]
+          ansökning. Om du skickar in flera beaktas endast den som
+          du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
          " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-           du skickade din tidigare ansökning."]
+          du skickade din tidigare ansökning."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
-        [:p "we noticed that "
-         [:strong "you have already submitted an application"]
-         " to this admission. Therefore, you cannot submit another
-          application to the same admission."]
+        [:p "You can only submit one (1) application form in this application."
+         [:strong "You have already submitted an application"]
+         " to this admission and therefore cannot submit another
+          application. If you submit several applications, only the latest one
+          will be taken into consideration and all others will be deleted."]
         [:p "If you want to "
          [:strong "make changes"]
-         " to your previous application, you can do so, by clicking the link
+         " to your previous application, you can do so by clicking the link
           in the confirmation email you have received with your earlier
           application."]
         [:p "If you have any problems, please contact the educational

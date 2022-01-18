@@ -44,12 +44,14 @@
       </tr>
       {% endfor %}
       {% endif %}
-      {% if attachments-without-answer|not-empty %}
+      {% if any attachments-without-answer|not-empty kouta-attachments-by-type|not-empty %}
         <tr>
           <td style="padding-left: 20px; padding-top: 20px;">
             Muistathan palauttaa vielä liitteet:
           </td>
         </tr>
+      {% endif %}
+      {% if any attachments-without-answer|not-empty %}
         <tr>
           <td>
             <ul>
@@ -64,6 +66,32 @@
             </ul>
           </td>
         </tr>
+      {% endif %}
+      {% if any kouta-attachments-by-type|not-empty %}
+      <tr>
+        <td>
+          <ul>
+            {% for type,attachments in kouta-attachments-by-type|not-empty %}
+            <li>
+              {{type}}
+              <br><br>
+              {{attachments.0.info-text}}
+              <ul>
+                {% for attachment in attachments %}
+                  <li>
+                    {{attachment.label|safe}}
+                    {% if attachment.deadline|not-empty %}
+                    Palautettava viimeistään {{attachment.deadline}}
+                    {% endif %}
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endfor %}
+          </ul>
+          <ul></ul>
+        </td>
+      </tr>
       {% endif %}
       {% if application-url|not-empty %}
       <tr>

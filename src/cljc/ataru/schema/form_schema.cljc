@@ -4,6 +4,7 @@
             [ataru.schema.button-schema :as button-schema]
             [ataru.schema.child-validator-schema :as child-validator-schema]
             [ataru.schema.info-element-schema :as info-element-schema]
+            [ataru.schema.modal-info-element-schema :as modal-info-element-schema]
             [ataru.schema.validator-schema :as validator-schema]
             [ataru.schema.module-schema :as module-schema]
             [ataru.schema.form-element-schema :as form-schema]
@@ -41,55 +42,80 @@
 (declare BasicElement)
 (declare WrapperElement)
 
-(s/defschema OptionCondition {:comparison-operator                 (s/enum "<" "=" ">")
-                              (s/optional-key :answer-compared-to) s/Int})
+(defn form-field-schema
+  [option-condition-schema]
+  {:fieldClass                                      (s/eq "formField")
+   :id                                              s/Str
+   :fieldType                                       (apply s/enum form-fields)
+   :metadata                                        element-metadata-schema/ElementMetadata
+   (s/optional-key :cannot-view)                    s/Bool
+   (s/optional-key :cannot-edit)                    s/Bool
+   (s/optional-key :validators)                     [validator-schema/Validator]
+   (s/optional-key :rules)                          {s/Keyword s/Any}
+   (s/optional-key :blur-rules)                     {s/Keyword s/Any}
+   (s/optional-key :label)                          localized-schema/LocalizedString
+   (s/optional-key :label-amendment)                localized-schema/LocalizedString
+   (s/optional-key :unselected-label)               localized-schema/LocalizedString
+   (s/optional-key :unselected-label-icon)          [(s/one s/Str "icon component")]
+   (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
+   (s/optional-key :params)                         params-schema/Params
+   (s/optional-key :no-blank-option)                s/Bool
+   (s/optional-key :exclude-from-answers)           s/Bool
+   (s/optional-key :exclude-from-answers-if-hidden) s/Bool
+   (s/optional-key :version)                        s/Str
+   (s/optional-key :koodisto-ordered-by-user)       s/Bool
+   (s/optional-key :sort-by-label)                  s/Bool
+   (s/optional-key :koodisto-source)                {:uri                             s/Str
+                                                     :version                         s/Int
+                                                     (s/optional-key :default-option) s/Any
+                                                     (s/optional-key :title)          s/Str
+                                                     (s/optional-key :allow-invalid?) s/Bool}
+   (s/optional-key :section-visibility-conditions)  [{:section-name s/Str
+                                                      :condition    option-condition-schema}]
+   (s/optional-key :options)                        [{:value                                      s/Str
+                                                      (s/optional-key :label)                     localized-schema/LocalizedStringOptional
+                                                      (s/optional-key :description)               localized-schema/LocalizedStringOptional
+                                                      (s/optional-key :selection-limit)           (s/maybe s/Int)
+                                                      (s/optional-key :default-value)             (s/maybe s/Bool)
+                                                      (s/optional-key :condition)                 option-condition-schema
+                                                      (s/optional-key :belongs-to-hakukohteet)    [s/Str]
+                                                      (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
+                                                      (s/optional-key :followups)                 [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
+   (s/optional-key :belongs-to-hakukohteet)         [s/Str]
+   (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
+   (s/optional-key :per-hakukohde)                  s/Bool
+   (s/optional-key :sensitive-answer)               s/Bool})
 
-(s/defschema FormField {:fieldClass                                      (s/eq "formField")
-                        :id                                              s/Str
-                        :fieldType                                       (apply s/enum form-fields)
-                        :metadata                                        element-metadata-schema/ElementMetadata
-                        (s/optional-key :cannot-view)                    s/Bool
-                        (s/optional-key :cannot-edit)                    s/Bool
-                        (s/optional-key :validators)                     [validator-schema/Validator]
-                        (s/optional-key :rules)                          {s/Keyword s/Any}
-                        (s/optional-key :blur-rules)                     {s/Keyword s/Any}
-                        (s/optional-key :label)                          localized-schema/LocalizedString
-                        (s/optional-key :label-amendment)                localized-schema/LocalizedString
-                        (s/optional-key :unselected-label)               localized-schema/LocalizedString
-                        (s/optional-key :unselected-label-icon)          [(s/one s/Str "icon component")]
-                        (s/optional-key :initialValue)                   (s/cond-pre localized-schema/LocalizedString s/Int)
-                        (s/optional-key :params)                         params-schema/Params
-                        (s/optional-key :no-blank-option)                s/Bool
-                        (s/optional-key :exclude-from-answers)           s/Bool
-                        (s/optional-key :exclude-from-answers-if-hidden) s/Bool
-                        (s/optional-key :version)                        s/Str
-                        (s/optional-key :koodisto-ordered-by-user)       s/Bool
-                        (s/optional-key :sort-by-label)                  s/Bool
-                        (s/optional-key :koodisto-source)                {:uri                             s/Str
-                                                                          :version                         s/Int
-                                                                          (s/optional-key :default-option) s/Any
-                                                                          (s/optional-key :title)          s/Str
-                                                                          (s/optional-key :allow-invalid?) s/Bool}
-                        (s/optional-key :section-visibility-conditions)  [{:section-name s/Str
-                                                                           :condition OptionCondition}]
-                        (s/optional-key :options)                        [{:value                            s/Str
-                                                                           (s/optional-key :label)           localized-schema/LocalizedStringOptional
-                                                                           (s/optional-key :description)     localized-schema/LocalizedStringOptional
-                                                                           (s/optional-key :selection-limit) (s/maybe s/Int)
-                                                                           (s/optional-key :default-value)   (s/maybe s/Bool)
-                                                                           (s/optional-key :condition)       OptionCondition
-                                                                           (s/optional-key :belongs-to-hakukohteet)    [s/Str]
-                                                                           (s/optional-key :belongs-to-hakukohderyhma) [s/Str]
-                                                                           (s/optional-key :followups)       [(s/if (comp some? :children) (s/recursive #'WrapperElement) (s/recursive #'BasicElement))]}]
-                        (s/optional-key :belongs-to-hakukohteet)         [s/Str]
-                        (s/optional-key :belongs-to-hakukohderyhma)      [s/Str]
-                        (s/optional-key :per-hakukohde)                  s/Bool})
+(s/defschema TextFieldOptionCondition
+  {:comparison-operator                 (s/enum "<" "=" ">")
+   (s/optional-key :data-type)          (s/eq "int")
+   (s/optional-key :answer-compared-to) s/Int})
+
+(s/defschema TextField
+  (form-field-schema TextFieldOptionCondition))
+
+(s/defschema ChoiceFieldOptionCondition
+  {:comparison-operator                 (s/enum "=")
+   (s/optional-key :data-type)          (s/eq "str")
+   (s/optional-key :answer-compared-to) s/Str})
+
+(s/defschema ChoiceField
+  (form-field-schema ChoiceFieldOptionCondition))
+
+(s/defschema FormField
+  (s/conditional
+    #(#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType %))
+    ChoiceField
+
+    :else
+    TextField))
 
 (s/defschema BasicElement
   (s/conditional
    #(= "formField" (:fieldClass %)) FormField
    #(= "button" (:fieldClass %)) button-schema/Button
    #(= "pohjakoulutusristiriita" (:fieldClass %)) pohjakoulutus-ristiriita-schema/Pohjakoulutusristiriita
+   #(= "modalInfoElement" (:fieldClass %)) modal-info-element-schema/ModalInfoElement
    :else info-element-schema/InfoElement))
 
 (s/defschema WrapperElement {:fieldClass                                 (apply s/enum ["wrapperElement" "questionGroup"])
@@ -152,7 +178,9 @@
    :groups [CreateMoveElement]})
 
 (s/defschema FormProperties
-  {(s/optional-key :auto-expand-hakukohteet) s/Bool})
+  {(s/optional-key :auto-expand-hakukohteet) s/Bool
+   (s/optional-key :demo-validity-start)     (s/maybe s/Str)
+   (s/optional-key :demo-validity-end)       (s/maybe s/Str)})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -188,6 +216,18 @@
    :tutkintonimike-names      [localized-schema/LocalizedStringOptional]
    (s/optional-key :tarkenne) s/Str})
 
+(s/defschema Toimitusosoite
+  {(s/optional-key :osoite)      (s/maybe localized-schema/LocalizedStringOptional)
+   (s/optional-key :postinumero) (s/maybe {(s/optional-key :koodiUri) (s/maybe s/Str)
+                                           (s/optional-key :nimi)     (s/maybe localized-schema/LocalizedStringOptional)})
+   (s/optional-key :verkkosivu)   (s/maybe s/Str)})
+
+(s/defschema HakukohdeLiite
+  {(s/optional-key :tyyppi)                (s/maybe s/Str)
+   (s/optional-key :toimitusaika)          (s/maybe localized-schema/LocalizedDateTime)
+   (s/optional-key :toimitetaan-erikseen)  (s/maybe s/Bool)
+   (s/optional-key :toimitusosoite)        Toimitusosoite})
+
 (s/defschema FormTarjontaHakukohde
   {:oid                                                                          s/Str
    :name                                                                         localized-schema/LocalizedStringOptional
@@ -202,7 +242,12 @@
    :applicable-base-educations                                                   [s/Str]
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus) s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                    [HakukohdeLiite]
+   (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
+   (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
+   (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)})
 
 (s/defschema FormTarjontaMetadata
   {:hakukohteet                        [FormTarjontaHakukohde]
@@ -258,7 +303,12 @@
    :ylioppilastutkinto-antaa-hakukelpoisuuden?                                   s/Bool
    ;; jyemp
    (s/optional-key :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?) s/Bool
-   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool})
+   (s/optional-key :yo-amm-autom-hakukelpoisuus)                                 s/Bool
+   (s/optional-key :liitteet)                                                    [HakukohdeLiite]
+   (s/optional-key :liitteet-onko-sama-toimitusosoite?)                          s/Bool
+   (s/optional-key :liitteiden-toimitusosoite)                                   (s/maybe Toimitusosoite)
+   (s/optional-key :liitteet-onko-sama-toimitusaika?)                            s/Bool
+   (s/optional-key :liitteiden-toimitusaika)                                     (s/maybe localized-schema/LocalizedDateTime)})
 
 (s/defschema HakukohdeSearchResult
   (assoc Hakukohde :user-organization? s/Bool))

@@ -6,7 +6,7 @@
             [ataru.test-utils :as utils]
             [ataru.virkailija.virkailija-system :as virkailija-system]
             [ataru.hakija.hakija-system :as hakija-system]
-            [ataru.email.application-email-confirmation :as application-email]
+            [ataru.email.application-email-jobs :as application-email]
             [ataru.log.audit-log :as audit-log])
   (:import (java.util.concurrent TimeUnit)))
 

@@ -5,7 +5,7 @@
     [ataru.applications.application-store :as application-store]
     [ataru.applications.excel-export :as excel]
     [ataru.config.core :refer [config]]
-    [ataru.email.application-email-confirmation :as email]
+    [ataru.email.application-email-jobs :as email]
     [ataru.forms.form-store :as form-store]
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]

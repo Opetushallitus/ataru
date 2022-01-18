@@ -13,12 +13,10 @@
             [ataru.application-common.application-field-common :as application-field]
             [ataru.application.option-visibility :as option-visibility]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
-            [ataru.hakija.components.hakukohde-details-component :refer [hakukohde-details-component]]))
+            [ataru.hakija.components.hakukohde-details-component :refer [hakukohde-details-component]]
+            [ataru.hakija.components.attachment :as attachment]))
 
 (declare field)
-
-(defn- from-multi-lang [text lang]
-  (util/non-blank-val text [lang :fi :sv :en]))
 
 (defn- split-if-string [s]
   (if (string? s)
@@ -65,7 +63,7 @@
 (defn- text-form-field-label [field-descriptor lang group-idx]
   [:div.application__form-field-label
    {:id (application-field/id-for-label field-descriptor group-idx)}
-   (str (from-multi-lang (:label field-descriptor) lang)
+   (str (util/from-multi-lang (:label field-descriptor) lang)
         (application-field/required-hint field-descriptor))])
 
 (defn text [field-descriptor application lang group-idx]
@@ -87,29 +85,6 @@
      (when followups?
        [text-nested-container options application lang group-idx])]))
 
-(defn- attachment-list [attachments]
-  (let [visible-attachments (filter #(not= (:status %) :deleting) attachments)]
-    [:div
-     (map (fn [value]
-            ^{:key (str "attachment-" (:value value))}
-            [:ul.application__form-field-list (str (:filename value) " (" (util/size-bytes->str (:size value)) ")")])
-          visible-attachments)]))
-
-(defn attachment [field-descriptor application lang question-group-index]
-  (let [answer-key (keyword (application-field/answer-key field-descriptor))
-        values     (if question-group-index
-                     (-> application
-                         :answers
-                         answer-key
-                         :values
-                         (nth question-group-index nil))
-                     (-> application :answers answer-key :values))]
-    [:div.application__form-field
-     [:div.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
-           (application-field/required-hint field-descriptor))]
-     [attachment-list values]]))
-
 (defn child-fields [children application lang ui question-group-id]
   (for [child children
         :when (visible? ui child)]
@@ -119,7 +94,7 @@
       (if (:per-hakukohde child)
         (with-meta [:div.readonly__per-question-wrapper
          [:div.application__form-field-label.application__form-field__original-question
-          (from-multi-lang (:label child) lang)]
+          (util/from-multi-lang (:label child) lang)]
          (for [duplicate-field (filter #(= (:original-question %) (:id child)) children)]
            ^{:key (str "duplicate-" (:id duplicate-field))}
            [:section
@@ -133,7 +108,7 @@
     (fn [content application lang children]
       [:div.application__wrapper-element
        [:div.application__wrapper-heading
-        [:h2 (from-multi-lang (:label content) lang)]
+        [:h2 (util/from-multi-lang (:label content) lang)]
         [application-field/scroll-to-anchor content]]
        (into [:div.application__wrapper-contents]
              (child-fields children application lang ui nil))])))
@@ -144,7 +119,7 @@
       (let [groups-amount (->> content :id keyword (get @ui) :count)]
         [:div.application__question-group.application__read-only
          [:p.application__read-only-heading-text
-          (from-multi-lang (:label content) lang)]
+          (util/from-multi-lang (:label content) lang)]
          (into [:div]
                (for [idx (range groups-amount)]
                  ^{:key (str (:id content) "-" idx)}
@@ -174,14 +149,14 @@
                               (apply map vector))]
     [:div.application__form-field
      [:div.application__form-field-label
-      (str (from-multi-lang (:label field-descriptor) lang)
+      (str (util/from-multi-lang (:label field-descriptor) lang)
            (application-field/required-hint field-descriptor))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header
-            (str (from-multi-lang (:label child) lang)
+            (str (util/from-multi-lang (:label child) lang)
                  (application-field/required-hint field-descriptor))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
@@ -197,8 +172,8 @@
                 "application__form-field-label--readonly-arvosanat-taulukko")}
       (if (and arvosanat-taulukko?
                (seq unselected-label))
-        (from-multi-lang unselected-label lang)
-        (from-multi-lang (:label content) lang))]
+        (util/from-multi-lang unselected-label lang)
+        (util/from-multi-lang (:label content) lang))]
      [:div.application-handling__nested-container
       {:class (when arvosanat-taulukko?
                 "application-handling__nested-container--readonly-arvosanat-taulukko")}
@@ -217,7 +192,7 @@
               {:class        (when arvosanat-taulukko?
                                "application__text-field-paragraph--readonly-arvosanat-taulukko")
                :data-test-id data-test-id}
-              (from-multi-lang (:label option) lang)]
+              (util/from-multi-lang (:label option) lang)]
              (when (some #(visible? ui %) (:followups option))
                (into [:div.application-handling__nested-container]
                      (child-fields (:followups option) application lang ui question-group-idx)))])))]]))
@@ -225,7 +200,7 @@
 (defn- multiple-choice [content application lang question-group-idx]
   [:div.application__form-field
    [:div.application__form-field-label
-    (from-multi-lang (:label content) lang)]
+    (util/from-multi-lang (:label content) lang)]
    [:div.application-handling__nested-container
     (let [selected-options (filterv #(deref (subscribe [:application/multiple-choice-option-checked? (keyword (:id content)) (:value %) question-group-idx]))
                                     (:options content))
@@ -235,7 +210,7 @@
          ^{:key (:value option)}
          [:div
           [:p.application__text-field-paragraph
-           (from-multi-lang (:label option) lang)]
+           (util/from-multi-lang (:label option) lang)]
           (when (some #(visible? ui %) (:followups option))
             (into [:div.application-handling__nested-container]
                   (child-fields (:followups option) application lang ui question-group-idx)))])))]])
@@ -282,10 +257,11 @@
          {:fieldClass "formField" :exclude-from-answers true} nil
          {:fieldClass "pohjakoulutusristiriita"} nil
          {:fieldClass "infoElement"} nil
+         {:fieldClass "modalInfoElement"} nil
          {:fieldClass "formField" :fieldType "multipleChoice"} [multiple-choice field-descriptor application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "dropdown" "singleChoice")} [selectable field-descriptor application lang question-group-index]
          {:fieldClass "formField" :fieldType (:or "textField" "textArea")} [text field-descriptor application lang question-group-index]
-         {:fieldClass "formField" :fieldType "attachment"} [attachment field-descriptor application lang question-group-index]
+         {:fieldClass "formField" :fieldType "attachment"} [attachment/attachment-readonly field-descriptor application lang question-group-index]
          {:fieldClass "formField" :fieldType "hakukohteet"} [hakukohteet field-descriptor]))
 
 (defn field

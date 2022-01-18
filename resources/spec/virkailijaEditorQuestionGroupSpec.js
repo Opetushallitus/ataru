@@ -29,26 +29,6 @@
     )
   }
 
-  const formComponents = () => {
-    return (
-      testFrame()
-        .find('.editor-form__component-wrapper')
-        // exclude followup question components
-        .not(
-          '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-        )
-        // exclude hakukohteet
-        .not(
-          (i, node) => $(node).find("header:contains('Hakukohteet')").length > 0
-        )
-        // exclude henkilötiedot
-        .not(
-          (i, node) =>
-            $(node).find("header:contains('Henkilötiedot')").length > 0
-        )
-    )
-  }
-
   const menuItem = (title) => {
     triggerEvent(
       testFrame().find('.editor-form > .editor-form__add-component-toolbar'),
@@ -78,6 +58,83 @@
   const clickSubComponentMenuItem = (element, title) => {
     return clickElement(() => subMenuItem(element, title))
   }
+
+  const questionGroupChildrenContainer =
+    '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__wrapper-element-well'
+
+  const addQuestionGroupElement = (elementName) =>
+    clickSubComponentMenuItem(
+      () =>
+        formComponents().find(
+          '.editor-form__followup-question-overlay .editor-form__component-wrapper'
+        ),
+      elementName
+    )
+
+  const findQuestionInQuestionGroup = (questionIndex) =>
+    formComponents()
+      .find(
+        `${questionGroupChildrenContainer} > div > .editor-form__component-wrapper`
+      )
+      .eq(questionIndex)
+
+  const textFieldInNestedQuestion = (questionIndex, textFieldIndex) =>
+    findQuestionInQuestionGroup(questionIndex)
+      .find('.editor-form__text-field')
+      .eq(textFieldIndex)
+
+  const checkboxInNestedQuestion = (
+    questionIndex,
+    checkboxLabel,
+    checkboxIndex = 0
+  ) => {
+    const label = findQuestionInQuestionGroup(questionIndex)
+      .find(`.editor-form__checkbox + label:contains("${checkboxLabel}")`)
+      .eq(checkboxIndex)
+    return formComponents().find('#' + label.attr('for'))
+  }
+
+  const setTextFieldValueInNestedQuestion = (
+    questionIndex,
+    textFieldIndex,
+    value
+  ) =>
+    setTextFieldValue(
+      () => textFieldInNestedQuestion(questionIndex, textFieldIndex),
+      value
+    )
+
+  const clickAddDropdownItemInNestedQuestion = (questionIndex) =>
+    clickElement(() =>
+      findQuestionInQuestionGroup(questionIndex).find(
+        '.editor-form__add-dropdown-item a:contains("Lisää")'
+      )
+    )
+
+  const clickCheckboxWithLabelInNestedQuestion = (
+    questionIndex,
+    checkboxLabel,
+    checkboxIndex = 0
+  ) =>
+    clickElement(() =>
+      findQuestionInQuestionGroup(questionIndex)
+        .find(`.editor-form__checkbox + label:contains("${checkboxLabel}")`)
+        .eq(checkboxIndex)
+    )
+
+  const addAdjacentTextFieldInNestedQuestion = (questionIndex) =>
+    clickSubComponentMenuItem(
+      () =>
+        findQuestionInQuestionGroup(questionIndex).find(
+          '.editor-form__adjacent-fieldset-container'
+        ),
+      'Tekstikenttä'
+    )
+
+  const headerInNestedQuestion = (questionIndex) =>
+    findQuestionInQuestionGroup(questionIndex)
+      .find('.editor-form__component-main-header')
+      .eq(0)
 
   before(() => {
     loadInFrame('http://localhost:8350/lomake-editori/')
@@ -127,7 +184,9 @@
             'Päätaso: B'
           ),
           clickElement(() =>
-            formComponents().find('.editor-form__checkbox + label')
+            formComponents().find(
+              '.editor-form__checkbox + label:contains("Pakollinen")'
+            )
           )
         )
         it('has expected contents', () => {
@@ -189,6 +248,7 @@
             'Liitepyyntö',
             'Kysymysryhmä',
             'Infoteksti',
+            'Infoteksti, koko ruutu',
           ])
         })
       })
@@ -250,533 +310,232 @@
             'Vierekkäiset tekstikentät',
             'Liitepyyntö',
             'Infoteksti',
+            'Infoteksti, koko ruutu',
           ])
         })
       })
 
       describe('adding dropdown as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Pudotusvalikko'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(1)'
-              ),
+          addQuestionGroupElement('Pudotusvalikko'),
+          setTextFieldValueInNestedQuestion(
+            0,
+            0,
             'Kysymysryhmä: pudotusvalikko'
           ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(2)'
-              ),
-            'Pudotusvalikko: A'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(3)'
-              ),
-            'Pudotusvalikko: B'
-          ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label'
-            )
-          )
+          setTextFieldValueInNestedQuestion(0, 1, 'Pudotusvalikko: A'),
+          setTextFieldValueInNestedQuestion(0, 2, 'Pudotusvalikko: B'),
+          clickCheckboxWithLabelInNestedQuestion(0, 'Pakollinen')
         )
         it('adds dropdown as element to a question group', () => {
+          expect(headerInNestedQuestion(0).text()).to.equal('Pudotusvalikko')
+          expect(textFieldInNestedQuestion(0, 0).val()).to.equal(
+            'Kysymysryhmä: pudotusvalikko'
+          )
+          expect(textFieldInNestedQuestion(0, 1).val()).to.equal(
+            'Pudotusvalikko: A'
+          )
+          expect(textFieldInNestedQuestion(0, 2).val()).to.equal(
+            'Pudotusvalikko: B'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(1)'
-              )
-              .text()
-          ).to.equal('Pudotusvalikko')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(1)'
-              )
-              .val()
-          ).to.equal('Kysymysryhmä: pudotusvalikko')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(2)'
-              )
-              .val()
-          ).to.equal('Pudotusvalikko: A')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(3)'
-              )
-              .val()
-          ).to.equal('Pudotusvalikko: B')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox'
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(0, 'Pakollinen').prop('checked')
           ).to.equal(true)
         })
       })
 
       describe('adding single choice button as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Painikkeet, yksi valittavissa'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(4)'
-              ),
+          addQuestionGroupElement('Painikkeet, yksi valittavissa'),
+          setTextFieldValueInNestedQuestion(
+            1,
+            0,
             'Kysymysryhmä: painikkeet, yksi valittavissa'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(1)'
-            )
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(5)'
-              ),
+          clickAddDropdownItemInNestedQuestion(1),
+          setTextFieldValueInNestedQuestion(
+            1,
+            1,
             'Painikkeet, yksi valittavissa: A'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(1)'
-            )
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(6)'
-              ),
+          clickAddDropdownItemInNestedQuestion(1),
+          setTextFieldValueInNestedQuestion(
+            1,
+            2,
             'Painikkeet, yksi valittavissa: B'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(1)'
-            )
-          )
+          clickCheckboxWithLabelInNestedQuestion(1, 'Pakollinen')
         )
         it('adds single choice button as element to a question group', () => {
+          expect(headerInNestedQuestion(1).text()).to.equal(
+            'Painikkeet, yksi valittavissa'
+          )
+          expect(textFieldInNestedQuestion(1, 0).val()).to.equal(
+            'Kysymysryhmä: painikkeet, yksi valittavissa'
+          )
+          expect(textFieldInNestedQuestion(1, 1).val()).to.equal(
+            'Painikkeet, yksi valittavissa: A'
+          )
+          expect(textFieldInNestedQuestion(1, 2).val()).to.equal(
+            'Painikkeet, yksi valittavissa: B'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(2)'
-              )
-              .text()
-          ).to.equal('Painikkeet, yksi valittavissa')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(4)'
-              )
-              .val()
-          ).to.equal('Kysymysryhmä: painikkeet, yksi valittavissa')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(5)'
-              )
-              .val()
-          ).to.equal('Painikkeet, yksi valittavissa: A')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(6)'
-              )
-              .val()
-          ).to.equal('Painikkeet, yksi valittavissa: B')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(1)'
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(1, 'Pakollinen').prop('checked')
           ).to.equal(true)
         })
       })
 
       describe('adding multiple choice button as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Lista, monta valittavissa'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(7)'
-              ),
+          addQuestionGroupElement('Lista, monta valittavissa'),
+          setTextFieldValueInNestedQuestion(
+            2,
+            0,
             'Kysymysryhmä: lista, monta valittavissa'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(2)'
-            )
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(8)'
-              ),
+          clickAddDropdownItemInNestedQuestion(2),
+          setTextFieldValueInNestedQuestion(
+            2,
+            1,
             'Lista, monta valittavissa: A'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__add-dropdown-item a:contains("Lisää"):eq(2)'
-            )
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(9)'
-              ),
+          clickAddDropdownItemInNestedQuestion(2),
+          setTextFieldValueInNestedQuestion(
+            2,
+            2,
             'Lista, monta valittavissa: B'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(2)'
-            )
-          )
+          clickCheckboxWithLabelInNestedQuestion(2, 'Pakollinen')
         )
         it('adds multiple choice button as element to a question group', () => {
+          expect(headerInNestedQuestion(2).text()).to.equal(
+            'Lista, monta valittavissa'
+          )
+          expect(textFieldInNestedQuestion(2, 0).val()).to.equal(
+            'Kysymysryhmä: lista, monta valittavissa'
+          )
+          expect(textFieldInNestedQuestion(2, 1).val()).to.equal(
+            'Lista, monta valittavissa: A'
+          )
+          expect(textFieldInNestedQuestion(2, 2).val()).to.equal(
+            'Lista, monta valittavissa: B'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(3)'
-              )
-              .text()
-          ).to.equal('Lista, monta valittavissa')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(7)'
-              )
-              .val()
-          ).to.equal('Kysymysryhmä: lista, monta valittavissa')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(8)'
-              )
-              .val()
-          ).to.equal('Lista, monta valittavissa: A')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(9)'
-              )
-              .val()
-          ).to.equal('Lista, monta valittavissa: B')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(2)'
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(2, 'Pakollinen').prop('checked')
           ).to.equal(true)
         })
       })
 
       describe('adding single-answer text field as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(10)'
-              ),
-            'Tekstikenttä, yksi vastaus'
-          ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(3)'
-            )
-          )
+          addQuestionGroupElement('Tekstikenttä'),
+          setTextFieldValueInNestedQuestion(3, 0, 'Tekstikenttä, yksi vastaus'),
+          clickCheckboxWithLabelInNestedQuestion(3, 'Pakollinen')
         )
         it('adds single-answer text field as element to a question group', () => {
+          expect(headerInNestedQuestion(3).text()).to.equal('Tekstikenttä')
+          expect(textFieldInNestedQuestion(3, 0).val()).to.equal(
+            'Tekstikenttä, yksi vastaus'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(4)'
-              )
-              .text()
-          ).to.equal('Tekstikenttä')
+            checkboxInNestedQuestion(3, 'Pakollinen').prop('checked')
+          ).to.equal(true)
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(10)'
-              )
-              .val()
-          ).to.equal('Tekstikenttä, yksi vastaus')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(3)'
-              )
-              .prop('checked')
-          ).to.equal(true) // required
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(4)'
-              )
-              .prop('checked')
-          ).to.equal(false) // multiple answers
+            checkboxInNestedQuestion(3, 'useita vastauksia').prop('checked')
+          ).to.equal(false)
         })
       })
 
       describe('adding multi-answer text field as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(11)'
-              ),
+          addQuestionGroupElement('Tekstikenttä'),
+          setTextFieldValueInNestedQuestion(
+            4,
+            0,
             'Tekstikenttä, monta vastausta'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(6)'
-            )
-          ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(7)'
-            )
-          )
+          clickCheckboxWithLabelInNestedQuestion(4, 'Pakollinen'),
+          clickCheckboxWithLabelInNestedQuestion(4, 'useita vastauksia')
         )
         it('adds multi-answer text field as element to a question group', () => {
+          expect(headerInNestedQuestion(4).text()).to.equal('Tekstikenttä')
+          expect(textFieldInNestedQuestion(4, 0).val()).to.equal(
+            'Tekstikenttä, monta vastausta'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(5)'
-              )
-              .text()
-          ).to.equal('Tekstikenttä')
+            checkboxInNestedQuestion(4, 'Pakollinen').prop('checked')
+          ).to.equal(true)
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(11)'
-              )
-              .val()
-          ).to.equal('Tekstikenttä, monta vastausta')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(6)'
-              )
-              .prop('checked')
-          ).to.equal(true) // required
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(7)'
-              )
-              .prop('checked')
-          ).to.equal(true) // multiple answers
+            checkboxInNestedQuestion(4, 'useita vastauksia').prop('checked')
+          ).to.equal(true)
         })
       })
 
       describe('adding text area as element to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Tekstialue'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(12)'
-              ),
-            'Tekstialue'
-          ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox + label:eq(9)'
-            )
-          )
+          addQuestionGroupElement('Tekstialue'),
+          setTextFieldValueInNestedQuestion(5, 0, 'Tekstialue'),
+          clickCheckboxWithLabelInNestedQuestion(5, 'Pakollinen')
         )
         it('adds text area as element to a question group', () => {
+          expect(headerInNestedQuestion(5).text()).to.equal('Tekstialue')
+          expect(textFieldInNestedQuestion(5, 0).val()).to.equal('Tekstialue')
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(6)'
-              )
-              .text()
-          ).to.equal('Tekstialue')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(12)'
-              )
-              .val()
-          ).to.equal('Tekstialue')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(9)'
-              )
-              .prop('checked')
-          ).to.equal(true) // required
+            checkboxInNestedQuestion(5, 'Pakollinen').prop('checked')
+          ).to.equal(true)
         })
       })
 
       describe('adding single-answer adjacent text field to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Vierekkäiset tekstikentät'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(14)'
-              ),
+          addQuestionGroupElement('Vierekkäiset tekstikentät'),
+          setTextFieldValueInNestedQuestion(
+            6,
+            0,
             'Vierekkäiset tekstikentät, yksi vastaus'
           ),
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(15)'
-              ),
+          addAdjacentTextFieldInNestedQuestion(6),
+          setTextFieldValueInNestedQuestion(
+            6,
+            1,
             'Vierekkäiset tekstikentät, yksi vastaus: A'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(11) + label'
-            )
-          ),
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(16)'
-              ),
+          clickCheckboxWithLabelInNestedQuestion(6, 'Pakollinen', 0),
+          addAdjacentTextFieldInNestedQuestion(6),
+          setTextFieldValueInNestedQuestion(
+            6,
+            2,
             'Vierekkäiset tekstikentät, yksi vastaus: B'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13) + label'
-            )
-          )
+          clickCheckboxWithLabelInNestedQuestion(6, 'Pakollinen', 1)
         )
         it('adds single-answer adjacent text field as element to a question group', () => {
+          expect(headerInNestedQuestion(6).text()).to.equal(
+            'Vierekkäiset tekstikentät'
+          )
+          expect(textFieldInNestedQuestion(6, 0).val()).to.equal(
+            'Vierekkäiset tekstikentät, yksi vastaus'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(7)'
-              )
-              .text()
-          ).to.equal('Vierekkäiset tekstikentät')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(14)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, yksi vastaus')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(10)'
-              )
-              .prop('checked')
-          ).to.equal(false) // multiple answers
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(15)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, yksi vastaus: A')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(11)' //pakollinen tieto
-              )
-              .prop('checked')
-          ).to.equal(true)
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(12)' //vain numeroita
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(6, 'useita vastauksia').prop('checked')
           ).to.equal(false)
+          expect(textFieldInNestedQuestion(6, 1).val()).to.equal(
+            'Vierekkäiset tekstikentät, yksi vastaus: A'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(16)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, yksi vastaus: B')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(13)' //pakollinen tieto
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(6, 'Pakollinen', 0).prop('checked')
           ).to.equal(true)
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(14)' //vain numeroita
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(6, 'vain numeroita', 0).prop('checked')
+          ).to.equal(false)
+          expect(textFieldInNestedQuestion(6, 2).val()).to.equal(
+            'Vierekkäiset tekstikentät, yksi vastaus: B'
+          )
+          expect(
+            checkboxInNestedQuestion(6, 'Pakollinen', 1).prop('checked')
+          ).to.equal(true)
+          expect(
+            checkboxInNestedQuestion(6, 'vain numeroita', 1).prop('checked')
           ).to.equal(false)
           expect(
             formComponents().find(
@@ -788,114 +547,56 @@
 
       describe('adding multi-answer adjacent text field to a question group', () => {
         before(
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper'
-              ),
-            'Vierekkäiset tekstikentät'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(17)'
-              ),
+          addQuestionGroupElement('Vierekkäiset tekstikentät'),
+          setTextFieldValueInNestedQuestion(
+            7,
+            0,
             'Vierekkäiset tekstikentät, monta vastausta'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15) + label'
-            )
-          ),
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container:eq(1)'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(18)'
-              ),
+          clickCheckboxWithLabelInNestedQuestion(7, 'useita vastauksia'),
+          addAdjacentTextFieldInNestedQuestion(7),
+          setTextFieldValueInNestedQuestion(
+            7,
+            1,
             'Vierekkäiset tekstikentät, monta vastausta: A'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(16) + label'
-            )
-          ),
-          clickSubComponentMenuItem(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container:eq(1)'
-              ),
-            'Tekstikenttä'
-          ),
-          setTextFieldValue(
-            () =>
-              formComponents().find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(19)'
-              ),
+          clickCheckboxWithLabelInNestedQuestion(7, 'Pakollinen', 0),
+          addAdjacentTextFieldInNestedQuestion(7),
+          setTextFieldValueInNestedQuestion(
+            7,
+            2,
             'Vierekkäiset tekstikentät, monta vastausta: B'
           ),
-          clickElement(() =>
-            formComponents().find(
-              '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(18) + label'
-            )
-          )
+          clickCheckboxWithLabelInNestedQuestion(7, 'Pakollinen', 1)
         )
         it('adds multi-answer adjacent text field as element to a question group', () => {
+          expect(headerInNestedQuestion(7).text()).to.equal(
+            'Vierekkäiset tekstikentät'
+          )
+          expect(textFieldInNestedQuestion(7, 0).val()).to.equal(
+            'Vierekkäiset tekstikentät, monta vastausta'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__component-main-header:eq(10)'
-              )
-              .text()
-          ).to.equal('Vierekkäiset tekstikentät')
+            checkboxInNestedQuestion(7, 'useita vastauksia').prop('checked')
+          ).to.equal(true)
+          expect(textFieldInNestedQuestion(7, 1).val()).to.equal(
+            'Vierekkäiset tekstikentät, monta vastausta: A'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(17)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, monta vastausta')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(15)'
-              )
-              .prop('checked')
-          ).to.equal(true) // multiple answers
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(18)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, monta vastausta: A')
-          expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(16)'
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(7, 'Pakollinen', 0).prop('checked')
           ).to.equal(true)
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__text-field:eq(19)'
-              )
-              .val()
-          ).to.equal('Vierekkäiset tekstikentät, monta vastausta: B')
+            checkboxInNestedQuestion(7, 'vain numeroita', 0).prop('checked')
+          ).to.equal(false)
+          expect(textFieldInNestedQuestion(7, 2).val()).to.equal(
+            'Vierekkäiset tekstikentät, monta vastausta: B'
+          )
           expect(
-            formComponents()
-              .find(
-                '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__checkbox:eq(18)'
-              )
-              .prop('checked')
+            checkboxInNestedQuestion(7, 'Pakollinen', 1).prop('checked')
           ).to.equal(true)
+          expect(
+            checkboxInNestedQuestion(7, 'vain numeroita', 1).prop('checked')
+          ).to.equal(false)
           expect(
             formComponents().find(
               '.editor-form__followup-question-overlay .editor-form__component-wrapper .editor-form__adjacent-fieldset-container .form__add-component-toolbar--list-item a:contains("Pohjakoulutusmoduuli")'

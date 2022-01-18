@@ -12,7 +12,7 @@
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
             [ataru.background-job.job :as job]
-            [ataru.email.application-email-confirmation :as email]
+            [ataru.email.application-email-jobs :as email]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :as url-helper]
@@ -76,7 +76,8 @@
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
             [ataru.user-rights :as user-rights]
-            [ataru.util :as util])
+            [ataru.util :as util]
+            [ataru.hakija.hakija-form-service :as hakija-form-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -739,7 +740,22 @@
         :summary "Remove an entry from cache map"
         {:status 200
          :body   (do (cache/remove-from (get dependencies (keyword (str cache "-cache"))) key)
-                     {})}))
+                     {})})
+      (api/POST "/haku/:haku-oid/clear" {session :session}
+        :path-params [haku-oid :- s/Str]
+        :summary "Remove haku, hakukohde and form cache entries related to haku"
+        {:status 200
+         :body   (do
+                   (tarjonta/clear-haku-caches tarjonta-service haku-oid)
+                   (hakija-form-service/clear-form-by-haku-oid-str-cache
+                     (:form-by-haku-oid-str-cache dependencies)
+                     haku-oid
+                     [:hakija])
+                   (hakija-form-service/clear-form-by-haku-oid-str-cache
+                     (:form-by-haku-oid-str-cache dependencies)
+                     haku-oid
+                     [:virkailija])
+                   {})}))
 
     (api/GET "/haut" {session :session}
       :query-params [{show-hakukierros-paattynyt :- s/Bool false}]

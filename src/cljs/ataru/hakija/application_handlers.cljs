@@ -1,6 +1,6 @@
 (ns ataru.hakija.application-handlers
   (:require [clojure.string :as string]
-            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after]]
+            [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
             [ataru.application.option-visibility :as option-visibility]
@@ -23,7 +23,8 @@
             [ataru.component-data.value-transformers :as value-transformers]
             [cljs-time.core :as c]
             [cljs-time.format :as f]
-            [cljs-time.coerce :refer [to-long]]))
+            [cljs-time.coerce :refer [to-long]]
+            [ataru.hakija.demo :as demo]))
 
 (def db-validator (s/validator schema/Db))
 
@@ -145,6 +146,20 @@
                             "?role=hakija"))
             :handler [:application/handle-form]}}))
 
+(reg-event-fx
+  :application/set-demo-requested
+  [check-schema-interceptor (inject-cofx :now)]
+  (fn [{:keys [db now]}]
+    {:db
+     (-> db
+       (assoc :demo-requested true)
+       (assoc :today now))}))
+
+(defn handle-submit [db _]
+  (assoc-in db [:application :submit-status] :submitted))
+
+(defn- send-application-with-api
+  [db method]
 (defn send-application [db method]
   (when-not (-> db :application :submit-status)
     {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
@@ -156,6 +171,15 @@
                                                          (:strict-warnings-on-unchanged-edits? db))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
+
+(defn- send-application-demo
+  []
+  {:dispatch [:application/handle-submit-response]})
+
+(defn send-application [db method]
+  (if (demo/demo? db)
+    (send-application-demo)
+    (send-application-with-api db method)))
 
 (reg-event-db
   :application/handle-submit-response
@@ -405,13 +429,31 @@
                                        (assoc :hakuaika-end hakuaika-end)
                                        (assoc :time-delta-from-server time-diff))
         valid-hakukohde-oids       (set (->> form :tarjonta :hakukohteet
-                                             (filter #(get-in % [:hakuaika :on]))
+                                             (filter #(or (demo/demo? db form) (get-in % [:hakuaika :on])))
                                              (map :oid)))
         preselected-hakukohde-oids (->> db :application :preselected-hakukohde-oids
                                         (filter #(contains? valid-hakukohde-oids %)))
+        form-hakukohde-oids        (->> (:content form)
+                                     (filter #(= "hakukohteet" (:id %)))
+                                     first
+                                     :options
+                                     (mapv :value))
+        preselected-hakukohde-oids (cond
+                                     (> (count preselected-hakukohde-oids) 0)
+                                     preselected-hakukohde-oids
+
+                                     ; Jos lomakkeella on vain yksi hakukohde, käytetään sitä
+                                     (= 1 (count form-hakukohde-oids))
+                                     form-hakukohde-oids
+
+                                     :else
+                                     [])
         excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
-        questions                  (:content form)
-        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) (get-in db [:application :hakukohde]) questions)
+        questions                  (demo/apply-when-demo db form demo/remove-unwanted-validators (:content form))
+        hakukohde-oids-to-duplicate (if-let [application-hakukohde-oids (get-in db [:application :hakukohde])]
+                                      application-hakukohde-oids
+                                      preselected-hakukohde-oids)
+        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
@@ -497,7 +539,7 @@
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
                       [:application/fetch-koulutustyypit]]}
-        (when selection-limited
+        (when (and selection-limited (not (demo/demo? db)))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
                   :handler [:application/handle-selection-limit]}})))))
@@ -787,6 +829,12 @@
   (fn [db _]
     (set-field-visibilities db)))
 
+(defn- handle-section-visibility-conditions-on-change?
+  [field-descriptor]
+  (and
+    (seq (:section-visibility-conditions field-descriptor))
+    (#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType field-descriptor))))
+
 (reg-event-fx
   :application/set-repeatable-application-field
   [check-schema-interceptor]
@@ -802,7 +850,9 @@
                                  (field-visibility/set-field-visibility field-descriptor)
                                  (set-validator-processing id))]
       {:db                 db
-       :dispatch           [:application/set-followup-values field-descriptor]
+       :dispatch-n         [[:application/set-followup-values field-descriptor]
+                            (when (handle-section-visibility-conditions-on-change? field-descriptor)
+                              [:application/handle-section-visibility-conditions])]
        :validate-debounced {:value                        value
                             :priorisoivat-hakukohderyhmat (get-in db [:form :priorisoivat-hakukohderyhmat])
                             :answers-by-key               (get-in db [:application :answers])
@@ -812,6 +862,7 @@
                             :field-idx                    data-idx
                             :virkailija?                  (contains? (:application db) :virkailija-secret)
                             :try-selection                (partial try-selection
+                                                                   db
                                                                    form-key
                                                                    selection-id
                                                                    selection-group-id)

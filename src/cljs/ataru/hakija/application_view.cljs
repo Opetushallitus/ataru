@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
+            [ataru.application-common.application-field-common :refer [markdown-paragraph]]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
@@ -8,7 +9,8 @@
             [re-frame.core :refer [subscribe dispatch]]
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [ataru.util :as util]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -91,33 +93,37 @@
         expired                (subscribe [:state-query [:application :secret-expired?]])
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
-        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])]
+        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
+        demo?                  (subscribe [:application/demo?])]
     (fn []
-      [:div.application__form-content-area
-       (when-not (or @load-failure?
+      (let [root-element (if @demo?
+                           :div.application__form-content-area.application__form-content-area--demo
+                           :div.application__form-content-area)]
+        [root-element
+         (when-not (or @load-failure?
                      @form)
-         [:div.application__form-loading-spinner
-          [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
-       (when @expired
-         [:div.application__secret-expired
-          [:div.application__secret-expired-icon
-           [:i.zmdi.zmdi-lock-outline]]
-          [:h2 (translations/get-hakija-translation :expired-secret-heading @lang)]
-          [:p (translations/get-hakija-translation :expired-secret-paragraph @lang secret-link-valid-days)]
-          [:button.application__secret-resend-button
-           {:disabled (some? @delivery-status)
-            :on-click #(dispatch [:application/send-new-secret])}
-           (if (= :completed @delivery-status)
-             (translations/get-hakija-translation :expired-secret-sent @lang)
-             (translations/get-hakija-translation :expired-secret-button @lang))]
-          [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
+           [:div.application__form-loading-spinner
+            [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
+         (when @expired
+           [:div.application__secret-expired
+            [:div.application__secret-expired-icon
+             [:i.zmdi.zmdi-lock-outline]]
+            [:h2 (translations/get-hakija-translation :expired-secret-heading @lang)]
+            [:p (translations/get-hakija-translation :expired-secret-paragraph @lang secret-link-valid-days)]
+            [:button.application__secret-resend-button
+             {:disabled (some? @delivery-status)
+              :on-click #(dispatch [:application/send-new-secret])}
+             (if (= :completed @delivery-status)
+               (translations/get-hakija-translation :expired-secret-sent @lang)
+               (translations/get-hakija-translation :expired-secret-button @lang))]
+            [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
 
-       ^{:key (:id @form)}
-       [application-header]
+         ^{:key (:id @form)}
+         [application-header]
 
-       (when (or @can-apply? @editing?)
-         ^{:key "form-fields"}
-         [render-fields @form])])))
+         (when (or @can-apply? @editing?)
+           ^{:key "form-fields"}
+           [render-fields @form])]))))
 
 (defn- star-number-from-event
   [event]
@@ -126,15 +132,17 @@
       (js/parseInt 10)))
 
 (defn- submit-notification
-  [hidden?]
+  [hidden? demo?]
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
-         (translations/get-hakija-translation :application-submitted lang)]]
+         (translations/get-hakija-translation
+           (if @demo? :application-submitted-demo :application-submitted)
+           lang)]]
        [:div.application__submitted-submit-notification-inner
-        [:button.application__send-feedback-button.application__send-feedback-button--enabled
+        [:button.application__overlay-button.application__overlay-button--enabled
          {:on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
@@ -212,14 +220,14 @@
                  :max-length  2000}]])
             (when (and (not submitted?)
                        rated?)
-              [:button.application__send-feedback-button.application__send-feedback-button--enabled
+              [:button.application__overlay-button.application__overlay-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
                             (dispatch [:application/rating-feedback-submit]))}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
-              [:button.application__send-feedback-button.application__send-feedback-button
+              [:button.application__overlay-button.application__overlay-button
                {:disabled true}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (not submitted?)
@@ -234,7 +242,8 @@
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
         submit-details              (subscribe [:state-query [:application :submit-details]])
         submit-notification-hidden? (r/atom false)
-        feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])]
+        feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
+        demo?                       (subscribe [:application/demo?])]
     (fn []
       (when (and (= :submitted @submit-status)
                  (or (not @feedback-hidden?)
@@ -243,9 +252,33 @@
          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
          (when (not @submit-notification-hidden?)
                (if @submit-details
-                  [submit-notification-payment submit-notification-hidden? @submit-details]
-                  [submit-notification submit-notification-hidden?])
-               )]))))
+                   [submit-notification-payment submit-notification-hidden? @submit-details]
+                   [submit-notification submit-notification-hidden? demo?]))]))))
+
+(defn- modal-info-element-overlay-inner
+  [field]
+  (let [modal-hidden (r/atom false)]
+    (fn []
+      (let [languages              (subscribe [:application/default-languages])
+            application-identifier (subscribe [:application/application-identifier])
+            header                 (util/non-blank-val (:label field) @languages)
+            text                   (util/non-blank-val (:text field) @languages)
+            button-text            (util/non-blank-val (:button-text field) @languages)]
+        (when (and field (not @modal-hidden))
+          [:div.application__notification-overlay
+           [:div.application__notification-container
+            [:h1.application__notification-title
+             (when (not-empty header)
+               header)]
+            [markdown-paragraph text (-> field :params :info-text-collapse) @application-identifier]
+            [:button.application__notification-button.application__notification-button--enabled
+             {:on-click #(reset! modal-hidden true)}
+             button-text]]])))))
+
+(defn- modal-info-element-overlay
+  []
+  (when-let [field @(subscribe [:application/first-visible-modal-info-element])]
+    [modal-info-element-overlay-inner field]))
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])
@@ -258,9 +291,28 @@
               [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
               [:div.application__message-display--details (translations/get-hakija-translation error-code @lang)]]))))
 
+(defn demo-overlay
+  []
+  (let [demo?   (subscribe [:application/demo?])
+        hidden? (r/atom false)
+        lang    (subscribe [:application/form-language])]
+    (fn []
+      (when (and @demo? (not @hidden?))
+        [:div.application__notification-overlay
+         [:div.application__notification-container
+          [:h1.application__notification-title
+           (translations/get-hakija-translation :demo-notification-title @lang)]
+          [:p (translations/get-hakija-translation :demo-notification @lang)]
+          [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
+           {:on-click     #(reset! hidden? true)
+            :data-test-id "dismiss-demo-notification-button"}
+           (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]))))
+
 (defn form-view []
   [:div
    [banner]
    [error-display]
    [application-contents]
-   [submitted-overlay]])
+   [submitted-overlay]
+   [demo-overlay]
+   [modal-info-element-overlay]])

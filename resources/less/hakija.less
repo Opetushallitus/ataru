@@ -4,7 +4,10 @@
 @import "button-component";
 @field-margin-left: 245px;
 @form-select-width: 305px;
+@notification-banner-height: 70px;
+@notification-banner-height-mobile: 23px;
 @total-banner-height: 97px;
+@total-banner-height-mobile: 90px;
 
 body {
   overflow-y: scroll;
@@ -36,6 +39,16 @@ body {
   display: flex;
   justify-content: center;
   background-color: @primary-green-700;
+}
+
+.application__notification-banner-container {
+  height: @notification-banner-height;
+  background-color: @primary-green-100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: @neutral-grey-900;
+  font-size: 24px;
 }
 
 .application__virkailija-fill-ribbon {
@@ -119,6 +132,15 @@ body {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
+
+  &--attachment-with-address {
+    background-color: @neutral-grey-50;
+    padding: 6px 3px;
+
+    .application__form-info-text a {
+      background: none;
+    }
+  }
 }
 
 @media only screen and (max-width: @mobile-width) {
@@ -355,11 +377,11 @@ body {
 }
 
 .application__send-application-button {
-  height: 40px;
+  .secondary-button;
+  min-height: 40px;
   width: 210px;
   margin-right: 0;
   font-size: 14px;
-  .secondary-button;
 }
 
 .application__sent-indicator {
@@ -526,6 +548,10 @@ body {
   margin-left: auto;
   margin-bottom: 150px;
   width: @desktop-content-width;
+
+  &.application__form-content-area--demo {
+    margin-top: @total-banner-height + @notification-banner-height;
+  }
 }
 
 .application__editable-content {
@@ -1146,7 +1172,7 @@ th.application__readonly-adjacent--header {
 }
 
 .application__form-single-choice-button:checked + label.disabled {
-  background-color: @single-choice-disabled;
+  background-color: @neutral-grey-500;
 }
 
 .application__text-field-paragraph {
@@ -1233,9 +1259,17 @@ th.application__readonly-adjacent--header {
     margin-left: 10px;
     margin-right: 10px;
   }
+  .application__notification-banner-container {
+    height: @notification-banner-height-mobile;
+    font-size: 16px;
+  }
   .application__form-content-area {
-    margin-top: 90px;
+    margin-top: @total-banner-height-mobile;
     width: auto;
+
+    &.application__form-content-area--demo {
+      margin-top: @total-banner-height-mobile + @notification-banner-height-mobile;
+    }
   }
   .application__form-text-input__size-large,
   .application__form-text-area__size-small,
@@ -1271,6 +1305,10 @@ th.application__readonly-adjacent--header {
   }
   .application__form-adjacent-row--desktop-only {
     display: none;
+  }
+
+  .application__demo-notification-title {
+    font-size: 36px;
   }
 }
 
@@ -1421,7 +1459,8 @@ th.application__readonly-adjacent--header {
     display: inline;
     vertical-align: middle;
   }
-  &>div>i {
+  &>div>i,
+  &>div>label {
     display: inline;
     vertical-align: middle;
     margin-left: 5px;
@@ -1888,6 +1927,71 @@ th.application__readonly-adjacent--header {
   align-content: center;
   display: flex;
 }
+
+
+.application__notification-overlay {
+  background-color: @very-light-gray;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__notification-container {
+    margin-top: 2 * @total-banner-height;
+    width: 60%;
+    border: 3px solid @primary-green-700;
+    padding: 2rem 3rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__notification-title {
+      font-size: 36px;
+    }
+
+    p,
+    .application__notification-button {
+      font-size: 24px;
+    }
+
+    .application__notification-button {
+      .primary-button;
+      margin-top: 1rem;
+      padding: 0.6rem 2rem;
+    }
+  }
+
+  @media only screen and (max-width: @mobile-width) {
+    .application__notification-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+
+      .application__notification-title {
+        font-size: 26px;
+      }
+
+      p,
+      .application__notification-button {
+        font-size: 16px;
+      }
+
+      .application__notification-button {
+        margin-top: 0.5rem;
+      }
+    }
+  }
+}
+
 .application__submitted-submit-notification-inner {
   display: flex;
   justify-content: center;
@@ -2025,10 +2129,9 @@ th.application__readonly-adjacent--header {
   padding: 0 30px;
 }
 
-.application__send-feedback-button {
+.application__overlay-button {
   .primary-button;
   align-items: center;
-  border-radius: 3px;
   display: flex;
   height: 41px;
   justify-content: center;
@@ -2228,6 +2331,7 @@ th.application__readonly-adjacent--header {
   }
   .application__form-field-label--duplicate-question {
     span {
+      color: @primary-green-700;
       font-weight: normal;
     }
   }

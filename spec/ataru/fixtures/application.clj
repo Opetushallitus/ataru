@@ -398,7 +398,11 @@
                {:key       "hakukohteet"
                 :value     ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                 :fieldType "hakukohteet"
-                :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}]})
+                :label     {:fi "Hakukohteet" :sv "Ansökningsmål" :en "Application options"}}
+               {:key       "87834771-34da-40a4-a9f6-sensitive"
+                :value     "Salainen vastaus"
+                :fieldType "textArea"
+                :label     {:fi "Salainen kysymys" :sv ""}}]})
 
 (def application-with-person-info-module {:key     "9d24af7d-f672-4c0e-870f-3c6999f105e0"
                                           :lang    "fi"
