@@ -818,39 +818,6 @@
         })
       })
 
-      describe('state selection boxes', () => {
-        before(
-          clickElement(massUpdateFromStateSelectionClosed),
-          clickElement(massUpdateToStateSelectionClosed)
-        )
-
-        it('have the correct contents', () => {
-          expect(
-            massUpdateFromStateSelectionOpened().find(
-              '.application-handling__review-state-row'
-            ).length === 7
-          )
-          expect(
-            massUpdateFromStateSelectionOpened().find(
-              '.application-handling__review-state-row--disabled'
-            ).length === 5
-          )
-
-          expect(
-            massUpdateToStateSelectionOpened().find(
-              '.application-handling__review-state-row'
-            ).length === 7
-          )
-          expect(
-            massUpdateToStateSelectionOpened().find(
-              '.application-handling__review-state-row--disabled'
-            ).length === 0
-          )
-
-          expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
-        })
-      })
-
       describe('selecting to-state and submitting', () => {
         before(
           clickElement(() => {
