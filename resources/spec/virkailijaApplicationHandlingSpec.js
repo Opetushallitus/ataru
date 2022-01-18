@@ -835,11 +835,6 @@
               '.application-handling__review-state-row--disabled'
             ).length === 5
           )
-          expect(
-            massUpdateFromStateSelectionOpened()
-              .find('.application-handling__review-state-row--selected')
-              .text()
-          ).to.equal('Käsittelemättä (2)')
 
           expect(
             massUpdateToStateSelectionOpened().find(
@@ -851,11 +846,6 @@
               '.application-handling__review-state-row--disabled'
             ).length === 0
           )
-          expect(
-            massUpdateToStateSelectionOpened()
-              .find('.application-handling__review-state-row--selected')
-              .text()
-          ).to.equal('Käsittelemättä (2)')
 
           expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
