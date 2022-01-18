@@ -16,6 +16,10 @@
                              :form-key                    "testi-form-key"
                              :country-question-id         "testi-country-question-id"
                              :attachment-total-size-limit 10485760
+                             :maksut                      {:enabled?                false
+                                                           :poll-interval-minutes   60
+                                                           :decision-amount         "70.00"
+                                                           :form-key      			    ""}
                              :ftp                         {:host               "localhost"
                                                            :port               1221
                                                            :user               "oph"
