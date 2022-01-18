@@ -36,8 +36,6 @@
   ([ds-key]
    (get-datasource ds-key false))
   ([ds-key read-only?]
-   (when (not read-only?)
-     (log/warn (str "Not read-only query: " (nth (.getStackTrace (Thread/currentThread)) 3) (nth (.getStackTrace (Thread/currentThread)) 4))))
    (let [ds-key (if read-only?
                   :db-read-only
                   ds-key)]

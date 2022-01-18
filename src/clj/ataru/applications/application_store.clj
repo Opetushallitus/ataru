@@ -35,6 +35,11 @@
   [ds-key query params]
   (db/exec ds-key query params))
 
+(defn- exec-on-primary-db
+  [ds-key query params]
+  (jdbc/with-db-transaction [connection {:datasource (db/get-datasource ds-key)}]
+                            (query params {:connection connection})))
+
 (defn- get-datasource
   []
   {:connection
@@ -505,7 +510,6 @@
 
 (defn get-application-heading-list
   [query sort]
-  (prn query)
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db true)}]
     (let [db-query (query->db-query connection query sort)]
       (try
@@ -559,12 +563,12 @@
        ->kebab-case-kw))
 
 (defn get-application-review-notes [application-key]
-  (->> (exec-db :db queries/yesql-get-application-review-notes {:application_key application-key})
+  (->> (exec-on-primary-db :db queries/yesql-get-application-review-notes {:application_key application-key})
        (map ->kebab-case-kw)
        (map util/remove-nil-values)))
 
 (defn get-application-review [application-key]
-  (->> (exec-db :db queries/yesql-get-application-review {:application_key application-key})
+  (->> (exec-on-primary-db :db queries/yesql-get-application-review {:application_key application-key})
        (map ->kebab-case-kw)
        (first)))
 
@@ -638,11 +642,11 @@
 
 (defn get-application-hakukohde-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
+  (mapv ->kebab-case-kw (exec-on-primary-db :db queries/yesql-get-application-hakukohde-reviews {:application_key application-key})))
 
 (defn get-application-attachment-reviews
   [application-key]
-  (mapv ->kebab-case-kw (exec-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key})))
+  (mapv ->kebab-case-kw (exec-on-primary-db :db queries/yesql-get-application-attachment-reviews {:application_key application-key})))
 
 (defn get-latest-application-by-secret [secret]
   (when-let [application (->> (exec-db :db
@@ -720,7 +724,7 @@
       (:id application))))
 
 (defn get-application-events [application-key]
-  (->> (exec-db :db queries/yesql-get-application-events {:application_key application-key})
+  (->> (exec-on-primary-db :db queries/yesql-get-application-events {:application_key application-key})
        (mapv ->kebab-case-kw)
        (mapv #(if (nil? (:virkailija-organizations %))
                 (dissoc % :virkailija-organizations)
