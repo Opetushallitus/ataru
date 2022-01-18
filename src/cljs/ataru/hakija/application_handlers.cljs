@@ -155,12 +155,8 @@
        (assoc :demo-requested true)
        (assoc :today now))}))
 
-(defn handle-submit [db _]
-  (assoc-in db [:application :submit-status] :submitted))
-
 (defn- send-application-with-api
   [db method]
-(defn send-application [db method]
   (when-not (-> db :application :submit-status)
     {:db   (-> db (assoc-in [:application :submit-status] :submitting) (dissoc :error))
      :http {:method        method
