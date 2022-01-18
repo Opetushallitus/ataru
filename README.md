@@ -58,7 +58,11 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 ### Running Cypress tests
 
-Start the service locally with make start command as usual. Then either open Cypress with command
+Start the service locally with make start command
+
+    make start VIRKAILIJA_CONFIG=$PWD/config/test.edn HAKIJA_CONFIG=$PWD/config/test.edn
+
+Then either open Cypress with command
 
     npm run cypress:open
 
