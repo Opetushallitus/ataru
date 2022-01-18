@@ -13,7 +13,7 @@
 
       (log/debug "Received statuses for" (count maksut) "invoices")
 
-      (let [terminal (filter #(some #{(:status %)} '("paid" "overdue")) maksut)
+      (let [terminal (filter #(some #{(:status %)} '(:paid :overdue)) maksut)
             raw      (map (fn [{:keys [reference status order_id]}]
                             (when-let [type (cond
                                             (ends-with? order_id "-1") :processing
@@ -21,7 +21,7 @@
                                           :else nil)]
                               (when-let [key-match (find key-state reference)]
                                 {:reference reference
-                                 :maksu-status status
+                                 :maksu-status (name status)
                                  :type type
                                  :app-status (val key-match)})))
                           terminal)
@@ -30,7 +30,6 @@
         (log/debug (pr-str "Invoices" items))
         (doseq [item items]
           (let [{:keys [reference type app-status maksu-status]} item
-                ;TODO also pass old app-status to the method so that this change is only done if status has not changed in between, as there is no locking
                 toggle   #(application-service/payment-poller-processing-state-change application-service reference %)
                 response (match [type app-status maksu-status]
                                 [:processing nil "paid"] (toggle "processing-fee-paid")
