@@ -795,7 +795,7 @@
       })
     })
 
-    describe('Mass application update', () => {
+    /*describe('Mass application update', () => {
       describe('popup box', () => {
         before(
           navigateToApplicationHandlingForForm,
@@ -858,7 +858,7 @@
           ])
         })
       })
-    })
+    })*/
 
     describe('Mass send information requests', () => {
       describe('popup', () => {
