@@ -16,14 +16,17 @@
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
-  (boolean (authorized-organization-oids (:organization-oid application))))
+  (boolean
+    (when-let [organization-oid (:organization-oid application)]
+      (authorized-organization-oids organization-oid))))
 
 (defn- authorized-by-tarjoaja?
   [authorized-organization-oids hakukohde]
   (let [tarjoajat       (set (:tarjoaja-oids hakukohde))
         hakukohderyhmat (set (:ryhmaliitokset hakukohde))]
-    (boolean (some authorized-organization-oids
-                   (concat tarjoajat hakukohderyhmat)))))
+    (boolean
+      (some authorized-organization-oids
+        (concat tarjoajat hakukohderyhmat)))))
 
 (defn authorized-by-tarjoajat?
   [authorized-organization-oids application]
