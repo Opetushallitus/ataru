@@ -2,6 +2,7 @@
            :refer-all           {:exclude [speclj.core]}
            :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
+                                           (secretary.core/defroute)
                                            (clojure.java.jdbc/with-db-transaction)
                                            (clojure.java.jdbc/with-db-connection)
                                            (clojure.core.match/match)

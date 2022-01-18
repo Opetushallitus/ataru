@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
             [ataru.hakija.banner :refer [banner]]
+            [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
             [ataru.translations.translation-util :as translations]
@@ -138,6 +139,29 @@
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
+(defn- submit-notification-payment
+  [_ _]
+  (fn []
+    (let [lang @(subscribe [:application/form-language])]
+      [:div.application__submitted-submit-payment
+       [:div.application__submitted-submit-payment-inner
+        [:div.application__submitted-submit-payment-icon
+          [icons/icon-check]]
+          [:h1.application__submitted-submit-notification-heading
+           (translations/get-hakija-translation :application-submitted-payment lang)]
+          [:div.application__submitted-submit-notification-heading
+            (translations/get-hakija-translation :application-submitted-payment-text lang)]
+
+          [:div.application__submitted-submit-payment-button-container
+            [:button.application__maksut-button
+             {:on-click     #(dispatch [:application/redirect-to-maksut])
+              :data-test-id "maksut-button"}
+             [icons/icon-card] (translations/get-hakija-translation :payment-button lang)]
+           ]
+        ]]
+      )
+    ))
+
 (defn feedback-form
   [feedback-hidden?]
   (let [submit-status     (subscribe [:state-query [:application :submit-status]])
@@ -208,6 +232,7 @@
 (defn- submitted-overlay
   []
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
+        submit-details              (subscribe [:state-query [:application :submit-details]])
         submit-notification-hidden? (r/atom false)
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])]
     (fn []
@@ -216,7 +241,11 @@
                      (not @submit-notification-hidden?)))
         [:div.application__submitted-overlay
          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
-         (when (not @submit-notification-hidden?) [submit-notification submit-notification-hidden?])]))))
+         (when (not @submit-notification-hidden?)
+               (if @submit-details
+                  [submit-notification-payment submit-notification-hidden? @submit-details]
+                  [submit-notification submit-notification-hidden?])
+               )]))))
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])

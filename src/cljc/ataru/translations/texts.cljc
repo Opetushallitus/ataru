@@ -458,6 +458,15 @@
    :lisaa-valinnaisaine                         {:fi "Lisää valinnaisaine"
                                                  :sv "Lägg till valfritt ämne"
                                                  :en "Lisää valinnaisaine"}
+   :application-submitted-payment               {:fi "Hakemuksesi on tallentunut"
+                                                 :sv "Din ansökan har sparats."
+                                                 :en "Your application has been saved."}
+   :application-submitted-payment-text          {:fi "Olet saanut vahvistusviestin sähköpostiisi. Siirry nyt maksamaan käsittelymaksu. Pääset maksamaan käsittelymaksun myös sähköpostiisi saamasi linkin kautta. Huomaathan, ettet voi muokata hakemusta sen jälkeen, kun olet maksanut käsittelymaksun."
+                                                 :sv "Du har fått en bekräftelse till din e-post. Gå nu till betalning av din behandlingsavgift. Du kan också betala behandlingsavgiften via länken du har fått till din e-post. Vänligen notera att du kan inte ändra din ansökan efter att du har betalt behandlingsavgiften."
+                                                 :en "You have received a confirmation to your email. Proceed now to the payment of your processing fee. You can also pay the processing fee through the link you have received by email. Please note that you cannot edit your application after you have paid the decision fee."}
+   :payment-button                              {:fi "Siirry maksamaan"
+                                                 :sv "Gå till betalning"
+                                                 :en "Go to payment"}
    :poista                                      {:fi "Poista"
                                                  :sv "Radera"
                                                  :en "Poista"}})
@@ -1941,7 +1950,65 @@
                                                      :en "EN: Vastaus"}
    :question-answers-selected                       {:fi "vastausvaihtoehtoa valittu"
                                                      :sv "Svarsalternativ valt"
-                                                     :en "EN: vastausvaihtoehtoa valittu"}})
+                                                     :en "EN: vastausvaihtoehtoa valittu"}
+
+   :tutu-amount-label                               {:fi "Maksun määrä"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-total-paid-label                           {:fi "Yhteissumma"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-due-label                                  {:fi "Eräpäivä"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-maksupyynto-header                         {:fi "Maksupyyntö"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-processing-header                          {:fi "Käsittelymaksu:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-decision-header                            {:fi "Päätösmaksu:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-recipient                      {:fi "Vastaanottaja:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-amount                         {:fi "Summa"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-message                        {:fi "Viesti:"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-send-button                    {:fi "Lähetä maksupyyntö"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-maksupyynto-again-button                   {:fi "Lähetä uudelleen"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-kasittelymaksu-button                      {:fi "Uudelleenlähetä käsittelymaksu"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-invoice-notfound                           {:fi "Maksun tietoja ei löydy"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-active                             {:fi "Avoin"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-paid                               {:fi "Maksettu"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-overdue                            {:fi "Eräpäivä ylitetty"
+                                                     :sv ""
+                                                     :en ""}
+   :tutu-payment-unknown                            {:fi "Maksun tilaa ei tiedetä"
+                                                     :sv ""
+                                                     :en ""}
+
+   :tutu-amount-input-placeholder                   {:fi "Anna summa muodossa 123 tai 123.00"
+                                                     :sv ""
+                                                     :en ""}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2052,10 +2119,64 @@
    :attachment-missing     {:fi "Liite puuttuu"
                             :sv "Liite puuttuu (sv) TODO"
                             :en "Liite puuttuu (en) TODO"}
+   :processing-fee-overdue {:fi "Käsittely maksamatta"
+                            :sv "Käsittely maksamatta (sv) TODO"
+                            :en "Käsittely maksamatta (en) TODO"}
+   :processing-fee-paid    {:fi "Käsittely maksettu"
+                            :sv "Käsittely maksettu (sv) TODO"
+                            :en "Käsittely maksettu (en) TODO"}
+   :decision-fee-outstanding {:fi "Päätösmaksu avoin"
+                              :sv "Päätösmaksu avoin (sv) TODO"
+                              :en "Päätösmaksu avoin (en) TODO"}
+   :decision-fee-overdue   {:fi "Päätös maksamatta"
+                            :sv "Päätös maksamatta (sv) TODO"
+                            :en "Päätös maksamatta (en) TODO"}
+   :decision-fee-paid      {:fi "Päätös maksettu"
+                            :sv "Päätös maksettu (sv) TODO"
+                            :en "Päätös maksettu (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
                             :en "Multiple values"}})
 
+(def tutu-decision-email
+  {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"
+                           :sv "Beslut om erkännande av din examen har fattats"
+                           :en "Decision on the recognition of your qualification has been made"}
+   :subject-prefix        {:fi "Opintopolku"
+                           :sv "Studieinfo"
+                           :en "Studyinfo"}
+
+   :decision-header       {:fi "Päätösmaksu"
+                           :sv "Beslutsavgiften"
+                           :en "Decision fee"}
+
+   :decision-text-1       {:fi "Lähetämme päätöksen sinulle, kun olet maksanut päätösmaksun."
+                           :sv "Vi skickar dig beslutet först då du har betalat beslutsavgiften."
+                           :en "We will send you the decision once you have paid the decision fee."}
+   :decision-text-2       {:fi "Voit maksaa päätösmaksun ja tarkastella maksusi tietoja seuraavasta linkistä."
+                           :sv "Du kan betala beslutsavgiften och kontrollera uppgifterna som gäller betalningen via nedanstående länk."
+                           :en "You can pay the decision fee and view the details of your payment through the following link."}
+   :decision-text-3       {:fi "Jos et suorita päätösmaksua 14 vuorokauden sisällä, lähetämme sinulle päätösmaksusta erillisen laskun. Maksu on ulosottokelpoinen ilman tuomiota tai päätöstä (valtion maksuperustelaki (150/1992) 11§ 1.mom.)."
+                           :sv "Om du inte betalabeslutsavgiften inom 14 dygn, skickar vi dig en separat faktura för beslutsavgiften. Avgiften från indrivas utan dom eller beslut (lag om grunderna för avgifter till staten (150/1992 11 § 1 mom.)."
+                           :en "If you do not pay the decision fee within 14 days, we will send you a separate invoice for the decision fee. The payment is enforceable without a judgement or a decision (Act on Criteria for Charges Payable to the State 150/1992, section 11, subsection 1)."}
+
+   :decision-info         {:fi "Lisätietoja päätöksistä ja maksuista on nettisivuillamme:"
+                           :sv "Mer information om besluten och avgifterna finns på vår webbplats:"
+                           :en "More information on the decisions and fees is available on our website:"}
+   :decision-info-url     {:fi "https://www.oph.fi/fi/palvelut/tutkintojen-tunnustaminen"
+                           :sv "https://www.oph.fi/sv/tjanster/erkannande-av-examina"
+                           :en "https://www.oph.fi/en/services/recognition-and-international-comparability-qualifications"}
+
+   :decision-info-noreply {:fi "Älä vastaa tähän viestiin – viesti on lähetetty automaattisesti. Jos sinulla on kysyttävää, otathan meihin yhteyttä sähköpostitse osoitteessa "
+                           :sv "Svara inte på detta meddelande, det har skickats automatiskt. Om du har frågor, vänligen kontakta oss per epost via "
+                           :en "This is an automatically generated email, please do not reply. If you have any questions, please send us an email at "}
+
+   :signature-header      {:fi "Ystävällisin terveisin"
+                           :sv "Med vänliga hälsningar,"
+                           :en "Best regards"}
+   :signature-name        {:fi "Opetushallitus"
+                           :sv "Utbildningsstyrelsen"
+                           :en "Finnish National Agency for Education"}})
 
 (def excel-texts
   {:name                     {:fi "Nimi"

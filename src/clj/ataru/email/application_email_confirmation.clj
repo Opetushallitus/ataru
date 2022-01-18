@@ -12,7 +12,7 @@
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts]]
+            [ataru.translations.texts :refer [email-default-texts tutu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -147,8 +147,8 @@
     (assoc attachment :deadline (-> field :params :deadline-label lang))))
 
 (defn- create-emails ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id]
-                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id false))
-  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id guardian?]
+                     (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id nil false))
+  ([koodisto-cache tarjonta-service organization-service ohjausparametrit-service subject template-name application-id payment-url guardian?]
    (let [now                             (t/now)
          application                     (application-store/get-application application-id)
          tarjonta-info                   (:tarjonta
@@ -202,6 +202,7 @@
          template-params                 {:hakukohteet (hakukohde-names tarjonta-info lang application)
                                                   :application-oid            (:key application)
                                                   :application-url            application-url
+                                                  :payment-url                payment-url
                                                   :content                    content
                                                   :content-ending             content-ending
                                                   :attachments-without-answer attachments-without-answer
@@ -215,14 +216,37 @@
        guardian-email-data
        render-file-fn))))
 
+(defn- create-tutu-decision-email [application-id message payment-url]
+   (let [application                     (application-store/get-application application-id)
+         template-name                   (fn [_] "templates/tutu_decision_email_template.html")
+         lang                            (keyword (:lang application))
+         applier-recipients              (->> (:answers application)
+                                              (filter #(= "email" (:key %)))
+                                              (map :value))
+         translations                    (reduce-kv #(assoc %1 %2 (get %3 lang))
+                                                    {}
+                                                    tutu-decision-email)
+         template-params                 (merge
+                                            {:application-oid            (:key application)
+                                             :payment-url                payment-url
+                                             :message                    (->safe-html message)
+                                             :decision-info-email        "recognition@oph.fi"}
+                                            translations)
+         subject                         (str (:subject-prefix translations) ": " (:header translations))
+         applicant-email-data            (email-util/make-email-data applier-recipients subject template-params)
+         render-file-fn                  (fn [template-params]
+                                           (selmer/render-file (template-name lang) template-params))]
+     (email-util/render-emails-for-applicant-and-guardian applicant-email-data nil render-file-fn)))
 
-(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+
+(defn- create-submit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id payment-url guardian?]
   (create-emails koodisto-cache tarjonta-service
                  organization-service
                  ohjausparametrit-service
                  nil
                  submit-email-template-filename
                  application-id
+                 payment-url
                  guardian?))
 
 (defn preview-submit-emails [previews]
@@ -235,13 +259,14 @@
       (preview-submit-email lang subject content content-ending signature)) previews))
 
 
-(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id guardian?]
+(defn- create-edit-email [koodisto-cache tarjonta-service organization-service ohjausparametrit-service application-id payment-url guardian?]
   (create-emails koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                  edit-email-subjects
                  #(str "templates/email_edit_confirmation_template_"
                       (name %)
                       ".html")
                  application-id
+                 payment-url
                  guardian?))
 
 (defn- create-refresh-secret-email
@@ -261,22 +286,33 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
     (for [email (create-submit-email koodisto-cache tarjonta-service
                   organization-service
                   ohjausparametrit-service
                   application-id
+                  payment-url
                   true)]
       (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
     (for [email (create-edit-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                        application-id
+                       payment-url
                        true)]
            (start-email-job job-runner email))))
+
+(defn start-tutu-decision-email-job
+  [job-runner application-id message payment-url]
+  (log/info "start-tutu-decision-email-job" application-id payment-url)
+  (dorun
+   (for [email (create-tutu-decision-email application-id message payment-url)]
+     (do
+       (log/info "Before email job" email)
+       (start-email-job job-runner email)))))
 
 (defn start-email-refresh-secret-confirmation-job
   [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
