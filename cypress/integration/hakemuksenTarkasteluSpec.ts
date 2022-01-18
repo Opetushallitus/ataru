@@ -9,6 +9,8 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         'aidinkieletonHakija'
       )
       cy.fixture('hakemukset.json').as('hakemuslistaus')
+      cy.fixture('lahtokoulu.json').as('lahtokoulu')
+      cy.fixture('lahtokoulut.json').as('lahtokoulut')
 
       cy.server()
       cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
@@ -43,6 +45,73 @@ describe('Hakemuksen tietojen tarkastelu', () => {
     it('Navigoi hakemusten käsittelynäkymään', () => {
       // editorin pääsivujen lataus välillä hidastelee rankasti, joten timeouttia on annettu tässä kohdin reilusti
       cy.get('div.section-link.application > a', { timeout: 30000 }).click()
+    })
+
+    describe('Hakemusten rajaus', () => {
+      it('Lähtökouluksi voi hakea käyttäjän organisaatioita', () => {
+        const searchAndAssertSchoolOptions = (
+          searchTerm: string,
+          expectation: string,
+          expectedValue?: number
+        ) => {
+          cy.get('#school-search').clear().type(searchTerm, { delay: 50 })
+          if (expectedValue) {
+            cy.get('div.school-filter__option')
+              .its('length')
+              .should(expectation, expectedValue)
+          } else {
+            cy.get('div.school-filter__option').should(expectation)
+          }
+        }
+        cy.route(
+          'GET',
+          '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
+          '@lahtokoulut'
+        )
+        cy.get(
+          '.application__search-control-tab-selector-wrapper--search'
+        ).click()
+        cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
+        cy.get('#open-application-filters').click()
+        cy.get('#selected-school').should('not.exist')
+        searchAndAssertSchoolOptions('perus', 'be', 3)
+        searchAndAssertSchoolOptions('Haa', 'be', 1)
+        searchAndAssertSchoolOptions('haaga', 'be', 1)
+        searchAndAssertSchoolOptions('1.2.3.4.7', 'be', 1)
+        searchAndAssertSchoolOptions('lukio', 'not.exist')
+        searchAndAssertSchoolOptions('Pell', 'be', 1)
+      })
+
+      it('Lähtökouluksi voi asettaa käyttäjän organisaation', () => {
+        cy.get('div.school-filter__option').its(0).click()
+        cy.get('#selected-school').should('exist')
+        cy.get('#selected-school').contains('Pellon peruskoulu')
+        cy.get('#school-search').should('not.exist')
+      })
+
+      it('Lähtökoulu valinnan voi poistaa', () => {
+        cy.get('#remove-selected-school-button').click()
+        cy.get('#selected-school').should('not.exist')
+        cy.get('#school-search').should('exist')
+      })
+
+      it('Hakemusten rajauksessa on valittu lähtökouluksi käyttäjän ainoa organisaatio', () => {
+        cy.reload()
+        cy.route(
+          'GET',
+          '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
+          '@lahtokoulu'
+        )
+        cy.get(
+          '.application__search-control-tab-selector-wrapper--search'
+        ).click()
+        cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
+        cy.get('#open-application-filters').click()
+        cy.get('#school-search').should('not.exist')
+        cy.get('#selected-school').should('exist')
+        cy.get('#selected-school').contains('Haagan peruskoulu')
+        cy.get('#open-application-filters').click()
+      })
     })
 
     describe('Hakemusten toiminnallisuuksien testaus', () => {
