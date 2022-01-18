@@ -165,8 +165,7 @@
 
     :maksut-poller (component/using
                     (maksut-poller/map->MaksutPollWorker
-                     {:enabled?      true ;TODO (-> config :tutkintojen-tunnustaminen :maksut :enabled? boolean)
-                      })
+                      {:enabled? (-> config :tutkintojen-tunnustaminen :maksut :enabled? boolean)})
                     [:job-runner
                      :application-service
                      :maksut-service])

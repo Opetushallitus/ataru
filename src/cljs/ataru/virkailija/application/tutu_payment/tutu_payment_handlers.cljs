@@ -1,7 +1,6 @@
 (ns ataru.virkailija.application.tutu-payment.tutu-payment-handlers
   (:require [clojure.string :refer [ends-with?]]
             [ataru.virkailija.virkailija-ajax :as ajax]
-            ;[cljs-time.core :as c]
             [cljs-time.format :as f]
             [re-frame.core :as re-frame]))
 
@@ -19,54 +18,8 @@
    (let [oid-suffix-matcher #(first (filter (fn [x] (ends-with? (:order_id x) %)) body))
          payments {:processing (oid-suffix-matcher "-1")
                    :decision (oid-suffix-matcher "-2")}]
-     ;(prn "GOT response" response)
-     (prn "GOT body" application-key (type body) body)
-     ;(prn "store to " application-key payments)
 
-     {:db       (assoc-in db [:tutu-payment :applications application-key] payments)
-      ;:dispatch [:liitepyynto-information-request/show-deadline application-key liitepyynto-key]
-      })
-
-   ))
-
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/hide-deadline
-;  (fn [{db :db} [_ application-key liitepyynto-key]]
-;    (let [current-state (get-deadline-visibility-state db application-key liitepyynto-key)]
-;      (when (or (= :visible current-state)
-;                (= :appearing current-state))
-;        {:db             (set-deadline-visibility-state db application-key liitepyynto-key :disappearing)
-;         :dispatch-later [{:ms       200
-;                           :dispatch [:liitepyynto-information-request/set-deadline-visibility-state
-;                                      application-key
-;                                      liitepyynto-key
-;                                      :hidden]}]}))))
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/show-deadline
-;  (fn [{db :db} [_ application-key liitepyynto-key]]
-;    (let [current-state (get-deadline-visibility-state db application-key liitepyynto-key)]
-;      (when (or (= :hidden current-state)
-;                (= :disappearing current-state))
-;        {:db             (set-deadline-visibility-state db application-key liitepyynto-key :appearing)
-;         :dispatch-later [{:ms       200
-;                           :dispatch [:liitepyynto-information-request/set-deadline-visibility-state
-;                                      application-key
-;                                      liitepyynto-key
-;                                      :visible]}]}))))
-
-;(re-frame/reg-event-fx
-;  :liitepyynto-information-request/set-deadline-toggle
-;  (fn [{db :db} [_ application-key liitepyynto-key on?]]
-;    {:dispatch [(cond on?
-;                      :liitepyynto-information-request/show-deadline
-;                      (some? (get-deadline-last-modified db application-key liitepyynto-key))
-;                      :liitepyynto-information-request/delete-deadline
-;                      :else
-;                      :liitepyynto-information-request/hide-deadline)
-;                application-key
-;                liitepyynto-key]}))
+     {:db (assoc-in db [:tutu-payment :applications application-key] payments)})))
 
 (re-frame/reg-event-fx
  :tutu-payment/fetch-payments
@@ -91,10 +44,8 @@
 
 (re-frame/reg-event-fx
  :tutu-payment/handle-processing-invoice
- (fn [_ [_ response _]]
-   (prn "processing-invoice email" response)
+ (fn [_ [_ _ _]]
    {}))
-
 
 (re-frame/reg-event-fx
  :tutu-payment/handle-decision-invoice
@@ -102,24 +53,11 @@
    (let [{:keys [hakukohde-reviews]} response
          state-name :processing-state
          state-value (-> hakukohde-reviews :form state-name)]
-     ;(prn "revs" hakukohde-reviews)
-     ;(prn "revs2" state-value)
 
      {:dispatch-n [[:application/update-review-field state-name state-value]
                    [:application/review-updated response]
-                   [:tutu-payment/fetch-payments application-key]]
+                   [:tutu-payment/fetch-payments application-key]]})))
 
-     })))
-
-
-;{:db       (-> db
-;               (assoc-in [:application :events] events))
-; :dispatch [:application/update-review-field state-name state-value]
-; })))
-
-
-;{:db       (assoc-in db [:application :review :hakukohde-reviews] (:hakukohde-reviews response))
-; :dispatch [:application/review-updated response]})))
 
 (re-frame/reg-event-fx
  :tutu-payment/resend-processing-invoice

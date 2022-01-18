@@ -4,7 +4,7 @@
                    :username      "oph"
                    :password      "oph"
                    :server-name   "localhost"
-                   :port-number   5433
+                   :port-number   15433
                    :schema        "public"}
  :aws             {:region "eu-west-1"
                    :henkilo-modified-queue {:enabled?      false
@@ -16,6 +16,7 @@
                              :attachment-total-size-limit 10485760
                              :maksut                      {:enabled?                false
                                                            :poll-interval-minutes   60
+                                                           :decision-amount         "70.00"
                                                            :form-key      			    ""}
                              :ftp                         {:host               "localhost"
                                                            :port               2221

@@ -789,7 +789,6 @@
           (response/ok {:hakukohde-oid   hakukohde-oid
                         :valintalaskenta valintalaskenta-enabled?}))))
 
-    ;TODO this might not be needed here in the end if client can directly call this API
     (api/context "/maksut" []
       :tags ["maksut-api"]
       (api/GET "/list/:application-key" {session :session}
@@ -836,10 +835,6 @@
               lang        (or locale "fi")
               payment-url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)]
 
-          (log/warn "Input" input "key" application-key "invoice" invoice)
-
-          ;TODO assuming everything went well, change status (if needed)
-          ;TODO ensure that this is a "other form", and form-key = tutu-form
           (if-let [result (application-service/payment-triggered-processing-state-change
                             application-service
                             session

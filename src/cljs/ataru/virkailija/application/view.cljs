@@ -964,7 +964,6 @@
        [:textarea.application-handling__review-note-input
         {:type      "text"
          :value     @value
-         ;:placeholder "Hei, tutkinnon tunnustamisen käsittelyvaihe on nyt valmis. Päätöstä varten sinun tulee vielä maksaa päätösmaksu."
          :on-change #(dispatch [:tutu-payment/set-note-input
                                 application-key
                                 (.. % -target -value)])}]])))
@@ -979,7 +978,6 @@
       {:type        "text"
        :value       amount
        :placeholder placeholder
-       ;:pattern     "[0-9]{1,4}([.][0-9]{1,2})?"
        :pattern     "[0-9]{1,4}"
        :title       @(subscribe [:editor/virkailija-translation :tutu-amount-input-placeholder])
        :disabled    disabled?
@@ -1017,7 +1015,6 @@
                            :paid    (str @(subscribe [:editor/virkailija-translation :tutu-payment-paid]) " " (format-date (:paid_at payment)))
                            :overdue (str @(subscribe [:editor/virkailija-translation :tutu-payment-overdue]) " " (format-date (:due_date payment)))
                            @(subscribe [:editor/virkailija-translation :tutu-payment-unknown])))]
-    (prn "single-row" payment)
     [:<>
       [:div header]
       [:div (when icon [icon]) (str label)]
@@ -1057,13 +1054,7 @@
               :else @(subscribe [:editor/virkailija-translation :tutu-maksupyynto-send-button]))]]))
 
 (defn- application-tutu-payment-status [payments]
-  (let [;window-visible?      true;(subscribe [:state-query [:application :information-request :visible?]])
-        ;request-window-open? true ;(reaction (if-some [visible? @window-visible?]
-                             ;            visible?
-                             ;            false))
-
-        ;request-state        (subscribe [:state-query [:application :information-request :state]])
-        loading?             @(subscribe [:state-query [:request-handles :fetch-payments]])
+  (let [loading?             @(subscribe [:state-query [:request-handles :fetch-payments]])
         email                @(subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
         application-key      @(subscribe [:state-query [:application :review :application-key]])
         processing-state     @(subscribe [:state-query [:application :review :hakukohde-reviews :form :processing-state]])
@@ -1072,13 +1063,6 @@
         processing-pay-status (keyword (:status processing))
         decision-pay-status  (keyword (:status decision))
         state                (or (keyword processing-state) :unprocessed)
-        show-dialog?         (case state
-                                   :unprocessed true
-                                   :processing-fee-paid true
-                                   :processing true
-                                   :decision-fee-outstanding true
-                                   :decision-fee-paid true
-                                   false)
         amount-label         (case state
                                    :unprocessed @(subscribe [:editor/virkailija-translation :tutu-amount-label])
                                    :processing-fee-paid @(subscribe [:editor/virkailija-translation :tutu-amount-label])
@@ -1106,10 +1090,7 @@
                                 :processing :input
                                 :decision-fee-outstanding (format-date (:due_date decision))
                                 :decision-fee-paid nil
-                                nil)
-
-            ]
-        (prn "state2" state "show-dialog?" show-dialog?)
+                                nil)]
 
         [:div.application-handling__tutu-payment-maksupyynto-box
         [:span.application-handling__tutu-payment--span-2

@@ -14,7 +14,7 @@
     "en"))
 
 (s/defschema LaskuStatus
-  {:order-id s/Str
+  {:order_id s/Str
    :reference s/Str
    :status PaymentStatus})
 

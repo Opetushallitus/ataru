@@ -46,9 +46,7 @@
         result (cas/cas-authenticated-post maksut-cas-client url req)]
     (match/match result
                  {:status 200 :body body}
-                 ;TODO enable once order_id => order-id
-                 ;(parse-and-validate body maksut-schema/LaskuStatus)
-                 (json/parse-string body true)
+                 (parse-and-validate body [maksut-schema/LaskuStatus])
 
                  :else (throw-error (str "Could not poll Maksut-services for keys " (apply str keys)
                                          " status: " (:status result)

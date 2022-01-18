@@ -5,21 +5,6 @@
     [clojure.string :as string]
     [re-frame.core :as re-frame]))
 
-;(re-frame/reg-sub
-;  :liitepyynto-information-request/deadline-toggle-on?
-;  (fn [db [_ application-key liitepyynto-key]]
-;    (let [state (get-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :visibility-state] :hidden)]
-;      (or (= :visible state)
-;          (= :appearing state)))))
-;
-;(re-frame/reg-sub
-;  :liitepyynto-information-request/deadline-visible?
-;  (fn [db [_ application-key liitepyynto-key]]
-;    (let [state (get-in db [:liitepyynto-information-request application-key liitepyynto-key :deadline :visibility-state] :hidden)]
-;      (or (= :visible state)
-;          (= :disappearing state)))))
-
-;TODO combine tutu-form? and show-review-ui?
 (re-frame.core/reg-sub
  :tutu-payment/tutu-form?
  (fn [_ [_ key]]
@@ -37,7 +22,6 @@
      (and
       (not-empty tutu-form)
       (= tutu-form current-form)))))
-
 
 (re-frame/reg-sub
  :tutu-payment/note-input

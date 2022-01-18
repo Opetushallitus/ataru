@@ -14,7 +14,8 @@
                              :country-question-id         ""
                              :attachment-total-size-limit 20
                              :maksut                      {:enabled?                false
-                                                           :poll-interval-minutes   60
+                                                           :poll-interval-minutes   5
+                                                           :decision-amount         "70.00"
                                                            :form-key      			    ""}
                              :ftp                         {:host               ""
                                                            :port               22

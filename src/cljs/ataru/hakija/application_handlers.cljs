@@ -161,7 +161,6 @@
   :application/handle-submit-response
   [check-schema-interceptor]
   (fn [db [_ response]]
-    ;(prn "ZZZ adding payment" (-> response :body :payment))
     (let [payment (-> response :body :payment)]
       (-> db
         (assoc-in [:application :submit-status] :submitted)

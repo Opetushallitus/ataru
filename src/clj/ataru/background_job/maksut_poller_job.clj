@@ -3,14 +3,8 @@
   (:require [clojure.core.match :refer [match]]
             [ataru.applications.application-service :as application-service]
             [ataru.maksut.maksut-protocol :as maksut-protocol]
-            ;[ataru.db.db :as db]
-            ;[clj-time.core :as time]
             [clojure.string :refer [ends-with?]]
-            [taoensso.timbre :as log]
-            ;[clj-time.coerce :as coerce]
-            ))
-
-;(defqueries "sql/maksut-queries.sql")
+            [taoensso.timbre :as log]))
 
 (defn poll-maksut [application-service maksut-service apps]
     (let [keys      (map :key apps)
@@ -25,7 +19,6 @@
                                             (ends-with? order_id "-1") :processing
                                             (ends-with? order_id "-2") :decision
                                           :else nil)]
-                              ;(log/info (pr-str type reference (find key-state reference) (val (find key-state reference)) (= reference (val (find key-state reference)))))
                               (when-let [key-match (find key-state reference)]
                                 {:reference reference
                                  :maksu-status status
@@ -49,25 +42,4 @@
                                 :else (log/debug "Invalid application&payment state combo, will not do anything" item))
                 ]
               (when response (log/info "Process result:" response))
-            )))
-
-        ;(prn "items" items)
-      )
-      ;(log/info "No applications in need of Maksut-polling found")
-    )
-
-;(defn check-maksut-status-step [state _]
-;  (log/info "Checking Maksut statuses for following applications " (str keys))
-;  (poll-maksut)
-;  (log/info "Successfully polled Maksut")
-;  (let [now (time/now)
-;        next-activation (time/plus (time/with-time-at-start-of-day now)
-;                                   (time/minutes 1)
-;                                   ;(time/hours 1)
-;                                   )]
-;    {:transition      {:id :to-next :step :initial}
-;     :updated-state   {:last-run-long (coerce/to-long now)}
-;     :next-activation next-activation}))
-;
-;(def job-definition {:steps {:initial check-maksut-status-step}
-;                     :type  (str (ns-name *ns*))})
+            )))))

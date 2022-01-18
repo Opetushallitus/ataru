@@ -2,7 +2,6 @@
   (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
             [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.background-job.email-job :as email-job]
-            ;[ataru.background-job.maksut-poller-job :as maksut-poller-job]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-service :as information-request-service]
             [ataru.person-service.person-integration :as person-integration]
@@ -12,7 +11,6 @@
 (def job-definitions
   {(:type email-job/job-definition)                     email-job/job-definition
    (:type information-request-job/job-definition)       information-request-job/job-definition
-   ;(:type maksut-poller-job/job-definition)             maksut-poller-job/job-definition
    "automatic-eligibility-if-ylioppilas-job"            {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
                                                          :type  "automatic-eligibility-if-ylioppilas-job"}
    "automatic-payment-obligation-job"                   {:steps {:initial automatic-payment-obligation/automatic-payment-obligation-job-step}

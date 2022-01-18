@@ -398,6 +398,27 @@
    job-runner
    application-id))
 
+(defn- handle-tutu-form [form-by-id-cache id application]
+  (let [app-key    (-> (application-store/get-application id) :key)
+        form       (:form application)
+        tutu-key   (-> config :tutkintojen-tunnustaminen :maksut :form-key)
+        form-key   (when (some? form)
+                         (-> (cache/get-from form-by-id-cache (str form)) :key))
+        tutu-form? (and (some? tutu-key) (= tutu-key form-key))
+
+        get-field  (fn [key] (->> (:answers application)
+                                  (filter #(= key (:key %)))
+                                  (map :value)
+                                  first))
+        req-fn     (fn [] {:application-key app-key
+                           :first-name (get-field "first-name")
+                           :last-name (get-field "last-name")
+                           :email (get-field "email")
+                           :amount (-> config :tutkintojen-tunnustaminen :maksut :decision-amount)})]
+    {:tutu-form? tutu-form?
+     :req-fn     req-fn
+     :lang       (:lang application)}))
+
 (defn handle-application-submit
   [form-by-id-cache
    koodisto-cache
@@ -426,24 +447,7 @@
                             application
                             false
                             session)
-        ;TODO refactor TuTu-maksut logic to separate function
-        app-key (-> (application-store/get-application id) :key)
-        form (:form application)
-        get-field  (fn [key] (->> (:answers application)
-                                  (filter #(= key (:key %)))
-                                  (map :value)
-                                  first))
-        lang (:lang application)
-        info {:application-key app-key
-              :first-name (get-field "first-name")
-              :last-name (get-field "last-name")
-              :email (get-field "email")
-              :amount "70.00" ;TODO get from config
-              }
-        tutu-key (-> config :tutkintojen-tunnustaminen :maksut :form-key)
-        form-key (when (some? form)
-                       (-> (cache/get-from form-by-id-cache (str form)) :key))
-        tutu-form? (and (some? tutu-key) (= tutu-key form-key))
+        {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application)
         virkailija-secret (:virkailija-secret application)]
 
     (if passed?
@@ -451,12 +455,11 @@
         (when virkailija-secret
           (virkailija-edit/invalidate-virkailija-create-secret virkailija-secret))
 
-        ;TODO only do this if TUTU-form
-        (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service info))
-              secret (:secret invoice)
-              url (url-helper/resolve-url :maksut-service.hakija-get-by-secret secret lang)]
-          (log/info "maksut info" invoice)
-          (log/info "Generate maksut-link for email" url)
+        (let [invoice (when tutu-form? (maksut-protocol/create-kasittely-lasku maksut-service (req-fn)))
+              url (when tutu-form? (url-helper/resolve-url :maksut-service.hakija-get-by-secret (:secret invoice) lang))]
+          (when invoice
+            (log/info "Invoice details" invoice)
+            (log/info "Generate maksut-link for email" url))
 
           (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
           (-> result
@@ -483,7 +486,7 @@
    input-application
    session
    liiteri-cas-client
-   _ ;maksut-service
+   _
    ]
   (log/info "Application edited:" input-application)
   (let [{:keys [passed? id application key]

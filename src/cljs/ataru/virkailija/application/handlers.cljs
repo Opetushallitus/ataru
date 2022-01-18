@@ -609,7 +609,6 @@
                                           [:application/fetch-application-attachment-metadata]
                                           [:application/start-autosave])
                                         [:liitepyynto-information-request/get-deadlines application-key]
-                                        ;Should this be initiated somewhere else?
                                         (when @(subscribe [:tutu-payment/tutu-form? form-key])
                                           [:tutu-payment/fetch-payments application-key])
                                         [:application/get-application-change-history application-key]]
