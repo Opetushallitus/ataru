@@ -610,6 +610,7 @@
         form-key                                  (subscribe [:application/selected-form-key])
         filter-questions                          (subscribe [:application/filter-questions])
         tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
+        opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -620,7 +621,8 @@
        [:a
         {:id       "open-application-filters"
          :on-click #(do
-                      (dispatch [:application/do-organization-query-for-schools-of-departure ""])
+                      (when @opinto-ohjaaja-or-admin?
+                        (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
         [:span
@@ -692,7 +694,8 @@
                   (-> general-texts :no (get @lang))
                   :eligibility-set-automatically
                   :no]]])]]
-           [school-and-class-filters]
+           (when @opinto-ohjaaja-or-admin?
+             [school-and-class-filters])
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
