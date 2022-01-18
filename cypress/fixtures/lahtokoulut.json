@@ -1,0 +1,20 @@
+[
+  {
+    "oid": "1.2.3.4.5",
+    "name": {
+      "fi": "Haagan peruskoulu"
+    }
+  },
+  {
+    "oid": "1.2.3.4.6",
+    "name": {
+      "fi": "Pellon peruskoulu"
+    }
+  },
+  {
+    "oid": "1.2.3.4.7",
+    "name": {
+      "fi": "Jaakkolan peruskoulu"
+    }
+  }
+]
