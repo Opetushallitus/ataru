@@ -318,6 +318,7 @@ WHERE a.key = :application_key;
 SELECT
   a.haku,
   a.hakukohde,
+  a.person_oid,
   (SELECT organization_oid
    FROM forms
    WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
