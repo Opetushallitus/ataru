@@ -477,11 +477,12 @@
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
         :summary "Get HTTP redirect response for modifying a single application in Hakija side"
-        (let [allowed? (access-controlled-application/applications-access-authorized? organization-service
-                                                                                      tarjonta-service
-                                                                                      session
-                                                                                      [application-key]
-                                                                                      [:edit-applications])]
+        (let [allowed? (access-controlled-application/application-edit-authorized?
+                         organization-service
+                         tarjonta-service
+                         suoritus-service
+                         session
+                         application-key)]
           (if allowed?
             (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
                                              session
