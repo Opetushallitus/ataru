@@ -264,6 +264,11 @@
                                "tutkintojen-tunnustaminen-review-state-changed-job"
                                {:event-id event-id})))))
 
+(defn- form-key-matches?
+  [cfg-form-key test]
+  (let [keys (string/split cfg-form-key #",")]
+    (some #(= test %) keys)))
+
 (defn- get-configuration
   []
   (let [cfg (:tutkintojen-tunnustaminen config)]
@@ -285,7 +290,7 @@
                 attachment-total-size-limit
                 ftp]} (get-configuration)
         application   (get-application country-question-id application-id)]
-    (if (= form-key (:form-key application))
+    (if (form-key-matches? form-key (:form-key application))
       (let [form        (get-form form-by-id-cache koodisto-cache application)
             attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
             message     (if edit?
@@ -320,7 +325,7 @@
                 ftp]}         (get-configuration)
         application-and-state (get-application-by-event-id country-question-id event-id)
         application           (:application application-and-state)]
-    (if (and (= form-key (:form-key application))
+    (if (and (form-key-matches? form-key (:form-key application))
              (nil? (:review-key application-and-state))
              (= "inactivated" (:state application-and-state)))
       (let [message (->application-inactivated application)]

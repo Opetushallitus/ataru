@@ -155,9 +155,6 @@
        (assoc :demo-requested true)
        (assoc :today now))}))
 
-(defn handle-submit [db _]
-  (assoc-in db [:application :submit-status] :submitted))
-
 (defn- send-application-with-api
   [db method]
   (when-not (-> db :application :submit-status)
@@ -183,7 +180,11 @@
 (reg-event-db
   :application/handle-submit-response
   [check-schema-interceptor]
-  handle-submit)
+  (fn [db [_ response]]
+    (let [payment (-> response :body :payment)]
+      (-> db
+        (assoc-in [:application :submit-status] :submitted)
+        (cond-> payment (assoc-in [:application :submit-details] payment))))))
 
 (defn response->error-message [db response]
   (assoc db :error {:code    (keyword (get-in response [:body :code] "internal-server-error"))
@@ -1314,6 +1315,13 @@
   [check-schema-interceptor]
   (fn [db _]
     (update-in db [:application :feedback :hidden?] not)))
+
+(reg-event-fx
+ :application/redirect-to-maksut
+ [check-schema-interceptor]
+ (fn [{:keys [db]}]
+   (when-let [url (get-in db [:application :submit-details :url])]
+     (set! (.. js/window -location -href) url))))
 
 (reg-event-fx
   :application/set-page-title

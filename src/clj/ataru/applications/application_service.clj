@@ -446,7 +446,9 @@
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
-  (send-modify-application-link-email [this application-key session])
+  (payment-triggered-processing-state-change [this session application-key message payment-url state])
+  (payment-poller-processing-state-change [this application-key state])
+  (send-modify-application-link-email [this application-key payment-url session])
   (add-review-note [this session note])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
@@ -579,6 +581,46 @@
         (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)
         {:events (get-application-events organization-service application-key)})))
 
+  (payment-triggered-processing-state-change
+    [_ session application-key message payment-url state]
+    (let [hakukohde   "form"
+          requirement "processing-state"]
+      (when (aac/applications-access-authorized?
+             organization-service
+             tarjonta-service
+             session
+             [application-key]
+             [:edit-applications])
+        (log/info "Changing form application" application-key " processing-state to" state)
+        (application-store/save-application-hakukohde-review
+               application-key
+               hakukohde
+               requirement
+               state
+               session
+               audit-logger)
+        (log/info "Before email sending" message)
+        (let [application-id (:id (application-store/get-latest-application-by-key application-key))]
+          (email/start-tutu-decision-email-job job-runner application-id message payment-url))
+
+        (let [hakukohde-reviews (future (parse-application-hakukohde-reviews application-key))
+              events            (future (get-application-events organization-service application-key))]
+          (util/remove-nil-values {:events            @events
+                                   :hakukohde-reviews @hakukohde-reviews})))))
+
+  (payment-poller-processing-state-change
+    [_ application-key state]
+    (let [hakukohde   "form"
+          requirement "processing-state"]
+            (log/info "Changing form application" application-key " processing-state to" state)
+            (application-store/save-application-hakukohde-review
+             application-key
+             hakukohde
+             requirement
+             state
+             nil
+             audit-logger)))
+
   (mass-update-application-states
     [_ session application-keys hakukohde-oids from-state to-state]
     (when (aac/applications-access-authorized?
@@ -596,7 +638,7 @@
        audit-logger)))
 
   (send-modify-application-link-email
-    [_ application-key session]
+    [_ application-key payment-url session]
     (when-let [application-id (:id (aac/get-latest-application-by-key
                                     organization-service
                                     tarjonta-service
@@ -604,7 +646,7 @@
                                     session
                                     application-key))]
       (application-store/add-new-secret-to-application application-key)
-      (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id)
+      (email/start-email-submit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url)
       (enrich-virkailija-organizations
        organization-service
        (application-store/add-application-event {:application-key application-key

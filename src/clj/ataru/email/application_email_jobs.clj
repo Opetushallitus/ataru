@@ -36,13 +36,14 @@
     (log/info email)))
 
 (defn start-email-submit-confirmation-job
-  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id]
+  [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
   (dorun
     (for [email (application-email/create-submit-email koodisto-cache tarjonta-service
                   organization-service
                   ohjausparametrit-service
                   application-id
-                  true)]
+                  true
+                  payment-url)]
         (start-email-job job-runner email))))
 
 (defn start-email-edit-confirmation-job
@@ -59,6 +60,15 @@
     (for [email (application-email/create-refresh-secret-email koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                   application-id)]
       (start-email-job job-runner email))))
+
+(defn start-tutu-decision-email-job
+  [job-runner application-id message payment-url]
+  (log/info "start-tutu-decision-email-job" application-id payment-url)
+  (dorun
+   (for [email (application-email/create-tutu-decision-email application-id message payment-url)]
+     (do
+       (log/info "Before email job" email)
+       (start-email-job job-runner email)))))
 
 (defn store-email-templates
   [form-key session templates]

@@ -69,10 +69,14 @@
         haku-header                (subscribe [:application/list-heading-data-for-haku])
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         loading?                   (subscribe [:application/fetching-applications?])
+        tutu-form-visible?         (subscribe [:tutu-payment/tutu-form-selected?])
+        processing-states          (if @tutu-form-visible?
+                                       review-states/application-hakukohde-processing-states
+                                       review-states/application-hakukohde-processing-states-normal)
         all-states                 (reduce (fn [acc [state _]]
                                              (assoc acc state 0))
                                            {}
-                                           review-states/application-hakukohde-processing-states)]
+                                           processing-states)]
     (fn []
       (let [from-states (merge all-states @review-state-counts)]
         [:span.application-handling__mass-edit-review-states-container

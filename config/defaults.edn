@@ -13,6 +13,10 @@
                              :form-key                    ""
                              :country-question-id         ""
                              :attachment-total-size-limit 20
+                             :maksut                      {:enabled?                false
+                                                           :poll-interval-minutes   5
+                                                           :decision-amount         "70.00"
+                                                           :form-key      			    ""}
                              :ftp                         {:host               ""
                                                            :port               22
                                                            :user               ""
@@ -32,6 +36,7 @@
                    :environment-name                    "dev"
                    :features                            {}
                    :secret-link-valid-days              14
+                   :tutu-payment-form-key               ""
                    :attachment-modify-grace-period-days 14
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880}

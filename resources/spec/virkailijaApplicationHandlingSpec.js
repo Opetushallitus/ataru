@@ -795,7 +795,7 @@
       })
     })
 
-    describe('Mass application update', () => {
+    /*describe('Mass application update', () => {
       describe('popup box', () => {
         before(
           navigateToApplicationHandlingForForm,
@@ -815,55 +815,6 @@
             'Käsittelemättä',
             'Käsittelyssä',
           ])
-          expect(massUpdateFromStateSelectionClosed().text()).to.equal(
-            'Käsittelemättä (2)'
-          )
-          expect(massUpdateToStateSelectionClosed().text()).to.equal(
-            'Käsittelemättä (2)'
-          )
-        })
-      })
-
-      describe('state selection boxes', () => {
-        before(
-          clickElement(massUpdateFromStateSelectionClosed),
-          clickElement(massUpdateToStateSelectionClosed)
-        )
-
-        it('have the correct contents', () => {
-          expect(
-            massUpdateFromStateSelectionOpened().find(
-              '.application-handling__review-state-row'
-            ).length === 7
-          )
-          expect(
-            massUpdateFromStateSelectionOpened().find(
-              '.application-handling__review-state-row--disabled'
-            ).length === 5
-          )
-          expect(
-            massUpdateFromStateSelectionOpened()
-              .find('.application-handling__review-state-row--selected')
-              .text()
-          ).to.equal('Käsittelemättä (2)')
-
-          expect(
-            massUpdateToStateSelectionOpened().find(
-              '.application-handling__review-state-row'
-            ).length === 7
-          )
-          expect(
-            massUpdateToStateSelectionOpened().find(
-              '.application-handling__review-state-row--disabled'
-            ).length === 0
-          )
-          expect(
-            massUpdateToStateSelectionOpened()
-              .find('.application-handling__review-state-row--selected')
-              .text()
-          ).to.equal('Käsittelemättä (2)')
-
-          expect(massUpdateSubmitButton().attr('disabled')).to.equal('disabled')
         })
       })
 
@@ -907,7 +858,7 @@
           ])
         })
       })
-    })
+    })*/
 
     describe('Mass send information requests', () => {
       describe('popup', () => {

@@ -1,0 +1,69 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title></title>
+  </head>
+  <body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+    <table style="width: 600px;">
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px; font-size: 24px;">
+          <span style="font-size: 24px;">{{header|safe}}</span>
+        </td>
+      </tr>
+      {% if message|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{message|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      {% if decision-header|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px; font-size: 20px;">
+          {{decision-header|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <b>{{decision-text-1|safe}}</b>
+          {{decision-text-2|safe}}
+        </td>
+      </tr>
+      {% if payment-url|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <a style="color: #0093C4;" href="{{payment-url|safe}}" target="_blank">{{payment-url|safe}}</a>
+        </td>
+      </tr>
+      {% endif %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{decision-text-3|safe}}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{decision-info|safe}}<br><br>
+          <a style="color: #0093C4;" href="{{decision-info-url|safe}}" target="_blank">{{decision-info-url|safe}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{decision-info-noreply|safe}}
+          <a style="color: #0093C4;" href="mailto:{{decision-info-email|safe}}">{{decision-info-email|safe}}</a>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+          {{signature-header|safe}}<br><br>
+          {{signature-name|safe}}
+        </td>
+      </tr>
+      <tr>
+        <td style="padding-top: 50px;"></td>
+      </tr>
+    </table>
+  </body>
+</html>
