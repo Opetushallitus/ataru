@@ -59,14 +59,15 @@
   (stop [this] this))
 
 (def fake-org-by-oid
-  {"1.2.246.562.10.11"          {:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}
-   "1.2.246.562.10.22"          {:name {:fi "Omnia"}, :oid "1.2.246.562.10.22", :type :organization}
-   "1.2.246.562.10.1234334543"  {:name {:fi "Telajärven aikuislukio"}, :oid "1.2.246.562.10.1234334543", :type :organization}
-   "1.2.246.562.10.0439845"     {:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
-   "1.2.246.562.28.1"           {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
-   "1.2.246.562.10.0439846"     {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
-   "1.2.246.562.28.2"           {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}
-   "1.2.246.562.10.10826252480" {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization}})
+  {"1.2.246.562.10.11"                   {:name {:fi "Lasikoulu"}, :oid "1.2.246.562.10.11", :type :organization}
+   "1.2.246.562.10.22"                   {:name {:fi "Omnia"}, :oid "1.2.246.562.10.22", :type :organization}
+   "1.2.246.562.10.1234334543"           {:name {:fi "Telajärven aikuislukio"}, :oid "1.2.246.562.10.1234334543", :type :organization}
+   "1.2.246.562.10.0439845"              {:name {:fi "Test org"}, :oid "1.2.246.562.10.0439845" :type :organization}
+   "1.2.246.562.28.1"                    {:name {:fi "Test group"}, :oid "1.2.246.562.28.1" :type :group}
+   "1.2.246.562.10.0439846"              {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
+   "1.2.246.562.28.2"                    {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}
+   "1.2.246.562.10.10826252480"          {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization}
+   "form-access-control-test-oppilaitos" {:name {:fi "Testioppilaitos"}, :oid "form-access-control-test-oppilaitos" :type :organization}})
 
 (defn fake-orgs-by-root-orgs [root-orgs]
   (some->> root-orgs

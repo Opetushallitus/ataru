@@ -422,20 +422,21 @@
           @(subscribe [:editor/virkailija-translation :lisakysymys])]]))))
 
 (defn text-component [_ _ path & {:keys [header-label]}]
-  (let [languages         (subscribe [:editor/languages])
-        value             (subscribe [:editor/get-component-value path])
-        sub-header        (subscribe [:editor/get-component-value path :label])
-        size              (subscribe [:editor/get-component-value path :params :size])
-        max-length        (subscribe [:editor/get-component-value path :params :max-length])
-        radio-group-id    (util/new-uuid)
-        radio-buttons     ["S" "M" "L"]
-        radio-button-ids  (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
-        max-length-change (fn [new-val]
-                            (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
-        size-change       (fn [new-size]
-                            (dispatch-sync [:editor/set-component-value new-size path :params :size]))
-        text-area?        (= "Tekstialue" header-label)
-        component-locked? (subscribe [:editor/component-locked? path])]
+  (let [languages                 (subscribe [:editor/languages])
+        value                     (subscribe [:editor/get-component-value path])
+        sub-header                (subscribe [:editor/get-component-value path :label])
+        size                      (subscribe [:editor/get-component-value path :params :size])
+        max-length                (subscribe [:editor/get-component-value path :params :max-length])
+        radio-group-id            (util/new-uuid)
+        radio-buttons             ["S" "M" "L"]
+        radio-button-ids          (reduce (fn [acc btn] (assoc acc btn (str radio-group-id "-" btn))) {} radio-buttons)
+        max-length-change         (fn [new-val]
+                                    (dispatch-sync [:editor/set-component-value new-val path :params :max-length]))
+        size-change               (fn [new-size]
+                                    (dispatch-sync [:editor/set-component-value new-size path :params :size]))
+        text-area?                (= "Tekstialue" header-label)
+        component-locked?         (subscribe [:editor/component-locked? path])
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
@@ -488,7 +489,7 @@
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-           (when text-area?
+           (when (and text-area? @toisen-asteen-yhteishaku?)
              [checkbox-component/checkbox path initial-content :sensitive-answer])
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
