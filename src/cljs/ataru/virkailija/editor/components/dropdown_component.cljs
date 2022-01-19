@@ -68,7 +68,8 @@
                             (let [n (string/replace value #"\D" "")]
                               (if (empty? n)
                                 nil
-                                (js/parseInt n))))]
+                                (js/parseInt n))))
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
     (fn [option-index option-count option-path followups path languages show-followups parent-key option-value question-group-element? &
          {:keys [editable?]
           :or   {editable? true}}]
@@ -107,7 +108,8 @@
                                                :value-fn    (fn [v] (:selection-limit v))}]])
         [followup-question/followup-question option-index followups show-followups]
         [belongs-to-hakukohteet-component/belongs-to-hakukohteet-option parent-key option-index option-path]
-        [prevent-submission-component/prevent-submission-option option-path]
+        (when @toisen-asteen-yhteishaku?
+          [prevent-submission-component/prevent-submission-option option-path])
         (when editable?
           [remove-dropdown-option-button path option-index (or @component-locked? (< option-count 3)) parent-key option-value question-group-element?])]
        [followup-question/followup-question-overlay option-index followups path show-followups]])))
@@ -317,16 +319,17 @@
            [custom-answer-options languages (:options value) followups path question-group-element? editable? show-followups parent-key]])))))
 
 (defn dropdown [_ _ path _]
-  (let [languages                (subscribe [:editor/languages])
-        options-koodisto         (subscribe [:editor/get-component-value path :koodisto-source])
-        koodisto-ordered-by-user (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
-        value                    (subscribe [:editor/get-component-value path])
-        support-selection-limit? (subscribe [:editor/dropdown-with-selection-limit? path])
-        selected-form-key        (subscribe [:editor/selected-form-key])
-        koodisto-ordered-id      (util/new-uuid)
-        component-locked?        (subscribe [:editor/component-locked? path])
-        is-per-hakukohde-allowed (subscribe [:editor/is-per-hakukohde-allowed path])
-        allow-invalid-koodis-id  (util/new-uuid)]
+  (let [languages                 (subscribe [:editor/languages])
+        options-koodisto          (subscribe [:editor/get-component-value path :koodisto-source])
+        koodisto-ordered-by-user  (subscribe [:editor/get-component-value path :koodisto-ordered-by-user])
+        value                     (subscribe [:editor/get-component-value path])
+        support-selection-limit?  (subscribe [:editor/dropdown-with-selection-limit? path])
+        selected-form-key         (subscribe [:editor/selected-form-key])
+        koodisto-ordered-id       (util/new-uuid)
+        component-locked?         (subscribe [:editor/component-locked? path])
+        is-per-hakukohde-allowed  (subscribe [:editor/is-per-hakukohde-allowed path])
+        allow-invalid-koodis-id   (util/new-uuid)
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
       (let [languages      @languages
             field-type     (:fieldType @value)
@@ -367,7 +370,8 @@
                 :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-              [checkbox-component/checkbox path initial-content :sensitive-answer]
+              (when @toisen-asteen-yhteishaku?
+                [checkbox-component/checkbox path initial-content :sensitive-answer])
               (when (and (seq (:belongs-to-hakukohderyhma initial-content))
                       @is-per-hakukohde-allowed
                       (nil? @options-koodisto))
