@@ -171,9 +171,9 @@
     (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))
 
 (defn applications-access-authorized-including-opinto-ohjaaja?
-  [organization-service tarjonta-service suoritus-service session application-keys]
+  [organization-service tarjonta-service suoritus-service session application-keys rights]
   (or
-    (applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
+    (applications-access-authorized? organization-service tarjonta-service session application-keys rights)
     (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-keys)))
 
 (defn- rights-by-hakukohde
