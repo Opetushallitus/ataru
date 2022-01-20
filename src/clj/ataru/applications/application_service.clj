@@ -595,12 +595,12 @@
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
-    (when (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [application-key]
-           [:view-applications :edit-applications])
+    (when (aac/application-view-authorized?
+            organization-service
+            tarjonta-service
+            suoritus-service
+            session
+            application-key)
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
