@@ -390,23 +390,27 @@
 
 (reg-event-fx
   :application/reload-applications
-  (fn [{:keys [db]} _]
-    (let [haku-oid      (or (get-in db [:application :selected-haku])
-                            (first (get-in db [:application :selected-hakukohderyhma])))
-          hakukohde-oid (get-in db [:application :selected-hakukohde])]
-      (cond-> {:db       (-> db
-                             (assoc-in [:application :applications] [])
-                             (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
-                             (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
-                             (assoc-in [:application :kevyt-valinta-selection-state-counts] (get-in initial-db/default-db [:application :kevyt-valinta-selection-state-counts]))
-                             (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
-                             (update-in [:application :sort] dissoc :offset)
-                             (assoc-in [:application :fetching-applications?] true))
-               :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications
-                                                                                             {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
-                                                                                            [:application/fetch-form-contents]]]}
-              (some? (get-in db [:request-handles :applications-list]))
-              (assoc :http-abort (get-in db [:request-handles :applications-list]))))))
+  (fn [{:keys [db]} [_ user-allowed-fetching?]]
+    (if (or user-allowed-fetching?
+            (get-in db [:application :user-allowed-fetching?]))
+      (let [haku-oid (or (get-in db [:application :selected-haku])
+                         (first (get-in db [:application :selected-hakukohderyhma])))
+            hakukohde-oid (get-in db [:application :selected-hakukohde])]
+        (cond-> {:db       (-> db
+                               (assoc-in [:application :applications] [])
+                               (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
+                               (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
+                               (assoc-in [:application :kevyt-valinta-selection-state-counts] (get-in initial-db/default-db [:application :kevyt-valinta-selection-state-counts]))
+                               (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
+                               (update-in [:application :sort] dissoc :offset)
+                               (assoc-in [:application :fetching-applications?] true)
+                               (assoc-in [:application :user-allowed-fetching?] true))
+                 :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications
+                                                                                               {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
+                                                                                              [:application/fetch-form-contents]]]}
+                (some? (get-in db [:request-handles :applications-list]))
+                (assoc :http-abort (get-in db [:request-handles :applications-list]))))
+      {:db db})))
 
 (reg-event-db
   :application/stop-loading-applications

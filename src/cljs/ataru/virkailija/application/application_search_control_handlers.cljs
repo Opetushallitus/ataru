@@ -2,6 +2,7 @@
   (:require
    [re-frame.core :refer [reg-event-fx reg-event-db]]
    [ataru.dob :as dob]
+   [clojure.string :as str]
    [ataru.email :as email]
    [ataru.ssn :as ssn]
    [ataru.cljs-util :as cljs-util]))
@@ -42,15 +43,15 @@
 
 (defn- complete-application-oid
   [oid-suffix]
-  (clojure.string/join "" (concat "1.2.246.562.11."
-                                  (repeat (- 20 (count oid-suffix)) "0")
-                                  oid-suffix)))
+  (str/join "" (concat "1.2.246.562.11."
+                       (repeat (- 20 (count oid-suffix)) "0")
+                       oid-suffix)))
 
 (defn- parse-search-term
   [search-term]
   (let [search-term-ucase (-> search-term
-                              clojure.string/trim
-                              clojure.string/upper-case)]
+                              str/trim
+                              str/upper-case)]
     (cond (application-oid? search-term-ucase)
           {:application-oid search-term-ucase}
 
@@ -86,7 +87,7 @@
     (let [db (set-search db search-term)]
       (cond-> {:db db}
               (or (some? (get-in db [:application :search-control :search-term :parsed]))
-                  (clojure.string/blank? search-term))
-              (assoc :dispatch-debounced {:timeout  (if (clojure.string/blank? search-term) 0 500)
+                  (str/blank? search-term))
+              (assoc :dispatch-debounced {:timeout  (if (str/blank? search-term) 0 500)
                                           :id       :application-search
-                                          :dispatch [:application/reload-applications]})))))
+                                          :dispatch [:application/reload-applications true]})))))

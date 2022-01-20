@@ -1568,6 +1568,7 @@
         applications            (subscribe [:application/applications-to-render])
         has-more?               (subscribe [:application/has-more-applications?])
         loading?                (subscribe [:application/fetching-applications?])
+        user-allowed-fetching?  (subscribe [:application/user-allowed-fetching?])
         expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
       [:div
@@ -1580,9 +1581,15 @@
            (when (not-empty @applications)
              [application-list/application-list-contents @applications select-application])
            (if (empty? @applications)
-             (when @loading?
+             (if @loading?
                [:div.application-handling__list-loading-indicator
-                [:i.zmdi.zmdi-spinner]])
+                [:i.zmdi.zmdi-spinner]]
+               (when-not @user-allowed-fetching?
+                 [:div.application-handling__list-loading-indicator
+                  [:button.application-handling__show-results-button
+                   {:data-test-id "show-results"
+                    :on-click #(dispatch [:application/reload-applications true])}
+                   @(subscribe [:editor/virkailija-translation :show-results])]]))
              (when (and @expanded (or @has-more? (< (count @applications) @loaded-count)))
                [:div#application-handling__end-of-list-element
                 {:on-click #(dispatch [:application/show-more-applications (count @applications)])}
