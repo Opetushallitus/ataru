@@ -674,9 +674,10 @@
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return {}
-        (if (access-controlled-application/applications-access-authorized?
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service
               tarjonta-service
+              suoritus-service
               session
               (:application-keys body)
               [:edit-applications])
