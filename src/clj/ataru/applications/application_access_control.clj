@@ -152,6 +152,12 @@
   (let [[application-authorization-data] (application-store/applications-authorization-data [application-key])]
     (application-authorized-by-lahtokoulu? organization-service suoritus-service session application-authorization-data)))
 
+(defn- applications-opinto-ohjaaja-access-authorized?
+  [organization-service suoritus-service session application-keys]
+  (let [applications-authorization-data (application-store/applications-authorization-data application-keys)
+        authorized-applications (filter-authorized-by-lahtokoulu organization-service suoritus-service session applications-authorization-data [])]
+    (= (count authorized-applications) (count application-keys))))
+
 (defn application-edit-authorized?
   [organization-service tarjonta-service suoritus-service session application-key]
   (or
@@ -163,6 +169,12 @@
   (or
     (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications])
     (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))
+
+(defn applications-access-authorized-including-opinto-ohjaaja?
+  [organization-service tarjonta-service suoritus-service session application-keys]
+  (or
+    (applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
+    (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-keys)))
 
 (defn- rights-by-hakukohde
   [organization-service session application]
