@@ -451,7 +451,7 @@
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]
-    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service session application-keys)
+    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service session application-keys [:view-applications :edit-applications])
       (let [applications                     (application-store/get-applications-by-keys application-keys)
             application-reviews              (->> applications
                                                   (map :key)
