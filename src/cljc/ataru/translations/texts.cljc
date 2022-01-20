@@ -1445,6 +1445,9 @@
    :link-to-feedback                                {:fi "Linkki palautteeseen"
                                                      :sv "Länk till responsen"
                                                      :en "Link to the feedback"}
+   :show-results                                    {:fi "Näytä hakutulokset"
+                                                     :sv "Show search results"
+                                                     :en "Show search results"}
    :load-excel                                      {:fi "Lataa Excel"
                                                      :sv "Ladda ner Excel"
                                                      :en "Load excel"}
