@@ -396,11 +396,10 @@
    job-runner
    application-id))
 
-(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id payment-url]
+(defn- start-hakija-edit-jobs [koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner application-id _]
   (application-email/start-email-edit-confirmation-job koodisto-cache tarjonta-service organization-service ohjausparametrit-service
                                                        job-runner
-                                                       application-id
-                                                       payment-url)
+                                                       application-id)
   (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-edit-job
    job-runner
    application-id)
