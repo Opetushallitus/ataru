@@ -158,6 +158,12 @@
     (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications])
     (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))
 
+(defn application-view-authorized?
+  [organization-service tarjonta-service suoritus-service session application-key]
+  (or
+    (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications])
+    (opinto-ohjaaja-access-authorized? organization-service suoritus-service session application-key)))
+
 (defn- rights-by-hakukohde
   [organization-service session application]
   (let [authorized? (memoize

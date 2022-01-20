@@ -179,3 +179,78 @@
       (let [session {:identity {:superuser true}}
             result  (aac/application-edit-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
         (should= true result)))))
+
+(describe "application-view-authorized?"
+  (tags :unit)
+
+  (it "returns true if user has edit-applications authorization for application's form's organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :edit-applications [organization-oid-1])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result))))
+
+  (it "returns true if user has view-applications authorization for application's form's organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :view-applications [organization-oid-1])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result))))
+
+  (it "returns true if user has edit-applications authorization for application's hakukohde's organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :edit-applications [hakukohteen-tarjoaja-oid])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result))))
+
+  (it "returns true if user has view-applications authorization for application's hakukohde's organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :view-applications [hakukohteen-tarjoaja-oid])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result))))
+
+  (it "returns false if user has edit-applications authorization for unrelated organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :edit-applications [organization-oid-2])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= false result))))
+
+  (it "returns false if user has view-applications authorization for unrelated organization"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :view-applications [organization-oid-2])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= false result))))
+
+  (it "returns true if user is opinto-ohjaaja for applicant"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :opinto-ohjaaja [organization-oid-1])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result))))
+
+  (it "returns false if user is opinto-ohjaaja for another school"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session (session-with-rights :opinto-ohjaaja [organization-oid-2])
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= false result))))
+
+  (it "returns true if user is superuser"
+    (with-redefs [application-store/applications-authorization-data
+                  (fn [_]
+                    [{:person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}])]
+      (let [session {:identity {:superuser true}}
+            result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
+        (should= true result)))))
