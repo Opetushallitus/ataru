@@ -225,12 +225,6 @@
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client])
 
-    :temp-file-store (if (get-in config [:aws :liiteri-files])
-                       (component/using
-                         (s3-temp-file-store/new-store)
-                         [:s3-client])
-                       (filesystem-temp-file-store/new-store))
-
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
                                             hakija-jobs/job-definitions))
@@ -248,6 +242,17 @@
 
     :credentials-provider (aws-auth/map->CredentialsProvider {})
 
+
+    :s3-client (component/using
+                 (s3-client/new-client)
+                 [:credentials-provider])
+
+    :temp-file-store (if (get-in config [:aws :liiteri-files])
+                       (component/using
+                         (s3-temp-file-store/new-store)
+                         [:s3-client])
+                       (filesystem-temp-file-store/new-store))
+    
     :amazon-sqs (component/using
                  (sqs/map->AmazonSQS {})
                  [:credentials-provider])
