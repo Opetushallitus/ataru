@@ -23,7 +23,8 @@
             [ataru.hakija.form-role :as form-role]
             [ataru.util :as util :refer [assoc?]]
             [taoensso.timbre :as log]
-            [ataru.demo-config :as demo]))
+            [ataru.demo-config :as demo]
+            [ataru.tarjonta.haku :as haku]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -94,8 +95,18 @@
                       (contains? editing-allowed-person-info-field-ids
                         (keyword (:id field)))))))))
 
+(def lupatiedot-field-ids #{:lupatiedot :sahkoisen-asioinnin-lupa :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
+
+(defn- is-lupatieto-field?
+  [field]
+  (contains? lupatiedot-field-ids (keyword (:id field))))
+
+(defn- is-editing-allowed-person-info-field?
+  [field]
+  (contains? editing-allowed-person-info-field-ids (keyword (:id field))))
+
 (defn- uneditable?
-  [now field hakuajat roles application-in-processing-state? field-deadline]
+  [now field hakuajat roles application-in-processing-state? field-deadline use-toisen-asteen-yhteishaku-restrictions?]
   (not (and (or (and (form-role/virkailija? roles)
                      (not (form-role/with-henkilo? roles)))
                 (not (contains? editing-forbidden-person-info-field-ids (keyword (:id field)))))
@@ -108,7 +119,10 @@
                       (editing-allowed-by-hakuaika? now field hakuajat application-in-processing-state?)))
             (or (form-role/virkailija? roles)
                 (not (and (empty? (:uniques hakuajat))
-                          application-in-processing-state?))))))
+                          application-in-processing-state?)))
+            (and use-toisen-asteen-yhteishaku-restrictions?
+                 (or (is-lupatieto-field? field)
+                     (is-editing-allowed-person-info-field? field))))))
 
 (defn- combine-old-rajaavat-ryhmat-with-new
   [haku-oid old-rajaavat hakukohderyhmat-with-settings]
@@ -134,7 +148,7 @@
     (not (form-role/virkailija? roles))))
 
 (defn flag-uneditable-and-unviewable-field
-  [now hakuajat roles application-in-processing-state? field-deadlines field]
+  [now hakuajat roles application-in-processing-state? field-deadlines field use-toisen-asteen-yhteishaku-restrictions?]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (cannot-view-field? roles field)
           cannot-edit? (or cannot-view?
@@ -144,7 +158,8 @@
                             hakuajat
                             roles
                             application-in-processing-state?
-                            (get field-deadlines (:id field))))]
+                            (get field-deadlines (:id field))
+                            use-toisen-asteen-yhteishaku-restrictions?))]
       (assoc field
              :cannot-view cannot-view?
              :cannot-edit cannot-edit?))
@@ -156,14 +171,16 @@
    hakuajat :- s/Any
    roles :- [form-role/FormRole]
    application-in-processing-state? :- s/Bool
-   field-deadlines :- {s/Str form-schema/FieldDeadline}]
+   field-deadlines :- {s/Str form-schema/FieldDeadline}
+   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool]
   (update form :content (partial util/map-form-fields
                                  (partial flag-uneditable-and-unviewable-field
                                           now
                                           hakuajat
                                           roles
                                           application-in-processing-state?
-                                          field-deadlines))))
+                                          field-deadlines
+                                          use-toisen-asteen-yhteishaku-restrictions?))))
 
 (s/defn ^:always-validate remove-required-hakija-validator-if-virkailija :- s/Any
   [form :- s/Any
@@ -224,7 +241,8 @@
    koodisto-cache :- s/Any
    hakukohteet :- s/Any
    application-in-processing-state? :- s/Bool
-   field-deadlines :- {s/Str form-schema/FieldDeadline}]
+   field-deadlines :- {s/Str form-schema/FieldDeadline}
+   use-toisen-asteen-yhteishaku-restrictions?]
   (let [now      (time/now)
         hakuajat (hakuaika/index-hakuajat hakukohteet)]
     (when-let [form (cache/get-from form-by-id-cache (str id))]
@@ -232,7 +250,7 @@
         (-> (koodisto/populate-form-koodisto-fields koodisto-cache form)
             (remove-required-hakija-validator-if-virkailija roles)
             (populate-attachment-deadlines now hakuajat field-deadlines)
-            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines)
+            (flag-uneditable-and-unviewable-fields now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions?)
             (populate-demo-allowed hakuajat now))))))
 
 (s/defn ^:always-validate fetch-form-by-key :- s/Any
@@ -250,7 +268,8 @@
                       koodisto-cache
                       hakukohteet
                       application-in-processing-state?
-                      field-deadlines)))
+                      field-deadlines
+                      false)))
 
 (s/defn ^:always-validate fetch-form-by-haku-oid-and-id :- s/Any
   [form-by-id-cache :- s/Any
@@ -263,7 +282,8 @@
    id :- s/Int
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
-   roles :- [form-role/FormRole]]
+   roles :- [form-role/FormRole]
+   use-toisen-asteen-yhteishaku-restrictions? :- s/Bool]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
         hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
         hakukohderyhmat (distinct (mapcat #(:hakukohderyhmat %) hakukohteet))
@@ -278,7 +298,8 @@
                        koodisto-cache
                        hakukohteet
                        application-in-processing-state?
-                       field-deadlines)]
+                       field-deadlines
+                       use-toisen-asteen-yhteishaku-restrictions?)]
     (if (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)
@@ -298,21 +319,28 @@
    haku-oid :- s/Any
    application-in-processing-state? :- s/Bool
    field-deadlines :- {s/Str form-schema/FieldDeadline}
-   roles :- [form-role/FormRole]]
-  (when-let [latest-id (some-> (tarjonta/get-haku tarjonta-service haku-oid)
-                               :ataru-form-key
-                               form-store/latest-id-by-key)]
-    (fetch-form-by-haku-oid-and-id form-by-id-cache
-                                   tarjonta-service
-                                   koodisto-cache
-                                   organization-service
-                                   ohjausparametrit-service
-                                   hakukohderyhma-settings-cache
-                                   haku-oid
-                                   latest-id
-                                   application-in-processing-state?
-                                   field-deadlines
-                                   roles)))
+   roles :- [form-role/FormRole]
+   is-rewrite-secret-used? :- s/Bool]
+  (let [haku      (tarjonta/get-haku tarjonta-service haku-oid)
+        use-toisen-asteen-yhteishaku-restrictions? (and
+                                                     (not is-rewrite-secret-used?)
+                                                     (haku/toisen-asteen-yhteishaku? [haku]))
+        latest-id (some-> haku
+                          :ataru-form-key
+                          form-store/latest-id-by-key)]
+    (when latest-id
+      (fetch-form-by-haku-oid-and-id form-by-id-cache
+                                     tarjonta-service
+                                     koodisto-cache
+                                     organization-service
+                                     ohjausparametrit-service
+                                     hakukohderyhma-settings-cache
+                                     haku-oid
+                                     latest-id
+                                     application-in-processing-state?
+                                     field-deadlines
+                                     roles
+                                     use-toisen-asteen-yhteishaku-restrictions?))))
 
 (defn- form-by-haku-oid-cache-key
   [haku-oid roles]
@@ -366,7 +394,8 @@
                                               haku-oid
                                               false
                                               {}
-                                              (map keyword roles))]
+                                              (map keyword roles)
+                                              false)]
         (json/generate-string (form-coercer form)))))
   (load-many [this keys]
     (into {} (keep #(when-let [v (cache/load this %)] [% v]) keys)))
