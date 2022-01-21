@@ -36,7 +36,8 @@
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.applications.application-service :as application-service]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
-            [ataru.db.db :as db])
+            [ataru.db.db :as db]
+            [ataru.temp-file-storage.s3-client :as s3-client])
   (:import java.time.Duration
            [java.util.concurrent TimeUnit]))
 
