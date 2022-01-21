@@ -12,6 +12,9 @@
   (signed-upload-url [_ _]
     (throw (RuntimeException. "Signed URL unimplemented on file system store!")))
 
+  (signed-download-url [_ _]
+    (throw (RuntimeException. "Signed URL unimplemented on file system store!")))
+
   (file-exists? [_ file-name]
     (let [path (str (base-path) "/" file-name)]
       (.exists (File. path)))))
