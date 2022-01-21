@@ -29,7 +29,8 @@
     [clojure.core.match :refer [match]]
     [clojure.java.jdbc :as jdbc]
     [clojure.string :as string]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [ataru.tarjonta.haku :as haku]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
   {:pre [(boolean? is-modify?)]}
@@ -253,7 +254,8 @@
                                              koodisto-cache
                                              nil
                                              (util/application-in-processing? application-hakukohde-reviews)
-                                             field-deadlines))
+                                             field-deadlines
+                                             false))
         final-application             (if is-modify?
                                         (-> application
                                             (merge-unviewable-answers-from-previous
@@ -609,8 +611,9 @@
 
                               :else
                               [:hakija nil])
+        is-rewrite-secret-valid?   (and (= actor-role :virkailija)(virkailija-edit/virkailija-rewrite-secret-valid? secret))
         application                (cond
-                                     (and (= actor-role :virkailija) (virkailija-edit/virkailija-rewrite-secret-valid? secret))
+                                     is-rewrite-secret-valid?
                                      (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
 
                                      (and (= actor-role :virkailija) (virkailija-edit/virkailija-update-secret-valid? secret))
@@ -642,7 +645,8 @@
                                                                       (:haku application)
                                                                       application-in-processing?
                                                                       field-deadlines
-                                                                      form-roles)
+                                                                      form-roles
+                                                                      is-rewrite-secret-valid?)
                                          (some? (:form application)) (hakija-form-service/fetch-form-by-key
                                                                       (->> application
                                                                            :form
