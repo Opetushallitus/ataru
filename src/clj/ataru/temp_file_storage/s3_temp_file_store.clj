@@ -24,7 +24,7 @@
           expiration  (Date. (+ (System/currentTimeMillis) (* 1000 60 60 24)))
           method      HttpMethod/GET
           url         (.generatePresignedUrl (:s3-client s3-client) bucket-name file-key expiration method)]
-      (log/info "Signed upload link: " url " expires" expiration)
+      (log/info "Signed download link: " url " expires" expiration)
       (.toString url)))
 
   (file-exists? [_ file-name]
