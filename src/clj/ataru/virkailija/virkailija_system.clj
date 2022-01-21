@@ -226,6 +226,7 @@
                             :ohjausparametrit-service
                             :person-service
                             :kayttooikeus-service
+                            :temp-file-store
                             :audit-logger
                             :application-service
                             :session-store]
