@@ -23,6 +23,8 @@
             [environ.core :refer [env]]
             [ataru.config.core :refer [config]]
             [ataru.background-job.job :as job]
+            [ataru.temp-file-storage.s3-temp-file-store :as s3-temp-file-store]
+            [ataru.temp-file-storage.filesystem-temp-file-store :as filesystem-temp-file-store]
             [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.hakija.background-jobs.hakija-jobs :as hakija-jobs]
             [ataru.person-service.person-client :as person-client]
@@ -222,6 +224,12 @@
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
                        [:suoritusrekisteri-cas-client])
+
+    :temp-file-store (if (get-in config [:aws :liiteri-files])
+                       (component/using
+                         (s3-temp-file-store/new-store)
+                         [:s3-client])
+                       (filesystem-temp-file-store/new-store))
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions

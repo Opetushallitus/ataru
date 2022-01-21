@@ -75,7 +75,8 @@
             [taoensso.timbre :as log]
             [ataru.user-rights :as user-rights]
             [ataru.util :as util]
-            [ataru.hakija.hakija-form-service :as hakija-form-service])
+            [ataru.hakija.hakija-form-service :as hakija-form-service]
+            [ataru.temp-file-storage.temp-file-store :as temp-file-store])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -201,6 +202,7 @@
                           statistics-month-cache
                           statistics-week-cache
                           statistics-day-cache
+                          temp-file-store
                           koodisto-cache
                           person-service
                           get-haut-cache
@@ -903,10 +905,8 @@
       (api/GET "/content/:key" []
         :path-params [key :- (api/describe s/Str "File key")]
         :summary "Download a file"
-        (if-let [file-response (file-store/get-file liiteri-cas-client key)]
-          (-> (ok (:body file-response))
-              (header "Content-Disposition" (:content-disposition file-response))
-              (header "Cache-Control" "public, max-age=31536000"))
+        (if-let [file-url (temp-file-store/signed-download-url temp-file-store key)]
+          (redirect file-url)
           (not-found)))
       (api/POST "/zip" []
         :form-params [keys :- s/Str
