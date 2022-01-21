@@ -31,7 +31,9 @@
     (condp = oppilaitos-oid
       organization-oid-1
       [{:person-oid "opiskelija-1-oid"
-        :luokka     "9C"}]
+        :luokka     "9C"}
+       {:person-oid "opiskelija-2-oid"
+        :luokka     "9D"}]
 
       []))
 
@@ -107,8 +109,7 @@
     (let [session      (session-with-rights
                          :opinto-ohjaaja [organization-oid-1]
                          :view-applications [hakukohteen-tarjoaja-oid])
-          applications [{:person-oid "opiskelija-1-oid" :oid "application-1-oid" :hakukohde [hakukohde-oid]}
-                        {:person-oid "opiskelija-2-oid" :oid "application-2-oid" :hakukohde ["foo"]}]
+          applications [{:person-oid "opiskelija-1-oid" :oid "application-1-oid" :hakukohde [hakukohde-oid]}]
           result       (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
       (should= 1 (count result))
       (should-contain "application-1-oid" (map :oid result)))))
@@ -254,3 +255,65 @@
       (let [session {:identity {:superuser true}}
             result  (aac/application-view-authorized? organization-service tarjonta-service suoritus-service session "application-1-oid")]
         (should= true result)))))
+
+(describe "applications-access-authorized-including-opinto-ohjaaja?"
+  (describe "when given two organizations"
+    (it "returns true if user has correct authorization for both applications' forms' organizations"
+      (with-redefs [application-store/applications-authorization-data
+                    (fn [_]
+                      [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}
+                       {:organization-oid organization-oid-2 :person-oid "opiskelija-2-oid" :hakukohde [hakukohde-oid]}])]
+        (let [session (session-with-rights :view-applications [organization-oid-1 organization-oid-2])
+              result  (aac/applications-access-authorized-including-opinto-ohjaaja?
+                        organization-service
+                        tarjonta-service
+                        suoritus-service
+                        session
+                        ["application-1-oid" "application-2-oid"]
+                        [:view-applications])]
+          (should= true result))))
+
+    (it "returns false if user has correct authorization only for one application's form's organization"
+      (with-redefs [application-store/applications-authorization-data
+                    (fn [_]
+                      [{:organization-oid organization-oid-1 :person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}
+                       {:organization-oid organization-oid-2 :person-oid "opiskelija-2-oid" :hakukohde [hakukohde-oid]}])]
+        (let [session (session-with-rights :view-applications [organization-oid-1])
+              result  (aac/applications-access-authorized-including-opinto-ohjaaja?
+                        organization-service
+                        tarjonta-service
+                        suoritus-service
+                        session
+                        ["application-1-oid" "application-2-oid"]
+                        [:view-applications])]
+          (should= false result))))
+
+    (it "returns true if user has opinto-ohjaaja for both applications' applicants"
+      (with-redefs [application-store/applications-authorization-data
+                    (fn [_]
+                      [{:person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}
+                       {:person-oid "opiskelija-2-oid" :hakukohde [hakukohde-oid]}])]
+        (let [session (session-with-rights :opinto-ohjaaja [organization-oid-1])
+              result  (aac/applications-access-authorized-including-opinto-ohjaaja?
+                        organization-service
+                        tarjonta-service
+                        suoritus-service
+                        session
+                        ["application-1-oid" "application-2-oid"]
+                        [:view-applications])]
+          (should= true result))))
+
+    (it "returns false if user has opinto-ohjaaja for only one applications' applicants"
+      (with-redefs [application-store/applications-authorization-data
+                    (fn [_]
+                      [{:person-oid "opiskelija-1-oid" :hakukohde [hakukohde-oid]}
+                       {:person-oid "opiskelija-3-oid" :hakukohde [hakukohde-oid]}])]
+        (let [session (session-with-rights :opinto-ohjaaja [organization-oid-1])
+              result  (aac/applications-access-authorized-including-opinto-ohjaaja?
+                        organization-service
+                        tarjonta-service
+                        suoritus-service
+                        session
+                        ["application-1-oid" "application-2-oid"]
+                        [:view-applications])]
+          (should= false result))))))
