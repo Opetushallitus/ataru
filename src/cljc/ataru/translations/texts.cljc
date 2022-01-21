@@ -486,7 +486,7 @@
                                                  :sv "Övningsblankett"
                                                  :en "EN: Harjoittelulomake"}
    :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
-                                                 :sv "SV: Lähetä liite osoitteeseen"
+                                                 :sv "Skicka bilagan till adressen"
                                                  :en "EN: Lähetä liite osoitteeseen"}
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "SV: Tai käytä"
