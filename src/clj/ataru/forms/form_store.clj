@@ -4,7 +4,7 @@
             [ataru.middleware.user-feedback :refer [user-feedback-exception]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.java.jdbc :refer [with-db-transaction]]
-            [ataru.db.db :refer [exec get-datasource]]
+            [ataru.db.db :refer [get-datasource exec-on-primary]]
             [yesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [ataru.util :as util])
@@ -60,7 +60,7 @@
 (defn execute-with-db [db yesql-query-fn params]
   (->> params
        wrap-form-content
-       (exec db yesql-query-fn)
+       (exec-on-primary db yesql-query-fn)
        postprocess))
 
 (defn execute-with-connection [conn yesql-query-fn params]

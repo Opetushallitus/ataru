@@ -66,6 +66,10 @@
   (and (read-only-query? query)
        (ataru-editori?)))
 
+(defmacro exec-on-primary [ds-key query params]
+  `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key false)}]
+                             (~query ~params {:connection connection#})))
+
 (defmacro exec [ds-key query params]
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key (use-read-only-datasource? (-> ~query meta :name)))}]
      (~query ~params {:connection connection#})))
