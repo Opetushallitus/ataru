@@ -735,19 +735,37 @@
     (haku/toisen-asteen-yhteishaku? selected-haku)))
 
 (re-frame/reg-sub
+  :application/can-edit-application?
+  (fn [_ _]
+    (re-frame/subscribe [:application/select-application]))
+  (fn [application _]
+    (get application :can-edit?)))
+
+(re-frame/reg-sub
   :application/review-state-editable?
   (fn [_ _]
-    [(re-frame/subscribe [:application/selected-application])
+    [(re-frame/subscribe [:application/review-settings-visible?])
+     (re-frame/subscribe [:application/can-edit-application?])
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
+  (fn [[settings-visible? can-edit-application? toisen-asteen-yhteishaku?] [_ state-name]]
+    (and
+      (not settings-visible?)
+      can-edit-application?
+      (or
+        (not toisen-asteen-yhteishaku?)
+        (not (contains? review-states/uneditable-for-toisen-asteen-yhteishaku-states state-name))))))
+
+(re-frame/reg-sub
+  :application/score-editable?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/can-edit-application?])
      (re-frame/subscribe [:application/review-settings-visible?])
      (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
-  (fn [[application settings-visible? toisen-asteen-yhteishaku?] [_ state-name]]
-    (let [can-edit-application? (:can-edit? application)]
-      (and
-        (not settings-visible?)
-        can-edit-application?
-        (or
-          (not toisen-asteen-yhteishaku?)
-          (not (contains? review-states/uneditable-for-toisen-asteen-yhteishaku-states state-name)))))))
+  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku?] _]
+    (and
+      (not settings-visible?)
+      can-edit-application?
+      (not toisen-asteen-yhteishaku?))))
 
 (re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
