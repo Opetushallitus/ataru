@@ -749,6 +749,7 @@
   (let [input-value               (subscribe [:state-query [:application :review-comment]])
         review-notes              (subscribe [:state-query [:application :review-notes]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        editable?                 (subscribe [:application/notes-editable?])
         button-enabled?           (reaction (and (-> @input-value string/blank? not)
                                                  (every? (comp not :animated?) @review-notes)))]
     (fn []
@@ -756,6 +757,7 @@
        [:textarea.application-handling__review-note-input
         {:type      "text"
          :value     @input-value
+         :disabled  (not @editable?)
          :on-change (fn [event]
                       (let [review-comment (.. event -target -value)]
                         (dispatch [:application/set-review-comment-value review-comment])))}]
@@ -772,10 +774,11 @@
         @(subscribe [:editor/virkailija-translation :add])]])))
 
 (defn application-review-notes []
-  (let [notes                            (subscribe [:application/review-note-indexes-excluding-eligibility])
-        notes-for-selected               (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
-        selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        only-selected-hakukohteet        (subscribe [:state-query [:application :only-selected-hakukohteet]])]
+  (let [notes                     (subscribe [:application/review-note-indexes-excluding-eligibility])
+        notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
+        selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        editable?                 (subscribe [:application/notes-editable?])]
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
@@ -786,6 +789,7 @@
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
              :value     "only-selected"
+             :disabled  (not @editable?)
              :checked   @only-selected-hakukohteet
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
