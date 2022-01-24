@@ -200,7 +200,7 @@
   [readonly-contents/readonly-fields form application hakukohteet])
 
 (defn review-state-selected-row [state-name on-click label multiple-values?]
-  (let [editable?         (subscribe [:application/review-state-editable? state-name])]
+  (let [editable?         (subscribe [:application/review-field-editable? state-name])]
     [:div.application-handling__review-state-row.application-handling__review-state-row--selected
      {:on-click #(when @editable? (on-click))
       :class    (if @editable?
@@ -749,7 +749,7 @@
   (let [input-value               (subscribe [:state-query [:application :review-comment]])
         review-notes              (subscribe [:state-query [:application :review-notes]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
-        editable?                 (subscribe [:application/notes-editable?])
+        editable?                 (subscribe [:application/review-field-editable? :notes])
         button-enabled?           (reaction (and (-> @input-value string/blank? not)
                                                  (every? (comp not :animated?) @review-notes)))]
     (fn []
@@ -778,7 +778,7 @@
         notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
         selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
-        editable?                 (subscribe [:application/notes-editable?])]
+        editable?                 (subscribe [:application/review-field-editable? :notes])]
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
@@ -824,7 +824,7 @@
   (let [score             (subscribe [:state-query [:application :review :score]])
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        editable?         (subscribe [:application/score-editable?])
+        editable?         (subscribe [:application/review-field-editable? :score])
         display-value     (r/atom (string/replace (str @score) #"\." ","))]
     (fn []
       [:div.application-handling__review-inputs
