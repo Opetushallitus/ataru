@@ -829,7 +829,7 @@
   (let [score             (subscribe [:state-query [:application :review :score]])
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+        editable?         (subscribe [:application/score-editable?])
         display-value     (r/atom (string/replace (str @score) #"\." ","))]
     (fn []
       [:div.application-handling__review-inputs
@@ -842,7 +842,7 @@
           [:input.application-handling__score-input
            {:type      "text"
             :value     @display-value
-            :disabled  (or @settings-visible? (not @can-edit?))
+            :disabled  (not @editable?)
             :on-change (when-not @settings-visible?
                          (fn [evt]
                            (let [new-value (-> evt .-target .-value)]
