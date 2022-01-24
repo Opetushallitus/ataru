@@ -730,47 +730,28 @@
 (re-frame/reg-sub
   :application/can-edit-application?
   (fn [_ _]
-    (re-frame/subscribe [:application/select-application]))
+    (re-frame/subscribe [:application/selected-application]))
   (fn [application _]
     (get application :can-edit?)))
 
+(def uneditable-for-toisen-asteen-yhteishaku-fields
+  (set/union
+    review-states/uneditable-for-toisen-asteen-yhteishaku-states
+    #{:score :notes}))
+
 (re-frame/reg-sub
-  :application/review-state-editable?
+  :application/review-field-editable?
   (fn [_ _]
-    [(re-frame/subscribe [:application/review-settings-visible?])
-     (re-frame/subscribe [:application/can-edit-application?])
+    [(re-frame/subscribe [:application/can-edit-application?])
+     (re-frame/subscribe [:application/review-settings-visible?])
      (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
-  (fn [[settings-visible? can-edit-application? toisen-asteen-yhteishaku?] [_ state-name]]
+  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku?] [_ field-name]]
     (and
       (not settings-visible?)
       can-edit-application?
       (or
         (not toisen-asteen-yhteishaku?)
-        (not (contains? review-states/uneditable-for-toisen-asteen-yhteishaku-states state-name))))))
-
-(re-frame/reg-sub
-  :application/score-editable?
-  (fn [_ _]
-    [(re-frame/subscribe [:application/can-edit-application?])
-     (re-frame/subscribe [:application/review-settings-visible?])
-     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
-  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku?] _]
-    (and
-      (not settings-visible?)
-      can-edit-application?
-      (not toisen-asteen-yhteishaku?))))
-
-(re-frame/reg-sub
-  :application/notes-editable?
-  (fn [_ _]
-    [(re-frame/subscribe [:application/can-edit-application?])
-     (re-frame/subscribe [:application/review-settings-visible?])
-     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
-  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku?] _]
-    (and
-      (not settings-visible?)
-      can-edit-application?
-      (not toisen-asteen-yhteishaku?))))
+        (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name))))))
 
 (re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
