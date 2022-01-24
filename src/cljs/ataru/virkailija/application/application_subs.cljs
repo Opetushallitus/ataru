@@ -10,7 +10,8 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [re-frame.core :as re-frame]
-            [ataru.tarjonta.haku :as haku]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.application.review-states :as review-states]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -720,6 +721,26 @@
   :application/review-state-setting-disabled?
   (fn [db [_ setting-kwd]]
     (-> db :application :review-settings :config setting-kwd (= :updating))))
+
+(re-frame/reg-sub
+  :application/review-settings-visible?
+  (fn [db _]
+    (get-in db [:application :review-settings :visible?])))
+
+(re-frame/reg-sub
+  :application/review-state-editable?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-application])
+     (re-frame/subscribe [:application/review-settings-visible?])
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
+  (fn [[application settings-visible? toisen-asteen-yhteishaku?] [_ state-name]]
+    (let [can-edit-application? (:can-edit? application)]
+      (and
+        (not settings-visible?)
+        can-edit-application?
+        (or
+          (not toisen-asteen-yhteishaku?)
+          (not (contains? review-states/uneditable-for-toisen-asteen-yhteishaku-states state-name)))))))
 
 (re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
