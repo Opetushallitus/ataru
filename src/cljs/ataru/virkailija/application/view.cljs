@@ -199,13 +199,11 @@
 (defn application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
 
-(defn review-state-selected-row [on-click label multiple-values?]
-  (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
-        enabled?          (and (not @settings-visible?) @can-edit?)]
+(defn review-state-selected-row [state-name on-click label multiple-values?]
+  (let [editable?         (subscribe [:application/review-state-editable? state-name])]
     [:div.application-handling__review-state-row.application-handling__review-state-row--selected
-     {:on-click #(when enabled? (on-click))
-      :class    (if enabled?
+     {:on-click #(when @editable? (on-click))
+      :class    (if @editable?
                   "application-handling__review-state-row--enabled"
                   "application-handling__review-state-row--disabled")}
      (if multiple-values?
@@ -219,7 +217,7 @@
 (defn review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
   (if (or (= current-review-state review-state-id)
           multiple-values?)
-    [review-state-selected-row #() (get review-state-label lang) multiple-values?]
+    [review-state-selected-row state-name #() (get review-state-label lang) multiple-values?]
     [:div.application-handling__review-state-row
      {:on-click (fn []
                   (dispatch [:application/update-review-field state-name review-state-id]))}
@@ -466,6 +464,7 @@
                     (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
               [:div.application-handling__review-state-list
                [review-state-selected-row
+                kw
                 list-click
                 (application-states/get-review-state-label-by-name
                  states
