@@ -12,7 +12,7 @@
   (signed-upload-url [_ _]
     (throw (RuntimeException. "Signed URL unimplemented on file system store!")))
 
-  (signed-download-url [_ _]
+  (signed-download-url [_ _ _ _]
     (throw (RuntimeException. "Signed URL unimplemented on file system store!")))
 
   (file-exists? [_ file-name]
