@@ -48,7 +48,7 @@
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))]
     (boolean (if bare-form-haku?
                application-in-processing?
-               (and (some #(get-in % [:hakuaika :jatkuva-haku?]) applied-hakukohteet)
+               (and (some #(get-in % [:hakuaika :jatkuva-or-joustava-haku?]) applied-hakukohteet)
                     application-in-processing?)))))
 
 (defn remove-unviewable-answers

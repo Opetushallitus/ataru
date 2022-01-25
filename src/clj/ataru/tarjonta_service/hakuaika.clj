@@ -44,6 +44,14 @@
 (defn- jatkuva-haku? [haku]
   (string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
 
+(defn- joustava-haku? [haku]
+  (string/starts-with? (:hakutapa-uri haku) "hakutapa_04#"))
+
+(defn- jatkuva-or-joustava-haku? [haku]
+  (or
+    (joustava-haku? haku)
+    (jatkuva-haku? haku)))
+
 (defn ended?
   [now end]
   (and (some? end)
@@ -154,6 +162,7 @@
                           :on                                  (:on hakuaika)
                           :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                           :jatkuva-haku?                       (jatkuva-haku? haku)
+                          :jatkuva-or-joustava-haku?           (jatkuva-or-joustava-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
 
 (defn haun-hakuaika
@@ -173,4 +182,5 @@
       :on                                  (:on hakuaika)
       :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
       :jatkuva-haku?                       (jatkuva-haku? haku)
+      :jatkuva-or-joustava-haku?           (jatkuva-or-joustava-haku? haku)
       :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))

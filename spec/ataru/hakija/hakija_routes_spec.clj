@@ -195,6 +195,7 @@
                                  :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                  :hakukierros-end                     nil
                                  :jatkuva-haku?                       false
+                                 :jatkuva-or-joustava-haku?           false
                                  :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
 (defn- hakuaika-ended-within-grace-period
@@ -207,6 +208,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     nil
                                    :jatkuva-haku?                       false
+                                   :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
 (defn- hakuaika-ended-within-grace-period-hakukierros-ongoing
@@ -219,6 +221,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                    :jatkuva-haku?                       false
+                                   :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
 (defn- hakuaika-ended-grace-period-passed-hakukierros-ongoing
@@ -231,6 +234,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                    :jatkuva-haku?                       false
+                                   :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
 (describe "/haku"
