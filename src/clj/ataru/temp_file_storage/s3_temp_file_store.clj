@@ -3,7 +3,8 @@
             [ataru.temp-file-storage.temp-file-store :refer [TempFileStorage]]
             [taoensso.timbre :as log])
   (:import (com.amazonaws HttpMethod)
-           (java.util Date)))
+           (java.util Date)
+           (com.amazonaws.services.s3.model GeneratePresignedUrlRequest ResponseHeaderOverrides)))
 
 (defn- bucket-name []
   (get-in config [:aws :liiteri-files :bucket]))
@@ -19,11 +20,16 @@
       (log/info "Signed upload link: " url " expires" expiration)
       (.toString url)))
 
-  (signed-download-url [_ file-key]
+  (signed-download-url [_ file-key content-type content-disposition]
     (let [bucket-name (bucket-name)
           expiration  (Date. (+ (System/currentTimeMillis) (* 1000 60 60 24)))
           method      HttpMethod/GET
-          url         (.generatePresignedUrl (:s3-client s3-client) bucket-name file-key expiration method)]
+          request     (-> (new GeneratePresignedUrlRequest bucket-name file-key method)
+                          (.withExpiration expiration)
+                          (.withResponseHeaders (-> (new ResponseHeaderOverrides)
+                                                    (.withContentType content-type)
+                                                    (.withContentDisposition content-disposition))))
+          url         (.generatePresignedUrl (:s3-client s3-client) request)]
       (log/info "Signed download link: " url " expires" expiration)
       (.toString url)))
 
