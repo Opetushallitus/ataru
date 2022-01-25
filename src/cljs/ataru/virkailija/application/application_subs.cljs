@@ -752,16 +752,23 @@
     #{:score :notes}))
 
 (re-frame/reg-sub
+  :application/superuser?
+  (fn [db _]
+    (get-in db [:editor :user-info :superuser?])))
+
+(re-frame/reg-sub
   :application/review-field-editable?
   (fn [_ _]
     [(re-frame/subscribe [:application/can-edit-application?])
      (re-frame/subscribe [:application/review-settings-visible?])
-     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
-  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku?] [_ field-name]]
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+     (re-frame/subscribe [:application/superuser?])])
+  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser?] [_ field-name]]
     (and
       (not settings-visible?)
       can-edit-application?
       (or
+        superuser?
         (not toisen-asteen-yhteishaku?)
         (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name))))))
 
