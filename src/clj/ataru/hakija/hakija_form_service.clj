@@ -149,7 +149,7 @@
     (not (form-role/virkailija? roles))))
 
 (defn flag-uneditable-and-unviewable-field
-  [now hakuajat roles application-in-processing-state? field-deadlines field use-toisen-asteen-yhteishaku-restrictions?]
+  [now hakuajat roles application-in-processing-state? field-deadlines use-toisen-asteen-yhteishaku-restrictions? field]
   (if (= "formField" (:fieldClass field))
     (let [cannot-view? (cannot-view-field? roles field)
           cannot-edit? (or cannot-view?
