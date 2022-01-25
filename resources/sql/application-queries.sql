@@ -688,10 +688,14 @@ SELECT a.key AS "oid",
                  WHERE key = 'asiointikieli' AND
                        application_id = a.id),
                 a.lang) AS "asiointikieli",
-       a.email AS "email"
+       a.email AS "email",
+       coalesce(ahr.payment_obligations, '{}') AS "payment-obligations"
 FROM applications AS a
 JOIN application_reviews AS ar ON ar.application_key = a.key
 LEFT JOIN applications AS la ON la.key = a.key AND la.id > a.id
+LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) FILTER (WHERE requirement = 'payment-obligation') AS payment_obligations
+                   FROM application_hakukohde_reviews
+                   WHERE application_key = a.key) AS ahr ON true
 WHERE la.id IS NULL AND
       a.person_oid IS NOT NULL AND
       a.haku IS NOT NULL AND
