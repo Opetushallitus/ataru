@@ -121,9 +121,9 @@
             (or (form-role/virkailija? roles)
                 (not (and (empty? (:uniques hakuajat))
                           application-in-processing-state?)))
-            (and use-toisen-asteen-yhteishaku-restrictions?
-                 (or (is-lupatieto-field? field)
-                     (is-editing-allowed-person-info-field? field))))))
+            (or (not use-toisen-asteen-yhteishaku-restrictions?)
+                (or (is-lupatieto-field? field)
+                    (is-editing-allowed-person-info-field? field))))))
 
 (defn- combine-old-rajaavat-ryhmat-with-new
   [haku-oid old-rajaavat hakukohderyhmat-with-settings]
