@@ -233,6 +233,9 @@
                                                    (map #(dissoc % :last-modified))
                                                    (util/group-by-first :field-id))
                                           {})
+        use-toisen-asteen-yhteishaku-restrictions? (and
+                                                     (not rewrite?)
+                                                     (haku/toisen-asteen-yhteishaku? (:haku application)))
         form                          (cond (some? (:haku application))
                                             (hakija-form-service/fetch-form-by-haku-oid-and-id
                                              form-by-id-cache
@@ -245,7 +248,8 @@
                                              (:form application)
                                              (util/application-in-processing? application-hakukohde-reviews)
                                              field-deadlines
-                                             form-roles)
+                                             form-roles
+                                              use-toisen-asteen-yhteishaku-restrictions?)
                                             (some? (:form application))
                                             (hakija-form-service/fetch-form-by-id
                                              (:form application)
