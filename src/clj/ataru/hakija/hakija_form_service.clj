@@ -325,7 +325,7 @@
   (let [haku      (tarjonta/get-haku tarjonta-service haku-oid)
         use-toisen-asteen-yhteishaku-restrictions? (and
                                                      (not is-rewrite-secret-used?)
-                                                     (haku/toisen-asteen-yhteishaku? [haku]))
+                                                     (haku/toisen-asteen-yhteishaku? haku))
         latest-id (some-> haku
                           :ataru-form-key
                           form-store/latest-id-by-key)]
