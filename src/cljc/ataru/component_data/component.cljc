@@ -185,6 +185,16 @@
                    {:value "Ei"
                     :label (:no texts/general-texts)}]))
 
+(defn paatos-opiskelijavalinnasta-sahkopostiin [metadata]
+  (assoc (single-choice-button metadata)
+    :id "paatos-opiskelijavalinnasta-sahkopostiin"
+    :label (:paatos-opiskelijavalinnasta-sahkopostiin texts/translation-mapping)
+    :validators ["required"]
+    :options [{:value "Kyllä"
+               :label (:yes texts/general-texts)}
+              {:value "Ei"
+               :label (:no texts/general-texts)}]))
+
 (defn lupa-sahkoiseen-asiointiin [metadata]
   (assoc (single-choice-button metadata)
          :id "sahkoisen-asioinnin-lupa"
@@ -217,6 +227,17 @@
                     (koulutusmarkkinointilupa metadata)
                     (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))
+
+(defn lupatiedot-toinen-aste [metadata]
+  (assoc (form-section metadata)
+    :id "lupatiedot-toinen-aste"
+    :label (:lupatiedot-toinen-aste texts/translation-mapping)
+    :children [(assoc (info-element metadata)
+                 :text (:lupatiedot-toinen-aste-info texts/translation-mapping))
+               (paatos-opiskelijavalinnasta-sahkopostiin metadata)
+               (koulutusmarkkinointilupa metadata)
+               (valintatuloksen-julkaisulupa metadata)
+               (asiointikieli metadata)]))
 
 (defn huoltajan-nimi [metadata idx]
   (assoc (text-field metadata)
