@@ -118,17 +118,21 @@
         (translations/get-hakija-translation :read-more lang)]]))
 
 (defn- selected-hakukohde [idx hakukohde-oid]
-   [:div.application__hakukohde-2nd-row__selected-hakukohde-row
-    [:div.application-hakukohde-2nd-row__name-wrapper
-     [:span @(subscribe [:application/hakukohde-name-label-by-oid hakukohde-oid])]
-     [:span @(subscribe [:application/hakukohde-tarjoaja-name-label-by-oid hakukohde-oid])]]
-    [hakukohde-details hakukohde-oid]
-    [clear-hakukohde idx]
-    [remove-hakukohde idx]])
+  (let [editable? (subscribe [:application/hakukohteet-editable?])]
+    [:div.application__hakukohde-2nd-row__selected-hakukohde-row
+     [:div.application-hakukohde-2nd-row__name-wrapper
+      [:span @(subscribe [:application/hakukohde-name-label-by-oid hakukohde-oid])]
+      [:span @(subscribe [:application/hakukohde-tarjoaja-name-label-by-oid hakukohde-oid])]]
+     [hakukohde-details hakukohde-oid]
+     (when @editable?
+       [clear-hakukohde idx])
+     (when @editable?
+       [remove-hakukohde idx])]))
 
 (defn- hakukohde-priority [idx hakukohde-oid hakukohteet-count]
-  (let [increase-disabled (= idx 0)
-        decrease-disabled (= idx (max 0 (dec hakukohteet-count)))]
+  (let [editable? (subscribe [:application/hakukohteet-editable?])
+        increase-disabled (or (not @editable?) (= idx 0))
+        decrease-disabled (or (not @editable?) (= idx (max 0 (dec hakukohteet-count))))]
     [:div.application__hakukohde-2nd-row__hakukohde-order
      [:span
       [:i.zmdi.zmdi-caret-up.zmdi-hc-2x
@@ -197,7 +201,8 @@
   (let [selected-hakukohteet (subscribe [:application/selected-hakukohteet])
         hakukohteet-count (count @selected-hakukohteet)
         hakukohteet-full? (subscribe [:application/hakukohteet-full?])
-        max-hakukohteet (subscribe [:application/max-hakukohteet])]
+        max-hakukohteet (subscribe [:application/max-hakukohteet])
+        editable? (subscribe [:application/hakukohteet-editable?])]
     [:div.application__wrapper-element
      [:div.application__wrapper-contents.application__hakukohde-2nd-contents-wrapper
       [:div.application__form-field
@@ -206,4 +211,5 @@
           (let [hakukohde-oid (nth @selected-hakukohteet idx nil)
                 hakukohde-oid (when (not= "" hakukohde-oid) hakukohde-oid)]
             ^{:key (str "hakukohde-row-" idx)} [hakukohde-row idx hakukohde-oid hakukohteet-count]))]
-       [add-hakukohde-row @hakukohteet-full? @max-hakukohteet hakukohteet-count]]]]))
+       (when @editable?
+         [add-hakukohde-row @hakukohteet-full? @max-hakukohteet hakukohteet-count])]]]))
