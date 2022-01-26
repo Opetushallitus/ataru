@@ -19,6 +19,14 @@
   {:id "something"
    :fieldClass "formField"})
 
+(def lupatieto-field
+  {:id "valintatuloksen-julkaisulupa"
+   :fieldClass "formField"})
+
+(def allowed-to-edit-person-field
+  {:id "address"
+   :fieldClass "formField"})
+
 (describe "flag-uneditable-and-unviewable-field"
   (describe "when role is hakija"
     (it "should mark field with sensitive-answer as not viewable and not editable"
@@ -58,4 +66,20 @@
     (it "should not mark normal field as viewable and editable"
       (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil false normal-field)]
         (should-be false? (:cannot-view new-field))
-        (should-be false? (:cannot-edit new-field))))))
+        (should-be false? (:cannot-edit new-field))))
+
+    (describe "when using toisen asteen yhteishaku restrictions"
+      (it "should mark normal field as viewable but not editable"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true normal-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be true? (:cannot-edit new-field))))
+
+      (it "should mark lupatieto field as viewable and editable"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true lupatieto-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field))))
+
+      (it "should mark allowed person info field as viewable and editable"
+        (let [new-field (hfs/flag-uneditable-and-unviewable-field now nil [:virkailija] false nil true allowed-to-edit-person-field)]
+          (should-be false? (:cannot-view new-field))
+          (should-be false? (:cannot-edit new-field)))))))
