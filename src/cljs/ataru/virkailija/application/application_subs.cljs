@@ -1057,7 +1057,10 @@
   :application/can-deactivate-application
   (fn [_]
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
-     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
-  (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
+     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])
+     (re-frame/subscribe [:application/superuser?])
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
+  (fn [[hakukohteet hakemuksen-valinnan-tulokset superuser? toisen-asteen-yhteishaku?]]
     (and (some? hakemuksen-valinnan-tulokset)
-         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
+         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset))
+         (or (not toisen-asteen-yhteishaku?) superuser?))))
