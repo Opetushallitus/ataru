@@ -96,7 +96,7 @@
                       (contains? editing-allowed-person-info-field-ids
                         (keyword (:id field)))))))))
 
-(def lupatiedot-field-ids #{:lupatiedot :sahkoisen-asioinnin-lupa :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
+(def lupatiedot-field-ids #{:lupatiedot-toinen-aste :paatos-opiskelijavalinnasta-sahkopostiin :koulutusmarkkinointilupa :valintatuloksen-julkaisulupa :asiointikieli})
 
 (defn- is-lupatieto-field?
   [field]
