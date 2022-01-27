@@ -525,9 +525,13 @@
 (defn- valpas-link
   [organization-oid]
   (let [url (.url js/window "valpas.hakutilanne" (or organization-oid ""))]
-    [:a
-     {:href url
-      :target "blank"}]))
+    [:div.application-handling__filter-group.application-handling__filter-group__valpas-link
+      [:span
+       @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-1])
+        [:a
+          {:href url
+           :target "blank"}
+          @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-2])]]]))
 
 (defn- school-and-class-filters
   []
@@ -547,10 +551,13 @@
                                       (dispatch [:application/set-school-filter (:oid org)]))]
     (fn []
       [:div.application-handling__popup-column.application-handling__popup-column--large
+       [:div.application-handling__filter-group--other-application-information
+         [:div.application-handling__filter-group-heading
+          @(subscribe [:editor/virkailija-translation :other-application-info])]
         [:div.application-handling__filter-group.school-filter-group
           [:div.application-handling__filter-group-title
            @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
-          [:div.application-handling__filters-attachment-search-input
+          [:div
            (if (not @selected-school)
             [:input
               {:type        "text"
@@ -600,7 +607,7 @@
            classes-label
            classes-options
            classes-on-change])]
-       [valpas-link @selected-school]])))
+       [valpas-link @selected-school]]])))
 
 (defn- application-filters
   []
