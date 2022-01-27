@@ -522,6 +522,13 @@
   (let [form-key (subscribe [:application/selected-form-key])]
     (subscribe [:application/form-fields-by-id @form-key])))
 
+(defn- valpas-link
+  [organization-oid]
+  (let [url (.url js/window "valpas.hakutilanne" (or organization-oid ""))]
+    [:a
+     {:href url
+      :target "blank"}]))
+
 (defn- school-and-class-filters
   []
   (let [schools                    (subscribe [:application/schools-of-departure])
@@ -592,7 +599,8 @@
           [dropdown/multi-option
            classes-label
            classes-options
-           classes-on-change])]])))
+           classes-on-change])]
+       [valpas-link @selected-school]])))
 
 (defn- application-filters
   []
