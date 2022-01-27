@@ -791,6 +791,7 @@
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
+        {:class (when (not @editable?) "application-handling__review-header--disabled")}
         @(subscribe [:editor/virkailija-translation :notes])
         (when (< 0 (count @selected-review-hakukohde))
           [:div.application-handling__review-filters
@@ -842,6 +843,7 @@
           (when @settings-visible?
             [review-settings-checkbox :score])
           [:div.application-handling__review-header.application-handling__review-header--points
+           {:class (when (not @editable?) "application-handling__review-header--disabled")}
            @(subscribe [:editor/virkailija-translation :points])]
           [:input.application-handling__score-input
            {:type      "text"
