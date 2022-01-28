@@ -326,17 +326,18 @@
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
-      {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
-                       (application-filtering/filter-applications
-                        (populate-applications-with-person-data person-service authorized-applications)
-                        states-and-filters)
-                       (populate-applications-with-person-data
-                        person-service
-                        (application-filtering/filter-applications authorized-applications states-and-filters)))
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)
+          filtered-applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
+                                   (application-filtering/filter-applications
+                                     (populate-applications-with-person-data person-service authorized-applications)
+                                     states-and-filters)
+                                   (populate-applications-with-person-data
+                                     person-service
+                                     (application-filtering/filter-applications authorized-applications states-and-filters)))]
+      {:applications filtered-applications
        :sort         (merge {:order-by (:order-by sort)
                              :order    (:order sort)}
-                            (when-let [a (first (drop 999 applications))]
+                            (when-let [a (first (drop 999 filtered-applications))]
                               {:offset (case (:order-by sort)
                                          "applicant-name" {:key            (:key a)
                                                            :last-name      (:last-name a)
