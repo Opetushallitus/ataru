@@ -54,6 +54,22 @@ describe('Hakemuksen tietojen tarkastelu', () => {
     })
 
     describe('Hakemusten rajaus', () => {
+      it('Valpas-linkissä ei ole lähtökoulua', () => {
+        cy.route(
+          'GET',
+          '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
+          '@lahtokoulut'
+        )
+        cy.get(
+          '.application__search-control-tab-selector-wrapper--search'
+        ).click()
+        cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
+        cy.get('#open-application-filters').click()
+        cy.get('#valpas-hakutilanne-link')
+          .should('have.attr', 'href')
+          .and('match', /.*\/hakutilanne\/$/)
+      })
+
       it('Lähtökouluksi voi hakea käyttäjän organisaatioita', () => {
         const searchAndAssertSchoolOptions = (
           searchTerm: string,
@@ -69,16 +85,6 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             cy.get('div.school-filter__option').should(expectation)
           }
         }
-        cy.route(
-          'GET',
-          '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
-          '@lahtokoulut'
-        )
-        cy.get(
-          '.application__search-control-tab-selector-wrapper--search'
-        ).click()
-        cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
-        cy.get('#open-application-filters').click()
         cy.get('#selected-school').should('not.exist')
         searchAndAssertSchoolOptions('perus', 'be', 3)
         searchAndAssertSchoolOptions('Haa', 'be', 1)
@@ -93,6 +99,12 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.get('#selected-school').should('exist')
         cy.get('#selected-school').contains('Pellon peruskoulu')
         cy.get('#school-search').should('not.exist')
+      })
+
+      it('Valpas-linkissä on lähtökoulu', () => {
+        cy.get('#valpas-hakutilanne-link')
+          .should('have.attr', 'href')
+          .and('match', /.*\/hakutilanne\/1\.2\.3\.4\.6$/)
       })
 
       it('Hakijoiden luokat voi valita lähtökoulusta', () => {

@@ -529,7 +529,8 @@
       [:span
        @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-1])
         [:a
-          {:href url
+          {:id "valpas-hakutilanne-link"
+           :href url
            :target "blank"}
           @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-2])]]]))
 
