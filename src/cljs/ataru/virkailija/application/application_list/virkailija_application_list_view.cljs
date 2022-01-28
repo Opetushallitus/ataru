@@ -534,6 +534,14 @@
            :target "blank"}
           @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-2])]]]))
 
+(defn- harkinnanvaraisuus-filter
+  []
+  (let [filters-checkboxes     (subscribe [:state-query [:application :filters-checkboxes]])]
+    [:div.application-handling__filter-group.application-handling__filter-group__harkinnanvaraiset
+      [:div.application-handling__filter-group-heading
+       @(subscribe [:editor/virkailija-translation :harkinnanvaraisuus])]
+      [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :only-harkinnanvaraiset]) :harkinnanvaraisuus :only-harkinnanvaraiset]]))
+
 (defn- school-and-class-filters
   []
   (let [schools                    (subscribe [:application/schools-of-departure])
@@ -608,7 +616,8 @@
            classes-label
            classes-options
            classes-on-change])]
-       [valpas-link @selected-school]]])))
+        [valpas-link @selected-school]
+        [harkinnanvaraisuus-filter]]])))
 
 (defn- application-filters
   []

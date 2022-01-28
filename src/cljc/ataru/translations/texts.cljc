@@ -1301,6 +1301,9 @@
    :valpas-hakutilanne-link-text-2                  {:fi "Valpas-palvelusta"
                                                      :sv "Valpas-tjänsten"
                                                      :en "Valpas service"}
+   :only-harkinnanvaraiset                          {:fi "Vain harkinnanvaraiset"
+                                                     :sv "SV: Vain harkinnanvaraiset"
+                                                     :en "EN: Vain harkinnanvaraiset"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
                                                      :en "Guardians contact information"}
