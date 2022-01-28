@@ -34,12 +34,17 @@
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
                                         :oikeus  "CRUD"}
                                        {:palvelu "ATARU_HAKEMUS"
-                                        :oikeus  "CRUD"}]}
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "opinto-ohjaaja"}]}
                     {:organisaatioOid "1.2.246.562.28.1"
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
                                         :oikeus  "CRUD"}
                                        {:palvelu "ATARU_HAKEMUS"
-                                        :oikeus  "CRUD"}]}]}
+                                        :oikeus  "CRUD"
+                                        }
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "opinto-ohjaaja"}]}]}
    "1.2.246.562.11.22222222222"
    {:oidHenkilo    "1.2.246.562.11.11111111000"
     :organisaatiot [{:organisaatioOid "1.2.246.562.10.0439846"
