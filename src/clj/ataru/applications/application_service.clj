@@ -29,7 +29,8 @@
     [ataru.dob :as dob]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
-    [clj-time.core :as time])
+    [clj-time.core :as time]
+    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -722,30 +723,36 @@
                                (->application-oid-query application-oid))
                          (->attachment-review-states-query attachment-review-states)
                          (->option-answers-query option-answers))]
-        (let [applications (get-application-list-by-query
-                             person-service
-                             organization-service
-                             tarjonta-service
-                             suoritus-service
-                             session
-                             query
-                             sort
-                             (add-selected-hakukohteet states-and-filters
-                                                       haku-oid
-                                                       hakukohde-oid
-                                                       hakukohderyhma-oid
-                                                       rajaus-hakukohteella
-                                                       ryhman-hakukohteet))]
-          (update
-            applications
-            :applications
-            suoritus-filter/filter-applications-by-oppilaitos-and-luokat
-            (fn [oppilaitos-oid]
-              (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
-                    luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
-                (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
-            (:school-filter states-and-filters)
-            (:classes-of-school states-and-filters)))))))
+        (let [applications
+              (get-application-list-by-query
+                person-service
+                organization-service
+                tarjonta-service
+                suoritus-service
+                session
+                query
+                sort
+                (add-selected-hakukohteet states-and-filters
+                                          haku-oid
+                                          hakukohde-oid
+                                          hakukohderyhma-oid
+                                          rajaus-hakukohteella
+                                          ryhman-hakukohteet))
+              filtered-applications-by-oppilaitos-and-luokat
+              (suoritus-filter/filter-applications-by-oppilaitos-and-luokat
+                (:applications applications)
+                (fn [oppilaitos-oid]
+                  (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
+                        luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+                    (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
+                (:school-filter states-and-filters)
+                (:classes-of-school states-and-filters))
+              fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
+              filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
+                                                          fetch-applications-content-fn
+                                                          filtered-applications-by-oppilaitos-and-luokat
+                                                          (:filters states-and-filters))]
+          (assoc applications :applications filter-applications-by-harkinnanvaraisuus))))))
 
 (s/defn ^:always-validate query-applications-paged
   [application-service
