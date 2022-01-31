@@ -822,7 +822,7 @@
         before(
           clickElement(() => {
             return massUpdateFromStateSelectionOpened().find(
-              '.application-handling__review-state-row--mass-update:contains("Käsittelemättä")'
+              '.application-handling__review-state-row--mass-update:contains("Käsittelemättä (2)")'
             )
           }),
           clickElement(() => {
