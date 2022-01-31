@@ -209,7 +209,8 @@
                             :valinta-tulos-service
                             :koodisto-cache
                             :job-runner
-                            :suoritus-service])
+                            :suoritus-service
+                            :form-by-id-cache])
 
     :session-store (create-session-store (db/get-datasource :db))
 
