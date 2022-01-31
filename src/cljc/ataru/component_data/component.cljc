@@ -259,32 +259,37 @@
        (map (comp name :id))
        set))
 
+(defn- harkinnanvaraisuus-info [metadata]
+  (assoc (info-element metadata)
+    :text (:harkinnanvaraisuus-info texts/translation-mapping)))
+
 (defn- harkinnanvaraisuus-question [metadata]
   (assoc (single-choice-button metadata)
     :id                "harkinnanvaraisuus"
-    :label             {:fi "Haetko harkinnanvaraisesti"}
+    :label             (:harkinnanvaraisuus-question texts/translation-mapping)
     :validators        ["required"]
     :sensitive-answer  true
     :options [{:value  "1"
-               :label  {:fi "Kyllä"}
+               :label  (:yes texts/general-texts)
                :followups [(assoc (single-choice-button metadata)
                              :id                "harkinnanvaraisuus-reason"
-                             :label             {:fi "Peruste harkinnanvaraisuudelle"}
+                             :label             (:harkinnanvaraisuus-reason texts/translation-mapping)
                              :validators        ["required"]
                              :sensitive-answer  true
-                             :options [{:label  {:fi "Oppimisvaikeudet"}
+                             :options [{:label  (:harkinnanvaraisuus-reason-0 texts/translation-mapping)
                                         :value  "0"}
-                                       {:label  {:fi "Sosiaaliset syyt"}
+                                       {:label  (:harkinnanvaraisuus-reason-1 texts/translation-mapping)
                                         :value  "1"}
-                                       {:label  {:fi "Koulutodistusten vertailuvaikeudet"}
+                                       {:label  (:harkinnanvaraisuus-reason-2 texts/translation-mapping)
                                         :value  "2"}
-                                       {:label  {:fi "Riittämätön tutkintokielen taito"}
+                                       {:label  (:harkinnanvaraisuus-reason-3 texts/translation-mapping)
                                         :value  "3"}])]}
               {:value "0"
-               :label {:fi "Ei"}}]))
+               :label (:no texts/general-texts)}]))
 
 (defn harkinnanvaraisuus [metadata]
   (assoc (form-section metadata)
-    :id "harkinnanvaraisuus-wrapper"
-    :label {:fi "Harkinnanvaraisuus"}
-    :children [(harkinnanvaraisuus-question metadata)]))
+    :id       "harkinnanvaraisuus-wrapper"
+    :label    (:harkinnanvaraisuus-topic texts/translation-mapping)
+    :children [(harkinnanvaraisuus-info metadata)
+               (harkinnanvaraisuus-question metadata)]))
