@@ -284,29 +284,31 @@
     (let [{:keys [form-key
                   country-question-id
                   attachment-total-size-limit
-                  ftp]} (get-configuration)
-          application (get-application country-question-id application-id)]
-      (if (= form-key (:form-key application))
-        (do
-          (log/info "Preparing data for application " application-id " for ASHA transfer in form " (:form-key application))
-          (let [form (get-form form-by-id-cache koodisto-cache application)
-                attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
-                message (if edit?
-                          (->application-edited application form attachments)
-                          (->application-submitted application form attachments))]
-            (log/info "Sending application"
-                      (if edit? "edited" "submitted")
-                      "message to ASHA for application"
-                      application-id)
-            (transfer ftp
-                      (str (:key application) "_" application-id ".xml")
-                      message)
-            (log/info "Sent application"
-                      (if edit? "edited" "submitted")
-                      "message to ASHA for application"
-                      application-id)
-            {:transition {:id :final}}))
-        {:transition {:id :final}}))
+                  ftp]} (get-configuration)]
+      (log/info "Checking for ASHA if form-key " form-key " with country-question-id " country-question-id " matches for application " application-id)
+      (let [application (get-application country-question-id application-id)]
+        (log/info "Got application " application-id " with form-key " (:form-key application) " for ASHA check")
+        (if (= form-key (:form-key application))
+          (do
+            (log/info "Preparing data for application " application-id " for ASHA transfer in form " (:form-key application))
+            (let [form (get-form form-by-id-cache koodisto-cache application)
+                  attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
+                  message (if edit?
+                            (->application-edited application form attachments)
+                            (->application-submitted application form attachments))]
+              (log/info "Sending application"
+                        (if edit? "edited" "submitted")
+                        "message to ASHA for application"
+                        application-id)
+              (transfer ftp
+                        (str (:key application) "_" application-id ".xml")
+                        message)
+              (log/info "Sent application"
+                        (if edit? "edited" "submitted")
+                        "message to ASHA for application"
+                        application-id)
+              {:transition {:id :final}}))
+          {:transition {:id :final}})))
     (catch Throwable e
       (log/error e (str "Tutkintojen tunnistaminen failed"))
       (throw e))))
