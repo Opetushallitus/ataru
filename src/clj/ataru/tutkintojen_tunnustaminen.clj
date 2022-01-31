@@ -280,30 +280,36 @@
 
 (defn- application-job-step
   [liiteri-cas-client form-by-id-cache koodisto-cache application-id edit?]
-  (let [{:keys [form-key
-                country-question-id
-                attachment-total-size-limit
-                ftp]} (get-configuration)
-        application   (get-application country-question-id application-id)]
-    (if (= form-key (:form-key application))
-      (let [form        (get-form form-by-id-cache koodisto-cache application)
-            attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
-            message     (if edit?
+  (try
+    (let [{:keys [form-key
+                  country-question-id
+                  attachment-total-size-limit
+                  ftp]} (get-configuration)
+          application (get-application country-question-id application-id)]
+      (if (= form-key (:form-key application))
+        (do
+          (log/info "Preparing data for application " application-id " for ASHA transfer in form " (:form-key application))
+          (let [form (get-form form-by-id-cache koodisto-cache application)
+                attachments (get-attachments liiteri-cas-client attachment-total-size-limit application)
+                message (if edit?
                           (->application-edited application form attachments)
                           (->application-submitted application form attachments))]
-        (log/info "Sending application"
-                  (if edit? "edited" "submitted")
-                  "message to ASHA for application"
-                  application-id)
-        (transfer ftp
-                  (str (:key application) "_" application-id ".xml")
-                  message)
-        (log/info "Sent application"
-                  (if edit? "edited" "submitted")
-                  "message to ASHA for application"
-                  application-id)
-        {:transition {:id :final}})
-      {:transition {:id :final}})))
+            (log/info "Sending application"
+                      (if edit? "edited" "submitted")
+                      "message to ASHA for application"
+                      application-id)
+            (transfer ftp
+                      (str (:key application) "_" application-id ".xml")
+                      message)
+            (log/info "Sent application"
+                      (if edit? "edited" "submitted")
+                      "message to ASHA for application"
+                      application-id)
+            {:transition {:id :final}}))
+        {:transition {:id :final}}))
+    (catch Throwable e
+      (log/error e (str "Tutkintojen tunnistaminen failed"))
+      (throw e))))
 
 (defn tutkintojen-tunnustaminen-submit-job-step
   [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
