@@ -30,7 +30,8 @@
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
     [clj-time.core :as time]
-    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]])
+    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
+    [ataru.cache.cache-service :as cache])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -393,7 +394,8 @@
                                      koodisto-cache
                                      job-runner
                                      liiteri-cas-client
-                                     suoritus-service]
+                                     suoritus-service
+                                     form-by-id-cache]
   ApplicationService
   (get-person
     [_ application]
@@ -748,8 +750,10 @@
                 (:school-filter states-and-filters)
                 (:classes-of-school states-and-filters))
               fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
+              fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
               filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                           fetch-applications-content-fn
+                                                          fetch-form-fn
                                                           filtered-applications-by-oppilaitos-and-luokat
                                                           (:filters states-and-filters))]
           (assoc applications :applications filter-applications-by-harkinnanvaraisuus))))))
@@ -808,4 +812,4 @@
           job-runner
           id)))))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil))

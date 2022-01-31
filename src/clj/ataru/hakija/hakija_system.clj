@@ -141,7 +141,8 @@
                             :person-service
                             :valinta-tulos-service
                             :koodisto-cache
-                            :job-runner])
+                            :job-runner
+                            :form-by-id-cache])
 
     :handler (component/using
                (handler/new-handler)
