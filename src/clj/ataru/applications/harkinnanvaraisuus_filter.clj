@@ -3,7 +3,7 @@
             [clojure.string :as string]))
 
 (def harkinnanvaraisuus-key "harkinnanvaraisuus")
-(def harkinnanvaraisuus-yes-answer-value "0")
+(def harkinnanvaraisuus-yes-answer-value "1")
 
 (defn- is-application-harkinnanvarainen
   [application]
