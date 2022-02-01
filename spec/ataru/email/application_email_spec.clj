@@ -19,7 +19,8 @@
                                        application-attachment-reviews
                                        fixtures/email-template
                                        get-attachment-type
-                                       false)
+                                       false
+                                       nil)
             body    (:body email)]
         (should= ["tiina@testaaja.fi"] (:recipients email))
         (should= (:fi email/edit-email-subjects) (:subject email))
@@ -43,7 +44,8 @@
                                          application-attachment-reviews
                                          fixtures/email-template
                                          get-attachment-type
-                                         false)
+                                         false
+                                         nil)
             body    (:body email)]
         (should= true (str/includes? body "Lähetä liite osoitteeseen: Toimisto, Elintie 5, 00100 HELSINKI"))
         (should= true (str/includes? body "Palautettava viimeistään 28.2.2022 klo 00:00"))
@@ -51,6 +53,27 @@
         (should= true (str/includes? body "Palautettava viimeistään 31.1.2022 klo 12:00"))
         (should= true (str/includes? body "Palautettava viimeistään 30.5.2022 klo 13:05"))
         (should= true (str/includes? body "Tai käytä: <a href='https://hampaat-liitteena.fi'>https://hampaat-liitteena.fi</a>"))
+      ))
+
+  (it "creates email with payment-url"
+      (let [template-name-fn (constantly "templates/email_submit_confirmation_template_fi.html")
+            application-attachment-reviews []
+            payment-url "https://localhost/maksut?secret=foobar"
+            get-attachment-type (fn [attachment-type] {:fi attachment-type
+                                                       :sv attachment-type
+                                                       :en attachment-type})
+            [email] (email/create-emails email/edit-email-subjects
+                                         template-name-fn
+                                         fixtures/application
+                                         fixtures/tarjonta-info
+                                         fixtures/form
+                                         application-attachment-reviews
+                                         fixtures/email-template
+                                         get-attachment-type
+                                         false
+                                         payment-url)
+            body    (:body email)]
+        (should= true (str/includes? body (str "href=\"" payment-url "\"")))
       ))
 
   (it "creates email with regular attachment notifications"
@@ -68,7 +91,8 @@
                                          application-attachment-reviews
                                          fixtures/email-template
                                          get-attachment-type
-                                         false)
+                                         false
+                                         nil)
             body    (:body email)]
           (should= true (str/includes? body "Upload liite"))
           (should= true (str/includes? body "Perinteinen liitepyyntö"))))
@@ -89,7 +113,8 @@
                                        application-attachment-reviews
                                        fixtures/email-template
                                        get-attachment-type
-                                       false)
+                                       false
+                                       nil)
           body    (:body email)]
       (should= false (str/includes? body "Upload liite"))
       (should= true (str/includes? body "Perinteinen liitepyyntö")))))

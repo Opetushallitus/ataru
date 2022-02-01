@@ -537,6 +537,7 @@
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
         filter-questions                          (subscribe [:application/filter-questions])
+        tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -595,7 +596,7 @@
              (when (some? @selected-hakukohde-oid)
                [:div.application-handling__filter-hakukohde-name
                 @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-             (->> review-states/hakukohde-review-types
+             (->> (if tutu-form? review-states/hakukohde-review-types review-states/hakukohde-review-types-normal)
                   (filter (fn [[kw _ _]]
                             (and
                              (contains? filters-to-include kw)
@@ -670,7 +671,9 @@
             @(subscribe [:editor/virkailija-translation :filters-cancel-button])]]])])))
 
 (defn application-list-header [_]
-  (let [review-settings (subscribe [:state-query [:application :review-settings :config]])]
+  (let [review-settings (subscribe [:state-query [:application :review-settings :config]])
+        form-key        @(subscribe [:application/selected-form-key])
+        tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
@@ -695,7 +698,9 @@
         @(subscribe [:editor/virkailija-translation :processing-state])
         :states
         {:processing-state-filter
-         review-states/application-hakukohde-processing-states}
+         (if tutu-form?
+            review-states/application-hakukohde-processing-states
+            review-states/application-hakukohde-processing-states-normal)}
         :state-counts-subs
         {:processing-state-filter
          @(subscribe [:state-query [:application :review-state-counts]])}}]]

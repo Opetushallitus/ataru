@@ -18,6 +18,13 @@
         </td>
       </tr>
       {% endif %}
+      {% if payment-url|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          <a style="color: #0093C4;" href="{{payment-url|safe}}" target="_blank">{{payment-url|safe}}</a>
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Application number: {{application-oid}}

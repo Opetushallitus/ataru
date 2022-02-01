@@ -9,6 +9,8 @@
 
 (def initial-application-review-state "active")
 
+; This list contains also only Tutu -specific states that need to removed from the list for normal use
+; (However they are left in this list because all schemas validate according to this)
 (def application-hakukohde-processing-states
   [["unprocessed" (:unprocessed state-translations)]
    ["processing" (:processing state-translations)]
@@ -17,7 +19,27 @@
    ["evaluating" (:evaluating state-translations)]
    ["valintaesitys" (:valintaesitys state-translations)]
    ["processed" (:processed state-translations)]
-   ["information-request" (:information-request state-translations)]])
+   ["information-request" (:information-request state-translations)]
+   ["processing-fee-overdue" (:processing-fee-overdue state-translations)]
+   ["processing-fee-paid" (:processing-fee-paid state-translations)]
+   ["decision-fee-outstanding" (:decision-fee-outstanding state-translations)]
+   ["decision-fee-overdue" (:decision-fee-overdue state-translations)]
+   ["decision-fee-paid" (:decision-fee-paid state-translations)]])
+
+(def tutu-processing-state
+  #{"processing-fee-overdue"
+    "processing-fee-paid"
+    "decision-fee-outstanding"
+    "decision-fee-overdue"
+    "decision-fee-paid"})
+
+(def application-hakukohde-processing-states-normal
+  (reduce (fn [acc [k v]]
+            (if (tutu-processing-state k)
+              acc
+              (conj acc [k v])))
+          []
+          application-hakukohde-processing-states))
 
 (def initial-application-hakukohde-processing-state "unprocessed")
 
@@ -86,6 +108,14 @@
 
 (def hakukohde-review-types
   [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states]
+   [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
+   [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
+   [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]
+   [:payment-obligation (:payment-obligation state-translations) application-payment-obligation-states]
+   [:selection-state (:selection-state state-translations) application-hakukohde-selection-states]])
+
+(def hakukohde-review-types-normal
+  [[:processing-state (:processing-state state-translations) application-hakukohde-processing-states-normal]
    [:language-requirement (:language-requirement state-translations) application-hakukohde-review-states]
    [:degree-requirement (:degree-requirement state-translations) application-hakukohde-review-states]
    [:eligibility-state (:eligibility-state state-translations) application-hakukohde-eligibility-states]

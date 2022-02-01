@@ -20,3 +20,15 @@
 (defn icon-select []
   [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
     [:i.zmdi.zmdi-square-o.zmdi-hc-stack-1x]])
+
+(defn tutu-payment-paid []
+  [:span.application-handling__tutu-payment-icon--paid.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-check-circle.zmdi-hc-stack-1x]])
+
+(defn tutu-payment-outstanding []
+  [:span.application-handling__tutu-payment-icon--outstanding.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-alert-triangle.zmdi-hc-stack-1x]])
+
+(defn tutu-payment-overdue []
+  [:span.application-handling__tutu-payment-icon--overdue.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-alert-octagon.zmdi-hc-stack-1x]])

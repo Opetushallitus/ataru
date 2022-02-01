@@ -37,18 +37,6 @@
             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
              application-key]))
 
-(defn- hyvaksynnan-ehto-dispatch-vec [db]
-  (let [application-key (get-in db [:application :selected-key])
-        hakukohde-oids  (get-in db [:application
-                                    :selected-application-and-form
-                                    :application
-                                    :hakukohde])]
-    (mapv (fn [hakukohde-oid]
-            [:hyvaksynnan-ehto/get-ehto-hakukohteessa
-             application-key
-             hakukohde-oid])
-          hakukohde-oids)))
-
 (reg-event-fx
   :application/select-application
   (fn [{:keys [db]} [_ application-key selected-hakukohde-oid with-newest-form?]]
@@ -348,9 +336,13 @@
 
 (reg-event-db
   :application/set-filters-from-query
-  (fn [db _]
+  (fn [db [_ form-key]]
     (let [query-params    (cljs-util/extract-query-params)
-          ensisijaisesti? (= "true" (:ensisijaisesti query-params))]
+          ensisijaisesti? (= "true" (:ensisijaisesti query-params))
+          tutu-form?      @(subscribe [:tutu-payment/tutu-form? form-key])
+          processing-states (if tutu-form?
+                              review-states/application-hakukohde-processing-states
+                              review-states/application-hakukohde-processing-states-normal)]
       (-> db
           (assoc-in [:application :attachment-state-filter]
                     (extract-unselected-review-states-from-query
@@ -361,7 +353,7 @@
                     (extract-unselected-review-states-from-query
                      query-params
                      :processing-state-filter
-                     review-states/application-hakukohde-processing-states))
+                     processing-states))
           (assoc-in [:application :selection-state-filter]
                     (extract-unselected-review-states-from-query
                      query-params
@@ -606,6 +598,7 @@
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [application-key            (-> response :application :key)
+          form-key                   (-> response :form :key)
           response-with-parsed-times (parse-application-times response)
           db                         (-> db
                                          (update-application-details response-with-parsed-times)
@@ -616,6 +609,8 @@
                                           [:application/fetch-application-attachment-metadata]
                                           [:application/start-autosave])
                                         [:liitepyynto-information-request/get-deadlines application-key]
+                                        (when @(subscribe [:tutu-payment/tutu-form? form-key])
+                                          [:tutu-payment/fetch-payments application-key])
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
                                        [(hyvaksynnan-ehto-hakemukselle-dispatch db)]
