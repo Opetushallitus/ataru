@@ -203,13 +203,11 @@
 (defn application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
 
-(defn review-state-selected-row [on-click label multiple-values?]
-  (let [settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
-        enabled?          (and (not @settings-visible?) @can-edit?)]
+(defn review-state-selected-row [state-name on-click label multiple-values?]
+  (let [editable?         (subscribe [:application/review-field-editable? state-name])]
     [:div.application-handling__review-state-row.application-handling__review-state-row--selected
-     {:on-click #(when enabled? (on-click))
-      :class    (if enabled?
+     {:on-click #(when @editable? (on-click))
+      :class    (if @editable?
                   "application-handling__review-state-row--enabled"
                   "application-handling__review-state-row--disabled")}
      (if multiple-values?
@@ -223,7 +221,7 @@
 (defn review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
   (if (or (= current-review-state review-state-id)
           multiple-values?)
-    [review-state-selected-row #() (get review-state-label lang) multiple-values?]
+    [review-state-selected-row state-name #() (get review-state-label lang) multiple-values?]
     [:div.application-handling__review-state-row
      {:on-click (fn []
                   (dispatch [:application/update-review-field state-name review-state-id]))}
@@ -470,6 +468,7 @@
                     (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
               [:div.application-handling__review-state-list
                [review-state-selected-row
+                kw
                 list-click
                 (application-states/get-review-state-label-by-name
                  states
@@ -754,6 +753,7 @@
   (let [input-value               (subscribe [:state-query [:application :review-comment]])
         review-notes              (subscribe [:state-query [:application :review-notes]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        editable?                 (subscribe [:application/review-field-editable? :notes])
         button-enabled?           (reaction (and (-> @input-value string/blank? not)
                                                  (every? (comp not :animated?) @review-notes)))]
     (fn []
@@ -761,6 +761,7 @@
        [:textarea.application-handling__review-note-input
         {:type      "text"
          :value     @input-value
+         :disabled  (not @editable?)
          :on-change (fn [event]
                       (let [review-comment (.. event -target -value)]
                         (dispatch [:application/set-review-comment-value review-comment])))}]
@@ -777,13 +778,15 @@
         @(subscribe [:editor/virkailija-translation :add])]])))
 
 (defn application-review-notes []
-  (let [notes                            (subscribe [:application/review-note-indexes-excluding-eligibility])
-        notes-for-selected               (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
-        selected-review-hakukohde        (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        only-selected-hakukohteet        (subscribe [:state-query [:application :only-selected-hakukohteet]])]
+  (let [notes                     (subscribe [:application/review-note-indexes-excluding-eligibility])
+        notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
+        selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
+        editable?                 (subscribe [:application/review-field-editable? :notes])]
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
+        {:class (when (not @editable?) "application-handling__review-header--disabled")}
         @(subscribe [:editor/virkailija-translation :notes])
         (when (< 0 (count @selected-review-hakukohde))
           [:div.application-handling__review-filters
@@ -791,6 +794,7 @@
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
              :value     "only-selected"
+             :disabled  (not @editable?)
              :checked   @only-selected-hakukohteet
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
@@ -825,7 +829,7 @@
   (let [score             (subscribe [:state-query [:application :review :score]])
         settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
         input-visible?    (subscribe [:application/review-state-setting-enabled? :score])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])
+        editable?         (subscribe [:application/review-field-editable? :score])
         display-value     (r/atom (string/replace (str @score) #"\." ","))]
     (fn []
       [:div.application-handling__review-inputs
@@ -834,11 +838,12 @@
           (when @settings-visible?
             [review-settings-checkbox :score])
           [:div.application-handling__review-header.application-handling__review-header--points
+           {:class (when (not @editable?) "application-handling__review-header--disabled")}
            @(subscribe [:editor/virkailija-translation :points])]
           [:input.application-handling__score-input
            {:type      "text"
             :value     @display-value
-            :disabled  (or @settings-visible? (not @can-edit?))
+            :disabled  (not @editable?)
             :on-change (when-not @settings-visible?
                          (fn [evt]
                            (let [new-value (-> evt .-target .-value)]
