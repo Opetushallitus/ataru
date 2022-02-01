@@ -944,6 +944,9 @@
    :valinnan-tila                                   {:fi "Valinnan tila"
                                                      :sv "Antagningens status"
                                                      :en "Valinnan tila"}
+   :search-placeholder                              {:fi "Hae.."
+                                                     :sv "Söka.."
+                                                     :en "Search.."}
    :valinnan-tila-ladattu-valinnoista               {:fi "Valintatieto tuotu valintarekisteristä"
                                                      :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                      :en "Valintatieto tuotu valintarekisteristä"}
@@ -1292,6 +1295,21 @@
    :eligibility-set-automatically                   {:fi "Hakukelpoisuus asetettu automaattisesti"
                                                      :sv "Ansökningsbehörigheten har satts automatiskt"
                                                      :en "Eligibility set automatically"}
+   :other-application-info                          {:fi "Muut hakemustiedot*"
+                                                     :sv "Annan information om ansökningen*"
+                                                     :en "Other application information*"}
+   :applicants-school-of-departure                  {:fi "Lähtökoulu"
+                                                     :sv "Avgångsskola"
+                                                     :en "School of departure"}
+   :applicants-classes                              {:fi "Luokka"
+                                                     :sv "Klass"
+                                                     :en "Class"}
+   :valpas-hakutilanne-link-text-1                  {:fi "*Ei hakeneita voi katsoa "
+                                                     :sv "De som inte sökt hittas i "
+                                                     :en "Non-applicants can be viewed in "}
+   :valpas-hakutilanne-link-text-2                  {:fi "Valpas-palvelusta"
+                                                     :sv "Valpas-tjänsten"
+                                                     :en "Valpas service"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
                                                      :en "Guardians contact information"}

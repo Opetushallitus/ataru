@@ -328,7 +328,7 @@
     (count decimals)))
 
 (defn- format-range [value]
-  (clojure.string/replace (clojure.string/trim (or value "")) "." ","))
+  (string/replace (string/trim (or value "")) "." ","))
 
 (defn valid-range? [value decimals]
                      (let [clean (format-range value)]
@@ -1360,9 +1360,44 @@
             :handler-or-dispatch :editor/update-organization-query-results}}))
 
 (reg-event-fx
+  :application/do-organization-query-for-schools-of-departure
+  (fn [{db :db} [_]]
+    (when (empty? (get-in db [:editor :organizations :select]))
+      {:http {:method              :get
+              :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000"
+              :skip-parse-times?   true
+              :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
+
+(reg-event-fx
   :editor/update-organization-query-results
   (fn [{db :db} [_ results]]
     {:db (assoc-in db [:editor :organizations :matches] results)}))
+
+(reg-event-fx
+  :editor/update-organization-query-results-for-schools-of-departure
+  (fn [{db :db} [_ results]]
+    (if (= (count results) 1)
+      {:db (-> db
+               (assoc-in [:editor :organizations :schools-of-departure] results)
+               (assoc-in [:editor :organizations :schools-of-departure-filtered] results))
+       :dispatch [:application/set-school-filter (:oid (first results))]}
+      {:db (assoc-in db [:editor :organizations :schools-of-departure] results)})))
+
+(defn- filter-organizations
+  [orgs query lang]
+  (let [query-lower-case (string/lower-case query)
+        pred             (fn [org]
+                           (or (string/includes? (string/lower-case (str "" (get-in org (:name lang)))) query-lower-case)
+                               (string/includes? (str "" (:oid org)) query)))]
+    (filter pred orgs)))
+
+(reg-event-db
+  :editor/filter-organizations-for-school-of-departure
+  (fn [db [_ query]]
+    (let [lang                    (keyword (get-in db [:editor :user-info :lang]))
+          organizations           (get-in db [:editor :organizations :schools-of-departure])
+          filtered-organizations  (filter-organizations organizations query lang)]
+      (assoc-in db [:editor :organizations :schools-of-departure-filtered] filtered-organizations))))
 
 (reg-event-fx
   :editor/select-organization
@@ -1371,7 +1406,7 @@
             :path                (str "/lomake-editori/api/organization/user-organization/"
                                       oid
                                       "?rights="
-                                      (clojure.string/join "&rights=" (map name user-rights/right-names)))
+                                      (string/join "&rights=" (map name user-rights/right-names)))
             :handler-or-dispatch :editor/update-selected-organization}
      :db   (assoc-in db [:editor :user-info :selected-organization :rights] user-rights/right-names)}))
 
@@ -1409,7 +1444,7 @@
               :path                (str "/lomake-editori/api/organization/user-organization/"
                                         (-> db :editor :user-info :selected-organization :oid)
                                         (when rights
-                                          (str "?rights=" (clojure.string/join "&rights=" rights))))
+                                          (str "?rights=" (string/join "&rights=" rights))))
               :handler-or-dispatch :editor/update-selected-organization}})))
 
 (reg-event-db

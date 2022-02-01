@@ -3182,6 +3182,10 @@ th.application__readonly-adjacent--header {
 
 .application-handling__filters-popup-close-button {
   margin-left: auto;
+  &:hover,
+  &:focus {
+    color: @link-color;
+  }
 }
 
 .application-handling__filters-popup-content-container {
@@ -3255,6 +3259,80 @@ th.application__readonly-adjacent--header {
   .light;
   margin-top: -10px;
   margin-bottom: 10px;
+}
+
+.application-handling__filter-group--other-application-information {
+  display: grid;
+  grid-template-rows: auto;
+  grid-column-gap: 6px;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-areas:
+    "header header header header header"
+    "school school school luokka luokka"
+    "valpas-link valpas-link valpas-link valpas-link valpas-link";
+  align-items: center;
+
+  .application-handling__filter-group-heading {
+    grid-area: header;
+  }
+
+  .school-filter-group {
+    grid-area: school;
+
+    .school-filter__selected-filter {
+      display: flex;
+      justify-content: space-between;
+      span {
+        max-width: 290px;
+        white-space: nowrap;
+        overflow-x: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+        line-height: 1.3rem;
+      }
+    }
+
+    .school-filter__options {
+      position: absolute;
+      background: @white;
+      z-index: 5;
+      max-height: 400px;
+      width: 420px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+      box-sizing: border-box;
+      border-radius: 3px;
+      padding: 0.1rem 0 0.1rem 0;
+      margin-top: 0.4rem;
+      text-align: start;
+      .school-filter__option {
+        :hover,
+        :focus {
+          background: @selected-blue;
+          color: @white;
+        }
+
+        span {
+          width: 100%;
+          white-space: nowrap;
+          overflow-x: hidden;
+          text-overflow: ellipsis;
+          display: block;
+          line-height: 1.3rem;
+          padding: 0 0.5rem 0 0.5rem;
+        }
+      }
+    }
+  }
+
+  .class-filter-group {
+    grid-area: luokka;
+  }
+
+  .application-handling__filter-group__valpas-link {
+    grid-area: valpas-link;
+  }
 }
 
 .application__message-display {

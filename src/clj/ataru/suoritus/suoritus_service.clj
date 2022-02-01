@@ -1,82 +1,66 @@
 (ns ataru.suoritus.suoritus-service
-  (:require [ataru.cas.client :as cas-client]
-            [ataru.config.url-helper :as url]
-            [cheshire.core :as json]
-            [clj-time.format :as format]
-            [clojure.core.match :refer [match]]
-            [com.stuartsierra.component :as component]))
-
-(def yo-komo "1.2.246.562.5.2013061010184237348007")
-(def erikoisammattitutkinto-komo "erikoisammattitutkinto komo oid")
-(def ammattitutkinto-komo "ammatillinentutkinto komo oid")
-(def ammatillinen-perustutkinto-komo "TODO ammatillinen komo oid")
-
-(defn- ->suoritus-tila
-  [data]
-  (case (:tila data)
-    "VALMIS"      :valmis
-    "KESKEN"      :kesken
-    "KESKEYTYNYT" :keskeytynyt
-    (throw
-     (new RuntimeException
-          (str "Unknown suorituksen tila " (:tila data)
-               " in suoritus " data)))))
-
-(defn- ->suoritus-person-oid
-  [data]
-  (when (clojure.string/blank? (:henkiloOid data))
-    (throw (new RuntimeException (str "No henkiloOid in suoritus " data))))
-  (:henkiloOid data))
-
-(defn- ->suoritus
-  [data]
-  {:tila       (->suoritus-tila data)
-   :person-oid (->suoritus-person-oid data)})
-
-(defn- format-modified-since
-  [modified-since]
-  (format/unparse (:date-time format/formatters)
-                  modified-since))
-
-(defn- suoritukset-for-komo
-  [cas-client person-oid modified-since komo]
-  (match [(cas-client/cas-authenticated-get
-           cas-client
-           (url/resolve-url
-            "suoritusrekisteri.suoritukset"
-            (cond-> {"komo" komo}
-                    (some? person-oid)
-                    (assoc "henkilo" person-oid)
-                    (some? modified-since)
-                    (assoc "muokattuJalkeen"
-                           (format-modified-since modified-since)))))]
-    [{:status 200 :body s}]
-    (map ->suoritus (json/parse-string s true))
-    [r]
-    (throw (new RuntimeException
-                (str "Fetching ylioppilas suoritukset failed: " r)))))
-
-(defn- ylioppilas-ja-ammatilliset-suoritukset [cas-client person-oid modified-since]
-  (mapcat (partial suoritukset-for-komo cas-client person-oid modified-since)
-          [yo-komo
-           ammatillinen-perustutkinto-komo
-           ammattitutkinto-komo
-           erikoisammattitutkinto-komo]))
+  (:require [ataru.suoritus.suoritus-client :as client]
+            [com.stuartsierra.component :as component]
+            [ataru.cache.cache-service :as cache]
+            [clojure.string :as string]))
 
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
-  (ylioppilas-tai-ammatillinen? [this person-oid]))
+  (ylioppilas-tai-ammatillinen? [this person-oid])
+  (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
+  (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot]))
 
-(defrecord HttpSuoritusService [suoritusrekisteri-cas-client]
+(defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
   (start [this] this)
   (stop [this] this)
 
   SuoritusService
-  (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since]
-    (ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client nil modified-since))
-  (ylioppilas-tai-ammatillinen? [this person-oid]
+  (ylioppilas-ja-ammatilliset-suoritukset-modified-since [_ modified-since]
+    (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client nil modified-since))
+  (ylioppilas-tai-ammatillinen? [_ person-oid]
     (some #(= :valmis (:tila %))
-          (ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil))))
+          (client/ylioppilas-ja-ammatilliset-suoritukset suoritusrekisteri-cas-client person-oid nil)))
+  (oppilaitoksen-opiskelijat [_ oppilaitos-oid vuosi luokkatasot]
+    (let [luokkatasot-str (string/join "," luokkatasot)
+          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
+      (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)))
+  (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
+    (let [luokkatasot-str (string/join "," luokkatasot)
+          cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
+      (cache/get-from oppilaitoksen-luokat-cache cache-key))))
 
-(defn new-suoritus-service [] (->HttpSuoritusService nil))
+(defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
+
+(defrecord OppilaitoksenOpiskelijatCacheLoader [cas-client]
+  cache/CacheLoader
+
+  (load [_ key]
+    (let [[oid vuosi luokkatasot] (string/split key #"#")]
+      (client/oppilaitoksen-opiskelijat cas-client oid vuosi luokkatasot)))
+
+  (load-many [this oppilaitos-oids]
+    (cache/default-load-many this oppilaitos-oids))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ _]
+    nil)
+)
+
+(defrecord OppilaitoksenLuokatCacheLoader [cas-client]
+  cache/CacheLoader
+
+  (load [_ key]
+    (let [[oid vuosi luokkatasot] (string/split key #"#")]
+      (client/oppilaitoksen-luokat cas-client oid vuosi luokkatasot)))
+
+  (load-many [this oppilaitos-oids]
+    (cache/default-load-many this oppilaitos-oids))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ _]
+    nil))

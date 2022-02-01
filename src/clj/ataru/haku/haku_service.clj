@@ -10,7 +10,9 @@
     [ataru.hakukohde.hakukohde-store :as hakukohde-store]
     [clj-time.core :as t]
     [clj-time.coerce :as c]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [ataru.tarjonta.haku :as haku]
+    [ataru.user-rights :as user-rights]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -65,6 +67,59 @@
           hkp? (memoize (fn [haku-oid] (hakukierros-paattynyt? ohjausparametrit-service now haku-oid)))]
       (remove #(hkp? (:haku %)) rows))))
 
+(defn- haut-with-hakukierros-paattynyt-removed
+  [ohjausparametrit-service get-haut-cache show-hakukierros-paattynyt?]
+  (->> (cache/get-from get-haut-cache :haut)
+    (remove-if-hakukierros-paattynyt ohjausparametrit-service
+      show-hakukierros-paattynyt?)))
+
+(defn- keep-haut-authorized-by-form-or-hakukohde
+  [tarjonta-service authorized-organization-oids haut]
+  (->> haut
+    (map (fn [h] (update h :hakukohde vector)))
+    (aac/filter-authorized-by-form-or-hakukohde tarjonta-service authorized-organization-oids)
+    (map (fn [h] (update h :hakukohde first)))))
+
+(defn- toisen-asteen-yhteishaut-oids
+  [tarjonta-service haku-authorized-by-form-or-hakukohde? haut]
+  (->> haut
+    (map :haku)
+    distinct
+    (remove haku-authorized-by-form-or-hakukohde?)
+    (map (partial tarjonta/get-haku tarjonta-service))
+    (filter haku/toisen-asteen-yhteishaku?)
+    (map :oid)
+    set))
+
+(defn- haut-for-opinto-ohjaaja
+  [tarjonta-service session haut-authorized-by-form-or-hakukohde haut]
+  (if (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+    (let [haku-authorized-by-form-or-hakukohde? (set (map :haku haut-authorized-by-form-or-hakukohde))
+          toisen-asteen-yhteishaku-oid?         (toisen-asteen-yhteishaut-oids
+                                                  tarjonta-service
+                                                  haku-authorized-by-form-or-hakukohde?
+                                                  haut)]
+      (filter (comp toisen-asteen-yhteishaku-oid? :haku) haut))
+    []))
+
+(defn- get-tarjonta-haut-for-ordinary-user
+  [ohjausparametrit-service tarjonta-service get-haut-cache show-hakukierros-paattynyt? session authorized-organization-oids]
+  (let [haut                                 (haut-with-hakukierros-paattynyt-removed
+                                               ohjausparametrit-service
+                                               get-haut-cache
+                                               show-hakukierros-paattynyt?)
+        haut-authorized-by-form-or-hakukohde (keep-haut-authorized-by-form-or-hakukohde
+                                               tarjonta-service
+                                               authorized-organization-oids
+                                               haut)
+        haut-for-opinto-ohjaaja              (haut-for-opinto-ohjaaja
+                                               tarjonta-service
+                                               session
+                                               haut-authorized-by-form-or-hakukohde
+                                               haut)]
+    (-> (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde)
+      handle-hakukohteet)))
+
 (defn- get-tarjonta-haut
   [ohjausparametrit-service
    organization-service
@@ -77,15 +132,12 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(->> (cache/get-from get-haut-cache :haut)
-         (remove-if-hakukierros-paattynyt ohjausparametrit-service
-                                          show-hakukierros-paattynyt?)
-         (map (fn [h] (update h :hakukohde vector)))
-         (aac/filter-authorized tarjonta-service
-                                (some-fn (partial aac/authorized-by-form? %)
-                                         (partial aac/authorized-by-tarjoajat? %)))
-         (map (fn [h] (update h :hakukohde first)))
-         handle-hakukohteet)
+   (partial get-tarjonta-haut-for-ordinary-user
+     ohjausparametrit-service
+     tarjonta-service
+     get-haut-cache
+     show-hakukierros-paattynyt?
+     session)
    #(->> (cache/get-from get-haut-cache :haut)
          (remove-if-hakukierros-paattynyt ohjausparametrit-service
                                           show-hakukierros-paattynyt?)

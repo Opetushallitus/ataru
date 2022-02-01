@@ -1,20 +1,20 @@
 (ns ataru.virkailija.application.application-list.virkailija-application-list-view
   (:require [ataru.application.application-states :as application-states]
-              [ataru.application.review-states :as review-states]
-              [ataru.cljs-util :as cljs-util]
-              [ataru.translations.texts :refer [general-texts]]
-              [ataru.util :as util]
-              [ataru.virkailija.application.view.virkailija-application-names :as names]
-              [ataru.virkailija.dropdown :as dropdown]
-              [ataru.virkailija.question-search.handlers :as qsh]
-              [ataru.virkailija.question-search.view :as question-search]
-              [ataru.virkailija.temporal :as temporal]
-              [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
-              [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
-              [clojure.string :as string]
-              [goog.string :as gstring]
-              [reagent.core :as r]
-              [re-frame.core :refer [subscribe dispatch]]))
+            [ataru.application.review-states :as review-states]
+            [ataru.cljs-util :as cljs-util]
+            [ataru.translations.texts :refer [general-texts]]
+            [ataru.util :as util]
+            [ataru.virkailija.application.view.virkailija-application-names :as names]
+            [ataru.virkailija.dropdown :as dropdown]
+            [ataru.virkailija.question-search.handlers :as qsh]
+            [ataru.virkailija.question-search.view :as question-search]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kevyt-valinta-i18n]
+            [clojure.string :as string]
+            [goog.string :as gstring]
+            [reagent.core :as r]
+            [re-frame.core :refer [subscribe dispatch]]))
 
 (defn- application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
@@ -522,6 +522,94 @@
   (let [form-key (subscribe [:application/selected-form-key])]
     (subscribe [:application/form-fields-by-id @form-key])))
 
+(defn- valpas-link
+  [organization-oid]
+  (let [url (.url js/window "valpas.hakutilanne" (or organization-oid ""))]
+    [:div.application-handling__filter-group.application-handling__filter-group__valpas-link
+      [:span
+       @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-1])
+        [:a
+          {:id "valpas-hakutilanne-link"
+           :href url
+           :target "blank"}
+          @(subscribe [:editor/virkailija-translation :valpas-hakutilanne-link-text-2])]]]))
+
+(defn- school-and-class-filters
+  []
+  (let [schools                    (subscribe [:application/schools-of-departure])
+        filtered-schools           (subscribe [:application/schools-of-departure-filtered])
+        selected-school            (subscribe [:application/pending-selected-school])
+        classes-of-selected-school (subscribe [:application/classes-of-selected-school])
+        pending-classes-of-school  (subscribe [:application/pending-classes-of-school])
+        get-school-name            (fn [school]
+                                     (some #(-> (:name school) %) [:fi :sv :en]))
+        selected-school-name       (fn [school orgs]
+                                     (->> orgs
+                                          (filter #(= school (:oid %)))
+                                          (first)
+                                          (get-school-name)))
+        set-school-filter          (fn [org]
+                                      (dispatch [:application/set-school-filter (:oid org)]))]
+    (fn []
+      [:div.application-handling__popup-column.application-handling__popup-column--large
+       [:div.application-handling__filter-group--other-application-information
+         [:div.application-handling__filter-group-heading
+          @(subscribe [:editor/virkailija-translation :other-application-info])]
+        [:div.application-handling__filter-group.school-filter-group
+          [:div.application-handling__filter-group-title
+           @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
+          [:div
+           (if (not @selected-school)
+            [:input
+              {:type        "text"
+               :id          "school-search"
+               :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
+               :on-change   (fn [event]
+                              (let [value (-> event .-target .-value)]
+                                (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
+            [:div.school-filter__selected-filter
+              [:span
+               {:title (selected-school-name @selected-school @filtered-schools)
+                :id    "selected-school"}
+                (selected-school-name @selected-school @filtered-schools)]
+             (when (not= (count @schools) 1)
+              [:button.virkailija-close-button.application-handling__filters-popup-close-button
+               {:id       "remove-selected-school-button"
+                :on-click #(dispatch [:application/remove-selected-school-pending nil])}
+               [:i.zmdi.zmdi-close]])])
+           (when (and (not @selected-school)
+                      (> (count @filtered-schools) 0))
+             [:div.school-filter__options
+              {:tab-index -1}
+              (for [org @filtered-schools]
+                [:div.school-filter__option
+                 {:on-click #(set-school-filter org)
+                  :on-key-up (fn [event]
+                               (when (= 13 (.-keyCode event))
+                                 (set-school-filter org)))
+                  :key (:oid org)
+                  :id (str "school-filter-option-" (:oid org))}
+                 [:span
+                  {:title (get-school-name org)
+                   :tab-index 0}
+                  (get-school-name org)]])])]]
+        [:div.application-handling__filter-group.class-filter-group
+          [:div.application-handling__filter-group-title
+           @(subscribe [:editor/virkailija-translation :applicants-classes])]
+         (let [classes-options  (map (fn [luokka]
+                                  (let [checked            (boolean (some #(= luokka %) @pending-classes-of-school))
+                                        on-change-argument [luokka checked]]
+                                    [checked luokka on-change-argument]))
+                                  @classes-of-selected-school)
+               classes-label      (string/join ", " @pending-classes-of-school)
+               classes-on-change  (fn [[luokka checked]]
+                                    (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
+          [dropdown/multi-option
+           classes-label
+           classes-options
+           classes-on-change])]
+       [valpas-link @selected-school]]])))
+
 (defn- application-filters
   []
   (let [filters-checkboxes                        (subscribe [:state-query [:application :filters-checkboxes]])
@@ -538,6 +626,7 @@
         form-key                                  (subscribe [:application/selected-form-key])
         filter-questions                          (subscribe [:application/filter-questions])
         tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
+        opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -546,7 +635,10 @@
     (fn []
       [:span.application-handling__filters
        [:a
-        {:on-click #(do
+        {:id       "open-application-filters"
+         :on-click #(do
+                      (when @opinto-ohjaaja-or-admin?
+                        (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
         [:span
@@ -618,6 +710,8 @@
                   (-> general-texts :no (get @lang))
                   :eligibility-set-automatically
                   :no]]])]]
+           (when @opinto-ohjaaja-or-admin?
+             [school-and-class-filters])
            (when @has-base-education-answers
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]

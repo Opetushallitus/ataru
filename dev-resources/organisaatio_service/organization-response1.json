@@ -6,6 +6,7 @@
       "nimi": {
         "fi": "Telajärven seudun koulutuskuntayhtymä"
       },
-        "children": []
+      "children": [],
+      "organisaatiotyypit": ["KOULUTUSTOIMIJA"]
     }]
 }

@@ -254,7 +254,11 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value]))
+        (not= (get-in db [:application :school-filter])
+              (get-in db [:application :school-filter-pending-value]))
+        (not= (get-in db [:application :classes-of-school])
+              (get-in db [:application :classes-of-school-pending-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
@@ -1064,3 +1068,29 @@
     (and (some? hakemuksen-valinnan-tulokset)
          (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset))
          (or (not toisen-asteen-yhteishaku?) superuser?))))
+
+
+(re-frame/reg-sub
+  :application/pending-selected-school
+  (fn [db _]
+    (get-in db [:application :school-filter-pending-value])))
+
+(re-frame/reg-sub
+  :application/classes-of-selected-school
+  (fn [db _]
+    (get-in db [:application :selected-school-classes])))
+
+(re-frame/reg-sub
+  :application/pending-classes-of-school
+  (fn [db _]
+    (get-in db [:application :classes-of-school-pending-value])))
+
+(re-frame/reg-sub
+  :application/schools-of-departure
+  (fn [db _]
+    (get-in db [:editor :organizations :schools-of-departure])))
+
+(re-frame/reg-sub
+  :application/schools-of-departure-filtered
+  (fn [db _]
+    (get-in db [:editor :organizations :schools-of-departure-filtered])))
