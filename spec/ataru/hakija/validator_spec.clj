@@ -337,10 +337,10 @@
 
   (it "fails validation when incorrect birth-date data is used with :birthdate-and-gender-component validation"
     (should= {:ssn        (:ssn answers-by-key)
-              :birth-date (assoc (:birth-date answers-by-key) :value "02.02.2022")}
+              :birth-date (assoc (:birth-date answers-by-key) :value "02.02.2222")}
              (validator/build-results koodisto-cache
                                       has-never-applied
-                                      (assoc-in answers-by-key [:birth-date :value] "02.02.2022")
+                                      (assoc-in answers-by-key [:birth-date :value] "02.02.2222")
                                       f
                                       (clojure.walk/postwalk
                                        (fn [form-field]
