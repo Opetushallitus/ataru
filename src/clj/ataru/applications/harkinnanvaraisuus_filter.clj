@@ -1,6 +1,5 @@
 (ns ataru.applications.harkinnanvaraisuus-filter
-  (:require [clojure.pprint :refer [pprint]]
-            [ataru.util :refer [flatten-form-fields]]
+  (:require [ataru.util :refer [flatten-form-fields]]
             [ataru.application.option-visibility :as option-visibility]))
 
 (def harkinnanvaraisuus-key "harkinnanvaraisuus")
@@ -33,8 +32,8 @@
                                                                     (first)
                                                                     :fields-with-visibility-conditions)
         answers (-> application :content :answers)
-        get-answer-value (fn [id] (first (filter #(= id (:key %)) answers)))]
-    (some #(option-visibility/answer-satisfies-condition? (get-answer-value (:id %)) %) field-ids-with-conditions-targeting-harkinnanvaraisuus)))
+        get-answer-value (fn [id] (:value (first (filter #(= id (:key %)) answers))))]
+    (some #(option-visibility/answer-satisfies-condition? (get-answer-value (:id %)) (:condition %)) field-ids-with-conditions-targeting-harkinnanvaraisuus)))
 
 (defn- form-id-with-field-ids-with-conditions
    [fetch-form-fn form-id]
@@ -50,18 +49,15 @@
 (defn- filter-harkinnanvaraiset-applications
   [fetch-application-content-fn fetch-form-fn applications]
   (let [applications-contents-and-forms (fetch-application-content-fn (map :id applications))
-        distinct-form-ids (-> applications-contents-and-forms
-                              :form
-                              (distinct))
+        distinct-form-ids (->> applications-contents-and-forms
+                            (map :form)
+                            (distinct))
         form-id-with-field-ids-with-conditions (map (partial form-id-with-field-ids-with-conditions fetch-form-fn) distinct-form-ids)
         harkinnanvaraiset-ids (->> applications-contents-and-forms
                                    (filter (some-fn answered-yes-to-harkinnanvaraisuus
                                                     (partial harkinnanvaraisuus-is-set-by-form-logic form-id-with-field-ids-with-conditions)))
                                    (map :id)
                                    set)]
-    (pprint "---------------------------------------APPLICATIONS CONtENTS AND FORMS --------------------------------")
-    (pprint applications-contents-and-forms)
-    (println "harkinnanvaraiset-ids" harkinnanvaraiset-ids)
     (filter (comp harkinnanvaraiset-ids :id) applications)))
 
 (defn filter-applications-by-harkinnanvaraisuus
