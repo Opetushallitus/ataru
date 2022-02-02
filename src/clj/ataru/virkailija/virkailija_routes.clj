@@ -971,8 +971,9 @@
         :path-params [key :- (api/describe s/Str "File key")]
         :summary "Download a file"
         (if-let [resp (file-store/get-metadata liiteri-cas-client [key])]
-          (let [content-type        (:content-type resp)
-                content-disposition (:content-disposition resp)
+          (let [metadata            (first resp)
+                content-type        (:content-type metadata)
+                content-disposition (:content-disposition metadata)
                 file-url            (temp-file-store/signed-download-url temp-file-store key content-type content-disposition)]
             (redirect file-url))
           (not-found)))
