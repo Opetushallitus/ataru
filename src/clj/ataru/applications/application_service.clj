@@ -381,7 +381,8 @@
   (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
-  (get-applications-paged [this session params]))
+  (get-applications-paged [this session params])
+  (get-applications-persons-and-hakukohteet-by-haku [this haku]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -756,7 +757,11 @@
                                                           fetch-form-fn
                                                           filtered-applications-by-oppilaitos-and-luokat
                                                           (:filters states-and-filters))]
-          (assoc applications :applications filter-applications-by-harkinnanvaraisuus))))))
+          (assoc applications :applications filter-applications-by-harkinnanvaraisuus)))))
+
+  (get-applications-persons-and-hakukohteet-by-haku
+    [_ haku]
+    (application-store/get-applications-persons-and-hakukohteet haku)))
 
 (s/defn ^:always-validate query-applications-paged
   [application-service

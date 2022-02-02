@@ -778,6 +778,8 @@
       (ok (haku-service/get-haut ohjausparametrit-service
                                  organization-service
                                  tarjonta-service
+                                 suoritus-service
+                                 application-service
                                  get-haut-cache
                                  session
                                  show-hakukierros-paattynyt)))
