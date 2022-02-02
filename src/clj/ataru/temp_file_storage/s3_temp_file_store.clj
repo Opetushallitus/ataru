@@ -22,7 +22,7 @@
 
   (signed-download-url [_ file-key content-type content-disposition]
     (let [bucket-name (bucket-name)
-          expiration  (Date. (+ (System/currentTimeMillis) (* 1000 60 60 24)))
+          expiration  (Date. (+ (System/currentTimeMillis) (* 1000 60 5)))
           method      HttpMethod/GET
           request     (-> (new GeneratePresignedUrlRequest bucket-name file-key method)
                           (.withExpiration expiration)
