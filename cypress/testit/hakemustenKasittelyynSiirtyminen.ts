@@ -9,6 +9,7 @@ export default (
       cy.avaaLomakkeenHakemuksetVirkailijanNakymassa(
         lomakkeenTunnisteet().lomakkeenAvain
       )
+      cy.get('[data-test-id=show-results]').click()
     })
 
     it('Lataa virkailijan hakemukset-näkymän', () => {})

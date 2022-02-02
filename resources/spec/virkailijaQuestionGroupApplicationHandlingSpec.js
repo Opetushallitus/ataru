@@ -5,6 +5,10 @@
       .text()
   }
 
+  const showResults = () => {
+    return testFrame().find('[data-test-id=show-results]')
+  }
+
   const adjacentAnswer = (formFieldIndex, answerIndex) => {
     return testFrame()
       .find(
@@ -29,7 +33,9 @@
       '.application__wrapper-heading h2:contains("Henkilötiedot")'
     )
   }
-
+  const showResultsExists = () => {
+    return elementExists(showResults())
+  }
   const personInfoHeaderExists = () => {
     return elementExists(personInfoHeader())
   }
@@ -39,7 +45,11 @@
   })
 
   describe('Virkailija application handling for form with a question group', () => {
-    before(navigateToApplicationHandling, wait.until(personInfoHeaderExists))
+    before(
+      navigateToApplicationHandling,
+      clickElement(showResults),
+      wait.until(personInfoHeaderExists)
+    )
     it('automatically shows the only application belonging to the form', () => {
       expect(answer(0)).to.equal('Etunimi Tokanimi')
       expect(answer(1)).to.equal('Etunimi')

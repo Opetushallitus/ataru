@@ -686,6 +686,11 @@
     (get-in db [:application :fetching-applications?])))
 
 (re-frame/reg-sub
+  :application/user-allowed-fetching?
+  (fn [db _]
+    (get-in db [:application :user-allowed-fetching?])))
+
+(re-frame/reg-sub
   :application/review-state-setting-enabled?
   (fn [db [_ setting-kwd]]
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
