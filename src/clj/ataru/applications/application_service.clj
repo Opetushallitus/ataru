@@ -379,7 +379,8 @@
   (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
-  (get-applications-paged [this session params]))
+  (get-applications-paged [this session params])
+  (get-applications-persons-and-hakukohteet-by-haku [this haku]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -744,7 +745,11 @@
                     luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
                 (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
             (:school-filter states-and-filters)
-            (:classes-of-school states-and-filters)))))))
+            (:classes-of-school states-and-filters))))))
+
+  (get-applications-persons-and-hakukohteet-by-haku
+    [_ haku]
+    (application-store/get-applications-persons-and-hakukohteet haku)))
 
 (s/defn ^:always-validate query-applications-paged
   [application-service

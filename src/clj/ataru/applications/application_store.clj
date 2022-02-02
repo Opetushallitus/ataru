@@ -526,6 +526,10 @@
                       (assoc % :secret (add-new-secret-to-application-in-tx conn (:key %))))
                   %)))))
 
+(defn get-applications-persons-and-hakukohteet
+  [haku]
+  (exec-db :db queries/yesql-applications-person-and-hakukohteet-by-haku {:haku haku}))
+
 (defn- unwrap-onr-application
   [{:keys [key haku form email content]}]
   (let [answers (answers-by-key (:answers content))]
