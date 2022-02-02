@@ -331,6 +331,17 @@ LEFT JOIN applications AS la
 WHERE la.id IS NULL AND
       a.key IN (:application_keys);
 
+-- name: yesql-applications-person-and-hakukohteet-by-haku
+SELECT
+    a.person_oid,
+    a.hakukohde
+FROM applications AS a
+LEFT JOIN applications AS la
+   ON la.key = a.key AND
+      la.id > a.id
+WHERE la.id IS NULL AND
+      a.haku = :haku;
+
 -- name: yesql-persons-applications-authorization-data
 SELECT a.haku,
        a.hakukohde,

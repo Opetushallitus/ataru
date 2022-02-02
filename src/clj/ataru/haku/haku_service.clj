@@ -12,7 +12,10 @@
     [clj-time.coerce :as c]
     [taoensso.timbre :as log]
     [ataru.tarjonta.haku :as haku]
-    [ataru.user-rights :as user-rights]))
+    [ataru.user-rights :as user-rights]
+    [ataru.applications.application-service :as application-service]
+    [ataru.suoritus.suoritus-service :as suoritus-service]
+    [ataru.applications.suoritus-filter :as suoritus-filter]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -159,7 +162,7 @@
          (map remove-organization-oid)
          (util/group-by-first :key))))
 
-(defn- add-selection-to-hakukohteet
+(defn- add-kevyt-valinta-to-hakukohteet
   [hakukohteet-without-selection]
     (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
           hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)
@@ -172,12 +175,38 @@
               hakukohteet)
           )
 
+(defn- limit-allowed-hakukohteet
+  [session organization-service suoritus-service application-service hakukohteet haut]
+  (if (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+    (let [lahtokoulut (aac/organization-oids-for-opinto-ohjaaja organization-service session)
+          toisen-asteen-yhteishaut (->> (keys haut)
+                                        (map #(get haut %))
+                                        (filter haku/toisen-asteen-yhteishaku?)
+                                        (map :oid)
+                                        set)
+          toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
+          persons-in-lahtokoulut (->> lahtokoulut
+                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat suoritus-service % (suoritus-filter/year-for-suoritus-filter (t/now)) (suoritus-filter/luokkatasot-for-suoritus-filter)))
+                                      (map :person-oid)
+                                      set)
+          applications-persons-and-hakukohteet (mapcat
+                                                 #(application-service/get-applications-persons-and-hakukohteet-by-haku application-service %)
+                                                 toisen-asteen-yhteishaut)
+          allowed-hakukohde-oids (->> applications-persons-and-hakukohteet
+                                      (filter #(contains? persons-in-lahtokoulut (:person_oid %)))
+                                      (mapcat :hakukohde)
+                                      set)]
+      (filter #(contains? allowed-hakukohde-oids (:oid %)) toisen-asteen-yhteishaun-hakukohteet))
+    hakukohteet))
+
 (def time-limit-to-fetch-haut 12)
 
 (defn get-haut
   [ohjausparametrit-service
    organization-service
    tarjonta-service
+   suoritus-service
+   application-service
    get-haut-cache
    session
    show-hakukierros-paattynyt?]
@@ -192,12 +221,19 @@
         haut (->> (keys tarjonta-haut)
                   (keep #(tarjonta/get-haku tarjonta-service %))
                   (util/group-by-first :oid))
-        hakukohteet-without-selection (->> (keys tarjonta-haut)
-                                            (mapcat #(tarjonta/hakukohde-search
-                                                       tarjonta-service
-                                                       %
-                                                       nil)))
-        hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)
+        hakukohteet (->> (keys tarjonta-haut)
+                      (mapcat #(tarjonta/hakukohde-search
+                                 tarjonta-service
+                                 %
+                                 nil)))
+        allowed-hakukohteet (limit-allowed-hakukohteet
+                              session
+                              organization-service
+                              suoritus-service
+                              application-service
+                              hakukohteet
+                              haut)
+        hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet allowed-hakukohteet)
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
@@ -208,5 +244,5 @@
           {:tarjonta-haut    tarjonta-haut
            :direct-form-haut direct-form-haut
            :haut             haut
-           :hakukohteet      hakukohteet
+           :hakukohteet      hakukohteet-with-kevyt-valinta
            :hakukohderyhmat  hakukohderyhmat}))
