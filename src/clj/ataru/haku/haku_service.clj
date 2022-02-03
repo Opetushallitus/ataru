@@ -177,7 +177,7 @@
 
 (defn- limit-allowed-hakukohteet
   [session organization-service suoritus-service application-service hakukohteet haut]
-  (if (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+  (when (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
     (let [lahtokoulut (aac/organization-oids-for-opinto-ohjaaja organization-service session)
           toisen-asteen-yhteishaut (->> (keys haut)
                                         (map #(get haut %))
@@ -192,12 +192,20 @@
           applications-persons-and-hakukohteet (mapcat
                                                  #(application-service/get-applications-persons-and-hakukohteet-by-haku application-service %)
                                                  toisen-asteen-yhteishaut)
+          hakukohde-counts       (->> applications-persons-and-hakukohteet
+                                      (mapcat :hakukohde)
+                                      (reduce (fn [p n]
+                                                (update p n #(+ 1 (or % 0)))) {}))
           allowed-hakukohde-oids (->> applications-persons-and-hakukohteet
                                       (filter #(contains? persons-in-lahtokoulut (:person_oid %)))
                                       (mapcat :hakukohde)
-                                      set)]
-      (filter #(contains? allowed-hakukohde-oids (:oid %)) toisen-asteen-yhteishaun-hakukohteet))
-    hakukohteet))
+                                      set)
+          update-hakukohde-counts-fn (fn [hk]
+                                       {:oid (:oid hk)
+                                        :application-count (get hakukohde-counts (:oid hk))})]
+      (->> toisen-asteen-yhteishaun-hakukohteet
+           (filter #(contains? allowed-hakukohde-oids (:oid %)))
+           (map update-hakukohde-counts-fn)))))
 
 (def time-limit-to-fetch-haut 12)
 
@@ -226,22 +234,35 @@
                                  tarjonta-service
                                  %
                                  nil)))
-        allowed-hakukohteet (limit-allowed-hakukohteet
+        allowed-hakukohteet-with-counts
+                    (limit-allowed-hakukohteet
                               session
                               organization-service
                               suoritus-service
                               application-service
                               hakukohteet
                               haut)
-        hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet allowed-hakukohteet)
+        hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet hakukohteet)
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
+        tarjonta-haut-with-updated-counts (if allowed-hakukohteet-with-counts
+                                            (util/map-kv
+                                              tarjonta-haut
+                                              (fn [haku]
+                                                (let [hakukohteet-to-show
+                                                      (filter
+                                                        #(some (fn [hk] (= (:oid %) (:oid hk))) allowed-hakukohteet-with-counts)
+                                                        (:hakukohteet haku))
+                                                      total (reduce (fn [p n] (+ p (:application-count n))) 0 hakukohteet-to-show)]
+                                                  (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count total))
+                                                ))
+                                            tarjonta-haut)
         duration (quot (- (System/currentTimeMillis) start-time) 1000)]
 
           (when (>= duration time-limit-to-fetch-haut)
             (log/warn "Duration of fetching haut is over the time limit, duration: " duration " s, limit: " time-limit-to-fetch-haut " s."))
-          {:tarjonta-haut    tarjonta-haut
+          {:tarjonta-haut    tarjonta-haut-with-updated-counts
            :direct-form-haut direct-form-haut
            :haut             haut
            :hakukohteet      hakukohteet-with-kevyt-valinta
