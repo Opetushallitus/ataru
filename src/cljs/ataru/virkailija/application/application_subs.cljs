@@ -1040,3 +1040,8 @@
   :application/schools-of-departure-filtered
   (fn [db _]
     (get-in db [:editor :organizations :schools-of-departure-filtered])))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku-oid?
+  (fn [db [_ haku-oid]]
+    (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
