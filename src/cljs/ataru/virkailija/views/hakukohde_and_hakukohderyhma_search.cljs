@@ -1,11 +1,12 @@
 (ns ataru.virkailija.views.hakukohde-and-hakukohderyhma-search
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [clojure.string :as string]))
 
 (defn- search-input->search-terms
   [search-input]
-  (clojure.string/split search-input #"\s+"))
+  (string/split search-input #"\s+"))
 
 (defn- hakukohderyhma->name
   [lang hakukohderyhma]
@@ -115,7 +116,7 @@
                 label-parts)])
 
 (defn- category-listing
-  [category-name items selected? on-select on-unselect]
+  [_category-name _items _selected? _on-select _on-unselect]
   (let [show-n (r/atom 10)]
     (fn [category-name items selected? on-select on-unselect]
       [:li.hakukohde-and-hakukohderyhma-category-listing
@@ -174,18 +175,20 @@
            on-hakukohde-unselect
            on-hakukohderyhma-select
            on-hakukohderyhma-unselect]}]
-  (let [lang @(re-frame/subscribe [:editor/virkailija-lang])]
+  (let [lang                      @(re-frame/subscribe [:editor/virkailija-lang])
+        toisen-asteen-yhteishaku? @(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])]
     [:ul.hakukohde-and-hakukohderyhma-search-listing
      (when-let [hits (seq @(re-frame/subscribe
                             [:hakukohde-and-hakukohderyhma/hakukohderyhma-hits
                              id
                              hakukohderyhmat]))]
-       [category-listing
-        @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
-        hits
-        hakukohderyhma-selected?
-        on-hakukohderyhma-select
-        on-hakukohderyhma-unselect])
+       (when (not toisen-asteen-yhteishaku?)
+         [category-listing
+          @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
+          hits
+          hakukohderyhma-selected?
+          on-hakukohderyhma-select
+          on-hakukohderyhma-unselect]))
      (doall
       (for [haku  haut
             :let  [hits @(re-frame/subscribe

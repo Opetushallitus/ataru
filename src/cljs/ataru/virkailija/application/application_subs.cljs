@@ -9,7 +9,8 @@
             [clojure.core.match :refer [match]]
             [clojure.set :as set]
             [clojure.string :as string]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [ataru.tarjonta.haku :as haku]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -113,7 +114,6 @@
   (fn [_ [_ hakukohde-oid]]
     (when hakukohde-oid
       (str "/lomake-editori/applications/hakukohde/" hakukohde-oid))))
-
 
 (re-frame/reg-sub
  :application/list-heading
@@ -261,6 +261,18 @@
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
   selected-hakukohderyhma-hakukohteet)
+
+(re-frame/reg-sub
+  :application/selected-haku
+  (fn [db]
+    (get-in db [:haut (-> db :application :selected-haku)])))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku?
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-haku]))
+  (fn [haku _]
+    (haku/toisen-asteen-yhteishaku? haku)))
 
 (re-frame/reg-sub
   :application/show-mass-update-link?
