@@ -1051,3 +1051,8 @@
     (and
       (not (nil? selected-haku-oid))
       (haku/toisen-asteen-yhteishaku? (get haut selected-haku-oid)))))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku-oid?
+  (fn [db [_ haku-oid]]
+    (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
