@@ -108,7 +108,8 @@
   [_]
   (let [list-opened (r/atom false)
         open-list   #(reset! list-opened true)
-        close-list  #(reset! list-opened false)]
+        close-list  #(reset! list-opened false)
+        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])]
     (fn [[haku-oid
           selected-hakukohde-oid
           selected-hakukohderyhma-oid
@@ -119,15 +120,16 @@
         (if-let [haku-name @(subscribe [:application/haku-name haku-oid])]
           haku-name
           [:i.zmdi.zmdi-spinner.spin])]
-       (closed-row (if @list-opened close-list open-list)
-                   (cond (some? selected-hakukohde-oid)
-                         @(subscribe [:application/hakukohde-name
-                                      selected-hakukohde-oid])
-                         (some? selected-hakukohderyhma-oid)
-                         @(subscribe [:application/hakukohderyhma-name
-                                      selected-hakukohderyhma-oid])
-                         :else
-                         @(subscribe [:editor/virkailija-translation :all-hakukohteet])))
+       (when (not @opinto-ohjaaja)
+         (closed-row (if @list-opened close-list open-list)
+           (cond (some? selected-hakukohde-oid)
+                 @(subscribe [:application/hakukohde-name
+                              selected-hakukohde-oid])
+                 (some? selected-hakukohderyhma-oid)
+                 @(subscribe [:application/hakukohderyhma-name
+                              selected-hakukohderyhma-oid])
+                 :else
+                 @(subscribe [:editor/virkailija-translation :all-hakukohteet]))))
        (when @list-opened
          [h-and-h/popup
           [h-and-h/search-input
