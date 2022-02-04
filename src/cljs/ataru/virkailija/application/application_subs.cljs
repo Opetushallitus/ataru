@@ -245,6 +245,13 @@
     (= :selected-hakukohderyhma (application-list-selected-by db))))
 
 (re-frame/reg-sub
+  :application/show-review-type-filter?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/opinto-ohjaaja?]))
+  (fn [opinto-ohjaaja? _]
+    (not opinto-ohjaaja?)))
+
+(re-frame/reg-sub
   :application/filters-changed?
   (fn [db]
     (or (not= (get-in db [:application :filters])
