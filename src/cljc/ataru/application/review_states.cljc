@@ -129,7 +129,7 @@
   (map (comp name first) hakukohde-review-types))
 
 (def uneditable-for-toisen-asteen-yhteishaku-states
-  #{:language-requirement :degree-requirement :eligibility-state :payment-obligation})
+  #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :selection-state})
 
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
