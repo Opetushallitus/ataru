@@ -177,7 +177,9 @@
 
 (defn- limit-allowed-hakukohteet
   [session organization-service suoritus-service application-service hakukohteet haut]
-  (when (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+  (when (and
+          (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+          (user-rights/sll-organizations-have-opinto-ohjaaja-rights? session)) ;should be when user has ONLY opo rights
     (let [lahtokoulut (aac/organization-oids-for-opinto-ohjaaja organization-service session)
           toisen-asteen-yhteishaut (->> (keys haut)
                                         (map #(get haut %))
@@ -186,7 +188,11 @@
                                         set)
           toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
           persons-in-lahtokoulut (->> lahtokoulut
-                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat suoritus-service % (suoritus-filter/year-for-suoritus-filter (t/now)) (suoritus-filter/luokkatasot-for-suoritus-filter)))
+                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat
+                                                 suoritus-service
+                                                 %
+                                                 (suoritus-filter/year-for-suoritus-filter (t/now)) ; should be any year?
+                                                 (suoritus-filter/luokkatasot-for-suoritus-filter)))
                                       (map :person-oid)
                                       set)
           applications-persons-and-hakukohteet (mapcat
@@ -194,18 +200,43 @@
                                                  toisen-asteen-yhteishaut)
           hakukohde-counts       (->> applications-persons-and-hakukohteet
                                       (mapcat :hakukohde)
-                                      (reduce (fn [p n]
-                                                (update p n #(+ 1 (or % 0)))) {}))
+                                      (reduce (fn [p n] (update p n #(+ 1 (or % 0)))) {}))
           allowed-hakukohde-oids (->> applications-persons-and-hakukohteet
                                       (filter #(contains? persons-in-lahtokoulut (:person_oid %)))
                                       (mapcat :hakukohde)
                                       set)
-          update-hakukohde-counts-fn (fn [hk]
-                                       {:oid (:oid hk)
-                                        :application-count (get hakukohde-counts (:oid hk))})]
+          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))]
       (->> toisen-asteen-yhteishaun-hakukohteet
            (filter #(contains? allowed-hakukohde-oids (:oid %)))
            (map update-hakukohde-counts-fn)))))
+
+(defn- tarjonta-haut-with-hakukohteet-that-user-can-access
+  [session
+   organization-service
+   suoritus-service
+   application-service
+   hakukohteet
+   haut
+   tarjonta-haut]
+  (let [allowed-hakukohteet-with-counts
+          (limit-allowed-hakukohteet
+            session
+            organization-service
+            suoritus-service
+            application-service
+            hakukohteet
+            haut)]
+    (if allowed-hakukohteet-with-counts
+      (util/map-kv
+        tarjonta-haut
+        (fn [haku]
+          (let [hakukohteet-to-show
+                (filter
+                  #(some (fn [hk] (= (:oid %) (:oid hk))) allowed-hakukohteet-with-counts)
+                  (:hakukohteet haku))
+                total (reduce (fn [p n] (+ p (:application-count n))) 0 hakukohteet-to-show)]
+            (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count total))))
+      tarjonta-haut)))
 
 (def time-limit-to-fetch-haut 12)
 
@@ -234,29 +265,17 @@
                                  tarjonta-service
                                  %
                                  nil)))
-        allowed-hakukohteet-with-counts
-                    (limit-allowed-hakukohteet
-                              session
-                              organization-service
-                              suoritus-service
-                              application-service
-                              hakukohteet
-                              haut)
         hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet hakukohteet)
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
-        tarjonta-haut-with-updated-counts (if allowed-hakukohteet-with-counts
-                                            (util/map-kv
-                                              tarjonta-haut
-                                              (fn [haku]
-                                                (let [hakukohteet-to-show
-                                                      (filter
-                                                        #(some (fn [hk] (= (:oid %) (:oid hk))) allowed-hakukohteet-with-counts)
-                                                        (:hakukohteet haku))
-                                                      total (reduce (fn [p n] (+ p (:application-count n))) 0 hakukohteet-to-show)]
-                                                  (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count total))
-                                                ))
+        tarjonta-haut-with-updated-counts (tarjonta-haut-with-hakukohteet-that-user-can-access
+                                            session
+                                            organization-service
+                                            suoritus-service
+                                            application-service
+                                            hakukohteet
+                                            haut
                                             tarjonta-haut)
         duration (quot (- (System/currentTimeMillis) start-time) 1000)]
 
