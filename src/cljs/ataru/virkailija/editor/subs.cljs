@@ -525,12 +525,18 @@
     (or (-> db :editor :user-info :lang keyword) :fi)))
 
 (re-frame/reg-sub
-  :editor/opinto-ohjaaja-or-admin?
+  :editor/opinto-ohjaaja?
   (fn [db _]
     (let [user-info (-> db :editor :user-info)]
-      (or
-        (:superuser? user-info)
-        (some (fn [org] (some #(= "opinto-ohjaaja" %) (:rights org))) (:organizations user-info))))))
+      (some (fn [org] (some #(= "opinto-ohjaaja" %) (:rights org))) (:organizations user-info)))))
+
+(re-frame/reg-sub
+  :editor/opinto-ohjaaja-or-admin?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/opinto-ohjaaja?])
+     (re-frame/subscribe [:editor/superuser?])])
+  (fn [[opinto-ohjaaja? superuser?] _]
+    (or opinto-ohjaaja? superuser?)))
 
 (re-frame/reg-sub
   :editor/autosave-enabled?

@@ -622,6 +622,7 @@
         has-base-education-answers                (subscribe [:application/applications-have-base-education-answers])
         show-ensisijaisesti?                      (subscribe [:application/show-ensisijaisesti?])
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
+        show-review-type-filter?                  (subscribe [:application/show-review-type-filter?])
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
         filter-questions                          (subscribe [:application/filter-questions])
@@ -682,34 +683,35 @@
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-active]) :active-status :active]
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]]
-           [:div.application-handling__popup-column
-            [:div.application-handling__filter-group
-             [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
-             (when (some? @selected-hakukohde-oid)
-               [:div.application-handling__filter-hakukohde-name
-                @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
-             (->> (if tutu-form? review-states/hakukohde-review-types review-states/hakukohde-review-types-normal)
-                  (filter (fn [[kw _ _]]
-                            (and
+           (when @show-review-type-filter?
+             [:div.application-handling__popup-column
+              [:div.application-handling__filter-group
+               [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
+               (when (some? @selected-hakukohde-oid)
+                 [:div.application-handling__filter-hakukohde-name
+                  @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
+               (->> (if tutu-form? review-states/hakukohde-review-types review-states/hakukohde-review-types-normal)
+                 (filter (fn [[kw _ _]]
+                           (and
                              (contains? filters-to-include kw)
                              (-> @review-settings (get kw) (false?) (not)))))
-                  (map (partial review-type-filter filters-checkboxes @lang))
-                  (doall))
-             (when @show-eligibility-set-automatically-filter
-               [:div.application-handling__filter-group
-                [:div.application-handling__filter-group-title
-                 @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])]
-                [:div.application-handling__filter-group-checkboxes
-                 [application-filter-checkbox
-                  filters-checkboxes
-                  (-> general-texts :yes (get @lang))
-                  :eligibility-set-automatically
-                  :yes]
-                 [application-filter-checkbox
-                  filters-checkboxes
-                  (-> general-texts :no (get @lang))
-                  :eligibility-set-automatically
-                  :no]]])]]
+                 (map (partial review-type-filter filters-checkboxes @lang))
+                 (doall))
+               (when @show-eligibility-set-automatically-filter
+                 [:div.application-handling__filter-group
+                  [:div.application-handling__filter-group-title
+                   @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])]
+                  [:div.application-handling__filter-group-checkboxes
+                   [application-filter-checkbox
+                    filters-checkboxes
+                    (-> general-texts :yes (get @lang))
+                    :eligibility-set-automatically
+                    :yes]
+                   [application-filter-checkbox
+                    filters-checkboxes
+                    (-> general-texts :no (get @lang))
+                    :eligibility-set-automatically
+                    :no]]])]])
            (when @opinto-ohjaaja-or-admin?
              [school-and-class-filters])
            (when @has-base-education-answers
