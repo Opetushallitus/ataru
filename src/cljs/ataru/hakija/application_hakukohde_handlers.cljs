@@ -176,6 +176,7 @@
                                              new-hakukohde-values)
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
+                                   (update-in [:application :ui :hakukohteet :deleting] (comp set disj) hakukohde-oid)
                                    set-field-visibilities)]
       {:db         (cond-> db
                      (and (some? max-hakukohteet)
@@ -201,6 +202,7 @@
                                              new-hakukohde-values)
                                    (assoc-in [:application :answers :hakukohteet :value]
                                              (mapv :value new-hakukohde-values))
+                                   (update-in [:application :ui :hakukohteet :deleting] (comp set disj) hakukohde-oid)
                                    set-field-visibilities)]
       {:db                 (cond-> db
                                    (and (some? max-hakukohteet)
