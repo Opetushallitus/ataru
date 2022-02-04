@@ -1403,7 +1403,10 @@
    :harkinnanvaraisuus                              {:fi "Harkinnanvaraisuus"
                                                      :sv "SV: Harkinnanvaraisuus"
                                                      :en "EN: Harkinnanvaraisuus"}
-   :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita ja hakukohderyhmiä"
+   :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita"
+                                                     :sv "Sök ansökningsmål"
+                                                     :en "Search for study programmes"}
+   :search-hakukohde-and-hakukohderyhma-placeholder {:fi "Etsi hakukohteita ja hakukohderyhmiä"
                                                      :sv "Sök ansökningsmål och ansökningsmålsgrupper"
                                                      :en "Search for study programmes and study programme groups"}
    :handling-notes                                  {:fi "Käsittelymerkinnät"

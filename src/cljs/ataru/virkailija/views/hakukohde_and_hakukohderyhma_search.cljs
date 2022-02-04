@@ -139,18 +139,22 @@
            hakukohderyhmat
            hakukohde-selected?
            hakukohderyhma-selected?]}]
-  [:input.hakukohde-and-hakukohderyhma-search-input
-   {:value       @(re-frame/subscribe
-                   [:hakukohde-and-hakukohderyhma/search-input id])
-    :on-change   #(re-frame/dispatch
-                   [:hakukohde-and-hakukohderyhma/set-search-input
-                    id
-                    haut
-                    hakukohderyhmat
-                    hakukohde-selected?
-                    hakukohderyhma-selected?
-                    (.-value (.-target %))])
-    :placeholder @(re-frame/subscribe [:editor/virkailija-translation :search-hakukohde-placeholder])}])
+  (let [toisen-asteen-yhteishaku? @(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+        placeholder-translation-key (if toisen-asteen-yhteishaku?
+                                      :search-hakukohde-placeholder
+                                      :search-hakukohde-and-hakukohderyhma-placeholder)]
+    [:input.hakukohde-and-hakukohderyhma-search-input
+     {:value       @(re-frame/subscribe
+                      [:hakukohde-and-hakukohderyhma/search-input id])
+      :on-change   #(re-frame/dispatch
+                      [:hakukohde-and-hakukohderyhma/set-search-input
+                       id
+                       haut
+                       hakukohderyhmat
+                       hakukohde-selected?
+                       hakukohderyhma-selected?
+                       (.-value (.-target %))])
+      :placeholder @(re-frame/subscribe [:editor/virkailija-translation placeholder-translation-key])}]))
 
 (defn visibility-checkbox
   [id path]
