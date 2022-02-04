@@ -32,3 +32,21 @@
     :opinto-ohjaaja
     seq
     boolean))
+
+(defn sll-organizations-have-opinto-ohjaaja-rights?
+  [session]
+  (let [opinto-ohjaaja-organizations (->> session
+                                          :identity
+                                          :user-right-organizations
+                                          :opinto-ohjaaja
+                                         (map :oid)
+                                          set)
+        all-organizations (->> session
+                               :identity
+                               :user-right-organizations
+                               (vals)
+                               (flatten)
+                               (map :oid)
+                               set)]
+  (and (boolean (seq opinto-ohjaaja-organizations))
+       (= opinto-ohjaaja-organizations all-organizations))))
