@@ -109,7 +109,8 @@
   (let [list-opened (r/atom false)
         open-list   #(reset! list-opened true)
         close-list  #(reset! list-opened false)
-        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])]
+        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])
+        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku?])]
     (fn [[haku-oid
           selected-hakukohde-oid
           selected-hakukohderyhma-oid
@@ -138,7 +139,8 @@
                                         :hakukohteet hakukohteet}]
             :hakukohderyhmat          hakukohderyhmat
             :hakukohde-selected?      #(= selected-hakukohde-oid %)
-            :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)}]
+            :hakukohderyhma-selected? #(= selected-hakukohderyhma-oid %)
+            :only-hakukohteet?        toisen-asteen-yhteishaku?}]
           nil
           [h-and-h/search-listing
            {:id                         haku-oid
@@ -161,7 +163,8 @@
                                                              %)]))
             :on-hakukohderyhma-unselect #(do (close-list)
                                              (dispatch [:application/navigate
-                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))}]
+                                                        (str "/lomake-editori/applications/haku/" haku-oid)]))
+            :only-hakukohteet?          toisen-asteen-yhteishaku?}]
           close-list])])))
 
 (defn selected-applications-heading
