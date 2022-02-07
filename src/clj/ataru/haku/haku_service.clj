@@ -175,23 +175,25 @@
               hakukohteet)
           )
 
-(defn- limit-allowed-hakukohteet
+(defn- limit-allowed-hakukohteet-for-opinto-ohjaaja
   [session organization-service suoritus-service application-service hakukohteet haut]
-  (when (and
-          (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
-          (user-rights/sll-organizations-have-opinto-ohjaaja-rights? session)) ;should be when user has ONLY opo rights
+  (when-let [toisen-asteen-yhteishaut (->> (keys haut)
+                                           (map #(get haut %))
+                                           (filter haku/toisen-asteen-yhteishaku?)
+                                           (map :oid)
+                                           set)]
     (let [lahtokoulut (aac/organization-oids-for-opinto-ohjaaja organization-service session)
-          toisen-asteen-yhteishaut (->> (keys haut)
+          hakuaika-end-years       (->> toisen-asteen-yhteishaut
                                         (map #(get haut %))
-                                        (filter haku/toisen-asteen-yhteishaku?)
-                                        (map :oid)
-                                        set)
+                                        (mapcat :hakuajat)
+                                        (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                                        (distinct))
           toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
           persons-in-lahtokoulut (->> lahtokoulut
-                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat
+                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
                                                  suoritus-service
                                                  %
-                                                 (suoritus-filter/year-for-suoritus-filter (t/now)) ; should be any year?
+                                                 hakuaika-end-years
                                                  (suoritus-filter/luokkatasot-for-suoritus-filter)))
                                       (map :person-oid)
                                       set)
@@ -218,14 +220,16 @@
    hakukohteet
    haut
    tarjonta-haut]
-  (let [allowed-hakukohteet-with-counts
-          (limit-allowed-hakukohteet
-            session
-            organization-service
-            suoritus-service
-            application-service
-            hakukohteet
-            haut)]
+  (let [allowed-hakukohteet-with-counts (when
+                                          (and (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+                                               (user-rights/sll-organizations-have-opinto-ohjaaja-rights? session))
+                                          (limit-allowed-hakukohteet-for-opinto-ohjaaja
+                                            session
+                                            organization-service
+                                            suoritus-service
+                                            application-service
+                                            hakukohteet
+                                            haut))]
     (if allowed-hakukohteet-with-counts
       (util/map-kv
         tarjonta-haut
