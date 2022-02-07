@@ -2,8 +2,8 @@ export const virkailija = {
   haeLomakkeenEsikatseluOsoite: (lomakkeenAvain: string) =>
     `/lomake-editori/api/preview/form/${lomakkeenAvain}?lang=fi`,
 
-  haeVirkailijanNakymaanKirjautumisenOsoite: () =>
-    `/lomake-editori/auth/cas?ticket=DEVELOPER`,
+  haeVirkailijanNakymaanKirjautumisenOsoite: (ticket?: string) =>
+    `/lomake-editori/auth/cas?ticket=${ticket || 'DEVELOPER'}`,
 
   haeUudenLomakkeenLahettamisenOsoite: () => `/lomake-editori/api/forms`,
 
