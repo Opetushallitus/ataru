@@ -18,8 +18,9 @@
 
 (defn- fake-login-provider [ticket]
   (fn []
-      (let [username      (if (= ticket "USER-WITH-HAKUKOHDE-ORGANIZATION")
-                            "1.2.246.562.11.22222222222"
+      (let [username      (case ticket
+                            "USER-WITH-HAKUKOHDE-ORGANIZATION" "1.2.246.562.11.22222222222"
+                            "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
                             "1.2.246.562.11.11111111111")
             unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
