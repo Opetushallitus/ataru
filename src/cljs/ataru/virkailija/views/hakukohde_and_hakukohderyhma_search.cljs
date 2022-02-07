@@ -138,9 +138,9 @@
            haut
            hakukohderyhmat
            hakukohde-selected?
-           hakukohderyhma-selected?]}]
-  (let [toisen-asteen-yhteishaku? @(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
-        placeholder-translation-key (if toisen-asteen-yhteishaku?
+           hakukohderyhma-selected?
+           only-hakukohteet?]}]
+  (let [placeholder-translation-key (if only-hakukohteet?
                                       :search-hakukohde-placeholder
                                       :search-hakukohde-and-hakukohderyhma-placeholder)]
     [:input.hakukohde-and-hakukohderyhma-search-input
@@ -178,15 +178,15 @@
            on-hakukohde-select
            on-hakukohde-unselect
            on-hakukohderyhma-select
-           on-hakukohderyhma-unselect]}]
-  (let [lang                      @(re-frame/subscribe [:editor/virkailija-lang])
-        toisen-asteen-yhteishaku? @(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])]
+           on-hakukohderyhma-unselect
+           only-hakukohteet?]}]
+  (let [lang                      @(re-frame/subscribe [:editor/virkailija-lang])]
     [:ul.hakukohde-and-hakukohderyhma-search-listing
      (when-let [hits (seq @(re-frame/subscribe
                             [:hakukohde-and-hakukohderyhma/hakukohderyhma-hits
                              id
                              hakukohderyhmat]))]
-       (when (not toisen-asteen-yhteishaku?)
+       (when (not only-hakukohteet?)
          [category-listing
           @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
           hits
