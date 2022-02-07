@@ -1526,14 +1526,12 @@
       const component = () => formComponents().eq(0)
       before(
         clickLomakeForEdit('belongs-to-hakukohteet-test-form'),
-        wait.forMilliseconds(1000),
         clickElement(() =>
           component().find('.editor-form__component-fold-button')
         ),
         clickElement(() =>
           component().find('.belongs-to-hakukohteet__modal-toggle')
         ),
-        wait.forMilliseconds(1000),
         clickElement(() =>
           component().find(
             '.hakukohde-and-hakukohderyhma-category-list-item:first'
