@@ -8,6 +8,7 @@
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
   (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
@@ -25,6 +26,8 @@
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-opiskelijat-cache cache-key)))
+  (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot]
+    (mapcat #(oppilaitoksen-opiskelijat this oppilaitos-oid % luokkatasot) vuodet))
   (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
