@@ -338,10 +338,8 @@
     (= section-name field-name)))
 
 (defn- visibility-conditions-on-field
-  [db field]
-  (let [answers (get-in db [:application :answers])
-        form                         (:form db)
-        fields-with-visibility-rules (fields-with-visibility-rules-memo form)]
+  [form answers field]
+  (let [fields-with-visibility-rules (fields-with-visibility-rules-memo form)]
     (mapcat
       (fn [{conditions :section-visibility-conditions condition-owner-id :id}]
         (keep
@@ -376,8 +374,8 @@
         (option-visibility/answer-satisfies-condition? value condition))
       conditions)))
 
-(defn is-field-hidden-by-section-visibility-conditions [db field]
-  (let [visibility-conditions (visibility-conditions-on-field db field)
+(defn is-field-hidden-by-section-visibility-conditions [form answers field]
+  (let [visibility-conditions (visibility-conditions-on-field form answers field)
         by-quantifier         (group-by condition-quantifier visibility-conditions)]
     (or
       (every-condition-satisfied (seq (:every by-quantifier)))

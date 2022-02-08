@@ -147,6 +147,8 @@
          id                     (keyword (:id field-descriptor))
          belongs-to             (belongs-to field-descriptor)
          jyemp?                 (jyemp? ylioppilastutkinto? db field-descriptor)
+         form                   (:form db)
+         answers                (get-in db [:application :answers])
          visible?               (and (not (get-in field-descriptor [:params :hidden]))
                                      visible?
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
@@ -157,7 +159,7 @@
                                                           selected-ei-jyemp-hakukohteet-and-ryhmat
                                                           selected-hakukohteet-and-ryhmat)))))
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
-                                     (not (u/is-field-hidden-by-section-visibility-conditions db field-descriptor)))
+                                     (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor)))
          child-visibility       (fn [db]
                                   (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
                                           db
