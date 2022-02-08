@@ -52,7 +52,8 @@
      (set/union selected-ei-jyemp-hakukohteet selected-ei-jyemp-hakukohderyhmat)]))
 
 (defn- visible? [field-descriptor application hakukohteet-and-ryhmat]
-  (let [[selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] hakukohteet-and-ryhmat
+  (let [form (subscribe [:application/selected-form])
+        [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat] hakukohteet-and-ryhmat
         jyemp? (and (ylioppilastutkinto? application)
                     (contains? (:excluded-attachment-ids-when-yo-and-jyemp application) (:id field-descriptor)))
         belongs-to (set (concat (:belongs-to-hakukohderyhma field-descriptor)
@@ -71,7 +72,8 @@
                               selected-ei-jyemp-hakukohteet-and-ryhmat
                               selected-hakukohteet-and-ryhmat)))))
          (or (empty? (:children field-descriptor))
-             (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor))))))
+             (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor)))
+         (not (util/is-field-hidden-by-section-visibility-conditions @form (:answers application) field-descriptor)))))
 
 (defn- text-form-field-nested-container [selected-options lang application hakukohteet-and-ryhmat question-group-idx]
   [:div.application-handling__nested-container--top-level
