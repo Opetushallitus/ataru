@@ -172,23 +172,36 @@
                       hakukohde
                       :selection-state-used (some? (some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
              (util/group-by-first :oid))]
-              hakukohteet)
-          )
+              hakukohteet))
+
+(defn filter-and-count-hakukohteet-by-students
+  [toisen-asteen-yhteishaut hakukohteet applications-persons-and-hakukohteet students-in-lahtokoulut]
+    (let [toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
+          allowed-applications-persons-and-hakukohteet (filter #(contains? students-in-lahtokoulut (:person_oid %))
+                                                               applications-persons-and-hakukohteet)
+          hakukohde-counts       (->> allowed-applications-persons-and-hakukohteet
+                                      (mapcat :hakukohde)
+                                      (reduce (fn [p n] (update p n #(+ 1 (or % 0)))) {}))
+          allowed-hakukohde-oids (->> allowed-applications-persons-and-hakukohteet
+                                      (mapcat :hakukohde)
+                                      set)
+          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))]
+      (->> toisen-asteen-yhteishaun-hakukohteet
+           (filter #(contains? allowed-hakukohde-oids (:oid %)))
+           (map update-hakukohde-counts-fn))))
 
 (defn- limit-allowed-hakukohteet-for-opinto-ohjaaja
-  [session organization-service suoritus-service application-service hakukohteet haut]
+  [suoritus-service application-service hakukohteet haut lahtokoulut]
   (when-let [toisen-asteen-yhteishaut (->> (keys haut)
                                            (map #(get haut %))
                                            (filter haku/toisen-asteen-yhteishaku?)
                                            (map :oid)
                                            set)]
-    (let [lahtokoulut (aac/organization-oids-for-opinto-ohjaaja organization-service session)
-          hakuaika-end-years       (->> toisen-asteen-yhteishaut
+    (let [hakuaika-end-years       (->> toisen-asteen-yhteishaut
                                         (map #(get haut %))
                                         (mapcat :hakuajat)
                                         (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
                                         (distinct))
-          toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
           persons-in-lahtokoulut (->> lahtokoulut
                                       (mapcat #(suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
                                                  suoritus-service
@@ -199,18 +212,8 @@
                                       set)
           applications-persons-and-hakukohteet (mapcat
                                                  #(application-service/get-applications-persons-and-hakukohteet-by-haku application-service %)
-                                                 toisen-asteen-yhteishaut)
-          hakukohde-counts       (->> applications-persons-and-hakukohteet
-                                      (mapcat :hakukohde)
-                                      (reduce (fn [p n] (update p n #(+ 1 (or % 0)))) {}))
-          allowed-hakukohde-oids (->> applications-persons-and-hakukohteet
-                                      (filter #(contains? persons-in-lahtokoulut (:person_oid %)))
-                                      (mapcat :hakukohde)
-                                      set)
-          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))]
-      (->> toisen-asteen-yhteishaun-hakukohteet
-           (filter #(contains? allowed-hakukohde-oids (:oid %)))
-           (map update-hakukohde-counts-fn)))))
+                                                 toisen-asteen-yhteishaut)]
+      (filter-and-count-hakukohteet-by-students toisen-asteen-yhteishaut hakukohteet applications-persons-and-hakukohteet persons-in-lahtokoulut))))
 
 (defn- tarjonta-haut-with-hakukohteet-that-user-can-access
   [session
@@ -224,12 +227,11 @@
                                           (and (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
                                                (user-rights/sll-organizations-have-opinto-ohjaaja-rights? session))
                                           (limit-allowed-hakukohteet-for-opinto-ohjaaja
-                                            session
-                                            organization-service
                                             suoritus-service
                                             application-service
                                             hakukohteet
-                                            haut))]
+                                            haut
+                                            (aac/organization-oids-for-opinto-ohjaaja organization-service session)))]
     (if allowed-hakukohteet-with-counts
       (util/map-kv
         tarjonta-haut
