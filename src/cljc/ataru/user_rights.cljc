@@ -33,7 +33,7 @@
     seq
     boolean))
 
-(defn sll-organizations-have-opinto-ohjaaja-rights?
+(defn all-organizations-have-opinto-ohjaaja-rights?
   [session]
   (let [opinto-ohjaaja-organizations (->> session
                                           :identity
