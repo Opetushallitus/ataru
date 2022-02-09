@@ -4,7 +4,7 @@
             [clj-time.format :as time-format]))
 
 (defn- fake-get-oppilaitoksen-opiskelijat
-  [oppilaitos-oid]
+  [oppilaitos-oid _]
   (case oppilaitos-oid
     "oppilaitos-1"
     [{:person-oid "oppilaitos-1-luokka-9A-opiskelija"
@@ -12,12 +12,17 @@
      {:person-oid "oppilaitos-1-luokka-9B-opiskelija"
       :luokka     "9B"}]))
 
+(defn- fake-get-haku
+  [haku-oid]
+  {:oid      haku-oid
+   :hakuajat [{:end (time-format/parse-local-date "2042-07-03")}]})
+
 (describe "filter-applications-by-oppilaitos-and-luokat"
   (tags :unit)
 
   (it "should return input applications if no filters are provided"
     (let [applications [:dummy :dummy2]
-          result       (sf/filter-applications-by-oppilaitos-and-luokat applications nil nil nil)]
+          result       (sf/filter-applications-by-oppilaitos-and-luokat applications nil nil nil nil)]
       (should= applications result)))
 
   (it "should only return applications whose applicants are in given school"
@@ -26,6 +31,7 @@
           applications  [application-1 application-2]
           result        (sf/filter-applications-by-oppilaitos-and-luokat
                           applications
+                          fake-get-haku
                           fake-get-oppilaitoksen-opiskelijat
                           "oppilaitos-1"
                           nil)]
@@ -38,6 +44,7 @@
           applications  [application-1 application-2]
           result        (sf/filter-applications-by-oppilaitos-and-luokat
                           applications
+                          fake-get-haku
                           fake-get-oppilaitoksen-opiskelijat
                           "oppilaitos-1"
                           ["9A"])]
@@ -51,6 +58,7 @@
           applications  [application-1 application-2]
           result        (sf/filter-applications-by-oppilaitos-and-luokat
                           applications
+                          fake-get-haku
                           fake-get-oppilaitoksen-opiskelijat
                           "oppilaitos-1"
                           ["9A" "9B"])]
