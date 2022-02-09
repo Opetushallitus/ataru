@@ -29,7 +29,6 @@
     [ataru.dob :as dob]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
-    [clj-time.core :as time]
     [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
     [ataru.cache.cache-service :as cache])
   (:import
@@ -743,9 +742,10 @@
               filtered-applications-by-oppilaitos-and-luokat
               (suoritus-filter/filter-applications-by-oppilaitos-and-luokat
                 (:applications applications)
-                (fn [oppilaitos-oid]
-                  (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
-                        luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+                (fn [haku-oid]
+                  (tarjonta-service/get-haku tarjonta-service haku-oid))
+                (fn [oppilaitos-oid year]
+                  (let [luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
                     (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
                 (:school-filter states-and-filters)
                 (:classes-of-school states-and-filters))
