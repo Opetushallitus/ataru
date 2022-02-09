@@ -271,8 +271,11 @@
 
 (re-frame/reg-sub
   :application/selected-haku
-  (fn [db]
-    (get-in db [:haut (-> db :application :selected-haku)])))
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[selected-haku-oid haut] _]
+    (get haut selected-haku-oid)))
 
 (re-frame/reg-sub
   :application/toisen-asteen-yhteishaku?
