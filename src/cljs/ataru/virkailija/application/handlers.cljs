@@ -700,7 +700,8 @@
   (fn [{db :db} [_ haku-oid]]
     {:db       (-> db
                    clear-selection
-                   (assoc-in [:application :selected-haku] haku-oid))
+                   (assoc-in [:application :selected-haku] haku-oid)
+                   (assoc-in [:application :user-allowed-fetching?] false))
      :dispatch [:application/reload-applications]}))
 
 (defn- keys-to-names [m] (reduce-kv #(assoc %1 (name %2) %3) {} m))
