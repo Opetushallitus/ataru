@@ -1048,3 +1048,13 @@
   :application/schools-of-departure-filtered
   (fn [db _]
     (get-in db [:editor :organizations :schools-of-departure-filtered])))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku-selected?
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[selected-haku-oid haut]]
+    (and
+      (not (nil? selected-haku-oid))
+      (haku/toisen-asteen-yhteishaku? (get haut selected-haku-oid)))))
