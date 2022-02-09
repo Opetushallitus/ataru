@@ -1112,4 +1112,4 @@
 (reg-event-db
   :application/handle-fetch-classes-of-school-response
   (fn handle-fetch-classes-of-school-response [db [_ classes]]
-    (assoc-in db [:application :selected-school-classes] classes)))
+    (assoc-in db [:application :selected-school-classes] (sort classes))))
