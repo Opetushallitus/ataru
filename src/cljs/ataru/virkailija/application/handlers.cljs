@@ -660,6 +660,7 @@
 (defn- clear-selection
   [db]
   (update db :application dissoc
+          :applications
           :selected-form-key
           :selected-haku
           :selected-hakukohde
