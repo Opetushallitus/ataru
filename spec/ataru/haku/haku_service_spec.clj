@@ -13,16 +13,22 @@
 
           (it "returns all hakukohteet with application counts"
               (let [applications-persons-and-hakukohteet [{:hakukohde ["1"] :person_oid "a"} {:hakukohde ["2"] :person_oid "b"} {:hakukohde ["1"] :person_oid "c"}]
-                    result (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} hakukohteet applications-persons-and-hakukohteet students)]
-                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] result)))
+                    result (first (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} hakukohteet applications-persons-and-hakukohteet students))
+                    hakukohteet (:hakukohteet result)]
+                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] hakukohteet)
+                (should= 3 (:total result))))
 
           (it "returns only toisen asteen yhteishaun hakukohteet with application counts"
               (let [non-yhteishaun-hakukohde {:oid "3" :haku-oid "1.321.321.321"}
                     applications-persons-and-hakukohteet [{:hakukohde ["1"] :person_oid "a"} {:hakukohde ["2"] :person_oid "b"} {:hakukohde ["1"] :person_oid "c"} {:hakukohde ["3"] :person_oid "c"}]
-                    result (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} (concat hakukohteet [non-yhteishaun-hakukohde]) applications-persons-and-hakukohteet students)]
-                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] result)))
+                    result (first (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} (concat hakukohteet [non-yhteishaun-hakukohde]) applications-persons-and-hakukohteet students))
+                    hakukohteet (:hakukohteet result)]
+                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] hakukohteet)
+                (should= 3 (:total result))))
 
           (it "returns only hakukohteet application counts with given students"
               (let [applications-persons-and-hakukohteet [{:hakukohde ["1"] :person_oid "a"} {:hakukohde ["2"] :person_oid "b"} {:hakukohde ["1"] :person_oid "c"} {:hakukohde ["2"] :person_oid "d"}]
-                    result (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} hakukohteet applications-persons-and-hakukohteet students)]
-                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] result))))
+                    result (first (service/filter-and-count-hakukohteet-by-students #{toisen-asteen-yhteishaku} hakukohteet applications-persons-and-hakukohteet students))
+                    hakukohteet (:hakukohteet result)]
+                (should= [{:oid "1" :haku-oid "1.123.123.123" :application-count 2} {:oid "2" :haku-oid "1.123.123.123" :application-count 1}] hakukohteet)
+                (should= 3 (:total result)))))
