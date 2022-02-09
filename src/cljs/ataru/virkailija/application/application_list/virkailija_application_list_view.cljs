@@ -544,7 +544,8 @@
 
 (defn- school-and-class-filters
   []
-  (let [schools                    (subscribe [:application/schools-of-departure])
+  (let [opinto-ohjaaja-or-admin?   (subscribe [:editor/opinto-ohjaaja-or-admin?])
+        schools                    (subscribe [:application/schools-of-departure])
         filtered-schools           (subscribe [:application/schools-of-departure-filtered])
         selected-school            (subscribe [:application/pending-selected-school])
         classes-of-selected-school (subscribe [:application/classes-of-selected-school])
@@ -564,59 +565,64 @@
          [:div.application-handling__filter-group-heading
           @(subscribe [:editor/virkailija-translation :other-application-info])]
         [:div.application-handling__filter-group.school-filter-group
+         (when @opinto-ohjaaja-or-admin?
           [:div.application-handling__filter-group-title
-           @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])]
-          [:div
-           (if (not @selected-school)
-            [:input
-              {:type        "text"
-               :id          "school-search"
-               :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
-               :on-change   (fn [event]
-                              (let [value (-> event .-target .-value)]
-                                (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
-            [:div.school-filter__selected-filter
-              [:span
-               {:title (selected-school-name @selected-school @filtered-schools)
-                :id    "selected-school"}
-                (selected-school-name @selected-school @filtered-schools)]
-             (when (not= (count @schools) 1)
-              [:button.virkailija-close-button.application-handling__filters-popup-close-button
-               {:id       "remove-selected-school-button"
-                :on-click #(dispatch [:application/remove-selected-school-pending nil])}
-               [:i.zmdi.zmdi-close]])])
-           (when (and (not @selected-school)
-                      (> (count @filtered-schools) 0))
-             [:div.school-filter__options
-              {:tab-index -1}
-              (for [org @filtered-schools]
-                [:div.school-filter__option
-                 {:on-click #(set-school-filter org)
-                  :on-key-up (fn [event]
-                               (when (= 13 (.-keyCode event))
-                                 (set-school-filter org)))
-                  :key (:oid org)
-                  :id (str "school-filter-option-" (:oid org))}
-                 [:span
-                  {:title (get-school-name org)
-                   :tab-index 0}
-                  (get-school-name org)]])])]]
+           @(subscribe [:editor/virkailija-translation :applicants-school-of-departure])])
+         (when @opinto-ohjaaja-or-admin?
+           [:div
+             (if (not @selected-school)
+              [:input
+                {:type        "text"
+                 :id          "school-search"
+                 :placeholder @(subscribe [:editor/virkailija-translation :search-placeholder])
+                 :on-change   (fn [event]
+                                (let [value (-> event .-target .-value)]
+                                  (dispatch [:editor/filter-organizations-for-school-of-departure value])))}]
+              [:div.school-filter__selected-filter
+                [:span
+                 {:title (selected-school-name @selected-school @filtered-schools)
+                  :id    "selected-school"}
+                  (selected-school-name @selected-school @filtered-schools)]
+               (when (not= (count @schools) 1)
+                [:button.virkailija-close-button.application-handling__filters-popup-close-button
+                 {:id       "remove-selected-school-button"
+                  :on-click #(dispatch [:application/remove-selected-school-pending nil])}
+                 [:i.zmdi.zmdi-close]])])
+             (when (and (not @selected-school)
+                        (> (count @filtered-schools) 0))
+               [:div.school-filter__options
+                {:tab-index -1}
+                (for [org @filtered-schools]
+                  [:div.school-filter__option
+                   {:on-click #(set-school-filter org)
+                    :on-key-up (fn [event]
+                                 (when (= 13 (.-keyCode event))
+                                   (set-school-filter org)))
+                    :key (:oid org)
+                    :id (str "school-filter-option-" (:oid org))}
+                   [:span
+                    {:title (get-school-name org)
+                     :tab-index 0}
+                    (get-school-name org)]])])])]
         [:div.application-handling__filter-group.class-filter-group
-          [:div.application-handling__filter-group-title
-           @(subscribe [:editor/virkailija-translation :applicants-classes])]
-         (let [classes-options  (map (fn [luokka]
-                                  (let [checked            (boolean (some #(= luokka %) @pending-classes-of-school))
-                                        on-change-argument [luokka checked]]
-                                    [checked luokka on-change-argument]))
-                                  @classes-of-selected-school)
-               classes-label      (string/join ", " @pending-classes-of-school)
-               classes-on-change  (fn [[luokka checked]]
-                                    (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
-          [dropdown/multi-option
-           classes-label
-           classes-options
-           classes-on-change])]
-        [valpas-link @selected-school]
+         (when @opinto-ohjaaja-or-admin?
+           [:div.application-handling__filter-group-title
+            @(subscribe [:editor/virkailija-translation :applicants-classes])])
+         (when @opinto-ohjaaja-or-admin?
+           (let [classes-options  (map (fn [luokka]
+                                    (let [checked            (boolean (some #(= luokka %) @pending-classes-of-school))
+                                          on-change-argument [luokka checked]]
+                                      [checked luokka on-change-argument]))
+                                    @classes-of-selected-school)
+                 classes-label      (string/join ", " @pending-classes-of-school)
+                 classes-on-change  (fn [[luokka checked]]
+                                      (dispatch [:application/set-pending-classes-of-school luokka (not checked)]))]
+            [dropdown/multi-option
+             classes-label
+             classes-options
+             classes-on-change]))]
+        (when @opinto-ohjaaja-or-admin?
+          [valpas-link @selected-school])
         [harkinnanvaraisuus-filter]]])))
 
 (defn- application-filters
@@ -642,13 +648,14 @@
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
         filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
-        lang                                      (subscribe [:editor/virkailija-lang])]
+        lang                                      (subscribe [:editor/virkailija-lang])
+        toisen-asteen-yhteishaku-selected?        (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn []
       [:span.application-handling__filters
        [:a
         {:id       "open-application-filters"
          :on-click #(do
-                      (when @opinto-ohjaaja-or-admin?
+                      (when (and @opinto-ohjaaja-or-admin? @toisen-asteen-yhteishaku-selected?)
                         (dispatch [:application/do-organization-query-for-schools-of-departure ""]))
                       (dispatch [:application/undo-filters])
                       (swap! filters-visible not))}
@@ -722,7 +729,7 @@
                     (-> general-texts :no (get @lang))
                     :eligibility-set-automatically
                     :no]]])]])
-           (when @opinto-ohjaaja-or-admin?
+           (when @toisen-asteen-yhteishaku-selected?
              [school-and-class-filters])
            (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku?))
              [:div.application-handling__popup-column.application-handling__popup-column--large
