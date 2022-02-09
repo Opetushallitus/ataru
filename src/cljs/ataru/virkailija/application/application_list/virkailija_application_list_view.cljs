@@ -637,13 +637,11 @@
         has-base-education-answers                (subscribe [:application/applications-have-base-education-answers])
         show-ensisijaisesti?                      (subscribe [:application/show-ensisijaisesti?])
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
-        show-review-type-filter?                  (subscribe [:application/show-review-type-filter?])
         filters-changed?                          (subscribe [:application/filters-changed?])
         form-key                                  (subscribe [:application/selected-form-key])
         filter-questions                          (subscribe [:application/filter-questions])
         tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
         opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
-        toisen-asteen-yhteishaku?                 (subscribe [:application/toisen-asteen-yhteishaku?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -700,7 +698,7 @@
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :active-status])]
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-active]) :active-status :active]
              [application-filter-checkbox filters-checkboxes @(subscribe [:editor/virkailija-translation :active-status-passive]) :active-status :passive]]]
-           (when @show-review-type-filter?
+           (when (not @toisen-asteen-yhteishaku-selected?)
              [:div.application-handling__popup-column
               [:div.application-handling__filter-group
                [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :handling-notes])]
@@ -708,12 +706,12 @@
                  [:div.application-handling__filter-hakukohde-name
                   @(subscribe [:application/hakukohde-name @selected-hakukohde-oid])])
                (->> (if tutu-form? review-states/hakukohde-review-types review-states/hakukohde-review-types-normal)
-                 (filter (fn [[kw _ _]]
-                           (and
-                             (contains? filters-to-include kw)
-                             (-> @review-settings (get kw) (false?) (not)))))
-                 (map (partial review-type-filter filters-checkboxes @lang))
-                 (doall))
+                    (filter (fn [[kw _ _]]
+                              (and
+                               (contains? filters-to-include kw)
+                               (-> @review-settings (get kw) (false?) (not)))))
+                    (map (partial review-type-filter filters-checkboxes @lang))
+                    (doall))
                (when @show-eligibility-set-automatically-filter
                  [:div.application-handling__filter-group
                   [:div.application-handling__filter-group-title
@@ -731,10 +729,10 @@
                     :no]]])]])
            (when @toisen-asteen-yhteishaku-selected?
              [school-and-class-filters])
-           (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku?))
+           (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (when (some? @form-key)
+          (when (and (not @toisen-asteen-yhteishaku-selected?) (some? @form-key))
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
