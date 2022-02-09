@@ -676,7 +676,8 @@
   (fn [{db :db} [_ form-key]]
     {:db       (-> db
                    clear-selection
-                   (assoc-in [:application :selected-form-key] form-key))
+                   (assoc-in [:application :selected-form-key] form-key)
+                   (assoc-in [:application :user-allowed-fetching?] false))
      :dispatch [:application/reload-applications]}))
 
 (reg-event-fx
