@@ -1,6 +1,6 @@
 (ns ataru.user-rights-spec
   (:require [ataru.user-rights :refer [virkailija->right-organization-oids
-                                       sll-organizations-have-opinto-ohjaaja-rights?
+                                       all-organizations-have-opinto-ohjaaja-rights?
                                        has-opinto-ohjaaja-right-for-any-organization?]]
             [speclj.core :refer [describe it should= tags]]))
 
@@ -61,18 +61,18 @@
       (should= {} org-oids))))
 
 (describe "opo rights"
-  (tags :unit)
-  (it "has opo rigts"
+          (tags :unit)
+          (it "has opo rigts"
     (should= true (has-opinto-ohjaaja-right-for-any-organization? {:identity opo-user})))
 
-  (it "all user organizations have opo rights"
-    (should= true (sll-organizations-have-opinto-ohjaaja-rights? {:identity opo-user})))
+          (it "all user organizations have opo rights"
+              (should= true (all-organizations-have-opinto-ohjaaja-rights? {:identity opo-user})))
 
-  (it "not all user organizations have opo rights"
-    (should= false (sll-organizations-have-opinto-ohjaaja-rights? {:identity
+          (it "not all user organizations have opo rights"
+    (should= false (all-organizations-have-opinto-ohjaaja-rights? {:identity
                                                                    (assoc-in opo-user
                                                                              [:user-right-organizations :view-applications 1]
                                                                              {:oid "1.2.246.562.10.83119092649"})})))
 
-  (it "returns false when there are no organization rights at all"
-    (should= false (sll-organizations-have-opinto-ohjaaja-rights? {:identity {:user-right-organizations {}}}))))
+          (it "returns false when there are no organization rights at all"
+              (should= false (all-organizations-have-opinto-ohjaaja-rights? {:identity {:user-right-organizations {}}}))))

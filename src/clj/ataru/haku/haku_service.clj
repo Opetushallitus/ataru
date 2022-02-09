@@ -15,7 +15,8 @@
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-service :as application-service]
     [ataru.suoritus.suoritus-service :as suoritus-service]
-    [ataru.applications.suoritus-filter :as suoritus-filter]))
+    [ataru.applications.suoritus-filter :as suoritus-filter]
+    [clojure.set :as set]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -185,10 +186,19 @@
           allowed-hakukohde-oids (->> allowed-applications-persons-and-hakukohteet
                                       (mapcat :hakukohde)
                                       set)
-          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))]
-      (->> toisen-asteen-yhteishaun-hakukohteet
-           (filter #(contains? allowed-hakukohde-oids (:oid %)))
-           (map update-hakukohde-counts-fn))))
+          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))
+          filtered-hakukohteet    (->> toisen-asteen-yhteishaun-hakukohteet
+                                       (filter #(contains? allowed-hakukohde-oids (:oid %)))
+                                       (map update-hakukohde-counts-fn))
+          hakukohteet-by-haku-fn  (fn [haku] (filter #(= haku (:haku-oid %)) filtered-hakukohteet))
+          count-applications      (fn [haku]
+                                    (let [hakukohde-oidit (set (map :oid (:hakukohteet haku)))]
+                                      (->> allowed-applications-persons-and-hakukohteet
+                                           (filter #(not (= (count (:hakukohde %)) (count (set/difference (set (:hakukohde %)) hakukohde-oidit)))))
+                                           (count))))]
+          (->> toisen-asteen-yhteishaut
+              (map (fn [haku] {:haku haku :hakukohteet (hakukohteet-by-haku-fn haku)}))
+              (map #(assoc % :total (count-applications %))))))
 
 (defn- limit-allowed-hakukohteet-for-opinto-ohjaaja
   [suoritus-service application-service hakukohteet haut lahtokoulut]
@@ -225,7 +235,7 @@
    tarjonta-haut]
   (let [allowed-hakukohteet-with-counts (when
                                           (and (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
-                                               (user-rights/sll-organizations-have-opinto-ohjaaja-rights? session))
+                                               (user-rights/all-organizations-have-opinto-ohjaaja-rights? session))
                                           (limit-allowed-hakukohteet-for-opinto-ohjaaja
                                             suoritus-service
                                             application-service
@@ -236,12 +246,12 @@
       (util/map-kv
         tarjonta-haut
         (fn [haku]
-          (let [hakukohteet-to-show
+          (let [haku-with-allowed (first (filter #(= (:haku %) (:oid haku)) allowed-hakukohteet-with-counts))
+                hakukohteet-to-show
                 (filter
-                  #(some (fn [hk] (= (:oid %) (:oid hk))) allowed-hakukohteet-with-counts)
-                  (:hakukohteet haku))
-                total (reduce (fn [p n] (+ p (:application-count n))) 0 hakukohteet-to-show)]
-            (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count total))))
+                  #(some (fn [hk] (= (:oid %) (:oid hk))) (:hakukohteet haku-with-allowed))
+                  (:hakukohteet haku))]
+            (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count (:total haku-with-allowed)))))
       tarjonta-haut)))
 
 (def time-limit-to-fetch-haut 12)
