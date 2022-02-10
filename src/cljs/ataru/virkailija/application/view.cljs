@@ -299,7 +299,8 @@
         list-opened                (r/atom false)
         toggle-list-open           #(swap! list-opened not)]
     (fn []
-      (let [hakukohde-count (count @application-hakukohde-oids)]
+      (let [hakukohde-count (count @application-hakukohde-oids)
+            disabled?       (or (= 1 hakukohde-count) (not @(subscribe [:application/review-field-editable? :hakukohde])))]
         (when (not= 0 hakukohde-count)
           [:div.application-handling__review-state-container.application-handling__review-state-container--columnar
            (into
@@ -320,7 +321,7 @@
                     [opened-review-hakukohde-list-row
                      toggle-list-open
                      list-opened oid
-                     (= 1 hakukohde-count)]) @application-hakukohde-oids))])))))
+                     disabled?]) @application-hakukohde-oids))])))))
 
 (defn- review-settings-checkbox [setting-kwd]
   (let [checked?  (subscribe [:application/review-state-setting-enabled? setting-kwd])
