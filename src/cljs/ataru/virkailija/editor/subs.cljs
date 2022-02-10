@@ -525,6 +525,12 @@
     (or (-> db :editor :user-info :lang keyword) :fi)))
 
 (re-frame/reg-sub
+  :editor/all-organizations-have-opinto-ohjaaja-rights?
+  (fn [db _]
+    (let [user-info (-> db :editor :user-info)]
+      (every? (fn [org] (some #(= "opinto-ohjaaja" %) (:rights org))) (:organizations user-info)))))
+
+(re-frame/reg-sub
   :editor/autosave-enabled?
   (fn [db _]
     (some? (-> db :editor :autosave))))

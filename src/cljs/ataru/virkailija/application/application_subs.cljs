@@ -762,15 +762,19 @@
     [(re-frame/subscribe [:application/can-edit-application?])
      (re-frame/subscribe [:application/review-settings-visible?])
      (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
-     (re-frame/subscribe [:application/superuser?])])
-  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser?] [_ field-name]]
+     (re-frame/subscribe [:application/superuser?])
+     (re-frame/subscribe [:editor/all-organizations-have-opinto-ohjaaja-rights?])])
+  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser? all-organizations-have-opinto-ohjaaja-rights?] [_ field-name]]
     (and
       (not settings-visible?)
       can-edit-application?
       (or
         superuser?
         (not toisen-asteen-yhteishaku?)
-        (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name))))))
+        (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name)))
+      (or
+        (not all-organizations-have-opinto-ohjaaja-rights?)
+        (not (contains? review-states/uneditable-for-opinto-ohjaaja-only field-name))))))
 
 (re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
