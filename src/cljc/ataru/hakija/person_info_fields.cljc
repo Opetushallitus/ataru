@@ -1,4 +1,5 @@
-(ns ataru.hakija.person-info-fields)
+(ns ataru.hakija.person-info-fields
+  (:require [clojure.set :as set]))
 
 (def person-info-field-ids
   #{:first-name
@@ -22,12 +23,20 @@
     :city
     :language})
 
+(def guardian-contact-info-field-ids
+  #{:guardian-name
+    :guardian-phone
+    :guardian-email
+    :guardian-name-secondary
+    :guardian-phone-secondary
+    :guardian-email-secondary})
+
 (def viewing-forbidden-person-info-field-ids
   #{:ssn
     :birth-date})
 
 (def editing-forbidden-person-info-field-ids
-  (clojure.set/union
+  (set/union
    viewing-forbidden-person-info-field-ids
    #{:first-name
      :preferred-name
@@ -38,6 +47,6 @@
      :language}))
 
 (def editing-allowed-person-info-field-ids
-  (clojure.set/difference
-   person-info-field-ids
-   editing-forbidden-person-info-field-ids))
+  (set/difference
+    (set/union person-info-field-ids guardian-contact-info-field-ids)
+    editing-forbidden-person-info-field-ids))
