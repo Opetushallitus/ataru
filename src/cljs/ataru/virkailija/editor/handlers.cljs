@@ -1399,6 +1399,11 @@
           filtered-organizations  (filter-organizations organizations query lang)]
       (assoc-in db [:editor :organizations :schools-of-departure-filtered] filtered-organizations))))
 
+(reg-event-db
+  :editor/clear-filter-organizations-for-school-of-departure
+  (fn [db]
+    (assoc-in db [:editor :organizations :schools-of-departure-filtered] [])))
+
 (reg-event-fx
   :editor/select-organization
   (fn [{db :db} [_ oid]]

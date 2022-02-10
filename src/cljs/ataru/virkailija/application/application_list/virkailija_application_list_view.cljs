@@ -586,7 +586,9 @@
                (when (not= (count @schools) 1)
                 [:button.virkailija-close-button.application-handling__filters-popup-close-button
                  {:id       "remove-selected-school-button"
-                  :on-click #(dispatch [:application/remove-selected-school-pending nil])}
+                  :on-click (fn [_]
+                              (dispatch [:application/remove-selected-school-pending])
+                              (dispatch [:editor/clear-filter-organizations-for-school-of-departure]))}
                  [:i.zmdi.zmdi-close]])])
              (when (and (not @selected-school)
                         (> (count @filtered-schools) 0))
