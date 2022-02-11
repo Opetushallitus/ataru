@@ -15,7 +15,7 @@
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
                    (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
-     :dispatch [:application/reload-applications]}))
+     :dispatch [:application/reload-applications true]}))
 
 (reg-event-fx
   :application/remove-filters

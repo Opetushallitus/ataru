@@ -160,6 +160,10 @@
     )
   }
 
+  const showResults = () => {
+    return testFrame().find('[data-test-id=show-results]')
+  }
+
   const reviewHeader = () => {
     return testFrame().find('.application-handling__review-header')
   }
@@ -376,6 +380,7 @@
         wait.until(() => {
           return applicationHeader().text() === 'Selaintestilomake1'
         }),
+        clickElement(showResults),
         clickElement(applicationRow),
         wait.until(() => {
           return reviewHeader().length > 0
@@ -540,7 +545,8 @@
         },
         wait.until(() => {
           return applicationHeader().text() === 'Selaintestilomake1'
-        })
+        }),
+        clickElement(showResults)
       )
       describe('Default sort', () => {
         before(wait.until(applicantNamesExist(3)))
@@ -762,6 +768,7 @@
           wait.until(() => {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
+          clickElement(showResults),
           clickElement(applicationRow),
           wait.until(() => {
             return reviewHeader().length > 0
@@ -780,6 +787,7 @@
       describe('Shows application and correct filters', () => {
         before(
           navigateToApplicationHandlingWithUrlParams,
+          clickElement(showResults),
           wait.until(() => {
             return applicationHeader().text() === 'Selaintestilomake1'
           }),
@@ -799,6 +807,7 @@
       describe('popup box', () => {
         before(
           navigateToApplicationHandlingForForm,
+          clickElement(showResults),
           clickElement(() => {
             return testFrame().find(
               '.application-handling__mass-edit-review-states-link'
@@ -864,6 +873,7 @@
       describe('popup', () => {
         before(
           navigateToApplicationHandlingForForm,
+          clickElement(showResults),
           clickElement(() => {
             return testFrame().find(
               '.application-handling__mass-information-request-link'
@@ -1006,6 +1016,7 @@
       describe('filter by hakukohde and then open hakukohde details by pressing candidate name', () => {
         before(
           navigateToApplicationHandlingForHaku,
+          clickElement(showResults),
           wait.until(() => {
             return hakukohdeRajausToggleButton().is(':visible')
           }),
