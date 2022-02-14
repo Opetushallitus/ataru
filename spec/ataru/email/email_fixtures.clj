@@ -283,6 +283,7 @@
                                       :on                                  true,
                                       :attachment-modify-grace-period-days nil,
                                       :jatkuva-haku?                       false,
+                                      :jatkuva-or-joustava-haku?           false,
                                       :hakukierros-end                     1640987999000,
                                       :label
                                                                            {:start
@@ -322,6 +323,7 @@
                                                                                                      :on                                  true,
                                                                                                      :attachment-modify-grace-period-days nil,
                                                                                                      :jatkuva-haku?                       false,
+                                                                                                     :jatkuva-or-joustava-haku?           false,
                                                                                                      :hakukierros-end                     1640987999000,
                                                                                                      :label
                                                                                                                                           {:start
@@ -380,6 +382,7 @@
                                                                                                      :on                                  true,
                                                                                                      :attachment-modify-grace-period-days nil,
                                                                                                      :jatkuva-haku?                       false,
+                                                                                                     :jatkuva-or-joustava-haku?           false,
                                                                                                      :hakukierros-end                     1640987999000,
                                                                                                      :label
                                                                                                                                           {:start
@@ -432,6 +435,7 @@
                                                                                                      :on                                  true,
                                                                                                      :attachment-modify-grace-period-days nil,
                                                                                                      :jatkuva-haku?                       false,
+                                                                                                     :jatkuva-or-joustava-haku?           false,
                                                                                                      :hakukierros-end                     1640987999000,
                                                                                                      :label
                                                                                                                                           {:start

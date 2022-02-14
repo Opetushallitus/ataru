@@ -206,6 +206,7 @@
    :end                                 (s/maybe s/Int)
    :on                                  s/Bool
    :jatkuva-haku?                       s/Bool
+   :jatkuva-or-joustava-haku?           s/Bool
    :attachment-modify-grace-period-days (s/maybe s/Int)
    :hakukierros-end                     (s/maybe s/Int)})
 

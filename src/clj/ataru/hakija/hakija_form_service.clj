@@ -85,9 +85,10 @@
         before?             (fn [t] (and (some? t)
                                          (time/before? now t)))]
     (or (nil? hakuaika)
-        (and (not (and application-in-processing-state? (:jatkuva-haku? hakuaika)))
+        (and (not (and application-in-processing-state? (:jatkuva-or-joustava-haku? hakuaika)))
              (after? hakuaika-start)
              (or (before? hakuaika-end)
+                 (nil? hakuaika-end)
                  (and (before? attachment-edit-end)
                       (= "attachment" (:fieldType field)))
                  (and (before? hakukierros-end)
