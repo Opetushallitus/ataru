@@ -2,6 +2,8 @@
   (:require [ataru.translations.texts :as texts]
             [ataru.util :as util]))
 
+(def harkinnanvaraisuus-wrapper-id "harkinnanvaraisuus-wrapper")
+
 (defn text-field [metadata]
   {:fieldClass "formField"
    :fieldType  "textField"
@@ -289,7 +291,7 @@
 
 (defn harkinnanvaraisuus [metadata]
   (assoc (form-section metadata)
-    :id       "harkinnanvaraisuus-wrapper"
+    :id       harkinnanvaraisuus-wrapper-id
     :label    (:harkinnanvaraisuus-topic texts/translation-mapping)
     :children [(harkinnanvaraisuus-info metadata)
                (harkinnanvaraisuus-question metadata)]))

@@ -2,6 +2,7 @@
   (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module :as base-education-module]
             [ataru.component-data.higher-education-base-education-module :as kk-base-education-module]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-2nd-module]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [ataru.component-data.arvosanat-module :as arvosanat]))
@@ -32,6 +33,7 @@
    [:modal-info-element component/modal-info-element]
    [:base-education-module base-education-module/module]
    [:kk-base-education-module kk-base-education-module/module]
+   [:base-education-module-2nd base-education-2nd-module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
    [:lupatiedot component/lupatiedot]
@@ -91,7 +93,7 @@
                                        (= :children (second path))
                                        (= :form-section component-name)))
                              (not (and @base-education-module-exists?
-                                       (contains? #{:base-education-module :kk-base-education-module} component-name)))
+                                       (contains? #{:base-education-module :kk-base-education-module :base-education-module-2nd} component-name)))
                              (not (and @pohjakoulutusristiriita-exists?
                                        (= :pohjakoulutusristiriita component-name))))]
               [:li.form__add-component-toolbar--list-item

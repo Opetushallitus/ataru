@@ -1145,6 +1145,9 @@
    :base-education-module                           {:fi "Pohjakoulutusmoduuli"
                                                      :sv "Grundutbildningsmodul"
                                                      :en "EN: Pohjakoulutusmoduuli"}
+   :base-education-module-2nd                       {:fi "Pohjakoulutusmoduuli (peruskoulu)"
+                                                     :sv "Grundutbildningsmodul (grundskolan)"
+                                                     :en "EN: Pohjakoulutusmoduuli (peruskoulu)"}
    :cannot-display-file-type-in-attachment-skimming {:fi "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."
                                                      :sv "Denna bilaga kan tyvärr inte visas i förhandsgranskningen, men du kan ladda ner bilagan som en fil."
                                                      :en "This attachment can't unfortunately be shown but you can download it here."}

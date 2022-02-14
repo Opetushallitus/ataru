@@ -500,7 +500,7 @@
   :editor/base-education-module-exists?
   (fn [db _]
     (let [content (get-selected-form-content db)]
-      (some #{"completed-base-education" "higher-base-education-module"}
+      (some #{"completed-base-education" "higher-base-education-module" "pohjakoulutus-2nd-wrapper"}
             (->> content
                  (mapcat :children)
                  (map :id)
