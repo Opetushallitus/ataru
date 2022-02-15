@@ -348,7 +348,8 @@
    (s/optional-key :deleted)        (s/maybe #?(:clj  org.joda.time.DateTime
                                                 :cljs #"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$"))
    (s/optional-key :preview-status) (s/enum "not_supported" "not_generated" "finished" "error")
-   (s/optional-key :previews)       [Preview]})
+   (s/optional-key :previews)       [Preview]
+   (s/optional-key :content-disposition) (s/maybe s/Str)})
 
 (s/defschema FormWithContentAndTarjontaMetadata
   (merge FormWithContent {:tarjonta FormTarjontaMetadata}))

@@ -2,6 +2,8 @@
   (:require [ataru.translations.texts :as texts]
             [ataru.util :as util]))
 
+(def harkinnanvaraisuus-wrapper-id "harkinnanvaraisuus-wrapper")
+
 (defn text-field [metadata]
   {:fieldClass "formField"
    :fieldType  "textField"
@@ -183,6 +185,16 @@
                    {:value "Ei"
                     :label (:no texts/general-texts)}]))
 
+(defn paatos-opiskelijavalinnasta-sahkopostiin [metadata]
+  (assoc (single-choice-button metadata)
+    :id "paatos-opiskelijavalinnasta-sahkopostiin"
+    :label (:paatos-opiskelijavalinnasta-sahkopostiin texts/translation-mapping)
+    :validators ["required"]
+    :options [{:value "Kyllä"
+               :label (:yes texts/general-texts)}
+              {:value "Ei"
+               :label (:no texts/general-texts)}]))
+
 (defn lupa-sahkoiseen-asiointiin [metadata]
   (assoc (single-choice-button metadata)
          :id "sahkoisen-asioinnin-lupa"
@@ -215,6 +227,17 @@
                     (koulutusmarkkinointilupa metadata)
                     (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))
+
+(defn lupatiedot-toinen-aste [metadata]
+  (assoc (form-section metadata)
+    :id "lupatiedot-toinen-aste"
+    :label (:lupatiedot-toinen-aste texts/translation-mapping)
+    :children [(assoc (info-element metadata)
+                 :text (:lupatiedot-toinen-aste-info texts/translation-mapping))
+               (paatos-opiskelijavalinnasta-sahkopostiin metadata)
+               (koulutusmarkkinointilupa metadata)
+               (valintatuloksen-julkaisulupa metadata)
+               (asiointikieli metadata)]))
 
 (defn huoltajan-nimi [metadata idx]
   (assoc (text-field metadata)
@@ -259,32 +282,37 @@
        (map (comp name :id))
        set))
 
+(defn- harkinnanvaraisuus-info [metadata]
+  (assoc (info-element metadata)
+    :text (:harkinnanvaraisuus-info texts/translation-mapping)))
+
 (defn- harkinnanvaraisuus-question [metadata]
   (assoc (single-choice-button metadata)
     :id                "harkinnanvaraisuus"
-    :label             {:fi "Haetko harkinnanvaraisesti"}
+    :label             (:harkinnanvaraisuus-question texts/translation-mapping)
     :validators        ["required"]
     :sensitive-answer  true
     :options [{:value  "1"
-               :label  {:fi "Kyllä"}
+               :label  (:yes texts/general-texts)
                :followups [(assoc (single-choice-button metadata)
                              :id                "harkinnanvaraisuus-reason"
-                             :label             {:fi "Peruste harkinnanvaraisuudelle"}
+                             :label             (:harkinnanvaraisuus-reason texts/translation-mapping)
                              :validators        ["required"]
                              :sensitive-answer  true
-                             :options [{:label  {:fi "Oppimisvaikeudet"}
+                             :options [{:label  (:harkinnanvaraisuus-reason-0 texts/translation-mapping)
                                         :value  "0"}
-                                       {:label  {:fi "Sosiaaliset syyt"}
+                                       {:label  (:harkinnanvaraisuus-reason-1 texts/translation-mapping)
                                         :value  "1"}
-                                       {:label  {:fi "Koulutodistusten vertailuvaikeudet"}
+                                       {:label  (:harkinnanvaraisuus-reason-2 texts/translation-mapping)
                                         :value  "2"}
-                                       {:label  {:fi "Riittämätön tutkintokielen taito"}
+                                       {:label  (:harkinnanvaraisuus-reason-3 texts/translation-mapping)
                                         :value  "3"}])]}
               {:value "0"
-               :label {:fi "Ei"}}]))
+               :label (:no texts/general-texts)}]))
 
 (defn harkinnanvaraisuus [metadata]
   (assoc (form-section metadata)
-    :id "harkinnanvaraisuus-wrapper"
-    :label {:fi "Harkinnanvaraisuus"}
-    :children [(harkinnanvaraisuus-question metadata)]))
+    :id       harkinnanvaraisuus-wrapper-id
+    :label    (:harkinnanvaraisuus-topic texts/translation-mapping)
+    :children [(harkinnanvaraisuus-info metadata)
+               (harkinnanvaraisuus-question metadata)]))

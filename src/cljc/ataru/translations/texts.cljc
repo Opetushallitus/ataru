@@ -275,6 +275,30 @@
    :lupatiedot-info                             {:fi "Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. \n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään perusopetuksen, lukiokoulutuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja, Ylioppilastutkintolautakunnasta ja korkeakouluista saatavia tutkinto- ja arvosanatietoja sekä väestötietojärjestelmästä saatavia henkilötietoja.  Henkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät korkeakoululle, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n \nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/wp/tietosuojaseloste/opintopolun-opiskelijavalintarekisterin-tietosuojaseloste/).\n\nSaat vahvistusviestin vastaanotetusta hakulomakkeesta sähköpostiisi."
                                                  :sv "Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten. \n\nDe uppgifter som du har gett i din ansökan används för att genomföra antagningen av studerande. Utöver dessa uppgifter används uppgifter som sparats i informationsresursen Koski, examens- och vitsordsuppgifter från Studentexamensnämnden och högskolorna samt personuppgifter från Befolkningsdatasystemet. Behandlingen av dina uppgifter bygger på lagen om nationella studie- och examensregister (884/2017).\n\nEfter att antagningen av studerande har gjorts, överförs dina uppgifter till den högskolan där du fick en studieplats. Dina uppgifter kan enligt lag också ges till andra myndigheter eller för forskning.\n\nUppgifterna sparas enligt lag i fem år, varefter de enligt Riksarkivets beslut bevaras permanent. Uppgifterna om mottagande av studieplats bevaras också permanent.\n\nDu har rätt att granska dina egna uppgifter och be att uppgifterna ändras eller att behandlingen av dem begränsas. Du har dessutom rätt att begära ändring hos dataombudsmannen. \n\nMer information: [Studieinfors dataskyddsbeskrivning] (https://studieinfo.fi/wp/dataskyddsbeskrivning/dataskyddsbeskrivning-for-studieinfos-antagningsregister/).\n\nDu får i din e-post ett bekräftelsemeddelande över att ansökningsblanketten har kommit fram."
                                                  :en "Please check all the information you have given in the application before you submit the application. \n\nThe information given on the application will be used for student admission and selection purposes. In addition to this information, data stored on the National Data Register for Basic Education, General Upper Secondary Education and Vocational Education, data received from the Finnish Matriculation Examination Board and data regarding degrees and grades received from higher education institutes as well as personal data received from the Finnish Population Information System will be used in student admission and selection. The processing of personal data is based on the Act on the National Registers of Education Records, Qualifications and Degrees (884/2017).\n\nAfter the student admission and selection process your data is transferred to the higher education institute to which you have received the right to study. Your data can be transferred to other officials as well as for research purposes.\nData in the data registry are kept for five years, starting from the decision of student admission. After this, the data will be transferred to permanent storage, according to the decision made by the National Archives of Finland. Data concerning receiving the right to study are kept forever.\n\nYou have the right to demand rectification of false or inaccurate data as well as the right to demand the limitation of processing the data. Additionally, you have the right to file a complaint to a data protection supervisor.\n\nAdditional information: [Studyinfo's register description](https://studyinfo.fi/wp2/en/register/).\n\nYou will receive a confirmation of your application to your email."}
+   :harkinnanvaraisuus-topic                    {:fi "Harkintaan perustuva valinta"
+                                                 :sv "Antagning enligt prövning"
+                                                 :en ""}
+   :harkinnanvaraisuus-info                     {:fi "Harkintaan perustuvassa valinnassa hakija voidaan valita koulutukseen valintapisteistä riippumatta erityisen syyn perusteella. \n\nErityisen syyn tulee olla sellainen, joka on saattanut vaikuttaa koulumenestykseen. \n\nErityisiä syitä ovat oppimisvaikeudet, sosiaaliset syyt, koulutodistusten vertailuvaikeus tai riittämätön tutkintokielen kielitaito."
+                                                 :sv "I antagning enligt prövning kan sökanden oberoende av antagningspoäng bli vald till utbildningen om det finns något särskilt skäl. \n\nDet särskilda skälet måste vara ett sådant som har påverkat skolframgången. \n\nSärskilda skäl är inlärningssvårigheter, sociala skäl, svårigheter att jämföra betygen eller otillräckliga kunskaper i examensspråket."
+                                                 :en ""}
+   :harkinnanvaraisuus-question                 {:fi "Haetko harkintaan perustuvassa valinnassa?"
+                                                 :sv "Söker du via antagning enligt prövning?"
+                                                 :en ""}
+   :harkinnanvaraisuus-reason                   {:fi "Peruste harkinnanvaraisuudelle"
+                                                 :sv "Grund för antagning enligt prövning"
+                                                 :en ""}
+   :harkinnanvaraisuus-reason-0                 {:fi "Oppimisvaikeudet"
+                                                 :sv "Inlärningssvårigheter"
+                                                 :en ""}
+   :harkinnanvaraisuus-reason-1                 {:fi "Sosiaaliset syyt"
+                                                 :sv "Sociala skäl "
+                                                 :en ""}
+   :harkinnanvaraisuus-reason-2                 {:fi "Koulutodistusten vertailuvaikeudet"
+                                                 :sv "Svårigheter att jämföra skolbetyg "
+                                                 :en ""}
+   :harkinnanvaraisuus-reason-3                 {:fi "Riittämätön tutkintokielen taito"
+                                                 :sv "Otillräcklig språkkunskap i examensspråket"
+                                                 :en ""}
    :minute                                      {:fi "minuutti"
                                                  :en "minute"
                                                  :sv "minut"}
@@ -359,6 +383,15 @@
    :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä voidaan hoitaa pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä ensisijaisen hakutoiveesi korkeakoulun hakijapalveluihin."
                                                  :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
                                                  :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services of the higher education institution that you are applying to."}
+   :paatos-opiskelijavalinnasta-sahkopostiin    {:fi "Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"
+                                                 :sv "Läroanstalten får skicka beslutet för studerandeantagningen till min e-post"
+                                                 :en "EN: Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"}
+   :lupatiedot-toinen-aste                      {:fi "Lupatiedot"
+                                                 :sv "Tillståndsuppgifter"
+                                                 :en "Permissions"}
+   :lupatiedot-toinen-aste-info                 {:fi "**Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. **\n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään perusopetuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja sekä väestötietojärjestelmästä saatavia henkilötietoja.  \n\nHenkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät oppilaitokseen, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n\nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/konfo/fi/sivu/opiskelijavalintarekisterin-tietosuojaseloste).\n\n\n\n"
+                                                 :sv "**Kontrollera noggrant de uppgifter som du har angett i ansökningsblanketten innan du skickar ansökningsblanketten.**\n\nDe uppgifter som du har gett i din ansökan används för att genomföra antagningen av studerande. Utöver dessa uppgifter används uppgifter som sparats i informationsresursen Koski samt personuppgifter från Befolkningsdatasystemet. \n\nBehandlingen av dina uppgifter bygger på lagen om nationella studie- och examensregister (884/2017).\n\nEfter att antagningen av studerande har gjorts, överförs dina uppgifter till den högskolan där du fick en studieplats. Dina uppgifter kan enligt lag också ges till andra myndigheter eller för forskning.\n\nUppgifterna sparas enligt lag i fem år, varefter de enligt Riksarkivets beslut bevaras permanent. Uppgifterna om mottagande av studieplats bevaras också permanent.\n\nDu har rätt att granska dina egna uppgifter och be att uppgifterna ändras eller att behandlingen av dem begränsas. Du har dessutom rätt att begära ändring hos dataombudsmannen. \n\nMer information: [Studieinfos dataskyddsbeskrivning](https://opintopolku.fi/konfo/sv/sivu/dataskyddsbeskrivning-foer-antagningsregistret).\n"
+                                                 :en "EN: **Tarkista hakulomakkeelle täyttämäsi tiedot huolellisesti ennen hakulomakkeen lähettämistä. **\n\nHakemuksella antamiasi tietoja käytetään opiskelijavalintaan. Näiden tietojen lisäksi opiskelijavalinnassa käytetään perusopetuksen ja ammatillisen koulutuksen valtakunnalliseen KOSKI-tietovarantoon tallennettuja tietoja sekä väestötietojärjestelmästä saatavia henkilötietoja.  \n\nHenkilötietojesi käsittely perustuu lakiin valtakunnallisista opinto- ja tutkintorekistereistä (884/2017).\n\nOpiskelijavalinnan jälkeen tietosi siirtyvät oppilaitokseen, josta sait opiskelupaikan. Tietojasi voidaan lakiin perustuen luovuttaa myös muille viranomaisille sekä tutkimustarkoitukseen.\n\nTiedot säilytetään lain mukaan viisi vuotta, jonka jälkeen tiedot siirretään Kansallisarkiston päätöksen mukaan pysyvään säilytykseen. Opiskelupaikan vastaanottamistiedot säilytetään lain mukaan pysyvästi.\n\nSinulla on oikeus tarkastaa tietosi sekä vaatia tietojen oikaisemista tai käsittelyn rajoittamista. Sinulla on myös oikeus tehdä valitus tietosuojavaltuutetulle.\n\nLisätietoja: [Opintopolun tietosuojaseloste](https://opintopolku.fi/konfo/fi/sivu/opiskelijavalintarekisterin-tietosuojaseloste).\n\n\n\n"}
    :permissions                                 {:fi "Lupatiedot"
                                                  :sv "Tilläggsuppgifter"
                                                  :en "Permissions"}
@@ -578,7 +611,10 @@
                         :sv "Nej"}
    :year-of-completion {:en "Year of completion"
                         :fi "Suoritusvuosi"
-                        :sv "Avlagd år"}})
+                        :sv "Avlagd år"}
+   :close              {:en "Close"
+                        :fi "Sulje"
+                        :sv "Stäng"}})
 
 (def base-education-module-texts
   {:title                            {:fi "Koulutustausta"
@@ -840,6 +876,111 @@
    :required-for-statistics                                {:fi "Tämä tieto kysytään tilastointia varten."
                                                             :sv "Uppgiften insamlas för statistik."
                                                             :en "This is required for statistical reasons"}})
+
+(def base-education-2nd-module-texts
+  {:section-title                           {:fi "Pohjakoulutuksesi"
+                                             :sv "Grundutbildning"
+                                             :en "EN: Pohjakoulutuksesi"}
+   :choose-base-education                   {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
+                                             :sv "Välj den grundutbildning med vilken du söker till utbildningen"
+                                             :en "EN: Valitse yksi pohjakoulutus, jolla haet koulutukseen"}
+   :choose-base-education-info              {:fi "Jos saat perusopetuksen päättötodistuksen tänä keväänä (olet ysiluokkalainen), valitse se oppimäärä, jonka perusteella suoritat perusopetusta. \n \n\nJos sinulla on ainoastaan ulkomailla suoritettu koulutus, niin valitse Ulkomailla suoritettu koulutus. Perusopetuksen oppimäärällä tarkoitetaan Suomessa suoritettua tai suoritettavaa oppimäärää."
+                                             :sv "Om du får avgångsbetyg från den grundläggande utbildningen den här våren (du går på nian), välj den lärokurs med vilken du avlägger din grundutbildning.\n\n\nOm du endast har en utbildning som du avlagt utomlands, välj då ”Utbildning utomlands”. Den grundläggande utbildningens lärokurs betyder en lärokurs som du avlagt eller avlägger i Finland."
+                                             :en "EN: Jos saat perusopetuksen päättötodistuksen tänä keväänä (olet ysiluokkalainen), valitse se oppimäärä, jonka perusteella suoritat perusopetusta. \n \n\nJos sinulla on ainoastaan ulkomailla suoritettu koulutus, niin valitse Ulkomailla suoritettu koulutus. Perusopetuksen oppimäärällä tarkoitetaan Suomessa suoritettua tai suoritettavaa oppimäärää. \n\n\n\n\n"}
+   :base-education                          {:fi "Perusopetuksen oppimäärä"
+                                             :sv "Den grundläggande utbildningens lärokurs"
+                                             :en "EN: Perusopetuksen oppimäärä"}
+   :base-education-partially-individualized {:fi "Perusopetuksen osittain yksilöllistetty oppimäärä"
+                                             :sv "Delvis individualiserad lärokurs inom den grundläggande utbildningen"
+                                             :en "EN: Perusopetuksen osittain yksilöllistetty oppimäärä"}
+   :base-education-individualized           {:fi "Perusopetuksen pääosin tai kokonaan yksilöllistetty oppimäärä"
+                                             :sv "Helt eller i huvudsak individualiserad lärokurs inom den grundläggande utbildningen"
+                                             :en "EN: Perusopetuksen pääosin tai kokonaan yksilöllistetty oppimäärä"}
+   :base-education-organized-regionly       {:fi "Perusopetuksen yksilöllistetty oppimäärä, opetus järjestetty toiminta-alueittain"
+                                             :sv "Individualiserad lärokurs inom den grundläggande utbildningen, som utgår från verksamhetsområden"
+                                             :en "EN: Perusopetuksen yksilöllistetty oppimäärä, opetus järjestetty toiminta-alueittain"}
+   :base-education-foreign                  {:fi "Ulkomailla suoritettu koulutus"
+                                             :sv "Utbildning utomlands"
+                                             :en "EN: Ulkomailla suoritettu koulutus"}
+   :base-education-no-graduation            {:fi "Ei päättötodistusta"
+                                             :sv "Inget avgångsbetyg"
+                                             :en "EN: Ei päättötodistusta"}
+   :study-language                          {:fi "Millä opetuskielellä olet suorittanut perusopetuksen?"
+                                             :sv "På vilket språk har du avlagt grundutbildningen?"
+                                             :en "EN: Millä opetuskielellä olet suorittanut perusopetuksen?"}
+   :language-finnish                        {:fi "suomi"
+                                             :sv "finska"
+                                             :en "Finnish"}
+   :language-swedish                        {:fi "ruotsi"
+                                             :sv "svenska"
+                                             :en "Swedish"}
+   :language-saame                          {:fi "saame"
+                                             :sv "samiska"
+                                             :en "EN: saame"}
+   :language-english                        {:fi "englanti"
+                                             :sv "engelska"
+                                             :en "English"}
+   :language-german                         {:fi "saksa"
+                                             :sv "tyska"
+                                             :en "German"}
+   :graduated-question                      {:fi "Oletko suorittanut Suomessa tai ulkomailla ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon?"
+                                             :sv "Har du avlagt en yrkesutbildning, gymnasiets lärokurs eller en högskoleexamen i Finland eller utomlands?"
+                                             :en "EN: Oletko suorittanut Suomessa tai ulkomailla ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon?"}
+   :graduated-notification                  {:fi "Koska olet suorittanut ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon, et voi hakea perusopetuksen jälkeisen koulutuksen yhteishaussa. \n"
+                                             :sv "Eftersom du redan har avlagt en yrkesinriktad examen, gymnasiets lärokurs eller en högskoleexamen kan du inte söka i gemensamma ansökan.\n\n"
+                                             :en "EN: Koska olet suorittanut ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon, et voi hakea perusopetuksen jälkeisen koulutuksen yhteishaussa. \n"}
+   :graduated-question-conditional          {:fi "Jos olet suorittanut jonkun seuraavista, valitse koulutus"
+                                             :sv "Om du har avlagt någon av följande, välj utbildning"
+                                             :en "EN: Jos olet suorittanut jonkun seuraavista, valitse koulutus"}
+   :tenth-grade                             {:fi "Kymppiluokka (perusopetuksen lisäopetus, vähintään 1100 tuntia) "
+                                             :sv "Tionde klassen (den grundläggande utbildningens påbyggnadsundervisning, minst 1 100 timmar)"
+                                             :en "EN: Kymppiluokka (perusopetuksen lisäopetus, vähintään 1100 tuntia) "}
+   :valma                                   {:fi "Ammatilliseen koulutukseen valmentava koulutus VALMA (vähintään 30 osaamispistettä)"
+                                             :sv "Utbildning som handleder för yrkesutbildning (VALMA) (minst 30 kompetenspoäng)"
+                                             :en "EN: Ammatilliseen koulutukseen valmentava koulutus VALMA (vähintään 30 osaamispistettä)"}
+   :luva                                    {:fi "Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA (vähintään 25 kurssia)"
+                                             :sv "Utbildning som förbereder för gymnasieutbildning som ordnas för invandrare (minst 25 kurser)"
+                                             :en "EN: Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA (vähintään 25 kurssia)"}
+   :kansanopisto                            {:fi "Kansanopiston lukuvuoden mittainen linja (vähintään 28 opiskelijaviikkoa)"
+                                             :sv "Ett år lång studielinje vid en folkhögskola (minst 28 studerandeveckor)"
+                                             :en "EN: Kansanopiston lukuvuoden mittainen linja (vähintään 28 opiskelijaviikkoa)"}
+   :free-civilized                          {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus (vähintään 17 opiskelijaviikkoa)"
+                                             :sv "Utbildning inom det fria bildningsarbetet som riktar sig till läropliktiga (minst 17 studerandeveckor)"
+                                             :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus (vähintään 17 opiskelijaviikkoa)"}
+   :year-of-graduation                      {:fi "Suoritusvuosi"
+                                             :sv "År då utbildningen har avlagts"
+                                             :en "EN: Suoritusvuosi"}
+   :year-of-graduation-question             {:fi "Suoritusvuosi"
+                                             :sv "År för avläggande av den grundläggande utbildningen"
+                                             :en "EN: Suoritusvuosi"}
+   :individualized-question                 {:fi "Oletko opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti?"
+                                             :sv "Har du studerat både matematik och modersmål enligt individualiserad lärokurs?"
+                                             :en "EN Oletko opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti?"}
+   :individualized-info                     {:fi "Jos sinulla on jo perusopetuksen päättötodistus, yksilöllistettyjen oppiaineiden arvosanat on merkitty tähdellä (*). Jos et ole vielä saanut päättötodistusta, voit kysyä neuvoa opinto-ohjaajalta."
+                                             :sv "Om du redan har den grundläggande utbildningens avgångsbetyg, är vitsorden för individualiserade lärokurser märkt med en stjärna (*). Om du inte ännu har fått avgångsbetyget, kan du be elevhandledaren om råd."
+                                             :en "EN: Jos sinulla on jo perusopetuksen päättötodistus, yksilöllistettyjen oppiaineiden arvosanat on merkitty tähdellä (*). Jos et ole vielä saanut päättötodistusta, voit kysyä neuvoa opinto-ohjaajalta."}
+   :individualized-harkinnanvaraisuus       {:fi "Koska olet opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti, hakemuksesi käsitellään harkinnanvaraisesti, jos haet ammatilliseen koulutukseen tai lukioon. \n\nJos haluat lähettää liitteitä harkinnanvaraisen haun tueksi, tarkista palautusosoite oppilaitoksista, joihin haet. "
+                                             :sv "Eftersom du har studerat både matematik och modersmål enligt individualiserad lärokurs, behandlas din ansökan via antagning enligt prövning om du söker till yrkesutbildning eller till gymnasium.\n\nOm du vill skicka in bilagor som stöd för din ansökan via prövning, kontrollera leveransadressen från de läroanstalter som du söker till."
+                                             :en "EN: Koska olet opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti, hakemuksesi käsitellään harkinnanvaraisesti, jos haet ammatilliseen koulutukseen tai lukioon. \n\nJos haluat lähettää liitteitä harkinnanvaraisen haun tueksi, tarkista palautusosoite oppilaitoksista, joihin haet. "}
+   :foreign-harkinnanvaraisuus              {:fi "Koska olet suorittanut tutkintosi ulkomailla, haet automaattisesti harkintaan perustuvassa valinnassa. Toimitathan kopion tutkintotodistuksestasi oppilaitoksiin."
+                                             :sv "Eftersom du har avlagt din examen utomlands, söker du automatiskt via antagning enligt prövning. Skicka en kopia av ditt examensbetyg till läroanstalterna."
+                                             :en "EN: Koska olet suorittanut tutkintosi ulkomailla, haet automaattisesti harkintaan perustuvassa valinnassa. Toimitathan kopion tutkintotodistuksestasi oppilaitoksiin."}
+   :copy-of-proof-of-certificate            {:fi "Kopio tutkintotodistuksesta "
+                                             :sv "Kopia av examensbetyget"
+                                             :en "EN: Kopio tutkintotodistuksesta "}
+   :copy-of-proof-of-certificate-info       {:fi "Tallenna tutkintotodistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). \n\n"
+                                             :sv "Spara ditt examensbetyg antingen i pdf-format eller som bildfil (t.ex. png eller jpeg)."
+                                             :en "EN: Tallenna tutkintotodistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). \n\n"}
+   :copy-of-certificate                     {:fi "Todistus, jolla haet "
+                                             :sv "Betyg som du söker med"
+                                             :en "EN: Todistus, jolla haet "}
+   :copy-of-certificate-info                {:fi "Tallenna todistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). "
+                                             :sv "Spara ditt betyg antingen i pdf-format eller som bildfil (t.ex. png eller jpeg)."
+                                             :en "EN: Tallenna todistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). "}
+   :no-graduation-info                      {:fi "Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "
+                                             :sv "Välj den här endast om du har avbrutit den grundläggande utbildningen.\n\nDu söker automatiskt via antagning enligt prövning."
+                                             :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}
+   })
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
@@ -1121,6 +1262,9 @@
    :base-education-module                           {:fi "Pohjakoulutusmoduuli"
                                                      :sv "Grundutbildningsmodul"
                                                      :en "EN: Pohjakoulutusmoduuli"}
+   :base-education-module-2nd                       {:fi "Pohjakoulutusmoduuli (peruskoulu)"
+                                                     :sv "Grundutbildningsmodul (grundskolan)"
+                                                     :en "EN: Pohjakoulutusmoduuli (peruskoulu)"}
    :cannot-display-file-type-in-attachment-skimming {:fi "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."
                                                      :sv "Denna bilaga kan tyvärr inte visas i förhandsgranskningen, men du kan ladda ner bilagan som en fil."
                                                      :en "This attachment can't unfortunately be shown but you can download it here."}
@@ -1471,6 +1615,9 @@
                                                      :en "EN: Sähköisen asioinnin lupa"}
    :lupatiedot                                      {:fi "Lupatiedot"
                                                      :sv "Tillståndsuppgifter"
+                                                     :en "Permissions"}
+   :lupatiedot-toinen-aste                          {:fi "Lupatiedot (2. aste)"
+                                                     :sv "Tillståndsuppgifter (2. stadiet)"
                                                      :en "Permissions"}
    :mass-edit                                       {:fi "Massamuutos"
                                                      :sv "Massändring"
