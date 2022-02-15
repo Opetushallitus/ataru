@@ -17,6 +17,7 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.fixture('lahtokoulu.json').as('lahtokoulu')
         cy.fixture('lahtokoulut.json').as('lahtokoulut')
         cy.fixture('lahtokoulunLuokat.json').as('luokat')
+        cy.fixture('haut.json').as('haut')
 
         cy.server()
         cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
@@ -47,28 +48,47 @@ describe('Hakemuksen tietojen tarkastelu', () => {
           '/lomake-editori/api/applications/oppilaitos/1.2.3.4.6/luokat',
           '@luokat'
         )
+        cy.route('GET', '/lomake-editori/api/haut*', '@haut')
+        cy.route(
+          'GET',
+          '/lomake-editori/api/organization/user-organizations*',
+          '@lahtokoulut'
+        )
       })
 
       afterEach(() => {
         cy.server({ enable: false })
       })
 
-      it('Navigoi hakemusten käsittelynäkymään', () => {
+      const goToApplicationHandling = () => {
         // editorin pääsivujen lataus välillä hidastelee rankasti, joten timeouttia on annettu tässä kohdin reilusti
         cy.get('div.section-link.application > a', { timeout: 30000 }).click()
+      }
+
+      const navigateToUnprocessedHautTab = () => {
+        cy.get('.application__search-control-tab-selector').first().click()
+      }
+
+      it('Navigoi hakemusten käsittelynäkymään', () => {
+        goToApplicationHandling()
       })
 
-      describe('Hakemusten rajaus', () => {
+      describe('Hakemusten rajaus toisen asteen yhteishaussa', () => {
+        const clickFirstHaku = () => {
+          cy.get('.application__search-control-haku').first().click()
+        }
+
+        before(() => {
+          goToApplicationHandling()
+        })
+
+        after(() => {
+          navigateToUnprocessedHautTab()
+          cy.reload()
+        })
+
         it('Valpas-linkissä ei ole lähtökoulua', () => {
-          cy.route(
-            'GET',
-            '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
-            '@lahtokoulut'
-          )
-          cy.get(
-            '.application__search-control-tab-selector-wrapper--search'
-          ).click()
-          cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
+          clickFirstHaku()
           cy.get('#open-application-filters').click()
           cy.get('#valpas-hakutilanne-link')
             .should('have.attr', 'href')
@@ -127,22 +147,23 @@ describe('Hakemuksen tietojen tarkastelu', () => {
           cy.get('li.multi-option-dropdown__option').should('not.exist')
         })
 
-        it('Hakemusten rajauksessa on valittu lähtökouluksi käyttäjän ainoa organisaatio', () => {
-          cy.reload()
-          cy.route(
-            'GET',
-            '/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000',
-            '@lahtokoulu'
-          )
-          cy.get(
-            '.application__search-control-tab-selector-wrapper--search'
-          ).click()
-          cy.get('#ssn-search-field').clear().type('Tuntematon', { delay: 50 })
-          cy.get('#open-application-filters').click()
-          cy.get('#school-search').should('not.exist')
-          cy.get('#selected-school').should('exist')
-          cy.get('#selected-school').contains('Haagan peruskoulu')
-          cy.get('#open-application-filters').click()
+        describe('Käyttäjällä on oikeus vain yhteen organisaatioon', () => {
+          it('Hakemusten rajauksessa on valittu lähtökouluksi käyttäjän ainoa organisaatio', () => {
+            cy.route(
+              'GET',
+              '/lomake-editori/api/organization/user-organizations*',
+              '@lahtokoulu'
+            )
+            goToApplicationHandling()
+            navigateToUnprocessedHautTab()
+            cy.reload()
+            clickFirstHaku()
+            cy.get('#open-application-filters').click()
+            cy.get('#school-search').should('not.exist')
+            cy.get('#selected-school').should('exist')
+            cy.get('#selected-school').contains('Haagan peruskoulu')
+            cy.get('#open-application-filters').click()
+          })
         })
       })
 

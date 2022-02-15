@@ -1,0 +1,18 @@
+{
+  "tarjonta-haut": {
+    "1.2.246.562.29.10000000001": {
+      "oid": "1.2.246.562.29.10000000001",
+      "application-count": 1,
+      "processed": 0
+    }
+  },
+  "direct-form-haut": {},
+  "haut": {
+    "1.2.246.562.29.10000000001": {
+      "yhteishaku": true,
+      "kohdejoukko-uri": "haunkohdejoukko_11#1"
+    }
+  },
+  "hakukohteet": {},
+  "hakukohderyhmat": {}
+}
