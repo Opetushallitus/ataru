@@ -22,9 +22,9 @@
 (defn- filter-organizations
   [{:keys [include-organizations? include-hakukohde-groups? perusaste-only? oppilaitos-only?]} organizations]
   (cond->> organizations
-    true (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
-    perusaste-only? (filter organization-service/is-perusaste-organization?)
-    oppilaitos-only? (filter organization-service/is-oppilaitos-organization?)))
+           true (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
+           perusaste-only? (filter organization-service/is-perusaste-organization?)
+           oppilaitos-only? (filter organization-service/is-oppilaitos-organization?)))
 
 (defn query-organization
   [organization-service session query filter-flags page-num]

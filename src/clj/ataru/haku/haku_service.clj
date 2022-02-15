@@ -70,26 +70,26 @@
 (defn- haut-with-hakukierros-paattynyt-removed
   [ohjausparametrit-service get-haut-cache show-hakukierros-paattynyt?]
   (->> (cache/get-from get-haut-cache :haut)
-    (remove-if-hakukierros-paattynyt ohjausparametrit-service
-      show-hakukierros-paattynyt?)))
+       (remove-if-hakukierros-paattynyt ohjausparametrit-service
+         show-hakukierros-paattynyt?)))
 
 (defn- keep-haut-authorized-by-form-or-hakukohde
   [tarjonta-service authorized-organization-oids haut]
   (->> haut
-    (map (fn [h] (update h :hakukohde vector)))
-    (aac/filter-authorized-by-form-or-hakukohde tarjonta-service authorized-organization-oids)
-    (map (fn [h] (update h :hakukohde first)))))
+       (map (fn [h] (update h :hakukohde vector)))
+       (aac/filter-authorized-by-form-or-hakukohde tarjonta-service authorized-organization-oids)
+       (map (fn [h] (update h :hakukohde first)))))
 
 (defn- toisen-asteen-yhteishaut-oids
   [tarjonta-service haku-authorized-by-form-or-hakukohde? haut]
   (->> haut
-    (map :haku)
-    distinct
-    (remove haku-authorized-by-form-or-hakukohde?)
-    (map (partial tarjonta/get-haku tarjonta-service))
-    (filter haku/toisen-asteen-yhteishaku?)
-    (map :oid)
-    set))
+       (map :haku)
+       distinct
+       (remove haku-authorized-by-form-or-hakukohde?)
+       (map (partial tarjonta/get-haku tarjonta-service))
+       (filter haku/toisen-asteen-yhteishaku?)
+       (map :oid)
+       set))
 
 (defn- haut-for-opinto-ohjaaja
   [tarjonta-service session haut-authorized-by-form-or-hakukohde haut]
