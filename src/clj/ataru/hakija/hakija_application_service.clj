@@ -615,7 +615,7 @@
 
                               :else
                               [:hakija nil])
-        is-rewrite-secret-valid?   (and (= actor-role :virkailija)(virkailija-edit/virkailija-rewrite-secret-valid? secret))
+        is-rewrite-secret-valid?   (and (= actor-role :virkailija) (virkailija-edit/virkailija-rewrite-secret-valid? secret))
         application                (cond
                                      is-rewrite-secret-valid?
                                      (application-store/get-latest-application-for-virkailija-rewrite-edit secret)
