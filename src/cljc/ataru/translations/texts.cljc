@@ -602,7 +602,10 @@
                         :sv "Nej"}
    :year-of-completion {:en "Year of completion"
                         :fi "Suoritusvuosi"
-                        :sv "Avlagd år"}})
+                        :sv "Avlagd år"}
+   :close              {:en "Close"
+                        :fi "Sulje"
+                        :sv "Stäng"}})
 
 (def base-education-module-texts
   {:title                            {:fi "Koulutustausta"
@@ -864,6 +867,111 @@
    :required-for-statistics                                {:fi "Tämä tieto kysytään tilastointia varten."
                                                             :sv "Uppgiften insamlas för statistik."
                                                             :en "This is required for statistical reasons"}})
+
+(def base-education-2nd-module-texts
+  {:section-title                           {:fi "Pohjakoulutuksesi"
+                                             :sv "Grundutbildning"
+                                             :en "EN: Pohjakoulutuksesi"}
+   :choose-base-education                   {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
+                                             :sv "Välj den grundutbildning med vilken du söker till utbildningen"
+                                             :en "EN: Valitse yksi pohjakoulutus, jolla haet koulutukseen"}
+   :choose-base-education-info              {:fi "Jos saat perusopetuksen päättötodistuksen tänä keväänä (olet ysiluokkalainen), valitse se oppimäärä, jonka perusteella suoritat perusopetusta. \n \n\nJos sinulla on ainoastaan ulkomailla suoritettu koulutus, niin valitse Ulkomailla suoritettu koulutus. Perusopetuksen oppimäärällä tarkoitetaan Suomessa suoritettua tai suoritettavaa oppimäärää."
+                                             :sv "Om du får avgångsbetyg från den grundläggande utbildningen den här våren (du går på nian), välj den lärokurs med vilken du avlägger din grundutbildning.\n\n\nOm du endast har en utbildning som du avlagt utomlands, välj då ”Utbildning utomlands”. Den grundläggande utbildningens lärokurs betyder en lärokurs som du avlagt eller avlägger i Finland."
+                                             :en "EN: Jos saat perusopetuksen päättötodistuksen tänä keväänä (olet ysiluokkalainen), valitse se oppimäärä, jonka perusteella suoritat perusopetusta. \n \n\nJos sinulla on ainoastaan ulkomailla suoritettu koulutus, niin valitse Ulkomailla suoritettu koulutus. Perusopetuksen oppimäärällä tarkoitetaan Suomessa suoritettua tai suoritettavaa oppimäärää. \n\n\n\n\n"}
+   :base-education                          {:fi "Perusopetuksen oppimäärä"
+                                             :sv "Den grundläggande utbildningens lärokurs"
+                                             :en "EN: Perusopetuksen oppimäärä"}
+   :base-education-partially-individualized {:fi "Perusopetuksen osittain yksilöllistetty oppimäärä"
+                                             :sv "Delvis individualiserad lärokurs inom den grundläggande utbildningen"
+                                             :en "EN: Perusopetuksen osittain yksilöllistetty oppimäärä"}
+   :base-education-individualized           {:fi "Perusopetuksen pääosin tai kokonaan yksilöllistetty oppimäärä"
+                                             :sv "Helt eller i huvudsak individualiserad lärokurs inom den grundläggande utbildningen"
+                                             :en "EN: Perusopetuksen pääosin tai kokonaan yksilöllistetty oppimäärä"}
+   :base-education-organized-regionly       {:fi "Perusopetuksen yksilöllistetty oppimäärä, opetus järjestetty toiminta-alueittain"
+                                             :sv "Individualiserad lärokurs inom den grundläggande utbildningen, som utgår från verksamhetsområden"
+                                             :en "EN: Perusopetuksen yksilöllistetty oppimäärä, opetus järjestetty toiminta-alueittain"}
+   :base-education-foreign                  {:fi "Ulkomailla suoritettu koulutus"
+                                             :sv "Utbildning utomlands"
+                                             :en "EN: Ulkomailla suoritettu koulutus"}
+   :base-education-no-graduation            {:fi "Ei päättötodistusta"
+                                             :sv "Inget avgångsbetyg"
+                                             :en "EN: Ei päättötodistusta"}
+   :study-language                          {:fi "Millä opetuskielellä olet suorittanut perusopetuksen?"
+                                             :sv "På vilket språk har du avlagt grundutbildningen?"
+                                             :en "EN: Millä opetuskielellä olet suorittanut perusopetuksen?"}
+   :language-finnish                        {:fi "suomi"
+                                             :sv "finska"
+                                             :en "Finnish"}
+   :language-swedish                        {:fi "ruotsi"
+                                             :sv "svenska"
+                                             :en "Swedish"}
+   :language-saame                          {:fi "saame"
+                                             :sv "samiska"
+                                             :en "EN: saame"}
+   :language-english                        {:fi "englanti"
+                                             :sv "engelska"
+                                             :en "English"}
+   :language-german                         {:fi "saksa"
+                                             :sv "tyska"
+                                             :en "German"}
+   :graduated-question                      {:fi "Oletko suorittanut Suomessa tai ulkomailla ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon?"
+                                             :sv "Har du avlagt en yrkesutbildning, gymnasiets lärokurs eller en högskoleexamen i Finland eller utomlands?"
+                                             :en "EN: Oletko suorittanut Suomessa tai ulkomailla ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon?"}
+   :graduated-notification                  {:fi "Koska olet suorittanut ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon, et voi hakea perusopetuksen jälkeisen koulutuksen yhteishaussa. \n"
+                                             :sv "Eftersom du redan har avlagt en yrkesinriktad examen, gymnasiets lärokurs eller en högskoleexamen kan du inte söka i gemensamma ansökan.\n\n"
+                                             :en "EN: Koska olet suorittanut ammatillisen tutkinnon, lukion oppimäärän tai korkeakoulututkinnon, et voi hakea perusopetuksen jälkeisen koulutuksen yhteishaussa. \n"}
+   :graduated-question-conditional          {:fi "Jos olet suorittanut jonkun seuraavista, valitse koulutus"
+                                             :sv "Om du har avlagt någon av följande, välj utbildning"
+                                             :en "EN: Jos olet suorittanut jonkun seuraavista, valitse koulutus"}
+   :tenth-grade                             {:fi "Kymppiluokka (perusopetuksen lisäopetus, vähintään 1100 tuntia) "
+                                             :sv "Tionde klassen (den grundläggande utbildningens påbyggnadsundervisning, minst 1 100 timmar)"
+                                             :en "EN: Kymppiluokka (perusopetuksen lisäopetus, vähintään 1100 tuntia) "}
+   :valma                                   {:fi "Ammatilliseen koulutukseen valmentava koulutus VALMA (vähintään 30 osaamispistettä)"
+                                             :sv "Utbildning som handleder för yrkesutbildning (VALMA) (minst 30 kompetenspoäng)"
+                                             :en "EN: Ammatilliseen koulutukseen valmentava koulutus VALMA (vähintään 30 osaamispistettä)"}
+   :luva                                    {:fi "Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA (vähintään 25 kurssia)"
+                                             :sv "Utbildning som förbereder för gymnasieutbildning som ordnas för invandrare (minst 25 kurser)"
+                                             :en "EN: Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA (vähintään 25 kurssia)"}
+   :kansanopisto                            {:fi "Kansanopiston lukuvuoden mittainen linja (vähintään 28 opiskelijaviikkoa)"
+                                             :sv "Ett år lång studielinje vid en folkhögskola (minst 28 studerandeveckor)"
+                                             :en "EN: Kansanopiston lukuvuoden mittainen linja (vähintään 28 opiskelijaviikkoa)"}
+   :free-civilized                          {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus (vähintään 17 opiskelijaviikkoa)"
+                                             :sv "Utbildning inom det fria bildningsarbetet som riktar sig till läropliktiga (minst 17 studerandeveckor)"
+                                             :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus (vähintään 17 opiskelijaviikkoa)"}
+   :year-of-graduation                      {:fi "Suoritusvuosi"
+                                             :sv "År då utbildningen har avlagts"
+                                             :en "EN: Suoritusvuosi"}
+   :year-of-graduation-question             {:fi "Suoritusvuosi"
+                                             :sv "År för avläggande av den grundläggande utbildningen"
+                                             :en "EN: Suoritusvuosi"}
+   :individualized-question                 {:fi "Oletko opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti?"
+                                             :sv "Har du studerat både matematik och modersmål enligt individualiserad lärokurs?"
+                                             :en "EN Oletko opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti?"}
+   :individualized-info                     {:fi "Jos sinulla on jo perusopetuksen päättötodistus, yksilöllistettyjen oppiaineiden arvosanat on merkitty tähdellä (*). Jos et ole vielä saanut päättötodistusta, voit kysyä neuvoa opinto-ohjaajalta."
+                                             :sv "Om du redan har den grundläggande utbildningens avgångsbetyg, är vitsorden för individualiserade lärokurser märkt med en stjärna (*). Om du inte ännu har fått avgångsbetyget, kan du be elevhandledaren om råd."
+                                             :en "EN: Jos sinulla on jo perusopetuksen päättötodistus, yksilöllistettyjen oppiaineiden arvosanat on merkitty tähdellä (*). Jos et ole vielä saanut päättötodistusta, voit kysyä neuvoa opinto-ohjaajalta."}
+   :individualized-harkinnanvaraisuus       {:fi "Koska olet opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti, hakemuksesi käsitellään harkinnanvaraisesti, jos haet ammatilliseen koulutukseen tai lukioon. \n\nJos haluat lähettää liitteitä harkinnanvaraisen haun tueksi, tarkista palautusosoite oppilaitoksista, joihin haet. "
+                                             :sv "Eftersom du har studerat både matematik och modersmål enligt individualiserad lärokurs, behandlas din ansökan via antagning enligt prövning om du söker till yrkesutbildning eller till gymnasium.\n\nOm du vill skicka in bilagor som stöd för din ansökan via prövning, kontrollera leveransadressen från de läroanstalter som du söker till."
+                                             :en "EN: Koska olet opiskellut sekä matematiikan että äidinkielen yksilöllistetyn oppimäärän mukaisesti, hakemuksesi käsitellään harkinnanvaraisesti, jos haet ammatilliseen koulutukseen tai lukioon. \n\nJos haluat lähettää liitteitä harkinnanvaraisen haun tueksi, tarkista palautusosoite oppilaitoksista, joihin haet. "}
+   :foreign-harkinnanvaraisuus              {:fi "Koska olet suorittanut tutkintosi ulkomailla, haet automaattisesti harkintaan perustuvassa valinnassa. Toimitathan kopion tutkintotodistuksestasi oppilaitoksiin."
+                                             :sv "Eftersom du har avlagt din examen utomlands, söker du automatiskt via antagning enligt prövning. Skicka en kopia av ditt examensbetyg till läroanstalterna."
+                                             :en "EN: Koska olet suorittanut tutkintosi ulkomailla, haet automaattisesti harkintaan perustuvassa valinnassa. Toimitathan kopion tutkintotodistuksestasi oppilaitoksiin."}
+   :copy-of-proof-of-certificate            {:fi "Kopio tutkintotodistuksesta "
+                                             :sv "Kopia av examensbetyget"
+                                             :en "EN: Kopio tutkintotodistuksesta "}
+   :copy-of-proof-of-certificate-info       {:fi "Tallenna tutkintotodistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). \n\n"
+                                             :sv "Spara ditt examensbetyg antingen i pdf-format eller som bildfil (t.ex. png eller jpeg)."
+                                             :en "EN: Tallenna tutkintotodistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). \n\n"}
+   :copy-of-certificate                     {:fi "Todistus, jolla haet "
+                                             :sv "Betyg som du söker med"
+                                             :en "EN: Todistus, jolla haet "}
+   :copy-of-certificate-info                {:fi "Tallenna todistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). "
+                                             :sv "Spara ditt betyg antingen i pdf-format eller som bildfil (t.ex. png eller jpeg)."
+                                             :en "EN: Tallenna todistuksesi joko pdf-muodossa tai kuvatiedostona (esim. png tai jpeg). "}
+   :no-graduation-info                      {:fi "Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "
+                                             :sv "Välj den här endast om du har avbrutit den grundläggande utbildningen.\n\nDu söker automatiskt via antagning enligt prövning."
+                                             :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}
+   })
 
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
