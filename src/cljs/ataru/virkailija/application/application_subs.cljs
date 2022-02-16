@@ -10,7 +10,8 @@
             [clojure.set :as set]
             [clojure.string :as string]
             [re-frame.core :as re-frame]
-            [ataru.tarjonta.haku :as haku]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.application.review-states :as review-states]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -722,6 +723,51 @@
     (-> db :application :review-settings :config setting-kwd (= :updating))))
 
 (re-frame/reg-sub
+  :application/review-settings-visible?
+  (fn [db _]
+    (get-in db [:application :review-settings :visible?])))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku?
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-haku]))
+  (fn [selected-haku _]
+    (haku/toisen-asteen-yhteishaku? selected-haku)))
+
+(re-frame/reg-sub
+  :application/can-edit-application?
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-application]))
+  (fn [application _]
+    (get application :can-edit?)))
+
+(def uneditable-for-toisen-asteen-yhteishaku-fields
+  (set/union
+    review-states/uneditable-for-toisen-asteen-yhteishaku-states
+    #{:score :notes}))
+
+(re-frame/reg-sub
+  :application/superuser?
+  (fn [db _]
+    (get-in db [:editor :user-info :superuser?])))
+
+(re-frame/reg-sub
+  :application/review-field-editable?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/can-edit-application?])
+     (re-frame/subscribe [:application/review-settings-visible?])
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+     (re-frame/subscribe [:application/superuser?])])
+  (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser?] [_ field-name]]
+    (and
+      (not settings-visible?)
+      can-edit-application?
+      (or
+        superuser?
+        (not toisen-asteen-yhteishaku?)
+        (not (contains? uneditable-for-toisen-asteen-yhteishaku-fields field-name))))))
+
+(re-frame/reg-sub
   :application/review-note-indexes-on-eligibility
   (fn [db [_]]
     (let [selected-hakukohde-oids (set (get-in db [:application :selected-review-hakukohde-oids]))]
@@ -1011,10 +1057,13 @@
   :application/can-deactivate-application
   (fn [_]
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
-     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])])
-  (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
+     (re-frame/subscribe [:application/valinnan-tulokset-valitun-hakemuksen-hakukohteille])
+     (re-frame/subscribe [:application/superuser?])
+     (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])])
+  (fn [[hakukohteet hakemuksen-valinnan-tulokset superuser? toisen-asteen-yhteishaku?]]
     (and (some? hakemuksen-valinnan-tulokset)
-         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
+         (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset))
+         (or (not toisen-asteen-yhteishaku?) superuser?))))
 
 
 (re-frame/reg-sub

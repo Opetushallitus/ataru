@@ -772,6 +772,10 @@ and (max-width: 1000px) {
   font-weight: lighter;
 }
 
+.application-handling__review-checkbox:disabled & + label {
+  color: @neutral-grey-600;
+}
+
 .application-handling__attachment-review-toggle-container {
   position: relative;
   margin-bottom: 15px;
@@ -926,6 +930,10 @@ and (max-width: 1000px) {
   color: @text-color;
   padding-top: 12px;
   .semibold;
+
+  &.application-handling__review-header--disabled {
+    color: @neutral-grey-500;
+  }
 }
 
 .application-handling__review-hakukohde-inputs {
@@ -1073,6 +1081,10 @@ and (max-width: 1000px) {
   flex-grow: 1;
   margin: 0px 0px 4px 0px;
   resize: vertical;
+
+  &:disabled {
+    background-color: @disabled-background-gray;
+  }
 }
 
 .application-handling__review-note-submit-button {
@@ -1979,6 +1991,10 @@ and (max-width: 1000px) {
   border-radius: 2px;
   width: 252px;
   flex: none;
+
+  &:disabled {
+    background-color: @disabled-background-gray;
+  }
 }
 
 /*
