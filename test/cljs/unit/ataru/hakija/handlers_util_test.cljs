@@ -84,7 +84,7 @@
     (is (= "followup-2-id" (:original-followup followup-2)))))
 
 (deftest correctly-duplicates-questions-with-combined-cases
-  (let [duplicated-questions (util/duplicate-questions-for-hakukohteet
+  (let [duplicated-questions (util/duplicate-questions-for-hakukohteet-during-form-load
                                [hakukohde-in-ryhma hakukohde-in-another-ryhma] ["hk1" "hk2"]
                                [question per-hakukohde-question {:children [{:id 3} {:id 4 :per-hakukohde true :belongs-to-hakukohderyhma ["a2"]}]} per-hakukohde-question-with-followups])
         [_ _ duplicated-question {[_ original-child duplicated-child :as children] :children} _ {[{followups :followups}] :options}] duplicated-questions]

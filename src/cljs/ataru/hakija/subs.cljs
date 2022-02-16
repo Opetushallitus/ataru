@@ -369,7 +369,11 @@
     [(re-frame/subscribe [:application/form-field id])
      (re-frame/subscribe [:application/editing?])])
   (fn [[field editing?] _]
-    (and editing? (:cannot-view field))))
+    (and editing?
+         (:cannot-view field)
+         (or (and (not (:original-question field))
+                  (not (:original-followup field)))
+             (:created-during-form-load field)))))
 
 (re-frame/reg-sub
   :application/cannot-edit?
@@ -377,7 +381,11 @@
     [(re-frame/subscribe [:application/form-field id])
      (re-frame/subscribe [:application/editing?])])
   (fn [[field editing?] _]
-    (and editing? (:cannot-edit field))))
+    (and editing?
+         (:cannot-edit field)
+         (or (and (not (:original-question field))
+                  (not (:original-followup field)))
+             (:created-during-form-load field)))))
 
 (re-frame/reg-sub
   :application/disabled?

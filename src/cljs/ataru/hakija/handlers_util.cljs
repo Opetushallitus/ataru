@@ -11,13 +11,16 @@
     (some is-ryhma-in-hakukohderyhmat (:hakukohderyhmat selected-hakukohde))))
 
 (defn- create-duplicate-question
-  [hakukohde-oid question]
+  ([hakukohde-oid question]
+   (create-duplicate-question hakukohde-oid question false))
+  ([hakukohde-oid question called-during-form-load?]
   (-> question
       (hsq/change-followups-for-question hakukohde-oid)
       (dissoc :per-hakukohde)
       (assoc :id (str (:id question) "_" hakukohde-oid)
              :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
-             :original-question (:id question))))
+             :original-question (:id question)
+             :created-during-form-load called-during-form-load?))))
 
 (defn- duplicate-question
   [tarjonta-hakukohteet hakukohde-oid questions question]
@@ -33,17 +36,18 @@
       (conj questions updated-question))
     (duplicate-question tarjonta-hakukohteet hakukohde-oid questions question)))
 
-(defn- duplicate-questions-for-hakukohde-inner
+(defn- duplicate-questions-for-hakukohde-inner-during-form-load
   [tarjonta-hakukohteet hakukohde-oids questions question]
   (if (and (:per-hakukohde question) (some #(is-hakukohde-in-hakukohderyhma-of-question tarjonta-hakukohteet % question) hakukohde-oids))
-    (let [valid-hakukohde-oids (filter #(is-hakukohde-in-hakukohderyhma-of-question tarjonta-hakukohteet % question) hakukohde-oids)
-          questions-to-add (map #(create-duplicate-question % question) valid-hakukohde-oids)]
+    (let [called-during-form-load? true
+          valid-hakukohde-oids (filter #(is-hakukohde-in-hakukohderyhma-of-question tarjonta-hakukohteet % question) hakukohde-oids)
+          questions-to-add (map #(create-duplicate-question % question called-during-form-load?) valid-hakukohde-oids)]
         (concat questions [question] questions-to-add))
     (concat questions [question])))
 
-(defn duplicate-questions-for-hakukohteet
+(defn duplicate-questions-for-hakukohteet-during-form-load
   [tarjonta-hakukohteet hakukohde-oids questions]
-  (let [duplicate-questions-fn (partial reduce (partial duplicate-questions-for-hakukohde-inner tarjonta-hakukohteet hakukohde-oids) [])
+  (let [duplicate-questions-fn (partial reduce (partial duplicate-questions-for-hakukohde-inner-during-form-load tarjonta-hakukohteet hakukohde-oids) [])
         duplicated-questions (duplicate-questions-fn questions)
         duplicate-children (fn [question]
                              (if (:children question)
