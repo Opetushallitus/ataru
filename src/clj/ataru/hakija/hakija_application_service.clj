@@ -30,7 +30,7 @@
     [clojure.java.jdbc :as jdbc]
     [clojure.string :as string]
     [taoensso.timbre :as log]
-    [ataru.tarjonta.haku :as haku]))
+    [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]))
 
 (defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
   {:pre [(boolean? is-modify?)]}
@@ -233,9 +233,10 @@
                                                    (map #(dissoc % :last-modified))
                                                    (util/group-by-first :field-id))
                                           {})
-        use-toisen-asteen-yhteishaku-restrictions? (and
-                                                     (not rewrite?)
-                                                     (haku/toisen-asteen-yhteishaku? (:haku application)))
+        use-toisen-asteen-yhteishaku-restrictions? (toisen-asteen-yhteishaku-logic/use-toisen-asteen-yhteishaku-restrictions?
+                                                     form-roles
+                                                     rewrite?
+                                                     (:haku application))
         form                          (cond (some? (:haku application))
                                             (hakija-form-service/fetch-form-by-haku-oid-and-id
                                              form-by-id-cache
