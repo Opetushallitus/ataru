@@ -131,6 +131,9 @@
 (def uneditable-for-toisen-asteen-yhteishaku-states
   #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :selection-state})
 
+(def uneditable-for-opinto-ohjaaja-only
+  #{:processing-state :hakukohde})
+
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
    ["checked" (:checked state-translations)]
