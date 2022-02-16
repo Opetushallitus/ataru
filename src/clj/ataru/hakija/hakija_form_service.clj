@@ -24,7 +24,8 @@
             [ataru.util :as util :refer [assoc?]]
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
-            [ataru.tarjonta.haku :as haku]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku
   [multiple? yhteishaku? haku-oid field]
@@ -323,9 +324,10 @@
    roles :- [form-role/FormRole]
    is-rewrite-secret-used? :- s/Bool]
   (let [haku      (tarjonta/get-haku tarjonta-service haku-oid)
-        use-toisen-asteen-yhteishaku-restrictions? (and
-                                                     (not is-rewrite-secret-used?)
-                                                     (haku/toisen-asteen-yhteishaku? haku))
+        use-toisen-asteen-yhteishaku-restrictions? (toisen-asteen-yhteishaku-logic/use-toisen-asteen-yhteishaku-restrictions?
+                                                     roles
+                                                     is-rewrite-secret-used?
+                                                     haku)
         latest-id (some-> haku
                           :ataru-form-key
                           form-store/latest-id-by-key)]
