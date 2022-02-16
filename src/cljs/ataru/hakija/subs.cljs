@@ -370,10 +370,7 @@
      (re-frame/subscribe [:application/editing?])])
   (fn [[field editing?] _]
     (and editing?
-         (:cannot-view field)
-         (or (and (not (:original-question field))
-                  (not (:original-followup field)))
-             (:created-during-form-load field)))))
+         (:cannot-view field))))
 
 (re-frame/reg-sub
   :application/cannot-edit?

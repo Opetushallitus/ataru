@@ -82,7 +82,7 @@
                                        field                     (fields-by-key (:key answer))
                                        original-followup-field   (fields-by-key (:original-followup answer))]
                                    (if (or (:cannot-view field) (:cannot-view original-question-field) (:cannot-view original-followup-field))
-                                     (old-answers-by-key (:key answer))
+                                     (or (old-answers-by-key (:key answer)) answer)
                                      answer)))]
     (assoc new-application :answers
             (concat (keep if-cannot-view-use-old (:answers new-application))
