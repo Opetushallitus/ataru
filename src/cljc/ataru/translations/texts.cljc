@@ -1591,7 +1591,7 @@
                                                      :en "Link to the feedback"}
    :show-results                                    {:fi "Näytä hakutulokset"
                                                      :sv "Visa ansökningar"
-                                                     :en "Show search results"}
+                                                     :en "Show applications"}
    :load-excel                                      {:fi "Lataa Excel"
                                                      :sv "Ladda ner Excel"
                                                      :en "Load excel"}
