@@ -1029,6 +1029,13 @@ JOIN application_reviews AS ar ON ar.application_key = la.key
 WHERE la.haku = :haku
     AND ar.state <> 'inactivated';
 
+--name: yesql-get-application-person-oids-for-haku
+SELECT la.person_oid AS person_oid
+FROM latest_applications la
+JOIN application_reviews AS ar ON ar.application_key = la.key
+WHERE la.haku = :haku
+  AND ar.state <> 'inactivated';
+
 --name: yesql-get-application-content-form-list-by-ids
 SELECT a.id, a.form_id AS "form", a.content
 FROM applications a

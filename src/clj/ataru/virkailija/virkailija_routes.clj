@@ -362,6 +362,14 @@
                 person-oid)
               (response/ok {}))
           (response/unauthorized {})))
+      (api/POST "/start-automatic-payment-obligation-job-for-haku/:haku-oid" {session :session}
+        :path-params [haku-oid :- s/Str]
+        (if (get-in session [:identity :superuser])
+          (do (automatic-payment-obligation/start-automatic-payment-obligation-job-for-haku
+                job-runner
+                haku-oid)
+              (response/ok {}))
+          (response/unauthorized {})))
       (api/POST "/start-submit-jobs/:application-id" {session :session}
         :path-params [application-id :- s/Int]
         (if (get-in session [:identity :superuser])

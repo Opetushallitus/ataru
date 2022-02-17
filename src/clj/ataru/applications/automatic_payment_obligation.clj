@@ -6,6 +6,7 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.applications.application-store :as application-store]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
+            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]))
 
 (defn nationality-finland? [person]
@@ -46,3 +47,18 @@
                    connection
                    "automatic-payment-obligation-job"
                    {:person-oid person-oid})))
+
+(defn start-automatic-payment-obligation-job-for-haku
+  [job-runner haku-oid]
+  (log/info (str "Running automatic payment obligation job for haku " haku-oid))
+  (let [person-oids  (application-store/get-application-person-oids-for-haku haku-oid)]
+    (log/info (str "Found " (count person-oids) " active applications for haku " haku-oid))
+    (doall
+      (for [person-oid person-oids]
+        (do
+          (log/info (str "Starting automatic payment obligation job for person " person-oid))
+          (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                                  (job/start-job job-runner
+                                                 connection
+                                                 "automatic-payment-obligation-job"
+                                                 {:person_oid person-oid})))))))
