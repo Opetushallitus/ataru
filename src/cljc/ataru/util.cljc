@@ -161,13 +161,6 @@
 (defn followups? [dropdown-options]
   (some some? (mapcat :followups dropdown-options)))
 
-(defn resolve-followups [dropdown-options value]
-  (and
-    value
-    (->> dropdown-options
-        (filter (comp (partial = value) :value))
-      (mapcat :followups))))
-
 (def ^:private b-limit 1024)
 (def ^:private kb-limit 102400)
 (def ^:private mb-limit (* 1024 1024 1024))

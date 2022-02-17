@@ -128,11 +128,11 @@
 (def hakukohde-review-type-names
   (map (comp name first) hakukohde-review-types))
 
-; States where applications are considered "complete" in the application handling UI
-(def complete-states ["inactivated"])
+(def uneditable-for-toisen-asteen-yhteishaku-states
+  #{:language-requirement :degree-requirement :eligibility-state :payment-obligation :selection-state})
 
-;; States which are not considered terminal, see above for terminal states
-(def incomplete-states ["active"])
+(def uneditable-for-opinto-ohjaaja-only
+  #{:processing-state :hakukohde})
 
 (def attachment-hakukohde-review-types
   [["not-checked" (:not-checked state-translations)]
