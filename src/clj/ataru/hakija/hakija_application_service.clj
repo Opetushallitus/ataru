@@ -73,9 +73,11 @@
   (let [fields-by-key      (->> (:content form)
                                 util/flatten-form-fields
                                 (util/group-by-first :id))
+        hakukohde-oids-in-new-application (set (:hakukohde new-application))
         old-answers-by-key (util/group-by-first :key (:answers old-application))
         original-followups-not-in-new (filter #(and (seq (:original-followup %))
                                                     (nil? (get-in new-application [:answers (keyword (:key %))]))
+                                                    (contains? hakukohde-oids-in-new-application (:duplikoitu-followup-hakukohde-oid %))
                                                     (:cannot-view (fields-by-key (:original-followup %)))) (:answers old-application))
         if-cannot-view-use-old (fn [answer]
                                  (let [original-question-field   (fields-by-key (:original-question answer))
