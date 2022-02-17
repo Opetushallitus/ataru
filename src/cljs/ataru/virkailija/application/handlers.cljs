@@ -239,7 +239,9 @@
                                                                                   question-answer-filter))
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                        :filters                      (get-in db [:application :filters])}}
+                                                                        :filters                      (get-in db [:application :filters])
+                                                                        :school-filter                (get-in db [:application :school-filter])
+                                                                        :classes-of-school            (get-in db [:application :classes-of-school])}}
                                             search-term
                                             form
                                             haku
@@ -1099,3 +1101,15 @@
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
      :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
+
+(reg-event-fx
+  :application/fetch-classes-of-school
+  (fn fetch-classes-of-school [_ [_ oppilaitos-oid]]
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/applications/oppilaitos/" oppilaitos-oid "/luokat")
+            :handler-or-dispatch :application/handle-fetch-classes-of-school-response}}))
+
+(reg-event-db
+  :application/handle-fetch-classes-of-school-response
+  (fn handle-fetch-classes-of-school-response [db [_ classes]]
+    (assoc-in db [:application :selected-school-classes] (sort classes))))

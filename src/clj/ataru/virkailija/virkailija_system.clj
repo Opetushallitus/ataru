@@ -208,7 +208,9 @@
                             :person-service
                             :valinta-tulos-service
                             :koodisto-cache
-                            :job-runner])
+                            :job-runner
+                            :suoritus-service
+                            :form-by-id-cache])
 
     :session-store (create-session-store (db/get-datasource :db))
 
@@ -229,7 +231,8 @@
                             :temp-file-store
                             :audit-logger
                             :application-service
-                            :session-store]
+                            :session-store
+                            :suoritus-service]
                            (map first caches))))
 
     :server-setup {:port      http-port
@@ -239,12 +242,11 @@
              (server/new-server)
              [:server-setup :handler])
 
-    :suoritusrekisteri-cas-client (cas/new-client "/suoritusrekisteri" "j_spring_cas_security_check"
-                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))
-
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
-                       [:suoritusrekisteri-cas-client])
+                       [:suoritusrekisteri-cas-client
+                        :oppilaitoksen-opiskelijat-cache
+                        :oppilaitoksen-luokat-cache])
 
     :job-runner (component/using
                  (job/new-job-runner (merge virkailija-jobs/job-definitions

@@ -318,6 +318,7 @@ WHERE a.key = :application_key;
 SELECT
   a.haku,
   a.hakukohde,
+  a.person_oid,
   (SELECT organization_oid
    FROM forms
    WHERE key = (SELECT key FROM forms WHERE id = a.form_id)
@@ -329,6 +330,17 @@ LEFT JOIN applications AS la
      la.id > a.id
 WHERE la.id IS NULL AND
       a.key IN (:application_keys);
+
+-- name: yesql-applications-person-and-hakukohteet-by-haku
+SELECT
+    a.person_oid,
+    a.hakukohde
+FROM applications AS a
+LEFT JOIN applications AS la
+   ON la.key = a.key AND
+      la.id > a.id
+WHERE la.id IS NULL AND
+      a.haku = :haku;
 
 -- name: yesql-persons-applications-authorization-data
 SELECT a.haku,
@@ -1016,3 +1028,8 @@ FROM latest_applications la
 JOIN application_reviews AS ar ON ar.application_key = la.key
 WHERE la.haku = :haku
     AND ar.state <> 'inactivated';
+
+--name: yesql-get-application-content-form-list-by-ids
+SELECT a.id, a.form_id AS "form", a.content
+FROM applications a
+WHERE a.id IN (:ids);

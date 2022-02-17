@@ -110,7 +110,9 @@
 
     :suoritus-service (component/using
                        (suoritus-service/new-suoritus-service)
-                       [:suoritusrekisteri-cas-client])
+                       [:suoritusrekisteri-cas-client
+                        :oppilaitoksen-opiskelijat-cache
+                        :oppilaitoksen-luokat-cache])
 
     :s3-client (component/using
                 (s3-client/new-client)
@@ -139,7 +141,8 @@
                             :person-service
                             :valinta-tulos-service
                             :koodisto-cache
-                            :job-runner])
+                            :job-runner
+                            :form-by-id-cache])
 
     :handler (component/using
                (handler/new-handler)

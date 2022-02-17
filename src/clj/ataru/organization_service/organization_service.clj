@@ -67,7 +67,8 @@
    "1.2.246.562.10.0439846"              {:name {:fi "Test org 2"}, :oid "1.2.246.562.10.0439846" :type :organization}
    "1.2.246.562.28.2"                    {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}
    "1.2.246.562.10.10826252480"          {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization}
-   "form-access-control-test-oppilaitos" {:name {:fi "Testioppilaitos"}, :oid "form-access-control-test-oppilaitos" :type :organization}})
+   "form-access-control-test-oppilaitos" {:name {:fi "Testioppilaitos"}, :oid "form-access-control-test-oppilaitos" :type :organization}
+   "1.2.246.562.10.10826252479"          {:name {:fi "Tarjoajan oppilaitos"} :oid "1.2.246.562.10.10826252479" :type :organization}})
 
 (defn fake-orgs-by-root-orgs [root-orgs]
   (some->> root-orgs
@@ -96,3 +97,18 @@
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeOrganizationService)
     (->IntegratedOrganizationService nil nil)))
+
+(def oppilaitostyyppi-peruskoulut "oppilaitostyyppi_11#1")
+(def oppilaitostyyppi-peruskouluasteen-erityiskoulut "oppilaitostyyppi_12#1")
+(def oppilaitostyyppi-perus-ja-lukioasteen-koulut "oppilaitostyyppi_19#1")
+
+(defn is-perusaste-organization?
+  [organization]
+  (#{oppilaitostyyppi-peruskoulut
+     oppilaitostyyppi-peruskouluasteen-erityiskoulut
+     oppilaitostyyppi-perus-ja-lukioasteen-koulut}
+   (:oppilaitostyyppi organization)))
+
+(defn is-oppilaitos-organization?
+  [organization]
+  (some #(= "OPPILAITOS" %) (:organisaatiotyypit organization)))

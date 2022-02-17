@@ -54,7 +54,23 @@
                                         :oikeus  "CRUD"}]}
                     {:organisaatioOid "1.2.246.562.10.10826252480"
                      :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
-                                        :oikeus  "CRUD"}]}]}})
+                                        :oikeus  "CRUD"}]}]}
+   "1.2.246.562.11.33333333333"
+   {:oidHenkilo    "1.2.246.562.11.11111111013"
+    :organisaatiot [{:organisaatioOid "1.2.246.562.10.0439845"
+                     :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "opinto-ohjaaja"}]}
+                    {:organisaatioOid "1.2.246.562.28.1"
+                     :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "opinto-ohjaaja"}]}]}})
 
 (defrecord FakeKayttooikeusService []
   KayttooikeusService

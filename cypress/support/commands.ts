@@ -4,7 +4,7 @@ declare global {
   // eslint-disable-next-line no-redeclare
   namespace Cypress {
     interface Chainable {
-      kirjauduVirkailijanNakymaan: () => Chainable<Window>
+      kirjauduVirkailijanNakymaan: (ticket?: string) => Chainable<Window>
 
       poistaLomake: (lomakkeenAvain: string) => Chainable<Response>
 
@@ -16,8 +16,8 @@ declare global {
   }
 }
 
-Cypress.Commands.add('kirjauduVirkailijanNakymaan', () =>
-  cy.visit(reitit.virkailija.haeVirkailijanNakymaanKirjautumisenOsoite())
+Cypress.Commands.add('kirjauduVirkailijanNakymaan', (ticket?: string) =>
+  cy.visit(reitit.virkailija.haeVirkailijanNakymaanKirjautumisenOsoite(ticket))
 )
 
 Cypress.Commands.add('poistaLomake', (lomakkeenAvain: string) =>

@@ -9,7 +9,8 @@
             [clojure.core.match :refer [match]]
             [clojure.set :as set]
             [clojure.string :as string]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [ataru.tarjonta.haku :as haku]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -113,7 +114,6 @@
   (fn [_ [_ hakukohde-oid]]
     (when hakukohde-oid
       (str "/lomake-editori/applications/hakukohde/" hakukohde-oid))))
-
 
 (re-frame/reg-sub
  :application/list-heading
@@ -252,11 +252,30 @@
         (not= (get-in db [:application :ensisijaisesti?])
               (get-in db [:application :ensisijaisesti?-checkbox]))
         (not= (get-in db [:application :rajaus-hakukohteella])
-              (get-in db [:application :rajaus-hakukohteella-value])))))
+              (get-in db [:application :rajaus-hakukohteella-value]))
+        (not= (get-in db [:application :school-filter])
+              (get-in db [:application :school-filter-pending-value]))
+        (not= (get-in db [:application :classes-of-school])
+              (get-in db [:application :classes-of-school-pending-value])))))
 
 (re-frame/reg-sub
   :application/selected-hakukohderyhma-hakukohteet
   selected-hakukohderyhma-hakukohteet)
+
+(re-frame/reg-sub
+  :application/selected-haku
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[selected-haku-oid haut] _]
+    (get haut selected-haku-oid)))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku?
+  (fn [_ _]
+    (re-frame/subscribe [:application/selected-haku]))
+  (fn [haku _]
+    (haku/toisen-asteen-yhteishaku? haku)))
 
 (re-frame/reg-sub
   :application/show-mass-update-link?
@@ -996,3 +1015,44 @@
   (fn [[hakukohteet hakemuksen-valinnan-tulokset]]
     (and (some? hakemuksen-valinnan-tulokset)
          (not (jollakin-hakukohteella-on-valinnan-tulos hakukohteet hakemuksen-valinnan-tulokset)))))
+
+
+(re-frame/reg-sub
+  :application/pending-selected-school
+  (fn [db _]
+    (get-in db [:application :school-filter-pending-value])))
+
+(re-frame/reg-sub
+  :application/classes-of-selected-school
+  (fn [db _]
+    (get-in db [:application :selected-school-classes])))
+
+(re-frame/reg-sub
+  :application/pending-classes-of-school
+  (fn [db _]
+    (get-in db [:application :classes-of-school-pending-value])))
+
+(re-frame/reg-sub
+  :application/schools-of-departure
+  (fn [db _]
+    (get-in db [:editor :organizations :schools-of-departure])))
+
+(re-frame/reg-sub
+  :application/schools-of-departure-filtered
+  (fn [db _]
+    (get-in db [:editor :organizations :schools-of-departure-filtered])))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku-selected?
+  (fn [_]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[selected-haku-oid haut]]
+    (and
+      (not (nil? selected-haku-oid))
+      (haku/toisen-asteen-yhteishaku? (get haut selected-haku-oid)))))
+
+(re-frame/reg-sub
+  :application/toisen-asteen-yhteishaku-oid?
+  (fn [db [_ haku-oid]]
+    (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))

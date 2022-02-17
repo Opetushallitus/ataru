@@ -10,7 +10,13 @@
     [ataru.hakukohde.hakukohde-store :as hakukohde-store]
     [clj-time.core :as t]
     [clj-time.coerce :as c]
-    [taoensso.timbre :as log]))
+    [taoensso.timbre :as log]
+    [ataru.tarjonta.haku :as haku]
+    [ataru.user-rights :as user-rights]
+    [ataru.applications.application-service :as application-service]
+    [ataru.suoritus.suoritus-service :as suoritus-service]
+    [ataru.applications.suoritus-filter :as suoritus-filter]
+    [clojure.set :as set]))
 
 (defn- raw-haku-row->hakukohde
   [{:keys [hakukohde application-count processed processing]}]
@@ -65,6 +71,59 @@
           hkp? (memoize (fn [haku-oid] (hakukierros-paattynyt? ohjausparametrit-service now haku-oid)))]
       (remove #(hkp? (:haku %)) rows))))
 
+(defn- haut-with-hakukierros-paattynyt-removed
+  [ohjausparametrit-service get-haut-cache show-hakukierros-paattynyt?]
+  (->> (cache/get-from get-haut-cache :haut)
+       (remove-if-hakukierros-paattynyt ohjausparametrit-service
+         show-hakukierros-paattynyt?)))
+
+(defn- keep-haut-authorized-by-form-or-hakukohde
+  [tarjonta-service authorized-organization-oids haut]
+  (->> haut
+       (map (fn [h] (update h :hakukohde vector)))
+       (aac/filter-authorized-by-form-or-hakukohde tarjonta-service authorized-organization-oids)
+       (map (fn [h] (update h :hakukohde first)))))
+
+(defn- toisen-asteen-yhteishaut-oids
+  [tarjonta-service haku-authorized-by-form-or-hakukohde? haut]
+  (->> haut
+       (map :haku)
+       distinct
+       (remove haku-authorized-by-form-or-hakukohde?)
+       (map (partial tarjonta/get-haku tarjonta-service))
+       (filter haku/toisen-asteen-yhteishaku?)
+       (map :oid)
+       set))
+
+(defn- haut-for-opinto-ohjaaja
+  [tarjonta-service session haut-authorized-by-form-or-hakukohde haut]
+  (if (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+    (let [haku-authorized-by-form-or-hakukohde? (set (map :haku haut-authorized-by-form-or-hakukohde))
+          toisen-asteen-yhteishaku-oid?         (toisen-asteen-yhteishaut-oids
+                                                  tarjonta-service
+                                                  haku-authorized-by-form-or-hakukohde?
+                                                  haut)]
+      (filter (comp toisen-asteen-yhteishaku-oid? :haku) haut))
+    []))
+
+(defn- get-tarjonta-haut-for-ordinary-user
+  [ohjausparametrit-service tarjonta-service get-haut-cache show-hakukierros-paattynyt? session authorized-organization-oids]
+  (let [haut                                 (haut-with-hakukierros-paattynyt-removed
+                                               ohjausparametrit-service
+                                               get-haut-cache
+                                               show-hakukierros-paattynyt?)
+        haut-authorized-by-form-or-hakukohde (keep-haut-authorized-by-form-or-hakukohde
+                                               tarjonta-service
+                                               authorized-organization-oids
+                                               haut)
+        haut-for-opinto-ohjaaja              (haut-for-opinto-ohjaaja
+                                               tarjonta-service
+                                               session
+                                               haut-authorized-by-form-or-hakukohde
+                                               haut)]
+    (-> (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde)
+      handle-hakukohteet)))
+
 (defn- get-tarjonta-haut
   [ohjausparametrit-service
    organization-service
@@ -77,15 +136,12 @@
    organization-service
    [:view-applications :edit-applications]
    (constantly {})
-   #(->> (cache/get-from get-haut-cache :haut)
-         (remove-if-hakukierros-paattynyt ohjausparametrit-service
-                                          show-hakukierros-paattynyt?)
-         (map (fn [h] (update h :hakukohde vector)))
-         (aac/filter-authorized tarjonta-service
-                                (some-fn (partial aac/authorized-by-form? %)
-                                         (partial aac/authorized-by-tarjoajat? %)))
-         (map (fn [h] (update h :hakukohde first)))
-         handle-hakukohteet)
+   (partial get-tarjonta-haut-for-ordinary-user
+     ohjausparametrit-service
+     tarjonta-service
+     get-haut-cache
+     show-hakukierros-paattynyt?
+     session)
    #(->> (cache/get-from get-haut-cache :haut)
          (remove-if-hakukierros-paattynyt ohjausparametrit-service
                                           show-hakukierros-paattynyt?)
@@ -107,7 +163,7 @@
          (map remove-organization-oid)
          (util/group-by-first :key))))
 
-(defn- add-selection-to-hakukohteet
+(defn- add-kevyt-valinta-to-hakukohteet
   [hakukohteet-without-selection]
     (let [hakukohdeoids (map #(:oid %) hakukohteet-without-selection)
           hakukohde-oids-with-selection-state-used (hakukohde-store/selection-state-used-in-hakukohdes? hakukohdeoids)
@@ -117,8 +173,86 @@
                       hakukohde
                       :selection-state-used (some? (some #(= hakukohde-oid %) hakukohde-oids-with-selection-state-used)))))
              (util/group-by-first :oid))]
-              hakukohteet)
-          )
+              hakukohteet))
+
+(defn filter-and-count-hakukohteet-by-students
+  [toisen-asteen-yhteishaut hakukohteet applications-persons-and-hakukohteet students-in-lahtokoulut]
+    (let [toisen-asteen-yhteishaun-hakukohteet (filter #(contains? toisen-asteen-yhteishaut (:haku-oid %)) hakukohteet)
+          allowed-applications-persons-and-hakukohteet (filter #(contains? students-in-lahtokoulut (:person_oid %))
+                                                               applications-persons-and-hakukohteet)
+          hakukohde-counts       (->> allowed-applications-persons-and-hakukohteet
+                                      (mapcat :hakukohde)
+                                      (reduce (fn [p n] (update p n #(+ 1 (or % 0)))) {}))
+          allowed-hakukohde-oids (->> allowed-applications-persons-and-hakukohteet
+                                      (mapcat :hakukohde)
+                                      set)
+          update-hakukohde-counts-fn (fn [hk] (assoc hk :application-count (get hakukohde-counts (:oid hk))))
+          filtered-hakukohteet    (->> toisen-asteen-yhteishaun-hakukohteet
+                                       (filter #(contains? allowed-hakukohde-oids (:oid %)))
+                                       (map update-hakukohde-counts-fn))
+          hakukohteet-by-haku-fn  (fn [haku] (filter #(= haku (:haku-oid %)) filtered-hakukohteet))
+          count-applications      (fn [haku]
+                                    (let [hakukohde-oidit (set (map :oid (:hakukohteet haku)))]
+                                      (->> allowed-applications-persons-and-hakukohteet
+                                           (filter #(not (= (count (:hakukohde %)) (count (set/difference (set (:hakukohde %)) hakukohde-oidit)))))
+                                           (count))))]
+          (->> toisen-asteen-yhteishaut
+              (map (fn [haku] {:haku haku :hakukohteet (hakukohteet-by-haku-fn haku)}))
+              (map #(assoc % :total (count-applications %))))))
+
+(defn- limit-allowed-hakukohteet-for-opinto-ohjaaja
+  [suoritus-service application-service hakukohteet haut lahtokoulut]
+  (when-let [toisen-asteen-yhteishaut (->> (keys haut)
+                                           (map #(get haut %))
+                                           (filter haku/toisen-asteen-yhteishaku?)
+                                           (map :oid)
+                                           set)]
+    (let [hakuaika-end-years       (->> toisen-asteen-yhteishaut
+                                        (map #(get haut %))
+                                        (mapcat :hakuajat)
+                                        (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                                        (distinct))
+          persons-in-lahtokoulut (->> lahtokoulut
+                                      (mapcat #(suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle
+                                                 suoritus-service
+                                                 %
+                                                 hakuaika-end-years
+                                                 (suoritus-filter/luokkatasot-for-suoritus-filter)))
+                                      (map :person-oid)
+                                      set)
+          applications-persons-and-hakukohteet (mapcat
+                                                 #(application-service/get-applications-persons-and-hakukohteet-by-haku application-service %)
+                                                 toisen-asteen-yhteishaut)]
+      (filter-and-count-hakukohteet-by-students toisen-asteen-yhteishaut hakukohteet applications-persons-and-hakukohteet persons-in-lahtokoulut))))
+
+(defn- tarjonta-haut-with-hakukohteet-that-user-can-access
+  [session
+   organization-service
+   suoritus-service
+   application-service
+   hakukohteet
+   haut
+   tarjonta-haut]
+  (let [allowed-hakukohteet-with-counts (when
+                                          (and (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
+                                               (user-rights/all-organizations-have-opinto-ohjaaja-rights? session))
+                                          (limit-allowed-hakukohteet-for-opinto-ohjaaja
+                                            suoritus-service
+                                            application-service
+                                            hakukohteet
+                                            haut
+                                            (aac/organization-oids-for-opinto-ohjaaja organization-service session)))]
+    (if allowed-hakukohteet-with-counts
+      (util/map-kv
+        tarjonta-haut
+        (fn [haku]
+          (let [haku-with-allowed (first (filter #(= (:haku %) (:oid haku)) allowed-hakukohteet-with-counts))
+                hakukohteet-to-show
+                (filter
+                  #(some (fn [hk] (= (:oid %) (:oid hk))) (:hakukohteet haku-with-allowed))
+                  (:hakukohteet haku))]
+            (assoc haku :hakukohteet hakukohteet-to-show :haku-application-count (:total haku-with-allowed)))))
+      tarjonta-haut)))
 
 (def time-limit-to-fetch-haut 12)
 
@@ -126,6 +260,8 @@
   [ohjausparametrit-service
    organization-service
    tarjonta-service
+   suoritus-service
+   application-service
    get-haut-cache
    session
    show-hakukierros-paattynyt?]
@@ -140,21 +276,29 @@
         haut (->> (keys tarjonta-haut)
                   (keep #(tarjonta/get-haku tarjonta-service %))
                   (util/group-by-first :oid))
-        hakukohteet-without-selection (->> (keys tarjonta-haut)
-                                            (mapcat #(tarjonta/hakukohde-search
-                                                       tarjonta-service
-                                                       %
-                                                       nil)))
-        hakukohteet (add-selection-to-hakukohteet hakukohteet-without-selection)
+        hakukohteet (->> (keys tarjonta-haut)
+                      (mapcat #(tarjonta/hakukohde-search
+                                 tarjonta-service
+                                 %
+                                 nil)))
+        hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet hakukohteet)
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
+        tarjonta-haut-with-updated-counts (tarjonta-haut-with-hakukohteet-that-user-can-access
+                                            session
+                                            organization-service
+                                            suoritus-service
+                                            application-service
+                                            hakukohteet
+                                            haut
+                                            tarjonta-haut)
         duration (quot (- (System/currentTimeMillis) start-time) 1000)]
 
           (when (>= duration time-limit-to-fetch-haut)
             (log/warn "Duration of fetching haut is over the time limit, duration: " duration " s, limit: " time-limit-to-fetch-haut " s."))
-          {:tarjonta-haut    tarjonta-haut
+          {:tarjonta-haut    tarjonta-haut-with-updated-counts
            :direct-form-haut direct-form-haut
            :haut             haut
-           :hakukohteet      hakukohteet
+           :hakukohteet      hakukohteet-with-kevyt-valinta
            :hakukohderyhmat  hakukohderyhmat}))

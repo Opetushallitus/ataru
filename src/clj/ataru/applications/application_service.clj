@@ -26,7 +26,11 @@
     [ataru.schema.form-schema :as ataru-schema]
     [ataru.organization-service.session-organizations :as session-orgs]
     [schema.core :as s]
-    [ataru.dob :as dob])
+    [ataru.dob :as dob]
+    [ataru.suoritus.suoritus-service :as suoritus-service]
+    [ataru.applications.suoritus-filter :as suoritus-filter]
+    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
+    [ataru.cache.cache-service :as cache])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -314,28 +318,27 @@
 
 (defn- get-application-list-by-query
     [person-service
+     organization-service
      tarjonta-service
-     authorized-organization-oids
+     suoritus-service
+     session
      query
      sort
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          authorized-applications (aac/filter-authorized
-                                   tarjonta-service
-                                   (some-fn (partial aac/authorized-by-form? authorized-organization-oids)
-                                            (partial aac/authorized-by-tarjoajat? authorized-organization-oids))
-                                   applications)]
-      {:applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
-                       (application-filtering/filter-applications
-                        (populate-applications-with-person-data person-service authorized-applications)
-                        states-and-filters)
-                       (populate-applications-with-person-data
-                        person-service
-                        (application-filtering/filter-applications authorized-applications states-and-filters)))
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)
+          filtered-applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
+                                   (application-filtering/filter-applications
+                                     (populate-applications-with-person-data person-service authorized-applications)
+                                     states-and-filters)
+                                   (populate-applications-with-person-data
+                                     person-service
+                                     (application-filtering/filter-applications authorized-applications states-and-filters)))]
+      {:applications filtered-applications
        :sort         (merge {:order-by (:order-by sort)
                              :order    (:order sort)}
-                            (when-let [a (first (drop 999 applications))]
+                            (when-let [a (first (drop 999 filtered-applications))]
                               {:offset (case (:order-by sort)
                                          "applicant-name" {:key            (:key a)
                                                            :last-name      (:last-name a)
@@ -363,83 +366,6 @@
                {:ensisijainen-hakukohde [hakukohde-oid]}
                {:hakukohde [hakukohde-oid]}))))
 
-(s/defn ^:always-validate query-applications-paged
-    [organization-service
-     person-service
-     tarjonta-service
-     session
-     params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
-    (let [{:keys [form-key
-                  hakukohde-oid
-                  hakukohderyhma-oid
-                  haku-oid
-                  ensisijaisesti
-                  rajaus-hakukohteella
-                  ssn
-                  dob
-                  email
-                  name
-                  person-oid
-                  application-oid
-                  attachment-review-states
-                  option-answers
-                  sort
-                  states-and-filters]} params
-          ensisijaisesti               (boolean ensisijaisesti)
-          authorized-organization-oids (session-orgs/run-org-authorized
-                                        session
-                                        organization-service
-                                        [:view-applications :edit-applications]
-                                        (fn [] (constantly false))
-                                        (fn [oids] #(contains? oids %))
-                                        (fn [] (constantly true)))
-          ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
-                                         (filter (fn [hakukohde]
-                                                   (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
-                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
-      (when-let [query (->and-query
-                        (cond (some? form-key)
-                              (->form-query form-key)
-                              (and (some? haku-oid) (some? hakukohderyhma-oid))
-                              (->hakukohderyhma-query
-                               ryhman-hakukohteet
-                               authorized-organization-oids
-                               haku-oid
-                               ensisijaisesti
-                               rajaus-hakukohteella)
-                              (some? hakukohde-oid)
-                              (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
-                              (some? haku-oid)
-                              (->haku-query haku-oid)
-                              :else
-                              (->empty-query))
-                        (cond (some? ssn)
-                              (->ssn-query ssn)
-                              (and (some? dob) (dob/dob? dob))
-                              (->dob-query dob)
-                              (some? email)
-                              (->email-query email)
-                              (some? name)
-                              (->name-query name)
-                              (some? person-oid)
-                              (->person-oid-query person-oid)
-                              (some? application-oid)
-                              (->application-oid-query application-oid))
-                        (->attachment-review-states-query attachment-review-states)
-                        (->option-answers-query option-answers))]
-        (get-application-list-by-query
-         person-service
-         tarjonta-service
-         authorized-organization-oids
-         query
-         sort
-         (add-selected-hakukohteet states-and-filters
-                                   haku-oid
-                                   hakukohde-oid
-                                   hakukohderyhma-oid
-                                   rajaus-hakukohteella
-                                   ryhman-hakukohteet)))))
-
 (defprotocol ApplicationService
   (get-person [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
@@ -454,7 +380,10 @@
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys])
   (siirto-applications [this session hakukohde-oid application-keys])
-  (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset]))
+  (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
+  (get-applications-paged [this session params])
+  (get-applications-persons-and-hakukohteet-by-haku [this haku]))
+
 
 (defrecord CommonApplicationService [organization-service
                                      tarjonta-service
@@ -464,7 +393,9 @@
                                      valinta-tulos-service
                                      koodisto-cache
                                      job-runner
-                                     liiteri-cas-client]
+                                     liiteri-cas-client
+                                     suoritus-service
+                                     form-by-id-cache]
   ApplicationService
   (get-person
     [_ application]
@@ -479,6 +410,7 @@
     (when-let [application (aac/get-latest-application-by-key
                              organization-service
                              tarjonta-service
+                             suoritus-service
                              audit-logger
                              session
                              application-key)]
@@ -523,7 +455,7 @@
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]
-    (when (aac/applications-access-authorized? organization-service tarjonta-service session application-keys [:view-applications :edit-applications])
+    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service session application-keys [:view-applications :edit-applications])
       (let [applications                     (application-store/get-applications-by-keys application-keys)
             application-reviews              (->> applications
                                                   (map :key)
@@ -642,6 +574,7 @@
     (when-let [application-id (:id (aac/get-latest-application-by-key
                                     organization-service
                                     tarjonta-service
+                                    suoritus-service
                                     audit-logger
                                     session
                                     application-key))]
@@ -666,12 +599,12 @@
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
-    (when (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [application-key]
-           [:view-applications :edit-applications])
+    (when (aac/application-view-authorized?
+            organization-service
+            tarjonta-service
+            suoritus-service
+            session
+            application-key)
       (application-store/get-application-version-changes koodisto-cache
                                                          application-key)))
 
@@ -730,7 +663,111 @@
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset))))
+      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+
+  (get-applications-paged
+    [_ session params]
+    (let [{:keys [form-key
+                  hakukohde-oid
+                  hakukohderyhma-oid
+                  haku-oid
+                  ensisijaisesti
+                  rajaus-hakukohteella
+                  ssn
+                  dob
+                  email
+                  name
+                  person-oid
+                  application-oid
+                  attachment-review-states
+                  option-answers
+                  sort
+                  states-and-filters]} params
+          ensisijaisesti               (boolean ensisijaisesti)
+          organization-oid-authorized? (session-orgs/run-org-authorized
+                                         session
+                                         organization-service
+                                         [:view-applications :edit-applications]
+                                         (fn [] (constantly false))
+                                         (fn [oids] #(contains? oids %))
+                                         (fn [] (constantly true)))
+          ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
+                                         (filter (fn [hakukohde]
+                                                   (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
+                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
+      (when-let [query (->and-query
+                         (cond (some? form-key)
+                               (->form-query form-key)
+                               (and (some? haku-oid) (some? hakukohderyhma-oid))
+                               (->hakukohderyhma-query
+                                 ryhman-hakukohteet
+                                 organization-oid-authorized?
+                                 haku-oid
+                                 ensisijaisesti
+                                 rajaus-hakukohteella)
+                               (some? hakukohde-oid)
+                               (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
+                               (some? haku-oid)
+                               (->haku-query haku-oid)
+                               :else
+                               (->empty-query))
+                         (cond (some? ssn)
+                               (->ssn-query ssn)
+                               (and (some? dob) (dob/dob? dob))
+                               (->dob-query dob)
+                               (some? email)
+                               (->email-query email)
+                               (some? name)
+                               (->name-query name)
+                               (some? person-oid)
+                               (->person-oid-query person-oid)
+                               (some? application-oid)
+                               (->application-oid-query application-oid))
+                         (->attachment-review-states-query attachment-review-states)
+                         (->option-answers-query option-answers))]
+        (let [applications
+              (get-application-list-by-query
+                person-service
+                organization-service
+                tarjonta-service
+                suoritus-service
+                session
+                query
+                sort
+                (add-selected-hakukohteet states-and-filters
+                                          haku-oid
+                                          hakukohde-oid
+                                          hakukohderyhma-oid
+                                          rajaus-hakukohteella
+                                          ryhman-hakukohteet))
+              filtered-applications-by-oppilaitos-and-luokat
+              (suoritus-filter/filter-applications-by-oppilaitos-and-luokat
+                (:applications applications)
+                (fn [haku-oid]
+                  (tarjonta-service/get-haku tarjonta-service haku-oid))
+                (fn [oppilaitos-oid year]
+                  (let [luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+                    (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
+                (:school-filter states-and-filters)
+                (:classes-of-school states-and-filters))
+              fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
+              fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
+              filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
+                                                          fetch-applications-content-fn
+                                                          fetch-form-fn
+                                                          filtered-applications-by-oppilaitos-and-luokat
+                                                          (:filters states-and-filters))]
+          (assoc applications :applications filter-applications-by-harkinnanvaraisuus)))))
+
+  (get-applications-persons-and-hakukohteet-by-haku
+    [_ haku]
+    (application-store/get-applications-persons-and-hakukohteet haku)))
+
+(s/defn ^:always-validate query-applications-paged
+  [application-service
+   session
+   params :- ataru-schema/ApplicationQuery] :- ataru-schema/ApplicationQueryResponse
+  (get-applications-paged application-service session params))
 
 (defn remove-review-note [note-id]
   (application-store/remove-review-note note-id))
@@ -780,4 +817,4 @@
           job-runner
           id)))))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil))

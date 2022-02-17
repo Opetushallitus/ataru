@@ -78,7 +78,10 @@
             [ataru.user-rights :as user-rights]
             [ataru.util :as util]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
-            [ataru.temp-file-storage.temp-file-store :as temp-file-store])
+            [ataru.temp-file-storage.temp-file-store :as temp-file-store]
+            [ataru.suoritus.suoritus-service :as suoritus-service]
+            [clj-time.core :as time]
+            [ataru.applications.suoritus-filter :as suoritus-filter])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -210,7 +213,8 @@
                           person-service
                           get-haut-cache
                           audit-logger
-                          application-service]
+                          application-service
+                          suoritus-service]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -419,13 +423,19 @@
         :summary "Return applications header-level info for form"
         :return ataru-schema/ApplicationQueryResponse
         (if-let [result (application-service/query-applications-paged
-                          organization-service
-                          person-service
-                          tarjonta-service
+                          application-service
                           session
                           body)]
           (response/ok result)
           (response/bad-request)))
+
+      (api/GET "/oppilaitos/:oppilaitos-oid/luokat" {session :session}
+        :path-params [oppilaitos-oid :- String]
+        :summary "Returns classes of given school"
+        :return [String]
+        (let [year (suoritus-filter/year-for-suoritus-filter (time/now))
+              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
+          (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year luokkatasot))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
@@ -467,11 +477,12 @@
       (api/GET "/:application-key/modify" {session :session}
         :path-params [application-key :- String]
         :summary "Get HTTP redirect response for modifying a single application in Hakija side"
-        (let [allowed? (access-controlled-application/applications-access-authorized? organization-service
-                                                                                      tarjonta-service
-                                                                                      session
-                                                                                      [application-key]
-                                                                                      [:edit-applications])]
+        (let [allowed? (access-controlled-application/application-edit-authorized?
+                         organization-service
+                         tarjonta-service
+                         suoritus-service
+                         session
+                         application-key)]
           (if allowed?
             (let [virkailija-update-secret (virkailija-edit/create-virkailija-update-secret
                                              session
@@ -663,9 +674,10 @@
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return {}
-        (if (access-controlled-application/applications-access-authorized?
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service
               tarjonta-service
+              suoritus-service
               session
               (:application-keys body)
               [:edit-applications])
@@ -766,6 +778,8 @@
       (ok (haku-service/get-haut ohjausparametrit-service
                                  organization-service
                                  tarjonta-service
+                                 suoritus-service
+                                 application-service
                                  get-haut-cache
                                  session
                                  show-hakukierros-paattynyt)))
@@ -904,13 +918,17 @@
         :query-params [{query :- s/Str nil}
                        organizations :- s/Bool
                        hakukohde-groups :- s/Bool
+                       {perusaste-only :- s/Bool false}
+                       {oppilaitos-only :- s/Bool false}
                        results-page :- s/Int]
         (ok (organization-selection/query-organization
               organization-service
               session
               query
-              organizations
-              hakukohde-groups
+              {:include-organizations?    organizations
+               :include-hakukohde-groups? hakukohde-groups
+               :perusaste-only?           perusaste-only
+               :oppilaitos-only?          oppilaitos-only}
               results-page)))
 
       (api/POST "/user-organization/:oid" {session :session}

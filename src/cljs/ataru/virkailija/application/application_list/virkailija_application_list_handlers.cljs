@@ -13,6 +13,8 @@
   (fn [{:keys [db]} _]
     {:db       (-> db
                    (assoc-in [:application :filters] (get-in db [:application :filters-checkboxes]))
+                   (assoc-in [:application :school-filter] (get-in db [:application :school-filter-pending-value]))
+                   (assoc-in [:application :classes-of-school] (get-in db [:application :classes-of-school-pending-value]))
                    (assoc-in [:application :ensisijaisesti?] (get-in db [:application :ensisijaisesti?-checkbox]))
                    (assoc-in [:application :rajaus-hakukohteella] (get-in db [:application :rajaus-hakukohteella-value])))
      :dispatch [:application/reload-applications true]}))
@@ -23,6 +25,10 @@
     {:db       (-> db
                    (assoc-in [:application :filters] initial-db/default-filters)
                    (assoc-in [:application :filters-checkboxes] initial-db/default-filters)
+                   (assoc-in [:application :school-filter] nil)
+                   (assoc-in [:application :school-filter-pending-value] nil)
+                   (assoc-in [:application :classes-of-school] nil)
+                   (assoc-in [:application :classes-of-school-pending-value] nil)
                    (assoc-in [:application :ensisijaisesti?] false)
                    (assoc-in [:application :ensisijaisesti?-checkbox] false)
                    (assoc-in [:application :rajaus-hakukohteella] nil)
@@ -53,8 +59,10 @@
   [db]
   (-> db
       (assoc-in [:application :filters-checkboxes] (get-in db [:application :filters]))
+      (assoc-in [:application :school-filter-pending-value] (get-in db [:application :school-filter]))
       (set-ensisijaisesti (get-in db [:application :ensisijaisesti?]))
-      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
+      (set-rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))
+      (assoc-in [:application :classes-of-school-pending-value] (get-in db [:application :classes-of-school]))))
 
 (reg-event-db
   :application/undo-filters
@@ -66,6 +74,28 @@
     (update-in db [:application :selected-time-column] #(if (= "created-time" %)
                                                           "submitted"
                                                           "created-time"))))
+
+(reg-event-fx
+  :application/set-school-filter
+  (fn [{:keys [db]} [_ oid]]
+    (letfn
+      [(set-school-filter-pending-value [db]
+         (assoc-in db [:application :school-filter-pending-value] oid))
+       (set-classes-of-school-pending-value [db]
+         (if (= 1 (count (get-in db [:editor :organizations :schools-of-departure])))
+           db
+           (assoc-in db [:application :classes-of-school-pending-value] nil)))]
+      {:db       (-> db
+                   set-school-filter-pending-value
+                   set-classes-of-school-pending-value)
+       :dispatch [:application/fetch-classes-of-school oid]})))
+
+(reg-event-db
+  :application/remove-selected-school-pending
+  (fn [db _]
+    (-> db
+      (assoc-in [:application :school-filter-pending-value] nil)
+      (assoc-in [:application :classes-of-school-pending-value] nil))))
 
 (reg-event-fx
   :application/update-sort
@@ -107,3 +137,13 @@
   :application/set-question-answer-filtering-options
   (fn [db [_ field-id option value]]
     (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id option] value)))
+
+(reg-event-db
+  :application/set-pending-classes-of-school
+  (fn [db [_ luokka checked]]
+    (let [path [:application :classes-of-school-pending-value]
+          classes (get-in db path)
+          new-classes (if checked
+                        (conj classes luokka)
+                        (remove #(= luokka %) classes))]
+      (assoc-in db path (vec new-classes)))))

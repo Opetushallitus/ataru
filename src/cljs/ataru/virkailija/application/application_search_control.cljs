@@ -1,7 +1,8 @@
 (ns ataru.virkailija.application.application-search-control
   (:require [ataru.virkailija.application.application-search-control-handlers]
             [re-frame.core :refer [subscribe dispatch]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [clojure.string :as string]))
 
 (defn haku-tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
@@ -34,7 +35,7 @@
        :title       title-text
        :value       @search-term
        :on-change   (fn [evt] (dispatch [:application/search-by-term (-> evt .-target .-value)]))}]
-     (when-not (clojure.string/blank? @search-term)
+     (when-not (string/blank? @search-term)
        [:a.application__search-control-clear-search-term
         {:on-click #(dispatch [:application/search-by-term ""])}
         [:i.zmdi.zmdi-close]])]))
@@ -80,34 +81,37 @@
       (str @(subscribe [:editor/virkailija-translation :processed-haut]) (haku-count-str @complete-count))]]))
 
 (defn- hakemus-list-link
-  [href title {:keys [haku-application-count application-count unprocessed processed]} hakukohde?]
+  [href title {:keys [haku-application-count application-count unprocessed processed]} hakukohde? toisen-asteen-yhteishaku?]
   (let [processing (- application-count unprocessed processed)
-        lang       @(subscribe [:editor/virkailija-lang])]
+        total-apps (or haku-application-count application-count)]
     [:a.application__search-control-haku-link
      {:href href}
      [:span.application__search-control-haku-title
       {:class (when hakukohde? "application__search-control-haku-title--hakukohde")}
       (or title [:i.zmdi.zmdi-spinner.spin])]
      [:span.application__search-control-haku-hl]
-     (when haku-application-count
+     (when (or toisen-asteen-yhteishaku? haku-application-count)
        [:span.application__search-control-haku-count
-        (str haku-application-count
+        (str total-apps
              " "
-             (if (< 1 haku-application-count)
+             (if (< 1 total-apps)
                @(subscribe [:editor/virkailija-translation :applications])
                @(subscribe [:editor/virkailija-translation :application])))])
-     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
-      {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-unprocessed])}
-      [:span.application-handling__state-label.application-handling__state-label--unprocessed]
-      unprocessed]
-     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
-      {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-processing])}
-      [:span.application-handling__state-label.application-handling__state-label--processing]
-      processing]
-     [:span.application-handling__count-tag.application-handling__count-tag--haku-list
-      {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-processed])}
-      [:span.application-handling__state-label.application-handling__state-label--processed]
-      processed]]))
+     (when (not toisen-asteen-yhteishaku?)
+       [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+        {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-unprocessed])}
+        [:span.application-handling__state-label.application-handling__state-label--unprocessed]
+        unprocessed])
+     (when (not toisen-asteen-yhteishaku?)
+       [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+        {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-processing])}
+        [:span.application-handling__state-label.application-handling__state-label--processing]
+        processing])
+     (when (not toisen-asteen-yhteishaku?)
+       [:span.application-handling__count-tag.application-handling__count-tag--haku-list
+        {:data-tooltip @(subscribe [:editor/virkailija-translation :application-count-processed])}
+        [:span.application-handling__state-label.application-handling__state-label--processed]
+        processed])]))
 
 (defn form-info-link
   [{:keys [key name] :as form}]
@@ -115,25 +119,28 @@
    (str "/lomake-editori/applications/" key)
    (some #(get name %) [:fi :sv :en])
    form
+   false
    false])
 
 (defn haku-info-link
-  [{:keys [oid] :as haku}]
+  [{:keys [oid] :as haku} toisen-asteen-yhteishaku?]
   [hakemus-list-link
    @(subscribe [:application/path-to-haku-search oid])
    @(subscribe [:application/haku-name oid])
    haku
-   false])
+   false
+   toisen-asteen-yhteishaku?])
 
 (defn hakukohde-info-link
-  [{:keys [oid] :as hakukohde}]
+  [{:keys [oid] :as hakukohde} toisen-asteen-yhteishaku?]
   [hakemus-list-link
    @(subscribe [:application/path-to-hakukohde-search oid])
    @(subscribe [:application/hakukohde-and-tarjoaja-name oid])
    hakukohde
-   true])
+   true
+   toisen-asteen-yhteishaku?])
 
-(defn hakukohde-list [hakukohteet-opened hakukohteet]
+(defn hakukohde-list [hakukohteet-opened hakukohteet toisen-asteen-yhteishaku?]
   (let [lang @(subscribe [:editor/virkailija-lang])]
     [:div.application__search-control-hakukohde-container
      (if @hakukohteet-opened
@@ -148,13 +155,14 @@
                      ^{:key (:oid hakukohde)}
                      [:div.application__search-control-hakukohde
                       [:div.application__search-control-haku-hover-highlight]
-                      [hakukohde-info-link hakukohde]])))]]
+                      [hakukohde-info-link hakukohde toisen-asteen-yhteishaku?]])))]]
        [:div.application__search-control-hakukohteet
         [:div.application__search-control-hakukohde-count
          (str (count hakukohteet) " " @(subscribe [:editor/virkailija-translation :application-options lang]))]])]))
 
 (defn tarjonta-haku [haku]
-  (let [hakukohde-count    (count (:hakukohteet haku))
+  (let [toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-oid? (:oid haku)])
+        hakukohde-count    (count (:hakukohteet haku))
         hakukohteet-opened (r/atom (= 1 hakukohde-count))]
     (fn [haku]
       [:div.application__search-control-haku
@@ -163,15 +171,15 @@
          {:on-click #(when (< 1 hakukohde-count)
                        (swap! hakukohteet-opened not))}
          [:i.application__search-control-open-hakukohteet
-          {:class (clojure.string/join
+          {:class (string/join
                     " "
                     [(if @hakukohteet-opened
                        "application__search-control-open-hakukohteet--up"
                        "application__search-control-open-hakukohteet--down")
                      (when (= 1 hakukohde-count) "application__search-control-open-hakukohteet--disabled")])}]]
-        [haku-info-link haku]]
+        [haku-info-link haku toisen-asteen-yhteishaku?]]
        (when (seq (:hakukohteet haku))
-         [hakukohde-list hakukohteet-opened (:hakukohteet haku)])])))
+         [hakukohde-list hakukohteet-opened (:hakukohteet haku) toisen-asteen-yhteishaku?])])))
 
 (defn direct-form-haku [haku]
   [:div.application__search-control-haku.application__search-control-direct-form-haku
@@ -183,13 +191,12 @@
 
 (defn- show-hakukierros-paattynyt
   []
-  (let [lang @(subscribe [:editor/virkailija-lang])]
-    [:div.application__search-control-haku.application__search-control-show-hakukierros-paattynyt
-     [:button.application__search-control-show-hakukierros-paattynyt-button
-      {:on-click #(dispatch [:application/toggle-show-hakukierros-paattynyt])}
-      (if @(subscribe [:application/show-hakukierros-paattynyt?])
-        @(subscribe [:editor/virkailija-translation :hide-hakukierros-paattynyt])
-        @(subscribe [:editor/virkailija-translation :show-hakukierros-paattynyt]))]]))
+  [:div.application__search-control-haku.application__search-control-show-hakukierros-paattynyt
+   [:button.application__search-control-show-hakukierros-paattynyt-button
+    {:on-click #(dispatch [:application/toggle-show-hakukierros-paattynyt])}
+    (if @(subscribe [:application/show-hakukierros-paattynyt?])
+      @(subscribe [:editor/virkailija-translation :hide-hakukierros-paattynyt])
+      @(subscribe [:editor/virkailija-translation :show-hakukierros-paattynyt]))]])
 
 (defn all-haut-list [haut-subscribe-type]
   (let [haut      @(subscribe [haut-subscribe-type])

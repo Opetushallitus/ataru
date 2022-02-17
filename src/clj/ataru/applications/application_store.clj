@@ -503,6 +503,10 @@
                       (assoc :offset-snip (sort->offset-snip sort)))]
     (queries/get-application-list-sqlvec query)))
 
+(defn get-application-content-form-list
+  [application-ids]
+  (exec-db :db queries/yesql-get-application-content-form-list-by-ids {:ids application-ids}))
+
 (defn get-application-heading-list
   [query sort]
   (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -525,6 +529,10 @@
                   (do (log/info "Refreshing secret for application" (:key %))
                       (assoc % :secret (add-new-secret-to-application-in-tx conn (:key %))))
                   %)))))
+
+(defn get-applications-persons-and-hakukohteet
+  [haku]
+  (exec-db :db queries/yesql-applications-person-and-hakukohteet-by-haku {:haku haku}))
 
 (defn- unwrap-onr-application
   [{:keys [key haku form email content]}]

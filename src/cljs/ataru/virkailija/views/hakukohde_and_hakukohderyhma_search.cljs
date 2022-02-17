@@ -1,11 +1,12 @@
 (ns ataru.virkailija.views.hakukohde-and-hakukohderyhma-search
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [clojure.string :as string]))
 
 (defn- search-input->search-terms
   [search-input]
-  (clojure.string/split search-input #"\s+"))
+  (string/split search-input #"\s+"))
 
 (defn- hakukohderyhma->name
   [lang hakukohderyhma]
@@ -115,7 +116,7 @@
                 label-parts)])
 
 (defn- category-listing
-  [category-name items selected? on-select on-unselect]
+  [_category-name _items _selected? _on-select _on-unselect]
   (let [show-n (r/atom 10)]
     (fn [category-name items selected? on-select on-unselect]
       [:li.hakukohde-and-hakukohderyhma-category-listing
@@ -137,19 +138,23 @@
            haut
            hakukohderyhmat
            hakukohde-selected?
-           hakukohderyhma-selected?]}]
-  [:input.hakukohde-and-hakukohderyhma-search-input
-   {:value       @(re-frame/subscribe
-                   [:hakukohde-and-hakukohderyhma/search-input id])
-    :on-change   #(re-frame/dispatch
-                   [:hakukohde-and-hakukohderyhma/set-search-input
-                    id
-                    haut
-                    hakukohderyhmat
-                    hakukohde-selected?
-                    hakukohderyhma-selected?
-                    (.-value (.-target %))])
-    :placeholder @(re-frame/subscribe [:editor/virkailija-translation :search-hakukohde-placeholder])}])
+           hakukohderyhma-selected?
+           only-hakukohteet?]}]
+  (let [placeholder-translation-key (if only-hakukohteet?
+                                      :search-hakukohde-placeholder
+                                      :search-hakukohde-and-hakukohderyhma-placeholder)]
+    [:input.hakukohde-and-hakukohderyhma-search-input
+     {:value       @(re-frame/subscribe
+                      [:hakukohde-and-hakukohderyhma/search-input id])
+      :on-change   #(re-frame/dispatch
+                      [:hakukohde-and-hakukohderyhma/set-search-input
+                       id
+                       haut
+                       hakukohderyhmat
+                       hakukohde-selected?
+                       hakukohderyhma-selected?
+                       (.-value (.-target %))])
+      :placeholder @(re-frame/subscribe [:editor/virkailija-translation placeholder-translation-key])}]))
 
 (defn visibility-checkbox
   [id path]
@@ -173,19 +178,21 @@
            on-hakukohde-select
            on-hakukohde-unselect
            on-hakukohderyhma-select
-           on-hakukohderyhma-unselect]}]
-  (let [lang @(re-frame/subscribe [:editor/virkailija-lang])]
+           on-hakukohderyhma-unselect
+           only-hakukohteet?]}]
+  (let [lang                      @(re-frame/subscribe [:editor/virkailija-lang])]
     [:ul.hakukohde-and-hakukohderyhma-search-listing
      (when-let [hits (seq @(re-frame/subscribe
                             [:hakukohde-and-hakukohderyhma/hakukohderyhma-hits
                              id
                              hakukohderyhmat]))]
-       [category-listing
-        @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
-        hits
-        hakukohderyhma-selected?
-        on-hakukohderyhma-select
-        on-hakukohderyhma-unselect])
+       (when (not only-hakukohteet?)
+         [category-listing
+          @(re-frame/subscribe [:editor/virkailija-translation :hakukohderyhmat])
+          hits
+          hakukohderyhma-selected?
+          on-hakukohderyhma-select
+          on-hakukohderyhma-unselect]))
      (doall
       (for [haku  haut
             :let  [hits @(re-frame/subscribe
