@@ -94,6 +94,7 @@
     (is (nil? (:per-hakukohde duplicated-question)))
     (is (= "hk1" (:duplikoitu-kysymys-hakukohde-oid duplicated-question)))
     (is (= "1_hk1" (:id duplicated-question)))
+    (is (true? (:created-during-form-load duplicated-question)))
     (is (= 4 (:original-question duplicated-child)))
     (is (nil? (:per-hakukohde duplicated-child)))
     (is (= "hk2" (:duplikoitu-kysymys-hakukohde-oid duplicated-child)))
