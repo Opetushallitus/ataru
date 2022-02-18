@@ -132,7 +132,8 @@
   (let [organization-oid-authorized?     (organization-oid-authorized-by-session-pred organization-service session)
         normally-authorized-applications (filter-authorized-by-form-or-hakukohde tarjonta-service organization-oid-authorized? applications)
         opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service session applications normally-authorized-applications)]
-    (concat normally-authorized-applications opo-authorized-applications)))
+    (->> (concat normally-authorized-applications opo-authorized-applications)
+         (util/distinct-by :key))))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
