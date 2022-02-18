@@ -15,7 +15,7 @@
    (create-duplicate-question hakukohde-oid question false))
   ([hakukohde-oid question called-during-form-load?]
   (-> question
-      (hsq/change-followups-for-question hakukohde-oid)
+      (hsq/change-followups-for-question hakukohde-oid called-during-form-load?)
       (dissoc :per-hakukohde)
       (assoc :id (str (:id question) "_" hakukohde-oid)
              :duplikoitu-kysymys-hakukohde-oid hakukohde-oid
