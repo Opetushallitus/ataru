@@ -338,7 +338,7 @@
       {:applications filtered-applications
        :sort         (merge {:order-by (:order-by sort)
                              :order    (:order sort)}
-                            (when-let [a (first (drop 999 filtered-applications))]
+                            (when-let [a (first (drop 999 applications))]
                               {:offset (case (:order-by sort)
                                          "applicant-name" {:key            (:key a)
                                                            :last-name      (:last-name a)
