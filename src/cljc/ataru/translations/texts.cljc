@@ -1613,7 +1613,7 @@
    :link-to-feedback                                {:fi "Linkki palautteeseen"
                                                      :sv "Länk till responsen"
                                                      :en "Link to the feedback"}
-   :show-results                                    {:fi "Näytä hakutulokset"
+   :show-results                                    {:fi "Näytä hakemukset"
                                                      :sv "Visa ansökningar"
                                                      :en "Show applications"}
    :load-excel                                      {:fi "Lataa Excel"
