@@ -1115,13 +1115,15 @@
   {key person_oid})
 
 (defn get-person-and-application-oids
-  [haku-oid hakukohde-oids]
+  ([haku-oid hakukohde-oids]
   (->> (exec-db :db queries/yesql-applications-by-haku-and-hakukohde-oids {:haku_oid       haku-oid
                                                                            ;; Empty string to avoid empty parameter lists
                                                                            :hakukohde_oids (cons "" hakukohde-oids)
                                                                            :hakemus_oids   [""]})
        (map unwrap-person-and-hakemus-oid)
        (into {})))
+  ([haku-oid]
+  (get-person-and-application-oids haku-oid nil)))
 
 (defn- update-hakukohde-process-state!
   [connection session hakukohde-oids from-state to-state application-key]
@@ -1367,3 +1369,7 @@
 (defn get-application-ids-for-haku
   [haku-oid]
   (map :id (exec-db :db queries/yesql-get-application-ids-for-haku {:haku haku-oid})))
+
+(defn get-application-person-oids-for-haku
+  [haku-oid]
+  (map :person_oid (exec-db :db queries/yesql-get-application-person-oids-for-haku {:haku haku-oid})))
