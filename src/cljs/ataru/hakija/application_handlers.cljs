@@ -449,7 +449,7 @@
         hakukohde-oids-to-duplicate (if-let [application-hakukohde-oids (get-in db [:application :hakukohde])]
                                       application-hakukohde-oids
                                       preselected-hakukohde-oids)
-        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
+        questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet-during-form-load (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
         initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
     (-> db
