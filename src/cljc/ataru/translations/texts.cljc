@@ -531,7 +531,7 @@
                                                  :sv "Skicka bilagan till adressen"
                                                  :en "EN: Lähetä liite osoitteeseen"}
    :verkkosivu                                  {:fi "Tai käytä"
-                                                 :sv "SV: Tai käytä"
+                                                 :sv "Eller använd"
                                                  :en "EN: Tai käytä"}})
 
 (def oppiaine-translations
