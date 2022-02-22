@@ -614,7 +614,8 @@
                                        [(if (application-has-attachments? db)
                                           [:application/fetch-application-attachment-metadata]
                                           [:application/start-autosave])
-                                        [:liitepyynto-information-request/get-deadlines application-key]
+                                        (when (not @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?]))
+                                          [:liitepyynto-information-request/get-deadlines application-key])
                                         (when @(subscribe [:tutu-payment/tutu-form? form-key])
                                           [:tutu-payment/fetch-payments application-key])
                                         [:application/get-application-change-history application-key]]

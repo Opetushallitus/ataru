@@ -751,7 +751,7 @@
      (re-frame/subscribe [:application/review-settings-visible?])
      (re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
      (re-frame/subscribe [:application/superuser?])
-     (re-frame/subscribe [:editor/all-organizations-have-opinto-ohjaaja-rights?])])
+     (re-frame/subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])])
   (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser? all-organizations-have-opinto-ohjaaja-rights?] [_ field-name]]
     (and
       (not settings-visible?)
