@@ -63,6 +63,6 @@
 (defn filter-applications-by-harkinnanvaraisuus
   [fetch-applications-content-fn fetch-form-fn applications filters]
   (let [only-harkinnanvaraiset? (-> filters :harkinnanvaraisuus :only-harkinnanvaraiset)]
-    (if only-harkinnanvaraiset?
+    (if (and only-harkinnanvaraiset? (seq applications))
       (filter-harkinnanvaraiset-applications fetch-applications-content-fn fetch-form-fn applications)
       applications)))
