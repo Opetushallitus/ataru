@@ -54,5 +54,5 @@
                                set)]
   (and (boolean (seq opinto-ohjaaja-organizations))
        (= opinto-ohjaaja-organizations all-organizations)
-       (empty? view-organizations))
-       (empty? edit-organizations)))
+       (empty? view-organizations)
+       (empty? edit-organizations))))
