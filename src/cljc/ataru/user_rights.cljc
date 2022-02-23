@@ -33,14 +33,18 @@
     seq
     boolean))
 
-(defn all-organizations-have-opinto-ohjaaja-rights?
+(defn all-organizations-have-only-opinto-ohjaaja-rights?
   [session]
-  (let [opinto-ohjaaja-organizations (->> session
-                                          :identity
-                                          :user-right-organizations
-                                          :opinto-ohjaaja
-                                         (map :oid)
-                                          set)
+  (let [get-organization-oids-for-right (fn [right]
+                                          (->> session
+                                               :identity
+                                               :user-right-organizations
+                                               right
+                                               (map :oid)
+                                               set))
+        opinto-ohjaaja-organizations (get-organization-oids-for-right :opinto-ohjaaja)
+        view-organizations (get-organization-oids-for-right :view-applications)
+        edit-organizations (get-organization-oids-for-right :edit-applications)
         all-organizations (->> session
                                :identity
                                :user-right-organizations
@@ -49,4 +53,6 @@
                                (map :oid)
                                set)]
   (and (boolean (seq opinto-ohjaaja-organizations))
-       (= opinto-ohjaaja-organizations all-organizations))))
+       (= opinto-ohjaaja-organizations all-organizations)
+       (empty? view-organizations)
+       (empty? edit-organizations))))

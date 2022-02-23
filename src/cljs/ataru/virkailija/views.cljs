@@ -28,7 +28,7 @@
 
 (defmulti panels identity)
 (defmethod panels :application []
-  [privileged-panel :application #{:view-applications :edit-applications}])
+  [privileged-panel :application #{:view-applications :edit-applications :opinto-ohjaaja}])
 (defmethod panels :editor []
   [privileged-panel :editor #{:form-edit}])
 (defmethod panels :error []

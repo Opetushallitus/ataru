@@ -134,7 +134,7 @@
   (session-orgs/run-org-authorized
    session
    organization-service
-   [:view-applications :edit-applications]
+   [:view-applications :edit-applications :opinto-ohjaaja]
    (constantly {})
    (partial get-tarjonta-haut-for-ordinary-user
      ohjausparametrit-service
@@ -235,7 +235,7 @@
    tarjonta-haut]
   (let [allowed-hakukohteet-with-counts (when
                                           (and (user-rights/has-opinto-ohjaaja-right-for-any-organization? session)
-                                               (user-rights/all-organizations-have-opinto-ohjaaja-rights? session))
+                                               (user-rights/all-organizations-have-only-opinto-ohjaaja-rights? session))
                                           (limit-allowed-hakukohteet-for-opinto-ohjaaja
                                             suoritus-service
                                             application-service
