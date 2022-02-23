@@ -770,7 +770,7 @@
               filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                           fetch-applications-content-fn
                                                           fetch-form-fn
-                                                          applications
+                                                          (:applications applications)
                                                           (:filters states-and-filters))]
           (assoc applications :applications filter-applications-by-harkinnanvaraisuus)))))
 
