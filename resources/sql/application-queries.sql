@@ -339,8 +339,11 @@ FROM applications AS a
 LEFT JOIN applications AS la
    ON la.key = a.key AND
       la.id > a.id
+LEFT JOIN application_reviews AS ar
+    ON ar.application_key = a.key
 WHERE la.id IS NULL AND
-      a.haku = :haku;
+      a.haku = :haku AND
+      ar.state <> 'inactivated';
 
 -- name: yesql-persons-applications-authorization-data
 SELECT a.haku,
