@@ -10,6 +10,7 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
+    [clj-time.core :as time]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
     [ataru.person-service.person-service :as person-service]
@@ -163,6 +164,10 @@
 (defn ->person-oid-query
   [person-oid]
   {:person-oid person-oid})
+
+(defn ->person-oids-query
+  [person-oids]
+  {:person-oids person-oids})
 
 (defn ->application-oid-query
   [application-oid]
@@ -694,7 +699,25 @@
           ryhman-hakukohteet           (when (and (some? haku-oid) (some? hakukohderyhma-oid))
                                          (filter (fn [hakukohde]
                                                    (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
-                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))]
+                                                 (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))
+          person-oids                  (when-let [oppilaitos-oid (:school-filter states-and-filters)]
+                                         (let [haku       (tarjonta-service/get-haku tarjonta-service haku-oid)
+                                               hakuvuodet (->> (:hakuajat haku)
+                                                               (map #(time/year (:end %)))
+                                                               (distinct))
+                                               luokkatasot-for-suoritus-filter ["9" "10" "VALMA" "TELMA"]
+                                               valitut-luokat (set (:classes-of-school states-and-filters))
+                                               oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat suoritus-service
+                                                                                                                               oppilaitos-oid
+                                                                                                                               hakuvuodet
+                                                                                                                               luokkatasot-for-suoritus-filter)]
+                                           (->> oppilaitoksen-opiskelijat-ja-luokat
+                                                (filter #(or
+                                                           (empty? valitut-luokat)
+                                                           (contains? valitut-luokat (:luokka %))))
+                                                (map :person-oid)
+                                                (set))))]
+      (prn (:school-filter states-and-filters))
       (when-let [query (->and-query
                          (cond (some? form-key)
                                (->form-query form-key)
@@ -721,6 +744,8 @@
                                (->name-query name)
                                (some? person-oid)
                                (->person-oid-query person-oid)
+                               (some? person-oids)
+                               (->person-oids-query person-oids)
                                (some? application-oid)
                                (->application-oid-query application-oid))
                          (->attachment-review-states-query attachment-review-states)
@@ -740,22 +765,12 @@
                                           hakukohderyhma-oid
                                           rajaus-hakukohteella
                                           ryhman-hakukohteet))
-              filtered-applications-by-oppilaitos-and-luokat
-              (suoritus-filter/filter-applications-by-oppilaitos-and-luokat
-                (:applications applications)
-                (fn [haku-oid]
-                  (tarjonta-service/get-haku tarjonta-service haku-oid))
-                (fn [oppilaitos-oid year]
-                  (let [luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
-                    (suoritus-service/oppilaitoksen-opiskelijat suoritus-service oppilaitos-oid year luokkatasot)))
-                (:school-filter states-and-filters)
-                (:classes-of-school states-and-filters))
               fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
               fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
               filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                           fetch-applications-content-fn
                                                           fetch-form-fn
-                                                          filtered-applications-by-oppilaitos-and-luokat
+                                                          applications
                                                           (:filters states-and-filters))]
           (assoc applications :applications filter-applications-by-harkinnanvaraisuus)))))
 
