@@ -373,3 +373,7 @@
     (or
       (every-condition-satisfied (seq (:every by-quantifier)))
       (some-condition-satisfied (seq (:some by-quantifier))))))
+
+(defn distinct-by [f coll]
+  (map #(first (second %))
+    (group-by f coll)))

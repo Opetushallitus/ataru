@@ -6,7 +6,8 @@
             [ataru.util.http-util :as http-util]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
-            [schema.core :as s])
+            [schema.core :as s]
+            [ataru.util :as util])
   (:import [java.time LocalDate LocalTime ZonedDateTime ZoneId]
            java.time.format.DateTimeFormatter))
 
@@ -83,10 +84,6 @@
        (add-within "koulutus")
        (mapcat :within)))
 
-(defn- distinct-by [f coll]
-  (map #(first (second %))
-       (group-by f coll)))
-
 (defn- get-vocational-institutions [version]
   (->> institution-type-codes
        (map (fn [type]
@@ -94,7 +91,7 @@
                :version version}))
        (add-within "oppilaitosnumero")
        (mapcat :within)
-       (distinct-by :uri)
+       (util/distinct-by :uri)
        (map #(assoc % :label (or (-> (:value %) (organization-client/get-organization-by-oid-or-number) :nimi)
                                  (:label %))))))
 
