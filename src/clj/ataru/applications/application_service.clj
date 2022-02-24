@@ -707,10 +707,10 @@
                                                                distinct)
                                                luokkatasot-for-suoritus-filter ["9" "10" "VALMA" "TELMA"]
                                                valitut-luokat (set (:classes-of-school states-and-filters))
-                                               oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat suoritus-service
-                                                                                                                               oppilaitos-oid
-                                                                                                                               hakuvuodet
-                                                                                                                               luokkatasot-for-suoritus-filter)]
+                                               oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle suoritus-service
+                                                                                                                                                   oppilaitos-oid
+                                                                                                                                                   hakuvuodet
+                                                                                                                                                   luokkatasot-for-suoritus-filter)]
                                            (->> oppilaitoksen-opiskelijat-ja-luokat
                                                 (filter #(or
                                                            (empty? valitut-luokat)
