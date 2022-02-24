@@ -716,9 +716,7 @@
                                                            (empty? valitut-luokat)
                                                            (contains? valitut-luokat (:luokka %))))
                                                 (map :person-oid)
-                                                distinct
-                                                vector)))]
-      (prn (:school-filter states-and-filters))
+                                                distinct)))]
       (when-let [query (->and-query
                          (cond (some? form-key)
                                (->form-query form-key)
