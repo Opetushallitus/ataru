@@ -10,7 +10,6 @@
     [ataru.hakija.hakija-form-service :as hakija-form-service]
     [ataru.information-request.information-request-store :as information-request-store]
     [ataru.koodisto.koodisto :as koodisto]
-    [clj-time.core :as time]
     [ataru.organization-service.organization-service :as organization-service]
     [ataru.person-service.birth-date-converter :as bd-converter]
     [ataru.person-service.person-service :as person-service]
@@ -703,22 +702,19 @@
           person-oids                  (when-let [oppilaitos-oid (:school-filter states-and-filters)]
                                          (let [haku       (tarjonta-service/get-haku tarjonta-service haku-oid)
                                                hakuvuodet (->> (:hakuajat haku)
-                                                               (map #(time/year (:end %)))
+                                                               (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
                                                                distinct)
-                                               luokkatasot-for-suoritus-filter ["9" "10" "VALMA" "TELMA"]
                                                valitut-luokat (set (:classes-of-school states-and-filters))
                                                oppilaitoksen-opiskelijat-ja-luokat (suoritus-service/oppilaitoksen-opiskelijat-useammalle-vuodelle suoritus-service
                                                                                                                                                    oppilaitos-oid
                                                                                                                                                    hakuvuodet
-                                                                                                                                                   luokkatasot-for-suoritus-filter)]
+                                                                                                                                                   (suoritus-filter/luokkatasot-for-suoritus-filter))]
                                            (->> oppilaitoksen-opiskelijat-ja-luokat
                                                 (filter #(or
                                                            (empty? valitut-luokat)
                                                            (contains? valitut-luokat (:luokka %))))
                                                 (map :person-oid)
-                                                distinct
-                                                vector)))]
-      (prn (:school-filter states-and-filters))
+                                                distinct)))]
       (when-let [query (->and-query
                          (cond (some? form-key)
                                (->form-query form-key)

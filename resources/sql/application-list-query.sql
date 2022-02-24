@@ -174,7 +174,7 @@ WHERE la.id IS NULL
   AND a.person_oid = :person-oid
 /*~ ) ~*/
 /*~ (when (contains? params :person-oids) */
-  AND a.person_oid IN (:person-oids)
+  AND a.person_oid IN (:v*:person-oids)
 /*~ ) ~*/
 /*~ (when (contains? params :name) */
   AND to_tsvector('unaccent_simple', concat(a.preferred_name, ' ', a.last_name)) @@ to_tsquery('unaccent_simple', :name)
