@@ -12,7 +12,8 @@
     [clojure.set :as set]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
-    [clj-time.core :as time]))
+    [clj-time.core :as time]
+    [medley.core :refer [distinct-by]]))
 
 (defn authorized-by-form?
   [authorized-organization-oids application]
@@ -132,8 +133,10 @@
   (let [organization-oid-authorized?     (organization-oid-authorized-by-session-pred organization-service session)
         normally-authorized-applications (filter-authorized-by-form-or-hakukohde tarjonta-service organization-oid-authorized? applications)
         opo-authorized-applications      (filter-authorized-by-lahtokoulu organization-service suoritus-service session applications normally-authorized-applications)]
-    (->> (concat normally-authorized-applications opo-authorized-applications)
-         (util/distinct-by :key))))
+    (if (= 0 (count opo-authorized-applications))
+      normally-authorized-applications
+      (->> (concat normally-authorized-applications opo-authorized-applications)
+           (distinct-by :key)))))
 
 (defn applications-access-authorized?
   [organization-service tarjonta-service session application-keys rights]
