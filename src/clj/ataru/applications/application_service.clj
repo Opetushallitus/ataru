@@ -331,26 +331,14 @@
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)
-          filtered-applications (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
-                                   (application-filtering/filter-applications
-                                     (populate-applications-with-person-data person-service authorized-applications)
-                                     states-and-filters)
-                                   (populate-applications-with-person-data
-                                     person-service
-                                     (application-filtering/filter-applications authorized-applications states-and-filters)))]
-      {:applications filtered-applications
-       :sort         (merge {:order-by (:order-by sort)
-                             :order    (:order sort)}
-                            (when-let [a (first (drop 999 applications))]
-                              {:offset (case (:order-by sort)
-                                         "applicant-name" {:key            (:key a)
-                                                           :last-name      (:last-name a)
-                                                           :preferred-name (:preferred-name a)}
-                                         "submitted"      {:key       (:key a)
-                                                           :submitted (:submitted a)}
-                                         "created-time"   {:key          (:key a)
-                                                           :created-time (:created-time a)})}))}))
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
+      (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
+        (application-filtering/filter-applications
+          (populate-applications-with-person-data person-service authorized-applications)
+          states-and-filters)
+        (populate-applications-with-person-data
+          person-service
+          (application-filtering/filter-applications authorized-applications states-and-filters)))))
 
 (defn- hakukohteiden-ehdolliset
   [valinta-tulos-service applications]
@@ -715,61 +703,74 @@
                                                            (contains? valitut-luokat (:luokka %))))
                                                 (map :person-oid)
                                                 distinct)))]
-      (when-let [query (->and-query
-                         (cond (some? form-key)
-                               (->form-query form-key)
-                               (and (some? haku-oid) (some? hakukohderyhma-oid))
-                               (->hakukohderyhma-query
-                                 ryhman-hakukohteet
-                                 organization-oid-authorized?
-                                 haku-oid
-                                 ensisijaisesti
-                                 rajaus-hakukohteella)
-                               (some? hakukohde-oid)
-                               (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
-                               (some? haku-oid)
-                               (->haku-query haku-oid)
-                               :else
-                               (->empty-query))
-                         (cond (some? ssn)
-                               (->ssn-query ssn)
-                               (and (some? dob) (dob/dob? dob))
-                               (->dob-query dob)
-                               (some? email)
-                               (->email-query email)
-                               (some? name)
-                               (->name-query name)
-                               (some? person-oid)
-                               (->person-oid-query person-oid)
-                               (some? person-oids)
-                               (->person-oids-query person-oids)
-                               (some? application-oid)
-                               (->application-oid-query application-oid))
-                         (->attachment-review-states-query attachment-review-states)
-                         (->option-answers-query option-answers))]
-        (let [applications
-              (get-application-list-by-query
-                person-service
-                organization-service
-                tarjonta-service
-                suoritus-service
-                session
-                query
-                sort
-                (add-selected-hakukohteet states-and-filters
-                                          haku-oid
-                                          hakukohde-oid
-                                          hakukohderyhma-oid
-                                          rajaus-hakukohteella
-                                          ryhman-hakukohteet))
-              fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
-              fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
-              filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
-                                                          fetch-applications-content-fn
-                                                          fetch-form-fn
-                                                          (:applications applications)
-                                                          (:filters states-and-filters))]
-          (assoc applications :applications filter-applications-by-harkinnanvaraisuus)))))
+        (when-let [query (->and-query
+                           (cond (some? form-key)
+                                 (->form-query form-key)
+                                 (and (some? haku-oid) (some? hakukohderyhma-oid))
+                                 (->hakukohderyhma-query
+                                   ryhman-hakukohteet
+                                   organization-oid-authorized?
+                                   haku-oid
+                                   ensisijaisesti
+                                   rajaus-hakukohteella)
+                                 (some? hakukohde-oid)
+                                 (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
+                                 (some? haku-oid)
+                                 (->haku-query haku-oid)
+                                 :else
+                                 (->empty-query))
+                           (cond (some? ssn)
+                                 (->ssn-query ssn)
+                                 (and (some? dob) (dob/dob? dob))
+                                 (->dob-query dob)
+                                 (some? email)
+                                 (->email-query email)
+                                 (some? name)
+                                 (->name-query name)
+                                 (some? person-oid)
+                                 (->person-oid-query person-oid)
+                                 (boolean (seq person-oids))
+                                 (->person-oids-query person-oids)
+                                 (some? application-oid)
+                                 (->application-oid-query application-oid))
+                           (->attachment-review-states-query attachment-review-states)
+                           (->option-answers-query option-answers))]
+          (let [fetch-applications? (or (not (:school-filter states-and-filters)) (boolean (seq person-oids)))
+                applications (if fetch-applications?
+                               (get-application-list-by-query
+                                 person-service
+                                 organization-service
+                                 tarjonta-service
+                                 suoritus-service
+                                 session
+                                 query
+                                 sort
+                                 (add-selected-hakukohteet states-and-filters
+                                                           haku-oid
+                                                           hakukohde-oid
+                                                           hakukohderyhma-oid
+                                                           rajaus-hakukohteella
+                                                           ryhman-hakukohteet))
+                               [])
+                fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
+                fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
+                filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
+                                                            fetch-applications-content-fn
+                                                            fetch-form-fn
+                                                            applications
+                                                            (:filters states-and-filters))]
+            {:applications filter-applications-by-harkinnanvaraisuus
+             :sort         (merge {:order-by (:order-by sort)
+                                   :order    (:order sort)}
+                                  (when-let [a (first (drop 999 applications))]
+                                    {:offset (case (:order-by sort)
+                                               "applicant-name" {:key            (:key a)
+                                                                 :last-name      (:last-name a)
+                                                                 :preferred-name (:preferred-name a)}
+                                               "submitted"      {:key       (:key a)
+                                                                 :submitted (:submitted a)}
+                                               "created-time"   {:key          (:key a)
+                                                                 :created-time (:created-time a)})}))}))))
 
   (get-applications-persons-and-hakukohteet-by-haku
     [_ haku]
