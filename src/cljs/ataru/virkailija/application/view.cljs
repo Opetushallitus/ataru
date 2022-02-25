@@ -1477,8 +1477,9 @@
           (when pref-name
             [:h2.application-handling__review-area-main-heading
              (str last-name ", " pref-name " — " (or ssn birth-date))])]
-         [:div.application-handling__review-area-main-heading-oppilaitos-name-row
-          [:span (str (util/from-multi-lang oppilaitos-name @lang) ", " luokka)]]
+         (when oppilaitos-name
+           [:div.application-handling__review-area-main-heading-oppilaitos-name-row
+            [:span (str (util/from-multi-lang oppilaitos-name @lang) ", " luokka)]])
          [:div.application-handling__review-area-main-heading-application-oid-row
           [:span hakemus-oid]]
          [:div.application-handling__review-area-main-heading-person-oid-row
