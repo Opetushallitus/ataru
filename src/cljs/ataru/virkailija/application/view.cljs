@@ -1462,10 +1462,13 @@
         ssn                (-> application :person :ssn)
         birth-date         (-> application :person :birth-date)
         person-oid         (-> application :person :oid)
+        oppilaitos-name    (-> application :person :oppilaitos-name)
+        luokka             (-> application :person :luokka)
         email              (get-in answers [:email :value])
         applications-count (:applications-count application)
         hakemus-oid        (:key application)
-        haku-oid           (:haku application)]
+        haku-oid           (:haku application)
+        lang               (subscribe [:editor/virkailija-lang])]
     [:div.application__handling-heading
      [:div.application-handling__review-area-main-heading-container
       (when-not loading?
@@ -1474,6 +1477,8 @@
           (when pref-name
             [:h2.application-handling__review-area-main-heading
              (str last-name ", " pref-name " — " (or ssn birth-date))])]
+         [:div.application-handling__review-area-main-heading-oppilaitos-name-row
+          [:span (str (util/from-multi-lang oppilaitos-name @lang) ", " luokka)]]
          [:div.application-handling__review-area-main-heading-application-oid-row
           [:span hakemus-oid]]
          [:div.application-handling__review-area-main-heading-person-oid-row

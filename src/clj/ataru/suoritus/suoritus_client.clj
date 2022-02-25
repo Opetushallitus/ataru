@@ -105,3 +105,16 @@
       [r]
       (throw (new RuntimeException
                (str "Fetching oppilaitoksen luokat failed: " r))))))
+
+(defn opiskelijat [cas-client henkilo-oid]
+  (let [url (url/resolve-url
+              "suoritusrekisteri.opiskelijat"
+              {"henkilo" henkilo-oid})]
+    (match [(cas-client/cas-authenticated-get
+              cas-client
+              url)]
+      [{:status 200 :body body}]
+      (json/parse-string body true)
+      [r]
+      (throw (new RuntimeException
+               (str "Fetching opiskelijat failed: " r))))))

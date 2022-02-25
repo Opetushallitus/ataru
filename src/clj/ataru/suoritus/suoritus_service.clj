@@ -4,12 +4,18 @@
             [ataru.cache.cache-service :as cache]
             [clojure.string :as string]))
 
+(defn- parse-opiskelija
+  [opiskelija]
+  {:oppilaitos-oid (:oppilaitosOid opiskelija)
+   :luokka         (:luokka opiskelija)})
+
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
   (ylioppilas-tai-ammatillinen? [this person-oid])
   (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
-  (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot]))
+  (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
+  (opiskelija [this henkilo-oid]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
@@ -31,7 +37,10 @@
   (oppilaitoksen-luokat [_ oppilaitos-oid vuosi luokkatasot]
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
-      (cache/get-from oppilaitoksen-luokat-cache cache-key))))
+      (cache/get-from oppilaitoksen-luokat-cache cache-key)))
+  (opiskelija [_ henkilo-oid]
+    (->> (client/opiskelijat suoritusrekisteri-cas-client henkilo-oid)
+         (map parse-opiskelija))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
 
