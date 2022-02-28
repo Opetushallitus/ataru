@@ -449,16 +449,12 @@
         :path-params [henkilo-oid :- String]
         :summary "Returns opiskelija information from suoritusrekisteri"
         :return ataru-schema/OpiskelijaResponse
-        (let [response (vec (suoritus-service/opiskelija suoritus-service henkilo-oid))]
-          (match response
-            [] (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)})
-            [opiskelija] (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
-                           (response/ok
-                             {:oppilaitos-name (:name organization)
-                              :luokka (:luokka opiskelija)}))
-            :else (do
-                    (log/error "Multiple opiskelijas found for henkilo-oid " henkilo-oid)
-                    (response/internal-server-error)))))
+        (if-let [opiskelija (suoritus-service/opiskelija suoritus-service henkilo-oid)]
+          (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
+            (response/ok
+              {:oppilaitos-name (:name organization)
+               :luokka (:luokka opiskelija)}))
+          (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)})))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings

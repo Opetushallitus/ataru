@@ -7,7 +7,8 @@
 (defn- parse-opiskelija
   [opiskelija]
   {:oppilaitos-oid (:oppilaitosOid opiskelija)
-   :luokka         (:luokka opiskelija)})
+   :luokka         (:luokka opiskelija)
+   :alkupaiva      (:alkuPaiva opiskelija)})
 
 (defprotocol SuoritusService
   (ylioppilas-ja-ammatilliset-suoritukset-modified-since [this modified-since])
@@ -40,7 +41,9 @@
       (cache/get-from oppilaitoksen-luokat-cache cache-key)))
   (opiskelija [_ henkilo-oid]
     (->> (client/opiskelijat suoritusrekisteri-cas-client henkilo-oid)
-         (map parse-opiskelija))))
+         (map parse-opiskelija)
+         (sort-by :alkupaiva)
+         (last))))
 
 (defn new-suoritus-service [] (->HttpSuoritusService nil nil nil))
 
