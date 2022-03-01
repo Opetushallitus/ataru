@@ -331,7 +331,7 @@
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service session applications)]
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
       (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
         (application-filtering/filter-applications
           (populate-applications-with-person-data person-service authorized-applications)
@@ -403,6 +403,7 @@
                              organization-service
                              tarjonta-service
                              suoritus-service
+                             person-service
                              audit-logger
                              session
                              application-key)]
@@ -447,7 +448,7 @@
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]
-    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service session application-keys [:view-applications :edit-applications])
+    (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service person-service suoritus-service session application-keys [:view-applications :edit-applications])
       (let [applications                     (application-store/get-applications-by-keys application-keys)
             application-reviews              (->> applications
                                                   (map :key)
@@ -567,6 +568,7 @@
                                     organization-service
                                     tarjonta-service
                                     suoritus-service
+                                    person-service
                                     audit-logger
                                     session
                                     application-key))]
@@ -595,6 +597,7 @@
             organization-service
             tarjonta-service
             suoritus-service
+            person-service
             session
             application-key)
       (application-store/get-application-version-changes koodisto-cache
