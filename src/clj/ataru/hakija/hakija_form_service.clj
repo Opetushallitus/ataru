@@ -126,6 +126,17 @@
                 (or (is-lupatieto-field? field)
                     (is-editing-allowed-person-info-field? field))))))
 
+(defn- combine-old-priorisoivat-ryhmat-with-new
+  [haku-oid old-priorisoivat hakukohderyhmat-with-settings]
+  (let [oid-is-found (fn [oid old-ones]
+                       (boolean (when (seq old-ones) (seq (filter #(= oid (:hakukohderyhma-oid %)) old-ones)))))
+        priorisoivat (filter #(:priorisoiva %) hakukohderyhmat-with-settings)
+        not-found-in-old (filter #(not (oid-is-found (:hakukohderyhma-oid %) old-priorisoivat)) priorisoivat)
+        transformed-to-priorisoivat (map #(merge {} {:hakukohderyhma-oid (:hakukohderyhma-oid %)
+                                                 :prioriteetit (mapv vector (:prioriteettijarjestys %))
+                                                 :haku-oid haku-oid}) not-found-in-old)]
+    (concat old-priorisoivat transformed-to-priorisoivat)))
+
 (defn- combine-old-rajaavat-ryhmat-with-new
   [haku-oid old-rajaavat hakukohderyhmat-with-settings]
     (let [oid-is-found (fn [oid old-ones]
@@ -287,21 +298,22 @@
    roles :- [form-role/FormRole]
    use-toisen-asteen-yhteishaku-restrictions? :- s/Bool]
   (let [tarjonta-info (tarjonta-parser/parse-tarjonta-info-by-haku koodisto-cache tarjonta-service organization-service ohjausparametrit-service haku-oid)
-        hakukohteet   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        hakukohteet (get-in tarjonta-info [:tarjonta :hakukohteet])
         hakukohderyhmat (distinct (mapcat #(:hakukohderyhmat %) hakukohteet))
         hakukohderyhmat-with-settings (map #(assoc (cache/get-from hakukohderyhma-settings-cache %) :hakukohderyhma-oid %) hakukohderyhmat)
-        priorisoivat  (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
-        old-rajaavat  (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
-        rajaavat      (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
-        form          (fetch-form-by-id
-                       id
-                       roles
-                       form-by-id-cache
-                       koodisto-cache
-                       hakukohteet
-                       application-in-processing-state?
-                       field-deadlines
-                       use-toisen-asteen-yhteishaku-restrictions?)]
+        old-rajaavat (:ryhmat (hakukohderyhmat/rajaavat-hakukohderyhmat haku-oid))
+        old-priorisoivat (:ryhmat (hakukohderyhmat/priorisoivat-hakukohderyhmat tarjonta-service haku-oid))
+        rajaavat (combine-old-rajaavat-ryhmat-with-new haku-oid old-rajaavat hakukohderyhmat-with-settings)
+        priorisoivat (combine-old-priorisoivat-ryhmat-with-new haku-oid old-priorisoivat hakukohderyhmat-with-settings)
+        form (fetch-form-by-id
+               id
+               roles
+               form-by-id-cache
+               koodisto-cache
+               hakukohteet
+               application-in-processing-state?
+               field-deadlines
+               use-toisen-asteen-yhteishaku-restrictions?)]
     (if (and (some? form) (some? tarjonta-info))
       (-> form
           (merge tarjonta-info)

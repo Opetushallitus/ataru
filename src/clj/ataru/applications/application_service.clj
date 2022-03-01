@@ -331,14 +331,15 @@
      states-and-filters]
     (let [applications            (->> (application-store/get-application-heading-list query sort)
                                        (map remove-irrelevant-application_hakukohde_reviews))
-          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)]
-      (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
-        (application-filtering/filter-applications
-          (populate-applications-with-person-data person-service authorized-applications)
-          states-and-filters)
-        (populate-applications-with-person-data
-          person-service
-          (application-filtering/filter-applications authorized-applications states-and-filters)))))
+          authorized-applications (aac/filter-authorized-by-session organization-service tarjonta-service suoritus-service person-service session applications)
+          filtered-applications   (if (application-filtering/person-info-needed-to-filter? (:filters states-and-filters))
+                                    (application-filtering/filter-applications
+                                      (populate-applications-with-person-data person-service authorized-applications)
+                                      states-and-filters)
+                                    (populate-applications-with-person-data
+                                      person-service
+                                      (application-filtering/filter-applications authorized-applications states-and-filters)))]
+          {:fetched-applications applications :filtered-applications filtered-applications}))
 
 (defn- hakukohteiden-ehdolliset
   [valinta-tulos-service applications]
@@ -739,7 +740,7 @@
                            (->attachment-review-states-query attachment-review-states)
                            (->option-answers-query option-answers))]
           (let [fetch-applications? (or (not (:school-filter states-and-filters)) (boolean (seq person-oids)))
-                applications (if fetch-applications?
+                fetched-and-filtered-applications (if fetch-applications?
                                (get-application-list-by-query
                                  person-service
                                  organization-service
@@ -754,18 +755,18 @@
                                                            hakukohderyhma-oid
                                                            rajaus-hakukohteella
                                                            ryhman-hakukohteet))
-                               [])
+                               {:fetched-applications [] :filtered-applications []})
                 fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
                 fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
-                filter-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
+                filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                             fetch-applications-content-fn
                                                             fetch-form-fn
-                                                            applications
+                                                            (:filtered-applications fetched-and-filtered-applications)
                                                             (:filters states-and-filters))]
-            {:applications filter-applications-by-harkinnanvaraisuus
+            {:applications filtered-applications-by-harkinnanvaraisuus
              :sort         (merge {:order-by (:order-by sort)
                                    :order    (:order sort)}
-                                  (when-let [a (first (drop 999 applications))]
+                                  (when-let [a (first (drop 999 (:fetched-applications fetched-and-filtered-applications)))]
                                     {:offset (case (:order-by sort)
                                                "applicant-name" {:key            (:key a)
                                                                  :last-name      (:last-name a)
