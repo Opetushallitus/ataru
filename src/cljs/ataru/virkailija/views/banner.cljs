@@ -1,10 +1,6 @@
 (ns ataru.virkailija.views.banner
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]])
-  (:require [ataru.util :as autil]
-            [ataru.virkailija.routes :as routes]
-            [cljs.core.async :refer [<! timeout]]
-            [cljs.core.match :refer-macros [match]]
+  (:require-macros [reagent.ratom :refer [reaction]])
+  (:require [cljs.core.match :refer-macros [match]]
             [clojure.string :as string]
             [goog.string :as s]
             [re-frame.core :refer [subscribe dispatch]]
@@ -64,8 +60,7 @@
       :else (-> organizations (first) :name (get-label)))))
 
 (defn- organization-rights-select []
-  (let [lang   @(subscribe [:editor/virkailija-lang])
-        rights (set @(subscribe [:state-query [:editor :user-info :selected-organization :rights]]))]
+  (let [rights (set @(subscribe [:state-query [:editor :user-info :selected-organization :rights]]))]
     [:div.profile__organization-rights-selector
      @(subscribe [:editor/virkailija-translation :choose-user-rights])
      (doall
@@ -76,7 +71,7 @@
           {:type      "checkbox"
            :checked   (contains? rights (name right))
            :on-change #(dispatch [:editor/update-selected-organization-rights right (.. % -target -checked)])}]
-         (autil/non-blank-val label [lang :fi :sv :en])]))]))
+         @(subscribe [:editor/virkailija-translation label])]))]))
 
 (defn- organization-results-filter-checkbox
   [id label]
