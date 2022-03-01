@@ -1,4 +1,4 @@
-(ns ataru.applications.harkinnanvaraisuus-filter
+(ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter
   (:require [ataru.util :refer [flatten-form-fields]]
             [ataru.application.option-visibility :as option-visibility]))
 

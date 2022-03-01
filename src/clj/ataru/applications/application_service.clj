@@ -29,7 +29,7 @@
     [ataru.dob :as dob]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
-    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
     [ataru.cache.cache-service :as cache])
   (:import
     java.io.ByteArrayInputStream
