@@ -755,7 +755,9 @@
   (fn [[can-edit-application? settings-visible? toisen-asteen-yhteishaku? superuser? all-organizations-have-opinto-ohjaaja-rights?] [_ field-name]]
     (and
       (not settings-visible?)
-      can-edit-application?
+      (or
+        can-edit-application?
+        (= :notes field-name))
       (or
         superuser?
         (not toisen-asteen-yhteishaku?)
