@@ -1364,7 +1364,7 @@
   (fn [{db :db} [_]]
     (when (empty? (get-in db [:editor :organizations :select]))
       {:http {:method              :get
-              :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&perusaste-only=true&oppilaitos-only=true&results-page=10000"
+              :path                "/lomake-editori/api/organization/user-organizations?organizations=true&hakukohde-groups=false&lahtokoulu-only=true&results-page=10000"
               :skip-parse-times?   true
               :handler-or-dispatch :editor/update-organization-query-results-for-schools-of-departure}})))
 
