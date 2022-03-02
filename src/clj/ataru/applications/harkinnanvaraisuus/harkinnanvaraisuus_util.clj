@@ -1,0 +1,37 @@
+(ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util
+  (:require [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-option-values-affecting-harkinnanvaraisuus
+                                                                    yksilollistetty-key-values-affecting-harkinnanvaraisuus
+                                                                    base-education-choice-key]]))
+
+(defn get-common-harkinnanvaraisuus-reason
+  [answers]
+  (let [base-education-value ((keyword base-education-choice-key) answers)
+        key-affecting-harkinnanvaraisuus-value (->> yksilollistetty-key-values-affecting-harkinnanvaraisuus
+                                                    keys
+                                                    (filter #(seq (% answers)))
+                                                    first)]
+    (cond
+      (and base-education-value
+           (= (:ulkomailla-suoritettu-value base-education-option-values-affecting-harkinnanvaraisuus)
+              base-education-value))
+      (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
+
+      (and base-education-value
+           (= (:ei-paattotodistusta-value base-education-option-values-affecting-harkinnanvaraisuus)
+              base-education-value))
+      (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+
+      (and key-affecting-harkinnanvaraisuus-value
+           (= (key-affecting-harkinnanvaraisuus-value yksilollistetty-key-values-affecting-harkinnanvaraisuus)
+              (key-affecting-harkinnanvaraisuus-value answers)))
+      (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
+
+(defn assoc-harkinnanvaraisuustieto
+  [tarjonta-application]
+  (let [answers     (:keyValues tarjonta-application)
+        hakukohteet (:hakutoiveet tarjonta-application)
+        common-harkinnanvaraisuus (get-common-harkinnanvaraisuus-reason answers)]
+    (if common-harkinnanvaraisuus
+      (assoc tarjonta-application :hakutoiveet (map #(assoc % :harkinnanvaraisuus common-harkinnanvaraisuus) hakukohteet))
+      tarjonta-application)))

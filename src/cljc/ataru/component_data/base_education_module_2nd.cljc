@@ -3,6 +3,16 @@
             [ataru.translations.texts :refer [base-education-2nd-module-texts general-texts]]
             [ataru.component-data.component :as component :refer [harkinnanvaraisuus-wrapper-id]]))
 
+(def base-education-option-values-affecting-harkinnanvaraisuus
+  {:ei-paattotodistusta-value "7"
+   :ulkomailla-suoritettu-value "0"})
+
+(def yksilollistetty-key-values-affecting-harkinnanvaraisuus
+  {:matematiikka-ja-aidinkieli-yksilollistetty_1 "1"
+   :matematiikka-ja-aidinkieli-yksilollistetty_2 "1"})
+
+(def base-education-choice-key "base-education-2nd")
+
 (defn- base-education-language-question
   [metadata]
   (merge (component/dropdown metadata)
@@ -199,7 +209,7 @@
 (defn- ulkomailla-suoritettu-option
   [metadata]
   {:label (:base-education-foreign base-education-2nd-module-texts)
-   :value "0"
+   :value (:ulkomailla-suoritettu-value base-education-option-values-affecting-harkinnanvaraisuus)
    :followups
    [(ulkomailla-harkinnanvarainen-info metadata)
     (suorittanut-tutkinnon-question metadata)
@@ -208,7 +218,7 @@
 (defn- ei-paattotodistusta-option
   [metadata]
   {:label (:base-education-no-graduation base-education-2nd-module-texts)
-   :value "7"
+   :value (:ei-paattotodistusta-value base-education-option-values-affecting-harkinnanvaraisuus)
    :followups
    [(ei-paattotodistusta-info metadata)
     (suorittanut-tutkinnon-question metadata)
@@ -217,7 +227,7 @@
 (defn- base-education-question
   [metadata]
   (assoc (component/single-choice-button metadata)
-    :id "base-education-2nd"
+    :id base-education-choice-key
     :label (:choose-base-education base-education-2nd-module-texts)
     :koodisto-source {
                       :uri "2asteenpohjakoulutus2021"
@@ -234,12 +244,12 @@
         :condition
         {:comparison-operator "="
          :data-type "str"
-         :answer-compared-to "0"}}
+         :answer-compared-to (:ulkomailla-suoritettu-value base-education-option-values-affecting-harkinnanvaraisuus)}}
        {:section-name harkinnanvaraisuus-wrapper-id
         :condition
         {:comparison-operator "="
          :data-type "str"
-         :answer-compared-to "7"}}]
+         :answer-compared-to (:ei-paattotodistusta-value base-education-option-values-affecting-harkinnanvaraisuus)}}]
       :options [(perusopetus-option metadata)
                 (perusopetuksen-osittain-yksilollistetty-option metadata)
                 (perusopetuksen-yksilollistetty-option metadata)

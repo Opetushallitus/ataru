@@ -1,6 +1,6 @@
-(ns ataru.applications.harkinnanvaraisuus-filter-spec
+(ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter-spec
   (:require [speclj.core :refer [it describe tags should=]]
-            [ataru.applications.harkinnanvaraisuus-filter :as hf]))
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :as hf]))
 
 (def harkinnanvaraisuus-only-filters
   {:harkinnanvaraisuus {:only-harkinnanvaraiset true}})
@@ -20,7 +20,7 @@
     (get form-map form-id)))
 
 (describe "filter-applications-by-harkinnanvaraisuus"
-  (tags :unit)
+  (tags :unit :harkinnanvaraisuus)
 
   (it "returns empty vector when given empty vector"
     (let [input  []
