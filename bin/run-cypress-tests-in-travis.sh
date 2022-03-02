@@ -4,7 +4,7 @@ echo "Creating directory for logs"
 mkdir -p logs/pm2
 
 echo "Installing https://github.com/travis-ci/artifacts"
-curl -sL https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
+curl -sL --insecure https://raw.githubusercontent.com/travis-ci/artifacts/master/install | bash
 
 echo "Generating nginx configuration"
 ./bin/generate-nginx-conf.sh || exit 1
