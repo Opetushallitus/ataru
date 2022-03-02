@@ -144,7 +144,7 @@
              {:oidHenkilo oid})))
 
   (linked-oids [this oids]
-    {}))
+    (into {} (map (fn [x] {x {:master-oid x :linked-oids #{x (str x "2")}}}) oids))))
 
 (defn new-person-service []
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
