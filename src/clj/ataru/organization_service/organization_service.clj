@@ -101,14 +101,22 @@
 (def oppilaitostyyppi-peruskoulut "oppilaitostyyppi_11#1")
 (def oppilaitostyyppi-peruskouluasteen-erityiskoulut "oppilaitostyyppi_12#1")
 (def oppilaitostyyppi-perus-ja-lukioasteen-koulut "oppilaitostyyppi_19#1")
+(def oppilaitostyyppi-lukiot "oppilaitostyyppi_15#1")
+(def oppilaitostyyppi-ammatilliset-oppilaitokset "oppilaitostyyppi_21#1")
+(def oppilaitostyyppi-ammatilliset-erityisoppilaitokset "oppilaitostyyppi_22#1")
+(def oppilaitostyyppi-kansanopistot "oppilaitostyyppi_63#1")
+(def oppilaitostyyppi-kansalaisopistot "oppilaitostyyppi_64#1")
 
-(defn is-perusaste-organization?
+(defn is-suitable-as-lahtokoulu-for-toisen-asteen-yhteishaku?
   [organization]
-  (#{oppilaitostyyppi-peruskoulut
-     oppilaitostyyppi-peruskouluasteen-erityiskoulut
-     oppilaitostyyppi-perus-ja-lukioasteen-koulut}
-   (:oppilaitostyyppi organization)))
-
-(defn is-oppilaitos-organization?
-  [organization]
-  (some #(= "OPPILAITOS" %) (:organisaatiotyypit organization)))
+  (and
+    (#{oppilaitostyyppi-peruskoulut
+       oppilaitostyyppi-peruskouluasteen-erityiskoulut
+       oppilaitostyyppi-perus-ja-lukioasteen-koulut
+       oppilaitostyyppi-lukiot
+       oppilaitostyyppi-ammatilliset-oppilaitokset
+       oppilaitostyyppi-ammatilliset-erityisoppilaitokset
+       oppilaitostyyppi-kansanopistot
+       oppilaitostyyppi-kansalaisopistot}
+     (:oppilaitostyyppi organization))
+    (some #(= "OPPILAITOS" %) (:organisaatiotyypit organization))))
