@@ -1424,10 +1424,10 @@
 (reg-event-fx
   :editor/update-selected-organization
   (fn [{db :db} [_ selected-organization]]
-    {:db         (assoc-in db
-                           [:editor :user-info :selected-organization]
-                           (not-empty selected-organization))
-     :navigate   "/lomake-editori/editor"}))
+    {:db (assoc-in db
+                   [:editor :user-info :selected-organization]
+                   (not-empty selected-organization))}
+    (.reload js/location)))
 
 (reg-event-fx
   :editor/remove-selected-organization
