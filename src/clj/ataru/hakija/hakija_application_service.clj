@@ -86,7 +86,7 @@
                                        original-followup-field   (fields-by-key (:original-followup answer))]
                                    (if (and
                                          (or (:cannot-view field) (:cannot-view original-question-field) (:cannot-view original-followup-field))
-                                         (nil? (:value answer)))
+                                         (or (:cannot-edit field) (nil? (:value answer))))
                                      (or (old-answers-by-key (:key answer)) answer)
                                      answer)))]
     (assoc new-application :answers
