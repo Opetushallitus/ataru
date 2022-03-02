@@ -445,6 +445,17 @@
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
           (ok (suoritus-service/oppilaitoksen-luokat suoritus-service oppilaitos-oid year luokkatasot))))
 
+      (api/GET "/opiskelija/:henkilo-oid" {session :session}
+        :path-params [henkilo-oid :- String]
+        :summary "Returns opiskelija information from suoritusrekisteri"
+        :return ataru-schema/OpiskelijaResponse
+        (if-let [opiskelija (suoritus-service/opiskelija suoritus-service henkilo-oid)]
+          (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
+            (response/ok
+              {:oppilaitos-name (:name organization)
+               :luokka (:luokka opiskelija)}))
+          (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)})))
+
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings
         (ok (virkailija-edit/get-review-settings session)))

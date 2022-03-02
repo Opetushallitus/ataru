@@ -810,3 +810,7 @@
    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool
    :yo-amm-autom-hakukelpoisuus                                s/Bool
    s/Any                                                       s/Any})
+
+(s/defschema OpiskelijaResponse
+  {:oppilaitos-name localized-schema/LocalizedStringOptional
+   :luokka s/Str})
