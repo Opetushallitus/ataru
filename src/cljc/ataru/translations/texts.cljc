@@ -1446,7 +1446,7 @@
                                                      :sv "Valpas-tjänsten"
                                                      :en "Valpas service"}
    :only-harkinnanvaraiset                          {:fi "Vain harkinnanvaraiset"
-                                                     :sv "SV: Vain harkinnanvaraiset"
+                                                     :sv "SV: Endast antagning enlig prövning"
                                                      :en "EN: Vain harkinnanvaraiset"}
    :guardian-contact-information                    {:fi "Huoltajan yhteystiedot"
                                                      :sv "Vårdnadshavarens kontaktuppgifter"
@@ -1548,7 +1548,7 @@
                                                      :sv "Ansökningsmålsgrupp"
                                                      :en "Study programme groups"}
    :harkinnanvaraisuus                              {:fi "Harkinnanvaraisuus"
-                                                     :sv "SV: Harkinnanvaraisuus"
+                                                     :sv "SV: Antagning enligt prövning"
                                                      :en "EN: Harkinnanvaraisuus"}
    :search-hakukohde-placeholder                    {:fi "Etsi hakukohteita"
                                                      :sv "Sök ansökningsmål"
