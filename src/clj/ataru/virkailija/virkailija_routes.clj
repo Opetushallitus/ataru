@@ -500,6 +500,7 @@
                          organization-service
                          tarjonta-service
                          suoritus-service
+                         person-service
                          session
                          application-key)]
           (if allowed?
@@ -697,6 +698,7 @@
               organization-service
               tarjonta-service
               suoritus-service
+              person-service
               session
               (:application-keys body)
               [:edit-applications])
