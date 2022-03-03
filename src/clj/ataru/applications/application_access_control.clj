@@ -81,15 +81,12 @@
     set))
 
 (defn linked-oids-for-person-oids [person-service oids]
-  (let [foo (person-service/linked-oids person-service oids)
-        result (mapcat vec (map :linked-oids (vals foo)))]
-    (log/info (str "linked oids for oids: " (count oids) " - " oids ", result " (count result) " - " result))
-    result))
+  (let [onr-data (person-service/linked-oids person-service oids)]
+    (mapcat vec (map :linked-oids (vals onr-data)))))
 
 (defn- person-oids-for-oppilaitos
   [suoritus-service person-service oppilaitos-oid]
   (let [now (time/now)]
-    (log/info "person-oids-for-oppilaitos")
     (->>
       (suoritus-service/oppilaitoksen-opiskelijat
         suoritus-service
@@ -107,7 +104,6 @@
 (defn- filter-applications-by-lahtokoulu
   [suoritus-service person-service authorized-organization-oids applications]
   (let [authorized-person-oids (mapcat (partial person-oids-for-oppilaitos suoritus-service person-service) authorized-organization-oids)]
-    (log/info (str "Filter by lahtokoulu " authorized-organization-oids))
     (->> applications
       (filter (partial authorized-by-person-oid? authorized-person-oids))
       (map remove-organization-oid))))
