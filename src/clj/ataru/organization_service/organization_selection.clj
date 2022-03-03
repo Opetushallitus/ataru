@@ -20,11 +20,11 @@
     (= (-> organization :hakukohderyhma? boolean) include-hakukohde-groups?)))
 
 (defn- filter-organizations
-  [{:keys [include-organizations? include-hakukohde-groups? perusaste-only? oppilaitos-only?]} organizations]
-  (cond->> organizations
-           true (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?))
-           perusaste-only? (filter organization-service/is-perusaste-organization?)
-           oppilaitos-only? (filter organization-service/is-oppilaitos-organization?)))
+  [{:keys [include-organizations? include-hakukohde-groups? lahtokoulu-only?]} organizations]
+  (let [filtered-by-type (filter (partial filter-org-by-type include-organizations? include-hakukohde-groups?) organizations)]
+    (if lahtokoulu-only?
+      (filter organization-service/is-suitable-as-lahtokoulu-for-toisen-asteen-yhteishaku? filtered-by-type)
+      filtered-by-type)))
 
 (defn query-organization
   [organization-service session query filter-flags page-num]

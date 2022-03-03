@@ -7,5 +7,5 @@
 
 (defn luokkatasot-for-suoritus-filter
   []
-  ["9" "10" "VALMA" "TELMA"])
+  ["9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI"])
 
