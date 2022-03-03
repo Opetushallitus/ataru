@@ -53,7 +53,7 @@
           (describe "assoc-harkinnanvaraisuus-tieto"
 
                     (it "returns harkinnanvaraisuus reason none for each hakukohde"
-                        (let [tarjonta-application {:keyValues {:question "answer"}
+                        (let [tarjonta-application {:keyValues {"question" "answer"}
                                                     :hakutoiveet [{:hakukohdeOid "1.2.3"} {:hakukohdeOid "1.2.1"}]}
                               result (hu/assoc-harkinnanvaraisuustieto tarjonta-application)
                               hakutoiveet (:hakutoiveet result)]
@@ -61,7 +61,7 @@
                           (should= true (every? #(= (:none harkinnanvaraisuus-reasons) (:harkinnanvaraisuus %)) hakutoiveet))))
 
                     (it "returns common harkinnanvaraisuus reason for each hakukohde"
-                        (let [tarjonta-application {:keyValues {:base-education-2nd "7"}
+                        (let [tarjonta-application {:keyValues {"base-education-2nd" "7"}
                                                     :hakutoiveet [{:hakukohdeOid "1.2.3"} {:hakukohdeOid "1.2.1"}]}
                               result (hu/assoc-harkinnanvaraisuustieto tarjonta-application)
                               hakutoiveet (:hakutoiveet result)]
@@ -70,7 +70,7 @@
                                                     (:harkinnanvaraisuus %)) hakutoiveet))))
 
                     (it "returns common harkinnanvaraisuus reason for each hakukohde even if there are hakukohde specific reasons in answers"
-                        (let [tarjonta-application {:keyValues {:base-education-2nd "0" :harkinnanvaraisuus-reason_1.2.3 "1"}
+                        (let [tarjonta-application {:keyValues {"base-education-2nd" "0", "harkinnanvaraisuus-reason_1.2.3" "1"}
                                                     :hakutoiveet [{:hakukohdeOid "1.2.3"} {:hakukohdeOid "1.2.1"}]}
                               result (hu/assoc-harkinnanvaraisuustieto tarjonta-application)
                               hakutoiveet (:hakutoiveet result)]
@@ -79,7 +79,7 @@
                                                     (:harkinnanvaraisuus %)) hakutoiveet))))
 
                     (it "returns specific harkinnanvaraisuus reason for each hakukohde"
-                        (let [tarjonta-application {:keyValues {:base-education-2nd "1" :harkinnanvaraisuus-reason_1.2.3 "0"}
+                        (let [tarjonta-application {:keyValues {"base-education-2nd" "1", "harkinnanvaraisuus-reason_1.2.3" "0"}
                                                     :hakutoiveet [{:hakukohdeOid "1.2.3"} {:hakukohdeOid "1.2.1"}]}
                               result (hu/assoc-harkinnanvaraisuustieto tarjonta-application)
                               hakutoiveet (:hakutoiveet result)]

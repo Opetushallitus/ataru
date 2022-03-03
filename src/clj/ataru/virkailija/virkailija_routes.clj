@@ -1364,8 +1364,8 @@
 
       (api/POST "/valintalaskenta" {session :session}
         :summary "Get application answers for valintalaskenta"
-        :query-params [{hakukohdeOid :- s/Str nil
-                        harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}]
+        :query-params [{hakukohdeOid :- s/Str nil}
+                       {harkinnanvaraisuustiedotHakutoiveille :- s/Bool false}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/ValintaApplication]
         (if (and (nil? hakukohdeOid)

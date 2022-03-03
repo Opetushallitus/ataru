@@ -1,5 +1,6 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util
   (:require [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
+            [clojure.walk :refer [keywordize-keys]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-option-values-affecting-harkinnanvaraisuus
                                                                     yksilollistetty-key-values-affecting-harkinnanvaraisuus
                                                                     base-education-choice-key]]))
@@ -49,7 +50,7 @@
 
 (defn assoc-harkinnanvaraisuustieto
   [tarjonta-application]
-  (let [answers     (:keyValues tarjonta-application)
+  (let [answers     (keywordize-keys (:keyValues tarjonta-application))
         hakukohteet (:hakutoiveet tarjonta-application)
         common-harkinnanvaraisuus (get-common-harkinnanvaraisuus-reason answers)
         assoc-harkinnanvaraisuus-fn (fn [hakukohde]
