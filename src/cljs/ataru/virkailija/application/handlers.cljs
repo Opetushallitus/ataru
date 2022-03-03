@@ -17,7 +17,8 @@
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
-            [ataru.virkailija.temporal :as temporal]))
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.tarjonta.haku :as haku]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -601,6 +602,27 @@
         (assoc-in [:form :content] form-content))))
 
 (reg-event-fx
+  :application/fetch-applicant-school
+  (fn [_ [_ applicant-henkilo-oid]]
+    {:http {:method              :get
+            :path                (str "/lomake-editori/api/applications/opiskelija/" applicant-henkilo-oid)
+            :handler-or-dispatch :application/handle-fetch-applicant-school-response}}))
+
+(reg-event-db
+  :application/handle-fetch-applicant-school-response
+  (fn [db [_ response]]
+    (let [applicant-oppilaitos-name (:oppilaitos-name response)
+          applicant-luokka          (:luokka response)]
+      (-> db
+        (assoc-in [:application :selected-application-and-form :application :person :oppilaitos-name] applicant-oppilaitos-name)
+        (assoc-in [:application :selected-application-and-form :application :person :luokka] applicant-luokka)))))
+
+(defn create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku
+  [application]
+  (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
+    [:application/fetch-applicant-school (-> application :person :oid)]))
+
+(reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [application-key            (-> response :application :key)
@@ -623,7 +645,8 @@
                                        [(hyvaksynnan-ehto-hakemukselle-dispatch db)]
                                        [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                          {:application-key application-key
-                                          :memoize         true}]]))]
+                                          :memoize         true}]]
+                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]))]
       {:db         db
        :dispatch-n dispatches})))
 
