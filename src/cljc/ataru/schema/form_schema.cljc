@@ -805,8 +805,8 @@
 (s/defschema HakukohderyhmaSettings
   {:rajaava                                                    s/Bool
    :max-hakukohteet                                            (s/maybe s/Int)
-   (s/optional-key :priorisoiva)                               s/Bool ;fixme optional?
-   (s/optional-key :prioriteettijarjestys)                     [s/Str] ;fixme optional?
+   (s/optional-key :priorisoiva)                               s/Bool
+   (s/optional-key :prioriteettijarjestys)                     [s/Str]
    :jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja s/Bool
    :yo-amm-autom-hakukelpoisuus                                s/Bool
    s/Any                                                       s/Any})
