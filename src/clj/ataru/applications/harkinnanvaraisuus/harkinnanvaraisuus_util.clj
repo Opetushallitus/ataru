@@ -27,11 +27,35 @@
               (key-affecting-harkinnanvaraisuus-value answers)))
       (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
 
+(defn get-harkinnanvaraisuus-reason-for-hakukohde
+  [answers hakukohde-oid]
+  (let [harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
+        harkinnanvaraisuus-answer (harkinnanvaraisuus-reason-key answers)]
+    (cond
+      (= "0" harkinnanvaraisuus-answer)
+      (:ataru-study-challenges harkinnanvaraisuus-reasons)
+
+      (= "1" harkinnanvaraisuus-answer)
+      (:ataru-social-reasons harkinnanvaraisuus-reasons)
+
+      (= "2" harkinnanvaraisuus-answer)
+      (:ataru-certificate-comparison-difficulties harkinnanvaraisuus-reasons)
+
+      (= "3" harkinnanvaraisuus-answer)
+      (:ataru-insufficient-language-skill harkinnanvaraisuus-reasons)
+
+      :else
+      (:none harkinnanvaraisuus-reasons))))
+
 (defn assoc-harkinnanvaraisuustieto
   [tarjonta-application]
   (let [answers     (:keyValues tarjonta-application)
         hakukohteet (:hakutoiveet tarjonta-application)
-        common-harkinnanvaraisuus (get-common-harkinnanvaraisuus-reason answers)]
+        common-harkinnanvaraisuus (get-common-harkinnanvaraisuus-reason answers)
+        assoc-harkinnanvaraisuus-fn (fn [hakukohde]
+                                        (assoc hakukohde
+                                          :harkinnanvaraisuus
+                                          (get-harkinnanvaraisuus-reason-for-hakukohde answers (:hakukohdeOid hakukohde))))]
     (if common-harkinnanvaraisuus
       (assoc tarjonta-application :hakutoiveet (map #(assoc % :harkinnanvaraisuus common-harkinnanvaraisuus) hakukohteet))
-      tarjonta-application)))
+      (assoc tarjonta-application :hakutoiveet (map assoc-harkinnanvaraisuus-fn hakukohteet)))))
