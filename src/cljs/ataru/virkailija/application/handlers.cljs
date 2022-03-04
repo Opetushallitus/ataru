@@ -604,7 +604,6 @@
 (reg-event-fx
   :application/fetch-applicant-school
   (fn [_ [_ applicant-henkilo-oid]]
-    (println "Fetching school for applicant" applicant-henkilo-oid)
     {:http {:method              :get
             :path                (str "/lomake-editori/api/applications/opiskelija/" applicant-henkilo-oid)
             :handler-or-dispatch :application/handle-fetch-applicant-school-response}}))

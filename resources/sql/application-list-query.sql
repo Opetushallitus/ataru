@@ -199,4 +199,4 @@ WHERE la.id IS NULL
 --~ (when (contains? params :option-answers-snip) ":snip:option-answers-snip")
 --~ (when (contains? params :offset-snip) ":snip:offset-snip")
 :snip:order-by-snip
-LIMIT 1000
+LIMIT 100

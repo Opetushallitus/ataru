@@ -339,7 +339,7 @@
                                     (populate-applications-with-person-data
                                       person-service
                                       (application-filtering/filter-applications authorized-applications states-and-filters)))]
-          {:fetched-applications applications :filtered-applications filtered-applications}))
+        {:fetched-applications applications :filtered-applications filtered-applications}))
 
 (defn- hakukohteiden-ehdolliset
   [valinta-tulos-service applications]
