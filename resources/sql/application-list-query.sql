@@ -142,13 +142,7 @@ SELECT a.id,
               ae.application_key = a.key) AS "new-application-modifications",
        (SELECT f.organization_oid
         FROM forms AS f
-        LEFT JOIN forms AS lf
-          ON lf.key = f.key AND
-             lf.id > f.id
-        WHERE lf.id IS NULL AND
-              f.key = (SELECT key
-                       FROM forms
-                       WHERE id = a.form_id)) AS "organization-oid",
+        WHERE id = a.form_id) AS "organization-oid",
        (SELECT jsonb_agg(jsonb_build_object('requirement', requirement,
                                             'state', state,
                                             'hakukohde', hakukohde))
