@@ -73,7 +73,9 @@
                               selected-hakukohteet-and-ryhmat)))))
          (or (empty? (:children field-descriptor))
              (some #(visible? % application hakukohteet-and-ryhmat) (:children field-descriptor)))
-         (not (util/is-field-hidden-by-section-visibility-conditions @form (:answers application) field-descriptor)))))
+         (not (util/is-field-hidden-by-section-visibility-conditions @form (:answers application) field-descriptor))
+         (or (some? (get-in application [:answers (keyword (:id field-descriptor))]))
+             (#{"wrapperElement" "questionGroup"} (:fieldClass field-descriptor))))))
 
 (defn- text-form-field-nested-container [selected-options lang application hakukohteet-and-ryhmat question-group-idx]
   [:div.application-handling__nested-container--top-level
