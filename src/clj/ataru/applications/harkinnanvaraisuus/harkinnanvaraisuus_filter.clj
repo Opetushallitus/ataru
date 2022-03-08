@@ -7,10 +7,12 @@
 (def harkinnanvaraisuus-yes-answer-value "1")
 
 (defn- answered-yes-to-harkinnanvaraisuus
-  [application]
+  [hakukohteet application]
   (->> (-> application :content :answers)
        (filter #(= harkinnanvaraisuus-key (:original-question %)))
-       (some #(= harkinnanvaraisuus-yes-answer-value (:value %)))
+       (some #(and
+                (= harkinnanvaraisuus-yes-answer-value (:value %))
+                (or (empty? hakukohteet) (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %)))))
        (boolean)))
 
 (defn- field-has-section-visibility-conditions-targeting-harkinnanvaraisuus
@@ -47,14 +49,14 @@
       :fields-with-visibility-conditions field-ids-with-conditions-targeting-harkinnanvaraisuus}))
 
 (defn- filter-harkinnanvaraiset-applications
-  [fetch-application-content-fn fetch-form-fn applications]
+  [fetch-application-content-fn fetch-form-fn hakukohteet applications]
   (let [applications-contents-and-forms (fetch-application-content-fn (map :id applications))
         distinct-form-ids (->> applications-contents-and-forms
                             (map :form)
                             (distinct))
         form-id-with-field-ids-with-conditions (map (partial form-id-with-field-ids-with-conditions fetch-form-fn) distinct-form-ids)
         harkinnanvaraiset-ids (->> applications-contents-and-forms
-                                   (filter (some-fn answered-yes-to-harkinnanvaraisuus
+                                   (filter (some-fn (partial answered-yes-to-harkinnanvaraisuus hakukohteet)
                                                     (partial harkinnanvaraisuus-is-set-by-form-logic form-id-with-field-ids-with-conditions)))
                                    (map :id)
                                    set)]
@@ -62,7 +64,8 @@
 
 (defn filter-applications-by-harkinnanvaraisuus
   [fetch-applications-content-fn fetch-form-fn applications filters]
-  (let [only-harkinnanvaraiset? (-> filters :harkinnanvaraisuus :only-harkinnanvaraiset)]
+  (let [only-harkinnanvaraiset? (-> filters :filters :harkinnanvaraisuus :only-harkinnanvaraiset)
+        hakukohteet             (-> filters :selected-hakukohteet)]
     (if (and only-harkinnanvaraiset? (seq applications))
-      (filter-harkinnanvaraiset-applications fetch-applications-content-fn fetch-form-fn applications)
+      (filter-harkinnanvaraiset-applications fetch-applications-content-fn fetch-form-fn hakukohteet applications)
       applications)))

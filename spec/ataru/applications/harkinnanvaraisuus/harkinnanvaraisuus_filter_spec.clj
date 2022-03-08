@@ -3,7 +3,7 @@
             [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :as hf]))
 
 (def harkinnanvaraisuus-only-filters
-  {:harkinnanvaraisuus {:only-harkinnanvaraiset true}})
+  {:filters {:harkinnanvaraisuus {:only-harkinnanvaraiset true}}})
 
 (def harkinnanvaraisuus-lomakeosio-key "harkinnanvaraisuus-wrapper")
 (def harkinnanvaraisuus-no-answer-value "0")
@@ -69,6 +69,40 @@
                              input
                              harkinnanvaraisuus-only-filters)]
       (should= [] result)))
+
+  (describe "when filtering by hakukohteet as well"
+    (it "returns application if it contains 'yes' answer to harkinnanvaraisuus question for given hakukohde"
+      (let [input            [{:id "application-1-id"}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:original-question "harkinnanvaraisuus"
+                                                    :duplikoitu-kysymys-hakukohde-oid "hakukohde-oid-1"
+                                                    :value harkinnanvaraisuus-yes-answer-value}]}}}
+            form-data        {"form-1-id" {:content [{:id "harkinnanvaraisuus"}]}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               (fake-fetch-form form-data)
+                               input
+                               (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-1"}))]
+        (should= input result)))
+
+    (it "does not return application if it contains 'no' answer to harkinnanvaraisuus question for given hakukohde even if it contains 'yes' answer for another"
+      (let [input            [{:id "application-1-id"}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:original-question "harkinnanvaraisuus"
+                                                    :duplikoitu-kysymys-hakukohde-oid "hakukohde-oid-1"
+                                                    :value harkinnanvaraisuus-no-answer-value}
+                                                   {:original-question "harkinnanvaraisuus"
+                                                    :duplikoitu-kysymys-hakukohde-oid "hakukohde-oid-2"
+                                                    :value harkinnanvaraisuus-yes-answer-value}]}}}
+            form-data        {"form-1-id" {:content [{:id "harkinnanvaraisuus"}]}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               (fake-fetch-form form-data)
+                               input
+                               (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-1"}))]
+        (should= [] result))))
 
   (describe "form has condition which can hide 'harkinnanvaraisuus' section"
     (let [form-data {"form-1-id" {:content [{:id harkinnanvaraisuus-lomakeosio-key}
