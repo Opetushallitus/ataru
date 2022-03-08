@@ -34,16 +34,16 @@
         harkinnanvaraisuus-answer (harkinnanvaraisuus-reason-key answers)]
     (cond
       (= "0" harkinnanvaraisuus-answer)
-      (:ataru-study-challenges harkinnanvaraisuus-reasons)
+      (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
 
       (= "1" harkinnanvaraisuus-answer)
-      (:ataru-social-reasons harkinnanvaraisuus-reasons)
+      (:ataru-sosiaaliset-syyt harkinnanvaraisuus-reasons)
 
       (= "2" harkinnanvaraisuus-answer)
-      (:ataru-certificate-comparison-difficulties harkinnanvaraisuus-reasons)
+      (:ataru-koulutodistusten-vertailuvaikeudet harkinnanvaraisuus-reasons)
 
       (= "3" harkinnanvaraisuus-answer)
-      (:ataru-insufficient-language-skill harkinnanvaraisuus-reasons)
+      (:ataru-riittamaton-tutkintokielen-taito harkinnanvaraisuus-reasons)
 
       :else
       (:none harkinnanvaraisuus-reasons))))

@@ -35,19 +35,19 @@
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.5 "0"} "1.2.3.4")))
 
                     (it "returns learning difficulties"
-                        (should= (:ataru-study-challenges harkinnanvaraisuus-reasons)
+                        (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "0"} "1.2.3.4")))
 
                     (it "returns social reasons"
-                        (should= (:ataru-social-reasons harkinnanvaraisuus-reasons)
+                        (should= (:ataru-sosiaaliset-syyt harkinnanvaraisuus-reasons)
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "1"} "1.2.3.4")))
 
                     (it "returns certificate comparison difficulties"
-                        (should= (:ataru-certificate-comparison-difficulties harkinnanvaraisuus-reasons)
+                        (should= (:ataru-koulutodistusten-vertailuvaikeudet harkinnanvaraisuus-reasons)
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "2"} "1.2.3.4")))
 
                     (it "returns insufficient language skill"
-                        (should= (:ataru-insufficient-language-skill harkinnanvaraisuus-reasons)
+                        (should= (:ataru-riittamaton-tutkintokielen-taito harkinnanvaraisuus-reasons)
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "3"} "1.2.3.4"))))
 
           (describe "assoc-harkinnanvaraisuus-tieto"
@@ -84,5 +84,5 @@
                               result (hu/assoc-harkinnanvaraisuustieto tarjonta-application)
                               hakutoiveet (:hakutoiveet result)]
                           (should= 2 (count hakutoiveet))
-                          (should= (:ataru-study-challenges harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (first hakutoiveet)))
+                          (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (first hakutoiveet)))
                           (should= (:none harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (last hakutoiveet)))))))
