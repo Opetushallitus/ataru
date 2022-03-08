@@ -19,7 +19,7 @@
             [re-frame.core :refer [subscribe dispatch]]
             [clojure.set :as set]
             [clojure.string :as string]
-            [ataru.application_common.comparators :as comparators]
+            [ataru.application-common.comparators :as comparators]
             [cljs.core.match :refer-macros [match]]
             [goog.string :as s]
             [ataru.application-common.hakukohde-specific-questions :as hsq]))
@@ -390,23 +390,23 @@
 (defn- per-question-wrapper
   [question lang application hakukohteet-and-ryhmat]
   (let [selected-hakukohteet (get-in application [:answers :hakukohteet :value])]
-    [:div.readonly__per-question-wrapper
-     [:div.application__form-field-label.application__form-field__original-question
-      [:span
-       (util/from-multi-lang (:label question) lang)]]
-     (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
-                                 (map #(-> question
-                                           (dissoc :per-hakukohde)
-                                           (assoc :id (:key %)
-                                                  :original-question (:original-question %)
-                                                  :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %))
-                                           (hsq/change-followups-for-question (:duplikoitu-kysymys-hakukohde-oid %)))
-                                      (filter #(= (:original-question %) (:id question)) (vals (:answers application)))))]
-       ^{:key (str "duplicate-" (:id duplicate-field))}
-       [:section
-        [:div.application__per-hakukohde.application__form-field
-         (str @(subscribe [:application/hakukohde-label (:duplikoitu-kysymys-hakukohde-oid duplicate-field)]) " ")]
-        [selectable duplicate-field application hakukohteet-and-ryhmat lang nil]])]))
+    (when-let [duplicated-answers (seq (filter #(= (:original-question %) (:id question)) (vals (:answers application))))]
+      [:div.readonly__per-question-wrapper
+       [:div.application__form-field-label.application__form-field__original-question
+        [:span (util/from-multi-lang (:label question) lang)]]
+       (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
+                               (map #(-> question
+                                       (dissoc :per-hakukohde)
+                                       (assoc :id (:key %)
+                                              :original-question (:original-question %)
+                                              :duplikoitu-kysymys-hakukohde-oid (:duplikoitu-kysymys-hakukohde-oid %))
+                                       (hsq/change-followups-for-question (:duplikoitu-kysymys-hakukohde-oid %)))
+                                    duplicated-answers))]
+         ^{:key (str "duplicate-" (:id duplicate-field))}
+         [:section
+          [:div.application__per-hakukohde.application__form-field
+           (str @(subscribe [:application/hakukohde-label (:duplikoitu-kysymys-hakukohde-oid duplicate-field)]) " ")]
+          [selectable duplicate-field application hakukohteet-and-ryhmat lang nil]])])))
 
 (defn readonly-fields [form application hakukohteet]
   (when form
