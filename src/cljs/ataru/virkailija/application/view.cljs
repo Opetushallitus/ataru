@@ -110,7 +110,7 @@
         open-list   #(reset! list-opened true)
         close-list  #(reset! list-opened false)
         opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])
-        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku?])]
+        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn [[haku-oid
           selected-hakukohde-oid
           selected-hakukohderyhma-oid

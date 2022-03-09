@@ -274,9 +274,9 @@
 (re-frame/reg-sub
   :application/toisen-asteen-yhteishaku?
   (fn [_ _]
-    (re-frame/subscribe [:application/selected-haku]))
-  (fn [haku _]
-    (haku/toisen-asteen-yhteishaku? haku)))
+    (re-frame/subscribe [:application/selected-application]))
+  (fn [selected-application _]
+    (haku/toisen-asteen-yhteishaku? (-> selected-application :tarjonta))))
 
 (re-frame/reg-sub
   :application/show-mass-update-link?
