@@ -42,6 +42,7 @@
      matriculation and vocational parts of the degree and pick later as that matches the final completion year in
      secondary level double degree. If only one of these is present, `nil` is returned to indicate the degree is not
      fully complete yet."
+
   [haku answers application-key]
   (if (any-answers-match? answers "1" [:22df6790-588f-4c45-8238-3ecfccdf6d93    ; 1. yhteishaun tunniste, nyt
                                        :dfeb9d56-4d53-4087-9473-1b2d9437e47f])  ; 2. yhteishaun tunniste, nyt
@@ -52,6 +53,8 @@
       (if-not (empty? (remove nil? upcoming-completion-year))
         upcoming-completion-year
         (->> [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
+              :98519703-70ca-4ab4-b3c8-a2ff78fa98fd ; Korkeakoulujen kevään 2022 ensimmäinen yhteishaku, lomake-id d4af1394-5e0f-4cd6-92b3-990cfbbb700a --> kysymys-id: 98519703-70ca-4ab4-b3c8-a2ff78fa98fd
+              :bc3723b0-471e-4983-ad88-083d64c5616e ; Korkeakoulujen yhteishaku syksy 2021, lomake-id b3f2f760-40d3-42c5-9ff8-37d004b633c6 --> kysymys-id: bc3723b0-471e-4983-ad88-083d64c5616e
               :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]
              (suoritusvuosi-one-of
                application-key
