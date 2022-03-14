@@ -28,7 +28,7 @@
               (key-affecting-harkinnanvaraisuus-value answers)))
       (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
 
-(defn get-harkinnanvaraisuus-reason-for-hakukohde
+(defn get-targeted-harkinnanvaraisuus-reason-for-hakukohde
   [answers hakukohde-oid]
   (let [harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
         harkinnanvaraisuus-answer (harkinnanvaraisuus-reason-key answers)]
@@ -56,7 +56,12 @@
         assoc-harkinnanvaraisuus-fn (fn [hakukohde]
                                         (assoc hakukohde
                                           :harkinnanvaraisuus
-                                          (get-harkinnanvaraisuus-reason-for-hakukohde answers (:hakukohdeOid hakukohde))))]
+                                          (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers (:hakukohdeOid hakukohde))))]
     (if common-harkinnanvaraisuus
       (assoc tarjonta-application :hakutoiveet (map #(assoc % :harkinnanvaraisuus common-harkinnanvaraisuus) hakukohteet))
       (assoc tarjonta-application :hakutoiveet (map assoc-harkinnanvaraisuus-fn hakukohteet)))))
+
+(defn get-harkinnanvaraisuus-reason-for-hakukohde
+  [answers hakukohde-oid]
+  (or (get-common-harkinnanvaraisuus-reason answers)
+      (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)))

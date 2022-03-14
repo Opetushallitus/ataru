@@ -374,6 +374,7 @@
   (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
+  (suoritusrekisteri-toinenaste-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku]))
 
@@ -667,6 +668,12 @@
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
       (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
+
+  (suoritusrekisteri-toinenaste-applications
+    [_ haku-oid hakukohde-oids person-oids modified-after offset]
+    (let [person-oids (when (seq person-oids)
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
+      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset true)))
 
   (get-applications-paged
     [_ session params]
