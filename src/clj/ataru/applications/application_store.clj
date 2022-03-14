@@ -943,9 +943,40 @@
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
+(defn- unwrap-hakurekisteri-application-toinen-aste
+  [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities attachment_reviews]}]
+  (let [answers  (answers-by-key (:answers content))
+        foreign? (not= finland-country-code (-> answers :country-of-residence :value))]
+    {:oid                         key
+     :personOid                   person_oid
+     :createdTime                 (.print JodaFormatter created_time)
+     :applicationSystemId         haku
+     :kieli                       lang
+     :hakukohteet                 hakukohde
+     :email                       email
+     :matkapuhelin                (-> answers :phone :value)
+     :lahiosoite                  (-> answers :address :value)
+     :postinumero                 (-> answers :postal-code :value)
+     :postitoimipaikka            (if foreign?
+                                    (-> answers :city :value)
+                                    (-> answers :postal-office :value))
+     :asuinmaa                    (-> answers :country-of-residence :value)
+     :kotikunta                   (-> answers :home-town :value)
+     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
+     :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
+     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
+     :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
+     :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
+     :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
+
 (defn suoritusrekisteri-applications
-  [haku-oid hakukohde-oids person-oids modified-after offset]
-  (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+  ([haku-oid hakukohde-oids person-oids modified-after offset]
+    (suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset false))
+  ([haku-oid hakukohde-oids person-oids modified-after offset toisen-asteen-hakemukset]
+  (let [unwrap-application (if toisen-asteen-hakemukset
+                             unwrap-hakurekisteri-application-toinen-aste
+                             unwrap-hakurekisteri-application)
+        as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                   (queries/yesql-suoritusrekisteri-applications
                    {:haku_oid       haku-oid
                     :hakukohde_oids (some->> (seq hakukohde-oids)
@@ -960,10 +991,10 @@
                                             .toOffsetDateTime)
                     :offset         offset}
                    {:connection connection}))
-                (map unwrap-hakurekisteri-application))]
+                (map unwrap-application))]
     (merge {:applications as}
            (when-let [a (first (drop 999 as))]
-             {:offset (:oid a)}))))
+             {:offset (:oid a)})))))
 
 (defn- requirement-names-mapped-to-states
   [requirements]
