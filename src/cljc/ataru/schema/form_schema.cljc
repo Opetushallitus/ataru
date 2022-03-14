@@ -547,6 +547,34 @@
    :koulutusmarkkinointilupa    s/Bool
    :korkeakoulututkintoVuosi    (s/maybe s/Int)})
 
+(s/defschema HakurekisteriApplicationToinenAste
+  {:oid                                               s/Str
+   :personOid                                         s/Str
+   :createdTime                                       s/Str
+   :applicationSystemId                               s/Str
+   :kieli                                             s/Str
+   :hakukohteet                                       [s/Str]
+   :email                                             s/Str
+   :matkapuhelin                                      s/Str
+   :lahiosoite                                        s/Str
+   :postinumero                                       s/Str
+   :postitoimipaikka                                  (s/maybe s/Str)
+   :asuinmaa                                          s/Str
+   :kotikunta                                         (s/maybe s/Str)
+   :paymentObligations                                {s/Str s/Str}
+   :attachments                                       {s/Str s/Str}
+   :eligibilities                                     {s/Str s/Str}
+   :pohjakoulutus                                     [s/Str]
+   :kiinnostunutOppisopimusKoulutuksesta              s/Bool
+   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta s/Bool
+   :terveys                                           s/Bool
+   :aiempiPeruminen                                   s/Bool
+   :kiinnostunutKaksoistutkinnosta                    s/Bool
+   :sahkoisenAsioinninLupa                            s/Bool
+   :valintatuloksenJulkaisulupa                       s/Bool
+   :koulutusmarkkinointilupa                          s/Bool
+   :tutkintoVuosi                                     (s/maybe s/Int)})
+
 (s/defschema OnrApplication
   {:oid          s/Str
    :haku         (s/maybe s/Str)

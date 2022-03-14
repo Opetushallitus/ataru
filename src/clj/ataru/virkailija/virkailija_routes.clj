@@ -1228,6 +1228,34 @@
                   hakijaOids
                   modifiedAfter
                   offset))))
+      (api/POST "/suoritusrekisteri/toinenaste" {session :session}
+        :summary "Toisen asteen hakemukset for suoritusrekisteri"
+        :body-params [{hakuOid :- s/Str nil}
+                      {hakukohdeOids :- [s/Str] nil}
+                      {hakijaOids :- [s/Str] nil}
+                      {modifiedAfter :- s/Str nil}
+                      {offset :- s/Str nil}]
+        :return {:applications [ataru-schema/HakurekisteriApplicationToinenAste]
+                 (s/optional-key :offset) s/Str}
+        (cond (every? nil? [hakuOid (seq hakukohdeOids) (seq hakijaOids) modifiedAfter])
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications :edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (application-service/suoritusrekisteri-applications
+                  application-service
+                  hakuOid
+                  hakukohdeOids
+                  hakijaOids
+                  modifiedAfter
+                  offset))))
       (api/GET "/applications" {session :session}           ;; deprecated, use /valinta-tulos-service
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}
