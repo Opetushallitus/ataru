@@ -547,13 +547,17 @@
    :koulutusmarkkinointilupa    s/Bool
    :korkeakoulututkintoVuosi    (s/maybe s/Int)})
 
+(s/defschema HakurekisteriHakukohde
+  {:oid s/Str
+   (s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)})
+
 (s/defschema HakurekisteriApplicationToinenAste
   {:oid                                               s/Str
    :personOid                                         s/Str
    :createdTime                                       s/Str
    :applicationSystemId                               s/Str
    :kieli                                             s/Str
-   :hakukohteet                                       [s/Str]
+   :hakukohteet                                       [HakurekisteriHakukohde]
    :email                                             s/Str
    :matkapuhelin                                      s/Str
    :lahiosoite                                        s/Str

@@ -1249,7 +1249,7 @@
               (response/unauthorized {:error "Unauthorized"})
               :else
               (response/ok
-                (application-service/suoritusrekisteri-applications
+                (application-service/suoritusrekisteri-toinenaste-applications
                   application-service
                   hakuOid
                   hakukohdeOids

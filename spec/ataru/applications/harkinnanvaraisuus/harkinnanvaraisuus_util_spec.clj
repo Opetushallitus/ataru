@@ -24,6 +24,32 @@
                         (should= (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
                                  (hu/get-common-harkinnanvaraisuus-reason {:base-education-2nd "7"}))))
 
+          (describe "get-targeted-harkinnanvaraisuus-reason-for-hakukohde"
+
+                    (it "returns none when no harkinnanvaraisuus reason"
+                        (should= (:none harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {} "1.2.3.4")))
+
+                    (it "returns none when harkinnanvaraisuus reason is for another hakukohde"
+                        (should= (:none harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.5 "0"} "1.2.3.4")))
+
+                    (it "returns learning difficulties"
+                        (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "0"} "1.2.3.4")))
+
+                    (it "returns social reasons"
+                        (should= (:ataru-sosiaaliset-syyt harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "1"} "1.2.3.4")))
+
+                    (it "returns certificate comparison difficulties"
+                        (should= (:ataru-koulutodistusten-vertailuvaikeudet harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "2"} "1.2.3.4")))
+
+                    (it "returns insufficient language skill"
+                        (should= (:ataru-riittamaton-tutkintokielen-taito harkinnanvaraisuus-reasons)
+                                 (hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "3"} "1.2.3.4"))))
+
           (describe "get-harkinnanvaraisuus-reason-for-hakukohde"
 
                     (it "returns none when no harkinnanvaraisuus reason"
@@ -34,13 +60,13 @@
                         (should= (:none harkinnanvaraisuus-reasons)
                                  (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.5 "0"} "1.2.3.4")))
 
-                    (it "returns learning difficulties"
-                        (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
-                                 (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "0"} "1.2.3.4")))
+                    (it "returns ulkomailla opiskelu"
+                        (should= (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
+                                 (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:base-education-2nd "0" :harkinnanvaraisuus-reason_1.2.3.4 "0"} "1.2.3.4")))
 
-                    (it "returns social reasons"
-                        (should= (:ataru-sosiaaliset-syyt harkinnanvaraisuus-reasons)
-                                 (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 "1"} "1.2.3.4")))
+                    (it "returns matematiikka ja aidinkieli yksilollistetty reason"
+                        (should= (:ataru-yks-mat-ai harkinnanvaraisuus-reasons)
+                                 (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:matematiikka-ja-aidinkieli-yksilollistetty_1 "1" :harkinnanvaraisuus-reason_1.2.3.4 "1"} "1.2.3.4")))
 
                     (it "returns certificate comparison difficulties"
                         (should= (:ataru-koulutodistusten-vertailuvaikeudet harkinnanvaraisuus-reasons)
