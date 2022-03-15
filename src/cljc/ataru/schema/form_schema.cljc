@@ -17,7 +17,8 @@
             [ataru.schema.localized-schema :as localized-schema]
             [schema.coerce :as c]
             [schema.core :as s]
-            [schema-tools.core :as st]))
+            [schema-tools.core :as st]
+            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -494,6 +495,10 @@
    :languageRequirement s/Str
    :degreeRequirement   s/Str})
 
+(s/defschema ValintaHakutoive
+  (merge Hakutoive
+         {(s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)}))
+
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)
    :hakuOid          s/Str
@@ -574,7 +579,7 @@
    :personOid           s/Str
    :hakuOid             s/Str
    :asiointikieli       (s/enum "fi" "sv" "en")
-   :hakutoiveet         [Hakutoive]
+   :hakutoiveet         [ValintaHakutoive]
    :maksuvelvollisuus   {s/Str s/Str}
    :keyValues           {s/Str Value}})
 

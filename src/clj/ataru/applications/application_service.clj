@@ -29,7 +29,8 @@
     [ataru.dob :as dob]
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
-    [ataru.applications.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
     [ataru.cache.cache-service :as cache])
   (:import
     java.io.ByteArrayInputStream
@@ -371,7 +372,7 @@
   (add-review-note [this session note])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
-  (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys])
+  (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
@@ -611,7 +612,7 @@
          (mapcat #(aac/omatsivut-applications organization-service session %))))
 
   (get-applications-for-valintalaskenta
-    [_ session hakukohde-oid application-keys]
+    [_ session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
     (if-let [applications (aac/get-applications-for-valintalaskenta
                             organization-service
                             session
@@ -627,9 +628,16 @@
                                               (:yksiloityVTJ %)))
                                  (map :oidHenkilo)
                                  distinct
-                                 seq)]
+                                 seq)
+            enrich-with-harkinnanvaraisuustieto (fn [application]
+                                                  (if with-harkinnanvaraisuus-tieto
+                                                    (assoc-harkinnanvaraisuustieto application)
+                                                    application))
+            enriched-applications (->> applications
+                                       (map (partial add-asiointikieli henkilot))
+                                       (map enrich-with-harkinnanvaraisuustieto))]
         {:yksiloimattomat yksiloimattomat
-         :applications    (map (partial add-asiointikieli henkilot) applications)})
+         :applications    enriched-applications})
       {:unauthorized nil}))
 
   (siirto-applications
