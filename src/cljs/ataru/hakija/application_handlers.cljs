@@ -676,7 +676,7 @@
   [db id]
   (let [values (get-in db [:application :answers id :values])]
     (assoc-in db [:application :answers id :value]
-              (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+              (cond (is-question-group-value? values)
                     (mapv #(when (vector? %)
                              (mapv :value %)) values)
                     (vector? values)
@@ -724,7 +724,7 @@
                                 (:valid attachment)))]
     (assoc-in db [:application :answers id :valid]
               (and valid?
-                   (cond (and (vector? values) (or (vector? (first values)) (nil? (first values))))
+                   (cond (is-question-group-value? values)
                          (every? #(or (nil? %) (every? valid-attachment? %)) values)
                          (vector? values)
                          (every? valid-attachment? values)
@@ -732,7 +732,7 @@
                          (valid-attachment? values))))))
 
 (reg-event-db
-  :application/unset-field-value
+  :application/unset-question-group-field-value
   [check-schema-interceptor]
   (fn [db [_ field-descriptor group-idx]]
     (let [id (keyword (:id field-descriptor))]
@@ -743,6 +743,16 @@
             (assoc-in db [:application :answers id :values] nil))
           (set-repeatable-field-value id)
           (set-repeatable-application-field-top-level-valid id true)))))
+
+(reg-event-db
+  :application/unset-non-question-group-field-value
+  [check-schema-interceptor]
+  (fn [db [_ field-descriptor]]
+    (let [id             (keyword (:id field-descriptor))
+          initial-answer (get (create-initial-answers [field-descriptor] []) id)
+          answer         (assoc initial-answer :original-value (:value initial-answer))]
+      (println "unset-non-question-group-field-value" (:fi (:label field-descriptor)))
+      (assoc-in db [:application :answers id] answer))))
 
 (defn- set-empty-value-dispatch
   [group-idx field-descriptor]
@@ -777,8 +787,33 @@
          nil))
 
 (defn- option-visible? [field-descriptor option values]
-  (let [visibility-checker (option-visibility/visibility-checker field-descriptor values)]
-    (visibility-checker option)))
+  (let [visibility-checker (option-visibility/visibility-checker field-descriptor values)
+        result (visibility-checker option)]
+    result))
+
+(defn- set-question-group-followup-values-dispatch
+  [db field-descriptor value]
+  (->> (for [option (:options field-descriptor)
+             child  (autil/flatten-form-fields (:followups option))
+             :when (autil/answerable? child)
+             [group-idx values] (map-indexed vector value)]
+         (if (option-visible? field-descriptor option values)
+           (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
+             (set-empty-value-dispatch group-idx child))
+           [[:application/unset-question-group-field-value child group-idx]]))
+    (mapcat identity)
+    vec))
+
+(defn- set-non-question-group-followup-values-dispatch
+  [field-descriptor value]
+  (->> (for [option (:options field-descriptor)
+             child  (autil/flatten-form-fields (:followups option))
+             :when (and
+                     (autil/answerable? child)
+                     (not (option-visible? field-descriptor option value)))]
+         [[:application/unset-non-question-group-field-value child]])
+    (mapcat identity)
+    vec))
 
 (reg-event-fx
   :application/set-followup-values
@@ -786,17 +821,9 @@
   (fn [{db :db} [_ field-descriptor]]
     (let [id    (keyword (:id field-descriptor))
           value (get-in db [:application :answers id :value])]
-      (when (and (vector? value) (or (vector? (first value)) (nil? (first value))))
-        {:dispatch-n (->> (for [option             (:options field-descriptor)
-                                child              (autil/flatten-form-fields (:followups option))
-                                :when              (autil/answerable? child)
-                                [group-idx values] (map-indexed vector value)]
-                            (if (option-visible? field-descriptor option values)
-                              (when (nil? (get-in db [:application :answers (keyword (:id child)) :values group-idx]))
-                                (set-empty-value-dispatch group-idx child))
-                              [[:application/unset-field-value child group-idx]]))
-                          (mapcat identity)
-                          vec)}))))
+      (if (is-question-group-value? value)
+        {:dispatch-n (set-question-group-followup-values-dispatch db field-descriptor value)}
+        {:dispatch-n (set-non-question-group-followup-values-dispatch field-descriptor value)}))))
 
 (reg-event-fx
   :application/set-repeatable-application-field-valid
