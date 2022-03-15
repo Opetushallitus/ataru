@@ -44,6 +44,8 @@
 (def double-degree-identifier {:higher-completed-base-education {:value ["pohjakoulutus_yo_ammatillinen"]}})
 (def double-degree-vocational-completed {:pohjakoulutus_yo_ammatillinen--vocational-completion-year {:value "2009"}})
 (def double-degree-vocational-completed-odw {:60ce79f9-b37a-4b7e-a7e0-f25ba430f055 {:value "2010"}})
+(def double-degree-vocational-completed-kk-yhteishaku-syksy-2021 {:bc3723b0-471e-4983-ad88-083d64c5616e {:value "2021"}})
+(def double-degree-vocational-completed-kk-1-yhteishaku-kevat-2022 {:98519703-70ca-4ab4-b3c8-a2ff78fa98fd {:value "2022"}})
 
 (describe "secondary level double degree (kaksoistutkinto) / pohjakoulutus_yo_ammatillinen completion year selection"
   (tags :unit :odw :tilastokeskus :OY-342 :OY-346)
@@ -59,6 +61,18 @@
                          double-degree-vocational-completed-odw)]
       (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2010}]
                (select-year-for answers))))
+
+  (it "uses completion year of vocational education with kk-yhteishaku-syksy-2021 looking answer id"
+      (let [answers (merge double-degree-identifier
+                           double-degree-vocational-completed-kk-yhteishaku-syksy-2021)]
+        (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2021}]
+                 (select-year-for answers))))
+
+  (it "uses completion year of vocational education with kk-1-yhteishaku-kevat-2022 looking answer id"
+      (let [answers (merge double-degree-identifier
+                           double-degree-vocational-completed-kk-1-yhteishaku-kevat-2022)]
+        (should= [{:pohjakoulutuskklomake "pohjakoulutus_yo_ammatillinen" :suoritusvuosi 2022}]
+                 (select-year-for answers))))
 
   (it "applicant should complete education in future (ODW hardcodings)"
     ; 1. yhteishaku, 2017-nyt
