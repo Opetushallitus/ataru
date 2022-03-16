@@ -82,7 +82,8 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.person-service.person-service :as person-service])
+            [ataru.person-service.person-service :as person-service]
+            [cuerdas.core :as str])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -1228,17 +1229,17 @@
                   hakijaOids
                   modifiedAfter
                   offset))))
-      (api/POST "/suoritusrekisteri/toinenaste" {session :session}
+      (api/POST "/suoritusrekisteri/haku/:haku-oid/toinenaste" {session :session}
         :summary "Toisen asteen hakemukset for suoritusrekisteri"
-        :body-params [{hakuOid :- s/Str nil}
-                      {hakukohdeOids :- [s/Str] nil}
+        :path-params [haku-oid :- (api/describe s/Str "Haun OID")]
+        :body-params [{hakukohdeOids :- [s/Str] nil}
                       {hakijaOids :- [s/Str] nil}
                       {modifiedAfter :- s/Str nil}
                       {offset :- s/Str nil}]
         :return {:applications [ataru-schema/HakurekisteriApplicationToinenAste]
                  (s/optional-key :offset) s/Str}
-        (cond (every? nil? [hakuOid (seq hakukohdeOids) (seq hakijaOids) modifiedAfter])
-              (response/bad-request {:error "No query parameter given"})
+        (cond (str/empty-or-nil? haku-oid)
+              (response/bad-request {:error "No haku-oid path parameter given"})
               (session-orgs/run-org-authorized
                 session
                 organization-service
@@ -1251,7 +1252,7 @@
               (response/ok
                 (application-service/suoritusrekisteri-toinenaste-applications
                   application-service
-                  hakuOid
+                  haku-oid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
