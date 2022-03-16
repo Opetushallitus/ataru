@@ -1,68 +1,64 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter
-  (:require [ataru.util :refer [flatten-form-fields]]
-            [ataru.application.option-visibility :as option-visibility]))
+  (:require [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
+            [ataru.application.harkinnanvaraisuus-types :as ht]
+            [clojure.walk :as walk]
+            [ataru.applications.application-store :as application-store]))
 
-(def harkinnanvaraisuus-key "harkinnanvaraisuus")
-(def harkinnanvaraisuus-lomakeosio-key "harkinnanvaraisuus-wrapper")
-(def harkinnanvaraisuus-yes-answer-value "1")
+(defn- harkinnanvaraisuus-reason->is-harkinnanvarainen?
+  [harkinnanvaraisuus-reason]
+  (and
+    (some? harkinnanvaraisuus-reason)
+    (not= (:none ht/harkinnanvaraisuus-reasons) harkinnanvaraisuus-reason)))
 
-(defn- answered-yes-to-harkinnanvaraisuus
+(defn- is-harkinnanvarainen-for-whole-application?
   [application]
-  (->> (-> application :content :answers)
-       (filter #(= harkinnanvaraisuus-key (:original-question %)))
-       (some #(= harkinnanvaraisuus-yes-answer-value (:value %)))
-       (boolean)))
+  (let [answers                   (:answers application)
+        harkinnanvaraisuus-reason (hu/get-common-harkinnanvaraisuus-reason answers)
+        result (harkinnanvaraisuus-reason->is-harkinnanvarainen? harkinnanvaraisuus-reason)]
+    result))
 
-(defn- field-has-section-visibility-conditions-targeting-harkinnanvaraisuus
-  [field]
-  (when-let [conditions (seq (:section-visibility-conditions field))]
-    (some #(= harkinnanvaraisuus-lomakeosio-key (:section-name %)) conditions)))
+(defn- is-harkinnanvarainen-for-some-hakukohde?
+  [hakukohteet-filter application]
+  (let [answers                    (:answers application)
+        hakukohteet                (or hakukohteet-filter (:hakukohde application))
+        harkinnanvaraisuus-reasons (map #(hu/get-harkinnanvaraisuus-reason-for-hakukohde answers %) hakukohteet)]
+    (some harkinnanvaraisuus-reason->is-harkinnanvarainen? harkinnanvaraisuus-reasons)))
 
-(defn- map-visibility-conditions-with-field
-  [field]
-  (->> (:section-visibility-conditions field)
-       seq
-       (filter #(= harkinnanvaraisuus-lomakeosio-key (:section-name %)))
-       (map (fn [condition] {:id (:id field) :condition condition}))))
+(defn- is-harkinnanvarainen?
+  [hakukohteet-filter application]
+  (or
+    (is-harkinnanvarainen-for-whole-application? application)
+    (is-harkinnanvarainen-for-some-hakukohde? hakukohteet-filter application)))
 
-(defn- harkinnanvaraisuus-is-set-by-form-logic
-  [form-id-with-field-ids-with-conditions application]
-  (let [field-ids-with-conditions-targeting-harkinnanvaraisuus (->> form-id-with-field-ids-with-conditions
-                                                                    (filter #(= (:form application) (:id %)))
-                                                                    (first)
-                                                                    :fields-with-visibility-conditions)
-        answers (-> application :content :answers)
-        get-answer-value (fn [id] (:value (first (filter #(= id (:key %)) answers))))]
-    (some #(option-visibility/answer-satisfies-condition? (get-answer-value (:id %)) (:condition %)) field-ids-with-conditions-targeting-harkinnanvaraisuus)))
-
-(defn- form-id-with-field-ids-with-conditions
-   [fetch-form-fn form-id]
-  (let [fields (-> (fetch-form-fn form-id)
-                   :content
-                   (flatten-form-fields))
-        field-ids-with-conditions-targeting-harkinnanvaraisuus (->> fields
-                                                                    (filter field-has-section-visibility-conditions-targeting-harkinnanvaraisuus)
-                                                                    (mapcat map-visibility-conditions-with-field))]
-    {:id                                form-id
-      :fields-with-visibility-conditions field-ids-with-conditions-targeting-harkinnanvaraisuus}))
+(defn- enrich-applications-with-answers
+  [fetch-applications-content-fn applications]
+  (let [applications-contents (->> applications
+                                   (map :id)
+                                   (fetch-applications-content-fn))]
+    (letfn [(assoc-content [application]
+              (let [answers (->> applications-contents
+                                 (filter #(= (:id application) (:id %)))
+                                 first
+                                 :content
+                                 :answers
+                                 application-store/flatten-application-answers
+                                 walk/keywordize-keys)]
+                (assoc application :answers answers)))]
+      (map assoc-content applications))))
 
 (defn- filter-harkinnanvaraiset-applications
-  [fetch-application-content-fn fetch-form-fn applications]
-  (let [applications-contents-and-forms (fetch-application-content-fn (map :id applications))
-        distinct-form-ids (->> applications-contents-and-forms
-                            (map :form)
-                            (distinct))
-        form-id-with-field-ids-with-conditions (map (partial form-id-with-field-ids-with-conditions fetch-form-fn) distinct-form-ids)
-        harkinnanvaraiset-ids (->> applications-contents-and-forms
-                                   (filter (some-fn answered-yes-to-harkinnanvaraisuus
-                                                    (partial harkinnanvaraisuus-is-set-by-form-logic form-id-with-field-ids-with-conditions)))
+  [fetch-applications-content-fn hakukohteet-filter applications]
+  (let [applications-contents (enrich-applications-with-answers fetch-applications-content-fn applications)
+        harkinnanvaraiset-ids (->> applications-contents
+                                   (filter (partial is-harkinnanvarainen? hakukohteet-filter))
                                    (map :id)
                                    set)]
     (filter (comp harkinnanvaraiset-ids :id) applications)))
 
 (defn filter-applications-by-harkinnanvaraisuus
-  [fetch-applications-content-fn fetch-form-fn applications filters]
-  (let [only-harkinnanvaraiset? (-> filters :harkinnanvaraisuus :only-harkinnanvaraiset)]
+  [fetch-applications-content-fn applications filters]
+  (let [only-harkinnanvaraiset? (-> filters :filters :harkinnanvaraisuus :only-harkinnanvaraiset)
+        hakukohteet             (-> filters :selected-hakukohteet)]
     (if (and only-harkinnanvaraiset? (seq applications))
-      (filter-harkinnanvaraiset-applications fetch-applications-content-fn fetch-form-fn applications)
+      (filter-harkinnanvaraiset-applications fetch-applications-content-fn hakukohteet applications)
       applications)))

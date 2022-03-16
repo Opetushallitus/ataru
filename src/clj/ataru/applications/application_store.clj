@@ -1268,7 +1268,7 @@
           ""
           (first values))]])
 
-(defn- flatten-application-answers [answers]
+(defn flatten-application-answers [answers]
   (reduce
    (fn [acc {:keys [key value fieldType] :as answer}]
      (let [index-fn (cond (= "multipleChoice" fieldType)
