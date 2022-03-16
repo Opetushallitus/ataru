@@ -30,8 +30,7 @@
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
     [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
-    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
-    [ataru.cache.cache-service :as cache])
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -766,10 +765,8 @@
                                                                 filters-with-hakukohteet)
                                                               {:fetched-applications [] :filtered-applications []})
                 fetch-applications-content-fn               (fn [application-ids] (application-store/get-application-content-form-list application-ids))
-                fetch-form-fn                               (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
                                                               fetch-applications-content-fn
-                                                              fetch-form-fn
                                                               (:filtered-applications fetched-and-filtered-applications)
                                                               filters-with-hakukohteet)]
             {:applications filtered-applications-by-harkinnanvaraisuus
