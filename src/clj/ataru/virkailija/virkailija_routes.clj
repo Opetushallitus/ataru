@@ -83,8 +83,8 @@
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.person-service.person-service :as person-service]
-            [cuerdas.core :as str]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste])
+            [cuerdas.core :as str])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
