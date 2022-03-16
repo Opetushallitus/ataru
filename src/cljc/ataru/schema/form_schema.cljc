@@ -551,6 +551,11 @@
   {:oid s/Str
    (s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)})
 
+(s/defschema GuardianContactInfo
+              {(s/optional-key :nimi) (s/maybe s/Str)
+               (s/optional-key :matkapuhelin) (s/maybe s/Str)
+               (s/optional-key :email) (s/maybe s/Str)})
+
 (s/defschema HakurekisteriApplicationToinenAste
   {:oid                                               s/Str
    :personOid                                         s/Str
@@ -568,7 +573,7 @@
    :paymentObligations                                {s/Str s/Str}
    :attachments                                       {s/Str s/Str}
    :eligibilities                                     {s/Str s/Str}
-   :pohjakoulutus                                     [s/Str]
+   :pohjakoulutus                                     s/Str
    :kiinnostunutOppisopimusKoulutuksesta              s/Bool
    :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta s/Bool
    :terveys                                           s/Bool
@@ -577,7 +582,8 @@
    :sahkoisenAsioinninLupa                            s/Bool
    :valintatuloksenJulkaisulupa                       s/Bool
    :koulutusmarkkinointilupa                          s/Bool
-   :tutkintoVuosi                                     (s/maybe s/Int)})
+   :tutkintoVuosi                                     (s/maybe s/Int)
+   :huoltajat                                        [GuardianContactInfo]})
 
 (s/defschema OnrApplication
   {:oid          s/Str

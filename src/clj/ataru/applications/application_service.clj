@@ -673,7 +673,7 @@
     [_ haku-oid hakukohde-oids person-oids modified-after offset]
     (let [person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset true)))
+      (application-store/suoritusrekisteri-applications-toinenaste haku-oid hakukohde-oids person-oids modified-after offset)))
 
   (get-applications-paged
     [_ session params]

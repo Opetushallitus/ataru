@@ -23,7 +23,8 @@
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]])
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key]])
   (:import [java.time
             LocalDateTime
             ZoneId]
@@ -946,13 +947,29 @@
 
 (defn- unwrap-hakurekisteri-application-toinenaste
   [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities attachment_reviews]}]
-  (let [answers  (answers-by-key (:answers content))
-        foreign? (not= finland-country-code (-> answers :country-of-residence :value))
+  (let [answers     (answers-by-key (:answers content))
+        foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
         hakukohteet (map (fn [oid]
                            {:oid oid
-                            :harkinnanvaraisuus-reason
+                            :harkinnanvaraisuus
                             (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)})
-                         hakukohde)]
+                         hakukohde)
+        first-huoltaja (when (or (-> answers :guardin-name :value)
+                                 (-> answers :guardian-email :value)
+                                 (-> answers :guardian-phone :value))
+                         {:nimi (-> answers :guardian-name :value first)
+                          :matkapuhelin (-> answers :guardian-phone :value first)
+                          :email (-> answers :guardian-email :value first)})
+        second-huoltaja (when (or (-> answers :guardian-name-secondary :value)
+                                  (-> answers :guardian-email-secondary :value)
+                                  (-> answers :guardian-phone-secondary :value))
+                          {:nimi (-> answers :guardian-name-secondary :value first)
+                           :matkapuhelin (-> answers :guardian-phone-secondary :value first)
+                           :email (-> answers :guardian-email-secondary :value first)})
+        huoltajat   (->> []
+                         (concat [first-huoltaja second-huoltaja])
+                         (filter #(not (nil? %))))
+        base-education-key (keyword base-education-choice-key)]
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)
@@ -973,16 +990,13 @@
      :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
      :paymentObligations          (reduce-kv #(assoc %1 (name %2) %3) {} payment-obligations)
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
-     :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
+     :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)
+     :huoltajat                   huoltajat
+     :pohjakoulutus               (-> answers base-education-key :value)}))
 
 (defn suoritusrekisteri-applications
-  ([haku-oid hakukohde-oids person-oids modified-after offset]
-    (suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset false))
-  ([haku-oid hakukohde-oids person-oids modified-after offset toisen-asteen-hakemukset]
-  (let [unwrap-application (if toisen-asteen-hakemukset
-                             unwrap-hakurekisteri-application-toinenaste
-                             unwrap-hakurekisteri-application)
-        as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+  [haku-oid hakukohde-oids person-oids modified-after offset]
+  (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                   (queries/yesql-suoritusrekisteri-applications
                    {:haku_oid       haku-oid
                     :hakukohde_oids (some->> (seq hakukohde-oids)
@@ -997,10 +1011,32 @@
                                             .toOffsetDateTime)
                     :offset         offset}
                    {:connection connection}))
-                (map unwrap-application))]
+                (map unwrap-hakurekisteri-application))]
     (merge {:applications as}
            (when-let [a (first (drop 999 as))]
-             {:offset (:oid a)})))))
+             {:offset (:oid a)}))))
+
+(defn suoritusrekisteri-applications-toinenaste
+  [haku-oid hakukohde-oids person-oids modified-after offset]
+   (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                                          (queries/yesql-suoritusrekisteri-applications
+                                            {:haku_oid       haku-oid
+                                             :hakukohde_oids (some->> (seq hakukohde-oids)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "varchar"))
+                                             :person_oids    (some->> (seq person-oids)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "text"))
+                                             :modified_after (some-> modified-after
+                                                                     (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
+                                                                     (.atZone (ZoneId/of "Europe/Helsinki"))
+                                                                     .toOffsetDateTime)
+                                             :offset         offset}
+                                            {:connection connection}))
+                 (map unwrap-hakurekisteri-application-toinenaste))]
+     (merge {:applications as}
+            (when-let [a (first (drop 999 as))]
+              {:offset (:oid a)}))))
 
 (defn- requirement-names-mapped-to-states
   [requirements]
