@@ -549,18 +549,17 @@
 
 (s/defschema HakurekisteriHakukohde
   {:oid s/Str
-   (s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)})
+   :harkinnanvaraisuus (apply s/enum harkinnanvaraisuus-types)})
 
 (s/defschema GuardianContactInfo
-              {(s/optional-key :nimi) (s/maybe s/Str)
-               (s/optional-key :matkapuhelin) (s/maybe s/Str)
-               (s/optional-key :email) (s/maybe s/Str)})
+              {:nimi(s/maybe s/Str)
+               :matkapuhelin (s/maybe s/Str)
+               :email (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplicationToinenAste
   {:oid                                               s/Str
    :personOid                                         s/Str
    :createdTime                                       s/Str
-   :applicationSystemId                               s/Str
    :kieli                                             s/Str
    :hakukohteet                                       [HakurekisteriHakukohde]
    :email                                             s/Str
@@ -574,16 +573,18 @@
    :attachments                                       {s/Str s/Str}
    :eligibilities                                     {s/Str s/Str}
    :pohjakoulutus                                     s/Str
-   :kiinnostunutOppisopimusKoulutuksesta              s/Bool
-   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta s/Bool
-   :terveys                                           s/Bool
-   :aiempiPeruminen                                   s/Bool
-   :kiinnostunutKaksoistutkinnosta                    s/Bool
+   :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
+   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)
+   :terveys                                           (s/maybe s/Bool)
+   :aiempiPeruminen                                   (s/maybe s/Bool)
+   :kiinnostunutKaksoistutkinnosta                    (s/maybe s/Bool)
    :sahkoisenAsioinninLupa                            s/Bool
    :valintatuloksenJulkaisulupa                       s/Bool
    :koulutusmarkkinointilupa                          s/Bool
    :tutkintoVuosi                                     (s/maybe s/Int)
-   :huoltajat                                        [GuardianContactInfo]})
+   :tutkintoKieli                                     (s/maybe s/Str)
+   :lisapisteKoulutus                                 (s/maybe s/Str)
+   :huoltajat                                         [GuardianContactInfo]})
 
 (s/defschema OnrApplication
   {:oid          s/Str

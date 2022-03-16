@@ -946,7 +946,7 @@
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 (defn- unwrap-hakurekisteri-application-toinenaste
-  [{:keys [key haku hakukohde created_time person_oid lang email content payment-obligations eligibilities attachment_reviews]}]
+  [{:keys [key hakukohde created_time person_oid lang email content payment-obligations eligibilities attachment_reviews]}]
   (let [answers     (answers-by-key (:answers content))
         foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
         hakukohteet (map (fn [oid]
@@ -973,7 +973,6 @@
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)
-     :applicationSystemId         haku
      :kieli                       lang
      :hakukohteet                 hakukohteet
      :email                       email
@@ -992,7 +991,15 @@
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)
      :huoltajat                   huoltajat
-     :pohjakoulutus               (-> answers base-education-key :value)}))
+     :pohjakoulutus               (-> answers base-education-key :value)
+     :terveys                     nil
+     :tutkintoKieli               nil
+     :tutkintoVuosi               nil
+     :aiempiPeruminen             nil
+     :kiinnostunutOppisopimusKoulutuksesta              nil
+     :kiinnostunutKaksoistutkinnosta                    nil
+     :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta nil
+     :lisapisteKoulutus                                 nil}))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
