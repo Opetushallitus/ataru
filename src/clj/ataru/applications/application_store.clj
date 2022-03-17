@@ -953,7 +953,9 @@
         hakukohteet (map (fn [oid]
                            {:oid oid
                             :harkinnanvaraisuus
-                            (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)})
+                            (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)
+                            :terveys ((keyword (str (:sora-terveys-key questions) "_" oid)) answers)
+                            :aiempiPeruminen ((keyword (str (:sora-terveys-key questions) "_" oid)) answers)})
                          hakukohde)
         first-huoltaja (when (or (-> answers :guardin-name :value)
                                  (-> answers :guardian-email :value)
@@ -978,7 +980,8 @@
         tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
-        tutkinto-kieli (-> answers tutkinto-kieli-key :value)]
+        tutkinto-kieli (-> answers tutkinto-kieli-key :value)
+        ]
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)
