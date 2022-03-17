@@ -13,6 +13,8 @@
 
 (def base-education-choice-key "base-education-2nd")
 
+(def base-education-wrapper-key "pohjakoulutus-2nd-wrapper")
+
 (defn- base-education-language-question
   [metadata]
   (merge (component/dropdown metadata)
@@ -259,7 +261,7 @@
 
 (defn base-education-2nd-module [metadata]
   (assoc (component/form-section metadata)
-         :id "pohjakoulutus-2nd-wrapper"
+         :id base-education-wrapper-key
          :label (:section-title base-education-2nd-module-texts)
          :children [(base-education-question metadata)]))
 

@@ -30,7 +30,10 @@
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
     [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
-    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]])
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
+    [ataru.cache.cache-service :as cache]
+    [ataru.applications.question-util :as question-util]
+    [cheshire.core :as json])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -374,7 +377,7 @@
   (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
-  (suoritusrekisteri-toinenaste-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
+  (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku]))
 
@@ -670,10 +673,12 @@
       (application-store/suoritusrekisteri-applications haku-oid hakukohde-oids person-oids modified-after offset)))
 
   (suoritusrekisteri-toinenaste-applications
-    [_ haku-oid hakukohde-oids person-oids modified-after offset]
-    (let [person-oids (when (seq person-oids)
-                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))]
-      (application-store/suoritusrekisteri-applications-toinenaste haku-oid hakukohde-oids person-oids modified-after offset)))
+    [_ form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset]
+    (let [form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
+          person-oids (when (seq person-oids)
+                        (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
+          questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)]
+      (application-store/suoritusrekisteri-applications-toinenaste haku-oid hakukohde-oids person-oids modified-after offset questions)))
 
   (get-applications-paged
     [_ session params]
