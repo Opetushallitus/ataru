@@ -569,9 +569,7 @@
    :postitoimipaikka                                  (s/maybe s/Str)
    :asuinmaa                                          s/Str
    :kotikunta                                         (s/maybe s/Str)
-   :paymentObligations                                {s/Str s/Str}
    :attachments                                       {s/Str s/Str}
-   :eligibilities                                     {s/Str s/Str}
    :pohjakoulutus                                     s/Str
    :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
    :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)
@@ -583,7 +581,6 @@
    :koulutusmarkkinointilupa                          s/Bool
    :tutkintoVuosi                                     (s/maybe s/Int)
    :tutkintoKieli                                     (s/maybe s/Str)
-   :lisapisteKoulutus                                 (s/maybe s/Str)
    :huoltajat                                         [GuardianContactInfo]})
 
 (s/defschema OnrApplication

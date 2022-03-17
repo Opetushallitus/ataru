@@ -1270,6 +1270,7 @@
               (response/ok
                 (application-service/suoritusrekisteri-applications
                   application-service
+                  (:form-by-haku-oid-str-cache dependencies)
                   haku-oid
                   hakukohdeOids
                   hakijaOids

@@ -63,5 +63,6 @@
 
 (defn get-harkinnanvaraisuus-reason-for-hakukohde
   [answers hakukohde-oid]
-  (or (get-common-harkinnanvaraisuus-reason answers)
-      (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)))
+  (let [answers (keywordize-keys answers)]
+    (or (get-common-harkinnanvaraisuus-reason answers)
+        (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid))))
