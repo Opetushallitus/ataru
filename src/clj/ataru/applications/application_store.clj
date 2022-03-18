@@ -950,12 +950,17 @@
   [questions {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
   (let [answers     (answers-by-key (:answers content))
         foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
+        form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
         hakukohteet (map (fn [oid]
                            {:oid oid
                             :harkinnanvaraisuus
                             (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)
-                            :terveys ((keyword (str (:sora-terveys-key questions) "_" oid)) answers)
-                            :aiempiPeruminen ((keyword (str (:sora-terveys-key questions) "_" oid)) answers)})
+                            :terveys (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
+                            :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key-key questions) oid) answers)))
+                            :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
+                                                                 (map #(:value ((form-hakukohde-key % oid) answers)))
+                                                                 (some #(= "0" %)))
+                            :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta nil})
                          hakukohde)
         first-huoltaja (when (or (-> answers :guardin-name :value)
                                  (-> answers :guardian-email :value)
@@ -980,8 +985,7 @@
         tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
-        tutkinto-kieli (-> answers tutkinto-kieli-key :value)
-        ]
+        tutkinto-kieli (-> answers tutkinto-kieli-key :value)]
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)
@@ -996,19 +1000,16 @@
                                     (-> answers :postal-office :value))
      :asuinmaa                    (-> answers :country-of-residence :value)
      :kotikunta                   (-> answers :home-town :value)
-     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
+     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :paatos-opiskelijavalinnasta-sahkopostiin :value))
      :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
      :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :huoltajat                   huoltajat
      :pohjakoulutus               (-> answers base-education-key :value)
-     :terveys                     nil
      :tutkintoKieli               tutkinto-kieli
      :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
-     :aiempiPeruminen             nil
-     :kiinnostunutOppisopimusKoulutuksesta              nil
-     :kiinnostunutKaksoistutkinnosta                    nil
-     :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta nil}))
+     :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers (:oppisopimuskoulutus-key questions) :value))
+     }))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]

@@ -548,10 +548,12 @@
    :korkeakoulututkintoVuosi    (s/maybe s/Int)})
 
 (s/defschema HakurekisteriHakukohde
-  {:oid s/Str
-   :harkinnanvaraisuus (apply s/enum harkinnanvaraisuus-types)
-   :terveys            (s/maybe s/Bool)
-   :aiempiPeruminen    (s/maybe s/Bool)})
+  {:oid                            s/Str
+   :harkinnanvaraisuus             (apply s/enum harkinnanvaraisuus-types)
+   :terveys                        (s/maybe s/Bool)
+   :aiempiPeruminen                (s/maybe s/Bool)
+   :kiinnostunutKaksoistutkinnosta (s/maybe s/Bool)
+   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)})
 
 (s/defschema GuardianContactInfo
               {:nimi(s/maybe s/Str)
@@ -574,8 +576,6 @@
    :attachments                                       {s/Str s/Str}
    :pohjakoulutus                                     s/Str
    :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
-   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)
-   :kiinnostunutKaksoistutkinnosta                    (s/maybe s/Bool)
    :sahkoisenAsioinninLupa                            s/Bool
    :valintatuloksenJulkaisulupa                       s/Bool
    :koulutusmarkkinointilupa                          s/Bool
