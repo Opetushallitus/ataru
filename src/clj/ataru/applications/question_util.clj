@@ -5,6 +5,15 @@
 
 (def sora-question-wrapper-label {:fi "Terveydelliset tekijät " :sv "Hälsoskäl"})
 
+(def lukio-kaksoistutkinto-wrapper-label {:fi "Ammatilliset opinnot lukiokoulutuksen ohella",
+                                          :sv "Yrkesinriktade studier vid sidan av gymnasieutbildningen"})
+
+(def amm-kaksoistutkinto-wrapper-label {:fi "Lukio-opinnot ammatillisen koulutuksen ohella",
+                                        :sv "Gymnasiestudier vid sidan av den yrkesinriktade utbildningen"})
+
+(def kiinnostunut-oppisopimuskoulutuksesta-wrapper-label {:fi "Oppisopimuskoulutus ",
+                                                          :sv "Läroavtalsutbildning"})
+
 (defn get-hakurekisteri-toinenaste-specific-questions
   [form]
   (let [content (:content (keywordize-keys form))
@@ -27,10 +36,23 @@
                                    first
                                    :children)
         sora-terveys-question (get-in sora-wrapper-children [0 :id])
-        sora-aiempi-question (get-in sora-wrapper-children [1 :id])]
+        sora-aiempi-question (get-in sora-wrapper-children [1 :id])
+        kaksoistutkinto-questions (->> content
+                                       (filter #(or (= lukio-kaksoistutkinto-wrapper-label (:label %))
+                                                    (= amm-kaksoistutkinto-wrapper-label (:label %))))
+                                       (map #(get-in % [:children 0 :id])))
+        oppisopimuskoulutus-key (->> content
+                                     (filter #(= kiinnostunut-oppisopimuskoulutuksesta-wrapper-label (:label %)))
+                                     first
+                                     :children
+                                     first
+                                     :id)]
     (prn sora-terveys-question)
     (prn sora-aiempi-question)
+    (prn kaksoistutkinto-questions)
     {:tutkintovuosi-keys tutkintovuosi-keys
      :tutkintokieli-keys tutkintokieli-keys
      :sora-terveys-key sora-terveys-question
-     :sora-aiempi-question sora-aiempi-question}))
+     :sora-aiempi-key sora-aiempi-question
+     :kaksoistutkinto-keys kaksoistutkinto-questions
+     :oppisopimuskoulutus-key (keyword oppisopimuskoulutus-key)}))
