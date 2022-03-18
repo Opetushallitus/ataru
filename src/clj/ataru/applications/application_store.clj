@@ -24,7 +24,7 @@
             [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]]
             [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
-            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key]]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-2nd-language-value-to-lang]]
             [clojure.edn :as edn])
   (:import [java.time
             LocalDateTime
@@ -985,7 +985,7 @@
         tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
-        tutkinto-kieli (-> answers tutkinto-kieli-key :value)]
+        tutkinto-kieli (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang))]
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)

@@ -1,7 +1,8 @@
 (ns ataru.component-data.base-education-module-2nd
   (:require [ataru.util :as util]
             [ataru.translations.texts :refer [base-education-2nd-module-texts general-texts]]
-            [ataru.component-data.component :as component :refer [harkinnanvaraisuus-wrapper-id]]))
+            [ataru.component-data.component :as component :refer [harkinnanvaraisuus-wrapper-id]]
+            [clojure.core.match :refer [match]]))
 
 (def base-education-option-values-affecting-harkinnanvaraisuus
   {:ei-paattotodistusta-value "7"
@@ -14,6 +15,15 @@
 (def base-education-choice-key "base-education-2nd")
 
 (def base-education-wrapper-key "pohjakoulutus-2nd-wrapper")
+
+(defn base-education-2nd-language-value-to-lang
+  [value]
+  (match [value]
+         ["1"] "sv"
+         ["2"] "sa"
+         ["3"] "en"
+         ["4"] "de"
+         :else "fi"))
 
 (defn- base-education-language-question
   [metadata]
