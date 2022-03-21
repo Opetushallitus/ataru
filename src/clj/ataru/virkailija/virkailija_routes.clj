@@ -81,7 +81,8 @@
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
-            [ataru.applications.suoritus-filter :as suoritus-filter])
+            [ataru.applications.suoritus-filter :as suoritus-filter]
+            [ataru.person-service.person-service :as person-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -450,8 +451,11 @@
         :summary "Returns opiskelija information from suoritusrekisteri"
         :return ataru-schema/OpiskelijaResponse
         (let [year        (suoritus-filter/year-for-suoritus-filter (time/now))
-              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)]
-          (if-let [opiskelija (suoritus-service/opiskelija suoritus-service henkilo-oid year luokkatasot)]
+              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
+              linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
+              aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
+              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % year luokkatasot) aliases)]
+          (if-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
             (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
               (response/ok
                 {:oppilaitos-name (:name organization)
