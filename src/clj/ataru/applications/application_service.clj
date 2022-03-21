@@ -30,8 +30,7 @@
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
     [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
-    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
-    [ataru.cache.cache-service :as cache])
+    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -747,30 +746,29 @@
                                  (->application-oid-query application-oid))
                            (->attachment-review-states-query attachment-review-states)
                            (->option-answers-query option-answers))]
-          (let [fetch-applications? (or (not (:school-filter states-and-filters)) (boolean (seq person-oids)))
-                fetched-and-filtered-applications (if fetch-applications?
-                               (get-application-list-by-query
-                                 person-service
-                                 organization-service
-                                 tarjonta-service
-                                 suoritus-service
-                                 session
-                                 query
-                                 sort
-                                 (add-selected-hakukohteet states-and-filters
-                                                           haku-oid
-                                                           hakukohde-oid
-                                                           hakukohderyhma-oid
-                                                           rajaus-hakukohteella
-                                                           ryhman-hakukohteet))
-                               {:fetched-applications [] :filtered-applications []})
-                fetch-applications-content-fn (fn [application-ids] (application-store/get-application-content-form-list application-ids))
-                fetch-form-fn (fn [form-id] (cache/get-from form-by-id-cache (str form-id)))
+          (let [fetch-applications?                         (or (not (:school-filter states-and-filters)) (boolean (seq person-oids)))
+                filters-with-hakukohteet                    (add-selected-hakukohteet states-and-filters
+                                                              haku-oid
+                                                              hakukohde-oid
+                                                              hakukohderyhma-oid
+                                                              rajaus-hakukohteella
+                                                              ryhman-hakukohteet)
+                fetched-and-filtered-applications           (if fetch-applications?
+                                                              (get-application-list-by-query
+                                                                person-service
+                                                                organization-service
+                                                                tarjonta-service
+                                                                suoritus-service
+                                                                session
+                                                                query
+                                                                sort
+                                                                filters-with-hakukohteet)
+                                                              {:fetched-applications [] :filtered-applications []})
+                fetch-applications-content-fn               (fn [application-ids] (application-store/get-application-content-form-list application-ids))
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
-                                                            fetch-applications-content-fn
-                                                            fetch-form-fn
-                                                            (:filtered-applications fetched-and-filtered-applications)
-                                                            (:filters states-and-filters))]
+                                                              fetch-applications-content-fn
+                                                              (:filtered-applications fetched-and-filtered-applications)
+                                                              filters-with-hakukohteet)]
             {:applications filtered-applications-by-harkinnanvaraisuus
              :sort         (merge {:order-by (:order-by sort)
                                    :order    (:order sort)}

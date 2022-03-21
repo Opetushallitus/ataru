@@ -1,23 +1,28 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter-spec
   (:require [speclj.core :refer [it describe tags should=]]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :as hf]))
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :as hf]
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
+            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]))
 
 (def harkinnanvaraisuus-only-filters
-  {:harkinnanvaraisuus {:only-harkinnanvaraiset true}})
-
-(def harkinnanvaraisuus-lomakeosio-key "harkinnanvaraisuus-wrapper")
-(def harkinnanvaraisuus-no-answer-value "0")
-(def harkinnanvaraisuus-yes-answer-value "1")
+  {:filters {:harkinnanvaraisuus {:only-harkinnanvaraiset true}}})
 
 (defn- fake-fetch-applications-content
   [applications-map]
   (fn [application-ids]
     (keep (fn [id] (assoc (get applications-map id) :id id)) application-ids)))
 
-(defn- fake-fetch-form
-  [form-map]
-  (fn [form-id]
-    (get form-map form-id)))
+(defn- fake-get-harkinnanvaraisuus-reason-for-hakukohde
+  [expected-hakukohde-oid]
+  (fn [_ hakukohde-oid]
+    (if (= expected-hakukohde-oid hakukohde-oid)
+      (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
+      (:none harkinnanvaraisuus-reasons))))
+
+(def application-data
+  {"application-1-id"
+   {:form    "form-1-id"
+    :content {:answers []}}})
 
 (describe "filter-applications-by-harkinnanvaraisuus"
   (tags :unit :harkinnanvaraisuus)
@@ -26,111 +31,127 @@
     (let [input  []
           result (hf/filter-applications-by-harkinnanvaraisuus
                    (fake-fetch-applications-content {})
-                   (fake-fetch-form {})
                    input
                    harkinnanvaraisuus-only-filters)]
       (should= [] result)))
 
   (it "returns all applications if :only-harkinnanvaraiset flag is false"
-    (let [input            [{:id "application-1-id"}]
-          application-data {"application-1-id"
-                            {:form    "form-1-id"
-                             :content {:answers []}}}
-          form-data        {"form-1-id" {:content []}}
-          result           (hf/filter-applications-by-harkinnanvaraisuus
-                             (fake-fetch-applications-content application-data)
-                             (fake-fetch-form form-data)
-                             input
-                             {:harkinnanvaraisuus {:only-harkinnanvaraiset false}})]
+    (let [input  [{:id "application-1-id"}]
+          result (hf/filter-applications-by-harkinnanvaraisuus
+                   (fake-fetch-applications-content application-data)
+                   input
+                   {:harkinnanvaraisuus {:only-harkinnanvaraiset false}})]
       (should= input result)))
 
-  (it "returns application if it contains 'yes' answer to question with id 'harkinnanvaraisuus'"
-    (let [input            [{:id "application-1-id"}]
-          application-data {"application-1-id"
-                            {:form    "form-1-id"
-                             :content {:answers [{:original-question "harkinnanvaraisuus" :value harkinnanvaraisuus-yes-answer-value}]}}}
-          form-data        {"form-1-id" {:content [{:id "harkinnanvaraisuus"}]}}
-          result           (hf/filter-applications-by-harkinnanvaraisuus
-                             (fake-fetch-applications-content application-data)
-                             (fake-fetch-form form-data)
-                             input
-                             harkinnanvaraisuus-only-filters)]
-      (should= input result)))
+  (it "does not return application if it has no application-wide reason for harkinnanvaraisuus"
+    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_] (:none harkinnanvaraisuus-reasons))]
+      (let [input  [{:id "application-1-id"}]
+            result (hf/filter-applications-by-harkinnanvaraisuus
+                     (fake-fetch-applications-content application-data)
+                     input
+                     harkinnanvaraisuus-only-filters)]
+        (should= [] result))))
 
-  (it "returns empty vector if input contains 'no' answer to question with id 'harkinnanvaraisuus'"
-    (let [input            [{:id "application-1-id"}]
-          application-data {"application-1-id"
-                            {:form    "form-1-id"
-                             :content {:answers [{:original-question "harkinnanvaraisuus" :value harkinnanvaraisuus-no-answer-value}]}}}
-          form-data        {"form-1-id" {:content [{:id "harkinnanvaraisuus"}]}}
-          result           (hf/filter-applications-by-harkinnanvaraisuus
-                             (fake-fetch-applications-content application-data)
-                             (fake-fetch-form form-data)
-                             input
-                             harkinnanvaraisuus-only-filters)]
-      (should= [] result)))
+  (it "returns application if it has an application-wide reason for harkinnanvaraisuus"
+    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_] (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons))]
+      (let [input  [{:id "application-1-id"}]
+            result (hf/filter-applications-by-harkinnanvaraisuus
+                     (fake-fetch-applications-content application-data)
+                     input
+                     harkinnanvaraisuus-only-filters)]
+        (should= input result))))
 
-  (describe "form has condition which can hide 'harkinnanvaraisuus' section"
-    (let [form-data {"form-1-id" {:content [{:id harkinnanvaraisuus-lomakeosio-key}
-                                            {:id                            "hiding-question"
-                                             :section-visibility-conditions [{:section-name harkinnanvaraisuus-lomakeosio-key
-                                                                              :condition    {:data-type           "str"
-                                                                                             :comparison-operator "="
-                                                                                             :answer-compared-to  "please-hide-the-section"}}]}]}}]
-      (it "returns application if it contains the answer which hides 'harkinnanvaraisuus' section"
-        (let [input            [{:id "application-1-id"}]
-              application-data {"application-1-id"
-                                {:form    "form-1-id"
-                                 :content {:answers [{:key "hiding-question" :value "please-hide-the-section"}]}}}
-              result           (hf/filter-applications-by-harkinnanvaraisuus
-                                 (fake-fetch-applications-content application-data)
-                                 (fake-fetch-form form-data)
-                                 input
-                                 harkinnanvaraisuus-only-filters)]
-          (should= input result)))
+  (it "returns application if it has a harkinnanvaraisuus reason for some hakukohde"
+    (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+      (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+            result (hf/filter-applications-by-harkinnanvaraisuus
+                     (fake-fetch-applications-content application-data)
+                     input
+                     harkinnanvaraisuus-only-filters)]
+        (should= input result))))
 
-      (it "does not return application if it contains answer which doesn't hide 'harkinnanvaraisuus' section"
-        (let [input            [{:id "application-1-id"}]
-              application-data {"application-1-id"
-                                {:form    "form-1-id"
-                                 :content {:answers [{:key "hiding-question" :value "something-else"}]}}}
-              result           (hf/filter-applications-by-harkinnanvaraisuus
-                                 (fake-fetch-applications-content application-data)
-                                 (fake-fetch-form form-data)
-                                 input
-                                 harkinnanvaraisuus-only-filters)]
+  (describe "when filtering by hakukohteet as well"
+    (it "returns application if it has a harkinnanvaraisuus reason for given hakukohde"
+      (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+        (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+              result (hf/filter-applications-by-harkinnanvaraisuus
+                       (fake-fetch-applications-content application-data)
+                       input
+                       (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-1"}))]
+          (should= input result))))
+
+    (it "does not return application if it has a harkinnanvaraisuus reason for another hakukohde"
+      (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+        (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+              result (hf/filter-applications-by-harkinnanvaraisuus
+                       (fake-fetch-applications-content application-data)
+                       input
+                       (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-2"}))]
           (should= [] result)))))
 
-  (describe "form has multiple conditions which can hide 'harkinnanvaraisuus' section"
-    (let [form-data {"form-1-id" {:content [{:id harkinnanvaraisuus-lomakeosio-key}
-                                            {:id                            "hiding-question-1"
-                                             :section-visibility-conditions [{:section-name harkinnanvaraisuus-lomakeosio-key
-                                                                              :condition    {:data-type           "str"
-                                                                                             :comparison-operator "="
-                                                                                             :answer-compared-to  "please-hide-the-section-1"}}
-                                                                             {:section-name harkinnanvaraisuus-lomakeosio-key
-                                                                              :condition    {:data-type           "str"
-                                                                                             :comparison-operator "="
-                                                                                             :answer-compared-to  "please-hide-the-section-2"}}]}
-                                            {:id                            "hiding-question-2"
-                                             :section-visibility-conditions [{:section-name harkinnanvaraisuus-lomakeosio-key
-                                                                              :condition    {:data-type           "str"
-                                                                                             :comparison-operator "="
-                                                                                             :answer-compared-to  "please-hide-the-section-3"}}]}]}}]
-      (it "returns application if it contains any answer which hides 'harkinnanvaraisuus' section"
-        (let [input            [{:id "application-1-id"}]
-              application-data {"application-1-id"
-                                {:form    "form-1-id"
-                                 :content {:answers [{:key "hiding-question-1" :value "please-hide-the-section-1"}]}}
-                                "application-2-id"
-                                {:form    "form-1-id"
-                                 :content {:answers [{:key "hiding-question-1" :value "please-hide-the-section-2"}]}}
-                                "application-3-id"
-                                {:form    "form-1-id"
-                                 :content {:answers [{:key "hiding-question-2" :value "please-hide-the-section-3"}]}}}
-              result           (hf/filter-applications-by-harkinnanvaraisuus
-                                 (fake-fetch-applications-content application-data)
-                                 (fake-fetch-form form-data)
-                                 input
-                                 harkinnanvaraisuus-only-filters)]
-          (should= input result))))))
+  (describe "integration test using actual answers"
+    (it "does not return application when base education is 'Perusopetuksen oppimäärä'"
+      (let [input            [{:id "application-1-id"}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:key   "base-education-2nd"
+                                                    :value "1"}]}}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               input
+                               harkinnanvaraisuus-only-filters)]
+        (should= [] result)))
+
+    (it "returns application when base education is 'Ulkomailla suoritettu koulutus'"
+      (let [input            [{:id "application-1-id"}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:key   "base-education-2nd"
+                                                    :value "0"}]}}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               input
+                               harkinnanvaraisuus-only-filters)]
+        (should= input result)))
+
+    (it "returns application when it has harkinnanvaraisuus reason for some hakukohde"
+      (let [input            [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:key   "base-education-2nd"
+                                                    :value "1"} ; perusopetuksen oppimäärä
+                                                   {:key   "harkinnanvaraisuus-reason_hakukohde-oid-1"
+                                                    :value "0"}]}}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               input
+                               harkinnanvaraisuus-only-filters)]
+        (should= input result)))
+
+    (it "returns application when it has harkinnanvaraisuus reason for given hakukohde"
+      (let [input            [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:key   "base-education-2nd"
+                                                    :value "1"} ; perusopetuksen oppimäärä
+                                                   {:key   "harkinnanvaraisuus-reason_hakukohde-oid-1"
+                                                    :value "0"}]}}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               input
+                               (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-1"}))]
+        (should= input result)))
+
+    (it "does not return application if it has a harkinnanvaraisuus reason for another hakukohde"
+      (let [input            [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
+            application-data {"application-1-id"
+                              {:form    "form-1-id"
+                               :content {:answers [{:key   "base-education-2nd"
+                                                    :value "1"} ; perusopetuksen oppimäärä
+                                                   {:key   "harkinnanvaraisuus-reason_hakukohde-oid-1"
+                                                    :value "0"}]}}}
+            result           (hf/filter-applications-by-harkinnanvaraisuus
+                               (fake-fetch-applications-content application-data)
+                               input
+                               (assoc harkinnanvaraisuus-only-filters :selected-hakukohteet #{"hakukohde-oid-2"}))]
+        (should= [] result)))))
