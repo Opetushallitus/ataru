@@ -1415,6 +1415,8 @@
 (defn notifications-display []
   (fn []
     (let [application                   @(subscribe [:application/selected-application])
+          toisen-asteen-yhteishaku?     @(subscribe [:application/toisen-asteen-yhteishaku-oid? (:haku application)])
+          admin?                        @(subscribe [:editor/superuser?])
           person-oid                    (-> application :person :oid)
           selected-review-hakukohde     @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
           show-not-latest-form?         (some? @(subscribe [:state-query [:application :latest-form]]))
@@ -1422,7 +1424,9 @@
           show-henkilo-info-incomplete? (and (some? person-oid)
                                              (not (-> application :person :language)))
           show-not-yksiloity?           (and (some? person-oid)
-                                             (not (-> application :person :yksiloity)))
+                                             (not (-> application :person :yksiloity))
+                                             (or (not toisen-asteen-yhteishaku?)
+                                                 admin?))
           show-metadata-not-found?      @(subscribe [:state-query [:application :metadata-not-found]])]
       (when (or show-not-latest-form?
                 show-creating-henkilo-failed?
