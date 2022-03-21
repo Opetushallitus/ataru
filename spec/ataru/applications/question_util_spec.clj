@@ -4,12 +4,17 @@
             [ataru.applications.question-util :as qu :refer [kiinnostunut-oppisopimuskoulutuksesta-wrapper-label
                                                              amm-kaksoistutkinto-wrapper-label
                                                              lukio-kaksoistutkinto-wrapper-label
-                                                             sora-question-wrapper-label]]
+                                                             sora-question-wrapper-label
+                                                             urheilijan-lisakysymykset-wrapper-label]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-wrapper-key]]))
 
 (def form-2nd-aste {"content" [{"id" "oppikeywrapper"
                                 "label" kiinnostunut-oppisopimuskoulutuksesta-wrapper-label
                                 "children" [{"id" "oppikey"}]}
+                               {"id" "urheilukeywrapper"
+                                "label" urheilijan-lisakysymykset-wrapper-label
+                                "children" [{"id" "urheilija-amm-key"
+                                             "belongs-to-hakukohderyhma" ["ryhma1" "ryhma2"]}]}
                                {"id" "ammkaksoistutkintowrapper"
                                 "label" amm-kaksoistutkinto-wrapper-label
                                 "children" [{"id" "amm2tutkintokey"}]}
@@ -45,6 +50,11 @@
 
                     (it "returns tutkintokieli keys"
                         (should= [:language-key1 :language-key2] (:tutkintokieli-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
+
+                    (it "returns urheilijan-amm-lisakysymys-key and groups"
+                        (let [result (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste)]
+                          (should= :urheilija-amm-key (:urheilijan-amm-lisakysymys-key result))
+                          (should=  #{"ryhma1" "ryhma2"} (:urheilijan-amm-groups result))))
 
                     (it "returns sora-aiempi key"
                         (should= "aiempi-key" (:sora-aiempi-key (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
