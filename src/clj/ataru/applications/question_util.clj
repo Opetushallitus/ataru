@@ -14,6 +14,9 @@
 (def kiinnostunut-oppisopimuskoulutuksesta-wrapper-label {:fi "Oppisopimuskoulutus ",
                                                           :sv "Läroavtalsutbildning"})
 
+(def urheilijan-lisakysymykset-wrapper-label {:fi "Urheilijan lisäkysymykset ammatillisissa kohteissa",
+                                              :sv "Tilläggsfrågor för idrottare i yrkesinriktade ansökningsmål"})
+
 (defn get-hakurekisteri-toinenaste-specific-questions
   [form]
   (let [content (:content (keywordize-keys form))
@@ -46,13 +49,17 @@
                                      first
                                      :children
                                      first
-                                     :id)]
-    (prn sora-terveys-question)
-    (prn sora-aiempi-question)
-    (prn kaksoistutkinto-questions)
+                                     :id)
+        urhelijian-ammatilliset-lisakysymykset-question (->> content
+                                                             (filter #(= urheilijan-lisakysymykset-wrapper-label (:label %)))
+                                                             first
+                                                             :children
+                                                             first)]
     {:tutkintovuosi-keys tutkintovuosi-keys
      :tutkintokieli-keys tutkintokieli-keys
      :sora-terveys-key sora-terveys-question
      :sora-aiempi-key sora-aiempi-question
      :kaksoistutkinto-keys kaksoistutkinto-questions
-     :oppisopimuskoulutus-key (keyword oppisopimuskoulutus-key)}))
+     :oppisopimuskoulutus-key (keyword oppisopimuskoulutus-key)
+     :urheilijan-amm-lisakysymys-key (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
+     :urheilijan-amm-groups (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))}))

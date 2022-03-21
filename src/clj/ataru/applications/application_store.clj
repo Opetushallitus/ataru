@@ -947,10 +947,12 @@
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 (defn- unwrap-hakurekisteri-application-toinenaste
-  [questions {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
+  [questions urheilija-amm-hakukohdes {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
   (let [answers     (answers-by-key (:answers content))
         foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
         form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
+        sports-key (:urheilijan-amm-lisakysymys-key questions)
+        interested-in-sports-amm? (-> answers sports-key :value)
         hakukohteet (map (fn [oid]
                            {:oid oid
                             :harkinnanvaraisuus
@@ -960,7 +962,9 @@
                             :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
                                                                  (map #(:value ((form-hakukohde-key % oid) answers)))
                                                                  (some #(= "0" %)))
-                            :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta nil})
+                            :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (when (and interested-in-sports-amm?
+                                                                                          (some #(= oid %) urheilija-amm-hakukohdes))
+                                                                                 (= "0" interested-in-sports-amm?))})
                          hakukohde)
         first-huoltaja (when (or (-> answers :guardin-name :value)
                                  (-> answers :guardian-email :value)
@@ -978,6 +982,7 @@
                          (concat [first-huoltaja second-huoltaja])
                          (filter #(not (nil? %))))
         base-education-key (keyword base-education-choice-key)
+        oppisopimuskoulutus-key (:oppisopimuskoulutus-key questions)
         tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
@@ -1008,7 +1013,7 @@
      :pohjakoulutus               (-> answers base-education-key :value)
      :tutkintoKieli               tutkinto-kieli
      :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
-     :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers (:oppisopimuskoulutus-key questions) :value))
+     :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
      }))
 
 (defn suoritusrekisteri-applications
@@ -1034,7 +1039,7 @@
              {:offset (:oid a)}))))
 
 (defn suoritusrekisteri-applications-toinenaste
-  [haku-oid hakukohde-oids person-oids modified-after offset questions]
+  [haku-oid hakukohde-oids person-oids modified-after offset questions urheilija-amm-hakukohdes]
    (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                                           (queries/yesql-suoritusrekisteri-applications
                                             {:haku_oid       haku-oid
@@ -1050,7 +1055,7 @@
                                                                      .toOffsetDateTime)
                                              :offset         offset}
                                             {:connection connection}))
-                 (map #(unwrap-hakurekisteri-application-toinenaste questions %)))]
+                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes %)))]
      (merge {:applications as}
             (when-let [a (first (drop 999 as))]
               {:offset (:oid a)}))))
