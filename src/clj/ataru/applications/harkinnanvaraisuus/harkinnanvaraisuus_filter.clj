@@ -13,7 +13,9 @@
 (defn- is-harkinnanvarainen-for-whole-application?
   [application]
   (let [answers                   (:answers application)
-        harkinnanvaraisuus-reason (hu/get-common-harkinnanvaraisuus-reason answers)
+        pick-value-fn (fn [answers question]
+                        (question answers))
+        harkinnanvaraisuus-reason (hu/get-common-harkinnanvaraisuus-reason answers pick-value-fn)
         result (harkinnanvaraisuus-reason->is-harkinnanvarainen? harkinnanvaraisuus-reason)]
     result))
 
@@ -21,7 +23,9 @@
   [hakukohteet-filter application]
   (let [answers                    (:answers application)
         hakukohteet                (or hakukohteet-filter (:hakukohde application))
-        harkinnanvaraisuus-reasons (map #(hu/get-harkinnanvaraisuus-reason-for-hakukohde answers %) hakukohteet)]
+        pick-value-fn (fn [answers question]
+                        (question answers))
+        harkinnanvaraisuus-reasons (map #(hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers % pick-value-fn) hakukohteet)]
     (some harkinnanvaraisuus-reason->is-harkinnanvarainen? harkinnanvaraisuus-reasons)))
 
 (defn- is-harkinnanvarainen?
