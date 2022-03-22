@@ -958,7 +958,7 @@
                             :harkinnanvaraisuus
                             (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)
                             :terveys (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
-                            :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key-key questions) oid) answers)))
+                            :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key questions) oid) answers)))
                             :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
                                                                  (map #(:value ((form-hakukohde-key % oid) answers)))
                                                                  (some #(= "0" %)))
