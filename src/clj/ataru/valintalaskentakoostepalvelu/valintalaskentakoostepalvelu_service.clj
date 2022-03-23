@@ -15,7 +15,10 @@
     (valintalaskentakoostepalvelu-client/opiskelijan-suoritukset
       valintalaskentakoostepalvelu-cas-client
       haku-oid
-      hakemus-oid)))
+      hakemus-oid))
+
+  (hakemusten-harkinnanvaraisuus-valintalaskennasta [this hakemukset-with-harkinnanvaraisuus])
+  )
 
 (defn new-valintalaskentakoostepalvelu-service []
   (map->CachedValintalaskentakoostepalveluService {}))

@@ -3,14 +3,24 @@
             [ataru.cas.client :as cas]
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
-            [clojure.core.match :as match]
-            [schema.core :as s]))
+            [clojure.core.match :refer [match]]
+            [schema.core :as s]
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
+            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
 (s/defschema HakukohdeValintalaskentaResponse
   {:kayttaaValintalaskentaa s/Bool})
+
+(s/defschema HakukohdeHarkinnanvaraisuusResponse
+  {:hakemusOid s/Str
+   :henkiloOid s/Str
+   :hakutoiveet [{:hakukohdeOid s/Str
+                  :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)}]})
+
+(def ^:private hakukohde-harkinnanvaraisuus-checker (s/checker HakukohdeHarkinnanvaraisuusResponse))
 
 (def ^:private hakukohde-valintalaskenta-checker (s/checker HakukohdeValintalaskentaResponse))
 
@@ -20,14 +30,31 @@
         result (cas/cas-authenticated-get
                  valintalaskentakoostepalvelu-cas-client
                  url)]
-    (match/match result
-                 {:status 200 :body body}
-                 (json/parse-string body true)
+    (match result
+           {:status 200 :body body}
+           (json/parse-string body true)
 
-                 :else (throw-error (str "Could not get hakukohde by oid " hakukohde-oid ", "
-                                         "status: " (:status result)
-                                         "response body: "
-                                         (:body result))))))
+           :else (throw-error (str "Could not get hakukohde by oid " hakukohde-oid ", "
+                                   "status: " (:status result)
+                                   "response body: "
+                                   (:body result))))))
+
+(defn hakemusten-harkinnanvaraisuus-valintalaskennasta
+  [valintalaskentakoostepalvelu-cas-client hakemukset-with-harkinnanvaraisuus]
+  (let [url    (url/resolve-url :valintalaskentakoostepalvelu-service.hakemusten-harkinnanvaraisuus)
+        result (cas/cas-authenticated-post
+                 valintalaskentakoostepalvelu-cas-client
+                 url
+                 hakemukset-with-harkinnanvaraisuus)]
+    (match result
+           {:status 200 :body body}
+           (json/parse-string body true)
+
+           :else (throw (new RuntimeException (str "Could not fetch harkinnanvaraisuustieto for "
+                                                   (count hakemukset-with-harkinnanvaraisuus)
+                                                   " applications from valintalaskentakoostepalvelu. "
+                                                   "One of the application oids this operation was done for: "
+                                                   (:oid (first hakemukset-with-harkinnanvaraisuus))))))))
 
 (defn opiskelijan-suoritukset
   [valintalaskentakoostepalvelu-cas-client haku-oid hakemus-oid]
@@ -71,3 +98,20 @@
 
   (check-schema [_ response]
     (hakukohde-valintalaskenta-checker response)))
+
+(defrecord HakukohdeHarkinnanvaraisuusCacheLoader [valintalaskentakoostepalvelu-cas-client]
+  cache/CacheLoader
+
+  (load [_ application]
+    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                      [(hutil/assoc-harkinnanvaraisuustieto application)]))
+
+  (load-many [_ applications]
+    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                      (map #(hutil/assoc-harkinnanvaraisuustieto %) applications)))
+
+  (load-many-size [_]
+    1)
+
+  (check-schema [_ response]
+    (hakukohde-harkinnanvaraisuus-checker response)))
