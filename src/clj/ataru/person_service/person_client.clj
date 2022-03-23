@@ -24,7 +24,7 @@
    person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
                 cas-client
-                (resolve-url :oppijanumerorekisteri-service.person-create) person)]
+                (resolve-url :oppijanumerorekisteri-service.person-create) person nil)]
     (match result
       {:status 201 :body body}
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
@@ -48,7 +48,7 @@
         results    (map
                      #(cas/cas-authenticated-post
                         cas-client
-                        (resolve-url :oppijanumerorekisteri-service.get-persons) %)
+                        (resolve-url :oppijanumerorekisteri-service.get-persons) % nil)
                      partitions)]
     (reduce
       (fn [acc result]
@@ -99,7 +99,8 @@
   (let [result (cas/cas-authenticated-post
                 cas-client
                 (resolve-url :oppijanumerorekisteri-service.duplicate-henkilos)
-                {:henkiloOids oids})]
+                {:henkiloOids oids}
+                nil)]
     (match result
       {:status 200 :body body}
       (parse-duplicate-henkilos (json/parse-string body true) oids)

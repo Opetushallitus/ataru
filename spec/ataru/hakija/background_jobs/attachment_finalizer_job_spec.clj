@@ -9,7 +9,7 @@
   (tags :unit)
 
   (it "should finalize attachments belonging to an application"
-    (with-redefs [cas/cas-authenticated-post        (fn [_ url body]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ url body _]
                                                       (should= "/api/files/finalize" url)
                                                       (should= {:keys ["attachment-key-1"
                                                                        "attachment-key-2"
@@ -27,7 +27,7 @@
         (should= {:transition {:id :final}} result))))
 
   (it "should not call finalize API without any attachments"
-    (with-redefs [cas/cas-authenticated-post        (fn [_ _ _]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ _ _ _]
                                                       (should-fail))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)

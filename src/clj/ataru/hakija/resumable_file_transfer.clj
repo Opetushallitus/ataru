@@ -7,6 +7,7 @@
             [string-normalizer.filename-normalizer :as normalizer]))
 
 (def max-part-size (get-in config [:public-config :attachment-file-part-max-size-bytes] (* 1024 1024)))
+(def origin-system "ataru")
 
 (defn mark-upload-delivered-to-liiteri
   [cas-client file-id file-name]
@@ -19,7 +20,8 @@
                                       (fn []
                                         {:socket-timeout (* 1000 60 10)
                                          :cookie-policy  :standard
-                                         :query-params {:filename (normalizer/normalize-filename file-name)}}))]
+                                         :query-params {:filename (normalizer/normalize-filename file-name)
+                                                        :origin-system origin-system}}))]
     (cond (= status 200)
           (do
             (log/info "Uploaded file" file-name "to liiteri in" (- (System/currentTimeMillis) start-time) "ms:" body)
