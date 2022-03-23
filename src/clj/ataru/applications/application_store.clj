@@ -948,7 +948,8 @@
 
 (defn- unwrap-hakurekisteri-application-toinenaste
   [questions urheilija-amm-hakukohdes {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
-  (let [answers     (answers-by-key (:answers content))
+
+  (try (let [answers     (answers-by-key (:answers content))
         foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
         form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
         sports-key (:urheilijan-amm-lisakysymys-key questions)
@@ -1014,7 +1015,8 @@
      :tutkintoKieli               tutkinto-kieli
      :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
      :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
-     }))
+     }) (catch Exception e
+              (log/warn "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
@@ -1055,7 +1057,8 @@
                                                                      .toOffsetDateTime)
                                              :offset         offset}
                                             {:connection connection}))
-                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes %)))]
+                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes %))
+                 (remove nil?))]
      (merge {:applications as}
             (when-let [a (first (drop 999 as))]
               {:offset (:oid a)}))))
