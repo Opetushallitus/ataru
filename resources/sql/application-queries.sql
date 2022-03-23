@@ -1043,3 +1043,11 @@ WHERE la.haku = :haku
 SELECT a.id, a.form_id AS "form", a.content
 FROM applications a
 WHERE a.id IN (:ids);
+
+--name: yesql-delete-applications-by-application-key
+DELETE FROM applications a
+WHERE a.key in (:keys);
+
+--name: yesql-delete-answers-by-application-key
+DELETE FROM applications a
+WHERE a.key in (:keys);
