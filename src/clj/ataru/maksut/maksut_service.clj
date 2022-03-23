@@ -18,7 +18,7 @@
 
 (defn- create-lasku-post [maksut-cas-client lasku]
   (let [url       (url/resolve-url :maksut-service.virkailija-create)
-        result    (cas/cas-authenticated-post maksut-cas-client url lasku)]
+        result    (cas/cas-authenticated-post maksut-cas-client url lasku nil)]
     (match/match result
                  {:status 200 :body body}
                  (parse-and-validate body maksut-schema/Lasku)
@@ -43,7 +43,7 @@
 (defn- list-statuses [maksut-cas-client keys]
   (let [url    (url/resolve-url :maksut-service.background-lasku-status)
         req    {:keys keys}
-        result (cas/cas-authenticated-post maksut-cas-client url req)]
+        result (cas/cas-authenticated-post maksut-cas-client url req nil)]
     (match/match result
                  {:status 200 :body body}
                  (parse-and-validate body [maksut-schema/LaskuStatus])

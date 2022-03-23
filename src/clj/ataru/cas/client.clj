@@ -2,7 +2,8 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.config.core :refer [config]]
             [ataru.util.http-util :as http-util]
-            [cheshire.core :as json])
+            [cheshire.core :as json]
+            [taoensso.timbre :as log])
   (:import [fi.vm.sade.utils.cas CasClient CasParams]
            [org.http4s.client.blaze package$]))
 
@@ -43,6 +44,9 @@
         cas-session-id      (:session-id client)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
+    (log/error "REQUEST IS: " (merge {:url url :method method}
+                                     (opts-fn)
+                                     (create-params session-cookie-name cas-session-id body)))
     (let [resp (http-util/do-request (merge {:url url :method method}
                                             (opts-fn)
                                             (create-params session-cookie-name cas-session-id body)))]
@@ -61,8 +65,8 @@
 (defn cas-authenticated-delete [client url]
   (cas-http client :delete url (constantly {})))
 
-(defn cas-authenticated-post [client url body]
-  (cas-http client :post url (constantly {}) body))
+(defn cas-authenticated-post [client url body opts-fn]
+  (cas-http client :post url (if (nil? opts-fn) (constantly {}) opts-fn) body))
 
 (defn cas-authenticated-multipart-post [client url opts-fn]
   (cas-http client :post url opts-fn nil))
