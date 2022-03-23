@@ -448,13 +448,17 @@
 
       (api/GET "/opiskelija/:henkilo-oid" {session :session}
         :path-params [henkilo-oid :- String]
+        :query-params [haku-oid :- String]
         :summary "Returns opiskelija information from suoritusrekisteri"
         :return ataru-schema/OpiskelijaResponse
-        (let [year        (suoritus-filter/year-for-suoritus-filter (time/now))
+        (let [haku       (tarjonta/get-haku tarjonta-service haku-oid)
+              hakuvuodet (->> (:hakuajat haku)
+                              (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                              distinct)
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
               linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
               aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % year luokkatasot) aliases)]
+              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % hakuvuodet luokkatasot) aliases)]
           (if-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
             (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
               (response/ok

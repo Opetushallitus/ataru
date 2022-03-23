@@ -40,8 +40,8 @@
     (let [luokkatasot-str (string/join "," luokkatasot)
           cache-key (str oppilaitos-oid "#" vuosi "#" luokkatasot-str)]
       (cache/get-from oppilaitoksen-luokat-cache cache-key)))
-  (opiskelija [_ henkilo-oid vuosi luokkatasot]
-    (->> (client/opiskelijat suoritusrekisteri-cas-client henkilo-oid vuosi)
+  (opiskelija [_ henkilo-oid vuodet luokkatasot]
+    (->> (mapcat #(client/opiskelijat suoritusrekisteri-cas-client henkilo-oid %) vuodet)
          (map parse-opiskelija)
          (filter #(contains? (set luokkatasot) (:luokkataso %)))
          (sort-by :alkupaiva)
