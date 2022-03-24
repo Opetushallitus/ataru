@@ -603,9 +603,9 @@
 
 (reg-event-fx
   :application/fetch-applicant-school
-  (fn [_ [_ applicant-henkilo-oid]]
+  (fn [_ [_ haku-oid applicant-henkilo-oid]]
     {:http {:method              :get
-            :path                (str "/lomake-editori/api/applications/opiskelija/" applicant-henkilo-oid)
+            :path                (str "/lomake-editori/api/applications/opiskelija/" applicant-henkilo-oid "?haku-oid=" haku-oid)
             :handler-or-dispatch :application/handle-fetch-applicant-school-response}}))
 
 (reg-event-db
@@ -620,7 +620,7 @@
 (defn create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku
   [application]
   (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
-    [:application/fetch-applicant-school (-> application :person :oid)]))
+    [:application/fetch-applicant-school (:haku application) (-> application :person :oid)]))
 
 (reg-event-fx
   :application/handle-fetch-application

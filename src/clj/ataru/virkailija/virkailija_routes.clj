@@ -81,7 +81,8 @@
             [ataru.temp-file-storage.temp-file-store :as temp-file-store]
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
-            [ataru.applications.suoritus-filter :as suoritus-filter])
+            [ataru.applications.suoritus-filter :as suoritus-filter]
+            [ataru.person-service.person-service :as person-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -447,14 +448,23 @@
 
       (api/GET "/opiskelija/:henkilo-oid" {session :session}
         :path-params [henkilo-oid :- String]
+        :query-params [haku-oid :- String]
         :summary "Returns opiskelija information from suoritusrekisteri"
         :return ataru-schema/OpiskelijaResponse
-        (if-let [opiskelija (suoritus-service/opiskelija suoritus-service henkilo-oid)]
-          (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
-            (response/ok
-              {:oppilaitos-name (:name organization)
-               :luokka (:luokka opiskelija)}))
-          (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)})))
+        (let [haku       (tarjonta/get-haku tarjonta-service haku-oid)
+              hakuvuodet (->> (:hakuajat haku)
+                              (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                              distinct)
+              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
+              linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
+              aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
+              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % hakuvuodet luokkatasot) aliases)]
+          (if-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
+            (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
+              (response/ok
+                {:oppilaitos-name (:name organization)
+                 :luokka          (:luokka opiskelija)}))
+            (response/not-found {:error (str "Opiskelija information not found for henkilo-oid " henkilo-oid)}))))
 
       (api/GET "/virkailija-settings" {session :session}
         :return ataru-schema/VirkailijaSettings

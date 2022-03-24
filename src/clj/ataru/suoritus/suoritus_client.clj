@@ -106,10 +106,12 @@
       (throw (new RuntimeException
                (str "Fetching oppilaitoksen luokat failed: " r))))))
 
-(defn opiskelijat [cas-client henkilo-oid]
+(defn opiskelijat [cas-client henkilo-oid vuosi]
   (let [url (url/resolve-url
               "suoritusrekisteri.opiskelijat"
-              {"henkilo" henkilo-oid})]
+              (cond-> {"henkilo" henkilo-oid}
+                (some? vuosi)
+                (assoc "vuosi" vuosi)))]
     (match [(cas-client/cas-authenticated-get
               cas-client
               url)]

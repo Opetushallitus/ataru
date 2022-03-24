@@ -713,6 +713,7 @@
                                                            (empty? valitut-luokat)
                                                            (contains? valitut-luokat (:luokka %))))
                                                 (map :person-oid)
+                                                (aac/linked-oids-for-person-oids person-service)
                                                 distinct)))]
         (when-let [query (->and-query
                            (cond (some? form-key)
