@@ -869,7 +869,16 @@
             (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
               (response/ok
                 (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
-          (response/unauthorized))))
+          (response/unauthorized)))
+
+      (api/GET "/valintaperusteet/hakemus/:application-oid/harkinnanvaraisuus" {session :session}
+        :path-params [application-oid :- s/Str]
+        :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
+        :summary "Tarkistaa valintalaskentakoostepalvelusta onko annettu hakemus harkinnanvarainen"
+        (let [hakukohteet-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                   valintalaskentakoostepalvelu-service
+                                                   [application-oid])]
+          (response/ok hakukohteet-harkinnanvaraisuudella))))
 
     (api/context "/maksut" []
       :tags ["maksut-api"]
@@ -1242,7 +1251,7 @@
               (response/ok
                 (application-service/suoritusrekisteri-applications
                   application-service
-                  hakuOid
+                  haku-oid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
@@ -1271,11 +1280,12 @@
                 (application-service/suoritusrekisteri-toinenaste-applications
                   application-service
                   (:form-by-haku-oid-str-cache dependencies)
-                  haku-oid
+                  hakuOid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
                   offset))))
+
       (api/GET "/applications" {session :session}           ;; deprecated, use /valinta-tulos-service
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}

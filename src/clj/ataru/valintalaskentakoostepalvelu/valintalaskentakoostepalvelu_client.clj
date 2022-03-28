@@ -1,30 +1,13 @@
 (ns ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client
-  (:require [ataru.cache.cache-service :as cache]
-            [ataru.cas.client :as cas]
+  (:require [ataru.cas.client :as cas]
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
-            [clojure.core.match :refer [match]]
-            [schema.core :as s]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [clojure.core.match :refer [match]]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))
 
-(s/defschema HakukohdeValintalaskentaResponse
-  {:kayttaaValintalaskentaa s/Bool})
-
-(s/defschema HakukohdeHarkinnanvaraisuusResponse
-  {:hakemusOid s/Str
-   :henkiloOid s/Str
-   :hakutoiveet [{:hakukohdeOid s/Str
-                  :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)}]})
-
-(def ^:private hakukohde-harkinnanvaraisuus-checker (s/checker HakukohdeHarkinnanvaraisuusResponse))
-
-(def ^:private hakukohde-valintalaskenta-checker (s/checker HakukohdeValintalaskentaResponse))
-
-(defn- hakukohde-uses-valintalaskenta? [valintalaskentakoostepalvelu-cas-client
+(defn hakukohde-uses-valintalaskenta? [valintalaskentakoostepalvelu-cas-client
                                         hakukohde-oid]
   (let [url    (url/resolve-url :valintalaskentakoostepalvelu-service.hakukohde-uses-valintalaskenta hakukohde-oid)
         result (cas/cas-authenticated-get
@@ -77,41 +60,3 @@
                            "status: " (:status result) ", "
                            "response body: "
                            (:body result))))))
-
-(defrecord HakukohdeValintalaskentaCacheLoader [valintalaskentakoostepalvelu-cas-client]
-  cache/CacheLoader
-
-  (load [_ hakukohde-oid]
-    (hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-cas-client
-                                     hakukohde-oid))
-
-  (load-many [_ hakukohde-oids]
-    (reduce (fn [acc hakukohde-oid]
-              (let [result (hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-cas-client
-                                                            hakukohde-oid)]
-                (assoc acc hakukohde-oid result)))
-            {}
-            hakukohde-oids))
-
-  (load-many-size [_]
-    1)
-
-  (check-schema [_ response]
-    (hakukohde-valintalaskenta-checker response)))
-
-(defrecord HakukohdeHarkinnanvaraisuusCacheLoader [valintalaskentakoostepalvelu-cas-client]
-  cache/CacheLoader
-
-  (load [_ application]
-    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
-                                                      [(hutil/assoc-harkinnanvaraisuustieto application)]))
-
-  (load-many [_ applications]
-    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
-                                                      (map #(hutil/assoc-harkinnanvaraisuustieto %) applications)))
-
-  (load-many-size [_]
-    1)
-
-  (check-schema [_ response]
-    (hakukohde-harkinnanvaraisuus-checker response)))
