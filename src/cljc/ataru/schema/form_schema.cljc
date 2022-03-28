@@ -499,6 +499,10 @@
   (merge Hakutoive
          {(s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)}))
 
+(s/defschema HakutoiveHarkinnanvaraisuudella
+  {:hakukohdeOid s/Str
+   :harkinnanvaraisuus (apply s/enum harkinnanvaraisuus-types)})
+
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)
    :hakuOid          s/Str
