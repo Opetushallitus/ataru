@@ -82,7 +82,8 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.person-service.person-service :as person-service])
+            [ataru.person-service.person-service :as person-service]
+            [cuerdas.core :as str])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -1224,6 +1225,35 @@
                 (application-service/suoritusrekisteri-applications
                   application-service
                   hakuOid
+                  hakukohdeOids
+                  hakijaOids
+                  modifiedAfter
+                  offset))))
+      (api/POST "/suoritusrekisteri/haku/:haku-oid/toinenaste" {session :session}
+        :summary "Toisen asteen hakemukset for suoritusrekisteri"
+        :path-params [haku-oid :- (api/describe s/Str "Haun OID")]
+        :body-params [{hakukohdeOids :- [s/Str] nil}
+                      {hakijaOids :- [s/Str] nil}
+                      {modifiedAfter :- s/Str nil}
+                      {offset :- s/Str nil}]
+        :return {:applications [ataru-schema/HakurekisteriApplicationToinenAste]
+                 (s/optional-key :offset) s/Str}
+        (cond (str/empty-or-nil? haku-oid)
+              (response/bad-request {:error "No haku-oid path parameter given"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications :edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (application-service/suoritusrekisteri-toinenaste-applications
+                  application-service
+                  (:form-by-haku-oid-str-cache dependencies)
+                  haku-oid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
