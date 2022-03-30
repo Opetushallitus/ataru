@@ -2241,7 +2241,34 @@
                                                      :en "EN: Valinta estää hakemuksen lähettämisen"}
    :button-text                                     {:fi "Painikkeen teksti"
                                                      :sv "SV: Painikkeen teksti"
-                                                     :en "EN: Painikkeen teksti"}})
+                                                     :en "EN: Painikkeen teksti"}
+   :pohjakoulutus-for-valinnat                      {:fi "Tiedot Koski-järjestelmästä"
+                                                     :sv "SV: Tiedot Koski-järjestelmästä"
+                                                     :en "EN: Tiedot Koski-järjestelmästä"}
+   :pohjakoulutus-opetuskieli                       {:fi "Opetuskieli"
+                                                     :sv "SV: Opetuskieli"
+                                                     :en "EN: Opetuskieli"}
+   :pohjakoulutus-suoritusvuosi                     {:fi "Suoritusvuosi"
+                                                     :sv "SV: Suoritusvuosi"
+                                                     :en "EN: Suoritusvuosi"}
+   :lisapistekoulutukset                            {:fi "Lisäpistekoulutukset"
+                                                     :sv "SV: Lisäpistekoulutukset"
+                                                     :en "EN: Lisäpistekoulutukset"}
+   :lisapistekoulutus-perusopetuksenlisaopetus      {:fi "Kymppiluokka (perusopetuksen lisäopetus)"
+                                                     :sv "SV: Kymppiluokka (perusopetuksen lisäopetus)"
+                                                     :en "EN: Kymppiluokka (perusopetuksen lisäopetus)"}
+   :lisapistekoulutus-valma                         {:fi "Ammatilliseen koulutukseen valmentava koulutus VALMA"
+                                                     :sv "SV: Ammatilliseen koulutukseen valmentava koulutus VALMA"
+                                                     :en "EN: Ammatilliseen koulutukseen valmentava koulutus VALMA"}
+   :lisapistekoulutus-luva                          {:fi "Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA"
+                                                     :sv "SV: Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA"
+                                                     :en "EN: Maahanmuuttajien lukiokoulutukseen valmistava koulutus LUVA"}
+   :lisapistekoulutus-kansanopisto                  {:fi "Kansanopiston lukuvuoden mittainen linja"
+                                                     :sv "SV: Kansanopiston lukuvuoden mittainen linja"
+                                                     :en "EN: Kansanopiston lukuvuoden mittainen linja"}
+   :lisapistekoulutus-opistovuosi                   {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
+                                                      :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
+                                                      :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

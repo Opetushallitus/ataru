@@ -29,6 +29,23 @@
                                          "response body: "
                                          (:body result))))))
 
+(defn opiskelijan-suoritukset
+  [valintalaskentakoostepalvelu-cas-client haku-oid hakemus-oid]
+  (let [url          (url/resolve-url :valintalaskentakoostepalvelu-service.opiskelijan-suoritukset haku-oid)
+        request-body [hakemus-oid]
+        result       (cas/cas-authenticated-post
+                       valintalaskentakoostepalvelu-cas-client
+                       url
+                       request-body)]
+    (match/match result
+      {:status 200 :body response-body}
+      (json/parse-string response-body true)
+
+      :else (throw-error (str "Could not get " url ", with body " request-body ", "
+                           "status: " (:status result) ", "
+                           "response body: "
+                           (:body result))))))
+
 (defrecord HakukohdeValintalaskentaCacheLoader [valintalaskentakoostepalvelu-cas-client]
   cache/CacheLoader
 

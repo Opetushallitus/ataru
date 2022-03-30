@@ -175,7 +175,7 @@
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
-(defn wrapper [content application hakukohteet-and-ryhmat lang children]
+(defn wrapper [content application hakukohteet-and-ryhmat lang children & {:keys [side-content]}]
   [:div.application__wrapper-element.application__wrapper-element--border
    [:div.application__wrapper-heading
     [:h2 (util/from-multi-lang (:label content) lang)]
@@ -184,7 +184,10 @@
          (for [child children]
            (if (:per-hakukohde child)
             [per-question-wrapper child lang application hakukohteet-and-ryhmat]
-            [field child application hakukohteet-and-ryhmat lang nil false])))])
+            [field child application hakukohteet-and-ryhmat lang nil false])))
+   (when (some? side-content)
+     [:div.application__wrapper-side-contents
+      side-content])])
 
 (defn row-container [_ _ _ _ group-idx person-info-field?]
   (fn [application hakukohteet-and-ryhmat lang children]
@@ -325,6 +328,42 @@
                 :when (not (:exclude-from-answers child))]
             [field child application hakukohteet-and-ryhmat lang nil true]))]])
 
+(defn-
+  labeled-value
+  [label value]
+  [:div.application__form-field
+   [:label.application__form-field-label @(subscribe [:editor/virkailija-translation label])]
+   [:div.application__form-field-value value]])
+
+(defn- lisapistekoulutukset-component
+  [lisapistekoulutukset]
+  (into [:ul]
+    (for [lisapistekoulutus lisapistekoulutukset]
+      [:li @(subscribe [:editor/virkailija-translation (keyword lisapistekoulutus)])])))
+
+(defn- pohjakoulutus-for-valinnat
+  []
+  (let [lang                 @(subscribe [:editor/virkailija-lang])
+        pohjakoulutus        @(subscribe [:application/pohjakoulutus-for-valinnat])
+        pohjakoulutus-choice (:pohjakoulutus pohjakoulutus)
+        opetuskieli          (:opetuskieli pohjakoulutus)
+        suoritusvuosi        (:suoritusvuosi pohjakoulutus)
+        lisapistekoulutukset (:lisapistekoulutukset pohjakoulutus)]
+    [:<>
+     [:span.application__wrapper-side-content-title @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
+     (when pohjakoulutus-choice
+       [labeled-value :base-education (lang (:label pohjakoulutus-choice))])
+     (when opetuskieli
+       [labeled-value :pohjakoulutus-opetuskieli (lang (:label opetuskieli))])
+     (when suoritusvuosi
+       [labeled-value :pohjakoulutus-suoritusvuosi suoritusvuosi])
+     (when lisapistekoulutukset
+       [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])]))
+
+(defn- base-education-module-2nd
+  [content application hakukohteet-and-ryhmat lang children]
+  [wrapper content application hakukohteet-and-ryhmat lang children :side-content [pohjakoulutus-for-valinnat]])
+
 (defn- repeat-count
   [application question-group-children]
   (util/reduce-form-fields
@@ -367,7 +406,10 @@
   (when (visible? content application hakukohteet-and-ryhmat)
     (match content
       {:module "person-info"} [person-info-module content application hakukohteet-and-ryhmat lang]
-      {:fieldClass "wrapperElement" :fieldType "fieldset" :children children} [wrapper content application hakukohteet-and-ryhmat lang children]
+      {:fieldClass "wrapperElement" :fieldType "fieldset" :children children}
+      (if (= "pohjakoulutus-2nd-wrapper" (:id content))
+        [base-education-module-2nd content application hakukohteet-and-ryhmat lang children]
+        [wrapper content application hakukohteet-and-ryhmat lang children])
       {:fieldClass "questionGroup" :fieldType "fieldset" :children children}
            (if person-info-field?
              (nationality-field content application lang children)

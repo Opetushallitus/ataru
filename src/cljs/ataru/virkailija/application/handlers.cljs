@@ -623,6 +623,25 @@
     [:application/fetch-applicant-school (:haku application) (-> application :person :oid)]))
 
 (reg-event-fx
+  :application/fetch-applicant-pohjakoulutus
+  (fn [_ [_ haku-oid application-key]]
+    {                                                       ; TODO: Loading indicator?
+     :http {:method              :get
+            :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/" haku-oid "?application-key=" application-key)
+            :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response}}))
+
+(reg-event-db
+  :application/handle-fetch-applicant-pohjakoulutus-response
+  (fn [db [_ response]]
+    (-> db
+      (assoc-in [:application :selected-application-and-form :application :person :pohjakoulutus] response))))
+
+(defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
+  [application]
+  (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
+    [:application/fetch-applicant-pohjakoulutus (:haku application) (:key application)]))
+
+(reg-event-fx
   :application/handle-fetch-application
   (fn [{:keys [db]} [_ response]]
     (let [application-key            (-> response :application :key)
@@ -646,7 +665,8 @@
                                        [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                          {:application-key application-key
                                           :memoize         true}]]
-                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]))]
+                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]
+                                       [(create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku (:application response))]))]
       {:db         db
        :dispatch-n dispatches})))
 
