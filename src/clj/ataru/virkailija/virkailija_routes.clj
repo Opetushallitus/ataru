@@ -861,9 +861,7 @@
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
           (letfn [(get-suoritus [haku-oid application-key]
-                    (->> (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)
-                         vals
-                         first))
+                    (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key))
                   (get-koodi-label [koodi-uri version koodi-value]
                     (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
                          (filter #(= koodi-value (:value %)))

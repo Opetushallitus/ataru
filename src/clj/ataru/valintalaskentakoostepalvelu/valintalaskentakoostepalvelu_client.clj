@@ -39,7 +39,12 @@
                        request-body)]
     (match/match result
       {:status 200 :body response-body}
-      (json/parse-string response-body true)
+      (->> (json/parse-string response-body true)
+           vals
+           first)
+
+      {:status 204}
+      nil
 
       :else (throw-error (str "Could not get " url ", with body " request-body ", "
                            "status: " (:status result) ", "

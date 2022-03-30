@@ -18,7 +18,7 @@
       (if (suoritus-value-true? suoritus valintalaskenta-key)
         (conj acc ataru-key)
         acc))
-    []
+    nil
     lisapistekoulutus-mapping))
 
 (defn pohjakoulutus-for-application
@@ -28,7 +28,7 @@
         opetuskieli          (:perusopetuksen_kieli suoritus)
         suoritusvuosi        (:PK_SUORITUSVUOSI suoritus)
         lisapistekoulutukset (get-lisapistekoulutukset suoritus)]
-    (cond-> {:suoritus suoritus}
+    (cond-> {}
       pohjakoulutus (assoc :pohjakoulutus {:value pohjakoulutus
                                            :label (get-koodi-label "2asteenpohjakoulutus2021" 1 pohjakoulutus)})
       opetuskieli (assoc :opetuskieli {:value opetuskieli
