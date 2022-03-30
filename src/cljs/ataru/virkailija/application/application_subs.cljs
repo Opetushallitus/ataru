@@ -1103,9 +1103,3 @@
   :application/toisen-asteen-yhteishaku-oid?
   (fn [db [_ haku-oid]]
     (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
-
-(re-frame/reg-sub
-  :application/pohjakoulutus-for-valinnat
-  (fn [db _]
-    (let [application-key (-> db :application :selected-key)]
-      (get-in db [:application :pohjakoulutus-by-application-key application-key]))))
