@@ -625,16 +625,17 @@
 (reg-event-fx
   :application/fetch-applicant-pohjakoulutus
   (fn [_ [_ haku-oid application-key]]
-    {                                                       ; TODO: Loading indicator?
-     :http {:method              :get
+    {:http {:method              :get
             :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/" haku-oid "?application-key=" application-key)
-            :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response}}))
+            :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response
+            :handler-args        application-key
+            :id                  :fetch-applicant-pohjakoulutus}}))
 
 (reg-event-db
   :application/handle-fetch-applicant-pohjakoulutus-response
-  (fn [db [_ response]]
+  (fn [db [_ response application-key]]
     (-> db
-      (assoc-in [:application :selected-application-and-form :application :person :pohjakoulutus] response))))
+      (assoc-in [:application :pohjakoulutus-by-application-key application-key] response))))
 
 (defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
   [application]

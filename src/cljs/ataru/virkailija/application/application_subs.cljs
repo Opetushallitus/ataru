@@ -1107,4 +1107,5 @@
 (re-frame/reg-sub
   :application/pohjakoulutus-for-valinnat
   (fn [db _]
-    (get-in db [:application :selected-application-and-form :application :person :pohjakoulutus])))
+    (let [application-key (-> db :application :selected-key)]
+      (get-in db [:application :pohjakoulutus-by-application-key application-key]))))
