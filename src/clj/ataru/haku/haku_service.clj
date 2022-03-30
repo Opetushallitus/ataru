@@ -108,21 +108,23 @@
 
 (defn- get-tarjonta-haut-for-ordinary-user
   [ohjausparametrit-service tarjonta-service get-haut-cache show-hakukierros-paattynyt? session authorized-organization-oids]
-  (let [haut                                 (haut-with-hakukierros-paattynyt-removed
+  (let [all-haut                             (haut-with-hakukierros-paattynyt-removed
                                                ohjausparametrit-service
                                                get-haut-cache
                                                show-hakukierros-paattynyt?)
         haut-authorized-by-form-or-hakukohde (keep-haut-authorized-by-form-or-hakukohde
                                                tarjonta-service
                                                authorized-organization-oids
-                                               haut)
+                                               all-haut)
         haut-for-opinto-ohjaaja              (haut-for-opinto-ohjaaja
                                                tarjonta-service
                                                session
                                                haut-authorized-by-form-or-hakukohde
-                                               haut)]
-    (-> (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde)
-      handle-hakukohteet)))
+                                               all-haut)
+        haut                                 (if (user-rights/all-organizations-have-only-opinto-ohjaaja-rights? session)
+                                               haut-for-opinto-ohjaaja
+                                               (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde))]
+    (handle-hakukohteet haut)))
 
 (defn- get-tarjonta-haut
   [ohjausparametrit-service
@@ -202,8 +204,7 @@
 
 (defn- limit-allowed-hakukohteet-for-opinto-ohjaaja
   [suoritus-service application-service hakukohteet haut lahtokoulut]
-  (when-let [toisen-asteen-yhteishaut (->> (keys haut)
-                                           (map #(get haut %))
+  (when-let [toisen-asteen-yhteishaut (->> (vals haut)
                                            (filter haku/toisen-asteen-yhteishaku?)
                                            (map :oid)
                                            set)]
