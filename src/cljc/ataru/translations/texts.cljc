@@ -2267,8 +2267,11 @@
                                                      :sv "SV: Kansanopiston lukuvuoden mittainen linja"
                                                      :en "EN: Kansanopiston lukuvuoden mittainen linja"}
    :lisapistekoulutus-opistovuosi                   {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
-                                                      :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
-                                                      :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}})
+                                                     :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
+                                                     :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
+   :error-loading-pohjakoulutus                     {:fi "Virhe pohjakoulutuksen hakemisessa"
+                                                     :sv "SV: Virhe pohjakoulutuksen hakemisessa"
+                                                     :en "EN: Virhe pohjakoulutuksen hakemisessa"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

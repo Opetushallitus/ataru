@@ -9,6 +9,7 @@
             :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/" haku-oid "?application-key=" application-key)
             :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response
             :handler-args        application-key
+            :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-applicant-pohjakoulutus-error application-key])}
             :id                  :fetch-applicant-pohjakoulutus}}))
 
 (re-frame/reg-event-db
@@ -16,6 +17,12 @@
   (fn [db [_ response application-key]]
     (-> db
       (assoc-in [:application :pohjakoulutus-by-application-key application-key] response))))
+
+(re-frame/reg-event-db
+  :application/handle-fetch-applicant-pohjakoulutus-error
+  (fn [db [_ application-key]]
+    (-> db
+      (assoc-in [:application :pohjakoulutus-by-application-key application-key :error] true))))
 
 (defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
   [application]
