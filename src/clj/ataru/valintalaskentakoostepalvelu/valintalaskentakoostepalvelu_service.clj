@@ -5,20 +5,37 @@
             [schema.core :as s]
             [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
             [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
-            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as client]))
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as client]
+            [ataru.applications.application-store :as application-store]
+            [ataru.util :refer [answers-by-key]]))
 
 (s/defschema HakukohdeValintalaskentaResponse
              {:kayttaaValintalaskentaa s/Bool})
 
 (s/defschema HakukohdeHarkinnanvaraisuusResponse
              {:hakemusOid s/Str
-              :henkiloOid s/Str
+              (s/optional-key :henkiloOid) s/Str
               :hakutoiveet [{:hakukohdeOid s/Str
                              :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)}]})
 
 (def ^:private hakukohde-harkinnanvaraisuus-checker (s/checker HakukohdeHarkinnanvaraisuusResponse))
 
 (def ^:private hakukohde-valintalaskenta-checker (s/checker HakukohdeValintalaskentaResponse))
+
+(defn- convert-application-to-have-harkinnanvaraisuus-reasons
+  [application]
+  (let [answers (answers-by-key (:answers application))
+        hakukohteet-with-harkinnanvaraisuus (->> (:hakukohde application)
+                                                 (map #(hutil/assoc-harkinnanvaraisuustieto-to-hakukohde answers %)))]
+    {:hakutoiveet hakukohteet-with-harkinnanvaraisuus
+     :hakemusOid (:key application)
+     :henkiloOid (:person-oid application)}))
+
+(defn- hakemusten-harkinnanvaraisuus-valintalaskennasta
+  [valintalaskentakoostepalvelu-cas-client hakemus-oids]
+  (let [applications (application-store/get-applications-by-keys hakemus-oids)
+        request-body (map #(convert-application-to-have-harkinnanvaraisuus-reasons %) applications)]
+    (client/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client request-body)))
 
 (defrecord HakukohdeValintalaskentaCacheLoader [valintalaskentakoostepalvelu-cas-client]
   cache/CacheLoader
@@ -44,13 +61,14 @@
 (defrecord HakukohdeHarkinnanvaraisuusCacheLoader [valintalaskentakoostepalvelu-cas-client]
   cache/CacheLoader
 
-  (load [_ application]
-    (client/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
-                                                      [(hutil/assoc-harkinnanvaraisuustieto application)]))
+  (load [_ application-oid]
+    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client [application-oid]))
 
-  (load-many [_ applications]
-    (client/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
-                                                      (map #(hutil/assoc-harkinnanvaraisuustieto %) applications)))
+  (load-many [_ application-oids]
+    (let [applications (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                                         application-oids)]
+      (reduce (fn [acc application]
+                (assoc acc (:hakemusOid application) application)) {} applications)))
 
   (load-many-size [_]
     1)

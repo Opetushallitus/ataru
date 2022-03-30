@@ -72,3 +72,8 @@
                         (:value (question answers)))]
     (or (get-common-harkinnanvaraisuus-reason answers pick-value-fn)
         (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid pick-value-fn))))
+
+(defn assoc-harkinnanvaraisuustieto-to-hakukohde
+  [answers hakukohde-oid]
+  {:hakukohdeOid hakukohde-oid
+   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)})

@@ -501,7 +501,7 @@
 
 (s/defschema HakutoiveHarkinnanvaraisuudella
   {:hakukohdeOid s/Str
-   :harkinnanvaraisuus (apply s/enum harkinnanvaraisuus-types)})
+   :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)})
 
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)

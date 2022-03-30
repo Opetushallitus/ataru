@@ -874,10 +874,11 @@
       (api/GET "/valintaperusteet/hakemus/:application-oid/harkinnanvaraisuus" {session :session}
         :path-params [application-oid :- s/Str]
         :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
-        :summary "Tarkistaa valintalaskentakoostepalvelusta onko annettu hakemus harkinnanvarainen"
-        (let [hakukohteet-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+        :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
+        (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                    valintalaskentakoostepalvelu-service
-                                                   [application-oid])]
+                                                   [application-oid])
+              hakukohteet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-oid :hakutoiveet])]
           (response/ok hakukohteet-harkinnanvaraisuudella))))
 
     (api/context "/maksut" []
