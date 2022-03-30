@@ -82,7 +82,8 @@
             [ataru.suoritus.suoritus-service :as suoritus-service]
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
-            [ataru.person-service.person-service :as person-service])
+            [ataru.person-service.person-service :as person-service]
+            [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -850,7 +851,27 @@
                                          (valintalaskentakoostepalvelu/hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-service
                                                                                                        hakukohde-oid))]
           (response/ok {:hakukohde-oid   hakukohde-oid
-                        :valintalaskenta valintalaskenta-enabled?}))))
+                        :valintalaskenta valintalaskenta-enabled?})))
+
+      (api/GET "/suoritukset/:haku-oid" {session :session}
+        :path-params [haku-oid :- String]
+        :query-params [application-key :- s/Str]
+        :summary "Returns pohjakoulutus for application's applicant"
+        :return s/Any                                       ;TODO
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+          (letfn [(get-suoritus [haku-oid application-key]
+                    (->> (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)
+                         vals
+                         first))
+                  (get-koodi-label [koodi-uri version koodi-value]
+                    (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
+                         (filter #(= koodi-value (:value %)))
+                         first
+                         :label))]
+            (response/ok
+              (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-suoritus get-koodi-label haku-oid application-key)))
+          (response/unauthorized))))
 
     (api/context "/maksut" []
       :tags ["maksut-api"]
