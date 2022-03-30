@@ -14,6 +14,8 @@
             [ataru.virkailija.application.handlers]
             [ataru.virkailija.application.tutu-payment.tutu-payment-handlers]
             [ataru.virkailija.application.tutu-payment.tutu-payment-subs]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-subs]
             [ataru.virkailija.application.hyvaksynnan-ehto.view :as hyvaksynnan-ehto]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
