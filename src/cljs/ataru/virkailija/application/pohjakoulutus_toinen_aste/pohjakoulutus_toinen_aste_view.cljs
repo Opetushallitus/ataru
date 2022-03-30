@@ -1,8 +1,7 @@
 (ns ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view
   (:require [re-frame.core :refer [subscribe]]))
 
-(defn-
-  labeled-value
+(defn- labeled-value
   [label value]
   [:div.application__form-field
    [:label.application__form-field-label @(subscribe [:editor/virkailija-translation label])]
@@ -14,7 +13,15 @@
     (for [lisapistekoulutus lisapistekoulutukset]
       [:li @(subscribe [:editor/virkailija-translation (keyword lisapistekoulutus)])])))
 
-(defn pohjakoulutus-for-valinnat
+(defn- loading-indicator
+  []
+  [:i.zmdi.zmdi-spinner.spin])
+
+(defn- error-loading
+  []
+  [:p @(subscribe [:editor/virkailija-translation :error-loading-pohjakoulutus])])
+
+(defn- pohjakoulutus-for-valinnat-loaded
   []
   (let [lang                 @(subscribe [:editor/virkailija-lang])
         pohjakoulutus        @(subscribe [:application/pohjakoulutus-for-valinnat])
@@ -23,7 +30,6 @@
         suoritusvuosi        (:suoritusvuosi pohjakoulutus)
         lisapistekoulutukset (:lisapistekoulutukset pohjakoulutus)]
     [:<>
-     [:span.application__wrapper-side-content-title @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
      (when pohjakoulutus-choice
        [labeled-value :base-education (lang (:label pohjakoulutus-choice))])
      (when opetuskieli
@@ -32,3 +38,13 @@
        [labeled-value :pohjakoulutus-suoritusvuosi suoritusvuosi])
      (when lisapistekoulutukset
        [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])]))
+
+(defn pohjakoulutus-for-valinnat
+  []
+  [:<>
+   [:span.application__wrapper-side-content-title
+    @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
+   (case @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])
+     :loading [loading-indicator]
+     :loaded [pohjakoulutus-for-valinnat-loaded]
+     :error [error-loading])])
