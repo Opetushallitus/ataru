@@ -2271,7 +2271,10 @@
                                                      :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
    :error-loading-pohjakoulutus                     {:fi "Virhe pohjakoulutuksen hakemisessa"
                                                      :sv "SV: Virhe pohjakoulutuksen hakemisessa"
-                                                     :en "EN: Virhe pohjakoulutuksen hakemisessa"}})
+                                                     :en "EN: Virhe pohjakoulutuksen hakemisessa"}
+   :pohjakoulutus-not-found                         {:fi "Pohjakoulutusta ei löytynyt"
+                                                     :sv "SV: Pohjakoulutusta ei löytynyt"
+                                                     :en "EN: Pohjakoulutusta ei löytynyt"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

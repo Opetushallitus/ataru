@@ -11,7 +11,9 @@
         :error
         (if loading
           :loading
-          :loaded)))))
+          (if (= {} pohjakoulutus)
+            :not-found
+            :loaded))))))
 
 (re-frame/reg-sub
   :application/pohjakoulutus-for-valinnat

@@ -17,6 +17,10 @@
   []
   [:i.zmdi.zmdi-spinner.spin])
 
+(defn- not-found
+  []
+  [:p @(subscribe [:editor/virkailija-translation :pohjakoulutus-not-found])])
+
 (defn- error-loading
   []
   [:p @(subscribe [:editor/virkailija-translation :error-loading-pohjakoulutus])])
@@ -47,4 +51,5 @@
    (case @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])
      :loading [loading-indicator]
      :loaded [pohjakoulutus-for-valinnat-loaded]
+     :not-found [not-found]
      :error [error-loading])])
