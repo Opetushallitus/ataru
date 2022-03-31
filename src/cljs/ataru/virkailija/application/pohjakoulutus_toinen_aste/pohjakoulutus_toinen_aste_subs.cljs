@@ -25,8 +25,9 @@
   :application/harkinnanvaraisuus-loading-state
   (fn [db _]
     (let [loading (get-in db [:request-handles :fetch-applicant-harkinnanvaraisuus])]
-      (when loading
-        :loading))))
+      (if loading
+        :loading
+        :loaded))))
 
 (re-frame/reg-sub
   :application/harkinnanvarainen-pohjakoulutus?

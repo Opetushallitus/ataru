@@ -9,9 +9,11 @@
 
 (defn- harkinnanvarainen-component
   []
-  [:div.harkinnanvaraisuus__wrapper
-   [:i.zmdi.zmdi-alert-triangle]
-   [:span @(subscribe [:editor/virkailija-translation :only-harkinnanvarainen-valinta])]])
+  (let [harkinnanvarainen? @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])]
+    (when harkinnanvarainen?
+      [:div.harkinnanvaraisuus__wrapper
+        [:i.zmdi.zmdi-alert-triangle]
+        [:span @(subscribe [:editor/virkailija-translation :only-harkinnanvarainen-valinta])]])))
 
 (defn- lisapistekoulutukset-component
   [lisapistekoulutukset]
@@ -21,7 +23,8 @@
 
 (defn- loading-indicator
   []
-  [:i.zmdi.zmdi-spinner.spin])
+  [:div.pohjakoulutus__loading-indicator
+   [:i.zmdi.zmdi-spinner.spin]])
 
 (defn- not-found
   []
@@ -51,14 +54,16 @@
 
 (defn pohjakoulutus-for-valinnat
   []
-  (let [harkinnanvarainen?   @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])
+  (let [pohjakoulutus-loading-state @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])
+        harkinnanvaraisuus-loading-state @(subscribe [:application/harkinnanvaraisuus-loading-state])
         yksilollistetty?     @(subscribe [:application/yksilollistetty-matikka-aikka?])]
   [:<>
    [:span.application__wrapper-side-content-title
     @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
-   (when harkinnanvarainen?
-     [harkinnanvarainen-component])
-   (case @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])
+   (case harkinnanvaraisuus-loading-state
+     :loading [loading-indicator]
+     :loaded [harkinnanvarainen-component])
+   (case pohjakoulutus-loading-state
      :loading [loading-indicator]
      :loaded [pohjakoulutus-for-valinnat-loaded]
      :not-found [not-found]
