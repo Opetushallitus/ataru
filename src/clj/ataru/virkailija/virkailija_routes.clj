@@ -857,7 +857,7 @@
         :path-params [haku-oid :- String
                       application-key :- s/Str]
         :summary "Returns pohjakoulutus for application's applicant"
-        :return s/Any                                       ;TODO
+        :return ataru-schema/PohjakoulutusResponse
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
           (letfn [(get-koodi-label [koodi-uri version koodi-value]

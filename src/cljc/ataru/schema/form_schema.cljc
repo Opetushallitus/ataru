@@ -819,3 +819,11 @@
 (s/defschema OpiskelijaResponse
   {:oppilaitos-name localized-schema/LocalizedStringOptional
    :luokka s/Str})
+
+(s/defschema PohjakoulutusResponse
+  {(s/optional-key :pohjakoulutus)        {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :opetuskieli)          {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :suoritusvuosi)        s/Str
+   (s/optional-key :lisapistekoulutukset) [s/Str]})
