@@ -22,9 +22,8 @@
     lisapistekoulutus-mapping))
 
 (defn pohjakoulutus-for-application
-  [get-suoritus get-koodi-label haku-oid application-key]
-  (let [suoritus             (get-suoritus haku-oid application-key)
-        pohjakoulutus        (:POHJAKOULUTUS suoritus)
+  [get-koodi-label suoritus]
+  (let [pohjakoulutus        (:POHJAKOULUTUS suoritus)
         opetuskieli          (:perusopetuksen_kieli suoritus)
         suoritusvuosi        (:PK_SUORITUSVUOSI suoritus)
         lisapistekoulutukset (get-lisapistekoulutukset suoritus)]

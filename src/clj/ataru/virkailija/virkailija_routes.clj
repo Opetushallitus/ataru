@@ -861,15 +861,14 @@
         :return s/Any                                       ;TODO
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
-          (letfn [(get-suoritus [haku-oid application-key]
-                    (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key))
-                  (get-koodi-label [koodi-uri version koodi-value]
+          (letfn [(get-koodi-label [koodi-uri version koodi-value]
                     (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
                          (filter #(= koodi-value (:value %)))
                          first
                          :label))]
-            (response/ok
-              (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-suoritus get-koodi-label haku-oid application-key)))
+            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
+              (response/ok
+                (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
           (response/unauthorized))))
 
     (api/context "/maksut" []
