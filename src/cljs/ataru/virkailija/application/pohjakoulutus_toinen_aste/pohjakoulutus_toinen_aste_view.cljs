@@ -34,15 +34,11 @@
   []
   (let [lang                 @(subscribe [:editor/virkailija-lang])
         pohjakoulutus        @(subscribe [:application/pohjakoulutus-for-valinnat])
-        harkinnanvarainen?   @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])
-        yksilollistetty?     @(subscribe [:application/yksilollistetty-matikka-aikka?])
         pohjakoulutus-choice (:pohjakoulutus pohjakoulutus)
         opetuskieli          (:opetuskieli pohjakoulutus)
         suoritusvuosi        (:suoritusvuosi pohjakoulutus)
         lisapistekoulutukset (:lisapistekoulutukset pohjakoulutus)]
     [:<>
-     (when harkinnanvarainen?
-       [harkinnanvarainen-component])
      (when pohjakoulutus-choice
        [labeled-value :base-education (lang (:label pohjakoulutus-choice))])
      (when opetuskieli
@@ -50,17 +46,21 @@
      (when suoritusvuosi
        [labeled-value :pohjakoulutus-suoritusvuosi suoritusvuosi])
      (when lisapistekoulutukset
-       [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])
-     (when yksilollistetty?
-       [labeled-value :pohjakoulutus-yksilollistetty @(subscribe [:editor/virkailija-translation :yes])])]))
+       [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])]))
 
 (defn pohjakoulutus-for-valinnat
   []
+  (let [harkinnanvarainen?   @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])
+        yksilollistetty?     @(subscribe [:application/yksilollistetty-matikka-aikka?])]
   [:<>
    [:span.application__wrapper-side-content-title
     @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
+   (when harkinnanvarainen?
+     [harkinnanvarainen-component])
    (case @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])
      :loading [loading-indicator]
      :loaded [pohjakoulutus-for-valinnat-loaded]
      :not-found [not-found]
-     :error [error-loading])])
+     :error [error-loading])
+   (when yksilollistetty?
+     [labeled-value :pohjakoulutus-yksilollistetty @(subscribe [:editor/virkailija-translation :yes])])]))

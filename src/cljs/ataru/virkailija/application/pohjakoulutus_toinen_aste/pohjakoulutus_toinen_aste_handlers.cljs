@@ -57,5 +57,5 @@
 (defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
   [application]
   (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
-    [:application/fetch-applicant-pohjakoulutus (:haku application) (:key application)]
-    [:application/fetch-applicant-harkinnanvaraisuus (:key application)]))
+    [[:application/fetch-applicant-pohjakoulutus (:haku application) (:key application)]
+     [:application/fetch-applicant-harkinnanvaraisuus (:key application)]]))
