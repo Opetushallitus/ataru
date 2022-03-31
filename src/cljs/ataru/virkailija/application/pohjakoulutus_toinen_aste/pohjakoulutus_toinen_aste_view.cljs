@@ -10,6 +10,7 @@
 (defn- harkinnanvarainen-component
   []
   [:div.harkinnanvaraisuus__wrapper
+   [:i.zmdi.zmdi-alert-triangle]
    [:span @(subscribe [:editor/virkailija-translation :only-harkinnanvarainen-valinta])]])
 
 (defn- lisapistekoulutukset-component
