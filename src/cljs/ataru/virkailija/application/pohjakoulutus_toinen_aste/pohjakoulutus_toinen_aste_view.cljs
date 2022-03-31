@@ -7,6 +7,11 @@
    [:label.application__form-field-label @(subscribe [:editor/virkailija-translation label])]
    [:div.application__form-field-value value]])
 
+(defn- harkinnanvarainen-component
+  []
+  [:div.harkinnanvaraisuus__wrapper
+   [:span @(subscribe [:editor/virkailija-translation :only-harkinnanvarainen-valinta])]])
+
 (defn- lisapistekoulutukset-component
   [lisapistekoulutukset]
   (into [:ul]
@@ -29,11 +34,15 @@
   []
   (let [lang                 @(subscribe [:editor/virkailija-lang])
         pohjakoulutus        @(subscribe [:application/pohjakoulutus-for-valinnat])
+        harkinnanvarainen?   @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])
+        yksilollistetty?     @(subscribe [:application/yksilollistetty-matikka-aikka?])
         pohjakoulutus-choice (:pohjakoulutus pohjakoulutus)
         opetuskieli          (:opetuskieli pohjakoulutus)
         suoritusvuosi        (:suoritusvuosi pohjakoulutus)
         lisapistekoulutukset (:lisapistekoulutukset pohjakoulutus)]
     [:<>
+     (when harkinnanvarainen?
+       [harkinnanvarainen-component])
      (when pohjakoulutus-choice
        [labeled-value :base-education (lang (:label pohjakoulutus-choice))])
      (when opetuskieli
@@ -41,7 +50,9 @@
      (when suoritusvuosi
        [labeled-value :pohjakoulutus-suoritusvuosi suoritusvuosi])
      (when lisapistekoulutukset
-       [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])]))
+       [labeled-value :lisapistekoulutukset [lisapistekoulutukset-component lisapistekoulutukset]])
+     (when yksilollistetty?
+       [labeled-value :pohjakoulutus-yksilollistetty @(subscribe [:editor/virkailija-translation :yes])])]))
 
 (defn pohjakoulutus-for-valinnat
   []

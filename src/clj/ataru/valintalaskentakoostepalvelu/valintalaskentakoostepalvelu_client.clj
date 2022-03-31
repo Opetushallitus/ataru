@@ -47,7 +47,7 @@
                        valintalaskentakoostepalvelu-cas-client
                        url
                        request-body)]
-    (match/match result
+    (match result
       {:status 200 :body response-body}
       (->> (json/parse-string response-body true)
            vals

@@ -20,3 +20,22 @@
   (fn [db _]
     (let [application-key (-> db :application :selected-key)]
       (get-in db [:application :pohjakoulutus-by-application-key application-key]))))
+
+(re-frame/reg-sub
+  :application/harkinnanvaraisuus-loading-state
+  (fn [db _]
+    (let [loading (get-in db [:request-handles :fetch-applicant-harkinnanvaraisuus])]
+      (when loading
+        :loading))))
+
+(re-frame/reg-sub
+  :application/harkinnanvarainen-pohjakoulutus?
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)]
+      (get-in db [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key]))))
+
+(re-frame/reg-sub
+  :application/yksilollistetty-matikka-aikka?
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)]
+      (get-in db [:application :yksilollistetty-matikka-aikka-by-application-key application-key]))))
