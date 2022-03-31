@@ -6,7 +6,7 @@
   :application/fetch-applicant-pohjakoulutus
   (fn [_ [_ haku-oid application-key]]
     {:http {:method              :get
-            :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/" haku-oid "?application-key=" application-key)
+            :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/suoritukset/haku/" haku-oid "/hakemus/" application-key)
             :handler-or-dispatch :application/handle-fetch-applicant-pohjakoulutus-response
             :handler-args        application-key
             :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-applicant-pohjakoulutus-error application-key])}

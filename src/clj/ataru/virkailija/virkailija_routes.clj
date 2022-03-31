@@ -854,9 +854,9 @@
           (response/ok {:hakukohde-oid   hakukohde-oid
                         :valintalaskenta valintalaskenta-enabled?})))
 
-      (api/GET "/suoritukset/:haku-oid" {session :session}
-        :path-params [haku-oid :- String]
-        :query-params [application-key :- s/Str]
+      (api/GET "/suoritukset/haku/:haku-oid/hakemus/:application-key" {session :session}
+        :path-params [haku-oid :- String
+                      application-key :- s/Str]
         :summary "Returns pohjakoulutus for application's applicant"
         :return s/Any                                       ;TODO
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
