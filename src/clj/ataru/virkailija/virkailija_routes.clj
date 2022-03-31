@@ -474,7 +474,7 @@
 
       (api/GET "/virkailija-texts" {session :session}
         (ok (if (:dev? env)
-              texts/virkailija-texts
+              (merge texts/general-texts texts/virkailija-texts)
               (get-virkailija-texts localizations-cache))))
 
       (api/POST "/review-setting" {session :session}
@@ -871,7 +871,7 @@
                 (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
           (response/unauthorized)))
 
-      (api/GET "/valintaperusteet/hakemus/:application-oid/harkinnanvaraisuus" {session :session}
+      (api/GET "/harkinnanvaraisuus/hakemus/:application-oid" {session :session}
         :path-params [application-oid :- s/Str]
         :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
         :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
@@ -1252,7 +1252,7 @@
               (response/ok
                 (application-service/suoritusrekisteri-applications
                   application-service
-                  haku-oid
+                  hakuOid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
@@ -1281,7 +1281,7 @@
                 (application-service/suoritusrekisteri-toinenaste-applications
                   application-service
                   (:form-by-haku-oid-str-cache dependencies)
-                  hakuOid
+                  haku-oid
                   hakukohdeOids
                   hakijaOids
                   modifiedAfter
