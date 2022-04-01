@@ -499,6 +499,10 @@
   (merge Hakutoive
          {(s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)}))
 
+(s/defschema HakutoiveHarkinnanvaraisuudella
+  {:hakukohdeOid s/Str
+   :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)})
+
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)
    :hakuOid          s/Str
@@ -546,6 +550,42 @@
    :valintatuloksenJulkaisulupa s/Bool
    :koulutusmarkkinointilupa    s/Bool
    :korkeakoulututkintoVuosi    (s/maybe s/Int)})
+
+(s/defschema HakurekisteriHakukohde
+  {:oid                            s/Str
+   :harkinnanvaraisuus             (apply s/enum harkinnanvaraisuus-types)
+   :terveys                        (s/maybe s/Bool)
+   :aiempiPeruminen                (s/maybe s/Bool)
+   :kiinnostunutKaksoistutkinnosta (s/maybe s/Bool)
+   :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)})
+
+(s/defschema GuardianContactInfo
+              {:nimi(s/maybe s/Str)
+               :matkapuhelin (s/maybe s/Str)
+               :email (s/maybe s/Str)})
+
+(s/defschema HakurekisteriApplicationToinenAste
+  {:oid                                               s/Str
+   :personOid                                         s/Str
+   :createdTime                                       s/Str
+   :kieli                                             s/Str
+   :hakukohteet                                       [HakurekisteriHakukohde]
+   :email                                             s/Str
+   :matkapuhelin                                      s/Str
+   :lahiosoite                                        s/Str
+   :postinumero                                       s/Str
+   :postitoimipaikka                                  (s/maybe s/Str)
+   :asuinmaa                                          s/Str
+   :kotikunta                                         (s/maybe s/Str)
+   :attachments                                       {s/Str s/Str}
+   :pohjakoulutus                                     s/Str
+   :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
+   :sahkoisenAsioinninLupa                            s/Bool
+   :valintatuloksenJulkaisulupa                       s/Bool
+   :koulutusmarkkinointilupa                          s/Bool
+   :tutkintoVuosi                                     (s/maybe s/Int)
+   :tutkintoKieli                                     (s/maybe s/Str)
+   :huoltajat                                         [GuardianContactInfo]})
 
 (s/defschema OnrApplication
   {:oid          s/Str
@@ -819,3 +859,11 @@
 (s/defschema OpiskelijaResponse
   {:oppilaitos-name localized-schema/LocalizedStringOptional
    :luokka s/Str})
+
+(s/defschema PohjakoulutusResponse
+  {(s/optional-key :pohjakoulutus)        {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :opetuskieli)          {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :suoritusvuosi)        s/Str
+   (s/optional-key :lisapistekoulutukset) [s/Keyword]})

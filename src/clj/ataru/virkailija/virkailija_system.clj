@@ -11,7 +11,6 @@
             [ataru.hakukohderyhmapalvelu-service.hakukohderyhmapalvelu-service :as hakukohderyhma-service]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
             [ataru.organization-service.organization-service :as organization-service]
-            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as koostepalvelu-client]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-service :as koostepalvelu-service]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
             [ataru.valintaperusteet.service :as valintaperusteet-service]
@@ -96,6 +95,16 @@
          :refresh-after       [1 TimeUnit/SECONDS]})
       {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
 
+    :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache
+    (component/using
+      (redis-cache/map->Cache
+        {:name          "valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus"
+         :ttl           [3 TimeUnit/DAYS]
+         :refresh-after [1 TimeUnit/DAYS]
+         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+      {:redis  :redis
+       :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
+
     :valinta-tulos-service-cas-client (cas/new-client "/valinta-tulos-service" "auth/login"
                                                       "session" (-> config :public-config :virkailija-caller-id))
 
@@ -109,12 +118,18 @@
                                                              (-> config :public-config :virkailija-caller-id))
 
     :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader (component/using
-                                                                           (koostepalvelu-client/map->HakukohdeValintalaskentaCacheLoader {})
+                                                                           (koostepalvelu-service/map->HakukohdeValintalaskentaCacheLoader {})
                                                                            [:valintalaskentakoostepalvelu-cas-client])
+
+    :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader (component/using
+                                                                              (koostepalvelu-service/map->HakukohdeHarkinnanvaraisuusCacheLoader {})
+                                                                              [:valintalaskentakoostepalvelu-cas-client])
 
     :valintalaskentakoostepalvelu-service (component/using
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
-                                            [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache])
+                                            [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache
+                                             :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache
+                                             :valintalaskentakoostepalvelu-cas-client])
 
     :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))

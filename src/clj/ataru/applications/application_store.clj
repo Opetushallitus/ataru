@@ -22,7 +22,10 @@
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
-            [ataru.config.core :refer [config]])
+            [ataru.config.core :refer [config]]
+            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-2nd-language-value-to-lang]]
+            [clojure.edn :as edn])
   (:import [java.time
             LocalDateTime
             ZoneId]
@@ -943,6 +946,78 @@
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
+(defn- unwrap-hakurekisteri-application-toinenaste
+  [questions urheilija-amm-hakukohdes {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
+
+  (try (let [answers     (answers-by-key (:answers content))
+        foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
+        form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
+        sports-key (:urheilijan-amm-lisakysymys-key questions)
+        interested-in-sports-amm? (-> answers sports-key :value)
+        hakukohteet (map (fn [oid]
+                           {:oid oid
+                            :harkinnanvaraisuus
+                            (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)
+                            :terveys (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
+                            :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key questions) oid) answers)))
+                            :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
+                                                                 (map #(:value ((form-hakukohde-key % oid) answers)))
+                                                                 (some #(= "0" %)))
+                            :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (when (and interested-in-sports-amm?
+                                                                                          (some #(= oid %) urheilija-amm-hakukohdes))
+                                                                                 (= "0" interested-in-sports-amm?))})
+                         hakukohde)
+        first-huoltaja (when (or (-> answers :guardin-name :value)
+                                 (-> answers :guardian-email :value)
+                                 (-> answers :guardian-phone :value))
+                         {:nimi (-> answers :guardian-name :value first)
+                          :matkapuhelin (-> answers :guardian-phone :value first)
+                          :email (-> answers :guardian-email :value first)})
+        second-huoltaja (when (or (-> answers :guardian-name-secondary :value)
+                                  (-> answers :guardian-email-secondary :value)
+                                  (-> answers :guardian-phone-secondary :value))
+                          {:nimi (-> answers :guardian-name-secondary :value first)
+                           :matkapuhelin (-> answers :guardian-phone-secondary :value first)
+                           :email (-> answers :guardian-email-secondary :value first)})
+        huoltajat   (->> []
+                         (concat [first-huoltaja second-huoltaja])
+                         (filter #(not (nil? %))))
+        base-education-key (keyword base-education-choice-key)
+        oppisopimuskoulutus-key (:oppisopimuskoulutus-key questions)
+        tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
+                                (filter #(not (nil? (% answers))))
+                                first)
+        tutkinto-vuosi (-> answers tutkinto-vuosi-key :value)
+        tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
+                                (filter #(not (nil? (% answers))))
+                                first)
+        tutkinto-kieli (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang))]
+    {:oid                         key
+     :personOid                   person_oid
+     :createdTime                 (.print JodaFormatter created_time)
+     :kieli                       lang
+     :hakukohteet                 hakukohteet
+     :email                       email
+     :matkapuhelin                (-> answers :phone :value)
+     :lahiosoite                  (-> answers :address :value)
+     :postinumero                 (-> answers :postal-code :value)
+     :postitoimipaikka            (if foreign?
+                                    (-> answers :city :value)
+                                    (-> answers :postal-office :value))
+     :asuinmaa                    (-> answers :country-of-residence :value)
+     :kotikunta                   (-> answers :home-town :value)
+     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :paatos-opiskelijavalinnasta-sahkopostiin :value))
+     :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
+     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
+     :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
+     :huoltajat                   huoltajat
+     :pohjakoulutus               (-> answers base-education-key :value)
+     :tutkintoKieli               tutkinto-kieli
+     :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
+     :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
+     }) (catch Exception e
+              (log/warn "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
+
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
   (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
@@ -964,6 +1039,29 @@
     (merge {:applications as}
            (when-let [a (first (drop 999 as))]
              {:offset (:oid a)}))))
+
+(defn suoritusrekisteri-applications-toinenaste
+  [haku-oid hakukohde-oids person-oids modified-after offset questions urheilija-amm-hakukohdes]
+   (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                                          (queries/yesql-suoritusrekisteri-applications
+                                            {:haku_oid       haku-oid
+                                             :hakukohde_oids (some->> (seq hakukohde-oids)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "varchar"))
+                                             :person_oids    (some->> (seq person-oids)
+                                                                      to-array
+                                                                      (.createArrayOf (:connection connection) "text"))
+                                             :modified_after (some-> modified-after
+                                                                     (LocalDateTime/parse (DateTimeFormatter/ofPattern "yyyyMMddHHmm"))
+                                                                     (.atZone (ZoneId/of "Europe/Helsinki"))
+                                                                     .toOffsetDateTime)
+                                             :offset         offset}
+                                            {:connection connection}))
+                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes %))
+                 (remove nil?))]
+     (merge {:applications as}
+            (when-let [a (first (drop 999 as))]
+              {:offset (:oid a)}))))
 
 (defn- requirement-names-mapped-to-states
   [requirements]
