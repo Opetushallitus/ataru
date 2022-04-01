@@ -114,4 +114,35 @@
                               hakutoiveet (:hakutoiveet result)]
                           (should= 2 (count hakutoiveet))
                           (should= (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (first hakutoiveet)))
-                          (should= (:none harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (last hakutoiveet)))))))
+                          (should= (:none harkinnanvaraisuus-reasons) (:harkinnanvaraisuus (last hakutoiveet))))))
+
+          (describe "assoc-harkinnanvaraisuustieto-to-hakukohde"
+
+                    (it "assocs none when no harkinnanvaraisuus reason"
+                        (should= (:none harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde {} "1.2.3.4"))))
+
+                    (it "assocs none when harkinnanvaraisuus reason is for another hakukohde"
+                        (should= (:none harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde
+                                                             {:harkinnanvaraisuus-reason_1.2.3.5 {:value "0"}} "1.2.3.4"))))
+
+                    (it "assocs ulkomailla opiskelu"
+                        (should= (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde
+                                                             {:base-education-2nd {:value "0"} :harkinnanvaraisuus-reason_1.2.3.4 {:value "0"}} "1.2.3.4"))))
+
+                    (it "assocs matematiikka ja aidinkieli yksilollistetty reason"
+                        (should= (:ataru-yks-mat-ai harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde
+                                                             {:matematiikka-ja-aidinkieli-yksilollistetty_1 {:value "1"} :harkinnanvaraisuus-reason_1.2.3.4 {:value "1"}} "1.2.3.4"))))
+
+                    (it "assocs certificate comparison difficulties"
+                        (should= (:ataru-koulutodistusten-vertailuvaikeudet harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde
+                                                             {:harkinnanvaraisuus-reason_1.2.3.4 {:value "2"}} "1.2.3.4"))))
+
+                    (it "assocs insufficient language skill"
+                        (should= (:ataru-riittamaton-tutkintokielen-taito harkinnanvaraisuus-reasons)
+                                 (:harkinnanvaraisuudenSyy (hu/assoc-harkinnanvaraisuustieto-to-hakukohde
+                                                             {:harkinnanvaraisuus-reason_1.2.3.4 {:value "3"}} "1.2.3.4"))))))
