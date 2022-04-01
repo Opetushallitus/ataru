@@ -31,8 +31,8 @@
   [:p @(subscribe [:editor/virkailija-translation :pohjakoulutus-not-found])])
 
 (defn- error-loading
-  []
-  [:p @(subscribe [:editor/virkailija-translation :error-loading-pohjakoulutus])])
+  [translation-key]
+  [:p @(subscribe [:editor/virkailija-translation translation-key])])
 
 (defn- pohjakoulutus-for-valinnat-loaded
   []
@@ -62,11 +62,12 @@
     @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
    (case harkinnanvaraisuus-loading-state
      :loading [loading-indicator]
-     :loaded [harkinnanvarainen-component])
+     :loaded [harkinnanvarainen-component]
+     :error [error-loading :error-loading-harkinnanvaraisuus])
    (case pohjakoulutus-loading-state
      :loading [loading-indicator]
      :loaded [pohjakoulutus-for-valinnat-loaded]
      :not-found [not-found]
-     :error [error-loading])
+     :error [error-loading :error-loading-pohjakoulutus])
    (when yksilollistetty?
      [labeled-value :pohjakoulutus-yksilollistetty @(subscribe [:editor/virkailija-translation :yes])])]))

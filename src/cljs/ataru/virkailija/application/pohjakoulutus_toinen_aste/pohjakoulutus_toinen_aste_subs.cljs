@@ -24,9 +24,17 @@
 (re-frame/reg-sub
   :application/harkinnanvaraisuus-loading-state
   (fn [db _]
-    (let [loading (get-in db [:request-handles :fetch-applicant-harkinnanvaraisuus])]
-      (if loading
+    (let [application-key (-> db :application :selected-key)
+          harkinnanvaraisuus   (get-in db [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key])
+          loading (get-in db [:request-handles :fetch-applicant-harkinnanvaraisuus])]
+      (cond
+        (:error harkinnanvaraisuus)
+        :error
+
+        loading
         :loading
+
+        :else
         :loaded))))
 
 (re-frame/reg-sub
