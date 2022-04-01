@@ -33,6 +33,7 @@
             :path                (str "/lomake-editori/api/valintalaskentakoostepalvelu/harkinnanvaraisuus/hakemus/" application-key)
             :handler-or-dispatch :application/handle-fetch-applicant-harkinnanvaraisuus-response
             :handler-args        application-key
+            :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-applicant-harkinnanvaraisuus-error application-key])}
             :id                  :fetch-applicant-harkinnanvaraisuus}}))
 
 (re-frame/reg-event-db
@@ -53,6 +54,12 @@
                   harkinnanvarainen-pohjakoulutus?)
         (assoc-in [:application :yksilollistetty-matikka-aikka-by-application-key application-key]
                   yksilollistetty-matikka-aikka?)))))
+
+(re-frame/reg-event-db
+  :application/handle-fetch-applicant-harkinnanvaraisuus-error
+  (fn [db [_ application-key]]
+    (-> db
+        (assoc-in [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key :error] true))))
 
 (defn create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku
   [application]

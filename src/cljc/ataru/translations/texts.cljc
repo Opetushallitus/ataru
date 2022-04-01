@@ -2275,6 +2275,9 @@
    :lisapistekoulutus-opistovuosi                            {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
+   :error-loading-harkinnanvaraisuus                         {:fi "Virhe harkinnanvaraisuustietojen hakemisessa"
+                                                              :sv "SV: Virhe harkinnanvaraisuustietojen hakemisessa"
+                                                              :en "EN: Virhe harkinnanvaraisuustietojen hakemisessa"}
    :error-loading-pohjakoulutus                              {:fi "Virhe pohjakoulutuksen hakemisessa"
                                                               :sv "SV: Virhe pohjakoulutuksen hakemisessa"
                                                               :en "EN: Virhe pohjakoulutuksen hakemisessa"}
