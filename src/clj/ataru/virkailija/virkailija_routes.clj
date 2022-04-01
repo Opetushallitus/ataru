@@ -871,15 +871,18 @@
                 (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
           (response/unauthorized)))
 
-      (api/GET "/harkinnanvaraisuus/hakemus/:application-oid" {session :session}
-        :path-params [application-oid :- s/Str]
+      (api/GET "/harkinnanvaraisuus/hakemus/:application-key" {session :session}
+        :path-params [application-key :- s/Str]
         :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
         :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
-        (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
-                                                   valintalaskentakoostepalvelu-service
-                                                   [application-oid])
-              hakukohteet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-oid :hakutoiveet])]
-          (response/ok hakukohteet-harkinnanvaraisuudella))))
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+          (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                     valintalaskentakoostepalvelu-service
+                                                     [application-key])
+                hakukohteet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-key :hakutoiveet])]
+            (response/ok hakukohteet-harkinnanvaraisuudella))
+          (response/unauthorized))))
 
     (api/context "/maksut" []
       :tags ["maksut-api"]
