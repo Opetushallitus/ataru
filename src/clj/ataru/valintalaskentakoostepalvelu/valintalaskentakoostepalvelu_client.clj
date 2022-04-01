@@ -33,11 +33,13 @@
            {:status 200 :body body}
            (json/parse-string body true)
 
-           :else (throw (new RuntimeException (str "Could not fetch harkinnanvaraisuustieto for "
-                                                   (count hakemukset-with-harkinnanvaraisuus)
-                                                   " applications from valintalaskentakoostepalvelu. "
-                                                   "One of the application oids this operation was done for: "
-                                                   (:oid (first hakemukset-with-harkinnanvaraisuus))))))))
+           :else (throw-error (str "Could not fetch harkinnanvaraisuustieto for "
+                                   (count hakemukset-with-harkinnanvaraisuus)
+                                   " applications from valintalaskentakoostepalvelu. "
+                                   "One of the application oids this operation was done for: "
+                                   (:oid (first hakemukset-with-harkinnanvaraisuus))
+                                   "response body: "
+                                   (:body result))))))
 
 (defn opiskelijan-suoritukset
   [valintalaskentakoostepalvelu-cas-client haku-oid hakemus-oid]
