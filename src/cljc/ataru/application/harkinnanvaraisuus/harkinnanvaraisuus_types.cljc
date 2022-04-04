@@ -1,4 +1,4 @@
-(ns ataru.application.harkinnanvaraisuus-types)
+(ns ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types)
 
 (def sure-yks-mat-ai "SURE_YKS_MAT_AI")
 (def ataru-yks-mat-ai "ATARU_YKS_MAT_AI")

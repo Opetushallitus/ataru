@@ -1,10 +1,9 @@
 (ns ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-service
   (:require [ataru.cache.cache-service :as cache]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :refer [ValintalaskentakoostepalveluService]]
-            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as valintalaskentakoostepalvelu-client]
             [schema.core :as s]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-client :as client]
             [ataru.applications.application-store :as application-store]
             [ataru.util :refer [answers-by-key]]))
@@ -86,7 +85,7 @@
                     hakukohde-oid))
 
   (opiskelijan-suoritukset [_ haku-oid hakemus-oid]
-    (valintalaskentakoostepalvelu-client/opiskelijan-suoritukset
+    (client/opiskelijan-suoritukset
       valintalaskentakoostepalvelu-cas-client
       haku-oid
       hakemus-oid))

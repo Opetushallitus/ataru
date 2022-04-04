@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers
   (:require [re-frame.core :as re-frame]
             [ataru.tarjonta.haku :as haku]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
                                                                 pohjakoulutus-harkinnanvarainen-types]]))
 
 (re-frame/reg-event-fx

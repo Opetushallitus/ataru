@@ -1,7 +1,7 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util-spec
   (:require [speclj.core :refer [it describe tags should= should-be-nil]]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]))
 
 (def pick-value-fn (fn [answers question]
                      (question answers)))
