@@ -3,8 +3,7 @@
             [ataru.tarjonta.haku :as haku]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
-                                                                                   pohjakoulutus-harkinnanvarainen-types
-                                                                                   ei-harkinnanvarainen]]))
+                                                                                   pohjakoulutus-harkinnanvarainen-types]]))
 
 (re-frame/reg-event-fx
   :application/fetch-applicant-pohjakoulutus
@@ -55,8 +54,7 @@
           pick-value-fn (fn [answers question]
                           (:value (question answers)))
           harkinnanvarainen-application-but-not-according-to-koski? (and (not harkinnanvarainen-pohjakoulutus?)
-                                                                         (= ei-harkinnanvarainen
-                                                                            (hutil/get-common-harkinnanvaraisuus-reason answers pick-value-fn)))]
+                                                                         (hutil/get-common-harkinnanvaraisuus-reason answers pick-value-fn))]
     (-> db
         (assoc-in [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key]
                   harkinnanvarainen-pohjakoulutus?)
