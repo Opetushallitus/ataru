@@ -1,8 +1,10 @@
 (ns ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers
-  (:require [re-frame.core :as re-frame]
+  (:require [re-frame.core :as re-frame :refer [subscribe]]
             [ataru.tarjonta.haku :as haku]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
-                                                                pohjakoulutus-harkinnanvarainen-types]]))
+                                                                                   pohjakoulutus-harkinnanvarainen-types
+                                                                                   ei-harkinnanvarainen]]))
 
 (re-frame/reg-event-fx
   :application/fetch-applicant-pohjakoulutus
@@ -39,7 +41,8 @@
 (re-frame/reg-event-db
   :application/handle-fetch-applicant-harkinnanvaraisuus-response
   (fn [db [_ response application-key]]
-    (let [has-harkinnanvaraisuus-reason-in-group (fn [resp group]
+    (let [answers @(subscribe [:application/selected-application-answers])
+          has-harkinnanvaraisuus-reason-in-group (fn [resp group]
                                                    (->> resp
                                                         (map :harkinnanvaraisuudenSyy)
                                                         (some (fn [harkinnanvaraisuus]
@@ -48,12 +51,19 @@
           yksilollistetty-matikka-aikka? (has-harkinnanvaraisuus-reason-in-group
                                            response harkinnanvaraisuus-yksilollistetty-matikka-aikka-types)
           harkinnanvarainen-pohjakoulutus? (has-harkinnanvaraisuus-reason-in-group
-                                             response pohjakoulutus-harkinnanvarainen-types)]
+                                             response pohjakoulutus-harkinnanvarainen-types)
+          pick-value-fn (fn [answers question]
+                          (:value (question answers)))
+          harkinnanvarainen-application-but-not-according-to-koski? (and (not harkinnanvarainen-pohjakoulutus?)
+                                                                         (= ei-harkinnanvarainen
+                                                                            (hutil/get-common-harkinnanvaraisuus-reason answers pick-value-fn)))]
     (-> db
         (assoc-in [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key]
                   harkinnanvarainen-pohjakoulutus?)
         (assoc-in [:application :yksilollistetty-matikka-aikka-by-application-key application-key]
-                  yksilollistetty-matikka-aikka?)))))
+                  yksilollistetty-matikka-aikka?)
+        (assoc-in [:application :harkinnanvarainen-application-but-not-according-to-koski? application-key]
+                  harkinnanvarainen-application-but-not-according-to-koski?)))))
 
 (re-frame/reg-event-db
   :application/handle-fetch-applicant-harkinnanvaraisuus-error

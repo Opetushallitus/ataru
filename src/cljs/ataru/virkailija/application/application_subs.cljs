@@ -24,6 +24,11 @@
     (get-in db [:application :selected-application-and-form :application])))
 
 (re-frame/reg-sub
+  :application/selected-application-answers
+  (fn selected-application-answers [db _]
+    (get-in db [:application :selected-application-and-form :application :answers])))
+
+(re-frame/reg-sub
   :application/selected-form-fields-by-id
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))

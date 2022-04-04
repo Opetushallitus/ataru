@@ -5,6 +5,7 @@
 (def sure-ei-paattotodistusta "SURE_EI_PAATTOTODISTUSTA")
 (def ataru-ulkomailla-opiskelu "ATARU_ULKOMAILLA_OPISKELTU")
 (def ataru-ei-paattotodistusta "SURE_EI_PAATTOTODISTUSTA")
+(def ei-harkinnanvarainen "EI_HARKINNANVARAINEN")
 
 (def harkinnanvaraisuus-reasons
   {:sure-yks-mat-ai                          sure-yks-mat-ai
@@ -16,7 +17,7 @@
    :ataru-oppimisvaikeudet                   "ATARU_OPPIMISVAIKEUDET"
    :ataru-koulutodistusten-vertailuvaikeudet "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET"
    :ataru-riittamaton-tutkintokielen-taito   "ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO"
-   :none                                     "EI_HARKINNANVARAINEN"})
+   :none                                     ei-harkinnanvarainen})
 
 (def harkinnanvaraisuus-types
   (vals harkinnanvaraisuus-reasons))

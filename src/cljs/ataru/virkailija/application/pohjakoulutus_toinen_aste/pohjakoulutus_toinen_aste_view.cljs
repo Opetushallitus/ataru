@@ -9,11 +9,17 @@
 
 (defn- harkinnanvarainen-component
   []
-  (let [harkinnanvarainen? @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])]
-    (when harkinnanvarainen?
+  (let [harkinnanvarainen? @(subscribe [:application/harkinnanvarainen-pohjakoulutus?])
+        desync-harkinnanvarainen? @(subscribe [:application/harkinnanvarainen-application-but-not-according-to-koski?])
+        harkinnanvarainen-text-key (cond harkinnanvarainen?
+                                         :only-harkinnanvarainen-valinta
+
+                                         desync-harkinnanvarainen?
+                                         :desync-harkinnanvarainen)]
+    (when (or harkinnanvarainen? desync-harkinnanvarainen?)
       [:div.harkinnanvaraisuus__wrapper
         [:i.zmdi.zmdi-alert-triangle]
-        [:span @(subscribe [:editor/virkailija-translation :only-harkinnanvarainen-valinta])]])))
+        [:span @(subscribe [:editor/virkailija-translation harkinnanvarainen-text-key])]])))
 
 (defn- lisapistekoulutukset-component
   [lisapistekoulutukset]

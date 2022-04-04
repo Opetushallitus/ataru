@@ -44,6 +44,12 @@
       (get-in db [:application :harkinnanvarainen-pohjakoulutus-by-application-key application-key]))))
 
 (re-frame/reg-sub
+  :application/harkinnanvarainen-application-but-not-according-to-koski?
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)]
+      (get-in db [:application :harkinnanvarainen-application-but-not-according-to-koski? application-key]))))
+
+(re-frame/reg-sub
   :application/yksilollistetty-matikka-aikka?
   (fn [db _]
     (let [application-key (-> db :application :selected-key)]

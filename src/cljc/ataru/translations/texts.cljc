@@ -2254,9 +2254,12 @@
    :pohjakoulutus-yksilollistetty                            {:fi "Matematiikan ja äidinkielen yksilöllistetty oppimäärä"
                                                               :sv "SV: Matematiikan ja äidinkielen yksilöllistetty oppimäärä"
                                                               :en "EN: Matematiikan ja äidinkielen yksilöllistetty oppimäärä"}
-   :only-harkinnanvarainen-valinta                           {:fi "Hakija on mukana vain harkintaan perustuvassa valinnassa. "
-                                                              :sv "SV: Hakija on mukana vain harkintaan perustuvassa valinnassa. "
-                                                              :en "EN: Hakija on mukana vain harkintaan perustuvassa valinnassa. "}
+   :only-harkinnanvarainen-valinta                           {:fi "Hakija on mukana vain harkintaan perustuvassa valinnassa."
+                                                              :sv "SV: Hakija on mukana vain harkintaan perustuvassa valinnassa."
+                                                              :en "EN: Hakija on mukana vain harkintaan perustuvassa valinnassa."}
+   :desync-harkinnanvarainen                                 {:fi "Hakija ei ole mukana harkinnanvaraisessa valinnassa."
+                                                              :sv "SV: Hakija ei ole mukana harkinnanvaraisessa valinnassa."
+                                                              :en "EN: Hakija ei ole mukana harkinnanvaraisessa valinnassa."}
    :lisapistekoulutukset                                     {:fi "Lisäpistekoulutukset"
                                                               :sv "SV: Lisäpistekoulutukset"
                                                               :en "EN: Lisäpistekoulutukset"}
