@@ -34,11 +34,11 @@
 
 (defn- not-found
   []
-  [:p @(subscribe [:editor/virkailija-translation :pohjakoulutus-not-found])])
+  [:p.error--not-found @(subscribe [:editor/virkailija-translation :pohjakoulutus-not-found])])
 
 (defn- error-loading
   [translation-key]
-  [:p @(subscribe [:editor/virkailija-translation translation-key])])
+  [:p.error--loading @(subscribe [:editor/virkailija-translation translation-key])])
 
 (defn- pohjakoulutus-for-valinnat-loaded
   []
