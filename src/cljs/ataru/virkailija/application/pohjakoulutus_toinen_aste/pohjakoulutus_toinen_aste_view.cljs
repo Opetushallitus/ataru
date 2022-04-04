@@ -66,6 +66,8 @@
   [:<>
    [:span.application__wrapper-side-content-title
     @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat])]
+   [:span.application__wrapper-side-content-subtitle
+    @(subscribe [:editor/virkailija-translation :pohjakoulutus-for-valinnat-alaotsikko])]
    (case harkinnanvaraisuus-loading-state
      :loading [loading-indicator]
      :loaded [harkinnanvarainen-component]

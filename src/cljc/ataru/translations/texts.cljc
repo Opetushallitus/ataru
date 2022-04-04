@@ -2242,9 +2242,12 @@
    :button-text                                              {:fi "Painikkeen teksti"
                                                               :sv "SV: Painikkeen teksti"
                                                               :en "EN: Painikkeen teksti"}
-   :pohjakoulutus-for-valinnat                               {:fi "TIedot valintoja varten (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
-                                                              :sv "SV: TIedot valintoja varten (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
-                                                              :en "EN: TIedot valintoja varten (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"}
+   :pohjakoulutus-for-valinnat                               {:fi "TIedot valintoja varten"
+                                                              :sv "SV: TIedot valintoja varten"
+                                                              :en "EN: TIedot valintoja varten"}
+   :pohjakoulutus-for-valinnat-alaotsikko                    {:fi "(koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
+                                                              :sv "SV: (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
+                                                              :en "EN: (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"}
    :pohjakoulutus-opetuskieli                                {:fi "Opetuskieli"
                                                               :sv "SV: Opetuskieli"
                                                               :en "EN: Opetuskieli"}
