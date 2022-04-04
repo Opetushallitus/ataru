@@ -23,7 +23,7 @@
             [taoensso.timbre :as log]
             [ataru.applications.application-store-queries :as queries]
             [ataru.config.core :refer [config]]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [get-harkinnanvaraisuus-reason-for-hakukohde]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-2nd-language-value-to-lang]]
             [clojure.edn :as edn])
   (:import [java.time
