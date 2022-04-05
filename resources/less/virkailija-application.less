@@ -2045,6 +2045,36 @@ and (max-width: 1000px) {
   transition: background-color 1s;
 }
 
+.application__wrapper-side-contents {
+  flex: 1 1 250px;
+  margin-top: 13px;
+  padding: 8px;
+  background-color: @neutral-grey-200;
+  transition: background-color 1s;
+  max-width: 25rem;
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    list-style-type: none;
+  }
+
+  .pohjakoulutus__loading-indicator {
+    padding: 0.5rem;
+    i {
+      font-size: 24px;
+    }
+  }
+}
+
+.application__wrapper-side-content-title {
+  text-transform: uppercase;
+  .application__form-field-label;
+}
+
 .application__form-field {
   display: flex;
   flex-direction: column;
@@ -3430,3 +3460,20 @@ th.application__readonly-adjacent--header {
   }
 }
 
+.harkinnanvaraisuus__wrapper {
+  background: @white;
+  padding: 0.5rem 0.5rem;
+  display: flex;
+
+  i {
+    color: @warning-yellow;
+    font-size: 24px;
+  }
+
+  span {
+    margin-left: 0.5rem;
+    color: @text-color;
+    font-size: 14px;
+    font-weight: 600;
+  }
+}

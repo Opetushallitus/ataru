@@ -14,7 +14,7 @@
 
 (defn- fake-get-harkinnanvaraisuus-reason-for-hakukohde
   [expected-hakukohde-oid]
-  (fn [_ hakukohde-oid]
+  (fn [_ hakukohde-oid _]
     (if (= expected-hakukohde-oid hakukohde-oid)
       (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
       (:none harkinnanvaraisuus-reasons))))
@@ -44,7 +44,8 @@
       (should= input result)))
 
   (it "does not return application if it has no application-wide reason for harkinnanvaraisuus"
-    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_] (:none harkinnanvaraisuus-reasons))]
+    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_ _] nil)
+                  hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde (fn [_] (:none harkinnanvaraisuus-reasons))]
       (let [input  [{:id "application-1-id"}]
             result (hf/filter-applications-by-harkinnanvaraisuus
                      (fake-fetch-applications-content application-data)
@@ -53,7 +54,7 @@
         (should= [] result))))
 
   (it "returns application if it has an application-wide reason for harkinnanvaraisuus"
-    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_] (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons))]
+    (with-redefs [hu/get-common-harkinnanvaraisuus-reason (fn [_ _] (:ataru-ulkomailla-opiskelu harkinnanvaraisuus-reasons))]
       (let [input  [{:id "application-1-id"}]
             result (hf/filter-applications-by-harkinnanvaraisuus
                      (fake-fetch-applications-content application-data)
@@ -62,7 +63,7 @@
         (should= input result))))
 
   (it "returns application if it has a harkinnanvaraisuus reason for some hakukohde"
-    (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+    (with-redefs [hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
       (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
             result (hf/filter-applications-by-harkinnanvaraisuus
                      (fake-fetch-applications-content application-data)
@@ -72,7 +73,7 @@
 
   (describe "when filtering by hakukohteet as well"
     (it "returns application if it has a harkinnanvaraisuus reason for given hakukohde"
-      (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+      (with-redefs [hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
         (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
               result (hf/filter-applications-by-harkinnanvaraisuus
                        (fake-fetch-applications-content application-data)
@@ -81,7 +82,7 @@
           (should= input result))))
 
     (it "does not return application if it has a harkinnanvaraisuus reason for another hakukohde"
-      (with-redefs [hu/get-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
+      (with-redefs [hu/get-targeted-harkinnanvaraisuus-reason-for-hakukohde (fake-get-harkinnanvaraisuus-reason-for-hakukohde "hakukohde-oid-1")]
         (let [input  [{:id "application-1-id" :hakukohde ["hakukohde-oid-1" "hakukohde-oid-2"]}]
               result (hf/filter-applications-by-harkinnanvaraisuus
                        (fake-fetch-applications-content application-data)
