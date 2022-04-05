@@ -382,7 +382,7 @@
                                  (or always?
                                      (and (not always?)
                                           (not skip-answers?)
-                                          (or hakukohde?
+                                          (or (and (empty? included-ids) hakukohde?)
                                               id-match?))))))]
     (->> form-fields
          (filter should-include?)
