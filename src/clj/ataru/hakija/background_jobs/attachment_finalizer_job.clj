@@ -14,13 +14,13 @@
                             (map :value)
                             flatten
                             (remove nil?))
-        applivation-key (:key application)]
+        application-key (:key application)]
     (when (> (count attachment-ids) 0)
       (let [response (cas/cas-authenticated-post liiteri-cas-client
                                                  (resolve-url :liiteri.finalize)
                                                  {:keys attachment-ids}
                                                  (fn [] {:query-params {:origin-system origin-system
-                                                                       :origin-reference applivation-key}}))]
+                                                                       :origin-reference application-key}}))]
         (when (not= 200 (:status response))
           (throw (Exception. (str "Could not finalize attachments for application " application-id))))
         (log/info (str "Finalized attachments for application " application-id))))
