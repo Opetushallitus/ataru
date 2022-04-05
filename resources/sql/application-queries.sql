@@ -1044,10 +1044,62 @@ SELECT a.id, a.form_id AS "form", a.content
 FROM applications a
 WHERE a.id IN (:ids);
 
---name: yesql-delete-applications-by-application-key
-DELETE FROM applications a
-WHERE a.key in (:keys);
+--name: yesql-delete-multi-answers-by-application-key
+DELETE FROM multi_answers ma
+WHERE ma.application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-multi-answer-values-by-application-key
+DELETE FROM multi_answer_values ma
+WHERE ma.application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-information-requests-by-application-key
+DELETE FROM information_requests ir
+WHERE ir.application_key = :key;
+
+--name: yesql-delete-group-answers-by-application-key
+DELETE FROM group_answers ga
+WHERE ga.application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-group-answer-values-by-application-key
+DELETE FROM group_answer_values ga
+WHERE ga.application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-group-answer-groups-by-application-key
+DELETE FROM group_answer_groups ga
+WHERE ga.application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-field-deadlines-by-application-key
+DELETE FROM field_deadlines fd
+WHERE fd.application_key = :key;
+
+--name: yesql-delete-application-secrets-by-application-key
+DELETE FROM application_secrets a
+WHERE a.application_key = :key;
+
+--name: yesql-delete-application-review-notes-by-application-key
+DELETE FROM application_review_notes a
+WHERE a.application_key = :key;
+
+--name: yesql-delete-application-reviews-by-application-key
+DELETE FROM application_reviews a
+WHERE a.application_key = :key;
+
+--name: yesql-delete-application-hakukohde-reviews-by-application-key
+DELETE FROM application_hakukohde_reviews a
+WHERE a.application_key = :key;
+
+--name: yesql-delete-application-hakukohde-attachment-reviews-by-application-key
+DELETE FROM application_hakukohde_attachment_reviews a
+WHERE a.application_key = :key;
+
+--name: yesql-delete-application-events-by-application-key
+DELETE FROM application_events a
+WHERE a.application_key = :key;
 
 --name: yesql-delete-answers-by-application-key
+DELETE FROM answers
+WHERE application_id IN (SELECT id FROM applications WHERE key = :key);
+
+--name: yesql-delete-applications-by-application-key
 DELETE FROM applications a
-WHERE a.key in (:keys);
+WHERE a.key = :key;
