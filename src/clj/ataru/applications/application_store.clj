@@ -1473,3 +1473,26 @@
 (defn get-application-person-oids-for-haku
   [haku-oid]
   (map :person_oid (exec-db :db queries/yesql-get-application-person-oids-for-haku {:haku haku-oid})))
+
+(defn mass-delete-application-data
+  [session application-keys audit-logger]
+  (log/info "Mass deleting" (count application-keys) "applications" application-keys)
+  (let [not-deleted-keys (conj nil (doall
+                           (map #(if (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
+                                   (log/info "BINGO: " %)
+                             (do (log/info "NO BINGO :" %)
+                                 %)
+                             ) application-keys)))]
+    (log/info "not-deleted-keys" (pr-str (remove nil? (vec (flatten not-deleted-keys)))))
+    ))
+
+;(comment defn mass-update-application-states
+;  [session application-keys hakukohde-oids from-state to-state audit-logger]
+;  (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohtees" hakukohde-oids)
+;  (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+;                                                    (mapv
+;                                                      (partial update-hakukohde-process-state! connection session hakukohde-oids from-state to-state)
+;                                                      application-keys))]
+;    (doseq [audit-log-entry (filter some? audit-log-entries)]
+;      (audit-log/log audit-logger audit-log-entry))
+;    true))
