@@ -1,7 +1,8 @@
 (ns ataru.applications.question-util
   (:require [ataru.translations.texts :refer [base-education-2nd-module-texts]]
             [clojure.walk :refer [keywordize-keys]]
-            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-wrapper-key]]))
+            [ataru.util :refer [answers-by-key]]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-wrapper-key base-education-2nd-language-value-to-lang]]))
 
 (def sora-question-wrapper-label {:fi "Terveydelliset tekijät " :sv "Hälsoskäl"})
 
@@ -16,6 +17,25 @@
 
 (def urheilijan-lisakysymykset-wrapper-label {:fi "Urheilijan lisäkysymykset ammatillisissa kohteissa",
                                               :sv "Tilläggsfrågor för idrottare i yrkesinriktade ansökningsmål"})
+
+;This should at some point be replaced by hardcoded id's for the fields.
+(defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
+                                               (let [answers (:keyValues application)
+                                                     pohjakoulutus-vuosi-key (some->> (:tutkintovuosi-keys questions)
+                                                                                 (filter #(not (nil? (get answers (name %)))))
+                                                                                 first
+                                                                                 name)
+                                                     pohjakoulutus-vuosi (when pohjakoulutus-vuosi-key
+                                                                      (get answers pohjakoulutus-vuosi-key))
+                                                     pohjakoulutus-kieli-key (some->> (:tutkintokieli-keys questions)
+                                                                                 (filter #(not (nil? (get answers (name %)))))
+                                                                                 first
+                                                                                 name)
+                                                     pohjakoulutus-kieli-answer (when pohjakoulutus-kieli-key
+                                                                                  (get answers (name pohjakoulutus-kieli-key)))
+                                                     pohjakoulutus-kieli (base-education-2nd-language-value-to-lang pohjakoulutus-kieli-answer)]
+                                                 (update application :keyValues (fn [kv] (merge kv {"pohjakoulutus_vuosi" pohjakoulutus-vuosi
+                                                                                                    "pohjakoulutus_kieli" pohjakoulutus-kieli})))))
 
 (defn get-hakurekisteri-toinenaste-specific-questions
   [form]
@@ -55,6 +75,7 @@
                                                              first
                                                              :children
                                                              first)]
+    (println "Get questions... ")
     {:tutkintovuosi-keys tutkintovuosi-keys
      :tutkintokieli-keys tutkintokieli-keys
      :sora-terveys-key sora-terveys-question
