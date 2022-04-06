@@ -382,7 +382,7 @@
   (add-review-note [this session note])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
-  (get-applications-for-valintalaskenta [this session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
+  (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (siirto-applications [this session hakukohde-oid application-keys])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
@@ -624,7 +624,7 @@
          (mapcat #(aac/omatsivut-applications organization-service session %))))
 
   (get-applications-for-valintalaskenta
-    [_ session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
+    [_ form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto]
     (if-let [applications (aac/get-applications-for-valintalaskenta
                             organization-service
                             session
@@ -634,6 +634,9 @@
                                  (map :personOid)
                                  distinct
                                  (person-service/get-persons person-service))
+            haku-oid (first (set (map :hakuOid applications))) ;fixme, either make it work for multiple or handle it as a bad request when params result in hakemukses from different hakus
+            form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
+            questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)
             yksiloimattomat (->> henkilot
                                  vals
                                  (remove #(or (:yksiloity %)
@@ -645,7 +648,8 @@
                                         (map (partial add-asiointikieli henkilot) as)
                                         (if with-harkinnanvaraisuus-tieto
                                           (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service) as)
-                                          as))]
+                                          as)
+                                        (map (partial question-util/assoc-deduced-vakio-answers-for-toinen-aste-application questions) as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
