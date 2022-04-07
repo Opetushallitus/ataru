@@ -44,9 +44,6 @@
         cas-session-id      (:session-id client)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
-    (log/error "REQUEST IS: " (merge {:url url :method method}
-                                     (opts-fn)
-                                     (create-params session-cookie-name cas-session-id body)))
     (let [resp (http-util/do-request (merge {:url url :method method}
                                             (opts-fn)
                                             (create-params session-cookie-name cas-session-id body)))]

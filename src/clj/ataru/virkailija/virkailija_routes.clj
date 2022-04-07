@@ -767,14 +767,14 @@
       (api/POST "/mass-delete" {session :session}
         :body [body {:application-keys [s/Str]}]
         :summary "Delete all application data by list of application keys"
-        (if (application-service/mass-delete-application-data
-              application-service
-              session
-              (:application-keys body))
-          (response/ok {:application-keys body})
+        (if-let [result (application-service/mass-delete-application-data
+                          application-service
+                          session
+                          (:application-keys body))]
+          (response/ok {:not-deleted-keys result})
           (response/unauthorized {:error (str "Hakemusten "
                                               (clojure.string/join ", " (:application-keys body))
-                                              " käsittely ei ole sallittu")}))))
+                                              " poisto ei ole sallittu")}))))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
