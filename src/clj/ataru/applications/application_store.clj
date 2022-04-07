@@ -1479,12 +1479,14 @@
   [session application-keys audit-logger]
   (log/info "Mass deleting" (count application-keys) "applications" application-keys)
   (let [not-deleted-keys (conj nil (doall
-                           (map #(if (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
-                                   (log/info "BINGO: " %)
-                             (do (log/info "NO BINGO :" %)
-                                 %)
-                             ) application-keys)))]
-    (log/info "not-deleted-keys" (pr-str (remove nil? (vec (flatten not-deleted-keys)))))
+                                     (map #(if (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
+                                             (do (log/info "Deleting application data for application key:" %)
+                                                 (try
+                                                   (exec-db :db queries/yesql-delete-application-data-by-application-key! {:key %})
+                                                   (catch Exception e (log/error "Delete failed for application-key:" % "," e))))
+                                             (do (log/warn "Application" % "status is not processed. Skipping deletion.")
+                                                 %)) application-keys)))]
+    (remove nil? (vec (flatten not-deleted-keys)))
     ))
 
 ;(comment defn mass-update-application-states
