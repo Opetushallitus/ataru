@@ -1056,7 +1056,6 @@ BEGIN;
     DELETE FROM multi_answers ma
     WHERE ma.application_id IN (SELECT id FROM applications WHERE key = :key);
 
-    --name: yesql-delete-multi-answer-values-by-application-key!
     DELETE FROM multi_answer_values ma
     WHERE ma.application_id IN (SELECT id FROM applications WHERE key = :key);
 
