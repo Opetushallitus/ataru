@@ -987,11 +987,13 @@
         tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
-        tutkinto-vuosi (-> answers tutkinto-vuosi-key :value)
+        tutkinto-vuosi (when tutkinto-vuosi-key
+                         (-> answers tutkinto-vuosi-key :value))
         tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
                                 (filter #(not (nil? (% answers))))
                                 first)
-        tutkinto-kieli (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang))]
+        tutkinto-kieli (when tutkinto-kieli-key
+                         (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang)))]
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time)
