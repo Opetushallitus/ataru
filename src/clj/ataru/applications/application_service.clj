@@ -363,6 +363,12 @@
                {:ensisijainen-hakukohde [hakukohde-oid]}
                {:hakukohde [hakukohde-oid]}))))
 
+(defn- enrich-with-harkinnanvaraisuustieto
+  [tarjonta-service application]
+  (let [hakukohde-oids (map :hakukohdeOid (:hakutoiveet application))
+        hakukohteet    (tarjonta-service/get-hakukohteet tarjonta-service hakukohde-oids)]
+    (assoc-harkinnanvaraisuustieto hakukohteet application)))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
@@ -633,13 +639,9 @@
                                  (map :oidHenkilo)
                                  distinct
                                  seq)
-            enrich-with-harkinnanvaraisuustieto (fn [application]
-                                                  (if with-harkinnanvaraisuus-tieto
-                                                    (assoc-harkinnanvaraisuustieto application)
-                                                    application))
             enriched-applications (->> applications
                                        (map (partial add-asiointikieli henkilot))
-                                       (map enrich-with-harkinnanvaraisuustieto))]
+                                       (cond->> with-harkinnanvaraisuus-tieto (map enrich-with-harkinnanvaraisuustieto)))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
