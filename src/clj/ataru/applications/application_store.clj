@@ -1478,12 +1478,14 @@
 (defn mass-delete-application-data
   [session application-keys audit-logger]
   (log/info "Mass deleting" (count application-keys) "applications" application-keys)
-  (let [not-deleted-keys (conj nil (doall
-                                     (map #(if (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
+  (let [not-deleted-keys (conj [] (doall
+                                     (map #(if
+                                             (or
+                                               (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
+                                               (= (:state (get-application-review %)) "inactivated"))
                                              (do
                                                (log/info "Deleting application data for application key:" %)
                                                (try
-                                                 ;TODO: poistetaan myös jos passiivinen hakemus!
                                                  (exec-db :db queries/yesql-delete-application-data-by-application-key! {:key %})
                                                  (audit-log/log audit-logger
                                                                 {:id        {:applicationOid %}
