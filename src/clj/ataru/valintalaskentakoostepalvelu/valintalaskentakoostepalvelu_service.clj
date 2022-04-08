@@ -22,18 +22,19 @@
 (def ^:private hakukohde-valintalaskenta-checker (s/checker HakukohdeValintalaskentaResponse))
 
 (defn- convert-application-to-have-harkinnanvaraisuus-reasons
-  [application]
+  [hahkukohde-cache application]
   (let [answers (answers-by-key (:answers application))
         hakukohteet-with-harkinnanvaraisuus (->> (:hakukohde application)
+                                                 (cache/get-many-from hahkukohde-cache)
                                                  (map #(hutil/assoc-harkinnanvaraisuustieto-to-hakukohde answers %)))]
     {:hakutoiveet hakukohteet-with-harkinnanvaraisuus
      :hakemusOid (:key application)
      :henkiloOid (:person-oid application)}))
 
 (defn- hakemusten-harkinnanvaraisuus-valintalaskennasta
-  [valintalaskentakoostepalvelu-cas-client hakemus-oids]
+  [valintalaskentakoostepalvelu-cas-client hahkukohde-cache hakemus-oids]
   (let [applications (application-store/get-applications-by-keys hakemus-oids)
-        request-body (map #(convert-application-to-have-harkinnanvaraisuus-reasons %) applications)]
+        request-body (map #(convert-application-to-have-harkinnanvaraisuus-reasons hahkukohde-cache %) applications)]
     (client/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client request-body)))
 
 (defrecord HakukohdeValintalaskentaCacheLoader [valintalaskentakoostepalvelu-cas-client]
@@ -57,14 +58,17 @@
   (check-schema [_ response]
     (hakukohde-valintalaskenta-checker response)))
 
-(defrecord HakukohdeHarkinnanvaraisuusCacheLoader [valintalaskentakoostepalvelu-cas-client]
+(defrecord HakukohdeHarkinnanvaraisuusCacheLoader [valintalaskentakoostepalvelu-cas-client hahkukohde-cache]
   cache/CacheLoader
 
   (load [_ application-oid]
-    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client [application-oid]))
+    (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                      hahkukohde-cache
+                                                      [application-oid]))
 
   (load-many [_ application-oids]
     (let [applications (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                                         hahkukohde-cache
                                                                          application-oids)]
       (reduce (fn [acc application]
                 (assoc acc (:hakemusOid application) application)) {} applications)))

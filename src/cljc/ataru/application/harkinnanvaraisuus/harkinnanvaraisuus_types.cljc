@@ -17,6 +17,7 @@
    :ataru-oppimisvaikeudet                   "ATARU_OPPIMISVAIKEUDET"
    :ataru-koulutodistusten-vertailuvaikeudet "ATARU_KOULUTODISTUSTEN_VERTAILUVAIKEUDET"
    :ataru-riittamaton-tutkintokielen-taito   "ATARU_RIITTAMATON_TUTKINTOKIELEN_TAITO"
+   :ei-harkinnanvarainen-hakukohde           "EI_HARKINNANVARAINEN_HAKUKOHDE"
    :none                                     ei-harkinnanvarainen})
 
 (def harkinnanvaraisuus-types

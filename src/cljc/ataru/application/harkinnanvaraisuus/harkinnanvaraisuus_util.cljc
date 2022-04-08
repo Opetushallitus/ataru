@@ -29,10 +29,14 @@
       (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
 
 (defn get-targeted-harkinnanvaraisuus-reason-for-hakukohde
-  [answers hakukohde-oid pick-value-fn]
-  (let [harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
+  [answers hakukohde pick-value-fn]
+  (let [hakukohde-oid (:oid hakukohde)
+        harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
         harkinnanvaraisuus-answer (pick-value-fn answers harkinnanvaraisuus-reason-key)]
     (cond
+      (not (:voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita? hakukohde))
+      (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
+
       (= "0" harkinnanvaraisuus-answer)
       (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
 
@@ -50,6 +54,8 @@
 
 (defn assoc-harkinnanvaraisuustieto
   [tarjonta-application]
+  ;todo handle hakukode :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?
+  ; pass hakukohdes fetched from cache as parameter
   (let [answers     (keywordize-keys (:keyValues tarjonta-application))
         hakukohteet (:hakutoiveet tarjonta-application)
         pick-value-fn (fn [answers question]
@@ -66,14 +72,14 @@
       (assoc tarjonta-application :hakutoiveet (map assoc-harkinnanvaraisuus-fn hakukohteet)))))
 
 (defn get-harkinnanvaraisuus-reason-for-hakukohde
-  [answers hakukohde-oid]
+  [answers hakukohde]
   (let [answers (keywordize-keys answers)
         pick-value-fn (fn [answers question]
                         (:value (question answers)))]
     (or (get-common-harkinnanvaraisuus-reason answers pick-value-fn)
-        (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid pick-value-fn))))
+        (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde pick-value-fn))))
 
 (defn assoc-harkinnanvaraisuustieto-to-hakukohde
-  [answers hakukohde-oid]
-  {:hakukohdeOid hakukohde-oid
-   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)})
+  [answers hakukohde]
+  {:hakukohdeOid (:oid hakukohde)
+   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde)})
