@@ -1379,22 +1379,17 @@
   (log/info "Mass deleting" (count application-keys) "applications" application-keys)
   (let [not-deleted-keys (conj nil (doall
                                      (map #(if (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
-                                             (do (log/info "Deleting application data for application key:" %)
-                                                 (try
-                                                   (exec-db :db queries/yesql-delete-application-data-by-application-key! {:key %})
-                                                   (catch Exception e (log/error "Delete failed for application-key:" % "," e))))
-                                             (do (log/warn "Application" % "status is not processed. Skipping deletion.")
-                                                 %)) application-keys)))]
-    (remove nil? (vec (flatten not-deleted-keys)))
-    ))
-
-;(comment defn mass-update-application-states
-;  [session application-keys hakukohde-oids from-state to-state audit-logger]
-;  (log/info "Mass updating" (count application-keys) "applications from" from-state "to" to-state "with hakukohtees" hakukohde-oids)
-;  (let [audit-log-entries (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-;                                                    (mapv
-;                                                      (partial update-hakukohde-process-state! connection session hakukohde-oids from-state to-state)
-;                                                      application-keys))]
-;    (doseq [audit-log-entry (filter some? audit-log-entries)]
-;      (audit-log/log audit-logger audit-log-entry))
-;    true))
+                                             (do
+                                               (log/info "Deleting application data for application key:" %)
+                                               (try
+                                                 ;TODO: poistetaan myös jos passiivinen hakemus!
+                                                 (exec-db :db queries/yesql-delete-application-data-by-application-key! {:key %})
+                                                 (audit-log/log audit-logger
+                                                                {:id        {:applicationOid %}
+                                                                 :session   session
+                                                                 :operation audit-log/operation-delete})
+                                                 (catch Exception e (log/error "Delete failed for application-key:" % "," e))))
+                                             (do
+                                               (log/warn "Application" % "status is not processed. Skipping deletion.")
+                                               %)) application-keys)))]
+    (remove nil? (vec (flatten not-deleted-keys)))))
