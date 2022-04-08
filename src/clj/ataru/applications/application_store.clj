@@ -1016,7 +1016,7 @@
      :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
      :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
      }) (catch Exception e
-              (log/warn "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
+              (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
