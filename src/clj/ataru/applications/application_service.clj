@@ -679,18 +679,21 @@
           person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
           questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)
-          urheilija-amm-hakukohdes (->> (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
+          haun-hakukohteet (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
+          urheilija-amm-hakukohdes (->> haun-hakukohteet
                                         (filter (fn [hakukohde] (seq (set/intersection
                                                                   (:urheilijan-amm-groups questions)
                                                                   (set (:ryhmaliitokset hakukohde))))))
                                         (map :oid)
                                         distinct)]
-      (application-store/suoritusrekisteri-applications-toinenaste haku-oid hakukohde-oids
-                                                                   person-oids
-                                                                   modified-after
-                                                                   offset
-                                                                   questions
-                                                                   urheilija-amm-hakukohdes)))
+      (application-store/suoritusrekisteri-applications-toinenaste
+        haku-oid hakukohde-oids
+        person-oids
+        modified-after
+        offset
+        questions
+        urheilija-amm-hakukohdes
+        haun-hakukohteet)))
 
   (get-applications-paged
     [_ session params]
