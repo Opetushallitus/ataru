@@ -83,6 +83,7 @@
             [clj-time.core :as time]
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.person-service.person-service :as person-service]
+            [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [cuerdas.core :as str])
   (:import java.util.Locale
            java.time.ZonedDateTime
@@ -473,7 +474,7 @@
 
       (api/GET "/virkailija-texts" {session :session}
         (ok (if (:dev? env)
-              texts/virkailija-texts
+              (merge texts/general-texts texts/virkailija-texts)
               (get-virkailija-texts localizations-cache))))
 
       (api/POST "/review-setting" {session :session}
@@ -851,7 +852,37 @@
                                          (valintalaskentakoostepalvelu/hakukohde-uses-valintalaskenta? valintalaskentakoostepalvelu-service
                                                                                                        hakukohde-oid))]
           (response/ok {:hakukohde-oid   hakukohde-oid
-                        :valintalaskenta valintalaskenta-enabled?}))))
+                        :valintalaskenta valintalaskenta-enabled?})))
+
+      (api/GET "/suoritukset/haku/:haku-oid/hakemus/:application-key" {session :session}
+        :path-params [haku-oid :- String
+                      application-key :- s/Str]
+        :summary "Returns pohjakoulutus for application's applicant"
+        :return ataru-schema/PohjakoulutusResponse
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+          (letfn [(get-koodi-label [koodi-uri version koodi-value]
+                    (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
+                         (filter #(= koodi-value (:value %)))
+                         first
+                         :label))]
+            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
+              (response/ok
+                (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
+          (response/unauthorized)))
+
+      (api/GET "/harkinnanvaraisuus/hakemus/:application-key" {session :session}
+        :path-params [application-key :- s/Str]
+        :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
+        :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+          (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                     valintalaskentakoostepalvelu-service
+                                                     [application-key])
+                hakukohteet-harkinnanvaraisuudella (get-in hakemukset-harkinnanvaraisuudella [application-key :hakutoiveet])]
+            (response/ok hakukohteet-harkinnanvaraisuudella))
+          (response/unauthorized))))
 
     (api/context "/maksut" []
       :tags ["maksut-api"]
@@ -1258,6 +1289,7 @@
                   hakijaOids
                   modifiedAfter
                   offset))))
+
       (api/GET "/applications" {session :session}           ;; deprecated, use /valinta-tulos-service
         :summary "Get the latest versions of applications in haku or hakukohde or by oids."
         :query-params [{hakuOid :- s/Str nil}

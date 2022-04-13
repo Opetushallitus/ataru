@@ -18,7 +18,8 @@
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [ataru.virkailija.temporal :as temporal]
-            [ataru.tarjonta.haku :as haku]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -646,7 +647,8 @@
                                        [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                          {:application-key application-key
                                           :memoize         true}]]
-                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]))]
+                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]
+                                       (pohjakoulutus-toinen-aste-handlers/create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku (:application response))))]
       {:db         db
        :dispatch-n dispatches})))
 

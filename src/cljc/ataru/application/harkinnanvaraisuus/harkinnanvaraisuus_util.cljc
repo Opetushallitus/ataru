@@ -1,5 +1,5 @@
-(ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util
-  (:require [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
+(ns ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util
+  (:require [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]
             [clojure.walk :refer [keywordize-keys]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-option-values-affecting-harkinnanvaraisuus
                                                                     yksilollistetty-key-values-affecting-harkinnanvaraisuus
@@ -72,3 +72,8 @@
                         (:value (question answers)))]
     (or (get-common-harkinnanvaraisuus-reason answers pick-value-fn)
         (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid pick-value-fn))))
+
+(defn assoc-harkinnanvaraisuustieto-to-hakukohde
+  [answers hakukohde-oid]
+  {:hakukohdeOid hakukohde-oid
+   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)})

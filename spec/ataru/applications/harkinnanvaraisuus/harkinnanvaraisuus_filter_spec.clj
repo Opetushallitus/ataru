@@ -1,8 +1,8 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter-spec
   (:require [speclj.core :refer [it describe tags should=]]
             [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :as hf]
-            [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-reasons]]))
 
 (def harkinnanvaraisuus-only-filters
   {:filters {:harkinnanvaraisuus {:only-harkinnanvaraiset true}}})

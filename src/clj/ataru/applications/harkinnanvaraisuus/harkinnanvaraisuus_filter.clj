@@ -1,6 +1,6 @@
 (ns ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter
-  (:require [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
-            [ataru.application.harkinnanvaraisuus-types :as ht]
+  (:require [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hu]
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :as ht]
             [clojure.walk :as walk]
             [ataru.applications.application-store :as application-store]))
 

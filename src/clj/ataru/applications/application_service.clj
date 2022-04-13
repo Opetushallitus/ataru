@@ -30,7 +30,7 @@
     [ataru.suoritus.suoritus-service :as suoritus-service]
     [ataru.applications.suoritus-filter :as suoritus-filter]
     [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-filter :refer [filter-applications-by-harkinnanvaraisuus]]
-    [ataru.applications.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
+    [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :refer [assoc-harkinnanvaraisuustieto]]
     [ataru.cache.cache-service :as cache]
     [ataru.applications.question-util :as question-util]
     [cheshire.core :as json]

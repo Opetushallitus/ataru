@@ -18,7 +18,7 @@
             [schema.coerce :as c]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [ataru.application.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
+            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-types]]))
 
 ;        __.,,------.._
 ;     ,'"   _      _   "`.
@@ -499,6 +499,10 @@
   (merge Hakutoive
          {(s/optional-key :harkinnanvaraisuus) (apply s/enum harkinnanvaraisuus-types)}))
 
+(s/defschema HakutoiveHarkinnanvaraisuudella
+  {:hakukohdeOid s/Str
+   :harkinnanvaraisuudenSyy (apply s/enum harkinnanvaraisuus-types)})
+
 (s/defschema VtsApplication
   {:oid              s/Str ; (:key application)
    :hakuOid          s/Str
@@ -855,3 +859,11 @@
 (s/defschema OpiskelijaResponse
   {:oppilaitos-name localized-schema/LocalizedStringOptional
    :luokka s/Str})
+
+(s/defschema PohjakoulutusResponse
+  {(s/optional-key :pohjakoulutus)        {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :opetuskieli)          {:value s/Str
+                                           :label localized-schema/LocalizedString}
+   (s/optional-key :suoritusvuosi)        s/Str
+   (s/optional-key :lisapistekoulutukset) [s/Keyword]})
