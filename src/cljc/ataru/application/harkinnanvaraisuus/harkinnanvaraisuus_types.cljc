@@ -4,7 +4,7 @@
 (def ataru-yks-mat-ai "ATARU_YKS_MAT_AI")
 (def sure-ei-paattotodistusta "SURE_EI_PAATTOTODISTUSTA")
 (def ataru-ulkomailla-opiskelu "ATARU_ULKOMAILLA_OPISKELTU")
-(def ataru-ei-paattotodistusta "SURE_EI_PAATTOTODISTUSTA")
+(def ataru-ei-paattotodistusta "ATARU_EI_PAATTOTODISTUSTA")
 (def ei-harkinnanvarainen "EI_HARKINNANVARAINEN")
 
 (def harkinnanvaraisuus-reasons
