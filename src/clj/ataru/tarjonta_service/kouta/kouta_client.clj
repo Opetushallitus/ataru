@@ -56,7 +56,7 @@
       :sijoittelu                                 (get ohjausparametrit :sijoittelu false)
       :yhteishaku                                 (string/starts-with?
                                                    (:hakutapaKoodiUri haku)
-                                                   "hakutapa_01#")
+                                                   "hakutapa_01")
       :ylioppilastutkinto-antaa-hakukelpoisuuden? false}
      (when (get ohjausparametrit :hakutoiveidenMaaraRajoitettu false)
        {:max-hakukohteet (get ohjausparametrit :hakutoiveidenEnimmaismaara 1)})
