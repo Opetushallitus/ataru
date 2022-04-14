@@ -42,10 +42,10 @@
   (f/parse basic-date-time-formatter str))
 
 (defn- jatkuva-haku? [haku]
-  (string/starts-with? (:hakutapa-uri haku) "hakutapa_03#"))
+  (string/starts-with? (:hakutapa-uri haku) "hakutapa_03"))
 
 (defn- joustava-haku? [haku]
-  (string/starts-with? (:hakutapa-uri haku) "hakutapa_04#"))
+  (string/starts-with? (:hakutapa-uri haku) "hakutapa_04"))
 
 (defn- jatkuva-or-joustava-haku? [haku]
   (or
