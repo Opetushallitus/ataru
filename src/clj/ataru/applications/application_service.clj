@@ -34,7 +34,8 @@
     [ataru.cache.cache-service :as cache]
     [ataru.applications.question-util :as question-util]
     [cheshire.core :as json]
-    [clojure.set :as set])
+    [clojure.set :as set]
+    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -363,6 +364,12 @@
                {:ensisijainen-hakukohde [hakukohde-oid]}
                {:hakukohde [hakukohde-oid]}))))
 
+(defn- enrich-with-harkinnanvaraisuustieto
+  [tarjonta-service application]
+  (let [hakukohde-oids (map :hakukohdeOid (:hakutoiveet application))
+        hakukohteet    (tarjonta-service/get-hakukohteet tarjonta-service hakukohde-oids)]
+    (assoc-harkinnanvaraisuustieto hakukohteet application)))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
@@ -394,7 +401,8 @@
                                      job-runner
                                      liiteri-cas-client
                                      suoritus-service
-                                     form-by-id-cache]
+                                     form-by-id-cache
+                                     valintalaskentakoostepalvelu-service]
   ApplicationService
   (get-person
     [_ application]
@@ -634,13 +642,9 @@
                                  (map :oidHenkilo)
                                  distinct
                                  seq)
-            enrich-with-harkinnanvaraisuustieto (fn [application]
-                                                  (if with-harkinnanvaraisuus-tieto
-                                                    (assoc-harkinnanvaraisuustieto application)
-                                                    application))
             enriched-applications (->> applications
                                        (map (partial add-asiointikieli henkilot))
-                                       (map enrich-with-harkinnanvaraisuustieto))]
+                                       (cond->> with-harkinnanvaraisuus-tieto (map enrich-with-harkinnanvaraisuustieto)))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
@@ -680,18 +684,21 @@
           person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
           questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)
-          urheilija-amm-hakukohdes (->> (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
+          haun-hakukohteet (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
+          urheilija-amm-hakukohdes (->> haun-hakukohteet
                                         (filter (fn [hakukohde] (seq (set/intersection
                                                                   (:urheilijan-amm-groups questions)
                                                                   (set (:ryhmaliitokset hakukohde))))))
                                         (map :oid)
                                         distinct)]
-      (application-store/suoritusrekisteri-applications-toinenaste haku-oid hakukohde-oids
-                                                                   person-oids
-                                                                   modified-after
-                                                                   offset
-                                                                   questions
-                                                                   urheilija-amm-hakukohdes)))
+      (application-store/suoritusrekisteri-applications-toinenaste
+        haku-oid hakukohde-oids
+        person-oids
+        modified-after
+        offset
+        questions
+        urheilija-amm-hakukohdes
+        haun-hakukohteet)))
 
   (get-applications-paged
     [_ session params]
@@ -790,9 +797,8 @@
                                                                 sort
                                                                 filters-with-hakukohteet)
                                                               {:fetched-applications [] :filtered-applications []})
-                fetch-applications-content-fn               (fn [application-ids] (application-store/get-application-content-form-list application-ids))
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
-                                                              fetch-applications-content-fn
+                                                              (partial valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service)
                                                               (:filtered-applications fetched-and-filtered-applications)
                                                               filters-with-hakukohteet)]
             {:applications filtered-applications-by-harkinnanvaraisuus
@@ -879,4 +885,4 @@
           job-runner
           id)))))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil nil))

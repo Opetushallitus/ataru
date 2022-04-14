@@ -123,7 +123,8 @@
 
     :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader (component/using
                                                                               (koostepalvelu-service/map->HakukohdeHarkinnanvaraisuusCacheLoader {})
-                                                                              [:valintalaskentakoostepalvelu-cas-client])
+                                                                              [:valintalaskentakoostepalvelu-cas-client
+                                                                               :hakukohde-cache])
 
     :valintalaskentakoostepalvelu-service (component/using
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
@@ -225,7 +226,8 @@
                             :koodisto-cache
                             :job-runner
                             :suoritus-service
-                            :form-by-id-cache])
+                            :form-by-id-cache
+                            :valintalaskentakoostepalvelu-service])
 
     :session-store (create-session-store (db/get-datasource :db))
 

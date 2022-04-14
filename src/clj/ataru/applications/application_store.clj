@@ -947,17 +947,18 @@
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 (defn- unwrap-hakurekisteri-application-toinenaste
-  [questions urheilija-amm-hakukohdes {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
+  [questions urheilija-amm-hakukohdes haun-hakukohteet {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
 
   (try (let [answers     (answers-by-key (:answers content))
         foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
         form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
         sports-key (:urheilijan-amm-lisakysymys-key questions)
         interested-in-sports-amm? (-> answers sports-key :value)
+        get-hakukohde-fn (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
         hakukohteet (map (fn [oid]
                            {:oid oid
                             :harkinnanvaraisuus
-                            (get-harkinnanvaraisuus-reason-for-hakukohde answers oid)
+                            (get-harkinnanvaraisuus-reason-for-hakukohde answers (get-hakukohde-fn oid))
                             :terveys (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
                             :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key questions) oid) answers)))
                             :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
@@ -1043,7 +1044,7 @@
              {:offset (:oid a)}))))
 
 (defn suoritusrekisteri-applications-toinenaste
-  [haku-oid hakukohde-oids person-oids modified-after offset questions urheilija-amm-hakukohdes]
+  [haku-oid hakukohde-oids person-oids modified-after offset questions urheilija-amm-hakukohdes haun-hakukohteet]
    (let [as (->> (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                                           (queries/yesql-suoritusrekisteri-applications
                                             {:haku_oid       haku-oid
@@ -1059,7 +1060,7 @@
                                                                      .toOffsetDateTime)
                                              :offset         offset}
                                             {:connection connection}))
-                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes %))
+                 (map #(unwrap-hakurekisteri-application-toinenaste questions urheilija-amm-hakukohdes haun-hakukohteet %))
                  (remove nil?))]
      (merge {:applications as}
             (when-let [a (first (drop 999 as))]

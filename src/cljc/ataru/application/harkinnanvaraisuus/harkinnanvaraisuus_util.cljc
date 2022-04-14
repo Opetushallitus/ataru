@@ -29,10 +29,14 @@
       (:ataru-yks-mat-ai harkinnanvaraisuus-reasons))))
 
 (defn get-targeted-harkinnanvaraisuus-reason-for-hakukohde
-  [answers hakukohde-oid pick-value-fn]
-  (let [harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
+  [answers hakukohde pick-value-fn]
+  (let [hakukohde-oid (:oid hakukohde)
+        harkinnanvaraisuus-reason-key (keyword (str "harkinnanvaraisuus-reason_" hakukohde-oid))
         harkinnanvaraisuus-answer (pick-value-fn answers harkinnanvaraisuus-reason-key)]
     (cond
+      (not (:voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita? hakukohde))
+      (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
+
       (= "0" harkinnanvaraisuus-answer)
       (:ataru-oppimisvaikeudet harkinnanvaraisuus-reasons)
 
@@ -48,32 +52,47 @@
       :else
       (:none harkinnanvaraisuus-reasons))))
 
+(defn decide-reason
+  [common-reason targeted-reason]
+  (or
+    (when (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
+      targeted-reason)
+    common-reason
+    targeted-reason))
+
 (defn assoc-harkinnanvaraisuustieto
-  [tarjonta-application]
-  (let [answers     (keywordize-keys (:keyValues tarjonta-application))
-        hakukohteet (:hakutoiveet tarjonta-application)
-        pick-value-fn (fn [answers question]
-                        (question answers))
-        common-harkinnanvaraisuus (get-common-harkinnanvaraisuus-reason answers pick-value-fn)
-        assoc-harkinnanvaraisuus-fn (fn [hakukohde]
-                                        (assoc hakukohde
-                                          :harkinnanvaraisuus
-                                          (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers
-                                                                                                (:hakukohdeOid hakukohde)
-                                                                                                pick-value-fn)))]
-    (if common-harkinnanvaraisuus
-      (assoc tarjonta-application :hakutoiveet (map #(assoc % :harkinnanvaraisuus common-harkinnanvaraisuus) hakukohteet))
-      (assoc tarjonta-application :hakutoiveet (map assoc-harkinnanvaraisuus-fn hakukohteet)))))
+  [hakukohteet tarjonta-application]
+  (let [answers                       (keywordize-keys (:keyValues tarjonta-application))
+        pick-value-fn                 (fn [answers question]
+                                        (question answers))
+        common-reason                 (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
+    (letfn [(get-hakukohde-for-hakutoive
+              [hakutoive]
+              (let [hakukohde-oid (:hakukohdeOid hakutoive)]
+                (->> hakukohteet
+                     (filter #(= hakukohde-oid (:oid %)))
+                     first)))
+            (get-targeted-reason
+              [hakutoive]
+              (let [hakukohde (get-hakukohde-for-hakutoive hakutoive)]
+                (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde pick-value-fn)))
+            (assoc-harkinnanvaraisuustieto
+              [hakutoive]
+              (let [targeted-reason (get-targeted-reason hakutoive)
+                    reason          (decide-reason common-reason targeted-reason)]
+                (assoc hakutoive :harkinnanvaraisuus reason)))]
+      (update tarjonta-application :hakutoiveet #(map assoc-harkinnanvaraisuustieto %)))))
 
 (defn get-harkinnanvaraisuus-reason-for-hakukohde
-  [answers hakukohde-oid]
-  (let [answers (keywordize-keys answers)
-        pick-value-fn (fn [answers question]
-                        (:value (question answers)))]
-    (or (get-common-harkinnanvaraisuus-reason answers pick-value-fn)
-        (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid pick-value-fn))))
+  [answers hakukohde]
+  (let [answers         (keywordize-keys answers)
+        pick-value-fn   (fn [answers question]
+                          (:value (question answers)))
+        targeted-reason (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde pick-value-fn)
+        common-reason   (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
+    (decide-reason common-reason targeted-reason)))
 
 (defn assoc-harkinnanvaraisuustieto-to-hakukohde
-  [answers hakukohde-oid]
-  {:hakukohdeOid hakukohde-oid
-   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde-oid)})
+  [answers hakukohde]
+  {:hakukohdeOid (:oid hakukohde)
+   :harkinnanvaraisuudenSyy (get-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde)})
