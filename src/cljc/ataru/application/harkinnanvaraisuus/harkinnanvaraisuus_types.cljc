@@ -29,3 +29,11 @@
 (def pohjakoulutus-harkinnanvarainen-types
   (concat harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
           [sure-ei-paattotodistusta ataru-ulkomailla-opiskelu ataru-ei-paattotodistusta]))
+
+(defn harkinnanvarainen?
+  [reason]
+  (and
+    (some? reason)
+    (not (#{(:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
+            (:none harkinnanvaraisuus-reasons)}
+          reason))))

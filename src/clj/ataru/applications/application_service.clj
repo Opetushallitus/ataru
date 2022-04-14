@@ -34,7 +34,8 @@
     [ataru.cache.cache-service :as cache]
     [ataru.applications.question-util :as question-util]
     [cheshire.core :as json]
-    [clojure.set :as set])
+    [clojure.set :as set]
+    [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
   (:import
     java.io.ByteArrayInputStream
     java.security.SecureRandom
@@ -399,7 +400,8 @@
                                      job-runner
                                      liiteri-cas-client
                                      suoritus-service
-                                     form-by-id-cache]
+                                     form-by-id-cache
+                                     valintalaskentakoostepalvelu-service]
   ApplicationService
   (get-person
     [_ application]
@@ -794,9 +796,8 @@
                                                                 sort
                                                                 filters-with-hakukohteet)
                                                               {:fetched-applications [] :filtered-applications []})
-                fetch-applications-content-fn               (fn [application-ids] (application-store/get-application-content-form-list application-ids))
                 filtered-applications-by-harkinnanvaraisuus (filter-applications-by-harkinnanvaraisuus
-                                                              fetch-applications-content-fn
+                                                              (partial valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service)
                                                               (:filtered-applications fetched-and-filtered-applications)
                                                               filters-with-hakukohteet)]
             {:applications filtered-applications-by-harkinnanvaraisuus
@@ -870,4 +871,4 @@
           job-runner
           id)))))
 
-(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil))
+(defn new-application-service [] (->CommonApplicationService nil nil nil nil nil nil nil nil nil nil nil nil))

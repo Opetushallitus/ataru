@@ -2,7 +2,8 @@
   (:require [ataru.cas.client :as cas]
             [ataru.config.url-helper :as url]
             [cheshire.core :as json]
-            [clojure.core.match :refer [match]]))
+            [clojure.core.match :refer [match]]
+            [schema.core :as s]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))
@@ -22,7 +23,13 @@
                                    "response body: "
                                    (:body result))))))
 
-(defn hakemusten-harkinnanvaraisuus-valintalaskennasta
+(s/defschema HakemuksenHarkinnanvaraisuus
+  {:hakemusOid s/Str
+   :henkiloOid s/Str
+   :hakutoiveet [{:hakukohdeOid s/Str
+                  :harkinnanvaraisuudenSyy s/Str}]})
+
+(s/defn hakemusten-harkinnanvaraisuus-valintalaskennasta :- [HakemuksenHarkinnanvaraisuus]
   [valintalaskentakoostepalvelu-cas-client hakemukset-with-harkinnanvaraisuus]
   (let [url    (url/resolve-url :valintalaskentakoostepalvelu-service.hakemusten-harkinnanvaraisuus)
         result (cas/cas-authenticated-post

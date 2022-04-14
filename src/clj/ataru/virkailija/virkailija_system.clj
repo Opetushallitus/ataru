@@ -226,7 +226,8 @@
                             :koodisto-cache
                             :job-runner
                             :suoritus-service
-                            :form-by-id-cache])
+                            :form-by-id-cache
+                            :valintalaskentakoostepalvelu-service])
 
     :session-store (create-session-store (db/get-datasource :db))
 
