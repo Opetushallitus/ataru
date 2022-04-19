@@ -7,8 +7,6 @@
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
             [ataru.virkailija.application.handlers]
-            [ataru.virkailija.application.tutu-payment.tutu-payment-handlers]
-            [ataru.virkailija.application.tutu-payment.tutu-payment-subs]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
