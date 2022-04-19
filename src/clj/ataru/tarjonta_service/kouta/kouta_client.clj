@@ -124,7 +124,8 @@
      :liitteiden-toimitusaika                                     (some-> hakukohde
                                                                     :liitteidenToimitusaika
                                                                     (hakuaika/basic-date-time-str->date-time)
-                                                                    (hakuaika/date-time->localized-date-time))}
+                                                                    (hakuaika/date-time->localized-date-time))
+     :voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?     (boolean (:voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita hakukohde))}
    (if (:kaytetaanHaunAikataulua hakukohde)
      {:hakuaika-id "kouta-hakuaika-id"}
      {:hakuajat (mapv (fn [hakuaika]
