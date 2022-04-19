@@ -641,9 +641,11 @@
                                  (map :oidHenkilo)
                                  distinct
                                  seq)
-            enriched-applications (->> applications
-                                       (map (partial add-asiointikieli henkilot))
-                                       (cond->> with-harkinnanvaraisuus-tieto (map enrich-with-harkinnanvaraisuustieto)))]
+            enriched-applications (as-> applications as
+                                        (map (partial add-asiointikieli henkilot) as)
+                                        (if with-harkinnanvaraisuus-tieto
+                                          (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service) as)
+                                          as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
