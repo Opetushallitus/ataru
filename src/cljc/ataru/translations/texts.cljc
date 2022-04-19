@@ -1748,6 +1748,9 @@
    :person-completed-education                               {:fi "Henkilön suoritukset"
                                                               :sv "Personens prestationer"
                                                               :en "Applicant's exams in Finland"}
+   :completed-education                                       {:fi "Suoritukset"
+                                                              :sv "Prestationer"
+                                                              :en "Exams"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}

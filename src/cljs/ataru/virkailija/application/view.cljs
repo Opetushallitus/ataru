@@ -15,9 +15,10 @@
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-view :as mass-information-request-view]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-view :as mass-review]
             [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+            [ataru.virkailija.application.view.application-heading :refer [application-heading]]
             [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.application-review :as application-review]))
+            [ataru.virkailija.application.application-review-view :as application-review]))
 
 (defn excel-download-link
   [_ _ _]
@@ -196,14 +197,24 @@
         (when (< element-offset viewport-offset)
           (.click end-of-list-element))))))
 
+(defn application-tab []
+  (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
+    (fn []
+      [:<>
+       (when @toisen-asteen-yhteishaku?
+         [:div.application__tabs
+          [:span @(subscribe [:editor/virkailija-translation :application])]
+          [:span @(subscribe [:editor/virkailija-translation :completed-education])]])
+       [application-review/application-review-area]])))
+
 (defn application []
-  (let [search-control-all-page (subscribe [:application/search-control-all-page-view?])
-        loaded-count            (subscribe [:application/loaded-applications-count])
-        applications            (subscribe [:application/applications-to-render])
-        has-more?               (subscribe [:application/has-more-applications?])
-        loading?                (subscribe [:application/fetching-applications?])
-        user-allowed-fetching?  (subscribe [:application/user-allowed-fetching?])
-        expanded                (subscribe [:state-query [:application :application-list-expanded?]])]
+  (let [search-control-all-page   (subscribe [:application/search-control-all-page-view?])
+        loaded-count              (subscribe [:application/loaded-applications-count])
+        applications              (subscribe [:application/applications-to-render])
+        has-more?                 (subscribe [:application/has-more-applications?])
+        loading?                  (subscribe [:application/fetching-applications?])
+        user-allowed-fetching?    (subscribe [:application/user-allowed-fetching?])
+        expanded                  (subscribe [:state-query [:application :application-list-expanded?]])]
     (fn []
       [:div
        [:div.application-handling__overview
@@ -228,7 +239,9 @@
                [:div#application-handling__end-of-list-element
                 {:on-click #(dispatch [:application/show-more-applications (count @applications)])}
                 [:i.application-handling__end-of-list-element-spinner.zmdi.zmdi-spinner.spin]]))])]
-       (when (not @search-control-all-page)
+       (when (and (not @search-control-all-page) (not @expanded))
          [:div.application-handling__review-area-container
-          [application-review/application-review-area]])])))
+          [:div.application-handling__detail-container
+           [application-heading]
+           [application-tab]]])])))
 
