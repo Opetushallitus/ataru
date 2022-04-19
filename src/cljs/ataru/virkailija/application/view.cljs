@@ -198,14 +198,26 @@
           (.click end-of-list-element))))))
 
 (defn application-tab []
-  (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
+  (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])
+        accomplishments-tab-selected? (subscribe [:application/tab-accomplishments-selected?])]
     (fn []
       [:<>
        (when @toisen-asteen-yhteishaku?
          [:div.application__tabs
-          [:span @(subscribe [:editor/virkailija-translation :application])]
-          [:span @(subscribe [:editor/virkailija-translation :completed-education])]])
-       [application-review/application-review-area]])))
+          [:button
+           {:on-click #(dispatch [:application/select-application-tab "application"])
+            :disabled (not @accomplishments-tab-selected?)}
+           @(subscribe [:editor/virkailija-translation :application])]
+          [:button
+           {:on-click #(dispatch [:application/select-application-tab "accomplishments"])
+            :disabled @accomplishments-tab-selected?}
+           @(subscribe [:editor/virkailija-translation :completed-education])]])
+       (cond
+         (or (not @toisen-asteen-yhteishaku?) (not @accomplishments-tab-selected?))
+         [application-review/application-review-area]
+
+         @accomplishments-tab-selected?
+         [:span "Suoritukset haahaa"])])))
 
 (defn application []
   (let [search-control-all-page   (subscribe [:application/search-control-all-page-view?])
