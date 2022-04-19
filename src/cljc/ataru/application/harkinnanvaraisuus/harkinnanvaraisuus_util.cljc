@@ -54,10 +54,14 @@
 
 (defn decide-reason
   [common-reason targeted-reason]
-  (or
-    (when (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
-      targeted-reason)
+  (cond
+    (= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons) targeted-reason)
+    targeted-reason
+
+    (not (nil? common-reason))
     common-reason
+
+    :else
     targeted-reason))
 
 (defn assoc-harkinnanvaraisuustieto
