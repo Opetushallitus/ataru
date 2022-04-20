@@ -764,7 +764,19 @@
           (response/ok result)
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key
-                                              " käsittely ei ole sallittu")}))))
+                                              " käsittely ei ole sallittu")})))
+
+      (api/POST "/mass-delete" {session :session}
+        :body [body {:application-keys [s/Str]}]
+        :summary "Delete all application data by list of application keys"
+        (if-let [result (application-service/mass-delete-application-data
+                          application-service
+                          session
+                          (:application-keys body))]
+          (response/ok {:not-deleted-keys result})
+          (response/unauthorized {:error (str "Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " poisto ei ole sallittu")}))))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}

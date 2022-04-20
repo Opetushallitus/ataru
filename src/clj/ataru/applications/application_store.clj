@@ -1474,3 +1474,40 @@
 (defn get-application-person-oids-for-haku
   [haku-oid]
   (map :person_oid (exec-db :db queries/yesql-get-application-person-oids-for-haku {:haku haku-oid})))
+
+(defn mass-delete-application-data
+  [session application-keys audit-logger]
+  (log/info "Mass deleting" (count application-keys) "applications" application-keys)
+  (let [not-deleted-keys (conj [] (doall
+                                     (map #(if
+                                             (or
+                                               (> (:count (first (exec-db :db queries/yesql-get-application-events-processed-count-by-application-key {:key %}))) 0)
+                                               (= (:state (get-application-review %)) "inactivated"))
+                                             (do
+                                               (log/info "Deleting application data for application key:" %)
+                                               (try
+                                                 (exec-db :db queries/yesql-delete-multi-answers-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-multi-answer-values-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-information-requests-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-group-answers-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-group-answer-values-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-group-answer-groups-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-field-deadlines-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-secrets-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-review-notes-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-reviews-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-hakukohde-reviews-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-hakukohde-attachment-reviews-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-events-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-answers-by-application-key! {:key %})
+                                                 (exec-db :db queries/yesql-delete-application-by-application-key! {:key %})
+                                                 (audit-log/log audit-logger
+                                                                {:new {:application-key %}
+                                                                 :id        {:applicationOid %}
+                                                                 :session   session
+                                                                 :operation audit-log/operation-delete})
+                                                 (catch Exception e (log/error "Delete failed for application-key:" % "," e))))
+                                             (do
+                                               (log/warn "Application" % "status is not processed or inactivated or application is not found - deletion skipped.")
+                                               %)) application-keys)))]
+    (remove nil? (vec (flatten not-deleted-keys)))))
