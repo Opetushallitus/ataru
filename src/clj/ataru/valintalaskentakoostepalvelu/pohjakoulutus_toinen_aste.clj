@@ -1,4 +1,5 @@
-(ns ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste)
+(ns ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste
+  (:require [clojure.string :as string]))
 
 (def lisapistekoulutus-mapping
   {:LISAKOULUTUS_KYMPPI             :lisapistekoulutus-perusopetuksenlisaopetus
@@ -24,7 +25,7 @@
 (defn pohjakoulutus-for-application
   [get-koodi-label suoritus]
   (let [pohjakoulutus        (:POHJAKOULUTUS suoritus)
-        opetuskieli          (:perusopetuksen_kieli suoritus)
+        opetuskieli          (string/upper-case (:perusopetuksen_kieli suoritus))
         suoritusvuosi        (:PK_SUORITUSVUOSI suoritus)
         lisapistekoulutukset (get-lisapistekoulutukset suoritus)]
     (cond-> {}
