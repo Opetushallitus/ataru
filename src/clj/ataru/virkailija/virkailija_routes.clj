@@ -866,7 +866,7 @@
                          (filter #(= koodi-value (:value %)))
                          first
                          :label))]
-            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
+            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)] ;kissa get pohjakoulutus
               (response/ok
                 (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
           (response/unauthorized)))
@@ -1400,6 +1400,8 @@
                                 session
                                 person-service
                                 tarjonta-service
+                                valintalaskentakoostepalvelu-service
+                                suoritus-service
                                 fromDate
                                 limit
                                 offset
@@ -1415,6 +1417,8 @@
                                 session
                                 person-service
                                 tarjonta-service
+                                valintalaskentakoostepalvelu-service
+                                suoritus-service
                                 nil
                                 nil
                                 nil
