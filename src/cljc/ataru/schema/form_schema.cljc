@@ -867,4 +867,5 @@
    (s/optional-key :opetuskieli)          {:value s/Str
                                            :label localized-schema/LocalizedString}
    (s/optional-key :suoritusvuosi)        s/Str
-   (s/optional-key :lisapistekoulutukset) [s/Keyword]})
+   (s/optional-key :lisapistekoulutukset) [s/Keyword]
+   s/Any                                  s/Any})
