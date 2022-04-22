@@ -2,7 +2,6 @@
   (:require
    [ataru.cache.cache-service :as cache]
    [ataru.cas.client :as cas]
-   [ataru.config.core :refer [config]]
    [ataru.config.url-helper :refer [resolve-url]]
    [ataru.person-service.person-schema :as person-schema]
    [cheshire.core :as json]
@@ -24,7 +23,7 @@
    person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
                 cas-client
-                (resolve-url :oppijanumerorekisteri-service.person-create) person nil)]
+                (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
       {:status 201 :body body}
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
@@ -48,7 +47,7 @@
         results    (map
                      #(cas/cas-authenticated-post
                         cas-client
-                        (resolve-url :oppijanumerorekisteri-service.get-persons) % nil)
+                        (resolve-url :oppijanumerorekisteri-service.get-persons) %)
                      partitions)]
     (reduce
       (fn [acc result]
@@ -99,8 +98,7 @@
   (let [result (cas/cas-authenticated-post
                 cas-client
                 (resolve-url :oppijanumerorekisteri-service.duplicate-henkilos)
-                {:henkiloOids oids}
-                nil)]
+                {:henkiloOids oids})]
     (match result
       {:status 200 :body body}
       (parse-duplicate-henkilos (json/parse-string body true) oids)

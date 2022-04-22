@@ -27,7 +27,7 @@
         (should= {:transition {:id :final}} result))))
 
   (it "should not call finalize API without any attachments"
-    (with-redefs [cas/cas-authenticated-post        (fn [_ _ _ _]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ _ _]
                                                       (should-fail))
                   application-store/get-application (fn [application-id]
                                                       (should= application-id 3)
