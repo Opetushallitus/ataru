@@ -1502,12 +1502,13 @@
                                                  (exec-db :db queries/yesql-delete-answers-by-application-key! {:key %})
                                                  (exec-db :db queries/yesql-delete-application-by-application-key! {:key %})
                                                  (audit-log/log audit-logger
-                                                                {:new {:application-key %}
+                                                                {:new       {:application-key %}
                                                                  :id        {:applicationOid %}
                                                                  :session   session
                                                                  :operation audit-log/operation-delete})
-                                                 (catch Exception e (log/error "Delete failed for application-key:" % "," e))))
+                                                 (catch Exception e (log/error e "Delete failed for application-key:" % ", Exception:" e))))
                                              (do
                                                (log/warn "Application" % "status is not processed or inactivated or application is not found - deletion skipped.")
-                                               %)) application-keys)))]
+                                               %))
+                                          application-keys)))]
     (remove nil? (vec (flatten not-deleted-keys)))))
