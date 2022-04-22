@@ -75,7 +75,6 @@
                                                              first
                                                              :children
                                                              first)]
-    (println "Get questions... ")
     {:tutkintovuosi-keys tutkintovuosi-keys
      :tutkintokieli-keys tutkintokieli-keys
      :sora-terveys-key sora-terveys-question
