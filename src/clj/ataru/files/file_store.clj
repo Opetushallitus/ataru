@@ -18,8 +18,7 @@
     (let [resp (cas/cas-authenticated-post
                  cas-client
                  (resolve-url :liiteri.metadata)
-                 {:keys file-keys}
-                 nil)]
+                 {:keys file-keys})]
       (if (= (:status resp) 200)
         (vec (json/parse-string (:body resp) true))
         (throw (new RuntimeException
