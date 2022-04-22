@@ -860,7 +860,7 @@
         :summary "Returns pohjakoulutus for application's applicant"
         :return ataru-schema/PohjakoulutusResponse
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications :edit-applications])
           (letfn [(get-koodi-label [koodi-uri version koodi-value]
                     (->> (koodisto/get-koodisto-options koodisto-cache koodi-uri version false)
                          (filter #(= koodi-value (:value %)))
@@ -876,7 +876,7 @@
         :return [ataru-schema/HakutoiveHarkinnanvaraisuudella]
         :summary "Tarkistaa valintalaskentakoostepalvelusta annetun hakemuksen hakukohteiden harkinnanvaraisuuden"
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
-              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications])
+              organization-service tarjonta-service suoritus-service person-service session [application-key] [:view-applications :edit-applications])
           (let [hakemukset-harkinnanvaraisuudella (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                      valintalaskentakoostepalvelu-service
                                                      [application-key])
