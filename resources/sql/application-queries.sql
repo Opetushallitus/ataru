@@ -1109,3 +1109,7 @@ WHERE application_id IN (SELECT id FROM applications WHERE key = :key);
 --name: yesql-delete-application-by-application-key!
 DELETE FROM applications a
 WHERE a.key = :key;
+
+-- name: yesql-add-application-delete-history!
+INSERT INTO application_delete_history (application_key, deleted_by, delete_ordered_by, reason_of_delete)
+VALUES (:application_key, :deleted_by, :delete_ordered_by, :reason_of_delete);

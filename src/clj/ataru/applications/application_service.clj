@@ -388,7 +388,7 @@
   (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
-  (mass-delete-application-data [this session application-keys]))
+  (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete]))
 
 
 (defrecord CommonApplicationService [organization-service
@@ -825,7 +825,7 @@
     (application-store/get-applications-persons-and-hakukohteet haku))
 
   (mass-delete-application-data
-    [_ session application-keys]
+    [_ session application-keys delete-ordered-by reason-of-delete]
     (when (aac/applications-access-authorized?
             organization-service
             tarjonta-service
@@ -835,6 +835,8 @@
       (application-store/mass-delete-application-data
         session
         application-keys
+        delete-ordered-by
+        reason-of-delete
         audit-logger))))
 
 (s/defn ^:always-validate query-applications-paged
