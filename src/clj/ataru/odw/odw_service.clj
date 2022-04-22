@@ -7,7 +7,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
             [taoensso.timbre :as log]
-            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]))
+            [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
+            [ataru.suoritus.suoritus-service :as suoritus-service]))
 
 (defn- get-hakukelpoisuus
   [application hakukohde-oid]
@@ -77,7 +78,7 @@
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData) ;ehkä joku fallback nykyiseen vuoteen jos ei löydy, tms.
-                                               luokkatieto (ataru.suoritus.suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) ["9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI"])
+                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) ["9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI"])
                                                lahtoluokka (:luokka luokkatieto)
                                                luokkataso (:luokkataso luokkatieto)
                                                lahtokoulu-oid (:oppilaitos-oid luokkatieto)
