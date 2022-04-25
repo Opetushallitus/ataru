@@ -18,7 +18,8 @@
             [ataru.virkailija.application.view.application-heading :refer [application-heading]]
             [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.application-review-view :as application-review]))
+            [ataru.virkailija.application.application-review-view :as application-review]
+            [ataru.virkailija.application.grades.grades-view :refer [grades]]))
 
 (defn excel-download-link
   [_ _ _]
@@ -197,27 +198,27 @@
         (when (< element-offset viewport-offset)
           (.click end-of-list-element))))))
 
-(defn application-tab []
+(defn- application-tab []
   (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])
-        accomplishments-tab-selected? (subscribe [:application/tab-accomplishments-selected?])]
+        grades-tab-selected? (subscribe [:application/tab-accomplishments-selected?])]
     (fn []
       [:<>
        (when @toisen-asteen-yhteishaku?
          [:div.application__tabs
           [:button
            {:on-click #(dispatch [:application/select-application-tab "application"])
-            :disabled (not @accomplishments-tab-selected?)}
+            :disabled (not @grades-tab-selected?)}
            @(subscribe [:editor/virkailija-translation :application])]
           [:button
            {:on-click #(dispatch [:application/select-application-tab "accomplishments"])
-            :disabled @accomplishments-tab-selected?}
-           @(subscribe [:editor/virkailija-translation :completed-education])]])
+            :disabled @grades-tab-selected?}
+           @(subscribe [:editor/virkailija-translation :grades])]])
        (cond
-         (or (not @toisen-asteen-yhteishaku?) (not @accomplishments-tab-selected?))
+         (or (not @toisen-asteen-yhteishaku?) (not @grades-tab-selected?))
          [application-review/application-review-area]
 
-         @accomplishments-tab-selected?
-         [:span "Suoritukset haahaa"])])))
+         @grades-tab-selected?
+         [grades])])))
 
 (defn application []
   (let [search-control-all-page   (subscribe [:application/search-control-all-page-view?])

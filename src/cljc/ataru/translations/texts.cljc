@@ -1748,9 +1748,12 @@
    :person-completed-education                               {:fi "Henkilön suoritukset"
                                                               :sv "Personens prestationer"
                                                               :en "Applicant's exams in Finland"}
-   :completed-education                                       {:fi "Suoritukset"
-                                                              :sv "Prestationer"
-                                                              :en "Exams"}
+   :grades                                                   {:fi "Arvosanat"
+                                                              :sv "SV: Arvosanat"
+                                                              :en "Grades"}
+   :grades-header                                            {:fi "Valinnoissa käytettävät arvosanat"
+                                                              :sv "SV: Valinnoissa käytettävät arvosanat"
+                                                              :en "EN: Valinnoissa käytettävät arvosanat"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}
