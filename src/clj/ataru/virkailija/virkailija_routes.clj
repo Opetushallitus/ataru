@@ -1445,6 +1445,7 @@
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
           (match (application-service/get-applications-for-valintalaskenta
                    application-service
+                   (:form-by-haku-oid-str-cache dependencies)
                    session
                    hakukohdeOid
                    (not-empty applicationOids)
