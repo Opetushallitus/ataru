@@ -27,16 +27,16 @@
     (for [lisapistekoulutus lisapistekoulutukset]
       [:li @(subscribe [:editor/virkailija-translation (keyword lisapistekoulutus)])])))
 
-(defn- loading-indicator
+(defn loading-indicator
   []
   [:div.pohjakoulutus__loading-indicator
    [:i.zmdi.zmdi-spinner.spin]])
 
-(defn- not-found
+(defn not-found
   []
   [:p.error--not-found @(subscribe [:editor/virkailija-translation :pohjakoulutus-not-found])])
 
-(defn- error-loading
+(defn error-loading
   [translation-key]
   [:p.error--loading @(subscribe [:editor/virkailija-translation translation-key])])
 
