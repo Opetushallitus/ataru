@@ -2,18 +2,18 @@
   (:require [re-frame.core :refer [subscribe]]))
 
 (defn grades []
-  (let [pohjakoulutus (subscribe [:application/pohjakoulutus-for-valinnat])
+  (let [grades (subscribe [:application/grades])
         lang (subscribe [:editor/virkailija-lang])]
     (fn []
       [:div.grades
        [:div.grades__left-panel
         [:h2 @(subscribe [:editor/virkailija-translation :grades-header])]]
        [:div.grades__right-panel
-       (for [arvosana  (:arvosanat @pohjakoulutus)]
+       (for [grade @grades]
          [:div.grade
-          [:span.grade__subject (@lang (:label arvosana))]
+          [:span.grade__subject (@lang (:label grade))]
           [:span " "]
-          [:span.grade__value (:value arvosana)]
-          (when (:lang arvosana)
-            [:span.grade__lang (@lang (:lang arvosana))])]
+          [:span.grade__value (:value grade)]
+          (when (:lang grade)
+            [:span.grade__lang (@lang (:lang grade))])]
          )]])))

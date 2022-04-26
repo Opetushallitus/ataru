@@ -36,9 +36,9 @@
                  :label (get-koodi-label "oppiaineetyleissivistava" 1 (last (str/split (str aine) #"PK_")))}))
          (filter #(not (nil? (:label %))))
          (map (fn [aine]
-                {:value (get suoritus (:key aine))
-                 :label (:label aine)
-                 :lang (get-oppiaine-lang aine)})))))
+                (merge aine
+                       {:value (get suoritus (:key aine))
+                        :lang (get-oppiaine-lang aine)}))))))
 
 (defn pohjakoulutus-for-application
   [get-koodi-label suoritus]
