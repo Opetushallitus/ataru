@@ -370,6 +370,15 @@
         hakukohteet    (tarjonta-service/get-hakukohteet tarjonta-service hakukohde-oids)]
     (assoc-harkinnanvaraisuustieto hakukohteet application)))
 
+(defn- enrich-with-toinen-aste-data
+  [tarjonta-service form-by-haku-oid-str-cache applications]
+  (let [haku-oid (first (set (map :hakuOid applications))) ;fixme, either make it work for multiple or handle it as a bad request when params result in hakemukses from different hakus
+        form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
+        questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)]
+    (->> applications
+      (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service))
+      (map (partial question-util/assoc-deduced-vakio-answers-for-toinen-aste-application questions)))))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
@@ -634,9 +643,6 @@
                                  (map :personOid)
                                  distinct
                                  (person-service/get-persons person-service))
-            haku-oid (first (set (map :hakuOid applications))) ;fixme, either make it work for multiple or handle it as a bad request when params result in hakemukses from different hakus
-            form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
-            questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)
             yksiloimattomat (->> henkilot
                                  vals
                                  (remove #(or (:yksiloity %)
@@ -647,9 +653,8 @@
             enriched-applications (as-> applications as
                                         (map (partial add-asiointikieli henkilot) as)
                                         (if with-harkinnanvaraisuus-tieto
-                                          (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service) as)
-                                          as)
-                                        (map (partial question-util/assoc-deduced-vakio-answers-for-toinen-aste-application questions) as))]
+                                          (enrich-with-toinen-aste-data tarjonta-service form-by-haku-oid-str-cache as)
+                                          as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
