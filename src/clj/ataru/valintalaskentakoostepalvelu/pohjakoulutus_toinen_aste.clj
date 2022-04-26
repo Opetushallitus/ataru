@@ -9,6 +9,7 @@
    :LISAKOULUTUS_OPISTOVUOSI        :lisapistekoulutus-opistovuosi})
 
 (def oppiaine-lang-postix "_OPPIAINE")
+(def oppiaine-valinnainen-postfix "_VAL")
 
 (defn- suoritus-value-true?
   [suoritus key]
@@ -24,6 +25,15 @@
     nil
     lisapistekoulutus-mapping))
 
+(defn- get-valinnaiset-arvosanat
+  [suoritus aine-key]
+  (->> (keys suoritus)
+       (map name)
+       (filter #(str/includes? % (str (name aine-key) "_VAL")))
+       (sort)
+       (map #(get suoritus (keyword %))))
+  )
+
 (defn- get-arvosanat
   [get-koodi-label suoritus]
   (letfn [(get-oppiaine-lang [aine]
@@ -38,7 +48,8 @@
          (map (fn [aine]
                 (merge aine
                        {:value (get suoritus (:key aine))
-                        :lang (get-oppiaine-lang aine)}))))))
+                        :lang (get-oppiaine-lang aine)
+                        :valinnaiset (get-valinnaiset-arvosanat suoritus (:key aine))}))))))
 
 (defn pohjakoulutus-for-application
   [get-koodi-label suoritus]

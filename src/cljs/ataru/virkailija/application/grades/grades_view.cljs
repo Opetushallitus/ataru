@@ -12,8 +12,10 @@
        (for [grade @grades]
          [:div.grade
           [:span.grade__subject (@lang (:label grade))]
-          [:span " "]
-          [:span.grade__value (:value grade)]
+          [:span.grade__value (:value grade)
+          (for [valinnainen (:valinnaiset grade)]
+            [:span.grade__value--valinnainen (str "(" valinnainen ")")])
+           ]
           (when (:lang grade)
             [:span.grade__lang (@lang (:lang grade))])]
          )]])))
