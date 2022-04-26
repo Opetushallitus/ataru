@@ -55,7 +55,7 @@
     (let [application-key (-> db :application :selected-key)]
       (get-in db [:application :yksilollistetty-matikka-aikka-by-application-key application-key]))))
 
-(def grade-sort ["PK_AI" "PK_A1" "PK_A12" "PK_A2" "PK_A22"
+(def grade-order ["PK_AI" "PK_A1" "PK_A12" "PK_A2" "PK_A22"
                  "PK_B1" "PK_B2" "PK_B22" "PK_B23"
                  "PK_MA" "PK_BI" "PK_GE" "PK_FY" "PK_KE"
                  "PK_TE" "PK_KT" "PK_HI" "PK_YH" "PK_MU"
@@ -68,6 +68,6 @@
   (fn [[pohjakoulutus]]
     (let [grades (:arvosanat pohjakoulutus)
           grade-comporator (fn [grade-a grade-b]
-                             (< (.indexOf grade-sort (:key grade-a))
-                                (.indexOf grade-sort (:key grade-b))))]
+                             (< (.indexOf grade-order (:key grade-a))
+                                (.indexOf grade-order (:key grade-b))))]
       (sort grade-comporator grades))))
