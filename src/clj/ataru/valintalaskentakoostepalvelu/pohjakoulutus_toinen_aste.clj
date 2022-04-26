@@ -29,7 +29,7 @@
   [suoritus aine-key]
   (->> (keys suoritus)
        (map name)
-       (filter #(str/includes? % (str (name aine-key) "_VAL")))
+       (filter #(str/includes? % (str (name aine-key) oppiaine-valinnainen-postfix)))
        (sort)
        (map #(get suoritus (keyword %))))
   )
@@ -58,7 +58,6 @@
         suoritusvuosi        (:PK_SUORITUSVUOSI suoritus)
         lisapistekoulutukset (get-lisapistekoulutukset suoritus)
         arvosanat            (get-arvosanat get-koodi-label suoritus)]
-    (prn arvosanat)
     (cond-> {}
       pohjakoulutus (assoc :pohjakoulutus {:value pohjakoulutus
                                            :label (get-koodi-label "2asteenpohjakoulutus2021" 1 pohjakoulutus)})

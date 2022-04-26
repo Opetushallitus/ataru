@@ -19,7 +19,7 @@
             [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]
             [ataru.virkailija.application.application-review-view :as application-review]
-            [ataru.virkailija.application.grades.grades-view :refer [grades]]))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.grades-view :refer [grades]]))
 
 (defn excel-download-link
   [_ _ _]
