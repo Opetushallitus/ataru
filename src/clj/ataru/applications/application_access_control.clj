@@ -306,14 +306,14 @@
    (constantly nil)
    #(application-store/onr-applications person-oid)))
 
-(defn get-applications-for-odw [organization-service session person-service tarjonta-service from-date limit offset application-key]
+(defn get-applications-for-odw [organization-service session person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset application-key]
   (session-orgs/run-org-authorized
     session
     organization-service
     [:view-applications :edit-applications]
     (constantly nil)
     (constantly nil)
-    #(odw-service/get-applications-for-odw person-service tarjonta-service from-date limit offset application-key)))
+    #(odw-service/get-applications-for-odw person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset application-key)))
 
 (defn get-applications-for-tilastokeskus [organization-service session tarjonta-service haku-oid hakukohde-oid]
   (session-orgs/run-org-authorized
