@@ -8,7 +8,7 @@
    :LISAKOULUTUS_KANSANOPISTO       :lisapistekoulutus-kansanopisto
    :LISAKOULUTUS_OPISTOVUOSI        :lisapistekoulutus-opistovuosi})
 
-(def oppiaine-lang-postix "_OPPIAINE")
+(def oppiaine-lang-postfix "_OPPIAINE")
 (def oppiaine-valinnainen-postfix "_VAL")
 
 (defn- suoritus-value-true?
@@ -37,7 +37,7 @@
 (defn- get-arvosanat
   [get-koodi-label suoritus]
   (letfn [(get-oppiaine-lang [aine]
-            (let [lang-key (keyword (str (name (:key aine)) oppiaine-lang-postix))]
+            (let [lang-key (keyword (str (name (:key aine)) oppiaine-lang-postfix))]
               (get-koodi-label "kieli" 1 (get suoritus lang-key))))]
     (->> (keys suoritus)
          (filter #(string/includes? (str %) "PK_"))
