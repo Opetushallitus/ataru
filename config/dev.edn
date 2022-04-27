@@ -26,6 +26,7 @@
                                                            :path               "/"
                                                            :timeout-seconds    10}}
  :application-key-masking   {:secret-key "u2gxnoyCiV87s+CsOEnGnw=="}
+ :application-delete-key    {:secret-key "vT6+TMbTwsJx5J&T"}
  :yksiloimattomat {:allow false}
  :cache           {:type :redis}
  :redis           {:uri "redis://localhost:6380"}

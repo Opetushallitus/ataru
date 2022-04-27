@@ -24,6 +24,7 @@
                                                            :path               "{{ataru_tutkintojen_tunnustaminen_ftp_path}}"
                                                            :timeout-seconds    {{ataru_tutkintojen_tunnustaminen_ftp_timeout_seconds | default('300')}}}}
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
+ :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}

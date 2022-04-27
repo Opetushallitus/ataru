@@ -764,7 +764,29 @@
           (response/ok result)
           (response/unauthorized {:error (str "Hakemuksen "
                                               application-key
-                                              " käsittely ei ole sallittu")}))))
+                                              " käsittely ei ole sallittu")})))
+
+      (api/POST "/mass-delete" {session :session}
+        :query-params [ataru-delete-secret :- s/Str
+                       delete-ordered-by :- s/Str
+                       reason-of-delete :- s/Str]
+        :body [body {:application-keys [s/Str]}]
+        :summary "Delete all application data by list of application keys"
+        (if (= ataru-delete-secret (get-in config [:application-delete-key :secret-key]))
+          (if-let [result (application-service/mass-delete-application-data
+                          application-service
+                          session
+                          (:application-keys body)
+                          delete-ordered-by
+                          reason-of-delete)]
+          (response/ok {:not-deleted-keys result})
+          (response/unauthorized {:error (str "Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " poisto ei ole sallittu")}))
+          (response/unauthorized {:error (str "Delete-secret ei vastaa haluttua. Hakemusten "
+                                              (clojure.string/join ", " (:application-keys body))
+                                              " poisto ei ole sallittu")})
+          )))
 
     (api/context "/cache" []
       (api/POST "/clear" {session :session}
