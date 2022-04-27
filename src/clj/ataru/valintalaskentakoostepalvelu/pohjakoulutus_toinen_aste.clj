@@ -29,7 +29,7 @@
   [suoritus aine-key]
   (->> (keys suoritus)
        (map name)
-       (filter #(str/includes? % (str (name aine-key) oppiaine-valinnainen-postfix)))
+       (filter #(string/includes? % (str (name aine-key) oppiaine-valinnainen-postfix)))
        (sort)
        (map #(get suoritus (keyword %))))
   )
@@ -43,7 +43,7 @@
          (filter #(string/includes? (str %) "PK_"))
          (map (fn [aine]
                 {:key aine
-                 :label (get-koodi-label "oppiaineetyleissivistava" 1 (last (str/split (str aine) #"PK_")))}))
+                 :label (get-koodi-label "oppiaineetyleissivistava" 1 (last (string/split (str aine) #"PK_")))}))
          (filter #(not (nil? (:label %))))
          (map (fn [aine]
                 (merge aine
