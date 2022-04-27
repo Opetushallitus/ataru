@@ -108,22 +108,26 @@
 
 (defn- get-tarjonta-haut-for-ordinary-user
   [ohjausparametrit-service tarjonta-service get-haut-cache show-hakukierros-paattynyt? session authorized-organization-oids]
-  (let [all-haut                             (haut-with-hakukierros-paattynyt-removed
-                                               ohjausparametrit-service
-                                               get-haut-cache
-                                               show-hakukierros-paattynyt?)
-        haut-authorized-by-form-or-hakukohde (keep-haut-authorized-by-form-or-hakukohde
-                                               tarjonta-service
-                                               authorized-organization-oids
-                                               all-haut)
-        haut-for-opinto-ohjaaja              (haut-for-opinto-ohjaaja
-                                               tarjonta-service
-                                               session
-                                               haut-authorized-by-form-or-hakukohde
-                                               all-haut)
-        haut                                 (if (user-rights/all-organizations-have-only-opinto-ohjaaja-rights? session)
-                                               haut-for-opinto-ohjaaja
-                                               (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde))]
+  (let [all-haut (haut-with-hakukierros-paattynyt-removed
+                   ohjausparametrit-service
+                   get-haut-cache
+                   show-hakukierros-paattynyt?)
+        haut     (if (user-rights/all-organizations-have-only-opinto-ohjaaja-rights? session)
+                   (haut-for-opinto-ohjaaja
+                     tarjonta-service
+                     session
+                     #{}
+                     all-haut)
+                   (let [haut-authorized-by-form-or-hakukohde (keep-haut-authorized-by-form-or-hakukohde
+                                                                tarjonta-service
+                                                                authorized-organization-oids
+                                                                all-haut)
+                         haut-for-opinto-ohjaaja              (haut-for-opinto-ohjaaja
+                                                                tarjonta-service
+                                                                session
+                                                                haut-authorized-by-form-or-hakukohde
+                                                                all-haut)]
+                     (concat haut-for-opinto-ohjaaja haut-authorized-by-form-or-hakukohde)))]
     (handle-hakukohteet haut)))
 
 (defn- get-tarjonta-haut
