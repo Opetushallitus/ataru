@@ -642,7 +642,7 @@
             nil (response/conflict {:error (str "Field deadline modified since " if-unmodified-since)})
             (response/no-content))))
 
-      (api/POST "/notes" {session :session}
+      (api/POST "/notes/:application-key" {session :session}
         :summary "Add new review note for the application"
         :return ataru-schema/ReviewNote
         :body [note {:notes                       s/Str
