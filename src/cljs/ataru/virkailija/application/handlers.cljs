@@ -978,7 +978,7 @@
       {:db   db
        :http {:method              :post
               :params              note
-              :path                "/lomake-editori/api/applications/notes"
+              :path                (str "/lomake-editori/api/applications/notes/" application-key)
               :handler-or-dispatch :application/handle-add-review-note-response
               :handler-args        {:tmp-id tmp-id}}})))
 
