@@ -396,6 +396,7 @@
   :application/reload-applications
   (fn [{:keys [db]} [_ user-allowed-fetching?]]
     (if (or user-allowed-fetching?
+            (get-in db [:application :search-control :search-term :parsed :application-oid])
             (get-in db [:application :user-allowed-fetching?]))
       (let [haku-oid (or (get-in db [:application :selected-haku])
                          (first (get-in db [:application :selected-hakukohderyhma])))
