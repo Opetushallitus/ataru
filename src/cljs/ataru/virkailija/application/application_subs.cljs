@@ -1111,6 +1111,6 @@
 
 
 (re-frame/reg-sub
-  :application/tab-accomplishments-selected?
-  (fn tab-accomplishments-selected? [db _]
-    (= (get-in db [:application :tab]) "accomplishments")))
+  :application/tab-grades-selected?
+  (fn tab-grades-selected? [db _]
+    (= (get-in db [:application :tab]) "grades")))

@@ -200,7 +200,7 @@
 
 (defn- application-tab []
   (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])
-        grades-tab-selected? (subscribe [:application/tab-accomplishments-selected?])]
+        grades-tab-selected? (subscribe [:application/tab-grades-selected?])]
     (fn []
       [:<>
        (when @toisen-asteen-yhteishaku?
@@ -210,7 +210,7 @@
             :disabled (not @grades-tab-selected?)}
            @(subscribe [:editor/virkailija-translation :application])]
           [:button
-           {:on-click #(dispatch [:application/select-application-tab "accomplishments"])
+           {:on-click #(dispatch [:application/select-application-tab "grades"])
             :disabled @grades-tab-selected?}
            @(subscribe [:editor/virkailija-translation :grades])]])
        (cond
