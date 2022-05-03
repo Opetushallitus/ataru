@@ -396,6 +396,7 @@
   :application/reload-applications
   (fn [{:keys [db]} [_ user-allowed-fetching?]]
     (if (or user-allowed-fetching?
+            (get-in db [:application :search-control :search-term :parsed :application-oid])
             (get-in db [:application :user-allowed-fetching?]))
       (let [haku-oid (or (get-in db [:application :selected-haku])
                          (first (get-in db [:application :selected-hakukohderyhma])))
@@ -978,7 +979,7 @@
       {:db   db
        :http {:method              :post
               :params              note
-              :path                "/lomake-editori/api/applications/notes"
+              :path                (str "/lomake-editori/api/applications/notes/" application-key)
               :handler-or-dispatch :application/handle-add-review-note-response
               :handler-args        {:tmp-id tmp-id}}})))
 
