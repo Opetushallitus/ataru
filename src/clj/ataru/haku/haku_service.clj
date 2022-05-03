@@ -286,7 +286,9 @@
                                  tarjonta-service
                                  %
                                  nil)))
-        hakukohteet-with-kevyt-valinta (add-kevyt-valinta-to-hakukohteet hakukohteet)
+        hakukohteet-with-kevyt-valinta (if (show-hakukierros-paattynyt?)
+                                         hakukohteet
+                                         (add-kevyt-valinta-to-hakukohteet hakukohteet))
         hakukohderyhmat (util/group-by-first
                           :oid
                           (filter :active? (organization-service/get-hakukohde-groups organization-service)))
