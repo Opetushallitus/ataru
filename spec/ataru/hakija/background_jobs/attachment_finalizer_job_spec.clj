@@ -9,7 +9,7 @@
   (tags :unit)
 
   (it "should finalize attachments belonging to an application"
-    (with-redefs [cas/cas-authenticated-post        (fn [_ url body]
+    (with-redefs [cas/cas-authenticated-post        (fn [_ url body _]
                                                       (should= "/api/files/finalize" url)
                                                       (should= {:keys ["attachment-key-1"
                                                                        "attachment-key-2"

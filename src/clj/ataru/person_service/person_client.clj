@@ -2,7 +2,6 @@
   (:require
    [ataru.cache.cache-service :as cache]
    [ataru.cas.client :as cas]
-   [ataru.config.core :refer [config]]
    [ataru.config.url-helper :refer [resolve-url]]
    [ataru.person-service.person-schema :as person-schema]
    [cheshire.core :as json]
