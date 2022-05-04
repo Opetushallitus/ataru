@@ -836,10 +836,7 @@ SELECT
   application_reviews.state,
   payment_obligations.states AS "payment-obligations",
   eligibilities.states AS eligibilities
-FROM applications AS a
-LEFT JOIN applications AS la
-  ON la.key = a.key AND
-     la.id > a.id
+FROM latest_applications AS a
 JOIN application_reviews
   ON application_reviews.application_key = a.key
 LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
@@ -855,7 +852,6 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
                    GROUP BY application_key) AS eligibilities
   ON true
 WHERE a.person_oid IS NOT NULL AND
-      la.id IS NULL AND
       (a.created_time > :date::DATE OR
        application_reviews.modified_time > :date::DATE OR
        EXISTS (SELECT 1
