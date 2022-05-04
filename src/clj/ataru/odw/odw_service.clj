@@ -34,7 +34,14 @@
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                   (into {}))
         persons (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-        harkinnanvaraisuus-by-hakemus (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service (vec (map :key applications)))
+
+        toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
+        toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
+        toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) applications)))
+        harkinnanvaraisuus-by-hakemus (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                        valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
+        koosteDataToiselleAsteelle (into {} (map (fn [hakuOid] (let [haun-hakemusOids (vec (map :key (filter (fn [application] (= hakuOid (:haku application))) applications)))]
+                                        (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid haun-hakemusOids))) toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
                        (try
                          [nil (let [application-key (:key application)
@@ -42,13 +49,13 @@
                                               (-> application :answers util/answers-by-key)
                                               (-> application :content :answers util/answers-by-key))
                                     haku (get haut (:haku application))
-                                    toinen-aste? (h/toisen-asteen-yhteishaku? (get haut (:haku application)))
+                                    toinen-aste? (h/toisen-asteen-yhteishaku? haku)
                                     hakukohteet (:hakukohde application)
                                     person-oid (:person-oid application)
                                     person (get persons person-oid)
                                     state (:state application)
                                     foreign? (not= finland-country-code (-> answers :country-of-residence :value))
-                                    hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus ["1.2.246.562.11.00000000000001081362" :hakutoiveet] [])]
+                                    hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus [(:key application) :hakutoiveet] [])]
                                 (merge {:oid                              application-key
                                         :person_oid                       person-oid
                                         :application_system_oid           (:haku application)
@@ -74,7 +81,8 @@
                                                                             "ACTIVE")
                                         :kk_pohjakoulutus                 (answer-util/get-kk-pohjakoulutus (get haut (:haku application)) answers (:key application))}
                                        (when toinen-aste?
-                                         (let [koosteData (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service (:oid haku) (:key application))
+                                         (let [;koosteData (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service (:oid haku) (:key application))
+                                               koosteData (get koosteDataToiselleAsteelle (keyword person-oid))
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData) ;ehkä joku fallback nykyiseen vuoteen jos ei löydy, tms.
@@ -83,16 +91,16 @@
                                                luokkataso (:luokkataso luokkatieto)
                                                lahtokoulu-oid (:oppilaitos-oid luokkatieto)
                                                ]
-                                           {:debug-luokkatieto                 luokkatieto
-                                            :debug-koostedata                  koosteData
+                                           {;:debug-luokkatieto                 luokkatieto
+                                            ;:debug-koostedata                  koosteDataToiselleAsteelle
                                             :pohjakoulutus-2nd                 pohjakoulutus
                                             :pohjakoulutus-2nd-suoritusvuosi   suoritusvuosi
                                             :pohjakoulutus-2nd-suorituskieli   opetuskieli
                                             :pohjakoulutus-2nd-lahtoluokka     lahtoluokka
                                             :pohjakoulutus-2nd-luokkataso      luokkataso
                                             :pohjakoulutus-2nd-lahtokoulu-oid  lahtokoulu-oid
-                                            :debug-harkinnanvaraisuudes-source harkinnanvaraisuus-by-hakemus
-                                            :debug-harkinnanvaraisuudes        hakutoiveiden-harkinnanvaraisuudet
+                                            ;:debug-harkinnanvaraisuudes-source harkinnanvaraisuus-by-hakemus
+                                            ;:debug-harkinnanvaraisuudes        hakutoiveiden-harkinnanvaraisuudet
                                             }))
                                        (if foreign?
                                          {:Ulk_postiosoite (-> answers :address :value)
