@@ -1749,10 +1749,10 @@
                                                               :sv "Personens prestationer"
                                                               :en "Applicant's exams in Finland"}
    :grades                                                   {:fi "Arvosanat"
-                                                              :sv "SV: Arvosanat"
+                                                              :sv "Vitsord"
                                                               :en "Grades"}
    :grades-header                                            {:fi "Valinnoissa käytettävät arvosanat"
-                                                              :sv "SV: Valinnoissa käytettävät arvosanat"
+                                                              :sv "Vitsord i antagningarna"
                                                               :en "EN: Valinnoissa käytettävät arvosanat"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
@@ -2249,16 +2249,16 @@
                                                               :sv "SV: Painikkeen teksti"
                                                               :en "EN: Painikkeen teksti"}
    :pohjakoulutus-for-valinnat                               {:fi "TIedot valintoja varten"
-                                                              :sv "SV: TIedot valintoja varten"
+                                                              :sv "Uppgifter för antagningarna"
                                                               :en "EN: TIedot valintoja varten"}
    :pohjakoulutus-for-valinnat-alaotsikko                    {:fi "(koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
-                                                              :sv "SV: (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"
+                                                              :sv "(Sammanställt av KOSKI-uppgifter samt uppgifter angivna av sökande)"
                                                               :en "EN: (koostettu KOSKI-järjestelmästä ja hakijan antamista tiedoista)"}
    :pohjakoulutus-opetuskieli                                {:fi "Opetuskieli"
-                                                              :sv "SV: Opetuskieli"
+                                                              :sv "Undervisningsspråk"
                                                               :en "EN: Opetuskieli"}
    :pohjakoulutus-suoritusvuosi                              {:fi "Suoritusvuosi"
-                                                              :sv "SV: Suoritusvuosi"
+                                                              :sv "Avlagd år"
                                                               :en "EN: Suoritusvuosi"}
    :pohjakoulutus-yksilollistetty                            {:fi "Matematiikan ja äidinkielen yksilöllistetty oppimäärä"
                                                               :sv "SV: Matematiikan ja äidinkielen yksilöllistetty oppimäärä"
@@ -2267,7 +2267,7 @@
                                                               :sv "Sökande är med endast i antagning enligt prövning (i ansökan till yrkesinriktad utbildning eller gymnasieutbildning)."
                                                               :en "EN: Hakija on mukana vain harkintaan perustuvassa valinnassa (ammatilliseen koulutukseen tai lukioon haettaessa)."}
    :desync-harkinnanvarainen                                 {:fi "Hakija ei ole mukana harkinnanvaraisessa valinnassa."
-                                                              :sv "SV: Hakija ei ole mukana harkinnanvaraisessa valinnassa."
+                                                              :sv "Sökande är inte med i antagning enligt prövning."
                                                               :en "EN: Hakija ei ole mukana harkinnanvaraisessa valinnassa."}
    :lisapistekoulutukset                                     {:fi "Lisäpistekoulutukset"
                                                               :sv "SV: Lisäpistekoulutukset"
@@ -2288,13 +2288,13 @@
                                                               :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
    :error-loading-harkinnanvaraisuus                         {:fi "Virhe harkinnanvaraisuustietojen hakemisessa"
-                                                              :sv "SV: Virhe harkinnanvaraisuustietojen hakemisessa"
+                                                              :sv "Fel i sökning av uppgifter om individualiseringar"
                                                               :en "EN: Virhe harkinnanvaraisuustietojen hakemisessa"}
    :error-loading-pohjakoulutus                              {:fi "Virhe pohjakoulutuksen hakemisessa"
-                                                              :sv "SV: Virhe pohjakoulutuksen hakemisessa"
+                                                              :sv "Fel i sökning av grundutbildning"
                                                               :en "EN: Virhe pohjakoulutuksen hakemisessa"}
    :pohjakoulutus-not-found                                  {:fi "Pohjakoulutusta ei löytynyt"
-                                                              :sv "SV: Pohjakoulutusta ei löytynyt"
+                                                              :sv "Grundutbildning hittades inte"
                                                               :en "EN: Pohjakoulutusta ei löytynyt"}})
 
 (def state-translations
