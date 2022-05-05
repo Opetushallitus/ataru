@@ -10,6 +10,7 @@
 
 (def oppiaine-lang-postfix "_OPPIAINE")
 (def oppiaine-valinnainen-postfix "_VAL")
+(def oppiaine-aidinkieli-prefix "PK_AI")
 
 (defn- suoritus-value-true?
   [suoritus key]
@@ -38,7 +39,9 @@
   [get-koodi-label suoritus]
   (letfn [(get-oppiaine-lang [aine]
             (let [lang-key (keyword (str (name (:key aine)) oppiaine-lang-postfix))]
-              (get-koodi-label "kieli" 1 (get suoritus lang-key))))]
+              (if (string/includes? (name (:key aine)) oppiaine-aidinkieli-prefix)
+                (get-koodi-label "aidinkielijakirjallisuus" 1 (get suoritus lang-key))
+                (get-koodi-label "kieli" 1 (get suoritus lang-key)))))]
     (->> (keys suoritus)
          (filter #(string/includes? (str %) "PK_"))
          (map (fn [aine]
