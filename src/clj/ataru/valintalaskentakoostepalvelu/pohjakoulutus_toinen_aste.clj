@@ -41,7 +41,7 @@
             (let [lang-key (keyword (str (name (:key aine)) oppiaine-lang-postfix))]
               (if (string/includes? (name (:key aine)) oppiaine-aidinkieli-prefix)
                 (get-koodi-label "aidinkielijakirjallisuus" 1 (get suoritus lang-key))
-                (get-koodi-label "kieli" 1 (get suoritus lang-key)))))]
+                (get-koodi-label "kielivalikoima" 1 (get suoritus lang-key)))))]
     (->> (keys suoritus)
          (filter #(string/includes? (str %) "PK_"))
          (map (fn [aine]
