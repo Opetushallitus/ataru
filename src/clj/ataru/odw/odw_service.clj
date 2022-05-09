@@ -29,6 +29,7 @@
   (let [applications (if application-key
                        [(application-store/get-latest-application-by-key application-key)]
                        (application-store/get-applications-newer-than date limit offset))
+        active-applications (filter #(not= (:state %) "inactivated") applications)
         haut (->> (keep :haku applications)
                   distinct
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
@@ -37,11 +38,17 @@
 
         toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
-        toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) applications)))
-        harkinnanvaraisuus-by-hakemus (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
-                                        valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
-        koosteDataToiselleAsteelle (into {} (map (fn [hakuOid] (let [haun-hakemusOids (vec (map :key (filter (fn [application] (= hakuOid (:haku application))) applications)))]
-                                        (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid haun-hakemusOids))) toisen-asteen-yhteishaku-oids))
+        toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)))
+        harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
+                                        (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
+                                        {})
+        koosteDataToiselleAsteelle (into {} (map (fn [hakuOid] (let [haun-hakemusOids (vec (doall (map :key (filter (fn [application] (= hakuOid (:haku application))) active-applications))))]
+                                                                 (if (not-empty haun-hakemusOids)
+                                                                   (do (log/info "Haetaan koosteData haulle" hakuOid ",   hakemusOids " haun-hakemusOids)
+                                                                       (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid haun-hakemusOids))
+                                                                   (do (log/warn "Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia hakemuksia")
+                                                                       {}))))
+                                                 toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
                        (try
                          [nil (let [application-key (:key application)
@@ -80,7 +87,7 @@
                                                                             "PASSIVE"
                                                                             "ACTIVE")
                                         :kk_pohjakoulutus                 (answer-util/get-kk-pohjakoulutus (get haut (:haku application)) answers (:key application))}
-                                       (when toinen-aste?
+                                       (when (and toinen-aste? (not= state "inactivated"))
                                          (let [;koosteData (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service (:oid haku) (:key application))
                                                koosteData (get koosteDataToiselleAsteelle (keyword person-oid))
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
