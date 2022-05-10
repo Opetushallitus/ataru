@@ -15,7 +15,7 @@
             [ataru.valintaperusteet.client :as valintaperusteet-client]
             [ataru.valintaperusteet.service :as valintaperusteet-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
-            [ataru.valinta-tulos-service.service :as valinta-tulos-service]
+            [ataru.valinta-tulos-service.valintatulosservice_service :as valinta-tulos-service]
             [ataru.virkailija.virkailija-routes :as virkailija-routes]
             [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
