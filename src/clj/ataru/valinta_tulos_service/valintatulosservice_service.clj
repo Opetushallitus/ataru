@@ -17,7 +17,9 @@
            (map #(set (keys %))
                 (vals valintatapajonoissa)))))
 
-(defrecord RemoteValintaTulosService [cas-client]
+(defrecord RemoteValintaTulosService [cas-client valinta-laskenta-service]
   ValintaTulosService
   (hakukohteen-ehdolliset [_ hakukohde-oid]
-    (get-hakukohteen-ehdolliset cas-client hakukohde-oid)))
+    (get-hakukohteen-ehdolliset cas-client hakukohde-oid))
+  (valinnan-tulos-hakemukselle [_ haku-oid hakemus-oid]
+    (client/get-valinnan-tulos-hakemukselle cas-client haku-oid hakemus-oid)))
