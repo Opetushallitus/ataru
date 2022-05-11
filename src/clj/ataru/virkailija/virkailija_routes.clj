@@ -888,7 +888,7 @@
                          (filter #(= koodi-value (:value %)))
                          first
                          :label))]
-            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)] ;kissa get pohjakoulutus
+            (let [suoritus (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service haku-oid application-key)]
               (response/ok
                 (pohjakoulutus-toinen-aste/pohjakoulutus-for-application get-koodi-label suoritus))))
           (response/unauthorized)))

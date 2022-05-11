@@ -88,27 +88,21 @@
                                                                             "ACTIVE")
                                         :kk_pohjakoulutus                 (answer-util/get-kk-pohjakoulutus (get haut (:haku application)) answers (:key application))}
                                        (when (and toinen-aste? (not= state "inactivated"))
-                                         (let [;koosteData (valintalaskentakoostepalvelu/opiskelijan-suoritukset valintalaskentakoostepalvelu-service (:oid haku) (:key application))
-                                               koosteData (get koosteDataToiselleAsteelle (keyword person-oid))
+                                         (let [koosteData (get koosteDataToiselleAsteelle (keyword person-oid))
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
-                                               suoritusvuosi (:pohjakoulutus_vuosi koosteData) ;ehkä joku fallback nykyiseen vuoteen jos ei löydy, tms.
+                                               suoritusvuosi (:pohjakoulutus_vuosi koosteData)
                                                luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) ["9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI"])
                                                lahtoluokka (:luokka luokkatieto)
                                                luokkataso (:luokkataso luokkatieto)
                                                lahtokoulu-oid (:oppilaitos-oid luokkatieto)
                                                ]
-                                           {;:debug-luokkatieto                 luokkatieto
-                                            ;:debug-koostedata                  koosteDataToiselleAsteelle
-                                            :pohjakoulutus-2nd                 pohjakoulutus
+                                           {:pohjakoulutus-2nd                 pohjakoulutus
                                             :pohjakoulutus-2nd-suoritusvuosi   suoritusvuosi
                                             :pohjakoulutus-2nd-suorituskieli   opetuskieli
                                             :pohjakoulutus-2nd-lahtoluokka     lahtoluokka
                                             :pohjakoulutus-2nd-luokkataso      luokkataso
-                                            :pohjakoulutus-2nd-lahtokoulu-oid  lahtokoulu-oid
-                                            ;:debug-harkinnanvaraisuudes-source harkinnanvaraisuus-by-hakemus
-                                            ;:debug-harkinnanvaraisuudes        hakutoiveiden-harkinnanvaraisuudet
-                                            }))
+                                            :pohjakoulutus-2nd-lahtokoulu-oid  lahtokoulu-oid}))
                                        (if foreign?
                                          {:Ulk_postiosoite (-> answers :address :value)
                                           :Ulk_postinumero (-> answers :postal-code :value)

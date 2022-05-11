@@ -96,7 +96,7 @@
       hakemus-oid))
 
   (opiskelijoiden-suoritukset [_ haku-oid hakemus-oids]
-    (client/opiskelijoiden-suoritukset-by-personoid ;fixme varmista, että täältä palautuu aina vastaus hakemuksen henkilöOideilla!
+    (client/opiskelijoiden-suoritukset-by-personoid
       valintalaskentakoostepalvelu-cas-client
       haku-oid
       hakemus-oids))
