@@ -231,7 +231,7 @@
 (defn- get-application-ids
   [suoritukset]
   (when-let [person-oids (seq (distinct (keep :person-oid suoritukset)))]
-    (log/info (str "Check automatic eligibility for persons: " (pr-str person-oids)))
+    (log/info (str "Check automatic eligibility for persons. Count: " (count person-oids)))
     (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
       (map :id (yesql-get-application-ids {:person_oids person-oids}
                                           {:connection connection})))))
@@ -243,7 +243,7 @@
                           (:suoritus-service job-runner)
                           (coerce/from-long last-run-long))
         suoritus-chunks (partition-all 10000 suoritukset)]
-    (log/info (str "Starting automatic eligibility job. Modified-since: " (coerce/from-long last-run-long)))
+    (log/info (str "Starting automatic eligibility job. Chunks of 10000 suoritus: " (count suoritus-chunks) " Modified-since: " (coerce/from-long last-run-long)))
     (doseq [suoritus-chunk suoritus-chunks]
       (doseq [application-id (get-application-ids suoritus-chunk)]
         (start-automatic-eligibility-if-ylioppilas-job job-runner
