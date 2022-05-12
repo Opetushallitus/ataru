@@ -231,23 +231,27 @@
 (defn- get-application-ids
   [suoritukset]
   (when-let [person-oids (seq (distinct (keep :person-oid suoritukset)))]
-    (log/info (str "Check automatic eligibility for persons: " (pr-str person-oids)))
     (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
       (map :id (yesql-get-application-ids {:person_oids person-oids}
                                           {:connection connection})))))
 
+(defonce suoritus-chunk-size 10000)
 (defn start-automatic-eligibility-if-ylioppilas-job-job-step
   [{:keys [last-run-long]} job-runner]
-  (let [now             (time/now)
-        suoritukset     (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
-                          (:suoritus-service job-runner)
-                          (coerce/from-long last-run-long))
-        suoritus-chunks (partition-all 10000 suoritukset)]
-    (log/info (str "Starting automatic eligibility job. Modified-since: " (coerce/from-long last-run-long)))
-    (doseq [suoritus-chunk suoritus-chunks]
-      (doseq [application-id (get-application-ids suoritus-chunk)]
-        (start-automatic-eligibility-if-ylioppilas-job job-runner
-                                                       application-id)))
+  (let [now                   (time/now)
+        suoritukset           (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
+                                (:suoritus-service job-runner)
+                                (coerce/from-long last-run-long))
+        suoritus-chunks       (partition-all suoritus-chunk-size suoritukset)
+        suoritus-chunks-count (count suoritus-chunks)]
+    (log/info (str "Starting automatic eligibility job. Chunks (" suoritus-chunk-size  " suoritus per chunk): "
+                   suoritus-chunks-count ". Count of suoritukset: " (count suoritukset) ". Modified-since: "
+                   (coerce/from-long last-run-long)))
+    (doseq [[n suoritus-chunk] (map-indexed #(vector (+ %1 1) %2) suoritus-chunks)]
+      (let [application-ids (get-application-ids suoritus-chunk)]
+        (log/info (str "Check automatic eligibility for chunk " n "/" suoritus-chunks-count ". Count: " (count application-ids)))
+        (doseq [application-id application-ids]
+          (start-automatic-eligibility-if-ylioppilas-job job-runner application-id))))
     {:transition      {:id :to-next :step :initial}
      :updated-state   {:last-run-long (coerce/to-long now)}
      :next-activation (time/plus now (time/days 1))}))
