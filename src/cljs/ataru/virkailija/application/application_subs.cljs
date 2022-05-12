@@ -1109,7 +1109,6 @@
   (fn [db [_ haku-oid]]
     (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
 
-
 (re-frame/reg-sub
   :application/tab-grades-selected?
   (fn tab-grades-selected? [db _]
