@@ -22,6 +22,26 @@
       (get-in db [:application :pohjakoulutus-by-application-key application-key]))))
 
 (re-frame/reg-sub
+  :application/application-valinnat-loading-state
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)
+          valinnat   (get-in db [:application :valinnat-by-application-key application-key])
+          loading         (get-in db [:request-handles :fetch-application-valinnat])]
+      (if (:error valinnat)
+        :error
+        (if loading
+          :loading
+          (if (= {} valinnat)
+            :not-found
+            :loaded))))))
+
+(re-frame/reg-sub
+  :application/application-valinnat
+  (fn [db _]
+    (let [application-key (-> db :application :selected-key)]
+      (get-in db [:application :valinnat-by-application-key application-key]))))
+
+(re-frame/reg-sub
   :application/harkinnanvaraisuus-loading-state
   (fn [db _]
     (let [application-key (-> db :application :selected-key)

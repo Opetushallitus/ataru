@@ -1119,8 +1119,7 @@
   (fn [db [_ haku-oid]]
     (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
 
-
 (re-frame/reg-sub
-  :application/tab-accomplishments-selected?
-  (fn tab-accomplishments-selected? [db _]
-    (= (get-in db [:application :tab]) "accomplishments")))
+  :application/selected-application-tab
+  (fn selected-application-tab [db _]
+    (or (get-in db [:application :tab]) "application")))

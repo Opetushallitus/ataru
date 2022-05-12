@@ -1760,6 +1760,9 @@
    :grades-header                                            {:fi "Valinnoissa käytettävät arvosanat"
                                                               :sv "Vitsord i antagningarna"
                                                               :en "EN: Valinnoissa käytettävät arvosanat"}
+   :valinnat                                                 {:fi "Valinnat"
+                                                              :sv "SV: Valinnat"
+                                                              :en "EN: Valinnat"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}
