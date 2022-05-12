@@ -7,18 +7,19 @@
         lang (subscribe [:editor/virkailija-lang])]
     (fn []
       [:<>
-      (for [grade @grades]
-        ^{:key (:key grade)}
-        [:div.grade
-          [:span.grade__subject (@lang (:label grade))]
-          [:span.grade__value (:value grade)
-          (for [[valinnainen idx] (:valinnaiset grade)]
-            ^{:key (str (:key grade) "_valinnainen_" idx)}
-            [:span.grade__value--valinnainen
-             (str "(" valinnainen ")")])
-           ]
-          (when (:lang grade)
-            [:span.grade__lang (@lang (:lang grade))])])])))
+       (doall
+         (for [grade @grades]
+            ^{:key (:key grade)}
+            [:div.grade
+              [:span.grade__subject (@lang (:label grade))]
+              [:span.grade__value (:value grade)
+              (map-indexed (fn [idx valinnainen]
+                ^{:key (str (:key grade) "_valinnainen_" idx)}
+                [:span.grade__value--valinnainen
+                (str "(" valinnainen ")")]) (:valinnaiset grade))
+              ]
+              (when (:lang grade)
+              [:span.grade__lang (@lang (:lang grade))])]))])))
 
 (defn grades []
   (let [pohjakoulutus-loading-state @(subscribe [:application/pohjakoulutus-for-valinnat-loading-state])]
