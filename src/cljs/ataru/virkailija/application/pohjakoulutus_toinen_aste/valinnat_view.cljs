@@ -2,18 +2,18 @@
   (:require [re-frame.core :refer [subscribe]]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :refer [loading-indicator not-found error-loading]]))
 
-(defn- pisteet [pisteet]
+(defn- pisteet [lang hakukohde-oid pisteet]
     [:<>
       [:div.grade @(subscribe [:editor/virkailija-translation :scores])]
-      (doall
         (for [piste pisteet]
-          ^{:key (:nimi piste)}
+          ^{:key (str hakukohde-oid "-" (:tunniste piste))}
           [:div.grade
-            [:span.grade__subject (:nimi piste)]
-            [:span.grade__value   (or (:arvo piste) (:tila piste))]]))])
+            [:span.grade__subject (lang (:nimi piste))]
+            [:span.grade__value (:arvo piste)]])])
 
 (defn- valinnat-loaded []
-  (let [valinnat (subscribe [:application/application-valinnat])]
+  (let [valinnat (subscribe [:application/application-valinnat])
+        lang (subscribe [:editor/virkailija-lang])]
     (fn []
       [:<>
        (doall
@@ -36,7 +36,7 @@
               [:span.grade__subject "Ilmoittautumistila"]
               [:span.grade__value (:ilmoittautumistila hakukohde)]]
             (when (> (count (:pisteet hakukohde)) 0)
-              [pisteet (:pisteet hakukohde)])
+              [pisteet @lang (:oid hakukohde) (:pisteet hakukohde)])
             [:hr]]) @valinnat))])))
 
 (defn valinnat []

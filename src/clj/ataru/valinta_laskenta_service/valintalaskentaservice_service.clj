@@ -6,15 +6,20 @@
 ; :valinnanvaihe -> :valintakokeet -> [:nimi] -> osallistuminenTulos [laskentaTila -> :tila laskentatulos -> :arvo :kuvaus
 (defn- parse-pisteet
   [pisteet hakukohde-oid]
-  (let [jarjestyskriteerit (->> (:hakukohteet pisteet)
+  (let [parse-tulos (fn [tulos]
+                      {:tunniste (:tunniste tulos)
+                       :arvo (:arvo tulos)
+                       :nimi {:fi (:nimiFi tulos) :sv (:nimiSv tulos) :en (:nimiEn tulos)}})
+        funktio-tulokset (->> (:hakukohteet pisteet)
                                 (filter #(= hakukohde-oid (:oid %)))
                                 first
                                 :valinnanvaihe
                                 (mapcat :valintatapajonot)
                                 (mapcat :jonosijat)
-                                (mapcat :jarjestyskriteerit)
-                                (sort-by :nimi))]
-    jarjestyskriteerit))
+                                (mapcat :funktioTulokset)
+                                (map parse-tulos)
+                                (sort-by :tunniste))]
+    funktio-tulokset))
 
 (defn- parse-tulos
   [tulos pisteet]
