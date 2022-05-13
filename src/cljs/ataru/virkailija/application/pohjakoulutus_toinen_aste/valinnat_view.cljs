@@ -11,7 +11,7 @@
          [:span.grade__subject (:nimi piste)]
          [:span.grade__value   (or (:arvo piste) (:tila piste))]]))])
 
-(defn- grades-loaded []
+(defn- valinnat-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])]
     (fn []
       [:<>
@@ -42,6 +42,6 @@
      [:div.grades__right-panel
       (case valinnat-loading-state
         :loading [loading-indicator]
-        :loaded [grades-loaded]
-        :error [error-loading :error-loading-pohjakoulutus]
+        :loaded [valinnat-loaded]
+        :error [error-loading :error-loading-valinnat]
         :not-found [not-found])]]))

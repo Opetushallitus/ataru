@@ -2304,7 +2304,10 @@
                                                               :en "EN: Virhe pohjakoulutuksen hakemisessa"}
    :pohjakoulutus-not-found                                  {:fi "Pohjakoulutusta ei löytynyt"
                                                               :sv "Grundutbildning hittades inte"
-                                                              :en "EN: Pohjakoulutusta ei löytynyt"}})
+                                                              :en "EN: Pohjakoulutusta ei löytynyt"}
+   :error-loading-valinnat                                   {:fi "Virhe hakemuksen valintojen hakemisessa"
+                                                              :sv "SV: Virhe hakemuksen valintojen hakemisessa"
+                                                              :en "EN: Virhe hakemuksen valintojen hakemisessa"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
