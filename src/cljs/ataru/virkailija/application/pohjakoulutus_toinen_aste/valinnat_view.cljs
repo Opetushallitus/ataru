@@ -22,6 +22,10 @@
            [:<>
              [:div.grade
               [:span.grade__subject (str (+ idx 1) ". " (:name hakukohde))]]
+            (when (not (nil? (:kokonaispisteet hakukohde)))
+              [:div.grade
+               [:span.grade__subject "Valinnan kokonaispisteet"]
+               [:span.grade__value (:kokonaispisteet hakukohde)]])
              [:div.grade
               [:span.grade__subject "Sijoittelun tulos"]
               [:span.grade__value (:valintatila hakukohde)]]

@@ -3,6 +3,7 @@
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]))
 
+; :valinnanvaihe -> :valintakokeet -> [:nimi] -> osallistuminenTulos [laskentaTila -> :tila laskentatulos -> :arvo :kuvaus
 (defn- parse-pisteet
   [pisteet hakukohde-oid]
   (let [jarjestyskriteerit (->> (:hakukohteet pisteet)
@@ -21,6 +22,7 @@
                          (map (fn [toive]
                                 {:oid (:hakukohdeOid toive)
                                  :name (str (:hakukohdeNimi toive) " - " (:tarjoajaNimi toive))
+                                 :kokonaispisteet (:pisteet toive)
                                  :valintatila (:valintatila toive)
                                  :vastaanottotila (:vastaanottotila toive)
                                  :ilmoittautumistila (get-in toive [:ilmoittautumistila :ilmoittautumistila])
