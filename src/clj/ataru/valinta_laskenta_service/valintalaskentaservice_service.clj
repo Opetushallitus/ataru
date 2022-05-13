@@ -11,7 +11,8 @@
                                 :valinnanvaihe
                                 (mapcat :valintatapajonot)
                                 (mapcat :jonosijat)
-                                (mapcat :jarjestyskriteerit))]
+                                (mapcat :jarjestyskriteerit)
+                                (sort-by :nimi))]
     jarjestyskriteerit))
 
 (defn- parse-tulos
