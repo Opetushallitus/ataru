@@ -287,7 +287,7 @@
                                  %
                                  nil)))
         hakukohteet-with-kevyt-valinta (if show-hakukierros-paattynyt?
-                                         hakukohteet
+                                         (util/group-by-first :oid hakukohteet)
                                          (add-kevyt-valinta-to-hakukohteet hakukohteet))
         hakukohderyhmat (util/group-by-first
                           :oid
