@@ -2,14 +2,14 @@
   (:require [re-frame.core :refer [subscribe]]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :refer [loading-indicator not-found error-loading]]))
 
-(defn- pisteet
-  [pisteet]
-  (doall
-    (for [piste pisteet]
-      ^{:key (:name piste)}
-      [:div.grade
-       [:span.grade__subject ]]
-      )))
+(defn- pisteet [pisteet]
+    [:<>
+    (doall
+      (for [piste pisteet]
+        ^{:key (:nimi piste)}
+        [:div.grade
+         [:span.grade__subject (:nimi piste)]
+         [:span.grade__value   (or (:arvo piste) (:tila piste))]]))])
 
 (defn- grades-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])]
@@ -30,9 +30,9 @@
              [:div.grade
               [:span.grade__subject "Ilmoittautumistila"]
               [:span.grade__value (:ilmoittautumistila hakukohde)]]
-            [:hr]
+            [:br]
             [pisteet (:pisteet hakukohde)]
-            ]))])))
+            [:hr]]))])))
 
 (defn valinnat []
   (let [valinnat-loading-state @(subscribe [:application/application-valinnat-loading-state])]
