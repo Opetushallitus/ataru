@@ -20,28 +20,29 @@
        (first)))
 
 (defn- initial-state [connection information-request]
-  (let [secret          (app-store/add-new-secret-to-application-in-tx
-                         connection
-                         (:application-key information-request))
-        application     (app-store/get-latest-application-by-key-in-tx
-                         connection
-                         (:application-key information-request))
-        lang            (-> application :lang keyword)
-        recipient-email (if (:only-guardian information-request)
-                          (or (extract-answer-value "guardian-email" application)
-                              (extract-answer-value "guardian-email-secondary" application))
-                          (extract-answer-value "email" application))
-        translations    (translations/get-translations lang)
-        service-url     (get-in config [:public-config :applicant :service_url])
-        application-url (str service-url "/hakemus?modify=" secret)
-        body            (selmer/render-file "templates/information-request-template.html"
-                                            (merge {:message         (->safe-html (:message information-request))
-                                                    :application-url application-url}
-                                                   translations))]
-    (when recipient-email
+  (let [secret           (app-store/add-new-secret-to-application-in-tx
+                          connection
+                          (:application-key information-request))
+        application      (app-store/get-latest-application-by-key-in-tx
+                          connection
+                          (:application-key information-request))
+        lang             (-> application :lang keyword)
+        recipient-emails (if (:only-guardian information-request)
+                           (filter some?
+                                   [(extract-answer-value "guardian-email" application)
+                                    (extract-answer-value "guardian-email-secondary" application)])
+                           [(extract-answer-value "email" application)])
+        translations     (translations/get-translations lang)
+        service-url      (get-in config [:public-config :applicant :service_url])
+        application-url  (str service-url "/hakemus?modify=" secret)
+        body             (selmer/render-file "templates/information-request-template.html"
+                                             (merge {:message         (->safe-html (:message information-request))
+                                                     :application-url application-url}
+                                                    translations))]
+    (when (not-empty recipient-emails)
       (-> (select-keys information-request [:subject :application-key :id])
           (merge {:from       "no-reply@opintopolku.fi"
-                  :recipients [recipient-email]
+                  :recipients recipient-emails
                   :body       body})))))
 
 (defn- start-email-job [job-runner connection information-request]
