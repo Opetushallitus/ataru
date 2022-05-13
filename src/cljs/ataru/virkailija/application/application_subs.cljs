@@ -988,7 +988,6 @@
 (re-frame/reg-sub
   :application/loaded-applications-guardian-count
   (fn [db _]
-    (prn (-> db :application :applications first))
     (-> db :application :applications (count))))
 
 (re-frame/reg-sub
