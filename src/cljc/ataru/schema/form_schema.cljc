@@ -762,6 +762,7 @@
                                     :application-key s/Str})
 
 (s/defschema InformationRequest {:subject         s/Str
+                                 (s/optional-key :only-guardian) s/Bool
                                  :message         s/Str
                                  :application-key s/Str
                                  :message-type    s/Str

@@ -986,6 +986,11 @@
     (-> db :application :applications (count))))
 
 (re-frame/reg-sub
+  :application/loaded-applications-guardian-count
+  (fn [db _]
+    (-> db :application :applications (count))))
+
+(re-frame/reg-sub
   :application/previous-application-fetch-params
   (fn [db _]
     (let [previous-fetch (-> db :application :previous-fetch)]
