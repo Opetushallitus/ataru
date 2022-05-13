@@ -317,7 +317,7 @@
   (assoc Hakukohde :user-organization? s/Bool))
 
 (s/defschema HakukohdeSearchResultWithSelectionStateInfo
-  (assoc HakukohdeSearchResult :selection-state-used (s/maybe s/Bool)))
+  (assoc HakukohdeSearchResult (s/optional-key :selection-state-used) (s/maybe s/Bool)))
 
 (s/defschema Koodi
   {:uri                     s/Str
