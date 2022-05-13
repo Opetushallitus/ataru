@@ -703,6 +703,7 @@
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
                                            :subject s/Str}
+                     :only-guardian       s/Bool
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
         :return {}
@@ -715,8 +716,9 @@
               (:application-keys body)
               [:edit-applications])
           (do (information-request/mass-store
-                (assoc (:message-and-subject body)
-                  :message-type "mass-information-request")
+                (-> (:message-and-subject body)
+                    (assoc :message-only-guardian (:only-guardian body))
+                    (assoc :message-type "mass-information-request"))
                 (:application-keys body)
                 (get-in session [:identity :oid])
                 job-runner)

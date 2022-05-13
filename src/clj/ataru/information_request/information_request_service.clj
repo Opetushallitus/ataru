@@ -27,7 +27,9 @@
                          connection
                          (:application-key information-request))
         lang            (-> application :lang keyword)
-        recipient-email (extract-answer-value "email" application)
+        recipient-email (if (:only-guardian information-request)
+                          (extract-answer-value "guardian-email" application)
+                          (extract-answer-value "email" application))
         translations    (translations/get-translations lang)
         service-url     (get-in config [:public-config :applicant :service_url])
         application-url (str service-url "/hakemus?modify=" secret)
@@ -35,20 +37,24 @@
                                             (merge {:message         (->safe-html (:message information-request))
                                                     :application-url application-url}
                                                    translations))]
-    (-> (select-keys information-request [:subject :application-key :id])
-        (merge {:from       "no-reply@opintopolku.fi"
-                :recipients [recipient-email]
-                :body       body}))))
+    (when recipient-email
+      (-> (select-keys information-request [:subject :application-key :id])
+          (merge {:from       "no-reply@opintopolku.fi"
+                  :recipients [recipient-email]
+                  :body       body})))))
 
 (defn- start-email-job [job-runner connection information-request]
-  (let [initial-state (initial-state connection information-request)
-        job-type      (:type information-request-job/job-definition)
-        job-id        (job/start-job job-runner
-                                     connection
-                                     job-type
-                                     initial-state)]
-    (log/info (str "Started information request email job with job id " job-id
-                   " for application " (:application-key information-request)))))
+  (if-let [initial-state (initial-state connection information-request)]
+    (let [job-type      (:type information-request-job/job-definition)
+          job-id        (job/start-job job-runner
+                                       connection
+                                       job-type
+                                       initial-state)]
+      (log/info (str "Started information request email job with job id " job-id
+                     " for application " (:application-key information-request))))
+    (log/info (str "Skipped information request email job for guardian for application "
+                   (:application-key information-request)
+                   " because application doesn't contain guardian email"))))
 
 (defn- store-in-tx
   [session information-request job-runner connection]
