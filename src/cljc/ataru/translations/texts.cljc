@@ -1319,6 +1319,9 @@
    :cancel-copy                                              {:fi "Älä kopio"
                                                               :sv "Kopiera inte"
                                                               :en "Cancel copy"}
+   :only-guardian-email                                      {:fi "Lähetä vain huoltajan sähköposti"
+                                                              :sv "Only send guardian e-mail"
+                                                              :en "Only send guardian e-mail"}
    :only-selected-hakukohteet                                {:fi "vain valituille hakukohteille"
                                                               :sv "till valda ansökningsmål"
                                                               :en "only selected study programmes"}
