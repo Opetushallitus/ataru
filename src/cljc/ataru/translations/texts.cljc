@@ -1763,6 +1763,9 @@
    :valinnat                                                 {:fi "Valinnat"
                                                               :sv "SV: Valinnat"
                                                               :en "EN: Valinnat"}
+   :scores                                                   {:fi "Pisteet"
+                                                              :sv "Poäng"
+                                                              :en "Scores"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}

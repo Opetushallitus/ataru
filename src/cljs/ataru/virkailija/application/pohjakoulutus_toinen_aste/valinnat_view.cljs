@@ -4,23 +4,24 @@
 
 (defn- pisteet [pisteet]
     [:<>
-    (doall
-      (for [piste pisteet]
-        ^{:key (:nimi piste)}
-        [:div.grade
-         [:span.grade__subject (:nimi piste)]
-         [:span.grade__value   (or (:arvo piste) (:tila piste))]]))])
+      [:div.grade @(subscribe [:editor/virkailija-translation :scores])]
+      (doall
+        (for [piste pisteet]
+          ^{:key (:nimi piste)}
+          [:div.grade
+            [:span.grade__subject (:nimi piste)]
+            [:span.grade__value   (or (:arvo piste) (:tila piste))]]))])
 
 (defn- valinnat-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])]
     (fn []
       [:<>
        (doall
-         (for [hakukohde @valinnat]
+         (map-indexed (fn [idx hakukohde]
            ^{:key (:oid hakukohde)}
            [:<>
              [:div.grade
-              [:span.grade__subject (:name hakukohde)]]
+              [:span.grade__subject (str (+ idx 1) ". " (:name hakukohde))]]
              [:div.grade
               [:span.grade__subject "Sijoittelun tulos"]
               [:span.grade__value (:valintatila hakukohde)]]
@@ -30,9 +31,9 @@
              [:div.grade
               [:span.grade__subject "Ilmoittautumistila"]
               [:span.grade__value (:ilmoittautumistila hakukohde)]]
-            [:br]
-            [pisteet (:pisteet hakukohde)]
-            [:hr]]))])))
+            (when (> (count (:pisteet hakukohde)) 0)
+              [pisteet (:pisteet hakukohde)])
+            [:hr]]) @valinnat))])))
 
 (defn valinnat []
   (let [valinnat-loading-state @(subscribe [:application/application-valinnat-loading-state])]
