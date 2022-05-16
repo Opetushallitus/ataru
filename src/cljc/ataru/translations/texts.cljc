@@ -1761,11 +1761,23 @@
                                                               :sv "Vitsord i antagningarna"
                                                               :en "EN: Valinnoissa käytettävät arvosanat"}
    :valinnat                                                 {:fi "Valinnat"
-                                                              :sv "SV: Valinnat"
+                                                              :sv "Antagningar"
                                                               :en "EN: Valinnat"}
    :scores                                                   {:fi "Pisteet"
                                                               :sv "Poäng"
                                                               :en "Scores"}
+   :valinnan-kokonaispisteet                                 {:fi "Valinnan kokonaispisteet"
+                                                              :sv "Helhetspoäng för antagningen"
+                                                              :en "EN: Valinnan kokonaispisteet"}
+   :sijoittelun-tulos                                        {:fi "Sijoittelun tulos"
+                                                              :sv "Placeringsresultat"
+                                                              :en "EN: Sijoittelun tulos"}
+   :vastaanottotieto                                         {:fi "Vastaanottotieto"
+                                                              :sv "Uppgift om mottagande"
+                                                              :en "EN: Vastaanottotieto"}
+   :ilmoittautumistila                                       {:fi "Ilmoittautumistila"
+                                                              :sv "Uppgift om anmälan"
+                                                              :en "EN: Ilmoittautumistila"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}

@@ -29,13 +29,13 @@
             [:div.valinnat__tulokset__nimet
               (when (not (nil? (:kokonaispisteet hakukohde)))
                 [:div.tulos
-                 [:span.tulos__subject "Valinnan kokonaispisteet"]])
+                 [:span.tulos__subject @(subscribe [:editor/virkailija-translation :valinnan-kokonaispisteet])]])
                [:div.tulos
-                [:span.tulos__subject "Sijoittelun tulos"]]
+                [:span.tulos__subject @(subscribe [:editor/virkailija-translation :sijoittelun-tulos])]]
                [:div.tulos
-                [:span.tulos__subject "Vastaanottotieto"]]
+                [:span.tulos__subject @(subscribe [:editor/virkailija-translation :vastaanottotieto])]]
                [:div.tulos
-                [:span.tulos__subject "Ilmoittautumistila"]]
+                [:span.tulos__subject @(subscribe [:editor/virkailija-translation :ilmoittautumistila])]]
               (when (> (count (:pisteet hakukohde)) 0)
                 [pisteet @lang (:oid hakukohde) true (:pisteet hakukohde)])]
             [:div.valinnat__tulokset__arvot
