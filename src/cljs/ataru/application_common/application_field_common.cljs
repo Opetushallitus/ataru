@@ -83,7 +83,7 @@
                             (js/clearTimeout @timeout)
                             (reset!
                              timeout
-                             (js/setTimeout (fn []
+                             (js/setTimeout (fn [_]
                                               (when @mounted?
                                                 (set-markdown-height component scroll-height))) 200)))
          lang             (re-frame/subscribe [:application/form-language])]
