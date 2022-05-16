@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view
   (:require [re-frame.core :refer [subscribe]]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :refer [loading-indicator not-found error-loading]]))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :refer [loading-indicator not-found error-loading]]
+            [ataru.cljs-util :refer [to-finnish-number]]))
 
 (defn- pisteet [lang hakukohde-oid nimet? pisteet]
   [:<>
@@ -12,7 +13,7 @@
             [:span.tulos__subject (lang (:nimi piste))]
             (if (:localize-arvo piste)
               [:span.tulos__value @(subscribe [:editor/virkailija-translation (keyword (:arvo piste))])]
-              [:span.tulos__value (:arvo piste)]))])])
+              [:span.tulos__value (to-finnish-number (:arvo piste))]))])])
 
 (defn- valinnat-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])
