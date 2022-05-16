@@ -3,13 +3,15 @@
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :refer [loading-indicator not-found error-loading]]))
 
 (defn- pisteet [lang hakukohde-oid pisteet]
-    [:<>
-      [:div.grade @(subscribe [:editor/virkailija-translation :scores])]
-        (for [piste pisteet]
-          ^{:key (str hakukohde-oid "-" (:tunniste piste))}
-          [:div.grade
-            [:span.grade__subject (lang (:nimi piste))]
-            [:span.grade__value (:arvo piste)]])])
+  [:<>
+    [:div.grade @(subscribe [:editor/virkailija-translation :scores])]
+      (for [piste pisteet]
+        ^{:key (str hakukohde-oid "-" (:tunniste piste))}
+        [:div.grade
+          [:span.grade__subject (lang (:nimi piste))]
+          (if (:localize-arvo piste)
+            [:span.grade__value @(subscribe [:editor/virkailija-translation (keyword (:arvo piste))])]
+            [:span.grade__value (:arvo piste)])])])
 
 (defn- valinnat-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])
@@ -28,13 +30,13 @@
                [:span.grade__value (:kokonaispisteet hakukohde)]])
              [:div.grade
               [:span.grade__subject "Sijoittelun tulos"]
-              [:span.grade__value (:valintatila hakukohde)]]
+              [:span.grade__value @(subscribe [:editor/virkailija-translation (keyword (:valintatila hakukohde))])]]
              [:div.grade
               [:span.grade__subject "Vastaanottotieto"]
-              [:span.grade__value (:vastaanottotila hakukohde)]]
+              [:span.grade__value @(subscribe [:editor/virkailija-translation (keyword (:vastaanottotila hakukohde))])]]
              [:div.grade
               [:span.grade__subject "Ilmoittautumistila"]
-              [:span.grade__value (:ilmoittautumistila hakukohde)]]
+              [:span.grade__value @(subscribe [:editor/virkailija-translation (keyword (:ilmoittautumistila hakukohde))])]]
             (when (> (count (:pisteet hakukohde)) 0)
               [pisteet @lang (:oid hakukohde) (:pisteet hakukohde)])
             [:hr]]) @valinnat))])))

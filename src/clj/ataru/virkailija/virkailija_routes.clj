@@ -476,7 +476,7 @@
 
       (api/GET "/virkailija-texts" {session :session}
         (ok (if (:dev? env)
-              (merge texts/general-texts texts/virkailija-texts)
+              (merge texts/general-texts texts/state-translations texts/virkailija-texts)
               (get-virkailija-texts localizations-cache))))
 
       (api/POST "/review-setting" {session :session}

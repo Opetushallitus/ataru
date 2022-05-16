@@ -26,7 +26,7 @@
   (fn [db _]
     (let [application-key (-> db :application :selected-key)
           valinnat   (get-in db [:application :valinnat-by-application-key application-key])
-          loading         (get-in db [:request-handles :fetch-application-valinnat])]
+          loading    (get-in db [:request-handles :fetch-application-valinnat])]
       (if (:error valinnat)
         :error
         (if loading

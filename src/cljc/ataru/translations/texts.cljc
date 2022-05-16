@@ -2346,6 +2346,9 @@
    :incomplete             {:fi "Kesken"
                             :sv "Inte färdig"
                             :en "Incomplete"}
+   :not-done               {:fi "Ei tehty"
+                            :sv "Inte gjort"
+                            :en "Not done"}
    :selection-proposal     {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
                             :en "Selected (pending)"}
@@ -2355,6 +2358,9 @@
    :selected               {:fi "Hyväksytty"
                             :sv "Godkänd"
                             :en "Selected"}
+   :accepted               {:fi "Hyväksytty"
+                            :sv "Accepterad"
+                            :en "Accepted"}
    :rejected               {:fi "Hylätty"
                             :sv "Underkänd"
                             :en "Rejected"}

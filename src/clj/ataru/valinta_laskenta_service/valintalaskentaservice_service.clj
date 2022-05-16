@@ -3,23 +3,63 @@
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]))
 
-; :valinnanvaihe -> :valintakokeet -> [:nimi] -> osallistuminenTulos [laskentaTila -> :tila laskentatulos -> :arvo :kuvaus
+(defn- parse-exam
+  [koe]
+  (let [name (:nimi koe)
+        tila (get-in koe [:osallistuminenTulos :tila])
+        tulos (get-in koe [:osallistuminenTulos :laskentaTulos])
+        arvo (cond
+               (true? tulos)
+               :accepted
+
+               (false? tulos)
+               :rejected
+
+               :else
+               :not-done)]
+    {:nimi name
+     :arvo arvo
+     :tila tila
+     :localize-arvo true}))
+
+(defn- localize-state
+  [state]
+  (cond
+    (= "HYVAKSYTTY" state)
+    :accepted
+
+    (= "HYLATTY" state)
+    :rejected
+
+    (= "KESKEN" state)
+    :incomplete
+
+    (= "EI_TEHTY" state)
+    :not-done
+
+    :else
+    state))
+
 (defn- parse-pisteet
   [pisteet hakukohde-oid]
   (let [parse-tulos (fn [tulos]
                       {:tunniste (:tunniste tulos)
                        :arvo (:arvo tulos)
                        :nimi {:fi (:nimiFi tulos) :sv (:nimiSv tulos) :en (:nimiEn tulos)}})
-        funktio-tulokset (->> (:hakukohteet pisteet)
-                                (filter #(= hakukohde-oid (:oid %)))
-                                first
-                                :valinnanvaihe
-                                (mapcat :valintatapajonot)
-                                (mapcat :jonosijat)
-                                (mapcat :funktioTulokset)
-                                (map parse-tulos)
-                                (sort-by :tunniste))]
-    funktio-tulokset))
+        valinnanvaiheet (->> (:hakukohteet pisteet)
+                             (filter #(= hakukohde-oid (:oid %)))
+                             first
+                             :valinnanvaihe)
+        funktio-tulokset (->> valinnanvaiheet
+                              (mapcat :valintatapajonot)
+                              (mapcat :jonosijat)
+                              (mapcat :funktioTulokset)
+                              (map parse-tulos)
+                              (sort-by :tunniste))
+        exams (->> valinnanvaiheet
+                    (mapcat :valintakokeet)
+                    (map parse-exam))]
+    (concat funktio-tulokset exams)))
 
 (defn- parse-tulos
   [tulos pisteet]
@@ -28,9 +68,9 @@
                                 {:oid (:hakukohdeOid toive)
                                  :name (str (:hakukohdeNimi toive) " - " (:tarjoajaNimi toive))
                                  :kokonaispisteet (:pisteet toive)
-                                 :valintatila (:valintatila toive)
-                                 :vastaanottotila (:vastaanottotila toive)
-                                 :ilmoittautumistila (get-in toive [:ilmoittautumistila :ilmoittautumistila])
+                                 :valintatila (localize-state (:valintatila toive))
+                                 :vastaanottotila (localize-state (:vastaanottotila toive))
+                                 :ilmoittautumistila (localize-state (get-in toive [:ilmoittautumistila :ilmoittautumistila]))
                                  :pisteet (parse-pisteet pisteet (:hakukohdeOid toive))})))]
     hakutoiveet))
 
