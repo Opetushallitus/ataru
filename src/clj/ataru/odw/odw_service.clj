@@ -27,7 +27,7 @@
 
 (defn get-applications-for-odw [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service date limit offset application-key]
   (let [applications (if application-key
-                       [(application-store/get-latest-application-by-key application-key)]
+                       (application-store/get-latest-application-by-key-for-odw application-key)
                        (application-store/get-applications-newer-than date limit offset))
         active-applications (filter #(not= (:state %) "inactivated") applications)
         haut (->> (keep :haku applications)

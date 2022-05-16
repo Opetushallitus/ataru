@@ -862,6 +862,36 @@ ORDER BY a.created_time DESC
 LIMIT :limit
 OFFSET :offset;
 
+--name: yesql-get-single-odw-application-by-key
+SELECT
+    a.key,
+    a.haku,
+    a.hakukohde,
+    a.person_oid AS "person-oid",
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    application_reviews.state,
+    payment_obligations.states AS "payment-obligations",
+    eligibilities.states AS eligibilities
+FROM latest_applications AS a
+         JOIN application_reviews
+              ON application_reviews.application_key = a.key
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'payment-obligation' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS payment_obligations
+                   ON true
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'eligibility-state' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS eligibilities
+                   ON true
+WHERE a.person_oid IS NOT NULL
+  AND a.key = :key;
+
 --name: yesql-onr-applications
 SELECT a.key AS key,
        a.haku AS haku,
