@@ -14,7 +14,7 @@
            {:status 200 :body body}
            (json/parse-string body true)
 
-           :else (throw (RuntimeException. (str "Could not get hakemuksen tulokset by oid " hakemus-oid ", "
+           :else (throw (RuntimeException. (str "Could not get hakemuksen tulokset by haku-oid " haku-oid " and hakemus-oid " hakemus-oid ", "
                                    "status: " (:status result)
                                    "response body: "
                                    (:body result)))))))

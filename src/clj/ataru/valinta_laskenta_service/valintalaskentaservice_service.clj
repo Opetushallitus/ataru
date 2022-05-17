@@ -3,25 +3,6 @@
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]))
 
-(defn- parse-exam
-  [koe]
-  (let [name (:nimi koe)
-        tila (get-in koe [:osallistuminenTulos :tila])
-        tulos (get-in koe [:osallistuminenTulos :laskentaTulos])
-        arvo (cond
-               (true? tulos)
-               :accepted
-
-               (false? tulos)
-               :rejected
-
-               :else
-               :not-done)]
-    {:nimi name
-     :arvo arvo
-     :tila tila
-     :localize-arvo true}))
-
 (defn- localize-state
   [state]
   (cond
@@ -39,6 +20,25 @@
 
     :else
     state))
+
+(defn- parse-exam
+  [koe]
+  (let [name (:nimi koe)
+        tila (localize-state (get-in koe [:osallistuminenTulos :tila]))
+        tulos (get-in koe [:osallistuminenTulos :laskentaTulos])
+        arvo (cond
+               (true? tulos)
+               :accepted
+
+               (false? tulos)
+               :rejected
+
+               :else
+               :not-done)]
+    {:nimi name
+     :arvo arvo
+     :tila tila
+     :localize-arvo true}))
 
 (defn- parse-pisteet
   [pisteet hakukohde-oid]
