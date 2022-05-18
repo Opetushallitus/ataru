@@ -861,10 +861,18 @@
   {:oppilaitos-name localized-schema/LocalizedStringOptional
    :luokka s/Str})
 
+(s/defschema Arvosana
+  {:key                          s/Keyword
+   :value                        s/Str
+   :label                        localized-schema/LocalizedString
+   (s/optional-key :lang)        (s/maybe localized-schema/LocalizedString)
+   (s/optional-key :valinnaiset) [s/Str]})
+
 (s/defschema PohjakoulutusResponse
   {(s/optional-key :pohjakoulutus)        {:value s/Str
                                            :label localized-schema/LocalizedString}
    (s/optional-key :opetuskieli)          {:value s/Str
                                            :label localized-schema/LocalizedString}
    (s/optional-key :suoritusvuosi)        s/Str
-   (s/optional-key :lisapistekoulutukset) [s/Keyword]})
+   (s/optional-key :lisapistekoulutukset) [s/Keyword]
+   (s/optional-key :arvosanat)            [Arvosana]})

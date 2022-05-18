@@ -3490,3 +3490,27 @@ th.application__readonly-adjacent--header {
     font-weight: 600;
   }
 }
+
+.application__tabs {
+  padding-left: 245px;
+  margin-bottom: 1rem;
+  button {
+    font-size: 14px;
+    background: none;
+    margin-right: 2rem;
+    text-transform: capitalize;
+    border-radius: unset;
+    padding-bottom: 1rem;
+    border: none;
+
+    &:hover,
+    &:focus,
+    &:disabled {
+      color: @pale-blue;
+    }
+
+    &:disabled {
+      border-bottom: 2px solid @pale-blue;
+    }
+  }
+}
