@@ -6,6 +6,7 @@
   [_]
   (let [only-guardian?     (reagent/atom false)
         visible?           (subscribe [:application/mass-information-request-popup-visible?])
+        guardian-enabled?  (subscribe [:application/mass-information-request-only-guardian-enabled?])
         subject            (subscribe [:state-query [:application :mass-information-request :subject]])
         message            (subscribe [:state-query [:application :mass-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
@@ -38,12 +39,13 @@
             {:value     @message
              :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
           [application-information-request-contains-modification-link]
-          [:label
-           [:input
-           {:type      "checkbox"
-            :checked   @only-guardian?
-            :on-change #(swap! only-guardian? not)}]
-           [:span @(subscribe [:editor/virkailija-translation :only-guardian-email])]]
+          (when @guardian-enabled?
+            [:label
+             [:input
+             {:type      "checkbox"
+              :checked   @only-guardian?
+              :on-change #(swap! only-guardian? not)}]
+             [:span @(subscribe [:editor/virkailija-translation :only-guardian-email])]])
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
@@ -63,9 +65,9 @@
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-mass-information-request @only-guardian?])}
+              {:on-click #(dispatch [:application/submit-mass-information-request (and @guardian-enabled? @only-guardian?)])}
               @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages
-                           (if @only-guardian?
+                           (if (and @guardian-enabled? @only-guardian?)
                              @guardian-count
                              @applications-count)])]
 
