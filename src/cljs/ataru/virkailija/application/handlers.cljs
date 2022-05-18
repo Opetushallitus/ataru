@@ -1140,3 +1140,8 @@
   :application/handle-fetch-classes-of-school-response
   (fn handle-fetch-classes-of-school-response [db [_ classes]]
     (assoc-in db [:application :selected-school-classes] (sort classes))))
+
+(reg-event-db
+  :application/select-application-tab
+  (fn select-application-tab [db [_ tab]]
+    (assoc-in db [:application :tab] tab)))
