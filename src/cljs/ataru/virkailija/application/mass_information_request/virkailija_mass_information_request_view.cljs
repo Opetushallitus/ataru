@@ -1,13 +1,17 @@
 (ns ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-view
-  (:require [re-frame.core :refer [subscribe dispatch]]))
+  (:require [reagent.core :as reagent]
+            [re-frame.core :refer [subscribe dispatch]]))
 
 (defn mass-information-request-link
   [_]
-  (let [visible?           (subscribe [:application/mass-information-request-popup-visible?])
+  (let [only-guardian?     (reagent/atom false)
+        visible?           (subscribe [:application/mass-information-request-popup-visible?])
+        guardian-enabled?  (subscribe [:application/mass-information-request-only-guardian-enabled?])
         subject            (subscribe [:state-query [:application :mass-information-request :subject]])
         message            (subscribe [:state-query [:application :mass-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
         applications-count (subscribe [:application/loaded-applications-count])
+        guardian-count     (subscribe [:application/loaded-applications-guardian-count])
         button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
     (fn [application-information-request-contains-modification-link]
       [:span.application-handling__mass-information-request-container
@@ -35,6 +39,13 @@
             {:value     @message
              :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
           [application-information-request-contains-modification-link]
+          (when @guardian-enabled?
+            [:label
+             [:input
+             {:type      "checkbox"
+              :checked   @only-guardian?
+              :on-change #(swap! only-guardian? not)}]
+             [:span @(subscribe [:editor/virkailija-translation :only-guardian-email])]])
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
@@ -54,8 +65,11 @@
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-mass-information-request])}
-              @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages @applications-count])]
+              {:on-click #(dispatch [:application/submit-mass-information-request (and @guardian-enabled? @only-guardian?)])}
+              @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages
+                           (if (and @guardian-enabled? @only-guardian?)
+                             @guardian-count
+                             @applications-count)])]
 
              :submitting
              [:div.application-handling__information-request-status

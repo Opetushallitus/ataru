@@ -40,7 +40,7 @@
 
 (reg-event-fx
   :application/submit-mass-information-request
-  (fn [{:keys [db]} _]
+  (fn [{:keys [db]} [_ only-guardian?]]
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
           application-keys    (map :key (get-in db [:application :applications]))]
@@ -48,6 +48,7 @@
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
                   :params              {:application-keys    application-keys
+                                        :only-guardian       only-guardian?
                                         :message-and-subject message-and-subject}
                   :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 
