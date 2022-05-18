@@ -5,15 +5,18 @@
 
 (defn- pisteet [lang hakukohde-oid nimet? pisteet]
   [:<>
-    [:div.grade @(subscribe [:editor/virkailija-translation :scores])]
-      (for [piste pisteet]
-        ^{:key (str hakukohde-oid "-" (:tunniste piste))}
-        [:div.tulos
-          (if nimet?
-            [:span.tulos__subject (lang (:nimi piste))]
-            (if (:localize-arvo piste)
-              [:span.tulos__value @(subscribe [:editor/virkailija-translation (keyword (:arvo piste))])]
-              [:span.tulos__value (to-finnish-number (:arvo piste))]))])])
+    [:div.tulos
+     [:p.tulos__sub-header (if nimet?
+                                @(subscribe [:editor/virkailija-translation :scores])
+                                "")]]
+    (for [piste pisteet]
+      ^{:key (str hakukohde-oid "-" (:tunniste piste))}
+      [:div.tulos
+        (if nimet?
+          [:span.tulos__subject (lang (:nimi piste))]
+          (if (:localize-arvo piste)
+            [:span.tulos__value @(subscribe [:editor/virkailija-translation (keyword (:arvo piste))])]
+            [:span.tulos__value (to-finnish-number (:arvo piste))]))])])
 
 (defn- valinnat-loaded []
   (let [valinnat (subscribe [:application/application-valinnat])
