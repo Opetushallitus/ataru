@@ -1123,3 +1123,12 @@
   :application/selected-application-tab
   (fn selected-application-tab [db _]
     (or (get-in db [:application :tab]) "application")))
+
+(re-frame/reg-sub
+  :application/has-right-to-valinnat-tab?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?])])
+  (fn has-right-to-valinnat-tab? [db [opinto-ohjaaja-or-admin?]]
+    (let [user-info (-> db :editor :user-info)]
+      (or opinto-ohjaaja-or-admin?
+        (some (fn [org] (some #(= "valinnat-valilehti" % ) (:rights org))) (:organizations user-info))))))
