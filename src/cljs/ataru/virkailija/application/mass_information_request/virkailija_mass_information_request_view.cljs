@@ -26,7 +26,8 @@
            [:button.virkailija-close-button
             {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility false])}
             [:i.zmdi.zmdi-close]]]
-          [:p @(subscribe [:editor/virkailija-translation :mass-information-request-email-n-recipients @applications-count])]
+          (when-not @guardian-enabled?
+            [:p @(subscribe [:editor/virkailija-translation :mass-information-request-email-n-recipients @applications-count])])
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :mass-information-request-subject])]
            [:div.application-handling__information-request-text-input-container
@@ -40,28 +41,33 @@
              :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
           [application-information-request-contains-modification-link]
           (when @guardian-enabled?
-            [:label
-             [:input
-             {:type      "checkbox"
-              :checked   @guardian?
-              :on-change #(swap! guardian? not)}]
-             [:span @(subscribe [:editor/virkailija-translation :guardian-email])]])
-          (when @guardian-enabled?
-            [:label
-             [:input
-              {:type      "checkbox"
-               :checked   @applicant?
-               :on-change #(swap! applicant? not)}]
-             [:span @(subscribe [:editor/virkailija-translation :applicant-email @applications-count])]])
+            [:div.application-handling__information-request-row
+             [:div.application-handling__information-request-row
+              [:label
+               [:input
+                {:type      "checkbox"
+                 :checked   @applicant?
+                 :on-change #(swap! applicant? not)}]
+               [:span @(subscribe [:editor/virkailija-translation :applicant-email @applications-count])]]
+             [:div.application-handling__information-request-row
+              [:label
+               [:input
+               {:type      "checkbox"
+                :checked   @guardian?
+                :on-change #(swap! guardian? not)}]
+               [:span @(subscribe [:editor/virkailija-translation :guardian-email])]]]]])
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
              [:button.application-handling__send-information-request-button
-              {:disabled (not @button-enabled?)
-               :class    (if @button-enabled?
-                           "application-handling__send-information-request-button--enabled"
-                           "application-handling__send-information-request-button--disabled")
-               :on-click #(dispatch [:application/confirm-mass-information-request])}
+              (let [enabled? (or (and (not @guardian-enabled?)
+                             @button-enabled?)
+                        (and @button-enabled? (or @guardian? @applicant?)))]
+                {:disabled (not enabled?)
+                 :class    (if enabled?
+                             "application-handling__send-information-request-button--enabled"
+                             "application-handling__send-information-request-button--disabled")
+                 :on-click #(dispatch [:application/confirm-mass-information-request])})
               @(subscribe [:editor/virkailija-translation :mass-information-request-send])]
 
              :loading-applications

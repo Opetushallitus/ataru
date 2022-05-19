@@ -1403,9 +1403,9 @@
    :edit-email-templates                                     {:fi "Muokkaa sähköpostipohjia"
                                                               :sv "Bearbeta e-postmallar"
                                                               :en "Edit the email templates"}
-   :edit-link-sent-automatically                             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
+   :edit-link-sent-automatically                             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti hakijoille"
                                                               :sv "Bearbetningslänken skickas automatiskt med meddelandet"
-                                                              :en "The edit link will be sent automatically"}
+                                                              :en "The edit link will be sent automatically to applicants"}
    :editable-content-beginning                               {:fi "Muokattava osuus (viestin alku)"
                                                               :sv "Del som ska bearbetas (början av meddelandet)"
                                                               :en "EN: Muokattava osuus (viestin alku)"}
