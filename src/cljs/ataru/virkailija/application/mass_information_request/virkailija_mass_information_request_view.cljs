@@ -4,7 +4,8 @@
 
 (defn mass-information-request-link
   [_]
-  (let [only-guardian?     (reagent/atom false)
+  (let [guardian?          (reagent/atom false)
+        applicant?         (reagent/atom true)
         visible?           (subscribe [:application/mass-information-request-popup-visible?])
         guardian-enabled?  (subscribe [:application/mass-information-request-only-guardian-enabled?])
         subject            (subscribe [:state-query [:application :mass-information-request :subject]])
@@ -43,9 +44,16 @@
             [:label
              [:input
              {:type      "checkbox"
-              :checked   @only-guardian?
-              :on-change #(swap! only-guardian? not)}]
-             [:span @(subscribe [:editor/virkailija-translation :only-guardian-email])]])
+              :checked   @guardian?
+              :on-change #(swap! guardian? not)}]
+             [:span @(subscribe [:editor/virkailija-translation :guardian-email])]])
+          (when @guardian-enabled?
+            [:label
+             [:input
+              {:type      "checkbox"
+               :checked   @applicant?
+               :on-change #(swap! applicant? not)}]
+             [:span @(subscribe [:editor/virkailija-translation :applicant-email @applications-count])]])
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
@@ -65,11 +73,21 @@
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-mass-information-request (and @guardian-enabled? @only-guardian?)])}
+              {:on-click #(dispatch [:application/submit-mass-information-request
+                                     (cond
+                                       (or (not @guardian-enabled?)
+                                           (and @applicant? (not @guardian?)))
+                                       "hakija"
+
+                                       (and @applicant? @guardian?)
+                                       "hakija_ja_huoltajat"
+
+                                       @guardian?
+                                       "huoltajat")])}
               @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages
-                           (if (and @guardian-enabled? @only-guardian?)
-                             @guardian-count
-                             @applications-count)])]
+                           (if (or (not @guardian-enabled?) (and @applicant? (not @guardian?)))
+                             @applications-count
+                             "-")])]
 
              :submitting
              [:div.application-handling__information-request-status
