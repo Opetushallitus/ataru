@@ -12,7 +12,6 @@
         message            (subscribe [:state-query [:application :mass-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
         applications-count (subscribe [:application/loaded-applications-count])
-        guardian-count     (subscribe [:application/loaded-applications-guardian-count])
         button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
     (fn [application-information-request-contains-modification-link]
       [:span.application-handling__mass-information-request-container
