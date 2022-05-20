@@ -78,8 +78,7 @@
   {:pre [(-> information-request :subject u/not-blank?)
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
-         (-> information-request :message-type u/not-blank?)
-         (-> information-request :recipient-target u/not-blank?)]}
+         (-> information-request :message-type u/not-blank?)]}
   (let [information-request (information-request-store/add-information-request
                              information-request
                              (-> session :identity :oid)
