@@ -5,7 +5,8 @@
    [ataru.config.core :refer [config]]
    [ataru.background-job.maksut-poller-job :as maksut-poller-job]
    [ataru.db.db :as db]
-   [yesql.core :refer [defqueries]])
+   [yesql.core :refer [defqueries]]
+   [clojure.string :as string])
   (:import [java.util.concurrent Executors TimeUnit]))
 
 (declare yesql-get-status-poll-applications)
@@ -18,7 +19,7 @@
 (defn- find-applications
   [application-service maksut-service job-runner]
   (try
-    (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_key (-> config :tutkintojen-tunnustaminen :maksut :form-key)}))]
+    (if-let [apps (seq (db/exec :db yesql-get-status-poll-applications {:form_keys (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")}))]
       (do
         (log/debug "Found " (count apps) " applications in states waiting for Maksut -actions, checking their statuses")
         (start-maksut-poller-job application-service maksut-service job-runner apps))

@@ -16,7 +16,7 @@
                              :maksut                      {:enabled?                false
                                                            :poll-interval-minutes   5
                                                            :decision-amount         "70.00"
-                                                           :form-key      			    ""}
+                                                           :form-keys      			    ""}
                              :ftp                         {:host               ""
                                                            :port               22
                                                            :user               ""

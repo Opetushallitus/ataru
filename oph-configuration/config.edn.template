@@ -15,7 +15,7 @@
                              :maksut                      {:enabled?                {{ataru_tutkintojen_tunnustaminen_maksut_enabled | default('false')}}
                                                            :poll-interval-minutes   {{ataru_tutkintojen_tunnustaminen_maksut_poll_interval | default('5')}}
                                                            :decision-amount         "{{ataru_tutkintojen_tunnustaminen_maksut_decision_amount | default('70.00')}}"
-                                                           :form-key      			    "{{ataru_tutkintojen_tunnustaminen_maksut_form_key}}"}
+                                                           :form-keys      			    "{{ataru_tutkintojen_tunnustaminen_maksut_form_keys}}"}
                              :ftp                         {:host               "{{ataru_tutkintojen_tunnustaminen_ftp_host}}"
                                                            :port               {{ataru_tutkintojen_tunnustaminen_ftp_port}}
                                                            :user               "{{ataru_tutkintojen_tunnustaminen_ftp_user}}"
@@ -45,7 +45,7 @@
                             :schema-validation {{ ataru_schema_validation | default('false') }}
                             :arvosanat {{ ataru_arvosanat | default('false') }}}
                  :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
-                 :tutu-payment-form-key "{{ataru_tutu_payment_form_key}}"
+                 :tutu-payment-form-keys "{{ataru_tutu_payment_form_keys}}"
                  :attachment-modify-grace-period-days 14
                  :attachment-file-max-size-bytes {{ataru_attachment_file_max_size_bytes}}
                  :attachment-file-part-max-size-bytes {{ataru_attachment_file_part_max_size_bytes}}
