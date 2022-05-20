@@ -1664,9 +1664,9 @@
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
-   :mass-information-request-confirm-n-messages              {:fi "Vahvista %d viestin lähetys"
-                                                              :sv "Bekräfta att %d meddelanden kommer att skickas"
-                                                              :en "Confirm sending %d messages"}
+   :mass-information-request-confirm-n-messages              {:fi "Vahvista %s viestin lähetys"
+                                                              :sv "Bekräfta att %s meddelanden kommer att skickas"
+                                                              :en "Confirm sending %s messages"}
    :mass-information-request-email-n-recipients              {:fi "Lähetä sähköposti %d hakijalle:"
                                                               :sv "Skicka e-post till %d sökande:"
                                                               :en "Send email to %d applicants:"}
