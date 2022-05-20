@@ -762,7 +762,7 @@
                                     :application-key s/Str})
 
 (s/defschema InformationRequest {:subject         s/Str
-                                 (s/optional-key :recipient-target) (s/enum "hakija" "huoltajat" "hakija_ja_huoltajat")
+                                 (s/optional-key :recipient-target) s/Str
                                  :message         s/Str
                                  :application-key s/Str
                                  :message-type    s/Str
