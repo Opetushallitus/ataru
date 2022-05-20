@@ -758,6 +758,7 @@
   (<= (count s) 200))
 
 (s/defschema NewInformationRequest {:subject         (s/constrained s/Str length-at-most-200)
+                                    (s/optional-key :recipient-target) s/Str
                                     :message         s/Str
                                     :application-key s/Str})
 
