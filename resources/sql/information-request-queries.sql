@@ -5,13 +5,15 @@ INSERT INTO information_requests (
   subject,
   message,
   virkailija_oid,
-  message_type
+  message_type,
+  recipient_target
 ) VALUES (
   :application_key,
   :subject,
   :message,
   :virkailija_oid,
-  :message_type
+  :message_type,
+  :recipient_target
 );
 
 -- name: yesql-get-information-requests
