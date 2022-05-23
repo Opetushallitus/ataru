@@ -37,7 +37,7 @@
                    :environment-name                    "dev"
                    :features                            {}
                    :secret-link-valid-days              14
-                   :tutu-payment-form-key               ""
+                   :tutu-payment-form-keys              ""
                    :attachment-modify-grace-period-days 14
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880}

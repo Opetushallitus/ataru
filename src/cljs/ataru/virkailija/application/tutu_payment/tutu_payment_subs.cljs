@@ -8,30 +8,32 @@
 (re-frame.core/reg-sub
  :tutu-payment/tutu-form?
  (fn [_ [_ key]]
-   (let [tutu-form (aget js/config "tutu-payment-form-key")]
-     (and
-      (not-empty tutu-form)
-      (= tutu-form key)))))
+   (let [tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
+     (boolean
+       (and
+         (not-empty tutu-forms)
+         (some #(= key %) tutu-forms))))))
 
 (re-frame.core/reg-sub
  :tutu-payment/show-review-ui?
  (fn [db _]
    (let [current-form (get-in db [:application :selected-application-and-form :form :key])
-         tutu-form    (aget js/config "tutu-payment-form-key")]
-
-     (and
-      (not-empty tutu-form)
-      (= tutu-form current-form)))))
+         tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
+     (boolean
+       (and
+         (not-empty tutu-forms)
+         (some #(= current-form %) tutu-forms)
+         )))))
 
 (re-frame.core/reg-sub
  :tutu-payment/tutu-form-selected?
  (fn [db _]
    (let [selected-form (get-in db [:application :selected-form-key])
-         tutu-form    (aget js/config "tutu-payment-form-key")]
-
-     (and
-      (not-empty tutu-form)
-      (= tutu-form selected-form)))))
+         tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
+     (boolean
+       (and
+         (not-empty tutu-forms)
+         (some #(= selected-form %) tutu-forms))))))
 
 (re-frame/reg-sub
  :tutu-payment/note-input
