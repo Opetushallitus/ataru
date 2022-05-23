@@ -1422,6 +1422,8 @@
                                 session
                                 person-service
                                 tarjonta-service
+                                valintalaskentakoostepalvelu-service
+                                suoritus-service
                                 fromDate
                                 limit
                                 offset
@@ -1437,6 +1439,8 @@
                                 session
                                 person-service
                                 tarjonta-service
+                                valintalaskentakoostepalvelu-service
+                                suoritus-service
                                 nil
                                 nil
                                 nil
