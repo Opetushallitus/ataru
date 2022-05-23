@@ -19,7 +19,7 @@
                              :maksut                      {:enabled?                false
                                                            :poll-interval-minutes   60
                                                            :decision-amount         "70.00"
-                                                           :form-key      			    ""}
+                                                           :form-keys      			    ""}
                              :ftp                         {:host               "localhost"
                                                            :port               1221
                                                            :user               "oph"
