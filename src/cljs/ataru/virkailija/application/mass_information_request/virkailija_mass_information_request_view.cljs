@@ -92,7 +92,8 @@
               @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages
                            (if (or (not @guardian-enabled?) (and @applicant? (not @guardian?)))
                              @applications-count
-                             "-")])]
+                             (str (if @applicant? @applications-count 0) "-"
+                                  (* @applications-count (if @applicant? 3 2))))])]
 
              :submitting
              [:div.application-handling__information-request-status
