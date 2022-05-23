@@ -15,6 +15,10 @@
 
 (s/defschema Right (apply s/enum right-names))
 
+(defn is-super-user?
+  [session]
+  (boolean (-> session :identity :superuser)))
+
 (defn virkailija->right-organization-oids
   [virkailija rights]
   {:pre [(< 0 (count rights))]}

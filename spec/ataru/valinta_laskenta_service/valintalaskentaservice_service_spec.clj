@@ -5,7 +5,8 @@
             [ataru.valinta-tulos-service.valintatulosservice-protocol :refer [ValintaTulosService]]
             [clj-http.client :as http]
             [ataru.cas.client :as cas]
-            [cheshire.core :as json]))
+            [cheshire.core :as json])
+  (:import [java.time ZonedDateTime ZoneId]))
 
 (def mocked-vls-response
   {:hakukohteet
@@ -53,6 +54,12 @@
                                   [{:nimi                "Valintakoe"
                                     :osallistuminenTulos {:tila          "HYVAKSYTTY"
                                                           :laskentaTulos true}}]))
+
+(defn- time-from-present [modifier]
+       (-> (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))
+           .toInstant
+           .toEpochMilli
+           (+ (* modifier 10000))))
 
 (defrecord FakeValintaTulosService []
   ValintaTulosService
@@ -109,4 +116,73 @@
                   (should= "Valintakoe" (:nimi last-piste))
                   (should= :accepted (:tila last-piste))
                   (should= :accepted (:arvo last-piste))
-                  (should= true (:localize-arvo last-piste))))))
+                  (should= true (:localize-arvo last-piste)))))
+
+          (it "allows fetching valintatulokset when time window is null"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu? vls-service-instance false {})]
+                (should= true result)))
+
+          (it "allows fetching valintatulokset when start is before present and end is not given"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present -10) :dateEnd nil}})]
+                (should= true result)))
+
+          (it "allows fetching valintatulokset when end is after present and start is not given"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart nil :dateEnd (time-from-present 10)}})]
+                (should= true result)))
+
+          (it "disallows fetching valintatulokset when start is after present and end is not given"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present 10) :dateEnd nil}})]
+                (should= false result)))
+
+          (it "disallows fetching valintatulokset when end is before present and start is not given"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart nil :dateEnd (time-from-present -10)}})]
+                (should= false result)))
+
+          (it "allows fetching valintatulokset when present is in time window"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present -10) :dateEnd (time-from-present 10)}})]
+                (should= true result)))
+
+          (it "disallows fetching valintatulokset when present is before time window"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present 10) :dateEnd (time-from-present 20)}})]
+                (should= false result)))
+
+          (it "disallows fetching valintatulokset when present is after time window"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             false
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present -20) :dateEnd (time-from-present -10)}})]
+                (should= false result)))
+
+          (it "disallows fetching valintatulokset when user is superuser"
+              (let [vls-service-instance (vls-service/->RemoteValintaLaskentaService nil nil)
+                    result (vls/valinnan-tuloksien-hakeminen-sallittu?
+                             vls-service-instance
+                             true
+                             {:valinnat-estetty-time-window {:dateStart (time-from-present -20) :dateEnd (time-from-present -10)}})]
+                (should= true result))))

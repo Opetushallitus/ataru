@@ -979,9 +979,13 @@
         :summary "Hakee hakemuksen tulokset valinnoista"
         (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
               organization-service tarjonta-service suoritus-service person-service session [hakemus-oid] [:valinnat-valilehti])
-          (if-let [tulokset (vls/hakemuksen-tulokset valinta-laskenta-service haku-oid hakemus-oid)]
-            (ok tulokset)
-            (not-found))
+          (let [haku (tarjonta/get-haku tarjonta-service haku-oid)
+                superuser? (user-rights/is-super-user? session)]
+            (if (vls/valinnan-tuloksien-hakeminen-sallittu? valinta-laskenta-service superuser? haku)
+              (if-let [tulokset (vls/hakemuksen-tulokset valinta-laskenta-service haku-oid hakemus-oid)]
+                (ok tulokset)
+                (not-found))
+              (response/unauthorized {:error "Valinnan tulokset kesken"})))
           (response/unauthorized {:error "Unauthorized"}))))
 
     (api/context "/valintaperusteet" []

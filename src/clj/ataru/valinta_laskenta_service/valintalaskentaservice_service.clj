@@ -1,7 +1,8 @@
 (ns ataru.valinta-laskenta-service.valintalaskentaservice-service
   (:require [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :refer [ValintaLaskentaService]]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
-            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]))
+            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client])
+  (:import [java.time ZonedDateTime Instant ZoneId]))
 
 (defn- localize-state
   [state]
@@ -81,8 +82,38 @@
         parsed-tulos (parse-tulos @tulos pisteet)]
     parsed-tulos))
 
+(defn- is-fetching-valinnat-allowed?
+  [time-window]
+  (let [start  (when (:dateStart time-window)
+                (-> (:dateStart time-window)
+                    (Instant/ofEpochMilli)
+                    (ZonedDateTime/ofInstant (ZoneId/of "Europe/Helsinki"))))
+        end    (when (:dateEnd time-window)
+                 (-> (:dateEnd time-window)
+                     (Instant/ofEpochMilli)
+                     (ZonedDateTime/ofInstant (ZoneId/of "Europe/Helsinki"))))
+        present (ZonedDateTime/now (ZoneId/of "Europe/Helsinki"))]
+  (cond
+    (and (nil? start) (nil? end))
+    true
+
+    (nil? end)
+    (.isBefore start present)
+
+    (nil? start)
+    (.isAfter end present)
+
+    :else
+    (and (.isBefore start present)
+         (.isAfter end present)))))
+
 (defrecord RemoteValintaLaskentaService [cas-client valinta-tulos-service]
   ValintaLaskentaService
 
   (hakemuksen-tulokset [_ hakukohde-oid haku-oid]
-    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid)))
+    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid))
+
+  (valinnan-tuloksien-hakeminen-sallittu? [_ superuser? haku]
+    (if superuser?
+      true
+      (is-fetching-valinnat-allowed? (:valinnat-estetty-time-window haku)))))
