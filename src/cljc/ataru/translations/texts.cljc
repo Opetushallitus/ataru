@@ -1319,6 +1319,12 @@
    :cancel-copy                                              {:fi "Älä kopio"
                                                               :sv "Kopiera inte"
                                                               :en "Cancel copy"}
+   :applicant-email                                          {:fi "Lähetä sähköposti %d hakijalle"
+                                                              :sv "Send %d applicant e-mail"
+                                                              :en "Send %d applicant e-mail"}
+   :guardian-email                                           {:fi "Lähetä sähköposti huoltajille"
+                                                              :sv "Send guardian e-mail"
+                                                              :en "Send guardian e-mail"}
    :only-selected-hakukohteet                                {:fi "vain valituille hakukohteille"
                                                               :sv "till valda ansökningsmål"
                                                               :en "only selected study programmes"}
@@ -1397,9 +1403,9 @@
    :edit-email-templates                                     {:fi "Muokkaa sähköpostipohjia"
                                                               :sv "Bearbeta e-postmallar"
                                                               :en "Edit the email templates"}
-   :edit-link-sent-automatically                             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti"
+   :edit-link-sent-automatically                             {:fi "Muokkauslinkki lähtee viestin mukana automaattisesti hakijoille"
                                                               :sv "Bearbetningslänken skickas automatiskt med meddelandet"
-                                                              :en "The edit link will be sent automatically"}
+                                                              :en "The edit link will be sent automatically to applicants"}
    :editable-content-beginning                               {:fi "Muokattava osuus (viestin alku)"
                                                               :sv "Del som ska bearbetas (början av meddelandet)"
                                                               :en "EN: Muokattava osuus (viestin alku)"}
@@ -1658,9 +1664,9 @@
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
-   :mass-information-request-confirm-n-messages              {:fi "Vahvista %d viestin lähetys"
-                                                              :sv "Bekräfta att %d meddelanden kommer att skickas"
-                                                              :en "Confirm sending %d messages"}
+   :mass-information-request-confirm-n-messages              {:fi "Vahvista %s viestin lähetys"
+                                                              :sv "Bekräfta att %s meddelanden kommer att skickas"
+                                                              :en "Confirm sending %s messages"}
    :mass-information-request-email-n-recipients              {:fi "Lähetä sähköposti %d hakijalle:"
                                                               :sv "Skicka e-post till %d sökande:"
                                                               :en "Send email to %d applicants:"}
