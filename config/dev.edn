@@ -39,7 +39,7 @@
                    :enable-re-frisk                     true
                    :local-dev-logout                    true
                    :secret-link-valid-days              14
-                   :tutu-payment-form-key               ""
+                   :tutu-payment-form-keys              ""
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
                    :features {:schema-validation true}}

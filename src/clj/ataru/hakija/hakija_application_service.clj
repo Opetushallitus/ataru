@@ -426,7 +426,8 @@
         tutu-keys   (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")
         form-key   (when (some? form)
                          (-> (cache/get-from form-by-id-cache (str form)) :key))
-        tutu-form? (and (some? tutu-keys) (= tutu-keys form-key))
+        tutu-form? (boolean
+                     (and (some? tutu-keys) (some #(= form-key %) tutu-keys)))
 
         get-field  (fn [key] (->> (:answers application)
                                   (filter #(= key (:key %)))
