@@ -50,28 +50,26 @@
 (defn- start-email-job [job-runner connection information-request]
   (let [job-type      (:type information-request-job/job-definition)
         target        (:recipient-target information-request)]
-    (cond-> nil
-            (or (= "hakija" target)
-                (= "hakija_ja_huoltajat" target))
-            #(let [job-id (job/start-job job-runner
+    (when (or (= "hakija" target)
+              (= "hakija_ja_huoltajat" target))
+          #(let [job-id (job/start-job job-runner
+                                       connection
+                                       job-type
+                                       (initial-state connection information-request false))]
+             (log/info (str "Started information request email job with job id " job-id
+                            " for application " (:application-key information-request)))))
+    (when (or (= "huoltajat" target)
+              (= "hakija_ja_huoltajat" target))
+          #(if-let [job-state (initial-state connection information-request true)]
+             (let [job-id (job/start-job job-runner
                                          connection
                                          job-type
-                                         (initial-state connection information-request false))]
+                                         job-state)]
                (log/info (str "Started information request email job with job id " job-id
                               " for application " (:application-key information-request))))
-
-            (or (= "huoltajat" target)
-                (= "hakija_ja_huoltajat" target))
-            #(if-let [job-state (initial-state connection information-request true)]
-               (let [job-id (job/start-job job-runner
-                                           connection
-                                           job-type
-                                           job-state)]
-                 (log/info (str "Started information request email job with job id " job-id
-                                " for application " (:application-key information-request))))
-               (log/info (str "Skipped information request email job for guardian for application "
-                              (:application-key information-request)
-                              " because application doesn't contain guardian email"))))))
+             (log/info (str "Skipped information request email job for guardian for application "
+                            (:application-key information-request)
+                            " because application doesn't contain guardian email"))))))
 
 (defn- store-in-tx
   [session information-request job-runner connection]
