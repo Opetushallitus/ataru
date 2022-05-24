@@ -29,9 +29,10 @@
         lang             (-> application :lang keyword)
         recipient-emails (if guardian?
                            (distinct
-                             (filter some?
-                                     [(extract-answer-value "guardian-email" application)
-                                      (extract-answer-value "guardian-email-secondary" application)]))
+                             (flatten
+                               (filter some?
+                                       [(extract-answer-value "guardian-email" application)
+                                        (extract-answer-value "guardian-email-secondary" application)])))
                            [(extract-answer-value "email" application)])
         translations     (translations/get-translations lang)
         service-url      (get-in config [:public-config :applicant :service_url])
