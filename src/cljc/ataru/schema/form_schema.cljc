@@ -279,7 +279,9 @@
    :haun-tiedot-url                            s/Str
    (s/optional-key :hakukausi-vuosi)           s/Int
    (s/optional-key :ataru-form-key)            s/Str
-   (s/optional-key :max-hakukohteet)           s/Int})
+   (s/optional-key :max-hakukohteet)           s/Int
+   (s/optional-key :valinnat-estetty-time-window) (s/maybe {:dateStart (s/maybe s/Int)
+                                                            :dateEnd   (s/maybe s/Int)})})
 
 (s/defschema Hakukohderyhma
   {:oid             s/Str
