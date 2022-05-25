@@ -1778,6 +1778,9 @@
    :ilmoittautumistila                                       {:fi "Ilmoittautumistila"
                                                               :sv "Uppgift om anmälan"
                                                               :en "EN: Ilmoittautumistila"}
+   :valinnan-tulokset-kesken                                 {:fi "Valinnan tulokset kesken"
+                                                              :sv "Ansökans resultat på hälft"
+                                                              :en "EN: Valinnan tulokset kesken"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}

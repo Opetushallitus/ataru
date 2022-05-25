@@ -27,13 +27,21 @@
     (let [application-key (-> db :application :selected-key)
           valinnat   (get-in db [:application :valinnat-by-application-key application-key])
           loading    (get-in db [:request-handles :fetch-application-valinnat])]
-      (if (:error valinnat)
+      (cond
+        (boolean? (:error valinnat))
         :error
-        (if loading
-          :loading
-          (if (= {} valinnat)
-            :not-found
-            :loaded))))))
+
+        (:error valinnat)
+        (:error valinnat)
+
+        loading
+        :loading
+
+        (= {} valinnat)
+        :not-found
+
+        :else
+        :loaded))))
 
 (re-frame/reg-sub
   :application/application-valinnat

@@ -65,4 +65,5 @@
         :loading [loading-indicator]
         :loaded [valinnat-loaded]
         :error [error-loading :error-loading-valinnat]
-        :not-found [not-found])]]))
+        :not-found [not-found]
+        [error-loading valinnat-loading-state])]]))
