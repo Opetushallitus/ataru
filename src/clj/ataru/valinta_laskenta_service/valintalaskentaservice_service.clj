@@ -98,14 +98,14 @@
     true
 
     (nil? end)
-    (.isBefore start present)
+    (.isBefore present start)
 
     (nil? start)
-    (.isAfter end present)
+    (.isAfter present end)
 
     :else
-    (and (.isBefore start present)
-         (.isAfter end present)))))
+    (or (.isBefore present start)
+         (.isAfter present end)))))
 
 (defrecord RemoteValintaLaskentaService [cas-client valinta-tulos-service]
   ValintaLaskentaService
