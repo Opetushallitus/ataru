@@ -222,10 +222,10 @@
                                                  :sv "Bekräfta raderingen"
                                                  :en "Confirm removal"}
    :cancel-upload                               {:fi "Keskeytä"
-                                                 :sv "Avbryta"
+                                                 :sv "Avbryt"
                                                  :en "Cancel"}
    :cancel-cancel-upload                        {:fi "Älä keskeytä"
-                                                 :sv "Avbryta inte"
+                                                 :sv "Avbryt inte"
                                                  :en "Don't cancel"}
    :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
                                                  :sv "Bekräfta avbrytning"
@@ -1077,7 +1077,7 @@
                                                               :sv "Antagningens status"
                                                               :en "Valinnan tila"}
    :search-placeholder                                       {:fi "Hae.."
-                                                              :sv "Söka.."
+                                                              :sv "Sök.."
                                                               :en "Search.."}
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
                                                               :sv "Antagningsuppgiften hämtad från antagningsregistret"
@@ -1536,8 +1536,8 @@
                                                               :sv "Av sökande"
                                                               :en "From applicant"}
    :from-state                                               {:fi "Tilasta"
-                                                              :sv "Ur status"
-                                                              :en "From status to"}
+                                                              :sv "Från behandlingsskede"
+                                                              :en "From processing status"}
    :group                                                    {:fi "ryhmä"
                                                               :sv "grupp"
                                                               :en "Group"}
@@ -1657,10 +1657,10 @@
                                                               :en "Excel"}
    :excel-included-ids                                       {:fi "Exceliin sisältyvät tunnisteet:"
                                                               :sv "Identifikationer som ingår i excelfilen:"
-                                                              :en "Exceliin sisältyvät tunnisteet:"}
+                                                              :en "Identifiers included in the Excel file:"}
    :excel-include-all-placeholder                            {:fi "Kaikki tunnisteet"
                                                               :sv "Alla identifikationer"
-                                                              :en "Kaikki tunnisteet"}
+                                                              :en "All identifiers"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
@@ -2327,7 +2327,7 @@
                             :en "Under evaluation"}
    :valintaesitys          {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
-                            :en "EN: Valintaesitys"}
+                            :en "Admission proposal"}
    :processed              {:fi "Käsitelty"
                             :sv "Behandlad"
                             :en "Processed"}
@@ -2354,10 +2354,10 @@
                             :en "Unreviewed"}
    :fulfilled              {:fi "Täyttyy"
                             :sv "Fylls"
-                            :en "Fills"}
+                            :en "Meets requirement"}
    :unfulfilled            {:fi "Ei täyty"
                             :sv "Fylls inte"
-                            :en "Not filling"}
+                            :en "Does nor meet requirement"}
    :eligible               {:fi "Hakukelpoinen"
                             :sv "Ansökningsbehörig"
                             :en "Eligible"}
@@ -2365,7 +2365,7 @@
                             :sv "Inte ansökningsbehörig"
                             :en "Not eligible"}
    :conditionally-eligible {:fi "Ehdollisesti hakukelpoinen"
-                            :sv "SV: Ehdollisesti hakukelpoinen"
+                            :sv "Villkorligt ansökningsbehörig"
                             :en "Conditionally eligible"}
    :obligated              {:fi "Velvollinen"
                             :sv "Förpliktad"
@@ -2378,7 +2378,7 @@
                             :en "State of processing"}
    :language-requirement   {:fi "Kielitaitovaatimus"
                             :sv "Språkkunskapskrav"
-                            :en "Language requirment"}
+                            :en "Language requirement"}
    :degree-requirement     {:fi "Tutkinnon kelpoisuus"
                             :sv "Examens behörighet"
                             :en "Degree requirement"}
@@ -2404,14 +2404,14 @@
                             :sv "Försenad"
                             :en "Overdue"}
    :no-attachment-required {:fi "Ei liitepyyntöä"
-                            :sv "Ei liitepyyntöä (sv) TODO"
-                            :en "Ei liitepyyntöä (en) TODO"}
+                            :sv "Ingen begäran om bilagor"
+                            :en "No attachment requirement"}
    :incomplete-attachment  {:fi "Puutteellinen liite"
-                            :sv "Puutteellinen liite (sv) TODO"
-                            :en "Puutteellinen liite (en) TODO"}
+                            :sv "Bristfällig bilaga"
+                            :en "Insufficient attachment"}
    :attachment-missing     {:fi "Liite puuttuu"
-                            :sv "Liite puuttuu (sv) TODO"
-                            :en "Liite puuttuu (en) TODO"}
+                            :sv "Bilaga fattas"
+                            :en "Attachment missing"}
    :processing-fee-overdue {:fi "Käsittely maksamatta"
                             :sv "Käsittely maksamatta (sv) TODO"
                             :en "Käsittely maksamatta (en) TODO"}
@@ -2512,8 +2512,8 @@
                               :sv "Antagningens status"
                               :en "EN: Valinnan tila"}
    :ehdollinen               {:fi "Ehdollinen"
-                              :sv "SV: Ehdollinen"
-                              :en "EN: Ehdollinen"}
+                              :sv "Villkorlig"
+                              :en "Conditional"}
    :pisteet                  {:fi "Pisteet"
                               :sv "Poäng"
                               :en "EN: Pisteet"}
@@ -2525,7 +2525,7 @@
                               :en "EN: Turvakielto"}
    :notes                    {:fi "Muistiinpanot"
                               :sv "Anteckningar"
-                              :en "EN: Muistiinpanot"}})
+                              :en "EN: Notes"}})
 
 (defn email-applied-error
   [email preferred-name]
