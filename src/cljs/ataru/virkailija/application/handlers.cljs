@@ -804,6 +804,7 @@
               :path                "/lomake-editori/api/applications/information-request"
               :params              (-> db :application :information-request
                                        (select-keys [:message :subject])
+                                       (assoc :recipient-target "hakija")
                                        (assoc :application-key application-key))
               :handler-or-dispatch :application/handle-submit-information-request-response}})))
 

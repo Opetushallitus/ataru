@@ -11,6 +11,7 @@
             {{message|safe}}
         </td>
     </tr>
+    {% if application-url|not-empty %}
     <tr>
         <td style="padding-left: 20px; padding-top: 10px;">
             <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
@@ -21,6 +22,7 @@
             {{modify-link-text}} {{do-not-share-warning-text}}
         </td>
     </tr>
+    {% endif %}
     <tr>
         <td style="padding-top: 50px;"></td>
     </tr>
