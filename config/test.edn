@@ -17,7 +17,7 @@
                              :maksut                      {:enabled?                false
                                                            :poll-interval-minutes   60
                                                            :decision-amount         "70.00"
-                                                           :form-key      			    ""}
+                                                           :form-keys      			    ""}
                              :ftp                         {:host               "localhost"
                                                            :port               1221
                                                            :user               "oph"
@@ -39,7 +39,7 @@
                    :enable-re-frisk                     true
                    :local-dev-logout                    true
                    :secret-link-valid-days              14
-                   :tutu-payment-form-key               ""
+                   :tutu-payment-form-keys              ""
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
                    :features {:schema-validation true}}

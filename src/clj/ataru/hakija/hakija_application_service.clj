@@ -423,10 +423,11 @@
 (defn- handle-tutu-form [form-by-id-cache id application]
   (let [app-key    (-> (application-store/get-application id) :key)
         form       (:form application)
-        tutu-key   (-> config :tutkintojen-tunnustaminen :maksut :form-key)
+        tutu-keys   (string/split (-> config :tutkintojen-tunnustaminen :maksut :form-keys) #",")
         form-key   (when (some? form)
                          (-> (cache/get-from form-by-id-cache (str form)) :key))
-        tutu-form? (and (some? tutu-key) (= tutu-key form-key))
+        tutu-form? (boolean
+                     (and (some? tutu-keys) (some #(= form-key %) tutu-keys)))
 
         get-field  (fn [key] (->> (:answers application)
                                   (filter #(= key (:key %)))
