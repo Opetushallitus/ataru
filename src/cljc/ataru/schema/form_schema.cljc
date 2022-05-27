@@ -234,6 +234,7 @@
   {:oid                                                                          s/Str
    :name                                                                         localized-schema/LocalizedStringOptional
    :can-be-applied-to?                                                           s/Bool
+   (s/optional-key :archived)                                                    (s/maybe s/Bool)
    :kohdejoukko-korkeakoulu?                                                     s/Bool
    :tarjoaja-name                                                                localized-schema/LocalizedStringOptional
    (s/optional-key :form-key)                                                    (s/maybe s/Str)
@@ -291,6 +292,7 @@
   {:oid                                                                          s/Str
    :hakukohteen-tiedot-url                                                       s/Str
    :can-be-applied-to?                                                           s/Bool
+   (s/optional-key :archived)                                                    (s/maybe s/Bool)
    :haku-oid                                                                     s/Str
    :koulutus-oids                                                                [s/Str]
    :name                                                                         localized-schema/LocalizedStringOptional
