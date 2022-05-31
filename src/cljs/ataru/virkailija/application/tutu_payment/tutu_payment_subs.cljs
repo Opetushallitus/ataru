@@ -22,8 +22,7 @@
      (boolean
        (and
          (not-empty tutu-forms)
-         (some #(= current-form %) tutu-forms)
-         )))))
+         (some #(= current-form %) tutu-forms))))))
 
 (re-frame.core/reg-sub
  :tutu-payment/tutu-form-selected?
