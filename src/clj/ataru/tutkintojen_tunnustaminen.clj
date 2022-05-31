@@ -152,6 +152,10 @@
                       (first (yesql-get-application {:country_question_id country-question-id
                                                      :id                  application-id}
                                                     {:connection connection})))]
+    (log/info "TESTING TUTU country-question-id: " country-question-id " application-id: " application-id)
+    (log/info "TESTING TUTU yesql-get-application APPLICATION COUNT: " (count (yesql-get-application {:country_question_id country-question-id
+                                                                                                 :id                  application-id}
+                                                                                                {:connection connection})))
     (when (nil? application)
       (throw (new RuntimeException (str "Application " application-id
                                         " not found"))))
@@ -178,6 +182,10 @@
   (let [id-and-state (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                        (first (yesql-get-application-id-and-state-by-event-id {:id event-id}
                                                                               {:connection connection})))]
+    (log/info "TESTING TUTU country-question-id: " country-question-id " event-id: " event-id)
+    (log/info "TESTING TUTU yesql-get-application-id-and-state-by-event-id APPLICATION COUNT: "
+              (count (yesql-get-application-id-and-state-by-event-id {:id event-id}
+                                                                     {:connection connection})))
     (when (nil? id-and-state)
       (throw (new RuntimeException (str "Application id by event id " event-id
                                         " not found"))))
