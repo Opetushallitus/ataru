@@ -83,7 +83,7 @@
         {:name          "valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
          :ttl           [3 TimeUnit/DAYS]
          :refresh-after [1 TimeUnit/DAYS]
-         :lock-timeout  [30 TimeUnit/SECONDS]})
+         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader})
 
@@ -100,9 +100,9 @@
     (component/using
       (redis-cache/map->Cache
         {:name          "valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus"
-         :ttl           [3 TimeUnit/DAYS]
+         :ttl           [1 TimeUnit/DAYS]
          :refresh-after [1 TimeUnit/DAYS]
-         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+         :lock-timeout  [30 TimeUnit/SECONDS]})
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
 
