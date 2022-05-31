@@ -151,7 +151,14 @@
   (let [application (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
                       (first (yesql-get-application {:country_question_id country-question-id
                                                      :id                  application-id}
-                                                    {:connection connection})))]
+                                                    {:connection connection})))
+        applications (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                                              (yesql-get-application {:country_question_id country-question-id
+                                                                      :id                  application-id}
+                                                                     {:connection connection})
+                                             )]
+    (log/info "TESTING TUTU country-question-id: " country-question-id " application-id: " application-id)
+    (log/info "TESTING TUTU yesql-get-application APPLICATION COUNT: " (count applications))
     (when (nil? application)
       (throw (new RuntimeException (str "Application " application-id
                                         " not found"))))
@@ -176,11 +183,21 @@
 (defn- get-application-by-event-id
   [country-question-id event-id]
   (let [id-and-state (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
-                       (first (yesql-get-application-id-and-state-by-event-id {:id event-id}
-                                                                              {:connection connection})))]
+                                              (first (yesql-get-application-id-and-state-by-event-id {:id event-id}
+                                                                                                     {:connection connection})))
+        id-and-states (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                                               (yesql-get-application-id-and-state-by-event-id {:id event-id}
+                                                                                               {:connection connection})
+                                               )]
+
+    (log/info "TESTING TUTU country-question-id: " country-question-id " event-id: " event-id)
+    (log/info "TESTING TUTU yesql-get-application-id-and-state-by-event-id APPLICATION COUNT: "
+              (count id-and-states) )
+
     (when (nil? id-and-state)
       (throw (new RuntimeException (str "Application id by event id " event-id
                                         " not found"))))
+
     {:review-key  (:review-key id-and-state)
      :state       (:state id-and-state)
      :application (get-application country-question-id (:id id-and-state))}))
