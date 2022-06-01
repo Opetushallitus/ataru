@@ -279,7 +279,8 @@
 
 (defn- hakukohteet-list-row [hakukohde-oid]
   (let [selected-hakukohde-oids (set @(subscribe [:state-query [:application :selected-review-hakukohde-oids]]))
-        selected?               (contains? selected-hakukohde-oids hakukohde-oid)]
+        selected?               (contains? selected-hakukohde-oids hakukohde-oid)
+        archived?               @(subscribe [:application/hakukohde-archived? hakukohde-oid])]
     [:div.application__form-field
      [:div.application-handling__hakukohde-wrapper.application-handling__hakukohde--selectable
       {:class    (when selected?
@@ -291,7 +292,9 @@
          @(subscribe [:application/hakukohde-priority-number hakukohde-oid])])
       [:div
        [:div.application-handling__review-area-hakukohde-heading
-        (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")
+        (when archived?
+          [:i.zmdi.zmdi-book.arkistoitu {:title "Arkistoitu"}])
+        [:span (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")]
         [:a.editor-form__haku-admin-link
          {:href   @(subscribe [:application/hakukohteen-tiedot-url hakukohde-oid])
           :target "_blank"}

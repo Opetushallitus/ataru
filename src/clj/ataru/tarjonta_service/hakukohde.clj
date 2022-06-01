@@ -1,9 +1,8 @@
 (ns ataru.tarjonta-service.hakukohde
-  (:require [ataru.util :refer [non-blank-val]]
+  (:require [ataru.util :as util :refer [non-blank-val]]
             [clojure.string :refer [join blank?]]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.config.core :refer [config]]
-            [ataru.util :as util]))
+            [clojure.walk :as walk]))
 
 (defn- koulutus->str
   [koulutus lang]
@@ -56,7 +55,7 @@
   (-> field
       (assoc :options (into []
                             (comp
-                             (filter :can-be-applied-to?)
+                             (filter #(or (:can-be-applied-to? %) (:archived %)))
                              (map hakukohde->option))
                             (get-in tarjonta-info [:tarjonta :hakukohteet])))
       (assoc-in [:params :max-hakukohteet] (get-in tarjonta-info [:tarjonta :max-hakukohteet]))))
@@ -96,7 +95,7 @@
     (update-hakukohde-question-on-top-level form tarjonta-info)
     (update form :content
             (fn [content]
-              (clojure.walk/prewalk
+              (walk/prewalk
                 (fn [field]
                   (if (= (:fieldType field) "hakukohteet")
                     (populate-hakukohteet-field field tarjonta-info)
