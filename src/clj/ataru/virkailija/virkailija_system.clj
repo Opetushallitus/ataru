@@ -83,7 +83,7 @@
         {:name          "valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
          :ttl           [3 TimeUnit/DAYS]
          :refresh-after [1 TimeUnit/DAYS]
-         :lock-timeout  [30 TimeUnit/SECONDS]})
+         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache-loader})
 

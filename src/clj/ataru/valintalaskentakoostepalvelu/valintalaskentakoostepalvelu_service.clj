@@ -75,7 +75,7 @@
                 (assoc acc (:hakemusOid application) application)) {} applications)))
 
   (load-many-size [_]
-    100)
+    1)
 
   (check-schema [_ response]
     (hakukohde-harkinnanvaraisuus-checker response)))
