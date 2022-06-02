@@ -99,9 +99,9 @@
     (component/using
       (redis-cache/map->Cache
         {:name          "valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus"
-         :ttl           [3 TimeUnit/DAYS]
+         :ttl           [32 TimeUnit/HOURS]
          :refresh-after [1 TimeUnit/DAYS]
-         :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
+         :lock-timeout  [1 TimeUnit/MINUTES]})
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
 
