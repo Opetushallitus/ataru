@@ -23,6 +23,7 @@
             [cljs.core.match :refer-macros [match]]
             [goog.string :as s]
             [ataru.application-common.hakukohde-specific-questions :as hsq]
+            [ataru.virkailija.application.view.virkailija-application-icons :as icons]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :as pohjakoulutus-toinen-aste-view]))
 
 (declare field)
@@ -293,12 +294,12 @@
       [:div
        [:div.application-handling__review-area-hakukohde-heading
         (when archived?
-          [:i.zmdi.zmdi-book.arkistoitu {:title "Arkistoitu"}])
-        [:span (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")]
-        [:a.editor-form__haku-admin-link
-         {:href   @(subscribe [:application/hakukohteen-tiedot-url hakukohde-oid])
-          :target "_blank"}
-         [:i.zmdi.zmdi-open-in-new]]]
+          [icons/archived-icon])
+        [:span (str @(subscribe [:application/hakukohde-label hakukohde-oid]) " ")
+          [:a.editor-form__haku-admin-link
+           {:href   @(subscribe [:application/hakukohteen-tiedot-url hakukohde-oid])
+            :target "_blank"}
+           [:i.zmdi.zmdi-open-in-new]]]]
        [:div.application-handling__review-area-koulutus-heading
         @(subscribe [:application/hakukohde-description hakukohde-oid])]]]]))
 

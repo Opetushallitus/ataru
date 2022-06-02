@@ -1157,6 +1157,9 @@
    :active                                                   {:fi "Aktiivinen"
                                                               :sv "Aktiv"
                                                               :en "Active"}
+   :archived                                                 {:fi "Arkistoitu"
+                                                              :sv "Arkiverad"
+                                                              :en "Archived"}
    :add                                                      {:fi "Lisää"
                                                               :sv "Lägg till"
                                                               :en "Add more"}
