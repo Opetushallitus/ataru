@@ -35,4 +35,6 @@
    [:i.zmdi.zmdi-alert-octagon.zmdi-hc-stack-1x]])
 
 (defn archived-icon []
-  [:i.zmdi.zmdi-book.arkistoitu {:title @(subscribe [:editor/virkailija-translation :archived])}])
+  [:i.material-icons-outlined.arkistoitu
+   {:title @(subscribe [:editor/virkailija-translation :archived])}
+   "archive"])

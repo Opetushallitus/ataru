@@ -2,7 +2,8 @@
   (:require [ataru.virkailija.application.application-search-control-handlers]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [ataru.virkailija.application.view.virkailija-application-icons :as icons]))
 
 (defn haku-tab [tab-id selected-tab link-url label-text]
   [:div.application__search-control-tab-selector-wrapper
@@ -81,14 +82,20 @@
       (str @(subscribe [:editor/virkailija-translation :processed-haut]) (haku-count-str @complete-count))]]))
 
 (defn- hakemus-list-link
-  [href title {:keys [haku-application-count application-count unprocessed processed]} hakukohde? toisen-asteen-yhteishaku?]
+  [href title {:keys [haku-application-count application-count unprocessed processed]}
+   hakukohde? toisen-asteen-yhteishaku? archived?]
   (let [processing (- application-count unprocessed processed)
         total-apps (or haku-application-count application-count)]
     [:a.application__search-control-haku-link
      {:href href}
      [:span.application__search-control-haku-title
       {:class (when hakukohde? "application__search-control-haku-title--hakukohde")}
-      (or title [:i.zmdi.zmdi-spinner.spin])]
+      (if title
+        [:<>
+          (when archived?
+            [icons/archived-icon])
+        title]
+        [:i.zmdi.zmdi-spinner.spin])]
      [:span.application__search-control-haku-hl]
      (when (or toisen-asteen-yhteishaku? haku-application-count)
        [:span.application__search-control-haku-count
@@ -120,6 +127,7 @@
    (some #(get name %) [:fi :sv :en])
    form
    false
+   false
    false])
 
 (defn haku-info-link
@@ -129,7 +137,8 @@
    @(subscribe [:application/haku-name oid])
    haku
    false
-   toisen-asteen-yhteishaku?])
+   toisen-asteen-yhteishaku?
+   false])
 
 (defn hakukohde-info-link
   [{:keys [oid] :as hakukohde} toisen-asteen-yhteishaku?]
@@ -138,7 +147,8 @@
    @(subscribe [:application/hakukohde-and-tarjoaja-name oid])
    hakukohde
    true
-   toisen-asteen-yhteishaku?])
+   toisen-asteen-yhteishaku?
+   @(subscribe [:application/hakukohde-archived? oid])])
 
 (defn hakukohde-list [hakukohteet-opened hakukohteet toisen-asteen-yhteishaku?]
   (let [lang @(subscribe [:editor/virkailija-lang])]
