@@ -250,6 +250,15 @@
       (ok (->> (form-store/fetch-by-key key)
                (koodisto/populate-form-koodisto-fields koodisto-cache))))
 
+    (api/GET "/forms/latest-by-haku/:haku-oid" []
+      :path-params [haku-oid :- s/Str]
+      :return ataru-schema/FormWithContent
+      :summary "Get latest version of form using haku"
+      (if-let [key (:ataru-form-key (tarjonta/get-haku tarjonta-service haku-oid))]
+        (ok (->> (form-store/fetch-by-key key)
+                 (koodisto/populate-form-koodisto-fields koodisto-cache)))
+        (response/not-found {:error (str "Form not found on haku " haku-oid)})))
+
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
