@@ -1162,7 +1162,7 @@
                      :offset        offset}
                     {:connection connection})))]
     (merge {:applications as}
-           (when-let [a (first (drop 999 as))]
+           (when-let [a (first (drop 4999 as))]
              {:offset (:oid a)}))))
 
 (defn- convert-asiointikieli [kielikoodi]
