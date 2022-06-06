@@ -214,10 +214,10 @@
   :application/fetch-applications
   (fn [{db :db} [_ {:keys [fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?]}]]
     (let [search-term              (get-in db [:application :search-control :search-term :parsed])
-          form                     (when-let [form-key (get-in db [:application :selected-form-key])]
-                                     {:form-key form-key})
           haku                     (when-let [haku-oid (get-in db [:application :selected-haku])]
                                      {:haku-oid haku-oid})
+          form                     (when-let [form-key (get-in db [:application :selected-form-key])]
+                                       {:form-key form-key})
           hakukohde                (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
                                      {:hakukohde-oid hakukohde-oid})
           hakukohderyhma           (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
@@ -374,6 +374,7 @@
   :application/handle-fetch-form-contents
   (fn [db [_ form]]
     (-> db
+        (assoc-in [:application :form-key-for-haku] [(get-in db [:application :selected-haku]) (:key form)])
         (assoc-in [:forms (:key form)] form)
         (assoc-in [:forms (:key form) :flat-form-fields] (util/flatten-form-fields (:content form)))
         (assoc-in [:forms (:key form) :form-fields-by-id] (util/form-fields-by-id form)))))
@@ -386,11 +387,16 @@
                             (get-in db [:application :selected-hakukohderyhma 0]))
           selected-form (or (get-in db [:application :selected-form-key])
                             (get-in db [:haut selected-haku :ataru-form-key]))]
-      (when selected-form
+      (if selected-form
         {:http {:method              :get
                 :path                (str "/lomake-editori/api/forms/latest/" selected-form)
                 :handler-or-dispatch :application/handle-fetch-form-contents
-                :skip-parse-times?   true}}))))
+                :skip-parse-times?   true}}
+        (when selected-haku
+          {:http {:method              :get
+                  :path                (str "/lomake-editori/api/forms/latest-by-haku/" selected-haku)
+                  :handler-or-dispatch :application/handle-fetch-form-contents
+                  :skip-parse-times?   true}})))))
 
 (reg-event-fx
   :application/reload-applications
@@ -415,7 +421,8 @@
                                                                                               [:application/fetch-form-contents]]]}
                 (some? (get-in db [:request-handles :applications-list]))
                 (assoc :http-abort (get-in db [:request-handles :applications-list]))))
-      {:db db})))
+      {:db db
+       :dispatch [:application/fetch-form-contents]})))
 
 (reg-event-db
   :application/stop-loading-applications
