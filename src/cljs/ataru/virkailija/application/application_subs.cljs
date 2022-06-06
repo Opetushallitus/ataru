@@ -46,6 +46,19 @@
       selected-form)))
 
 (re-frame/reg-sub
+  :application/selected-form-key-for-search
+  (fn [db _]
+    (let [selected-haku (or (get-in db [:application :selected-haku])
+                            (get-in db [:hakukohteet (get-in db [:application :selected-hakukohde]) :haku-oid])
+                            (get-in db [:application :selected-hakukohderyhma 0]))
+          selected-form (or (get-in db [:application :selected-form-key])
+                            (get-in db [:haut selected-haku :ataru-form-key]))
+          form-for-haku (when-let [[[haku key]] (get-in db [:application :form-key-for-haku])]
+                          (when (= haku selected-haku)
+                            key))]
+      (or selected-form form-for-haku))))
+
+(re-frame/reg-sub
   :application/selected-form-attachment-fields
   (fn [_ _]
     (re-frame/subscribe [:application/selected-form]))
