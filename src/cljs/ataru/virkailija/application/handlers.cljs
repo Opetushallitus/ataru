@@ -216,9 +216,8 @@
     (let [search-term              (get-in db [:application :search-control :search-term :parsed])
           haku                     (when-let [haku-oid (get-in db [:application :selected-haku])]
                                      {:haku-oid haku-oid})
-          form                     (when-not haku
-                                     (when-let [form-key (get-in db [:application :selected-form-key])]
-                                       {:form-key form-key}))
+          form                     (when-let [form-key (get-in db [:application :selected-form-key])]
+                                       {:form-key form-key})
           hakukohde                (when-let [hakukohde-oid (get-in db [:application :selected-hakukohde])]
                                      {:hakukohde-oid hakukohde-oid})
           hakukohderyhma           (when-let [[haku-oid hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
@@ -375,7 +374,7 @@
   :application/handle-fetch-form-contents
   (fn [db [_ form]]
     (-> db
-        (assoc-in [:application :selected-form-key] (:key form))
+        (assoc-in [:application :form-key-for-haku] [(get-in db [:application :selected-haku]) (:key form)])
         (assoc-in [:forms (:key form)] form)
         (assoc-in [:forms (:key form) :flat-form-fields] (util/flatten-form-fields (:content form)))
         (assoc-in [:forms (:key form) :form-fields-by-id] (util/form-fields-by-id form)))))
