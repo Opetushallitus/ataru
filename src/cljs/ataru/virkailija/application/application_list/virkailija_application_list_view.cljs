@@ -646,7 +646,6 @@
         rajaava-hakukohde-opened?                 (r/atom false)
         filters-to-include                        #{:language-requirement :degree-requirement :eligibility-state :payment-obligation}
         lang                                      (subscribe [:editor/virkailija-lang])
-        form-fields-by-id                         (subscribe [:application/form-fields-by-id @form-key])
         toisen-asteen-yhteishaku-selected?        (subscribe [:application/toisen-asteen-yhteishaku-selected?])]
     (fn []
       [:span.application-handling__filters
@@ -732,9 +731,7 @@
            (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (when (and
-                  (or (not @toisen-asteen-yhteishaku-selected?) @admin?)
-                  (some? @form-key))
+          (when (or (not @toisen-asteen-yhteishaku-selected?) @admin?)
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
@@ -755,7 +752,7 @@
                       (map (fn [[field-id _]]
                              [:li.application-handling__filters-attachment-attachments__list-item
                               [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-question-filter (get @form-fields-by-id (keyword field-id))])}
+                               {:on-click #(dispatch [:application/remove-question-filter (get @(subscribe [:application/form-fields-by-id @form-key]) (keyword field-id))])}
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
