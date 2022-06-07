@@ -88,13 +88,19 @@
         hakukohde-editable?                @(subscribe [:application/hakukohde-editable? hakukohde-oid])
         [should-be-lower should-be-higher] @(subscribe [:application/hakukohde-offending-priorization? hakukohde-oid])
         rajaavat-hakukohteet               @(subscribe [:application/rajaavat-hakukohteet hakukohde-oid])
-        lang                               @(subscribe [:application/form-language])]
+        lang                               @(subscribe [:application/form-language])
+        virkailija?                        @(subscribe [:application/virkailija?])
+        archived?                          @(subscribe [:application/hakukohde-archived? hakukohde-oid])]
     [:div.application__selected-hakukohde-row.animated
      {:class (if deleting? "fadeOut" "fadeIn")}
      (when prioritize-hakukohteet?
        [prioritize-hakukohde-buttons hakukohde-oid (not hakukohde-editable?)])
      [:div.application__selected-hakukohde-row--content
       [:div.application__hakukohde-header
+       (when (and virkailija? archived?)
+         [:i.material-icons-outlined.arkistoitu
+          {:title (translations/get-hakija-translation :archived lang)}
+          "archive"])
        @(subscribe [:application/hakukohde-label hakukohde-oid])]
       [:div.application__hakukohde-description
        @(subscribe [:application/hakukohde-description hakukohde-oid])]
@@ -112,7 +118,7 @@
                    @(subscribe [:application/hakukohde-label (:oid hakukohde)])]))])
       (if (seq should-be-higher)
         (offending-priorization (first should-be-higher) hakukohde-oid)
-        (if (seq should-be-lower)
+        (when (seq should-be-lower)
           (offending-priorization hakukohde-oid (first should-be-lower))))]
      [:div.application__selected-hakukohde-row--buttons
       (cond (and haku-editable? hakukohde-editable?)

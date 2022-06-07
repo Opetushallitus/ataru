@@ -641,6 +641,17 @@
      @(re-frame/subscribe [:application/default-languages]))))
 
 (re-frame/reg-sub
+  :application/hakukohde-archived?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/tarjonta-hakukohteet])])
+  (fn [[tarjonta-hakukohteet] [_ hakukohde-oid]]
+    (->> tarjonta-hakukohteet
+         (filter #(= (:oid %) hakukohde-oid))
+         first
+         :archived
+         boolean)))
+
+(re-frame/reg-sub
   :application/hakukohteet-header
   (fn [db _]
     (util/non-blank-val
