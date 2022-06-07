@@ -1119,8 +1119,16 @@
   (fn [db [_ haku-oid]]
     (haku/toisen-asteen-yhteishaku? (get-in db [:haut haku-oid]))))
 
+(re-frame/reg-sub
+  :application/selected-application-tab
+  (fn selected-application-tab [db _]
+    (or (get-in db [:application :tab]) "application")))
 
 (re-frame/reg-sub
-  :application/tab-accomplishments-selected?
-  (fn tab-accomplishments-selected? [db _]
-    (= (get-in db [:application :tab]) "accomplishments")))
+  :application/has-right-to-valinnat-tab?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?])])
+  (fn has-right-to-valinnat-tab? [db [opinto-ohjaaja-or-admin?]]
+    (let [user-info (-> db :editor :user-info)]
+      (or opinto-ohjaaja-or-admin?
+        (some (fn [org] (some #(= "valinnat-valilehti" % ) (:rights org))) (:organizations user-info))))))

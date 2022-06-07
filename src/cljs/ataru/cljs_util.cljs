@@ -169,3 +169,8 @@
 
 (defn modify-event? [event]
   (some #{(:event-type event)} ["updated-by-applicant" "updated-by-virkailija"]))
+
+(defn to-finnish-number [value]
+  (if (js/Number.isNaN value)
+    value
+    (.toLocaleString (js/Number value) "fi")))
