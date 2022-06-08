@@ -723,7 +723,7 @@ WHERE la.id IS NULL AND
         ELSE a.key > :offset
       END
 ORDER BY a.key
-LIMIT 1000;
+LIMIT 5000;
 
 -- name: yesql-valinta-ui-applications
 SELECT
