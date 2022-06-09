@@ -3,6 +3,7 @@
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
             [clojure.string :as s]
+            [clojure.core.memoize :as memoize]
             [taoensso.timbre :as log]))
 
 (def oph-organization "1.2.246.562.10.00000000001")
@@ -94,6 +95,9 @@
     (if (= 200 status)
       (json/parse-string body true)
       (log/error (str "Couldn't fetch organization by number from url: " url)))))
+
+(def get-single-organization-cached
+  (memoize/ttl get-organization-by-oid-or-number {} :ttl/threshold (* 1000 60 30))) ;30 minuutin cache
 
 (defn fake-hakukohderyhma [index]
   (group->map {:oid         (format "1.2.246.562.28.0000000000%d" index)
