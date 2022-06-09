@@ -1760,6 +1760,27 @@
    :grades-header                                            {:fi "Valinnoissa käytettävät arvosanat"
                                                               :sv "Vitsord i antagningarna"
                                                               :en "EN: Valinnoissa käytettävät arvosanat"}
+   :valinnat                                                 {:fi "Valinnat"
+                                                              :sv "Antagningar"
+                                                              :en "EN: Valinnat"}
+   :scores                                                   {:fi "Pisteet"
+                                                              :sv "Poäng"
+                                                              :en "Scores"}
+   :valinnan-kokonaispisteet                                 {:fi "Valinnan kokonaispisteet"
+                                                              :sv "Helhetspoäng för antagningen"
+                                                              :en "EN: Valinnan kokonaispisteet"}
+   :sijoittelun-tulos                                        {:fi "Sijoittelun tulos"
+                                                              :sv "Placeringsresultat"
+                                                              :en "EN: Sijoittelun tulos"}
+   :vastaanottotieto                                         {:fi "Vastaanottotieto"
+                                                              :sv "Uppgift om mottagande"
+                                                              :en "EN: Vastaanottotieto"}
+   :ilmoittautumistila                                       {:fi "Ilmoittautumistila"
+                                                              :sv "Uppgift om anmälan"
+                                                              :en "EN: Ilmoittautumistila"}
+   :valinnan-tulokset-kesken                                 {:fi "Valinnan tulokset kesken"
+                                                              :sv "Ansökans resultat på hälft"
+                                                              :en "EN: Valinnan tulokset kesken"}
    :person-info-module-onr                                   {:fi "Opiskelijavalinta"
                                                               :en "Opiskelijavalinta"
                                                               :sv "Studerandeantagning"}
@@ -2301,7 +2322,10 @@
                                                               :en "EN: Virhe pohjakoulutuksen hakemisessa"}
    :pohjakoulutus-not-found                                  {:fi "Pohjakoulutusta ei löytynyt"
                                                               :sv "Grundutbildning hittades inte"
-                                                              :en "EN: Pohjakoulutusta ei löytynyt"}})
+                                                              :en "EN: Pohjakoulutusta ei löytynyt"}
+   :error-loading-valinnat                                   {:fi "Virhe hakemuksen valintojen hakemisessa"
+                                                              :sv "SV: Virhe hakemuksen valintojen hakemisessa"
+                                                              :en "EN: Virhe hakemuksen valintojen hakemisessa"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2337,6 +2361,9 @@
    :incomplete             {:fi "Kesken"
                             :sv "Inte färdig"
                             :en "Incomplete"}
+   :not-done               {:fi "Ei tehty"
+                            :sv "Inte gjort"
+                            :en "Not done"}
    :selection-proposal     {:fi "Valintaesitys"
                             :sv "Antagningsförslag"
                             :en "Selected (pending)"}
@@ -2346,6 +2373,9 @@
    :selected               {:fi "Hyväksytty"
                             :sv "Godkänd"
                             :en "Selected"}
+   :accepted               {:fi "Hyväksytty"
+                            :sv "Accepterad"
+                            :en "Accepted"}
    :rejected               {:fi "Hylätty"
                             :sv "Underkänd"
                             :en "Rejected"}

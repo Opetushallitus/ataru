@@ -28,6 +28,34 @@
       (assoc-in [:application :pohjakoulutus-by-application-key application-key :error] true))))
 
 (re-frame/reg-event-fx
+  :application/fetch-application-valinnat
+  (fn [_ [_ haku-oid application-key]]
+    {:http {:method               :get
+            :path                 (str "/lomake-editori/api/tulos-service/haku/" haku-oid "/hakemus/" application-key)
+            :handler-or-dispatch  :application/handle-fetch-application-valinnat-response
+            :handler-args         application-key
+            :override-args       {:error-handler #(re-frame/dispatch [:application/handle-fetch-application-valinnat-error application-key %])}
+            :id                   :fetch-applicant-valinnat}}))
+
+(re-frame/reg-event-db
+  :application/handle-fetch-application-valinnat-response
+  (fn [db [_ response application-key]]
+    (-> db
+        (assoc-in [:application :valinnat-by-application-key application-key] response))))
+
+(re-frame/reg-event-db
+  :application/handle-fetch-application-valinnat-error
+  (fn [db [_ application-key response]]
+    (let [error (-> response
+                    :response
+                    :error
+                    (case
+                      "Valinnan tulokset kesken" :valinnan-tulokset-kesken
+                      true))]
+      (-> db
+          (assoc-in [:application :valinnat-by-application-key application-key :error] error)))))
+
+(re-frame/reg-event-fx
   :application/fetch-applicant-harkinnanvaraisuus
   (fn [_ [_ application-key]]
     {:http {:method              :get
@@ -73,4 +101,5 @@
   [application]
   (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
     [[:application/fetch-applicant-pohjakoulutus (:haku application) (:key application)]
-     [:application/fetch-applicant-harkinnanvaraisuus (:key application)]]))
+     [:application/fetch-applicant-harkinnanvaraisuus (:key application)]
+     [:application/fetch-application-valinnat (:haku application) (:key application)]]))

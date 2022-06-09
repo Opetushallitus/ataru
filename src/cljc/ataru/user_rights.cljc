@@ -8,11 +8,16 @@
    {:palvelu "ATARU_HAKEMUS" :oikeus "CRUD"}           :edit-applications
    {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_READ"}   :view-valinta
    {:palvelu "ATARU_HAKEMUS" :oikeus "VALINTA_CRUD"}   :edit-valinta
-   {:palvelu "ATARU_HAKEMUS" :oikeus "opinto-ohjaaja"} :opinto-ohjaaja})
+   {:palvelu "ATARU_HAKEMUS" :oikeus "opinto-ohjaaja"} :opinto-ohjaaja
+   {:palvelu "ATARU_HAKEMUS" :oikeus "valinnat-valilehti"} :valinnat-valilehti})
 
 (def right-names (vals oikeus-to-right))
 
 (s/defschema Right (apply s/enum right-names))
+
+(defn is-super-user?
+  [session]
+  (boolean (-> session :identity :superuser)))
 
 (defn virkailija->right-organization-oids
   [virkailija rights]

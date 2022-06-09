@@ -42,7 +42,8 @@
                             :start (parse-date-time (:alkaa hakuaika))}
                            (when-let [paattyy (:paattyy hakuaika)]
                              {:end (parse-date-time paattyy)})))
-                       (:hakuajat haku))]
+                       (:hakuajat haku))
+        virkailijan-valinta-kaytto-estetty (get ohjausparametrit :PH_OLVVPKE false)]
     (merge
      {:can-submit-multiple-applications           (get ohjausparametrit :useitaHakemuksia false)
       :hakuajat                                   hakuajat
@@ -65,7 +66,9 @@
                               (map #(t/year (:start %)))
                               (apply max))})
      (when (some? (:hakulomakeAtaruId haku))
-       {:ataru-form-key (:hakulomakeAtaruId haku)}))))
+       {:ataru-form-key (:hakulomakeAtaruId haku)})
+     (when virkailijan-valinta-kaytto-estetty
+       {:valinnat-estetty-time-window virkailijan-valinta-kaytto-estetty}))))
 
 (defn- parse-can-be-applied-to?
   [hakukohde]

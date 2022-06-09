@@ -18,7 +18,7 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
-    [ataru.valinta-tulos-service.service :as valinta-tulos-service]
+    [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
     [ataru.applications.filtering :as application-filtering]
     [clojure.data :refer [diff]]
     [ataru.virkailija.editor.form-utils :refer [visible?]]
@@ -351,7 +351,7 @@
   (into {}
         (comp (mapcat :hakukohde)
               (distinct)
-              (map #(vector % (valinta-tulos-service/hakukohteen-ehdolliset
+              (map #(vector % (vts/hakukohteen-ehdolliset
                                valinta-tulos-service
                                %))))
         applications))

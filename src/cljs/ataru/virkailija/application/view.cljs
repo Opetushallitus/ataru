@@ -19,7 +19,8 @@
             [reagent.core :as r]
             [re-frame.core :refer [subscribe dispatch]]
             [ataru.virkailija.application.application-review-view :as application-review]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.grades-view :refer [grades]]))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.grades-view :refer [grades]]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view :refer [valinnat]]))
 
 (defn excel-download-link
   [_ _ _]
@@ -200,25 +201,36 @@
 
 (defn- application-tab []
   (let [toisen-asteen-yhteishaku? (subscribe [:application/toisen-asteen-yhteishaku-selected?])
-        grades-tab-selected? (subscribe [:application/tab-accomplishments-selected?])]
+        has-right-to-valinnat-tab? (subscribe [:application/has-right-to-valinnat-tab?])
+        selected-application-tab (subscribe [:application/selected-application-tab])]
     (fn []
       [:<>
        (when @toisen-asteen-yhteishaku?
          [:div.application__tabs
           [:button
            {:on-click #(dispatch [:application/select-application-tab "application"])
-            :disabled (not @grades-tab-selected?)}
+            :disabled (= "application" @selected-application-tab)}
            @(subscribe [:editor/virkailija-translation :application])]
           [:button
-           {:on-click #(dispatch [:application/select-application-tab "accomplishments"])
-            :disabled @grades-tab-selected?}
-           @(subscribe [:editor/virkailija-translation :grades])]])
+           {:on-click #(dispatch [:application/select-application-tab "grades"])
+            :disabled (= "grades" @selected-application-tab)}
+           @(subscribe [:editor/virkailija-translation :grades])]
+          (when @has-right-to-valinnat-tab?
+            [:button
+              {:on-click #(dispatch [:application/select-application-tab "valinnat"])
+               :disabled (= "valinnat" @selected-application-tab)}
+              @(subscribe [:editor/virkailija-translation :valinnat])])])
        (cond
-         (or (not @toisen-asteen-yhteishaku?) (not @grades-tab-selected?))
+         (or (not @toisen-asteen-yhteishaku?) (= "application" @selected-application-tab))
          [application-review/application-review-area]
 
-         @grades-tab-selected?
-         [grades])])))
+         (= "grades" @selected-application-tab)
+         [grades]
+
+         (and
+           @has-right-to-valinnat-tab?
+           (= "valinnat" @selected-application-tab))
+         [valinnat])])))
 
 (defn application []
   (let [search-control-all-page   (subscribe [:application/search-control-all-page-view?])
