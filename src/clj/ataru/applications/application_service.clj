@@ -653,7 +653,7 @@
                                  seq)
             enriched-applications (as-> applications as
                                         (map (partial add-asiointikieli henkilot) as)
-                                        (if with-harkinnanvaraisuus-tieto
+                                        (if (and with-harkinnanvaraisuus-tieto (not-empty as))
                                           (enrich-with-toinen-aste-data tarjonta-service form-by-haku-oid-str-cache as)
                                           as))]
         {:yksiloimattomat yksiloimattomat
