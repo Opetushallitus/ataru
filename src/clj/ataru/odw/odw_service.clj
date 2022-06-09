@@ -51,10 +51,7 @@
                                                  toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
                        (try
-                         [nil (let [application-key (:key application)
-                                    answers (if application-key
-                                              (-> application :answers util/answers-by-key)
-                                              (-> application :content :answers util/answers-by-key))
+                         [nil (let [answers (-> application :content :answers util/answers-by-key)
                                     haku (get haut (:haku application))
                                     toinen-aste? (h/toisen-asteen-yhteishaku? haku)
                                     hakukohteet (:hakukohde application)
@@ -63,7 +60,7 @@
                                     state (:state application)
                                     foreign? (not= finland-country-code (-> answers :country-of-residence :value))
                                     hakutoiveiden-harkinnanvaraisuudet (get-in harkinnanvaraisuus-by-hakemus [(:key application) :hakutoiveet] [])]
-                                (merge {:oid                              application-key
+                                (merge {:oid                              (:key application)
                                         :person_oid                       person-oid
                                         :application_system_oid           (:haku application)
                                         :puhelin                          (-> answers :phone :value)
