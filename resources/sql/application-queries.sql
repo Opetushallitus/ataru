@@ -894,6 +894,7 @@ WHERE a.person_oid IS NOT NULL
 
 --name: yesql-onr-applications
 SELECT a.key AS key,
+       a.person_oid AS person_oid,
        a.haku AS haku,
        f.key AS form,
        a.email AS email,

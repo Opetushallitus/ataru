@@ -1253,9 +1253,20 @@
         (if-let [applications (access-controlled-application/onr-applications
                                 organization-service
                                 session
-                                person-oid)]
+                                [person-oid])]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+      (api/POST "/onr/applications" {session :session}
+        :body [person-oids [s/Str]]
+        :return [ataru-schema/OnrApplication]
+        (if (empty? person-oids)
+          (response/bad-request {:error "Nonempty list of application oids is required"})
+          (if-let [applications (access-controlled-application/onr-applications
+                                organization-service
+                                session
+                                person-oids)]
+          (response/ok applications)
+          (response/unauthorized {:error "Unauthorized"}))))
       (api/POST "/suoritusrekisteri" {session :session}
         :summary "Applications for suoritusrekisteri"
         :body-params [{hakuOid :- s/Str nil}
