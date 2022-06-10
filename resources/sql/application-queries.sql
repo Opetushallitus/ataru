@@ -903,7 +903,7 @@ SELECT a.key AS key,
         WHERE application_id = a.id) AS content
 FROM latest_applications AS a
 JOIN forms AS f ON f.id = a.form_id
-WHERE a.person_oid = :person_oid
+WHERE a.person_oid IN (:person_oids)
 ORDER BY a.created_time DESC;
 
 --name: yesql-add-review-note<!
