@@ -92,9 +92,16 @@
   [oid-or-number]
   (let [url (resolve-url :organisaatio-service.get-by-oid oid-or-number)
         {:keys [status body]} (http-util/do-get url)]
-    (if (= 200 status)
+    (case status
+      200
       (json/parse-string body true)
-      (log/error (str "Couldn't fetch organization by number from url: " url)))))
+
+      404
+      nil
+
+      (let [message (str "Couldn't fetch organization by id " oid-or-number " from url: " url ", status " status)]
+        (log/error message)
+        (throw (RuntimeException. message))))))
 
 (def get-single-organization-cached
   (memoize/ttl get-organization-by-oid-or-number {} :ttl/threshold (* 1000 60 30))) ;30 minuutin cache
