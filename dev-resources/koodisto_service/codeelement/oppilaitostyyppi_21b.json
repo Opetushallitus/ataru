@@ -1,0 +1,163 @@
+{
+  "koodiUri": "oppilaitostyyppi_21",
+  "resourceUri": "https://virkailija.testiopintopolku.fi/koodisto-service/rest/codeelement/oppilaitostyyppi_21",
+  "version": 14,
+  "versio": 1,
+  "koodisto": {
+    "koodistoUri": "oppilaitostyyppi",
+    "organisaatioOid": "1.2.246.562.10.00000000001",
+    "koodistoVersios": [
+      1
+    ]
+  },
+  "koodiArvo": "21",
+  "paivitysPvm": 1517915612771,
+  "paivittajaOid": null,
+  "voimassaAlkuPvm": "1990-01-01",
+  "voimassaLoppuPvm": null,
+  "tila": "LUONNOS",
+  "metadata": [
+    {
+      "nimi": "Vocational institutions",
+      "kuvaus": "Vocational institutions",
+      "lyhytNimi": "Vocational institutions",
+      "kayttoohje": "",
+      "kasite": "",
+      "sisaltaaMerkityksen": "",
+      "eiSisallaMerkitysta": "",
+      "huomioitavaKoodi": "",
+      "sisaltaaKoodiston": "",
+      "kieli": "EN"
+    },
+    {
+      "nimi": "Yrkesläroanstalter",
+      "kuvaus": "Yrkesläroanstalter",
+      "lyhytNimi": "Yrkesläroanstalter",
+      "kayttoohje": "",
+      "kasite": "",
+      "sisaltaaMerkityksen": "",
+      "eiSisallaMerkitysta": "",
+      "huomioitavaKoodi": "",
+      "sisaltaaKoodiston": "",
+      "kieli": "SV"
+    },
+    {
+      "nimi": "Ammatilliset oppilaitokset",
+      "kuvaus": "Ammatilliset oppilaitokset",
+      "lyhytNimi": "Ammatilliset oppilaitokset",
+      "kayttoohje": "",
+      "kasite": "",
+      "sisaltaaMerkityksen": "",
+      "eiSisallaMerkitysta": "",
+      "huomioitavaKoodi": "",
+      "sisaltaaKoodiston": "",
+      "kieli": "FI"
+    }
+  ],
+  "withinCodeElements": [
+    {
+      "codeElementUri": "oppilaitosnumero_02440",
+      "codeElementVersion": 1,
+      "codeElementValue": "02440",
+      "relationMetadata": [
+        {
+          "nimi": "Suonenjoen maatalouskoulu",
+          "kieli": "FI",
+          "kuvaus": ""
+        }
+      ],
+      "parentMetadata": [
+        {
+          "nimi": "oppilaitosnumero",
+          "kieli": "FI",
+          "kuvaus": "Tilastokeskus on antanut oppilaitoksille yksilöintitunnuksen. Tunnus on viisimerkkinen ja tunnukselle on varattu numerosarja 00000-99999. Tunnus on annettu ja annetaan ainoastaa pääkoululle. Samaa oppilaitostunnusta käytetään kaikissa oppilaitokseen liittyvissä toimintayksiköissä. Tietoa ylläpidetään organisaatiopalvelussa josta se kopioituu tähän koodistoon."
+        },
+        {
+          "nimi": "oppilaitosnumero",
+          "kieli": "EN",
+          "kuvaus": "oppilaitosnumero"
+        },
+        {
+          "nimi": "oppilaitosnumero",
+          "kieli": "SV",
+          "kuvaus": "oppilaitosnumero"
+        }
+      ],
+      "passive": false
+    }
+  ],
+  "includesCodeElements": [
+    {
+      "codeElementUri": "koulutustyyppi_11",
+      "codeElementVersion": 2,
+      "codeElementValue": "11",
+      "relationMetadata": [
+        {
+          "nimi": "Yrkesexamen",
+          "kieli": "SV",
+          "kuvaus": "Yrkesexamen"
+        },
+        {
+          "nimi": "Ammattitutkinto",
+          "kieli": "FI",
+          "kuvaus": "Ammattitutkinto"
+        }
+      ],
+      "parentMetadata": [
+        {
+          "nimi": "koulutustyyppi",
+          "kieli": "EN",
+          "kuvaus": "koulutustyyppi"
+        },
+        {
+          "nimi": "koulutustyyppi",
+          "kieli": "SV",
+          "kuvaus": "koulutustyyppi"
+        },
+        {
+          "nimi": "koulutustyyppi",
+          "kieli": "FI",
+          "kuvaus": "Koulutustarjontapalvelun käyttöliittymän käytössä oleva koodisto"
+        }
+      ],
+      "passive": false
+    }
+  ],
+  "levelsWithCodeElements": [
+    {
+      "codeElementUri": "oppilaitostyyppikela_40317",
+      "codeElementVersion": 1,
+      "codeElementValue": "40317",
+      "relationMetadata": [
+        {
+          "nimi": "Ammatilliset oppilaitokset",
+          "kieli": "FI",
+          "kuvaus": "Ammatilliset oppilaitokset"
+        },
+        {
+          "nimi": "Yrkesläroanstalter",
+          "kieli": "SV",
+          "kuvaus": "Yrkesläroanstalter"
+        }
+      ],
+      "parentMetadata": [
+        {
+          "nimi": "oppilaitostyyppi kela",
+          "kieli": "SV",
+          "kuvaus": "oppilaitostyyppi kela"
+        },
+        {
+          "nimi": "oppilaitostyyppi kela",
+          "kieli": "EN",
+          "kuvaus": "oppilaitostyyppi kela"
+        },
+        {
+          "nimi": "oppilaitostyyppi kela",
+          "kieli": "FI",
+          "kuvaus": "oppilaitostyyppi kela"
+        }
+      ],
+      "passive": false
+    }
+  ]
+}

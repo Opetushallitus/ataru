@@ -92,7 +92,7 @@
        (add-within "oppilaitosnumero")
        (mapcat :within)
        (util/distinct-by :uri)
-       (map #(assoc % :label (or (-> (:value %) (organization-client/get-organization-by-oid-or-number) :nimi)
+       (map #(assoc % :label (or (-> (:value %) (organization-client/get-single-organization-cached) :nimi)
                                  (:label %))))))
 
 (s/defn ^:always-validate get-koodi-options :- [schema/Koodi]
