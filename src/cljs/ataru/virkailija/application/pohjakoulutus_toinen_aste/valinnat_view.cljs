@@ -13,7 +13,7 @@
       ^{:key (str hakukohde-oid "-" (:tunniste piste))}
       [:div.tulos
         (if nimet?
-          [:span.tulos__subject (lang (:nimi piste))]
+          [:span.tulos__subject (or (lang (:nimi piste)) (:nimi piste))]
           (if (:localize-arvo piste)
             [:span.tulos__value @(subscribe [:editor/virkailija-translation (keyword (:arvo piste))])]
             [:span.tulos__value (to-finnish-number (:arvo piste))]))])])
