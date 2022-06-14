@@ -297,14 +297,14 @@
    #(application-store/get-full-application-list-by-person-oid-for-omatsivut-and-refresh-old-secrets
      person-oid)))
 
-(defn onr-applications [organization-service session person-oid]
+(defn onr-applications [organization-service session person-oids]
   (session-orgs/run-org-authorized
-   session
-   organization-service
-   [:view-applications :edit-applications]
-   (constantly nil)
-   (constantly nil)
-   #(application-store/onr-applications person-oid)))
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    (constantly nil)
+    #(application-store/onr-applications person-oids)))
 
 (defn get-applications-for-odw [organization-service session person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service from-date limit offset application-key]
   (session-orgs/run-org-authorized

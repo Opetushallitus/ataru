@@ -590,6 +590,7 @@
 
 (s/defschema OnrApplication
   {:oid          s/Str
+   :henkiloOid    s/Str
    :haku         (s/maybe s/Str)
    :form         s/Str
    :kansalaisuus [s/Str]

@@ -538,9 +538,10 @@
   (exec-db :db queries/yesql-applications-person-and-hakukohteet-by-haku {:haku haku}))
 
 (defn- unwrap-onr-application
-  [{:keys [key haku form email content]}]
+  [{:keys [key haku form email content person_oid]}]
   (let [answers (answers-by-key (:answers content))]
     {:oid          key
+     :henkiloOid   person_oid
      :haku         haku
      :form         form
      :kansalaisuus (-> answers :nationality :value flatten)
@@ -552,8 +553,8 @@
      :passinNumero (-> answers :passport-number :value)
      :idTunnus     (-> answers :national-id-number :value)}))
 
-(defn onr-applications [person-oid]
-  (->> (exec-db :db queries/yesql-onr-applications {:person_oid person-oid})
+(defn onr-applications [person-oids]
+  (->> (exec-db :db queries/yesql-onr-applications {:person_oids person-oids})
        (map unwrap-onr-application)))
 
 (defn has-ssn-applied [haku-oid ssn]
