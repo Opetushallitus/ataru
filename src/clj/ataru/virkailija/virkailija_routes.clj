@@ -1259,8 +1259,8 @@
       (api/POST "/onr/applications" {session :session}
         :body [person-oids [s/Str]]
         :return [ataru-schema/OnrApplication]
-        (if (empty? person-oids)
-          (response/bad-request {:error "Nonempty list of application oids is required"})
+        (if (or (empty? person-oids) (> (count person-oids) 1000))
+          (response/bad-request {:error "Nonempty list of person oids is required and maximum amount of person oids is 1000"})
           (if-let [applications (access-controlled-application/onr-applications
                                 organization-service
                                 session
