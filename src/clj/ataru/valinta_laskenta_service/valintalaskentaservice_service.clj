@@ -19,6 +19,12 @@
     (= "EI_TEHTY" state)
     :not-done
 
+    (= "VARALLA" state)
+    :reserve
+
+    (= "PERUUNTUNUT" state)
+    :cancelled
+
     :else
     state))
 

@@ -2141,7 +2141,9 @@
    :varalla                                                  {:fi "Varalla"
                                                               :sv "På reserv"
                                                               :en "On reserve place"}
-   :peruuntunut                                              {:fi "Peruuntunut"}
+   :peruuntunut                                              {:fi "Peruuntunut"
+                                                              :sv "Inställt"
+                                                              :en "Cancelled"}
    :varasijalta-hyvaksytty                                   {:fi "Varasijalta hyväksytty"}
    :hyvaksytty                                               {:fi "Hyväksytty"
                                                               :sv "Godkänd"
@@ -2370,6 +2372,9 @@
    :reserve                {:fi "Varalla"
                             :sv "På reserv"
                             :en "On reserve place"}
+   :cancelled              {:fi "Peruuntunut"
+                            :sv "Inställt"
+                            :en "Cancelled"}
    :selected               {:fi "Hyväksytty"
                             :sv "Godkänd"
                             :en "Selected"}
