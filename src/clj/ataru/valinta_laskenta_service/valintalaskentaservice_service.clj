@@ -78,13 +78,16 @@
                                  :valintatila (localize-state (:valintatila toive))
                                  :vastaanottotila (localize-state (:vastaanottotila toive))
                                  :ilmoittautumistila (localize-state (get-in toive [:ilmoittautumistila :ilmoittautumistila]))
-                                 :pisteet (parse-pisteet pisteet (:hakukohdeOid toive))})))]
+                                 :pisteet (if (nil? pisteet)
+                                            []
+                                            (parse-pisteet pisteet (:hakukohdeOid toive)))})))]
     hakutoiveet))
 
 (defn- get-valinnan-ja-laskennan-tulos-hakemukselle
-  [cas-client valinta-tulos-service haku-oid hakemus-oid]
+  [cas-client valinta-tulos-service haku-oid hakemus-oid skip-fetching-pisteet]
   (let [tulos (future (vts/valinnan-tulos-hakemukselle valinta-tulos-service haku-oid hakemus-oid))
-        pisteet (client/hakemuksen-laskennan-tiedot cas-client haku-oid hakemus-oid)
+        pisteet (when (not skip-fetching-pisteet)
+                  (client/hakemuksen-laskennan-tiedot cas-client haku-oid hakemus-oid))
         parsed-tulos (parse-tulos @tulos pisteet)]
     parsed-tulos))
 
@@ -117,7 +120,7 @@
   ValintaLaskentaService
 
   (hakemuksen-tulokset [_ hakukohde-oid haku-oid]
-    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid))
+    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid false))
 
   (valinnan-tuloksien-hakeminen-sallittu? [_ superuser? haku]
     (if superuser?
