@@ -1,7 +1,8 @@
 (ns ataru.valinta-laskenta-service.valintalaskentaservice-service
   (:require [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :refer [ValintaLaskentaService]]
             [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
-            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client])
+            [ataru.valinta-laskenta-service.valintalaskentaservice-client :as client]
+            [ataru.config.core :refer [config]])
   (:import [java.time ZonedDateTime Instant ZoneId]))
 
 (defn- localize-state
@@ -84,8 +85,9 @@
     hakutoiveet))
 
 (defn- get-valinnan-ja-laskennan-tulos-hakemukselle
-  [cas-client valinta-tulos-service haku-oid hakemus-oid skip-fetching-pisteet]
+  [cas-client valinta-tulos-service haku-oid hakemus-oid]
   (let [tulos (future (vts/valinnan-tulos-hakemukselle valinta-tulos-service haku-oid hakemus-oid))
+        skip-fetching-pisteet (get-in config [:valinta-tulos-settings :skip-fetching-pisteet] false)
         pisteet (when (not skip-fetching-pisteet)
                   (client/hakemuksen-laskennan-tiedot cas-client haku-oid hakemus-oid))
         parsed-tulos (parse-tulos @tulos pisteet)]
@@ -120,7 +122,7 @@
   ValintaLaskentaService
 
   (hakemuksen-tulokset [_ hakukohde-oid haku-oid]
-    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid false))
+    (get-valinnan-ja-laskennan-tulos-hakemukselle cas-client valinta-tulos-service hakukohde-oid haku-oid))
 
   (valinnan-tuloksien-hakeminen-sallittu? [_ superuser? haku]
     (if superuser?

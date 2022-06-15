@@ -26,6 +26,7 @@
  :application-key-masking {:secret-key "{{ataru_application_key_masking_secret_key}}"}
  :application-delete-key  {:secret-key "{{ataru_application_delete_secret_key}}"}
  :yksiloimattomat {:allow {{ataru_allow_yksiloimattomat}}}
+ :valinta-tulos-settings {:skip-fetching-pisteet {{ataru_hakemuksentulos_skip_fetching_pisteet | default('false')}}}
  :cache {:type {{ataru_cache_type}}}
  :redis {:uri "{{ataru_redis_uri}}"}
  :aws {:region "{{aws_region}}"
