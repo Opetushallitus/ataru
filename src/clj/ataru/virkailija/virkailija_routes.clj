@@ -47,6 +47,7 @@
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [ataru.valintaperusteet.service :as valintaperusteet]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
+            [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :as vls]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
@@ -217,7 +218,8 @@
                           get-haut-cache
                           audit-logger
                           application-service
-                          suoritus-service]
+                          suoritus-service
+                          valinta-laskenta-service]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -474,7 +476,7 @@
 
       (api/GET "/virkailija-texts" {session :session}
         (ok (if (:dev? env)
-              (merge texts/general-texts texts/virkailija-texts)
+              (merge texts/general-texts texts/state-translations texts/virkailija-texts)
               (get-virkailija-texts localizations-cache))))
 
       (api/POST "/review-setting" {session :session}
@@ -967,6 +969,24 @@
             (response/unauthorized {:error (str "Hakemuksen "
                                                 (:application-key application-key)
                                                 " käsittely ei ole sallittu")})))))
+
+    (api/context "/tulos-service" []
+      :tags ["tulos-service-api"]
+
+      (api/GET "/haku/:haku-oid/hakemus/:hakemus-oid" {session :session}
+        :path-params [haku-oid :- s/Str hakemus-oid :- s/Str]
+        :return s/Any
+        :summary "Hakee hakemuksen tulokset valinnoista"
+        (if (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+              organization-service tarjonta-service suoritus-service person-service session [hakemus-oid] [:valinnat-valilehti])
+          (let [haku (tarjonta/get-haku tarjonta-service haku-oid)
+                superuser? (user-rights/is-super-user? session)]
+            (if (vls/valinnan-tuloksien-hakeminen-sallittu? valinta-laskenta-service superuser? haku)
+              (if-let [tulokset (vls/hakemuksen-tulokset valinta-laskenta-service haku-oid hakemus-oid)]
+                (ok tulokset)
+                (not-found))
+              (response/unauthorized {:error "Valinnan tulokset kesken"})))
+          (response/unauthorized {:error "Unauthorized"}))))
 
     (api/context "/valintaperusteet" []
       :tags ["valintaperusteet-api"]

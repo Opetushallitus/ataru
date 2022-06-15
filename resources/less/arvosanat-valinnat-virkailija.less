@@ -1,0 +1,115 @@
+@import "component-colors";
+@import "component-fonts";
+@import "component-layout";
+
+.valinnat,
+.grades {
+  .default-font();
+  display: flex;
+
+  &__left-panel {
+    flex: 0 0 245px;
+    padding-right: 20px;
+    min-width: 12rem;
+    min-height: 6rem;
+    h2 {
+      color: @text-color;
+      font-size: 15px;
+      font-weight: normal;
+      text-transform: uppercase;
+      margin-bottom: 0;
+      max-width: 230px;
+      word-wrap: break-word;
+    }
+  }
+
+  &__right-panel {
+    margin-top: 13px;
+
+    .pohjakoulutus__loading-indicator {
+      font-size: 32px;
+    }
+
+    .tulos,
+    .grade {
+      display: grid;
+      grid-template-columns: 20rem 1rem 8rem;
+      margin-bottom: 0.7rem;
+      grid-template-areas:
+        "subject . value"
+        "lang . . ";
+
+      &__subject {
+        grid-area: subject;
+      }
+
+      &__value {
+        grid-area: value;
+        &--valinnainen {
+          margin-left: 0.8rem;
+          color: @neutral-grey-700;
+        }
+      }
+
+      &__lang {
+        grid-area: lang;
+        color: @neutral-grey-700;
+      }
+    }
+  }
+}
+
+.valinnat {
+
+  &__right-panel {
+    .valinnat__tulokset-container {
+      display: grid;
+      grid-template-columns: 25rem 1rem 19rem;
+      grid-template-areas:
+        "hakukohde hakukohde hakukohde"
+        "subjects . values"
+        "divider divider divider";
+
+      .valinnat__hakukohde {
+        margin-bottom: 1.5rem;
+        span {
+          font-size: 15px;
+          font-weight: bolder;
+        }
+        grid-area: hakukohde;
+      }
+
+      .valinnat__tulokset__nimet {
+        grid-area: subjects;
+        padding: 0.2rem 0.5rem 0.2rem 0.5rem;
+      }
+
+      .valinnat__tulokset__arvot {
+        grid-area: values;
+        padding: 0.2rem 0.5rem 0.2rem 0.5rem;
+        background-color: lighten(@paler-blue, 15%);
+      }
+
+      .tulos {
+        display: block;
+
+        &__sub-header {
+          font-weight: bolder;
+
+          &:after {
+            content: '\200b';
+          }
+        }
+      }
+
+      .valinnat__divider {
+        grid-area: divider;
+        height: 1px;
+        width: 100%;
+        margin-top: 0.5rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(to right, @neutral-grey-700, lighten(@neutral-grey-700, 20%), lighten(@neutral-grey-700, 50%), lighten(@neutral-grey-700, 100%));
+      }
+    }
+  }
+}
