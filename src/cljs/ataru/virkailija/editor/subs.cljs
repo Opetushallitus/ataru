@@ -25,6 +25,7 @@
            translation-key
            lang
            virkailija-texts
+           true
            params)))
 
 (re-frame/reg-sub
