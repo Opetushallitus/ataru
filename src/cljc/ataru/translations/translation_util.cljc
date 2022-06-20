@@ -20,17 +20,24 @@
   #?(:cljs (apply gstring/format text params)
      :clj  (apply format text params)))
 
-(defn get-translation [key lang texts & params]
+(defn get-translation [key lang texts use-key-if-missing? & params]
   (let [text (-> texts
                  (get key not-found-translations)
                  (get lang))]
-    (cond-> text
-            (some? params)
-            (format-string params))))
+    (cond
+      (some? params)
+      (format-string text params)
+
+      (and (nil? (get texts key)) use-key-if-missing?)
+      key
+
+      :else
+      text)))
 
 (defn get-hakija-translation [key lang & params]
   (apply get-translation
          key
          lang
          translation-mapping
+         false
          params))

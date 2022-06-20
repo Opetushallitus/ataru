@@ -2384,6 +2384,45 @@
    :rejected               {:fi "Hylätty"
                             :sv "Underkänd"
                             :en "Rejected"}
+   :accepted-from-reserve  {:fi "Varasijalta hyväksytty"
+                            :sv "Godkänd från reservplats"
+                            :en "Accepted from reserve"}
+   :bindingly-received     {:fi "Vastaanottanut sitovasti"
+                            :sv "Mottagit bindande"}
+   :present-whole-academic-year {:fi "Läsnä koko lukuvuoden"
+                                 :sv "Närvarande hela läsåret"
+                                 :en "Present whole academic year"}
+   :away-whole-acedemic-year {:fi "Poissa koko lukuvuoden"
+                              :sv "Frånvarande hela läsåret"
+                              :en "Away whole academic year"}
+   :cancelled-by-someone   {:fi "Peruutettu"
+                            :sv "Annullerats"}
+   :cancelled-by-applicant {:fi "Perunut"
+                            :sv "Annullerad"
+                            :en "Cancelled by applicant"}
+   :present-autumn         {:fi "Läsnä syksyn"
+                            :sv "Närvarande hösten"
+                            :en "Present during autumn"}
+   :away-autumn            {:fi "Poissa syksyn"
+                            :sv "Frånvarande hösten"
+                            :en "Away during autumn"}
+   :present-spring         {:fi "Läsnä kevään"
+                            :sv "Närvarande våren"
+                            :en "Present during spring"}
+   :away-spring            {:fi "Poissa kevään"
+                            :sv "Frånvarande våren"
+                            :en "Away during spring"}
+   :accepted-harkinnanvaraisesti {:fi "Harkinnanvaraisesti hyväksytty"
+                                  :sv "Godkänd enligt prövning"}
+   :not-enrolled           {:fi "Ei ilmoittautunut"
+                            :sv "Ej anmält sig"
+                            :en "Not enrolled"}
+   :not-received-during-period {:fi "Ei vastaanotettu määrä-aikana"
+                                :sv "Ej mottagit inom utsatt tid"}
+   :received-another       {:fi "Ottanut vastaan toisen paikan"
+                            :sv "Tagit emot annan plats"}
+   :conditionally-received {:fi "Ehdollisesti vastaanottanut"
+                            :sv "Mottagit villkorligt"}
    :unreviewed             {:fi "Tarkastamatta"
                             :sv "Inte granskad"
                             :en "Unreviewed"}

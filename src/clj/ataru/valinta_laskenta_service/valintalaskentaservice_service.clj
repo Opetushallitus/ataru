@@ -9,22 +9,46 @@
   (cond
     (= "HYVAKSYTTY" state)
     :accepted
-
     (= "HYLATTY" state)
     :rejected
-
     (= "KESKEN" state)
     :incomplete
-
     (= "EI_TEHTY" state)
     :not-done
-
     (= "VARALLA" state)
     :reserve
-
     (= "PERUUNTUNUT" state)
     :cancelled
-
+    (= "PERUUTETTU" state)
+    :cancelled-by-someone
+    (= "PERUNUT" state)
+    :cancelled-by-applicant
+    (= "VARASIJALTA_HYVAKSYTTY" state)
+    :accepted-from-reserve
+    (= "VASTAANOTTANUT_SITOVASTI" state)
+    :bindingly-received
+    (= "LASNA_KOKO_LUKUVUOSI" state)
+    :present-whole-academic-year
+    (= "POISSA_KOKO_LUKUVUOSI" state)
+    :away-whole-acedemic-year
+    (= "LASNA_SYKSY" state)
+    :present-autumn
+    (= "POISSA_SYKSY" state)
+    :away-autumn
+    (= "LASNA" state)
+    :present-spring
+    (= "AWAY" state)
+    :away-spring
+    (= "HARKINNANVARAISESTI_HYVAKSYTTY" state)
+    :accepted-harkinnanvaraisesti
+    (= "EI_ILMOITTAUTUNUT" state)
+    :not-enrolled
+    (= "EI_VASTAANOTETTU_MAARA_AIKANA" state)
+    :not-received-during-period
+    (= "OTTANUT_VASTAAN_TOISEN_PAIKAN" state)
+    :received-another
+    (= "EHDOLLISESTI_VASTAANOTTANUT" state)
+    :conditionally-received
     :else
     state))
 
