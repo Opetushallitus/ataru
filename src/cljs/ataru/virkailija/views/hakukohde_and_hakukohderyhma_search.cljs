@@ -2,7 +2,8 @@
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
             [reagent.core :as r]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [ataru.virkailija.application.view.virkailija-application-icons :as icons]))
 
 (defn- search-input->search-terms
   [search-input]
@@ -112,6 +113,8 @@
                            "hakukohde-and-hakukohderyhma-list-item-label--selected")
                          (when hilight
                            " hakukohde-and-hakukohderyhma-list-item-label--highlighted"))}
+                   (when @(re-frame/subscribe [:application/hakukohde-archived? id])
+                     [icons/archived-icon])
                    text])
                 label-parts)])
 

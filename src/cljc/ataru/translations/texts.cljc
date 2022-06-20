@@ -532,7 +532,10 @@
                                                  :en "EN: Lähetä liite osoitteeseen"}
    :verkkosivu                                  {:fi "Tai käytä"
                                                  :sv "Eller använd"
-                                                 :en "EN: Tai käytä"}})
+                                                 :en "EN: Tai käytä"}
+   :archived                                    {:fi "Arkistoitu"
+                                                 :sv "Arkiverad"
+                                                 :en "Archived"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -1157,6 +1160,9 @@
    :active                                                   {:fi "Aktiivinen"
                                                               :sv "Aktiv"
                                                               :en "Active"}
+   :archived                                                 {:fi "Arkistoitu"
+                                                              :sv "Arkiverad"
+                                                              :en "Archived"}
    :add                                                      {:fi "Lisää"
                                                               :sv "Lägg till"
                                                               :en "Add more"}

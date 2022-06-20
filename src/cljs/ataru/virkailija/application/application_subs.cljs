@@ -571,6 +571,14 @@
         hakukohde-oid))))
 
 (re-frame/reg-sub
+  :application/hakukohde-archived?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/hakukohteet])])
+  (fn hakukohde-archived?
+    [[hakukohteet] [_ hakukohde-oid]]
+    (boolean (:archived (get hakukohteet hakukohde-oid)))))
+
+(re-frame/reg-sub
   :application/tarjoaja-name
   (fn [db [_ hakukohde-oid]]
     (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]

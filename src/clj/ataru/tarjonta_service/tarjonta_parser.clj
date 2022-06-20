@@ -20,6 +20,7 @@
     {:oid                                                         (:oid hakukohde)
      :name                                                        (:name hakukohde)
      :can-be-applied-to?                                          (:can-be-applied-to? hakukohde)
+     :archived                                                    (:archived hakukohde)
      :hakukohderyhmat                                             (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))
      :kohdejoukko-korkeakoulu?                                    (string/starts-with?
                                                                     (:kohdejoukko-uri haku)

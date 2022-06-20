@@ -118,10 +118,18 @@
         (translations/get-hakija-translation :read-more lang)]]))
 
 (defn- selected-hakukohde [idx hakukohde-oid]
-  (let [editable? (subscribe [:application/hakukohteet-editable?])]
+  (let [editable? (subscribe [:application/hakukohteet-editable?])
+        virkailija? (subscribe [:application/virkailija?])
+        archived? (subscribe [:application/hakukohde-archived? hakukohde-oid])
+        lang @(subscribe [:application/form-language])]
     [:div.application__hakukohde-2nd-row__selected-hakukohde-row
      [:div.application-hakukohde-2nd-row__name-wrapper
-      [:span @(subscribe [:application/hakukohde-name-label-by-oid hakukohde-oid])]
+      [:span
+        (when (and @virkailija? @archived?)
+          [:i.material-icons-outlined.arkistoitu
+            {:title (translations/get-hakija-translation :archived lang)}
+          "archive"])
+        @(subscribe [:application/hakukohde-name-label-by-oid hakukohde-oid])]
       [:span @(subscribe [:application/hakukohde-tarjoaja-name-label-by-oid hakukohde-oid])]]
      [hakukohde-details hakukohde-oid]
      (when @editable?

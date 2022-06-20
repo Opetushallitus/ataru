@@ -1,4 +1,5 @@
-(ns ataru.virkailija.application.view.virkailija-application-icons)
+(ns ataru.virkailija.application.view.virkailija-application-icons
+  (:require [re-frame.core :refer [subscribe]]))
 
 (defn icon-check []
   [:span.application-handling__review-state-selected-icon.zmdi-hc-stack.zmdi-hc-lg
@@ -32,3 +33,8 @@
 (defn tutu-payment-overdue []
   [:span.application-handling__tutu-payment-icon--overdue.zmdi-hc-stack.zmdi-hc-lg
    [:i.zmdi.zmdi-alert-octagon.zmdi-hc-stack-1x]])
+
+(defn archived-icon []
+  [:i.material-icons-outlined.arkistoitu
+   {:title @(subscribe [:editor/virkailija-translation :archived])}
+   "archive"])
