@@ -30,7 +30,13 @@
                                        :valid   {:start (ZonedDateTime/parse "1994-08-01T00:00+03:00[Europe/Helsinki]")
                                                  :end   (ZonedDateTime/parse "1996-07-31T00:00+03:00[Europe/Helsinki]")}})
 
-(def school-from-koodisto-only (merge school-from-organization-service {:label {:fi "Suonenjoen maatalousoppilaitos"}}))
+(def school-from-koodisto-only {:uri     "oppilaitosnumero_02440"
+                                :version 1
+                                :value   "02440"
+                                :label   {:fi "Vasa yrkesinstitut"}
+                                :valid   {:start (ZonedDateTime/parse "1994-08-01T00:00+03:00[Europe/Helsinki]")
+                                          :end   (ZonedDateTime/parse "1996-07-31T00:00+03:00[Europe/Helsinki]")}})
+
 
 (describe "loading 'oppilaitostyyppi' koodisto"
   (tags :unit :koodisto)
@@ -50,16 +56,17 @@
 
   (it "should use koodisto provided labels if organization service doesn't contain school details"
     (with-redefs [koodisto-codes/institution-type-codes ["21"]
+                  ;organization-client/get-single-organization-cached (constantly nil)
                   http-util/do-request (fake-http-requester {"/koodisto-service/rest/codeelement/oppilaitostyyppi_21/"
-                                                             [200 "koodisto_service/codeelement/oppilaitostyyppi_21.json"]
+                                                             [200 "koodisto_service/codeelement/oppilaitostyyppi_21b.json"]
 
-                                                             "/koodisto-service/rest/codeelement/oppilaitosnumero_02439/1"
-                                                             [200 "koodisto_service/json/oppilaitosnumero/koodi.json"]
+                                                             "/koodisto-service/rest/codeelement/oppilaitosnumero_02440/1"
+                                                             [200 "koodisto_service/json/oppilaitosnumero/koodi02440.json"]
 
-                                                             "/organisaatio-service/rest/organisaatio/02439"
+                                                             "/organisaatio-service/rest/organisaatio/02440"
                                                              [404 nil]})]
-
       (should= [school-from-koodisto-only] (koodisto-db/get-koodi-options "oppilaitostyyppi"))))
+
   )
 
 (run-specs)
