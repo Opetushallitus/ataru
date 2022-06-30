@@ -894,6 +894,8 @@
   (let [m {"pohjakoulutus_yo"              ["yo"]
            "pohjakoulutus_yo_ammatillinen" ["yo" "am"]
            "pohjakoulutus_am"              ["am"]
+           "pohjakoulutus_amp"             ["am"]
+           "pohjakoulutus_amv"             ["am"]
            "pohjakoulutus_amt"             ["amt"]
            "pohjakoulutus_kk"              ["kk"]
            "pohjakoulutus_avoin"           ["avoin"]
