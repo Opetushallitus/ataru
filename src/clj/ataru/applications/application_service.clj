@@ -456,7 +456,12 @@
             review                (future (application-store/get-application-review application-key))
             review-notes          (future (map (partial enrich-virkailija-organizations organization-service)
                                                (application-store/get-application-review-notes application-key)))
-            information-requests  (future (information-request-store/get-information-requests application-key))]
+            information-requests  (future (information-request-store/get-information-requests application-key))
+            master-oid            (future
+                                    (->> application
+                                         :person-oid
+                                         (person-service/get-person person-service)
+                                         :oppijanumero))]
         (util/remove-nil-values {:application           (-> application
                                                             (dissoc :person-oid)
                                                             (assoc :person (get-person this application))
@@ -468,7 +473,8 @@
                                  :events                @events
                                  :review                @review
                                  :review-notes          @review-notes
-                                 :information-requests  @information-requests}))))
+                                 :information-requests  @information-requests
+                                 :master-oid            @master-oid}))))
 
   (get-excel-report-of-applications-by-key
     [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]

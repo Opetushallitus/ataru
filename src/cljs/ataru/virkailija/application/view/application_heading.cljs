@@ -81,6 +81,7 @@
 (defn application-heading []
   (let [loading?            @(subscribe [:state-query [:application :loading?]])
         application         @(subscribe [:state-query [:application :selected-application-and-form :application]])
+        master-oid          (-> application :person :master-oid)
         answers             (:answers application)
         pref-name           (-> application :person :preferred-name)
         last-name           (-> application :person :last-name)
@@ -111,6 +112,15 @@
            [:span hakemus-oid]]
           [:div.application-handling__review-area-main-heading-person-oid-row
            [:div.application-handling__applicant-links
+            (when master-oid
+              [:a
+               {:href   (str "/henkilo-ui/oppija/"
+                             master-oid
+                             "?permissionCheckService=ATARU")
+                :target "_blank"}
+               [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
+               [:span.application-handling__review-area-main-heading-person-oid
+                (str @(subscribe [:editor/virkailija-translation :student-number]) " " master-oid)]])
             (when person-oid
               [:a
                {:href   (str "/henkilo-ui/oppija/"
@@ -119,7 +129,7 @@
                 :target "_blank"}
                [:i.zmdi.zmdi-account-circle.application-handling__review-area-main-heading-person-icon]
                [:span.application-handling__review-area-main-heading-person-oid
-                (str @(subscribe [:editor/virkailija-translation :student]) " " person-oid)]])
+                (str @(subscribe [:editor/virkailija-translation :person-oid]) " " person-oid)]])
             (when person-oid
               [:a
                {:href   (str "/suoritusrekisteri/#/opiskelijat?henkilo=" person-oid)

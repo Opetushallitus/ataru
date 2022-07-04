@@ -2012,6 +2012,12 @@
    :student                                                  {:fi "Oppija"
                                                               :sv "Studerande"
                                                               :en "Applicant"}
+   :person-oid                                               {:fi "Henkilö-OID"
+                                                              :sv "Person OID"
+                                                              :en "Person OID"}
+   :student-number                                            {:fi "Oppijanumero"
+                                                              :sv "SV: Oppijanumero"
+                                                              :en "Student number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
                                                               :sv "matade in ansökan"
                                                               :en "submitted"}
