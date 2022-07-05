@@ -28,7 +28,8 @@
                                           ; This is a vector of vectors where index determines the country for each specific foreign base education
                                           ; This isn't the pretties way to implement this, but it is the easiest for now.
             :pohjakoulutus_kk_ulk_country (some-> (or (get-in answers [:pohjakoulutus_kk_ulk--country :value])
-                                                      (get-in answers [:secondary-completed-base-education–country :value]))
+                                                      (get-in answers [:secondary-completed-base-education–country :value])
+                                                      (get-in answers [:893ede6f-998e-4e66-9ca5-b10bc602c944 :value]))
                                                   first-string)
             :hakutoiveet                  (hakutoiveet (:hakukohde_oids application))})))
 
