@@ -75,6 +75,11 @@
               :turvakielto (-> person-from-onr :turvakielto boolean)
               :yksiloity   (boolean yksiloity)}))))
 
+(defn parse-person-with-master-oid [application person-from-onr]
+  (let [person (parse-person application person-from-onr)
+        master-oid (:oppijanumero person-from-onr)]
+    (merge person {:master-oid master-oid})))
+
 (defrecord IntegratedPersonService [henkilo-cache
                                     oppijanumerorekisteri-cas-client]
   component/Lifecycle

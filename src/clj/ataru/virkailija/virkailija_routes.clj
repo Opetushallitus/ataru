@@ -505,7 +505,8 @@
                  :hakukohde-reviews            ataru-schema/HakukohdeReviews
                  :form                         ataru-schema/FormWithContent
                  (s/optional-key :latest-form) form-schema/Form
-                 :information-requests         [ataru-schema/InformationRequest]}
+                 :information-requests         [ataru-schema/InformationRequest]
+                 (s/optional-key :master-oid)  (s/maybe s/Str)}
         (if-let [application (application-service/get-application-with-human-readable-koodis
                               application-service
                               application-key

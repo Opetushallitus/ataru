@@ -2012,6 +2012,12 @@
    :student                                                  {:fi "Oppija"
                                                               :sv "Studerande"
                                                               :en "Applicant"}
+   :person-oid                                               {:fi "Henkilö-OID"
+                                                              :sv "Person OID"
+                                                              :en "Person OID"}
+   :student-number                                            {:fi "Oppijanumero"
+                                                              :sv "SV: Oppijanumero"
+                                                              :en "Student number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
                                                               :sv "matade in ansökan"
                                                               :en "submitted"}
@@ -2558,6 +2564,9 @@
    :id                       {:fi "Id"
                               :sv "Id"
                               :en "EN: Id"}
+   :application-number       {:fi "Hakemusnumero"
+                              :sv "Ansökningsnummer"
+                              :en "Application number"}
    :key                      {:fi "Tunniste"
                               :sv "Identifikation"
                               :en "EN: Tunniste"}
@@ -2597,6 +2606,9 @@
    :pisteet                  {:fi "Pisteet"
                               :sv "Poäng"
                               :en "EN: Pisteet"}
+   :student-number           {:fi "Oppijanumero"
+                              :sv "SV: Oppijanumero"
+                              :en "Student number"}
    :applicant-oid            {:fi "Hakijan henkilö-OID"
                               :sv "Sökandes person-OID"
                               :en "EN: Hakijan henkilö-OID"}
