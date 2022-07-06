@@ -114,7 +114,7 @@
     :field :created-by}])
 
 (def ^:private application-meta-fields
-  [{:label     (:id excel-texts)
+  [{:label     (:application-number excel-texts)
     :field     [:application :key]}
    {:label     (:sent-at excel-texts)
     :field     [:application :created-time]
@@ -158,6 +158,8 @@
     :format-fn ehdollinen-formatter}
    {:label     (:pisteet excel-texts)
     :field     [:application-review :score]}
+   {:label     (:student-number excel-texts)
+    :field     [:person :master-oid]}
    {:label     (:applicant-oid excel-texts)
     :field     [:application :person-oid]}
    {:label     (:turvakielto excel-texts)

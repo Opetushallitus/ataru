@@ -496,7 +496,7 @@
                                                       (assoc application
                                                              :person (->> (:person-oid application)
                                                                           (get onr-persons)
-                                                                          (person-service/parse-person application))))
+                                                                          (person-service/parse-person-with-master-oid application))))
                                                   applications)
             hakukohteiden-ehdolliset         (hakukohteiden-ehdolliset valinta-tulos-service applications)
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
