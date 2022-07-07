@@ -66,6 +66,21 @@
                                      (or (:cannot-view field) (:cannot-view original-question-field) (:cannot-view original-followup-field))
                                      (assoc :value nil))))))))
 
+(defn- is-parent-of-per-hakukohde-old-followup-in-new-answers?
+  [form-fields new-answers followup]
+  (let [parent (form-fields (:followup-of followup))
+        option-value (:option-value followup)
+        answer (->> new-answers
+                    (filter #(seq (:original-question %)))
+                    (filter #(= (:original-question %) (:id parent)))
+                    first)]
+    (or (and
+          (or (nil? answer)
+              (and (nil? (:value answer))
+                   (some #(= "required" %) (:validators parent))))
+          (:cannot-view parent))
+        (= option-value (:value answer)))))
+
 (defn merge-unviewable-answers-from-previous
   [new-application
    old-application
@@ -79,7 +94,9 @@
         original-followups-not-in-new (filter #(and (seq (:original-followup %))
                                                     (nil? (get new-answers-by-key (:key %)))
                                                     (contains? hakukohde-oids-in-new-application (:duplikoitu-followup-hakukohde-oid %))
-                                                    (:cannot-view (fields-by-key (:original-followup %)))) (:answers old-application))
+                                                    (:cannot-view (fields-by-key (:original-followup %)))
+                                                    (is-parent-of-per-hakukohde-old-followup-in-new-answers? fields-by-key (:answers new-application) (fields-by-key (:original-followup %))))
+                                              (:answers old-application))
         if-cannot-view-use-old (fn [answer]
                                  (let [original-question-field   (fields-by-key (:original-question answer))
                                        field                     (fields-by-key (:key answer))
