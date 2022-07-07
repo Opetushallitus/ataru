@@ -126,4 +126,27 @@
           (should-contain {:key                               "followup-id_1"
                            :value                             "new-value"
                            :original-followup                 "followup-id"
-                           :duplikoitu-followup-hakukohde-oid "1"} answers))))))
+                           :duplikoitu-followup-hakukohde-oid "1"} answers)))
+
+      (it "does not copy followup answer value from old application when new application has answered different option parent of followup"
+          (let [form            {:content [{:id      "id"
+                                            :options [{:value 0 :followups [{:id          "followup-id"
+                                                                             :cannot-view true}]}
+                                                      {:value 1}]}]}
+                old-application {:answers   [{:key                               "followup-id_1"
+                                              :value                             "old-value"
+                                              :original-followup                 "followup-id"
+                                              :duplikoitu-followup-hakukohde-oid "1"}
+                                             {:key "id_1"
+                                              :original-question "id"
+                                              :value 0}]
+                                 :hakukohde ["1"]}
+                new-application {:answers   [{:key "id_1"
+                                              :original-question "id"
+                                              :value 1}]
+                                 :hakukohde ["1"]}
+                answers         (:answers (hakija-application-service/merge-unviewable-answers-from-previous new-application old-application form))]
+            (should= 1 (count answers))
+            (should-contain {:key "id_1"
+                             :original-question "id"
+                             :value 1} answers)))        )))
