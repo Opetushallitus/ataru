@@ -518,10 +518,6 @@
       [filter-attachment-state-dropdown field-id]
       [filter-question-answer-dropdown field-id])))
 
-(defn- form-fields-by-id []
-  (let [form-key (subscribe [:application/selected-form-key])]
-    (subscribe [:application/form-fields-by-id @form-key])))
-
 (defn- valpas-link
   [organization-oid]
   (let [url (.url js/window "valpas.hakutilanne" (or organization-oid ""))]
@@ -640,7 +636,7 @@
         show-ensisijaisesti?                      (subscribe [:application/show-ensisijaisesti?])
         show-rajaa-hakukohteella?                 (subscribe [:application/show-rajaa-hakukohteella?])
         filters-changed?                          (subscribe [:application/filters-changed?])
-        form-key                                  (subscribe [:application/selected-form-key])
+        form-key                                  (subscribe [:application/selected-form-key-for-search])
         filter-questions                          (subscribe [:application/filter-questions])
         tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
         opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
@@ -735,9 +731,7 @@
            (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (when (and
-                  (or (not @toisen-asteen-yhteishaku-selected?) @admin?)
-                  (some? @form-key))
+          (when (or (not @toisen-asteen-yhteishaku-selected?) @admin?)
             [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
@@ -758,7 +752,7 @@
                       (map (fn [[field-id _]]
                              [:li.application-handling__filters-attachment-attachments__list-item
                               [:button.application-handling__filters-attachment-attachments__remove-button
-                               {:on-click #(dispatch [:application/remove-question-filter (get @(form-fields-by-id) (keyword field-id))])}
+                               {:on-click #(dispatch [:application/remove-question-filter (get @(subscribe [:application/form-fields-by-id @form-key]) (keyword field-id))])}
                                [:i.zmdi.zmdi-close]]
                               [:span.application-handling__filters-attachment-attachments__label
                                @(subscribe [:application/form-field-label @form-key field-id])]
