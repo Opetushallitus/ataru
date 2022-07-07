@@ -1079,6 +1079,16 @@ button.application__maksut-button {
   z-index: 1;
 }
 
+.application__form-single-choice-button-inner-container {
+  label.disabled {
+    + .application__form-multi-choice-followups-outer-container {
+      .application__form-multi-choice-followups-indicator {
+        border-top: 9px solid @neutral-grey-500;
+      }
+    }
+  }
+}
+
 .application__readonly-adjacent {
   text-align: left;
 }
@@ -1137,10 +1147,6 @@ th.application__readonly-adjacent--header {
   cursor: default;
   + .application__form-single-choice-followups-indicator {
     border-top: 9px solid @neutral-grey-500;
-  }
-
-  + .application__form-multi-choice-followups-outer-container {
-
   }
 }
 
