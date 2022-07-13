@@ -29,8 +29,7 @@
                                           ; This isn't the pretties way to implement this, but it is the easiest for now.
             :pohjakoulutus_kk_ulk_country (some-> (or (get-in answers [:pohjakoulutus_kk_ulk--country :value])
                                                       (get-in answers [:secondary-completed-base-education–country :value])
-                                                      (get-in answers [:893ede6f-998e-4e66-9ca5-b10bc602c944 :value])
-                                                      (get-in answers [:f983b9c8-6354-4714-9d3d-ae784079bef0 :value]))
+                                                      (get-in answers [:893ede6f-998e-4e66-9ca5-b10bc602c944 :value]))
                                                   first-string)
             :hakutoiveet                  (hakutoiveet (:hakukohde_oids application))})))
 
