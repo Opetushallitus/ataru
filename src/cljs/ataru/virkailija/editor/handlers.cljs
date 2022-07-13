@@ -794,13 +794,19 @@
                                                        name))))
         reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
                                            (assoc-in x [:params :selection-group-id] new-form-key)
-                                           x))]
+                                           x))
+        remove-belongs-to (fn [x] (if (map? x)
+                                    (-> x
+                                        (dissoc :belongs-to-hakukohderyhma)
+                                        (dissoc :belongs-to-hakukohteet))
+                                    x))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
                                             (map (fn [component] (walk/prewalk
                                                                    #(-> %
-                                                                        (reset-selection-group-id)) component))
+                                                                        (reset-selection-group-id)
+                                                                        (remove-belongs-to)) component))
                                                  content)))
                          (assoc :key new-form-key))
                      {:locked nil :locked-by nil}))
