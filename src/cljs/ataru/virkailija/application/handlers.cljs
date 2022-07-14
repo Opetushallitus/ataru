@@ -486,14 +486,15 @@
                                              hakukohde-reviews
                                              attachment-reviews
                                              information-requests
-                                             review-notes]}]
+                                             review-notes
+                                             master-oid]}]
   (-> db
       (assoc-in [:application :selected-application-and-form]
-        {:form        form
-         :application (-> application
-                          answers-indexed
-                          parse-rights-by-hakukohde
-                          (add-non-yo-attachment-ids form))})
+                {:form        form
+                 :application (-> application
+                                  answers-indexed
+                                  parse-rights-by-hakukohde
+                                  (add-non-yo-attachment-ids form))})
       (assoc-in [:application :latest-form] latest-form)
       (assoc-in [:application :events] events)
       (assoc-in [:application :review] review)
@@ -502,6 +503,7 @@
       (assoc-in [:application :review :hakukohde-reviews] hakukohde-reviews)
       (assoc-in [:application :review :attachment-reviews] attachment-reviews)
       (assoc-in [:application :information-requests] information-requests)
+      (assoc-in [:application :selected-application-and-form :application :person :master-oid] master-oid)
       (update-in [:application :selected-review-hakukohde-oids]
         (fn [current-hakukohde-oids]
           (let
