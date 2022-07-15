@@ -458,10 +458,10 @@
                                                (application-store/get-application-review-notes application-key)))
             information-requests  (future (information-request-store/get-information-requests application-key))
             master-oid            (future
-                                    (->> application
-                                         :person-oid
-                                         (person-service/get-person person-service)
-                                         :oppijanumero))]
+                                    (some->> application
+                                             :person-oid
+                                             (person-service/get-person person-service)
+                                             :oppijanumero))]
         (util/remove-nil-values {:application           (-> application
                                                             (dissoc :person-oid)
                                                             (assoc :person (get-person this application))
