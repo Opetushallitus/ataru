@@ -20,11 +20,10 @@
            :aria-hidden   true}
     koulutustyyppi-name]])
 
-(defn- koulutustyyppi-btn [label is-open? on-click-fn on-blur-fn]
+(defn- koulutustyyppi-btn [label is-open? on-click-fn]
   [:div
    [btn/button {:label    label
                 :on-click on-click-fn
-                :on-blur  on-blur-fn
                 :id       "koulutustyyppi-btn"}]
    (if is-open?
      [:i.zmdi.zmdi-caret-up]
@@ -41,10 +40,9 @@
                     (translations/get-hakija-translation :filter-by-koulutustyyppi @lang)
                     (when (not-empty koulutustyypit-filters')
                       (str " (" (count koulutustyypit-filters') ")")))
-            on-blur-fn #(reset! is-open false)
             on-click-fn #(swap! is-open not)]
         [:div.application__hakukohde-2nd-row__hakukohde-koulutustyyppi
-         [koulutustyyppi-btn label @is-open on-click-fn on-blur-fn]
+         [koulutustyyppi-btn label @is-open on-click-fn]
          (when @is-open
            [:div.application__koulutustyypit-filter-wrapper
             (for [{uri :uri :as koulutustyyppi} @koulutustyypit]
@@ -56,13 +54,17 @@
 
 (defn- search-hit-hakukohde-row
   [hakukohde-oid idx]
-  (let [aria-header-id (str "hakukohde-search-hit-header-" hakukohde-oid)]
+  (let [aria-header-id (str "hakukohde-search-hit-header-" hakukohde-oid)
+        select-fn #(do
+                     (dispatch [:application/hakukohde-query-process (atom "") idx])
+                     (dispatch [:application/set-active-hakukohde-search nil])
+                     (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx]))]
     [:div.application__search-hit-hakukohde-row-2nd
      {:on-mouse-down #(.preventDefault %)
-      :on-click      #(do
-                        (dispatch [:application/hakukohde-query-process (atom "") idx])
-                        (dispatch [:application/set-active-hakukohde-search nil])
-                        (dispatch [:application/hakukohde-add-selection-2nd hakukohde-oid idx]))}
+      :tab-index 0
+      :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                       (select-fn))
+      :on-click select-fn}
      [:div.application__search-hit-hakukohde-row--content
       [:div.application__hakukohde-header
        {:id aria-header-id}
@@ -76,11 +78,7 @@
     (fn []
       [:div.application__hakukohde-2nd-row__hakukohde
        [:input.application__form-text-input-in-box
-        {:on-blur     #(do
-                         (reset! search-input "")
-                         (dispatch [:application/hakukohde-query-process search-input])
-                         (dispatch [:application/set-active-hakukohde-search nil]))
-         :on-change   #(do (reset! search-input (.-value (.-target %)))
+        {:on-change   #(do (reset! search-input (.-value (.-target %)))
                            (dispatch [:application/hakukohde-query-change search-input idx])
                            (dispatch [:application/set-active-hakukohde-search idx]))
          :placeholder (translations/get-hakija-translation :search-application-options-or-education @lang)
@@ -140,19 +138,26 @@
 (defn- hakukohde-priority [idx hakukohde-oid hakukohteet-count]
   (let [editable? (subscribe [:application/hakukohteet-editable?])
         increase-disabled (or (not @editable?) (= idx 0))
-        decrease-disabled (or (not @editable?) (= idx (max 0 (dec hakukohteet-count))))]
+        decrease-disabled (or (not @editable?) (= idx (max 0 (dec hakukohteet-count))))
+        change-priority-fn (fn [acc] (dispatch [:application/change-hakukohde-priority hakukohde-oid acc idx]))]
     [:div.application__hakukohde-2nd-row__hakukohde-order
      [:span
       [:i.zmdi.zmdi-caret-up.zmdi-hc-2x
        (if increase-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
-         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1 idx])})]]
+         {:tab-index 0
+          :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                        (change-priority-fn -1))
+          :on-click #(change-priority-fn -1)})]]
      [:span (inc idx)]
      [:span
       [:i.zmdi.zmdi-caret-down.zmdi-hc-2x
        (if decrease-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
-         {:on-click #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1 idx])})]]]))
+         {:tab-index 0
+          :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                        (change-priority-fn 1))
+          :on-click #(change-priority-fn 1 )})]]]))
 
 (defn- select-hakukohde [idx hakukohde-oid hakukohteet-count]
   [:div
