@@ -434,6 +434,9 @@
    :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
                                                  :sv "Sök läroanstalt eller utbildningar"
                                                  :en "EN: Etsi oppilaitosta tai koulutusta"}
+   :close-application-options                   {:fi "Sulje koulutusten haku"
+                                                 :sv "Dölj hämta ansökningsmål"
+                                                 :en "Close study program search"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}

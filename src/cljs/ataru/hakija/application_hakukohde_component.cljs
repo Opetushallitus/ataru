@@ -185,7 +185,11 @@
                   "application__hakukohde-selection-search-arrow-up--prioritized")}]
        [:div.application__hakukohde-selection-search-container
         [:div.application__hakukohde-selection-search-close-button
-         [:a {:on-click hakukohde-search-toggle-event-handler}
+         [:a {:aria-label (translations/get-hakija-translation :close-application-options @lang)
+              :tab-index 0
+              :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                            (hakukohde-search-toggle-event-handler %))
+              :on-click hakukohde-search-toggle-event-handler}
           [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
         [:div.application__hakukohde-selection-search-input.application__form-text-input-box
          [:input.application__form-text-input-in-box
@@ -229,7 +233,10 @@
            (translations/get-hakija-translation :applications_at_most lang max-hakukohteet)])
         [:div.application__hakukohde-selection-open-search-wrapper
          [:a.application__hakukohde-selection-open-search
-          {:on-click hakukohde-search-toggle-event-handler}
+          {:tab-index 0
+           :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                         (hakukohde-search-toggle-event-handler %))
+           :on-click hakukohde-search-toggle-event-handler}
           (translations/get-hakija-translation :add-application-option lang)]]))))
 
 (defn hakukohteet

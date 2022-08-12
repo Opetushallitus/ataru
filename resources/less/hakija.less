@@ -1530,6 +1530,10 @@ th.application__readonly-adjacent--header {
   border-image-slice: 2;
   border-image-repeat: round;
   padding: 25px 0px 25px 0px;
+  .application__hakukohde-selection-open-search:focus {
+    box-shadow: 0px 0px 0px 3px @primary-green-300;
+    outline: none;
+  }
 }
 
 .application__hakukohde-selection-open-search {
@@ -1584,6 +1588,12 @@ th.application__readonly-adjacent--header {
   box-shadow: @modal-shadow;
   padding: 20px;
   position: relative;
+  .application__hakukohde-selection-search-close-button {
+    a:focus {
+      box-shadow: 0px 0px 0px 3px @primary-green-300;
+      outline: none;
+    }
+  }
 }
 
 .application__hakukohde-selection-search-input {
