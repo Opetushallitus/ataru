@@ -603,27 +603,31 @@
             disabled?            (or @verifying? @cannot-edit? unselectable?)
             selection-uncertain? @uncertain?
             has-selection-limit? (:selection-limit option)
-            sure-if-selected?    (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))]
-        [:div.application__form-single-choice-button-inner-container {:key option-id}
+            sure-if-selected?    (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))
+            toggle-value-fn (fn [value]
+                              (dispatch [:application/set-repeatable-application-field
+                                         field-descriptor
+                                         question-group-idx
+                                         nil
+                                         (when-not checked? value)]))]
+        [:div.application__form-single-choice-button-inner-container
+         {:key option-id}
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
-                  :on-change (fn [event]
-                               (let [value (.. event -target -value)]
-                                 (dispatch [:application/set-repeatable-application-field
-                                            field-descriptor
-                                            question-group-idx
-                                            nil
-                                            (when-not checked? value)])))
+                  :on-change #(toggle-value-fn (.. % -target -value))
                   :role      "radio"
                   :class     (if use-multi-choice-style?
                                "application__form-checkbox"
                                "application__form-single-choice-button")}
                  (when disabled? {:disabled true}))]
          [:label
-          (merge {:for option-id}
+          (merge {:for option-id
+                  :tab-index (if disabled? -1 0)
+                  :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                                (toggle-value-fn option-value))}
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
             [:span.application__form-single-choice-button--verifying
@@ -661,7 +665,6 @@
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid answer))
-           :tab-index       "0"
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall
