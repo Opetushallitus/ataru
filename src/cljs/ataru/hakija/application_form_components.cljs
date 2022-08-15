@@ -556,6 +556,7 @@
                  (when @cannot-edit? {:class "disabled"})
                  (when (not @cannot-edit?)
                    {:tab-index 0
+                    :role      "option"
                     :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
                                   (on-change %))}))
           label]
@@ -631,6 +632,7 @@
           (merge {:for option-id}
                   (when (not disabled?)
                     {:tab-index 0
+                     :role      "radio"
                      :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
