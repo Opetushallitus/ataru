@@ -552,7 +552,11 @@
                  (when @cannot-edit? {:disabled true}))]
          [:label
           (merge {:for option-id}
-                 (when @cannot-edit? {:class "disabled"}))
+                 (when @cannot-edit? {:class "disabled"})
+                 (when (not @cannot-edit?)
+                   {:tab-index 0
+                    :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                                  (on-change %))}))
           label]
          (when (and @checked?
                     (not-empty followups))
@@ -573,7 +577,6 @@
          [:div.application__form-outer-checkbox-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
-           :tab-index       "0"
            :role            "listbox"}
           (doall
             (map-indexed (fn [option-idx option]
@@ -624,10 +627,11 @@
                                "application__form-single-choice-button")}
                  (when disabled? {:disabled true}))]
          [:label
-          (merge {:for option-id
-                  :tab-index (if disabled? -1 0)
-                  :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
-                                (toggle-value-fn option-value))}
+          (merge {:for option-id}
+                  (when (not disabled?)
+                    {:tab-index 0
+                     :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                                (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
             [:span.application__form-single-choice-button--verifying
