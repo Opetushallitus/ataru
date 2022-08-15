@@ -522,11 +522,11 @@ body {
   font-size: 26px;
   color: @gray-of-the-beast;
   cursor: pointer;
-}
-
-.application__remove-question-group-row-mouse-over {
-  color: black;
-  cursor: pointer;
+  &:focus,
+  &:hover {
+    color: black;
+    cursor: pointer;
+  }
 }
 
 .application__add-question-group-row {

@@ -448,10 +448,7 @@
                (with-meta [render-field child nil] {:key (:id child)}))))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
-  (let [mouse-over?   (subscribe [:application/mouse-over-remove-question-group-button
-                                  field-descriptor
-                                  idx])
-        on-mouse-over (fn [_]
+  (let [on-mouse-over (fn [_]
                         (dispatch [:application/remove-question-group-mouse-over
                                    field-descriptor
                                    idx]))
@@ -462,14 +459,18 @@
         on-click      (fn [_]
                         (dispatch [:application/remove-question-group-row
                                    field-descriptor
-                                   idx]))]
+                                   idx]))
+        lang          @(subscribe [:application/form-language])]
     (fn [_ _]
-      [(if @mouse-over?
-         :i.zmdi.zmdi-close.application__remove-question-group-row.application__remove-question-group-row-mouse-over
-         :i.zmdi.zmdi-close.application__remove-question-group-row)
+      [:i.zmdi.zmdi-close.application__remove-question-group-row
        {:on-mouse-over on-mouse-over
         :on-mouse-out  on-mouse-out
-        :on-click      on-click}])))
+        :on-click      on-click
+        :aria-label    (tu/get-hakija-translation :remove-question-group-answer lang)
+        :tab-index     0
+        :role          "button"
+        :on-key-up     #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                          (on-click %))}])))
 
 (defn- question-group-row [field-descriptor idx can-remove?]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button

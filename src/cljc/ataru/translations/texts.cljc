@@ -428,6 +428,9 @@
    :remove-row                                  {:fi "Poista rivi"
                                                  :sv "Ta bort rad"
                                                  :en "Remove row"}
+   :remove-question-group-answer                {:fi "Poista vastausvaihtoehto"
+                                                 :sv "SV: Poista vastausvaihtoehto"
+                                                 :en "Remove answer option"}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
