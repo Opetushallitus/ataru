@@ -33,7 +33,7 @@
   (let [id   (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")
         lang @(subscribe [:application/form-language])]
     [:div.application__form-upload-attachment-container
-     [:input.application__form-upload-input
+     [:input.application__form-upload-input.visually-hidden
       {:id           id
        :type         "file"
        :multiple     "multiple"
