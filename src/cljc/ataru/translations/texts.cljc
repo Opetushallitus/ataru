@@ -429,7 +429,7 @@
                                                  :sv "Ta bort rad"
                                                  :en "Remove row"}
    :remove-question-group-answer                {:fi "Poista vastausvaihtoehto"
-                                                 :sv "SV: Poista vastausvaihtoehto"
+                                                 :sv "Radera svarsalternativ"
                                                  :en "Remove answer option"}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"

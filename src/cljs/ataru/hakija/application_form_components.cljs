@@ -24,7 +24,8 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]
-            [ataru.hakija.components.attachment :as attachment]))
+            [ataru.hakija.components.attachment :as attachment]
+            [ataru.application-common.accessibility-util :as a11y]))
 
 (defonce autocomplete-off "new-password")
 
@@ -469,7 +470,7 @@
         :aria-label    (tu/get-hakija-translation :remove-question-group-answer lang)
         :tab-index     0
         :role          "button"
-        :on-key-up     #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+        :on-key-up     #(when (a11y/is-enter-or-space? %)
                           (on-click %))}])))
 
 (defn- question-group-row [field-descriptor idx can-remove?]
@@ -557,7 +558,7 @@
                  (when (not @cannot-edit?)
                    {:tab-index 0
                     :role      "option"
-                    :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                    :on-key-up #(when (a11y/is-enter-or-space? %)
                                   (on-change %))}))
           label]
          (when (and @checked?
@@ -633,7 +634,7 @@
                   (when (not disabled?)
                     {:tab-index 0
                      :role      "radio"
-                     :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+                     :on-key-up #(when (a11y/is-enter-or-space? %)
                                 (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)

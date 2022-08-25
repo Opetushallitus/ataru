@@ -6,7 +6,8 @@
     [ataru.util :as util]
     [ataru.translations.translation-util :as translations]
     [reagent.core :as r]
-    [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]))
+    [ataru.hakija.application-hakukohde-2nd-component :as hakukohde-2nd]
+    [ataru.application-common.accessibility-util :as a11y]))
 
 (defn hilighted-text->span [idx {:keys [text hilight]}]
   [(if hilight
@@ -187,7 +188,7 @@
         [:div.application__hakukohde-selection-search-close-button
          [:a {:aria-label (translations/get-hakija-translation :close-application-options @lang)
               :tab-index 0
-              :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+              :on-key-up #(when (a11y/is-enter-or-space? %)
                             (hakukohde-search-toggle-event-handler %))
               :on-click hakukohde-search-toggle-event-handler}
           [:i.zmdi.zmdi-close.zmdi-hc-lg]]]
@@ -234,7 +235,7 @@
         [:div.application__hakukohde-selection-open-search-wrapper
          [:a.application__hakukohde-selection-open-search
           {:tab-index 0
-           :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+           :on-key-up #(when (a11y/is-enter-or-space? %)
                          (hakukohde-search-toggle-event-handler %))
            :on-click hakukohde-search-toggle-event-handler}
           (translations/get-hakija-translation :add-application-option lang)]]))))

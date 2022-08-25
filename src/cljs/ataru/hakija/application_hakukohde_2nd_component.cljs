@@ -3,7 +3,8 @@
             [re-frame.core :refer [dispatch subscribe]]
             [ataru.application-common.components.button-component :as btn]
             [ataru.util :as u]
-            [ataru.translations.translation-util :as translations]))
+            [ataru.translations.translation-util :as translations]
+            [ataru.application-common.accessibility-util :as a11y]))
 
 
 (defn- koulutustyyppi-filter-row [koulutustyyppi-name is-selected on-change-fn]
@@ -62,7 +63,7 @@
     [:div.application__search-hit-hakukohde-row-2nd
      {:on-mouse-down #(.preventDefault %)
       :tab-index 0
-      :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+      :on-key-up #(when (a11y/is-enter-or-space? %)
                        (select-fn))
       :on-click select-fn}
      [:div.application__search-hit-hakukohde-row--content
@@ -146,7 +147,7 @@
        (if increase-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
          {:tab-index 0
-          :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+          :on-key-up #(when (a11y/is-enter-or-space? %)
                         (change-priority-fn -1))
           :on-click #(change-priority-fn -1)})]]
      [:span (inc idx)]
@@ -155,7 +156,7 @@
        (if decrease-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
          {:tab-index 0
-          :on-key-up #(when (or (= 13 (.-keyCode %)) (= 32 (.-keyCode %)))
+          :on-key-up #(when (a11y/is-enter-or-space? %)
                         (change-priority-fn 1))
           :on-click #(change-priority-fn 1 )})]]]))
 
