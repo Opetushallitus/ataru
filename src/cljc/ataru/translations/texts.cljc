@@ -428,12 +428,18 @@
    :remove-row                                  {:fi "Poista rivi"
                                                  :sv "Ta bort rad"
                                                  :en "Remove row"}
+   :remove-question-group-answer                {:fi "Poista vastausvaihtoehto"
+                                                 :sv "Radera svarsalternativ"
+                                                 :en "Remove answer option"}
    :search-application-options                  {:fi "Etsi tämän haun koulutuksia"
                                                  :sv "Hämta ansökningsmål i denna ansökan"
                                                  :en "Search for study programmes"}
    :search-application-options-or-education     {:fi "Etsi oppilaitosta tai koulutusta"
                                                  :sv "Sök läroanstalt eller utbildningar"
                                                  :en "EN: Etsi oppilaitosta tai koulutusta"}
+   :close-application-options                   {:fi "Sulje koulutusten haku"
+                                                 :sv "Dölj hämta ansökningsmål"
+                                                 :en "Close study program search"}
    :second                                      {:fi "sekunti"
                                                  :en "second"
                                                  :sv "sekund"}

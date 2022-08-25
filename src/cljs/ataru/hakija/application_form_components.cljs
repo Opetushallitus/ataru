@@ -24,7 +24,8 @@
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]
-            [ataru.hakija.components.attachment :as attachment]))
+            [ataru.hakija.components.attachment :as attachment]
+            [ataru.application-common.accessibility-util :as a11y]))
 
 (defonce autocomplete-off "new-password")
 
@@ -448,10 +449,7 @@
                (with-meta [render-field child nil] {:key (:id child)}))))]))
 
 (defn- remove-question-group-button [field-descriptor idx]
-  (let [mouse-over?   (subscribe [:application/mouse-over-remove-question-group-button
-                                  field-descriptor
-                                  idx])
-        on-mouse-over (fn [_]
+  (let [on-mouse-over (fn [_]
                         (dispatch [:application/remove-question-group-mouse-over
                                    field-descriptor
                                    idx]))
@@ -462,14 +460,18 @@
         on-click      (fn [_]
                         (dispatch [:application/remove-question-group-row
                                    field-descriptor
-                                   idx]))]
+                                   idx]))
+        lang          @(subscribe [:application/form-language])]
     (fn [_ _]
-      [(if @mouse-over?
-         :i.zmdi.zmdi-close.application__remove-question-group-row.application__remove-question-group-row-mouse-over
-         :i.zmdi.zmdi-close.application__remove-question-group-row)
+      [:i.zmdi.zmdi-close.application__remove-question-group-row
        {:on-mouse-over on-mouse-over
         :on-mouse-out  on-mouse-out
-        :on-click      on-click}])))
+        :on-click      on-click
+        :aria-label    (tu/get-hakija-translation :remove-question-group-answer lang)
+        :tab-index     0
+        :role          "button"
+        :on-key-up     #(when (a11y/is-enter-or-space? %)
+                          (on-click %))}])))
 
 (defn- question-group-row [field-descriptor idx can-remove?]
   (let [mouse-over? (subscribe [:application/mouse-over-remove-question-group-button
@@ -552,7 +554,12 @@
                  (when @cannot-edit? {:disabled true}))]
          [:label
           (merge {:for option-id}
-                 (when @cannot-edit? {:class "disabled"}))
+                 (when @cannot-edit? {:class "disabled"})
+                 (when (not @cannot-edit?)
+                   {:tab-index 0
+                    :role      "option"
+                    :on-key-up #(when (a11y/is-enter-or-space? %)
+                                  (on-change %))}))
           label]
          (when (and @checked?
                     (not-empty followups))
@@ -573,7 +580,6 @@
          [:div.application__form-outer-checkbox-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid @(subscribe [:application/answer id idx nil])))
-           :tab-index       "0"
            :role            "listbox"}
           (doall
             (map-indexed (fn [option-idx option]
@@ -603,20 +609,21 @@
             disabled?            (or @verifying? @cannot-edit? unselectable?)
             selection-uncertain? @uncertain?
             has-selection-limit? (:selection-limit option)
-            sure-if-selected?    (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))]
-        [:div.application__form-single-choice-button-inner-container {:key option-id}
+            sure-if-selected?    (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))
+            toggle-value-fn (fn [value]
+                              (dispatch [:application/set-repeatable-application-field
+                                         field-descriptor
+                                         question-group-idx
+                                         nil
+                                         (when-not checked? value)]))]
+        [:div.application__form-single-choice-button-inner-container
+         {:key option-id}
          [:input
           (merge {:id        option-id
                   :type      "checkbox"
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
-                  :on-change (fn [event]
-                               (let [value (.. event -target -value)]
-                                 (dispatch [:application/set-repeatable-application-field
-                                            field-descriptor
-                                            question-group-idx
-                                            nil
-                                            (when-not checked? value)])))
+                  :on-change #(toggle-value-fn (.. % -target -value))
                   :role      "radio"
                   :class     (if use-multi-choice-style?
                                "application__form-checkbox"
@@ -624,6 +631,11 @@
                  (when disabled? {:disabled true}))]
          [:label
           (merge {:for option-id}
+                  (when (not disabled?)
+                    {:tab-index 0
+                     :role      "radio"
+                     :on-key-up #(when (a11y/is-enter-or-space? %)
+                                (toggle-value-fn option-value))})
                  (when disabled? {:class "disabled"}))
           (when (and @verifying? checked?)
             [:span.application__form-single-choice-button--verifying
@@ -661,7 +673,6 @@
          [:div.application__form-single-choice-button-outer-container
           {:aria-labelledby (generic-label-component/id-for-label field-descriptor idx)
            :aria-invalid    (not (:valid answer))
-           :tab-index       "0"
            :role            "radiogroup"
            :class           (when use-multi-choice-style? "application__form-single-choice-button-container--column")}
           (doall

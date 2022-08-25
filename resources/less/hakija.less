@@ -522,11 +522,11 @@ body {
   font-size: 26px;
   color: @gray-of-the-beast;
   cursor: pointer;
-}
-
-.application__remove-question-group-row-mouse-over {
-  color: black;
-  cursor: pointer;
+  &:focus,
+  &:hover {
+    color: black;
+    cursor: pointer;
+  }
 }
 
 .application__add-question-group-row {
@@ -1412,6 +1412,7 @@ th.application__readonly-adjacent--header {
     margin-bottom: 0px;
   }
 
+  &:focus,
   &:hover {
     cursor: pointer;
     background: @primary-green-100;
@@ -1479,6 +1480,12 @@ th.application__readonly-adjacent--header {
 
 .application__hakukohde-2nd-contents-wrapper {
   flex-grow: 2;
+
+  button:focus,
+  #koulutustyyppi-btn:focus {
+    box-shadow: 0px 0px 0px 3px @primary-green-300;
+    outline: none;
+  }
 }
 
 .application__hakukohde-2nd-max-amount-reached {
@@ -1523,6 +1530,10 @@ th.application__readonly-adjacent--header {
   border-image-slice: 2;
   border-image-repeat: round;
   padding: 25px 0px 25px 0px;
+  .application__hakukohde-selection-open-search:focus {
+    box-shadow: 0px 0px 0px 3px @primary-green-300;
+    outline: none;
+  }
 }
 
 .application__hakukohde-selection-open-search {
@@ -1577,6 +1588,12 @@ th.application__readonly-adjacent--header {
   box-shadow: @modal-shadow;
   padding: 20px;
   position: relative;
+  .application__hakukohde-selection-search-close-button {
+    a:focus {
+      box-shadow: 0px 0px 0px 3px @primary-green-300;
+      outline: none;
+    }
+  }
 }
 
 .application__hakukohde-selection-search-input {
@@ -2224,6 +2241,11 @@ th.application__readonly-adjacent--header {
   font-size: 16px;
   border-radius: 6px;
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+
+  div p,
+  p {
+    color: white;
+  }
 
   & p:first-child {
     margin-top: 0px;
