@@ -1079,6 +1079,16 @@ button.application__maksut-button {
   z-index: 1;
 }
 
+.application__form-single-choice-button-inner-container {
+  label.disabled {
+    + .application__form-multi-choice-followups-outer-container {
+      .application__form-multi-choice-followups-indicator {
+        border-top: 9px solid @neutral-grey-500;
+      }
+    }
+  }
+}
+
 .application__readonly-adjacent {
   text-align: left;
 }
@@ -1119,11 +1129,6 @@ th.application__readonly-adjacent--header {
   font-size: 14px;
 }
 
-.application__form-single-choice-button + label.disabled {
-  background-color: @neutral-grey-500;
-  cursor: default;
-}
-
 .application__form-single-choice-followups-indicator {
   position: absolute;
   width: 0;
@@ -1134,6 +1139,15 @@ th.application__readonly-adjacent--header {
   top: 100%;
   left: 40px;
   z-index: 1;
+}
+
+
+.application__form-single-choice-button + label.disabled {
+  background-color: @neutral-grey-500;
+  cursor: default;
+  + .application__form-single-choice-followups-indicator {
+    border-top: 9px solid @neutral-grey-500;
+  }
 }
 
 .application__form-single-choice-button-inner-container {
