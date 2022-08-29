@@ -640,7 +640,6 @@
         filter-questions                          (subscribe [:application/filter-questions])
         tutu-form?                                (subscribe [:tutu-payment/tutu-form? @form-key])
         opinto-ohjaaja-or-admin?                  (subscribe [:editor/opinto-ohjaaja-or-admin?])
-        admin?                                    (subscribe [:editor/superuser?])
         question-search-id                        :filters-attachment-search
         filters-visible                           (r/atom false)
         rajaava-hakukohde-opened?                 (r/atom false)
@@ -731,8 +730,7 @@
            (when (and @has-base-education-answers (not @toisen-asteen-yhteishaku-selected?))
              [:div.application-handling__popup-column.application-handling__popup-column--large
               [application-base-education-filters filters-checkboxes @lang]])]
-          (when (or (not @toisen-asteen-yhteishaku-selected?) @admin?)
-            [:div.application-handling__filter-group
+           [:div.application-handling__filter-group
              [:h3.application-handling__filter-group-heading @(subscribe [:editor/virkailija-translation :submitted-content-search-label])]
              [:div.application-handling__filters-attachment-search-input
               [question-search/search-input
@@ -763,7 +761,7 @@
                  @form-key
                  question-search-id
                  #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
-                      (dispatch [:application/add-question-filter %]))]])])
+                      (dispatch [:application/add-question-filter %]))]])]
           [:div.application-handling__filters-popup-apply-button-container
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?

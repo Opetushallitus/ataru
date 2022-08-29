@@ -25,4 +25,4 @@
   (fn [[_ form-key id] _]
     (re-frame/subscribe [:question-search/data form-key id]))
   (fn [data _]
-    (mapv (comp keyword :id) (remove :per-hakukohde (:search-result data)))))
+    (mapv (comp keyword :id) (:search-result data))))
