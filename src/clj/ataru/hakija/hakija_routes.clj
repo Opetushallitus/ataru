@@ -29,7 +29,6 @@
             [selmer.parser :as selmer]
             [cheshire.core :as json]
             [ataru.config.core :refer [config]]
-            [ataru.flowdock.flowdock-client :as flowdock-client]
             [ataru.palaute.palaute-client :as palaute-client]
             [ataru.test-utils :refer [get-test-vars-params get-latest-application-secret alter-application-to-hakuaikaloppu-for-secret]]
             [ataru.hakija.resumable-file-transfer :as resumable-file]
@@ -192,7 +191,6 @@
       :body [feedback ataru-schema/ApplicationFeedback]
       (if-let [saved-application (hakija-application-service/save-application-feedback feedback)]
         (do
-          (flowdock-client/send-application-feedback saved-application)
           (palaute-client/send-application-feedback amazon-sqs feedback)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request {})))
