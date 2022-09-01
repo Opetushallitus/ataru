@@ -1063,7 +1063,7 @@
 (re-frame/reg-sub
   :application/filter-question-answers-filtering-options
   (fn [db [_ field-id]]
-    (get-in db [:application :filters-checkboxes :question-answer-filtering-options field-id])))
+    (get-in db [:application :filters-checkboxes :question-answer-filtering-options field-id :options])))
 
 (re-frame/reg-sub
   :application/valitun-hakemuksen-hakukohteet

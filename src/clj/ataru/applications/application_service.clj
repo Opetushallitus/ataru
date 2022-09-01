@@ -195,12 +195,7 @@
 (defn ->option-answers-query
   [option-answers]
   (when (seq option-answers)
-    {:option-answers
-     (into
-      {}
-      (map (fn [[field-id options]]
-             [(name field-id) options])
-           option-answers))}))
+    {:option-answers option-answers}))
 
 (defn ->empty-query
   []

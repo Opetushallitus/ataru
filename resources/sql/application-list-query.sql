@@ -26,7 +26,11 @@ AND EXISTS (SELECT 1
 AND ((EXISTS (SELECT 1
               FROM answers
               WHERE application_id = a.id
+/*~ (if (contains? params :original-question) */
+                AND original_question = :key
+/*~*/
                 AND key = :key
+/*~   ) ~*/
                 AND (value IS NULL OR char_length(value) < 1000)
 /*~ (if (contains? params :options) */
                 AND value = ANY (:options)))

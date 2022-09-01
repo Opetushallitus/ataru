@@ -107,10 +107,12 @@
      :dispatch [:application/reload-applications]}))
 
 (defn- init-question-answer-filtering-options [field]
-  (->> (:options field)
-       (map :value)
-       (mapv (fn [v] [v false]))
-       (into {})))
+  (let [base-answer {:use-original-question (boolean (:per-hakukohde field))}
+        options     (->> (:options field)
+                         (map :value)
+                         (mapv (fn [v] [v false]))
+                         (into {}))]
+       (merge base-answer {:options options})))
 
 (reg-event-db
   :application/add-question-filter
@@ -136,7 +138,7 @@
 (reg-event-db
   :application/set-question-answer-filtering-options
   (fn [db [_ field-id option value]]
-    (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id option] value)))
+    (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id :options option] value)))
 
 (reg-event-db
   :application/set-pending-classes-of-school
