@@ -293,11 +293,14 @@
 
 (defn demo-overlay
   []
-  (let [demo?   (subscribe [:application/demo?])
+  (let [demo? (subscribe [:application/demo?])
+        demo-open? (subscribe [:application/demo-open?])
         hidden? (r/atom false)
-        lang    (subscribe [:application/form-language])]
+        lang (subscribe [:application/form-language])
+        url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
+              (str konfo-base "/konfo/" (name @lang) "/"))]
     (fn []
-      (when (and @demo? (not @hidden?))
+      (if (and @demo? (not @hidden?) @demo-open?)
         [:div.application__notification-overlay
          [:div.application__notification-container
           [:h1.application__notification-title
@@ -306,7 +309,16 @@
           [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
            {:on-click     #(reset! hidden? true)
             :data-test-id "dismiss-demo-notification-button"}
-           (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]))))
+           (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]
+
+        [:div.application__notification-overlay
+         [:div.application__notification-container
+          [:h1.application__notification-title
+           (translations/get-hakija-translation :demo-closed-title @lang)]
+          [:p (translations/get-hakija-translation :demo-closed-notification-start @lang)
+           [:a {:href url}
+            (translations/get-hakija-translation :demo-closed-link @lang)]
+           (translations/get-hakija-translation :demo-closed-notification-end @lang)]]]))))
 
 (defn form-view []
   [:div

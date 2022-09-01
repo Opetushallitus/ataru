@@ -1,5 +1,7 @@
 (ns ataru.hakija.demo
-  (:require [clojure.zip :as z]))
+  (:require [clojure.zip :as z]
+            [cljs-time.core :as time]
+            [cljs-time.format :as format]))
 
 (defn- is-ssn-question?
   [question]
@@ -53,11 +55,25 @@
         demo-allowed? (get form :demo-allowed)]
     (boolean (and demo-requested? demo-allowed?))))
 
+(defn- demo-period-open?
+  [form]
+  (let [demo-end-date (get-in form [:properties :demo-validity-end] nil)
+        date-now (time/today)]
+    (if (some? demo-end-date)
+      (time/before? date-now (format/parse demo-end-date))
+      false)))
+
 (defn demo?
   ([db]
    (demo-requested-and-allowed? db (get db :form)))
   ([db form]
    (demo-requested-and-allowed? db form)))
+
+(defn demo-open?
+  ([db]
+   ;(demo-period-open? (get db :form))
+   true
+   ))
 
 (defn apply-when-demo
   [db form f x]

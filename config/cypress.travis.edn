@@ -37,6 +37,7 @@
                    :hakija-caller-id                    "1.2.246.562.10.00000000001.ataru-hakija.frontend"
                    :applicant                           {:service_url "http://localhost:8354"}
                    :virkailija                          {:service_url "http://localhost:8354/lomake-editori/"}
+                   :konfo                               {:service_url "http://localhost:8354"}
                    :environment-name                    "test"
                    :enable-re-frisk                     true
                    :local-dev-logout                    true

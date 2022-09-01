@@ -290,6 +290,11 @@
     (demo/demo? db)))
 
 (re-frame/reg-sub
+  :application/demo-open?
+  (fn [db]
+    (demo/demo-open? db)))
+
+(re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])

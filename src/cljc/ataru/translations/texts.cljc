@@ -527,12 +527,24 @@
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :sv "Det här är en övningsblankett. De uppgifter som du fyller i sparas inte."
                                                  :en "This is a practice form. The information that you fill in will not be saved."}
+   :demo-closed-notification-start              {:fi "Demolomake ei ole tällä hetkellä käytössä. Tutustu koulutustarjontaan ja tuleviin hakuihin "
+                                                 :sv "Demoblanketten är inte i användning just nu. Bekanta dig med utbildningsutbudet och kommande ansökningar på "
+                                                 :en "The application demo form is currently not in use. Explore available study programmes and upcoming application periods at "}
+   :demo-closed-link                            {:fi "Opintopolku.fi"
+                                                 :sv "Studieinfo.fi"
+                                                 :en "Studyinfo.fi"}
+   :demo-closed-notification-end                {:fi ":ssä."
+                                                 :sv "."
+                                                 :en "."}
    :dismiss-demo-notification                   {:fi "Jatka"
                                                  :sv "Fortsätt"
                                                  :en "Continue"}
    :demo-notification-title                     {:fi "Harjoittelulomake"
                                                  :sv "Övningsblankett"
                                                  :en "Practice form"}
+   :demo-closed-title                           {:fi "Demolomake suljettu"
+                                                 :sv "Demoblanketten stängd"
+                                                 :en "Application demo form closed"}
    :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
                                                  :sv "Skicka bilagan till adressen"
                                                  :en "EN: Lähetä liite osoitteeseen"}
