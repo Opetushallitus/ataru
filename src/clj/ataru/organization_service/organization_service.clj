@@ -49,7 +49,7 @@
 
   (get-organizations-for-oids [this organization-oids]
     (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
-          normal-orgs (map org-client/get-organization normal-org-oids)
+          normal-orgs (map org-client/get-organization-cached normal-org-oids)
           all-groups  (cache/get-from all-organization-groups-cache :dummy-key)
           groups      (map #(get all-groups % (unknown-group %)) group-oids)]
       (concat normal-orgs groups)))
