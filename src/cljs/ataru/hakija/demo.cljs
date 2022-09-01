@@ -71,9 +71,7 @@
 
 (defn demo-open?
   ([db]
-   ;(demo-period-open? (get db :form))
-   true
-   ))
+   (demo-period-open? (get db :form))))
 
 (defn apply-when-demo
   [db form f x]
