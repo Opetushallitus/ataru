@@ -294,6 +294,12 @@
   (fn [db]
     (demo/demo-open? db)))
 
+
+(re-frame/reg-sub
+  :application/demo-requested?
+  (fn [db]
+    (demo/demo-requested? db)))
+
 (re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]

@@ -293,15 +293,15 @@
 
 (defn demo-overlay
   []
-  (let [demo? (subscribe [:application/demo?])
-        demo-open? (subscribe [:application/demo-open?])
+  (let [demo-open? (subscribe [:application/demo-open?])
+        demo-requested? (subscribe [:application/demo-requested?])
         hidden? (r/atom false)
         lang (subscribe [:application/form-language])
         url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
               (str konfo-base "/konfo/" (name @lang) "/"))]
     (fn []
-      (when (and @demo? (not @hidden?))
-        (if @demo-open?
+      (when (and @demo-requested? (not @hidden?))
+        (if (and @demo-requested? @demo-open?)
           [:div.application__notification-overlay
            [:div.application__notification-container
             [:h1.application__notification-title
@@ -312,7 +312,7 @@
               :data-test-id "dismiss-demo-notification-button"}
              (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]
 
-          [:div.application__notification-overlay
+           [:div.application__notification-overlay
            [:div.application__notification-container
             [:h1.application__notification-title
              (translations/get-hakija-translation :demo-closed-title @lang)]
