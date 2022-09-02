@@ -65,12 +65,10 @@
   (let [demo-start-date (get-in form [:properties :demo-validity-start] nil)
         demo-end-date (get-in form [:properties :demo-validity-end] nil)
         date-now (time/today)]
-    (.log js/console "demo start" demo-start-date)
-    (.log js/console "demo end" demo-end-date)
-    (.log js/console "now" date-now)
-    (if (and
-          (some? demo-start-date)
-          (some? demo-end-date))
+    (if
+      (and
+        (some? demo-start-date)
+        (some? demo-end-date))
       (time/within?
         (time/minus (format/parse demo-start-date) (time/days 1))
         (format/parse demo-end-date) date-now)

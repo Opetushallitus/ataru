@@ -293,14 +293,15 @@
 
 (defn demo-overlay
   []
-  (let [demo-open? (subscribe [:application/demo-open?])
+  (let [form? (subscribe [:application/form])
+        demo-open? (subscribe [:application/demo-open?])
         demo-requested? (subscribe [:application/demo-requested?])
         hidden? (r/atom false)
         lang (subscribe [:application/form-language])
         url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
               (str konfo-base "/konfo/" (name @lang) "/"))]
     (fn []
-      (when (and @demo-requested? (not @hidden?))
+      (when (and @demo-requested? (not @hidden?) @form?)
         (if (and @demo-requested? @demo-open?)
           [:div.application__notification-overlay
            [:div.application__notification-container
