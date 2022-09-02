@@ -28,9 +28,11 @@ AND ((EXISTS (SELECT 1
               WHERE application_id = a.id
 /*~ (if (contains? params :original-question) */
                 AND original_question = :key
+/*~ (if (contains? params :original-followup) */
+                AND original_followup = :key
 /*~*/
                 AND key = :key
-/*~   ) ~*/
+/*~   )) ~*/
                 AND (value IS NULL OR char_length(value) < 1000)
 /*~ (if (contains? params :options) */
                 AND value = ANY (:options)))

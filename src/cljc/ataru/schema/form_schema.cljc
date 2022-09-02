@@ -825,7 +825,8 @@
 (s/defschema OptionAnswers
   {:key                                     s/Str
    :options                                 [(s/maybe (s/constrained s/Str length-less-than-1000))]
-   (s/optional-key :use-original-question)  (s/maybe s/Bool)})
+   (s/optional-key :use-original-question)  (s/maybe s/Bool)
+   (s/optional-key :use-original-followup)  (s/maybe s/Bool)})
 
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str

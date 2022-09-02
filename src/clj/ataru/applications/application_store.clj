@@ -470,6 +470,9 @@
              (true? (:use-original-question query))
              (assoc :original-question true)
 
+             (true? (:use-original-followup query))
+             (assoc :original-followup true)
+
              (seq (:options query))
              (assoc :options (to-sql-array (:options query) connection "varchar"))))))
 
