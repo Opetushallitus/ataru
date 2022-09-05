@@ -266,85 +266,85 @@
     (it "should find application with Painike, yksi valittavissa"
       (should== [*painike-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"painike" ["0"]}}
+                           {:option-answers [{:key "painike" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with nonselected Painike, yksi valittavissa"
       (should== [*nonselected-painike-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"painike" []}}
+                           {:option-answers [{:key "painike" :options []}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with Valikko"
       (should== [*valikko-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"valikko" ["0"]}}
+                           {:option-answers [{:key "valikko" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with Lista, monta valittavissa"
       (should== [*lista-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"lista" ["0"]}}
+                           {:option-answers [{:key "lista" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Painike, yksi valittavissa with nonselected answer"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"painike" ["1"]}}
+                           {:option-answers [{:key "painike" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Valikko with nonselected answer"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"valikko" ["1"]}}
+                           {:option-answers [{:key "valikko" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Lista, monta valittavissa with nonselected answer"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"lista" ["1"]}}
+                           {:option-answers [{:key "lista" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with Painike, yksi valittavissa in a question group"
       (should== [*group-painike-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-painike" ["0"]}}
+                           {:option-answers [{:key "group-painike" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with nonselected Painike, yksi valittavissa in a question group"
       (should== [*nonselected-group-painike-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-painike" []}}
+                           {:option-answers [{:key "group-painike" :options[]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with Valikko in a question group"
       (should== [*group-valikko-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-valikko" ["0"]}}
+                           {:option-answers [{:key "group-valikko" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should find application with Lista, monta valittavissa in a question group"
       (should== [*group-lista-application-id*]
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-lista" ["0"]}}
+                           {:option-answers [{:key "group-lista" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Painike, yksi valittavissa with nonselected answer in a question group"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-painike" ["1"]}}
+                           {:option-answers [{:key "group-painike" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Valikko with nonselected answer in a question group"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-valikko" ["1"]}}
+                           {:option-answers [{:key "group-valikko" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Lista, monta valittavissa with nonselected answer in a question group"
       (should== []
                 (mapv :id (store/get-application-heading-list
-                           {:option-answers {"group-lista" ["1"]}}
+                           {:option-answers [{:key "group-lista" :options ["1"]}]}
                            {:order-by "applicant-name" :order "asc"}))))))
 
 (describe "creating application attachment reviews in db"
