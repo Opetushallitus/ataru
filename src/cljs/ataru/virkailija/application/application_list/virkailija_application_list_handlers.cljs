@@ -106,8 +106,14 @@
                              (assoc % :order-by column-id)))
      :dispatch [:application/reload-applications]}))
 
-(defn- init-question-answer-filtering-options [field]
-  (let [base-answer {:use-original-question (boolean (:per-hakukohde field))}
+(defn- init-question-answer-filtering-options [form field]
+  (let [use-original-question? (boolean (:per-hakukohde field))
+        use-original-followup? (boolean
+                                 (and (not use-original-question?)
+                                      (:followup-of field)
+                                      (:per-hakukohde (get-in form [:form-fields-by-id (keyword (:followup-of field))]))))
+        base-answer {:use-original-question use-original-question?
+                     :use-original-followup use-original-followup?}
         options     (->> (:options field)
                          (map :value)
                          (mapv (fn [v] [v false]))
@@ -116,11 +122,12 @@
 
 (reg-event-db
   :application/add-question-filter
-  (fn [db [_ field]]
+  (fn [db [_ form-key field]]
     (let [field-id (:id field)]
       (if (= (:fieldType field) "attachment")
         (assoc-in db [:application :filters-checkboxes :attachment-review-states field-id] initial-db/default-attachment-review-states)
-        (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id] (init-question-answer-filtering-options field))))))
+        (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id]
+                  (init-question-answer-filtering-options (get-in db [:forms form-key]) field))))))
 
 (reg-event-db
   :application/remove-question-filter

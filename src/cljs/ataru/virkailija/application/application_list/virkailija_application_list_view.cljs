@@ -761,7 +761,7 @@
                  @form-key
                  question-search-id
                  #(do (dispatch [:question-search/clear-search-input @form-key question-search-id])
-                      (dispatch [:application/add-question-filter %]))]])]
+                      (dispatch [:application/add-question-filter @form-key %]))]])]
           [:div.application-handling__filters-popup-apply-button-container
            [:a.editor-form__control-button.editor-form__control-button--variable-width
             {:class    (if @filters-changed?

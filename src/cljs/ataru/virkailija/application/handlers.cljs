@@ -230,7 +230,8 @@
           option-answers           (map (fn [[field vals]]
                                           {:key field
                                            :options (keep #(when (second %) (first %)) (:options vals))
-                                           :use-original-question (:use-original-question vals)})
+                                           :use-original-question (:use-original-question vals)
+                                           :use-original-followup (:use-original-followup vals)})
                                         question-answer-filter)]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
         {:db   (assoc-in db [:application :fetching-applications?] true)
