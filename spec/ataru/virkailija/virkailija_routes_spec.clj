@@ -27,7 +27,6 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
-          :session-store (create-session-store (ataru-db/get-datasource :db))
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -42,8 +41,7 @@
                                 :kayttooikeus-service
                                 :person-service
                                 :application-service
-                                :audit-logger
-                                :session-store]))
+                                :audit-logger]))
       component/start
       :virkailija-routes
       :routes)))

@@ -1,6 +1,6 @@
 (ns ataru.applications.application-store-db-spec
   (:require [ataru.applications.application-store :as store]
-            [ataru.component-data.component :as component]
+            [ataru.component-data.component :as component :refer [harkinnanvaraisuus-question]]
             [ataru.forms.form-store :as form-store]
             [ataru.log.audit-log :as audit-log]
             [ataru.db.db :as db]
@@ -73,6 +73,8 @@
 (def ^:dynamic *nonselected-group-painike-application-id*)
 (def ^:dynamic *group-valikko-application-id*)
 (def ^:dynamic *group-lista-application-id*)
+(def ^:dynamic *per-hakukohde-application-id*)
+(def ^:dynamic *per-hakukohde-followup-application-id*)
 
 (describe "listing applications"
   (tags :unit :database)
@@ -133,6 +135,7 @@
                                                                                            :label {:fi "0"}}
                                                                                           {:value "1"
                                                                                            :label {:fi "1"}}])
+                                                                         (harkinnanvaraisuus-question nil)
                                                                          (assoc (component/question-group nil)
                                                                                 :children [(assoc (component/single-choice-button nil)
                                                                                                   :key "group-painike"
@@ -241,7 +244,36 @@
                                               []
                                               form
                                               {}
-                                              audit-logger))]
+                                              audit-logger))
+            per-hakukohde-application-id               (-> {:lang    "fi"
+                                                            :form    form-id
+                                                            :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
+                                                                       :original-question "harkinnanvaraisuus"
+                                                                       :value "1"
+                                                                       :fieldType "singleChoice"
+                                                                       :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}]}
+                                           (store/add-application
+                                             []
+                                             form
+                                             {}
+                                             audit-logger))
+            per-hakukohde-followup-application-id (-> {:lang    "fi"
+                                                         :form    form-id
+                                                         :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
+                                                                    :original-question "harkinnanvaraisuus"
+                                                                    :value "1"
+                                                                    :fieldType "singleChoice"
+                                                                    :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}
+                                                                   {:key "harkinnanvaraisuus-reason_1.2.246.562.29.123454321"
+                                                                    :original-followup "harkinnanvaraisuus-reason"
+                                                                    :fieldType "singleChoice"
+                                                                    :value "2"
+                                                                    :duplikoitu-followup-hakukohde-oid "1.2.246.562.29.123454321"}]}
+                                                        (store/add-application
+                                                          []
+                                                          form
+                                                          {}
+                                                          audit-logger))]
         (binding [*painike-application-id*                   painike-application-id
                   *nonselected-painike-application-id*       nonselected-painike-application-id
                   *valikko-application-id*                   valikko-application-id
@@ -249,7 +281,9 @@
                   *group-painike-application-id*             group-painike-application-id
                   *nonselected-group-painike-application-id* nonselected-group-painike-application-id
                   *group-valikko-application-id*             group-valikko-application-id
-                  *group-lista-application-id*               group-lista-application-id]
+                  *group-lista-application-id*               group-lista-application-id
+                  *per-hakukohde-application-id*             per-hakukohde-application-id
+                  *per-hakukohde-followup-application-id*    per-hakukohde-followup-application-id]
           (try
             (it)
             (finally
@@ -261,6 +295,8 @@
               (delete-application! nonselected-group-painike-application-id)
               (delete-application! group-valikko-application-id)
               (delete-application! group-lista-application-id)
+              (delete-application! per-hakukohde-application-id)
+              (delete-application! per-hakukohde-followup-application-id)
               (delete-form! form-id))))))
 
     (it "should find application with Painike, yksi valittavissa"
@@ -286,6 +322,30 @@
                 (mapv :id (store/get-application-heading-list
                            {:option-answers [{:key "lista" :options ["0"]}]}
                            {:order-by "applicant-name" :order "asc"}))))
+
+    (it "should find applications with per-hakukohde question"
+      (should= [*per-hakukohde-application-id* *per-hakukohde-followup-application-id*]
+               (mapv :id (store/get-application-heading-list
+                           {:option-answers [{:key "harkinnanvaraisuus" :use-original-question true :options ["1"]}]}
+                           {:order-by "applicant-name" :order "asc"}))))
+
+    (it "should find application with per-hakukohde question using followup"
+      (should= [*per-hakukohde-followup-application-id*]
+               (mapv :id (store/get-application-heading-list
+                           {:option-answers [{:key "harkinnanvaraisuus-reason" :use-original-followup true :options ["2"]}]}
+                           {:order-by "applicant-name" :order "asc"}))))
+
+    (it "should not find application with per-hakukohde question"
+       (should= []
+                (mapv :id (store/get-application-heading-list
+                            {:option-answers [{:key "harkinnanvaraisuus" :use-original-question true :options ["0"]}]}
+                            {:order-by "applicant-name" :order "asc"}))))
+
+    (it "should not find application with per-hakukohde question using followup"
+       (should= []
+                (mapv :id (store/get-application-heading-list
+                            {:option-answers [{:key "harkinnanvaraisuus-reason" :use-original-followup true :options ["1"]}]}
+                            {:order-by "applicant-name" :order "asc"}))))
 
     (it "should not find application with Painike, yksi valittavissa with nonselected answer"
       (should== []
