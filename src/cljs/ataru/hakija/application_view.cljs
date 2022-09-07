@@ -301,7 +301,8 @@
       (when (and @demo-requested? (not @hidden?) @form?)
         (let [demo-lang (subscribe [:application/demo-lang])
               url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
-                    (str konfo-base "/konfo/" @demo-lang "/"))]
+                    (str konfo-base "/konfo/" @demo-lang "/"))
+              [text1 text2] (translations/get-hakija-translation :demo-closed-notification (keyword @demo-lang))]
           (if (and @demo-requested? @demo-open?)
             [:div.application__notification-overlay
              [:div.application__notification-container
@@ -317,10 +318,10 @@
              [:div.application__notification-container
               [:h1.application__notification-title
                (translations/get-hakija-translation :demo-closed-title (keyword @demo-lang))]
-              [:p (translations/get-hakija-translation :demo-closed-notification-start (keyword @demo-lang))
+              [:p text1
                [:a {:href url}
                 (translations/get-hakija-translation :demo-closed-link (keyword @demo-lang))]
-               (translations/get-hakija-translation :demo-closed-notification-end (keyword @demo-lang))]]]))))))
+               text2]]]))))))
 
 (defn form-view []
   [:div

@@ -297,12 +297,16 @@
 (re-frame/reg-sub
   :application/demo-lang
   (fn [db]
-    (demo/demo-lang db)))
+    (let [value (get db :demo-lang)]
+      (if (cstr/blank? value)
+        "fi"
+        value))))
 
 (re-frame/reg-sub
   :application/demo-requested?
   (fn [db]
-    (demo/demo-requested? db)))
+    (let [demo-requested? (get db :demo-requested)]
+      (boolean demo-requested?))))
 
 (re-frame/reg-sub
   :application/can-apply?
