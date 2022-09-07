@@ -294,6 +294,10 @@
   (fn [db]
     (demo/demo-open? db)))
 
+(re-frame/reg-sub
+  :application/demo-lang
+  (fn [db]
+    (demo/demo-lang db)))
 
 (re-frame/reg-sub
   :application/demo-requested?
