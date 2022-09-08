@@ -200,13 +200,16 @@
       [notification-banner (translations/get-hakija-translation :demo lang)])))
 
 (defn banner []
-  [:div.application__banner-container
-   [virkailija-fill-ribbon]
-   [:div.application__top-banner-container
-    [:div.application-top-banner
-     [logo]
-     [hakuaika-left]
-     [:div.application__preview-control
-      [preview-toggle]]
-     [status-controls]]]
-   [demo-notification-banner]])
+  (let [form? @(subscribe [:application/form])]
+    [:div.application__banner-container
+     [virkailija-fill-ribbon]
+     [:div.application__top-banner-container
+      [:div.application-top-banner
+       [logo]
+       [hakuaika-left]
+       (when form?
+         [:div.application__preview-control
+          [preview-toggle]])
+       (when form?
+         [status-controls])]]
+     [demo-notification-banner]]))
