@@ -27,6 +27,18 @@ body {
   }
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .application__banner-container {
   z-index: 10;
   display: inline-block;
@@ -836,32 +848,24 @@ textarea.application__form-text-area__size-large {
 }
 
 .application__form-attachment-remove-button {
-  margin: 0px;
+  .primary-button;
+  padding-left: 1rem;
+  padding-right: 1rem;
   margin-right: 10px;
-  height: 27px;
-  border: 0;
-  border-radius: 3px;
-  background: @primary-green-100;
-  color: @neutral-grey-900;
-  cursor: pointer;
-  font-size: 14px;
-  font-family: 'Open Sans', sans-serif;
+  min-height: 43px;
   &:last-child {
     margin-right: 0px;
   }
-  &:focus {
-    outline: none;
-  }
-  &::-moz-focus-inner {
-    border: 0;
-  }
-  &:hover {
-    border: 0;
-    background: @primary-green-700;
-    color: @white;
-  }
   &__confirm {
     background-color: @sg-color-red;
+    color: white;
+    &:hover {
+      background-color: darken(@sg-color-red, 20%);
+    }
+    &:focus {
+      box-shadow: 0px 0px 0px 3px darken(@sg-color-red, 20%);
+      outline: none;
+    }
   }
 }
 
@@ -880,8 +884,9 @@ textarea.application__form-text-area__size-large {
   font-size: 22px;
 }
 
-.application__form-upload-input {
-  display: none;
+.application__form-upload-input:focus + label {
+  box-shadow: 0px 0px 0px 3px @primary-green-300;
+  outline: none;
 }
 
 .application__form-upload-label {
