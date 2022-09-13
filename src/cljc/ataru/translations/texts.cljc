@@ -1631,6 +1631,9 @@
    :link-to-feedback                                         {:fi "Linkki palautteeseen"
                                                               :sv "Länk till responsen"
                                                               :en "Link to the feedback"}
+   :link-to-applications                                     {:fi "Linkki hakemuksiin"
+                                                              :sv "Länk till ansökningar"
+                                                              :en "Link to applications"}
    :show-results                                             {:fi "Näytä hakemukset"
                                                               :sv "Visa ansökningar"
                                                               :en "Show applications"}
