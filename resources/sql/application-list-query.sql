@@ -33,6 +33,12 @@ AND ((EXISTS (SELECT 1
 /*~*/
                 AND key = :key
 /*~   )) ~*/
+/*~ (when (and (contains? params :original-question) (contains? params :hakukohde)) */
+                AND duplikoitu_kysymys_hakukohde_oid = ANY (:hakukohde)
+/*~   ) ~*/
+/*~ (when (and (contains? params :original-followup) (contains? params :hakukohde)) */
+                AND duplikoitu_followup_hakukohde_oid = ANY (:hakukohde)
+/*~   ) ~*/
                 AND (value IS NULL OR char_length(value) < 1000)
 /*~ (if (contains? params :options) */
                 AND value = ANY (:options)))

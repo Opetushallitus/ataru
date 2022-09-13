@@ -463,18 +463,21 @@
 
 (defn- query->option-answers-snip
   [connection query]
-  (let [query (first (:option-answers query))]
+  (let [option-answers (first (:option-answers query))]
     (queries/option-answers-snip
-     (cond-> {:key (:key query)}
+     (cond-> {:key (:key option-answers)}
 
-             (true? (:use-original-question query))
+             (true? (:use-original-question option-answers))
              (assoc :original-question true)
 
-             (true? (:use-original-followup query))
+             (true? (:use-original-followup option-answers))
              (assoc :original-followup true)
 
-             (seq (:options query))
-             (assoc :options (to-sql-array (:options query) connection "varchar"))))))
+             (some? (:hakukohde query))
+             (assoc :hakukohde (to-sql-array (:hakukohde query) connection "varchar"))
+
+             (seq (:options option-answers))
+             (assoc :options (to-sql-array (:options option-answers) connection "varchar"))))))
 
 (defn- sort->offset-snip
   [sort]
