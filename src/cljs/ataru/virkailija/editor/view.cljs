@@ -257,6 +257,11 @@
                        "?lang=fi")
           :target "_blank"}
       @(subscribe [:editor/virkailija-translation :form])]
+     [:span " | "]
+     [:a {:href   (str "/lomake-editori/applications/haku/" (:oid haku)
+                       "?ensisijaisesti=false")
+          :target "_blank"}
+      @(subscribe [:editor/virkailija-translation :link-to-applications])]
      (when (:superuser? user-info)
        (link-to-feedback (str "/hakemus/haku/" (:oid haku))))
      (when demo-allowed?
