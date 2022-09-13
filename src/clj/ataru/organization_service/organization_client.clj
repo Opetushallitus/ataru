@@ -57,12 +57,15 @@
           (org-node->map (first (:organisaatiot parsed-response)))))
       (throw (Exception. (str "Got status code " (:status response) " While reading single organization"))))))
 
-(defn get-organization [organization-oid]
-  (if (= organization-oid oph-organization)
+(def org-haku-cached
+  (memoize/ttl get-organization-from-remote-service {} :ttl/threshold (* 1000 60 30)))
+
+(defn get-organization-cached [org-oid]
+  (if (= org-oid oph-organization)
     ;; the remote organization service  (organisaatiopalvelu) doesn't support
     ;; fetching data about the root OPH organization, so we'll hard-code it here:
     {:oid oph-organization :name {:fi "OPH"} :type :organization}
-    (get-organization-from-remote-service organization-oid)))
+    (org-haku-cached org-oid)))
 
 (defn get-organizations
   "Returns a sequence of {:name <org-name> :oid <org-oid>} maps containing all suborganizations

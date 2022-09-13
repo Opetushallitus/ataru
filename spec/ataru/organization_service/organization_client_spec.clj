@@ -63,17 +63,17 @@
       (should= expected-flat-organizations organizations)))
   (it "Returns the hard-coded OPH organization for the known OID"
     (should= {:oid oph-oid :name {:fi "OPH"} :type :organization}
-             (org-client/get-organization oph-oid)))
+             (org-client/get-organization-cached oph-oid)))
   (it "Returns nil if numHits is zero"
     (with-redefs [http/request fake-no-organization]
       (should= nil
-               (org-client/get-organization "1.2.246.562.10.2.445.3"))))
+               (org-client/get-organization-cached "1.2.246.562.10.2.445.3"))))
   (it "Returns the organization in normal case (numHits 1)"
     (should= {:name {:fi "Telajärven seudun koulutuskuntayhtymä"}
               :oid  "1.2.246.562.10.3242342"
               :type :organization
               :organisaatiotyypit ["KOULUTUSTOIMIJA"]}
-             (org-client/get-organization "1.2.246.562.10.3242342")))
+             (org-client/get-organization-cached "1.2.246.562.10.3242342")))
   (it "Returns groups"
     (with-redefs [http/request fake-groups]
       (should= {"1.2.246.562.28.1.2" {:name            {:fi "Yhteiskäyttöryhmä"}
