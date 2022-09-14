@@ -37,7 +37,7 @@
                                                  :en "Confirmation email will be sent to the email address you've provided"}
    :application-confirmation-demo               {:fi "Tietojasi ei tallennettu"
                                                  :sv "Dina uppgifter har inte sparats"
-                                                 :en "EN: Tietojasi ei tallennettu"}
+                                                 :en "Your information has not been saved"}
    :application-edited-subject                  {:fi "Opintopolku - Hakemuksesi on päivitetty"
                                                  :sv "Studieinfo - Din ansökan har updaterats"
                                                  :en "Opintopolku - Your application has been received"}
@@ -91,13 +91,13 @@
                                                  :en "The application has been sent"}
    :application-sent-demo                       {:fi "Harjoittelulomake täytetty"
                                                  :sv "Övningsblanketten är ifylld"
-                                                 :en "EN: Harjoittelulomake täytetty"}
+                                                 :en "The practice form is completed"}
    :application-submitted                       {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
    :application-submitted-demo                  {:fi "Tämä on harjoittelulomake. Tietojasi ei tallennettu!"
                                                  :sv "Det här är en övningsblankett. Dina uppgifter sparades inte!"
-                                                 :en "EN: Tämä on harjoittelulomake. Tietojasi ei tallennettu!"}
+                                                 :en "This is a practice form. Your information has not been saved."}
    :application-submitted-ok                    {:fi "OK"
                                                  :sv "OK"
                                                  :en "OK"}
@@ -192,7 +192,7 @@
                                                  :en "The file size is 0"
                                                  :sv "Filstorleken är 0"}
    :filter-by-koulutustyyppi                    {:fi "Rajaa koulutustyypillä"
-                                                 :en "EN: Rajaa koulutustyypillä"
+                                                 :en "Filter by education type"
                                                  :sv "Avgränsa enligt utbildningstyp"}
    :uploading                                   {:fi "Ladataan"
                                                  :sv "Laddar upp"
@@ -256,7 +256,7 @@
                                                  :en "Submit application"}
    :submit-demo                                 {:fi "Lähetä harjoitteluhakemus"
                                                  :sv "Skicka övningsansökan"
-                                                 :en "EN: Lähetä harjoitteluhakemus"}
+                                                 :en "Send practice application"}
    :hello-text                                  {:fi "Hei"
                                                  :sv "Hej"
                                                  :en "Hi"}
@@ -523,16 +523,16 @@
                                                  :en "Poista"}
    :demo                                        {:fi "Harjoittelulomake — Tietojasi ei tallenneta!"
                                                  :sv "Övningsblankett – Dina uppgifter sparas inte!"
-                                                 :en "EN: Harjoittelulomake — Tietojasi ei tallenneta!"}
+                                                 :en "Practice form  — Your information will not be saved!"}
    :demo-notification                           {:fi "Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."
                                                  :sv "Det här är en övningsblankett. De uppgifter som du fyller i sparas inte."
-                                                 :en "EN: Tämä on harjoittelulomake. Täyttämiäsi tietoja ei tallenneta."}
+                                                 :en "This is a practice form. The information that you fill in will not be saved."}
    :dismiss-demo-notification                   {:fi "Jatka"
                                                  :sv "Fortsätt"
-                                                 :en "EN: Jatka"}
+                                                 :en "Continue"}
    :demo-notification-title                     {:fi "Harjoittelulomake"
                                                  :sv "Övningsblankett"
-                                                 :en "EN: Harjoittelulomake"}
+                                                 :en "Practice form"}
    :toimitusosoite                              {:fi "Lähetä liite osoitteeseen"
                                                  :sv "Skicka bilagan till adressen"
                                                  :en "EN: Lähetä liite osoitteeseen"}
