@@ -1508,3 +1508,10 @@
       (if (empty? updated-invalid-values)
         (remove-validator updated-db [nil "invalid-values" parent-path])
         updated-db))))
+
+(reg-event-db
+  :editor/toggle-allow-only-yhteishaut
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])
+          value (not (get-in db path))]
+    (assoc-in db path value))))

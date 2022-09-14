@@ -365,6 +365,20 @@
        {:for "demo-validity-end"}
        @(subscribe [:editor/virkailija-translation :demo-validity-end])]]]))
 
+(defn- allow-only-yhteishaku-component
+  []
+  (let [id "toggle-allow-only-yhteishaku"
+        allow-only-yhteishaut? @(subscribe [:editor/allow-only-yhteishaut?])]
+  [:div.editor-form__checkbox-with-label
+   [:input.editor-form__checkbox
+    {:id        id
+     :checked   (true? (boolean allow-only-yhteishaut?))
+     :type      "checkbox"
+     :on-change #(dispatch [:editor/toggle-allow-only-yhteishaut])}]
+   [:label.editor-form__checkbox-label
+    {:for id}
+    @(subscribe [:editor/virkailija-translation :only-yhteishaku])]]))
+
 (defn- properties []
   [:div.editor-form__component-wrapper
    [:div.editor-form__header-wrapper
@@ -372,7 +386,11 @@
      [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
    [:div.editor-form__component-content-wrapper
     [:div.editor-form__module-fields
-     [demo-validity]]]])
+     [allow-only-yhteishaku-component]]]
+   (when @(subscribe [:editor/show-demo-config])
+    [:div.editor-form__component-content-wrapper
+     [:div.editor-form__module-fields
+      [demo-validity]]])])
 
 (defn- editor-panel [form-key]
   [:div.editor-form__panel-container
@@ -380,8 +398,7 @@
    [:div
     [editor-name]
     [form-usage form-key]]
-   (when @(subscribe [:editor/show-demo-config])
-     [properties])
+     [properties]
    [c/editor]])
 
 (defn editor []
