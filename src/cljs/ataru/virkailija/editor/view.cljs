@@ -367,13 +367,15 @@
 
 (defn- allow-only-yhteishaku-component
   []
-  (let [id "toggle-allow-only-yhteishaku"
-        allow-only-yhteishaut? @(subscribe [:editor/allow-only-yhteishaut?])]
+  (let [id                      "toggle-allow-only-yhteishaku"
+        allow-only-yhteishaut?  @(subscribe [:editor/allow-only-yhteishaut?])
+        disabled?               @(subscribe [:editor/form-locked?])]
   [:div.editor-form__checkbox-with-label
    [:input.editor-form__checkbox
     {:id        id
      :checked   (true? (boolean allow-only-yhteishaut?))
      :type      "checkbox"
+     :disabled  disabled?
      :on-change #(dispatch [:editor/toggle-allow-only-yhteishaut])}]
    [:label.editor-form__checkbox-label
     {:for id}
