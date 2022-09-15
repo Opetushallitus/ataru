@@ -9,7 +9,8 @@ SELECT
   f.created_by,
   f.created_time,
   f.languages,
-  f.locked
+  f.locked,
+  f.properties
 FROM (SELECT DISTINCT key FROM forms) AS k
 JOIN LATERAL (SELECT *
               FROM forms
