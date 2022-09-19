@@ -290,6 +290,25 @@
     (demo/demo? db)))
 
 (re-frame/reg-sub
+  :application/demo-open?
+  (fn [db]
+    (demo/demo-open? db)))
+
+(re-frame/reg-sub
+  :application/demo-lang
+  (fn [db]
+    (let [value (get db :demo-lang)]
+      (if (cstr/blank? value)
+        "fi"
+        value))))
+
+(re-frame/reg-sub
+  :application/demo-requested?
+  (fn [db]
+    (let [demo-requested? (get db :demo-requested)]
+      (boolean demo-requested?))))
+
+(re-frame/reg-sub
   :application/can-apply?
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])

@@ -34,11 +34,12 @@
         hakija-secret     (:modify query-params)
         virkailija-secret (:virkailija-secret query-params)
         hakukohteet       (string/split (:hakukohteet query-params) #",")
-        demo              (:demo query-params)]
+        demo              (:demo query-params)
+        demo-lang         (:lang query-params)]
     (cljs-util/unset-query-param "modify")
     (cljs-util/unset-query-param "virkailija-secret")
     (when (and (u/not-blank? demo) (= "true" demo))
-      (re-frame/dispatch [:application/set-demo-requested]))
+      (re-frame/dispatch [:application/set-demo-requested demo-lang]))
     (cond
       (u/not-blank? hakukohde-oid)
       (re-frame/dispatch [:application/get-latest-form-by-hakukohde hakukohde-oid virkailija-secret])

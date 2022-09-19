@@ -149,10 +149,11 @@
 (reg-event-fx
   :application/set-demo-requested
   [check-schema-interceptor (inject-cofx :now)]
-  (fn [{:keys [db now]}]
+  (fn [{:keys [db now]} [_ demo-lang]]
     {:db
      (-> db
        (assoc :demo-requested true)
+       (assoc :demo-lang demo-lang)
        (assoc :today now))}))
 
 (defn- send-application-with-api

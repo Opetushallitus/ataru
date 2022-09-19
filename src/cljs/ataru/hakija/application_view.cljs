@@ -293,20 +293,35 @@
 
 (defn demo-overlay
   []
-  (let [demo?   (subscribe [:application/demo?])
-        hidden? (r/atom false)
-        lang    (subscribe [:application/form-language])]
+  (let [form? (subscribe [:application/form])
+        demo-open? (subscribe [:application/demo-open?])
+        demo-requested? (subscribe [:application/demo-requested?])
+        hidden? (r/atom false)]
     (fn []
-      (when (and @demo? (not @hidden?))
-        [:div.application__notification-overlay
-         [:div.application__notification-container
-          [:h1.application__notification-title
-           (translations/get-hakija-translation :demo-notification-title @lang)]
-          [:p (translations/get-hakija-translation :demo-notification @lang)]
-          [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
-           {:on-click     #(reset! hidden? true)
-            :data-test-id "dismiss-demo-notification-button"}
-           (translations/get-hakija-translation :dismiss-demo-notification @lang)]]]))))
+      (when (and @demo-requested? (not @hidden?) @form?)
+        (let [demo-lang (subscribe [:application/demo-lang])
+              url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
+                    (str konfo-base "/konfo/" @demo-lang "/"))
+              [text1 text2] (translations/get-hakija-translation :demo-closed-notification (keyword @demo-lang))]
+          (if (and @demo-requested? @demo-open?)
+            [:div.application__notification-overlay
+             [:div.application__notification-container
+              [:h1.application__notification-title
+               (translations/get-hakija-translation :demo-notification-title (keyword @demo-lang))]
+              [:p (translations/get-hakija-translation :demo-notification (keyword @demo-lang))]
+              [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
+               {:on-click     #(reset! hidden? true)
+                :data-test-id "dismiss-demo-notification-button"}
+               (translations/get-hakija-translation :dismiss-demo-notification (keyword @demo-lang))]]]
+
+            [:div.application__notification-overlay
+             [:div.application__notification-container
+              [:h1.application__notification-title
+               (translations/get-hakija-translation :demo-closed-title (keyword @demo-lang))]
+              [:p text1
+               [:a {:href url}
+                (translations/get-hakija-translation :demo-closed-link (keyword @demo-lang))]
+               text2]]]))))))
 
 (defn form-view []
   [:div
