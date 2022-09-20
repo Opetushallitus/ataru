@@ -161,119 +161,78 @@
                                                       :deleted          nil
                                                       :locked           nil
                                                       :locked-by        nil}
-            form-id                                  (-> form
-                                             form-store/create-new-form!
-                                             :key
-                                             form-store/latest-id-by-key)
-            painike-application-id                   (-> {:lang    "fi"
-                                                          :form    form-id
-                                                          :answers [{:key       "painike"
-                                                                     :value     "0"
-                                                                     :fieldType "singleChoice"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
+            form-id                          (-> form form-store/create-new-form! :key form-store/latest-id-by-key)
+            painike-application-id           (-> {:lang    "fi"
+                                                  :form    form-id
+                                                  :answers [{:key       "painike"
+                                                             :value     "0"
+                                                             :fieldType "singleChoice"}]}
+                                                  (store/add-application [] form {} audit-logger))
             nonselected-painike-application-id       (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "painike"
                                                                      :value     nil
                                                                      :fieldType "singleChoice"}]}
-                                                         (store/add-application
-                                                          []
-                                                          form
-                                                          {}
-                                                          audit-logger))
+                                                         (store/add-application [] form {} audit-logger))
             valikko-application-id                   (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "valikko"
                                                                      :value     "0"
                                                                      :fieldType "dropdown"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
+                                             (store/add-application [] form {} audit-logger))
             lista-application-id                     (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "lista"
                                                                      :value     ["0"]
                                                                      :fieldType "multipleChoice"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
+                                                          (store/add-application [] form {} audit-logger))
             group-painike-application-id             (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-painike"
                                                                      :value     [["0"]]
                                                                      :fieldType "singleChoice"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
+                                                          (store/add-application [] form {} audit-logger))
             nonselected-group-painike-application-id (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-painike"
                                                                      :value     [[nil]]
                                                                      :fieldType "singleChoice"}]}
-                                                         (store/add-application
-                                                          []
-                                                          form
-                                                          {}
-                                                          audit-logger))
+                                                         (store/add-application [] form {} audit-logger))
             group-valikko-application-id             (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-valikko"
                                                                      :value     [["0"]]
                                                                      :fieldType "dropdown"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
+                                                          (store/add-application [] form {} audit-logger))
             group-lista-application-id               (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-lista"
                                                                      :value     [["0"]]
                                                                      :fieldType "multipleChoice"}]}
-                                             (store/add-application
-                                              []
-                                              form
-                                              {}
-                                              audit-logger))
-            per-hakukohde-application-id               (-> {:lang    "fi"
-                                                            :form    form-id
-                                                            :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
-                                                                       :original-question "harkinnanvaraisuus"
-                                                                       :value "1"
-                                                                       :fieldType "singleChoice"
-                                                                       :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}]}
-                                           (store/add-application
-                                             []
-                                             form
-                                             {}
-                                             audit-logger))
-            per-hakukohde-followup-application-id (-> {:lang    "fi"
-                                                         :form    form-id
-                                                         :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
-                                                                    :original-question "harkinnanvaraisuus"
-                                                                    :value "1"
-                                                                    :fieldType "singleChoice"
-                                                                    :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}
-                                                                   {:key "harkinnanvaraisuus-reason_1.2.246.562.29.123454321"
-                                                                    :original-followup "harkinnanvaraisuus-reason"
-                                                                    :fieldType "singleChoice"
-                                                                    :value "2"
-                                                                    :duplikoitu-followup-hakukohde-oid "1.2.246.562.29.123454321"}]}
-                                                        (store/add-application
-                                                          []
-                                                          form
-                                                          {}
-                                                          audit-logger))]
+                                                          (store/add-application [] form {} audit-logger))
+            per-hakukohde-application-id  (-> {
+                                               :lang    "fi"
+                                               :form    form-id
+                                               :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
+                                                          :original-question "harkinnanvaraisuus"
+                                                          :value "1"
+                                                          :fieldType "singleChoice"
+                                                          :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}]}
+                                              (store/add-application [] form {} audit-logger))
+            per-hakukohde-followup-application-id (-> {
+                                                       :lang    "fi"
+                                                       :form    form-id
+                                                       :answers [{:key "harkinnanvaraisuus_1.2.246.562.29.123454321"
+                                                                  :original-question "harkinnanvaraisuus"
+                                                                  :value "1"
+                                                                  :fieldType "singleChoice"
+                                                                  :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}
+                                                                 {:key "harkinnanvaraisuus-reason_1.2.246.562.29.123454321"
+                                                                  :original-followup "harkinnanvaraisuus-reason"
+                                                                  :fieldType "singleChoice"
+                                                                  :value "2"
+                                                                  :duplikoitu-followup-hakukohde-oid "1.2.246.562.29.123454321"}]}
+                                                        (store/add-application [] form {} audit-logger))]
         (binding [*painike-application-id*                   painike-application-id
                   *nonselected-painike-application-id*       nonselected-painike-application-id
                   *valikko-application-id*                   valikko-application-id
