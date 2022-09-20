@@ -226,7 +226,13 @@
                                              (some? (get-in db [:application :rajaus-hakukohteella]))
                                              (assoc :rajaus-hakukohteella (get-in db [:application :rajaus-hakukohteella]))))
           attachment-review-states (get-in db [:application :filters :attachment-review-states])
-          question-answer-filter   (get-in db [:application :filters :question-answer-filtering-options])]
+          question-answer-filter   (get-in db [:application :filters :question-answer-filtering-options])
+          option-answers           (map (fn [[field vals]]
+                                          {:key field
+                                           :options (keep #(when (second %) (first %)) (:options vals))
+                                           :use-original-question (:use-original-question vals)
+                                           :use-original-followup (:use-original-followup vals)})
+                                        question-answer-filter)]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
         {:db   (assoc-in db [:application :fetching-applications?] true)
          :http {:id                  :applications-list
@@ -235,10 +241,7 @@
                 :params              (merge {:sort                     (get-in db [:application :sort] {:order-by "applicant-name"
                                                                                                         :order    "asc"})
                                              :attachment-review-states attachment-review-states
-                                             :option-answers           (into {}
-                                                                             (map (fn [[field-id states]]
-                                                                                    [field-id (keep #(when (second %) (first %)) states)])
-                                                                                  question-answer-filter))
+                                             :option-answers           option-answers
                                              :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
                                                                         :processing-states-to-include (get-in db [:application :processing-state-filter])
                                                                         :filters                      (get-in db [:application :filters])

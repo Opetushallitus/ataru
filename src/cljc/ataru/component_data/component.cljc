@@ -286,7 +286,7 @@
   (assoc (info-element metadata)
     :text (:harkinnanvaraisuus-info texts/translation-mapping)))
 
-(defn- harkinnanvaraisuus-question [metadata]
+(defn harkinnanvaraisuus-question [metadata]
   (assoc (single-choice-button metadata)
     :id                "harkinnanvaraisuus"
     :label             (:harkinnanvaraisuus-question texts/translation-mapping)

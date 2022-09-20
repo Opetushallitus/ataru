@@ -823,7 +823,10 @@
   (< (count s) 1000))
 
 (s/defschema OptionAnswers
-  {s/Keyword [(s/maybe (s/constrained s/Str length-less-than-1000))]})
+  {:key                                     s/Str
+   :options                                 [(s/maybe (s/constrained s/Str length-less-than-1000))]
+   (s/optional-key :use-original-question)  (s/maybe s/Bool)
+   (s/optional-key :use-original-followup)  (s/maybe s/Bool)})
 
 (s/defschema ApplicationQuery
   {(s/optional-key :form-key)             s/Str
@@ -839,7 +842,7 @@
    (s/optional-key :person-oid)           s/Str
    (s/optional-key :application-oid)      s/Str
    :attachment-review-states              QueryAttachmentReviewStates
-   (s/optional-key :option-answers)       OptionAnswers
+   (s/optional-key :option-answers)       [OptionAnswers]
    :sort                                  Sort
    (s/optional-key :states-and-filters)   {:filters                             {s/Keyword (s/conditional map? {s/Keyword s/Any} :else s/Bool)}
                                            :attachment-states-to-include        [s/Str]

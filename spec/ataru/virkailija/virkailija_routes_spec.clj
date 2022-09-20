@@ -27,7 +27,6 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
-          :session-store (create-session-store (ataru-db/get-datasource :db))
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -42,8 +41,7 @@
                                 :kayttooikeus-service
                                 :person-service
                                 :application-service
-                                :audit-logger
-                                :session-store]))
+                                :audit-logger]))
       component/start
       :virkailija-routes
       :routes)))
@@ -292,7 +290,7 @@
 
   (it "Should fetch nothing when answer to a question does not match"
         (let [query (-> application-fixtures/applications-list-query-matching-everything
-                        (assoc :option-answers {"country-of-residence" ["123"]}))]
+                        (assoc :option-answers [{:key "country-of-residence" :options ["123"]}]))]
           (db/init-db-fixture
             fixtures/person-info-form-with-more-questions
             (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))
@@ -306,7 +304,7 @@
 
   (it "Should fetch an application when answer to a question matches"
       (let [query (-> application-fixtures/applications-list-query-matching-everything
-                      (assoc :option-answers {"country-of-residence" ["246"]}))]
+                      (assoc :option-answers [{:key "country-of-residence" :options ["246"]}]))]
         (db/init-db-fixture
           fixtures/person-info-form-with-more-questions
           (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))
@@ -320,7 +318,7 @@
 
   (it "Should fetch an application when answer to a question with multiple answers matches"
         (let [query (-> application-fixtures/applications-list-query-matching-everything
-                        (assoc :option-answers {"nationality" ["246"]}))]
+                        (assoc :option-answers [{:key "nationality" :options ["246"]}]))]
           (db/init-db-fixture
             fixtures/person-info-form-with-more-questions
             (assoc application-fixtures/person-info-form-application-with-more-answers :form (:id fixtures/person-info-form-with-more-questions))

@@ -106,19 +106,28 @@
                              (assoc % :order-by column-id)))
      :dispatch [:application/reload-applications]}))
 
-(defn- init-question-answer-filtering-options [field]
-  (->> (:options field)
-       (map :value)
-       (mapv (fn [v] [v false]))
-       (into {})))
+(defn- init-question-answer-filtering-options [form field]
+  (let [use-original-question? (boolean (:per-hakukohde field))
+        use-original-followup? (boolean
+                                 (and (not use-original-question?)
+                                      (:followup-of field)
+                                      (:per-hakukohde (get-in form [:form-fields-by-id (keyword (:followup-of field))]))))
+        base-answer {:use-original-question use-original-question?
+                     :use-original-followup use-original-followup?}
+        options     (->> (:options field)
+                         (map :value)
+                         (mapv (fn [v] [v false]))
+                         (into {}))]
+       (merge base-answer {:options options})))
 
 (reg-event-db
   :application/add-question-filter
-  (fn [db [_ field]]
+  (fn [db [_ form-key field]]
     (let [field-id (:id field)]
       (if (= (:fieldType field) "attachment")
         (assoc-in db [:application :filters-checkboxes :attachment-review-states field-id] initial-db/default-attachment-review-states)
-        (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id] (init-question-answer-filtering-options field))))))
+        (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id]
+                  (init-question-answer-filtering-options (get-in db [:forms form-key]) field))))))
 
 (reg-event-db
   :application/remove-question-filter
@@ -136,7 +145,7 @@
 (reg-event-db
   :application/set-question-answer-filtering-options
   (fn [db [_ field-id option value]]
-    (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id option] value)))
+    (assoc-in db [:application :filters-checkboxes :question-answer-filtering-options field-id :options option] value)))
 
 (reg-event-db
   :application/set-pending-classes-of-school
