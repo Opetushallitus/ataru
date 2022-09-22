@@ -217,15 +217,14 @@
                    {:value "3"
                     :label (:english texts/translation-mapping)}]))
 
-(defn lupatiedot [metadata]
+(defn lupatiedot-kk [metadata]
   (assoc (form-section metadata)
-         :id "lupatiedot"
-         :label (:permissions texts/translation-mapping)
+         :id "lupatiedot-kk"
+         :label (:lupatiedot-kk texts/translation-mapping)
          :children [(assoc (info-element metadata)
-                           :text (:lupatiedot-info texts/translation-mapping))
+                           :text (:lupatiedot-kk-info texts/translation-mapping))
                     (lupa-sahkoiseen-asiointiin metadata)
                     (koulutusmarkkinointilupa metadata)
-                    (valintatuloksen-julkaisulupa metadata)
                     (asiointikieli metadata)]))
 
 (defn lupatiedot-toinen-aste [metadata]
@@ -275,8 +274,8 @@
          :children [(huoltajan-yhteystiedot-rivi metadata false)
                     (huoltajan-yhteystiedot-rivi metadata true)]))
 
-(def lupatiedot-questions
-  (->> (lupatiedot {})
+(def lupatiedot-kk-questions
+  (->> (lupatiedot-kk {})
        :children
        util/flatten-form-fields
        (map (comp name :id))
