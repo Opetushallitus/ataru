@@ -19,6 +19,7 @@
 (declare yesql-fetch-latest-version-by-id)
 (declare yesql-fetch-latest-version-by-id-lock-for-update)
 (declare yesql-get-by-id)
+(declare yesql-form-by-key-has-applications)
 (declare yesql-fetch-latest-version-by-key)
 (declare yesql-latest-id-by-key)
 (declare yesql-add-form<!)
@@ -97,6 +98,10 @@
   (first (execute yesql-get-by-id {:id id} conn)))
 
 (def fetch-form fetch-latest-version)
+
+(defn form-has-applications [key & [conn]]
+  (let [res (first (execute yesql-form-by-key-has-applications {:key key} conn))]
+    (boolean (:exists res))))
 
 (defn fetch-by-key [key & [conn]]
   (first (execute yesql-fetch-latest-version-by-key {:key key} conn)))

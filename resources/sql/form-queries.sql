@@ -85,6 +85,13 @@ FROM latest_forms f
 LEFT JOIN virkailija ON f.locked_by = virkailija.oid
 WHERE f.key = (SELECT key FROM forms WHERE id = :id);
 
+-- name: yesql-form-by-key-has-applications
+SELECT exists(
+    SELECT 1
+    FROM latest_applications la
+        JOIN forms fo
+            on fo.id = la.form_id where fo.key = :key);
+
 -- name: yesql-fetch-latest-version-by-key
 SELECT
   id,
@@ -96,8 +103,11 @@ SELECT
   languages,
   deleted,
   organization_oid,
-  properties
+  locked,
+  properties,
+  (CASE WHEN locked_by IS NULL THEN NULL ELSE CONCAT(first_name, ' ', last_name) END) as locked_by
 FROM latest_forms
+LEFT JOIN virkailija ON locked_by = virkailija.oid
 WHERE key = :key;
 
 -- name: yesql-fetch-latest-version-by-id-lock-for-update

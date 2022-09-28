@@ -272,6 +272,14 @@
       (access-controlled-form/edit-form-with-operations id operations session tarjonta-service organization-service audit-logger)
       (ok {}))
 
+    (api/PUT "/forms/:form-key/change-field-id" {session :session}
+      :summary "Change id for form field."
+      :path-params [form-key :- s/Str]
+      :query-params [old-field-id :- s/Str
+                    new-field-id :- s/Str]
+      (access-controlled-form/update-field-id-in-form form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger)
+      (ok {}))
+
     (api/PUT "/forms/:id/lock/:operation" {session :session}
       :path-params [id :- Long
                     operation :- (s/enum "open" "close")]
