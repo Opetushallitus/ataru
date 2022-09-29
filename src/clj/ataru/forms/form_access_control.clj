@@ -116,13 +116,11 @@
         session
         audit-logger)))))
 
-(defn- validate-form-id-change [form old-field-id new-field-id superuser?]
-
+(defn- validate-form-id-change [form old-field-id new-field-id superuser? has-applications?]
   (when (not superuser?) (throw (user-feedback-exception "Ei oikeuksia muokata lomakkeen kentän id:tä")))
   (let [content (-> form :content util/flatten-form-fields)
         contains-old-id? (some? (first (filter #(= (:id %) old-field-id) content)))
-        contains-new-id? (some? (first (filter #(= (:id %) new-field-id) content)))
-        has-applications? form]
+        contains-new-id? (some? (first (filter #(= (:id %) new-field-id) content)))]
     (when (not contains-old-id?) (throw (user-feedback-exception (str "Lomakkeelta ei löytynyt kenttää vanhalla id:llä " old-field-id))))
     (when contains-new-id? (throw (user-feedback-exception (str "Lomakkeelta löytyi jo kenttä uudella id:llä " new-field-id))))
     (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))))
@@ -131,9 +129,10 @@
   [form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger]
   (log/info (str "updating field in form " form-key "from " old-field-id "to" new-field-id))
   (let [superuser? (-> session :identity :superuser)
-        form (form-store/fetch-by-key form-key)]
+        form (form-store/fetch-by-key form-key)
+        has-applications? (form-store/form-has-applications form-key)]
     (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
-    (validate-form-id-change form old-field-id new-field-id superuser?)
+    (validate-form-id-change form old-field-id new-field-id superuser? has-applications?)
     (let [update-form-content-fn (fn [content] (clojure.walk/postwalk (fn [x]
                                                                         (if (and (map-entry? x)
                                                                                  (= (key x) :id)
