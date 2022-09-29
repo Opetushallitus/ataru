@@ -117,6 +117,7 @@
         audit-logger)))))
 
 (defn- validate-form-id-change [form old-field-id new-field-id superuser?]
+
   (when (not superuser?) (throw (user-feedback-exception "Ei oikeuksia muokata lomakkeen kentän id:tä")))
   (let [content (-> form :content util/flatten-form-fields)
         contains-old-id? (some? (first (filter #(= (:id %) old-field-id) content)))
@@ -131,6 +132,7 @@
   (log/info (str "updating field in form " form-key "from " old-field-id "to" new-field-id))
   (let [superuser? (-> session :identity :superuser)
         form (form-store/fetch-by-key form-key)]
+    (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
     (validate-form-id-change form old-field-id new-field-id superuser?)
     (let [update-form-content-fn (fn [content] (clojure.walk/postwalk (fn [x]
                                                                         (if (and (map-entry? x)
