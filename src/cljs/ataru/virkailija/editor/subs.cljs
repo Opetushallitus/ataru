@@ -596,3 +596,10 @@
     (and
       parent-has-validator
       (contains? (set invalid-values) (:value option-component)))))
+
+(re-frame/reg-sub
+  :editor/allow-only-yhteishaut?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :allow-only-yhteishaut false)))

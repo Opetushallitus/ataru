@@ -1274,6 +1274,9 @@
    :demo-validity-end                                        {:fi "Demon voimassaolo päättyy"
                                                               :sv "Demoversionen avslutas"
                                                               :en "EN: Demon voimassaolo päättyy"}
+   :only-yhteishaku                                          {:fi "Lomake on sallittu vain yhteishauille"
+                                                              :sv "SV: Lomake on sallittu vain yhteishauille"
+                                                              :en "EN: Lomake on sallittu vain yhteishauille"}
    :submitted-content-search-placeholder                     {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                               :sv "Sök enligt fråga eller begäran om bilaga..."
                                                               :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}
