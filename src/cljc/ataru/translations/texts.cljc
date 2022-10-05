@@ -688,10 +688,12 @@
                                       :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det, välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte det land där du avlagt högskoleexamen."}})
 
 (def higher-base-education-module-texts
-  {:educational-background                                 {:en "Your educational background" :fi "Koodistopohjainen pohjakoulutusosio" :sv "Utbildningsbakgrund"}
-   :completed-education                                    {:en "Fill in the education that you have completed  or will complete during the admission process (autumn 2018)"
-                                                            :fi "Ilmoita kaikki suorittamasi koulutukset. Myös ne jotka suoritat hakukautena (syksy 2018)."
-                                                            :sv "Ange alla utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden (hösten 2018)."}
+  {:educational-background                                 {:en "Your educational background"
+                                                            :fi "Pohjakoulutuksesi"
+                                                            :sv "Din utbildningsbakgrund"}
+   :completed-education                                    {:en "Fill in the education that you have completed or will complete during the admission process."
+                                                            :fi "Ilmoita suorittamasi koulutukset. Ilmoita myös ne, jotka suoritat hakukautena."
+                                                            :sv "Ange de utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden."}
    :matriculation-exam-in-finland                          {:en "Matriculation examination completed in Finland"
                                                             :fi "Suomessa suoritettu ylioppilastutkinto"
                                                             :sv "Studentexamen som avlagts i Finland"}
@@ -801,7 +803,7 @@
    :click-to-add-more-qualifications                       {:en "Click ADD if you want add further qualifications."
                                                             :fi "Paina LISÄÄ jos haluat lisätä useampia opintokokonaisuuksia."
                                                             :sv "Tryck på LÄGG TILL om du vill lägga till flera studiehelheter."}
-   :finnish-vocational-or-special                          {:en "Further vocational qualification or specialist vocational qualification completed in Finland"
+   :finnish-vocational-or-special                          {:en "Further or specialist vocational qualification completed in Finland (ammatti- tai erikoisammattitutkinto)"
                                                             :fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
                                                             :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"}
    :finnish-special-before-2018                            {:en "Have you completed you Further vocational or Specialist vocational qualification in 2018?"

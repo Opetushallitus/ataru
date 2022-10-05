@@ -1,7 +1,36 @@
-(ns ataru.component-data.base-education-module-kk)
+(ns ataru.component-data.base-education-module-kk
+  (:require [ataru.translations.texts :refer [higher-base-education-module-texts general-texts virkailija-texts]]))
+
+(def ahvenanmaa-followup
+  {:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
+           :sv "Examensbetyg för yrkesinriktad examen"},
+   :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
+
+                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
+
+                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
+
+                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
+
+                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
+                                :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
+
+                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
+
+                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
+
+                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
+                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
+                                                                                                           Kontrollera att dokumenten i filen är rättvända.
+
+                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
+                        :enabled? true}},
+   :options [],
+   :fieldType "attachment",
+   :fieldClass "formField"})
 
 (def my-large-json
-  {:label {:en "Your educational background", :fi "Pohjakoulutuksesi", :sv "Din utbildningsbakgrund"},
+  {:label (:educational-background higher-base-education-module-texts),
    :children [{:params {:hidden false,
                         :info-text {:label {:en "[Read more about who can apply for bachelor's and master's programmes](https://opintopolku.fi/konfo/en/sivu/how-to-apply-for-bachelors-and-masters)",
                                             :fi "Lue lisää siitä millä koulutuksella voit hakea
@@ -18,14 +47,10 @@
                :koodisto-ordered-by-user true,
                :validators ["required"],
                :fieldClass "formField",
-               :label {:en "Fill in the education that you have completed or will complete during the admission process.",
-                       :fi "Ilmoita suorittamasi koulutukset. Ilmoita myös ne, jotka suoritat hakukautena.",
-                       :sv "Ange de utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden."},
-               :options [{:label {:en "Matriculation examination completed in Finland (Ylioppilastutkinto)",
-                                  :fi "Suomessa suoritettu ylioppilastutkinto",
-                                  :sv "Studentexamen som avlagts i Finland"},
+               :label (:completed-education higher-base-education-module-texts),
+               :options [{:label (:matriculation-exam-in-finland higher-base-education-module-texts),
                           :value "pohjakoulutus_yo",
-                          :followups [{:label {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"},
+                          :followups [{:label (:year-of-completion higher-base-education-module-texts),
                                        :params {:size "S",
                                                 :hidden false,
                                                 :numeric true,
@@ -80,9 +105,7 @@
                                        :fieldType "textField",
                                        :fieldClass "formField",
                                        :validators ["numeric" "required"]}]}
-                         {:label {:en "Vocational upper secondary qualification completed in Finland (ammatillinen perustutkinto)",
-                                  :fi "Suomessa suoritettu ammatillinen perustutkinto",
-                                  :sv "Yrkesinriktad grundexamen som avlagts i Finland"},
+                         {:label (:pohjakoulutus_amp virkailija-texts),
                           :value "pohjakoulutus_amp",
                           :followups [{:text {:en "Please make sure that your degree is truly a Finnish vocational upper secondary qualification (ammatillinen perustutkinto). As a rule, these degrees were not available before 1994. It is not possible to enter the year of completion earlier than 1994 on the form.",
                                               :fi "Tarkistathan, että kyseessä on varmasti ammatillinen perustutkinto. Näitä tutkintoja on voinut suorittaa pääsääntöisesti vuodesta 1994 alkaen. Vuotta 1994 aiempia suoritusvuosia ammatilliselle perustutkinnolle ei lomakkeella pysty ilmoittamaan.",
@@ -103,14 +126,10 @@
                                                               :followups [{:label {:en "Have you graduated",
                                                                                    :fi "Oletko valmistunut?",
                                                                                    :sv "Har du tagit examen"},
-                                                                           :options [{:label {:en "Yes",
-                                                                                              :fi "Kyllä",
-                                                                                              :sv "Ja"},
+                                                                           :options [{:label (:yes general-texts),
                                                                                       :value "0",
                                                                                       :followups []}
-                                                                                     {:label {:en "No",
-                                                                                              :fi "En",
-                                                                                              :sv "Nej"},
+                                                                                     {:label (:have-not general-texts),
                                                                                       :value "1",
                                                                                       :followups [{:label {:en "Estimated graduation date (dd.mm.yyyy)",
                                                                                                            :fi "Arvioitu valmistumispäivämäärä (pp.kk.vvvv)",
@@ -177,9 +196,7 @@
                                                                                    :fi "Oletko suorittanut ammatillisen perustutkinnon näyttötutkintona?",
                                                                                    :sv "Har du avlagt examen som fristående yrkesexamen?"},
                                                                            :params {:info-text {:label nil}},
-                                                                           :options [{:label {:en "Yes",
-                                                                                              :fi "Kyllä",
-                                                                                              :sv "Ja"},
+                                                                           :options [{:label (:yes general-texts),
                                                                                       :value "0",
                                                                                       :followups [{:text {:fi "Huomaathan, ettet ole mukana todistusvalinnassa, jos olet suorittanut tutkinnon näyttötutkintona. ",
                                                                                                           :sv "Obs! En examen som är avlagd som fristående examen beaktas inte i betygsbaserad antagning."},
@@ -218,9 +235,7 @@
                                                                                                            :sv "Yrkesinriktad grundexamens betyg"},
                                                                                                    :options [],
                                                                                                    :fieldType "attachment"}]}
-                                                                                     {:label {:en "No",
-                                                                                              :fi "En",
-                                                                                              :sv "Nej"},
+                                                                                     {:label (:have-not general-texts),
                                                                                       :value "1",
                                                                                       :followups [{:text {:en "Your final vocational qualification details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the educational institution to correct any errors.
                                                                                                              ",
@@ -237,9 +252,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
-                                                  {:label {:en "Vocational qualification",
-                                                           :fi "Ammatillinen tutkinto",
-                                                           :sv "Yrkesinriktad examen"},
+                                                  {:label (:vocational-qualification higher-base-education-module-texts),
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
@@ -255,25 +268,18 @@
                                                            :sv "Omfattningens enhet"},
                                                    :options [{:label {:en "Courses", :fi "Kurssia", :sv "Kurser"},
                                                               :value "0"}
-                                                             {:label {:en "ECTS credits",
-                                                                      :fi "Opintopistettä",
-                                                                      :sv "Studiepoäng"},
+                                                             {:label (:ects-credits higher-base-education-module-texts),
                                                               :value "1"}
-                                                             {:label {:en "Study weeks",
-                                                                      :fi "Opintoviikkoa",
-                                                                      :sv "Studieveckor"},
+                                                             {:label (:study-weeks higher-base-education-module-texts),
                                                               :value "2"}
-                                                             {:label {:en "Competence points",
-                                                                      :fi "Osaamispistettä",
-                                                                      :sv "Kompetenspoäng"},
+                                                             {:label (:competence-points higher-base-education-module-texts),
                                                               :value "3"}
-                                                             {:label {:en "Hours", :fi "Tuntia", :sv "Timmar"},
+                                                             {:label (:hours higher-base-education-module-texts),
                                                               :value "4"}
-                                                             {:label {:en "Weekly lessons per year",
-                                                                      :fi "Vuosiviikkotuntia",
-                                                                      :sv "Årsveckotimmar"},
+                                                             {:label (:weekly-lessons higher-base-education-module-texts),
                                                               :value "5"}
-                                                             {:label {:en "Years", :fi "Vuotta", :sv "År"}, :value "6"}],
+                                                             {:label (:years higher-base-education-module-texts),
+                                                              :value "6"}],
                                                    :fieldType "dropdown",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
@@ -286,409 +292,72 @@
                                                                      :allow-invalid? true},
                                                    :validators ["required"],
                                                    :fieldClass "formField",
-                                                   :label {:en "Educational institution",
-                                                           :fi "Oppilaitos ",
-                                                           :sv "Läroanstalt "},
+                                                   :label (:educational-institution higher-base-education-module-texts),
                                                    :options [{:label {:en "Ålands folkhögskola",
                                                                       :fi "Ålands folkhögskola",
                                                                       :sv "Ålands folkhögskola"},
                                                               :value "01701",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands handelsläroverk",
                                                                       :fi "Ålands handelsläroverk",
                                                                       :sv "Ålands handelsläroverk"},
                                                               :value "01279",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hantverksskola",
                                                                       :fi "Ålands hantverksskola",
                                                                       :sv "Ålands hantverksskola"},
                                                               :value "02596",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hotell- och restaurangskola",
                                                                       :fi "Ålands hotell- och restaurangskola",
                                                                       :sv "Ålands hotell- och restaurangskola"},
                                                               :value "01419",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands husmodersskola",
                                                                       :fi "Ålands husmodersskola",
                                                                       :sv "Ålands husmodersskola"},
                                                               :value "01388",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands musikinstitut",
                                                                       :fi "Ålands musikinstitut",
                                                                       :sv "Ålands musikinstitut"},
                                                               :value "10004",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands naturbruksskola",
                                                                       :fi "Ålands naturbruksskola",
                                                                       :sv "Ålands naturbruksskola"},
                                                               :value "01510",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjöfartsläroverk",
                                                                       :fi "Ålands sjöfartsläroverk",
                                                                       :sv "Ålands sjöfartsläroverk"},
                                                               :value "01569",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjömansskola",
                                                                       :fi "Ålands sjömansskola",
                                                                       :sv "Ålands sjömansskola"},
                                                               :value "01573",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands tekniska läroverk",
                                                                       :fi "Ålands tekniska läroverk",
                                                                       :sv "Ålands tekniska läroverk"},
                                                               :value "01029",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:deadline nil,
-                                                                                    :info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands vårdinstitut",
                                                                       :fi "Ålands vårdinstitut",
                                                                       :sv "Ålands vårdinstitut"},
                                                               :value "02526",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesgymnasium",
                                                                       :fi "Ålands yrkesgymnasium",
                                                                       :sv "Ålands yrkesgymnasium"},
                                                               :value "10102",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesskola",
                                                                       :fi "Ålands yrkesskola",
                                                                       :sv "Ålands yrkesskola"},
                                                               :value "01110",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}],
+                                                              :followups [ahvenanmaa-followup]}],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
@@ -698,12 +367,10 @@
                                                    :fieldClass "infoElement"}],
                                        :fieldType "fieldset",
                                        :fieldClass "questionGroup"}]}
-                         {:label {:en "Further or specialist vocational qualification completed in Finland (ammatti- tai erikoisammattitutkinto)",
-                                  :fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto",
-                                  :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"},
+                         {:label (:finnish-vocational-or-special higher-base-education-module-texts),
                           :value "pohjakoulutus_amt",
                           :followups [{:label {:fi "", :sv ""},
-                                       :children [{:label {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"},
+                                       :children [{:label (:year-of-completion higher-base-education-module-texts),
                                                    :params {:size "S",
                                                             :numeric true,
                                                             :max-value "2022",
@@ -871,392 +538,67 @@
                                                                       :fi "Ålands folkhögskola",
                                                                       :sv "Ålands folkhögskola"},
                                                               :value "01701",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands handelsläroverk",
                                                                       :fi "Ålands handelsläroverk",
                                                                       :sv "Ålands handelsläroverk"},
                                                               :value "01279",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hantverksskola",
                                                                       :fi "Ålands hantverksskola",
                                                                       :sv "Ålands hantverksskola"},
                                                               :value "02596",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hotell- och restaurangskola",
                                                                       :fi "Ålands hotell- och restaurangskola",
                                                                       :sv "Ålands hotell- och restaurangskola"},
                                                               :value "01419",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands husmodersskola",
                                                                       :fi "Ålands husmodersskola",
                                                                       :sv "Ålands husmodersskola"},
                                                               :value "01388",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands musikinstitut",
                                                                       :fi "Ålands musikinstitut",
                                                                       :sv "Ålands musikinstitut"},
                                                               :value "10004",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands naturbruksskola",
                                                                       :fi "Ålands naturbruksskola",
                                                                       :sv "Ålands naturbruksskola"},
                                                               :value "01510",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjöfartsläroverk",
                                                                       :fi "Ålands sjöfartsläroverk",
                                                                       :sv "Ålands sjöfartsläroverk"},
                                                               :value "01569",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjömansskola",
                                                                       :fi "Ålands sjömansskola",
                                                                       :sv "Ålands sjömansskola"},
                                                               :value "01573",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands tekniska läroverk",
                                                                       :fi "Ålands tekniska läroverk",
                                                                       :sv "Ålands tekniska läroverk"},
                                                               :value "01029",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands vårdinstitut",
                                                                       :fi "Ålands vårdinstitut",
                                                                       :sv "Ålands vårdinstitut"},
                                                               :value "02526",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesgymnasium",
                                                                       :fi "Ålands yrkesgymnasium",
                                                                       :sv "Ålands yrkesgymnasium"},
                                                               :value "10102",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesskola",
                                                                       :fi "Ålands yrkesskola",
                                                                       :sv "Ålands yrkesskola"},
                                                               :value "01110",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}],
+                                                              :followups [ahvenanmaa-followup]}],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
@@ -1890,392 +1232,67 @@
                                                                       :fi "Ålands folkhögskola",
                                                                       :sv "Ålands folkhögskola"},
                                                               :value "01701",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands handelsläroverk",
                                                                       :fi "Ålands handelsläroverk",
                                                                       :sv "Ålands handelsläroverk"},
                                                               :value "01279",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hantverksskola",
                                                                       :fi "Ålands hantverksskola",
                                                                       :sv "Ålands hantverksskola"},
                                                               :value "02596",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands hotell- och restaurangskola",
                                                                       :fi "Ålands hotell- och restaurangskola",
                                                                       :sv "Ålands hotell- och restaurangskola"},
                                                               :value "01419",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands husmodersskola",
                                                                       :fi "Ålands husmodersskola",
                                                                       :sv "Ålands husmodersskola"},
                                                               :value "01388",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands musikinstitut",
                                                                       :fi "Ålands musikinstitut",
                                                                       :sv "Ålands musikinstitut"},
                                                               :value "10004",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands naturbruksskola",
                                                                       :fi "Ålands naturbruksskola",
                                                                       :sv "Ålands naturbruksskola"},
                                                               :value "01510",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjöfartsläroverk",
                                                                       :fi "Ålands sjöfartsläroverk",
                                                                       :sv "Ålands sjöfartsläroverk"},
                                                               :value "01569",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands sjömansskola",
                                                                       :fi "Ålands sjömansskola",
                                                                       :sv "Ålands sjömansskola"},
                                                               :value "01573",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands tekniska läroverk",
                                                                       :fi "Ålands tekniska läroverk",
                                                                       :sv "Ålands tekniska läroverk"},
                                                               :value "01029",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands vårdinstitut",
                                                                       :fi "Ålands vårdinstitut",
                                                                       :sv "Ålands vårdinstitut"},
                                                               :value "02526",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesgymnasium",
                                                                       :fi "Ålands yrkesgymnasium",
                                                                       :sv "Ålands yrkesgymnasium"},
                                                               :value "10102",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}
+                                                              :followups [ahvenanmaa-followup]}
                                                              {:label {:en "Ålands yrkesskola",
                                                                       :fi "Ålands yrkesskola",
                                                                       :sv "Ålands yrkesskola"},
                                                               :value "01110",
-                                                              :followups [{:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-                                                                                   :sv "Examensbetyg för yrkesinriktad examen"},
-                                                                           :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                        :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                :enabled? true}},
-                                                                           :options [],
-                                                                           :fieldType "attachment",
-                                                                           :fieldClass "formField"}]}],
+                                                              :followups [ahvenanmaa-followup]}],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
