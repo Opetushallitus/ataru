@@ -1,34 +1,6 @@
 (ns ataru.component-data.base-education-module-kk
   (:require [ataru.translations.texts :refer [higher-base-education-module-texts general-texts virkailija-texts]]))
 
-(def ahvenanmaa-followup
-  {:label {:fi "Ammatillisen tutkinnon tutkintotodistus",
-           :sv "Examensbetyg för yrkesinriktad examen"},
-   :params {:info-text {:value {:fi "Olet suorittanut/suoritat ammatillisen tutkintosi Ahvenanmaalla, jolloin tutkintotietojasi ei saada suoraan tietovarannosta. Jos olet jo valmistunut, lataa tähän tutkintotodistuksesi. Jos taas valmistut hakuajan jälkeen, toimita liite hakijapalveluihin tai lataa liite hakemuksellesi heti valmistuttuasi.
-
-                                                                                                           Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                :sv "Du har avlagt/avlägger en yrkesinriktad examen på Åland, vilket innebär att uppgifter om din examen inte fås direkt från datalagret. Ladda upp ditt examensbetyg här om du redan är utexaminerad. Om du utexamineras efter att ansökningstiden har avslutats, lämna in bilagan till antagningsservice eller ladda upp bilagan till din ansökan genast då du har utexaminerats.
-
-                                                                                                           Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                        :enabled? true}},
-   :options [],
-   :fieldType "attachment",
-   :fieldClass "formField"})
-
 (defn- seven-day-attachment-followup
   [label]
   {:params {:hidden false,
@@ -240,71 +212,7 @@
                                                    :validators ["required"],
                                                    :fieldClass "formField",
                                                    :label (:educational-institution higher-base-education-module-texts),
-                                                   :options [{:label {:en "Ålands folkhögskola",
-                                                                      :fi "Ålands folkhögskola",
-                                                                      :sv "Ålands folkhögskola"},
-                                                              :value "01701",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands handelsläroverk",
-                                                                      :fi "Ålands handelsläroverk",
-                                                                      :sv "Ålands handelsläroverk"},
-                                                              :value "01279",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hantverksskola",
-                                                                      :fi "Ålands hantverksskola",
-                                                                      :sv "Ålands hantverksskola"},
-                                                              :value "02596",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hotell- och restaurangskola",
-                                                                      :fi "Ålands hotell- och restaurangskola",
-                                                                      :sv "Ålands hotell- och restaurangskola"},
-                                                              :value "01419",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands husmodersskola",
-                                                                      :fi "Ålands husmodersskola",
-                                                                      :sv "Ålands husmodersskola"},
-                                                              :value "01388",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands musikinstitut",
-                                                                      :fi "Ålands musikinstitut",
-                                                                      :sv "Ålands musikinstitut"},
-                                                              :value "10004",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands naturbruksskola",
-                                                                      :fi "Ålands naturbruksskola",
-                                                                      :sv "Ålands naturbruksskola"},
-                                                              :value "01510",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjöfartsläroverk",
-                                                                      :fi "Ålands sjöfartsläroverk",
-                                                                      :sv "Ålands sjöfartsläroverk"},
-                                                              :value "01569",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjömansskola",
-                                                                      :fi "Ålands sjömansskola",
-                                                                      :sv "Ålands sjömansskola"},
-                                                              :value "01573",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands tekniska läroverk",
-                                                                      :fi "Ålands tekniska läroverk",
-                                                                      :sv "Ålands tekniska läroverk"},
-                                                              :value "01029",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands vårdinstitut",
-                                                                      :fi "Ålands vårdinstitut",
-                                                                      :sv "Ålands vårdinstitut"},
-                                                              :value "02526",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesgymnasium",
-                                                                      :fi "Ålands yrkesgymnasium",
-                                                                      :sv "Ålands yrkesgymnasium"},
-                                                              :value "10102",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesskola",
-                                                                      :fi "Ålands yrkesskola",
-                                                                      :sv "Ålands yrkesskola"},
-                                                              :value "01110",
-                                                              :followups [ahvenanmaa-followup]}],
+                                                   :options [],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
@@ -423,71 +331,7 @@
                                                    :label {:en "Educational institution",
                                                            :fi "Oppilaitos ",
                                                            :sv "Läroanstalt "},
-                                                   :options [{:label {:en "Ålands folkhögskola",
-                                                                      :fi "Ålands folkhögskola",
-                                                                      :sv "Ålands folkhögskola"},
-                                                              :value "01701",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands handelsläroverk",
-                                                                      :fi "Ålands handelsläroverk",
-                                                                      :sv "Ålands handelsläroverk"},
-                                                              :value "01279",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hantverksskola",
-                                                                      :fi "Ålands hantverksskola",
-                                                                      :sv "Ålands hantverksskola"},
-                                                              :value "02596",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hotell- och restaurangskola",
-                                                                      :fi "Ålands hotell- och restaurangskola",
-                                                                      :sv "Ålands hotell- och restaurangskola"},
-                                                              :value "01419",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands husmodersskola",
-                                                                      :fi "Ålands husmodersskola",
-                                                                      :sv "Ålands husmodersskola"},
-                                                              :value "01388",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands musikinstitut",
-                                                                      :fi "Ålands musikinstitut",
-                                                                      :sv "Ålands musikinstitut"},
-                                                              :value "10004",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands naturbruksskola",
-                                                                      :fi "Ålands naturbruksskola",
-                                                                      :sv "Ålands naturbruksskola"},
-                                                              :value "01510",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjöfartsläroverk",
-                                                                      :fi "Ålands sjöfartsläroverk",
-                                                                      :sv "Ålands sjöfartsläroverk"},
-                                                              :value "01569",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjömansskola",
-                                                                      :fi "Ålands sjömansskola",
-                                                                      :sv "Ålands sjömansskola"},
-                                                              :value "01573",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands tekniska läroverk",
-                                                                      :fi "Ålands tekniska läroverk",
-                                                                      :sv "Ålands tekniska läroverk"},
-                                                              :value "01029",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands vårdinstitut",
-                                                                      :fi "Ålands vårdinstitut",
-                                                                      :sv "Ålands vårdinstitut"},
-                                                              :value "02526",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesgymnasium",
-                                                                      :fi "Ålands yrkesgymnasium",
-                                                                      :sv "Ålands yrkesgymnasium"},
-                                                              :value "10102",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesskola",
-                                                                      :fi "Ålands yrkesskola",
-                                                                      :sv "Ålands yrkesskola"},
-                                                              :value "01110",
-                                                              :followups [ahvenanmaa-followup]}],
+                                                   :options [],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
@@ -911,71 +755,7 @@
                                                    :label {:en "Vocational institution",
                                                            :fi "Ammatillinen oppilaitos ",
                                                            :sv "Yrkesinriktad läroanstalt "},
-                                                   :options [{:label {:en "Ålands folkhögskola",
-                                                                      :fi "Ålands folkhögskola",
-                                                                      :sv "Ålands folkhögskola"},
-                                                              :value "01701",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands handelsläroverk",
-                                                                      :fi "Ålands handelsläroverk",
-                                                                      :sv "Ålands handelsläroverk"},
-                                                              :value "01279",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hantverksskola",
-                                                                      :fi "Ålands hantverksskola",
-                                                                      :sv "Ålands hantverksskola"},
-                                                              :value "02596",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands hotell- och restaurangskola",
-                                                                      :fi "Ålands hotell- och restaurangskola",
-                                                                      :sv "Ålands hotell- och restaurangskola"},
-                                                              :value "01419",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands husmodersskola",
-                                                                      :fi "Ålands husmodersskola",
-                                                                      :sv "Ålands husmodersskola"},
-                                                              :value "01388",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands musikinstitut",
-                                                                      :fi "Ålands musikinstitut",
-                                                                      :sv "Ålands musikinstitut"},
-                                                              :value "10004",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands naturbruksskola",
-                                                                      :fi "Ålands naturbruksskola",
-                                                                      :sv "Ålands naturbruksskola"},
-                                                              :value "01510",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjöfartsläroverk",
-                                                                      :fi "Ålands sjöfartsläroverk",
-                                                                      :sv "Ålands sjöfartsläroverk"},
-                                                              :value "01569",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands sjömansskola",
-                                                                      :fi "Ålands sjömansskola",
-                                                                      :sv "Ålands sjömansskola"},
-                                                              :value "01573",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands tekniska läroverk",
-                                                                      :fi "Ålands tekniska läroverk",
-                                                                      :sv "Ålands tekniska läroverk"},
-                                                              :value "01029",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands vårdinstitut",
-                                                                      :fi "Ålands vårdinstitut",
-                                                                      :sv "Ålands vårdinstitut"},
-                                                              :value "02526",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesgymnasium",
-                                                                      :fi "Ålands yrkesgymnasium",
-                                                                      :sv "Ålands yrkesgymnasium"},
-                                                              :value "10102",
-                                                              :followups [ahvenanmaa-followup]}
-                                                             {:label {:en "Ålands yrkesskola",
-                                                                      :fi "Ålands yrkesskola",
-                                                                      :sv "Ålands yrkesskola"},
-                                                              :value "01110",
-                                                              :followups [ahvenanmaa-followup]}],
+                                                   :options [],
                                                    :fieldType "dropdown"}
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
