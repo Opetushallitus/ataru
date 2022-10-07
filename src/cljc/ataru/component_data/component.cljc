@@ -169,6 +169,7 @@
   (assoc (single-choice-button metadata)
          :id "koulutusmarkkinointilupa"
          :label (:allow-use-of-contact-information texts/translation-mapping)
+         :params {:info-text {:label (:allow-use-of-contact-information-info texts/translation-mapping)}}
          :validators ["required"]
          :options [{:value "Kyllä"
                     :label (:yes texts/general-texts)}
