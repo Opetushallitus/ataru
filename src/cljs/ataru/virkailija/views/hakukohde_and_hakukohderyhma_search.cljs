@@ -160,14 +160,19 @@
       :placeholder @(re-frame/subscribe [:editor/virkailija-translation placeholder-translation-key])}]))
 
 (defn visibility-checkbox
-  [id path]
+  [id path is-option?]
   [:div.hakukohde-and-hakukohderyhma-visibility-checkbox
    [:input
     {:id        id
      :type      "checkbox"
-     :checked   (boolean @(re-frame/subscribe [:editor/get-component-value path :params :hidden]))
+     :checked   (boolean
+                  (if is-option?
+                    @(re-frame/subscribe [:editor/get-component-value path :hidden])
+                    @(re-frame/subscribe [:editor/get-component-value path :params :hidden])))
      :disabled  @(re-frame/subscribe [:editor/component-locked? path])
-     :on-change #(re-frame/dispatch [:editor/toggle-element-visibility-on-form path])}]
+     :on-change #(if is-option?
+                   (re-frame/dispatch [:editor/toggle-option-visibility-on-form path])
+                   (re-frame/dispatch [:editor/toggle-element-visibility-on-form path]))}]
    [:label
     {:for id}
     @(re-frame/subscribe [:editor/virkailija-translation :is-hidden?])]])
@@ -214,11 +219,11 @@
 (defn popup
   [header-component visibility-component content-component on-close]
   [:div.hakukohde-and-hakukohderyhma-search-popup
-   visibility-component
    [:div.hakukohde-and-hakukohderyhma-search-popup-header
     header-component
     [:button.virkailija-close-button
      {:on-click on-close}
      [:i.zmdi.zmdi-close]]]
+   visibility-component
    [:div.hakukohde-and-hakukohderyhma-search-popup-content
     content-component]])

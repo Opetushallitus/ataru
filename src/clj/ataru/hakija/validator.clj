@@ -119,6 +119,7 @@
                       (get-in answers-by-key [id :value]))]
           (cond (or hidden?
                     (get-in field [:params :hidden] false)
+                    (get-in field [:hidden] false)
                     (and (field-belongs-to-hakukohde-or-hakukohderyhma? field)
                          (not (belongs-to-existing-hakukohde-or-hakukohderyma? field hakukohteet hakukohderyhmat))))
                 (recur (rest fields)
