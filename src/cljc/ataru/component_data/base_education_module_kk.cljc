@@ -35,6 +35,88 @@
    :label label
    :fieldType "attachment"})
 
+(defn- deadline-next-to-request-attachment-followup
+  [label]
+  {:params {:hidden false,
+            :deadline nil,
+            :info-text {:value {:en "The exact deadline is available next to the attachment request.
+
+                                     Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
+
+                                     Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
+
+                                     Recommended file formats are: PDF, JPG, PNG and DOCX.",
+                                :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
+
+                                     Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
+
+                                     Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
+
+                                     Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
+                                :sv "Den angivna tidpunkten syns invid begäran om bilagor.
+
+                                     Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
+
+                                     Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
+                                     Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
+                                     Kontrollera att dokumenten i filen är rättvända.
+
+                                     Rekommenderade filformat är PDF, JPG, PNG och DOCX. "},
+                        :enabled? true}},
+   :fieldClass "formField",
+   :label label,
+   :options [],
+   :fieldType "attachment"})
+
+(def share-link-followup
+  {:label {:en "Share a link to your study records from My Studyinfo",
+           :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
+           :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"},
+   :params {:size "L",
+            :hidden false,
+            :info-text {:label {:en "This question applies only study programmes listed above, under \"Show study programmes\".
+
+                                                                                                                                   You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
+
+                                                                                                                                   To create a link to your completed study records:
+
+                                                                                                                                   1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
+                                                                                                                                   2. Choose \"Proceed to studies\".
+                                                                                                                                   3. Choose \"Jaa suoritustietoja\" (share study records).
+                                                                                                                                   4. Choose the study records you wish to share.
+                                                                                                                                   5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
+                                                                                                                                   6. Choose \"Kopioi linkki\" (copy link).
+                                                                                                                                   7. Paste the copied link to the text field below.
+                                                                                                                                   ",
+                                :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
+
+                                                                                                                                   Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
+
+                                                                                                                                   Näin luot linkin omiin suoritustietoihisi:
+
+                                                                                                                                   1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
+                                                                                                                                   2. Valitse ”Siirry opintosuorituksiin”.
+                                                                                                                                   3. Valitse näytöltä ”Jaa suoritustietoja”.
+                                                                                                                                   4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
+                                                                                                                                   5. Valitse ”Jaa valitsemasi opinnot”.
+                                                                                                                                   6. Valitse ”Kopioi linkki”.
+                                                                                                                                   7. Liitä linkki alla olevaan tekstikenttään.",
+                                :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
+
+                                                                                                                                   Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
+
+                                                                                                                                   Så här skapar du en länk till dina prestationsuppgifter:
+
+                                                                                                                                   1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
+                                                                                                                                   2. Välj ”Fortsätt till studierna”.
+                                                                                                                                   3. Välj ”Dela dina prestationsuppgifter”.
+                                                                                                                                   4. Välj de prestationsuppgifter du vill dela.
+                                                                                                                                   5. Välj ”Dela valda studier”.
+                                                                                                                                   6. Välj ”Kopiera länk”.
+                                                                                                                                   7. Klistra in länken i fältet nedan på ansökningsblanketten."}}},
+   :fieldType "textField",
+   :fieldClass "formField"})
+
 (def my-large-json
   {:label (:educational-background higher-base-education-module-texts),
    :children [{:params {:hidden false,
@@ -368,53 +450,7 @@
                                                                                                   (seven-day-attachment-followup {:en "Higher education degree certificate",
                                                                                                                                   :fi "Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
                                                                                                                                   :sv "Högskoleexamensbetyg"})
-                                                                                                  {:label {:en "Share a link to your study records from My Studyinfo",
-                                                                                                           :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
-                                                                                                           :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"},
-                                                                                                   :params {:size "L",
-                                                                                                            :hidden false,
-                                                                                                            :info-text {:label {:en "This question applies only study programmes listed above, under \"Show study programmes\".
-
-                                                                                                                                   You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
-
-                                                                                                                                   To create a link to your completed study records:
-
-                                                                                                                                   1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
-                                                                                                                                   2. Choose \"Proceed to studies\".
-                                                                                                                                   3. Choose \"Jaa suoritustietoja\" (share study records).
-                                                                                                                                   4. Choose the study records you wish to share.
-                                                                                                                                   5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
-                                                                                                                                   6. Choose \"Kopioi linkki\" (copy link).
-                                                                                                                                   7. Paste the copied link to the text field below.
-                                                                                                                                   ",
-                                                                                                                                :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
-
-                                                                                                                                   Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
-
-                                                                                                                                   Näin luot linkin omiin suoritustietoihisi:
-
-                                                                                                                                   1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
-                                                                                                                                   2. Valitse ”Siirry opintosuorituksiin”.
-                                                                                                                                   3. Valitse näytöltä ”Jaa suoritustietoja”.
-                                                                                                                                   4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
-                                                                                                                                   5. Valitse ”Jaa valitsemasi opinnot”.
-                                                                                                                                   6. Valitse ”Kopioi linkki”.
-                                                                                                                                   7. Liitä linkki alla olevaan tekstikenttään.",
-                                                                                                                                :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
-
-                                                                                                                                   Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
-
-                                                                                                                                   Så här skapar du en länk till dina prestationsuppgifter:
-
-                                                                                                                                   1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
-                                                                                                                                   2. Välj ”Fortsätt till studierna”.
-                                                                                                                                   3. Välj ”Dela dina prestationsuppgifter”.
-                                                                                                                                   4. Välj de prestationsuppgifter du vill dela.
-                                                                                                                                   5. Välj ”Dela valda studier”.
-                                                                                                                                   6. Välj ”Kopiera länk”.
-                                                                                                                                   7. Klistra in länken i fältet nedan på ansökningsblanketten."}}},
-                                                                                                   :fieldType "textField",
-                                                                                                   :fieldClass "formField"}]}
+                                                                                                  share-link-followup]}
                                                                                      {:label {:en "No",
                                                                                               :fi "En",
                                                                                               :sv "Nej"},
@@ -431,85 +467,10 @@
                                                                                                   (seven-day-attachment-followup {:en "Transcript of records of higher education degree completed in Finland",
                                                                                                                                   :fi "Opintosuoritusote Suomessa suoritettavaan korkeakoulututkintoon sisältyvistä opinnoista",
                                                                                                                                   :sv "Studieprestationsutdrag om högskoleexamen som avlagts i Finland"})
-                                                                                                  {:params {:hidden false,
-                                                                                                            :deadline nil,
-                                                                                                            :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                                                                                                                   Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                   Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                   Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                                                                                                                :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                   Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                   Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                   Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                                                :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                   Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                   Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                   Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                   Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                   Rekommenderade filformat är PDF, JPG, PNG och DOCX. "},
-                                                                                                                        :enabled? true}},
-                                                                                                   :fieldClass "formField",
-                                                                                                   :label {:en "Higher education degree certificate",
-                                                                                                           :fi "Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
-                                                                                                           :sv "Högskoleexamensbetyg"},
-                                                                                                   :options [],
-                                                                                                   :fieldType "attachment"}
-                                                                                                  {:label {:en "Share a link to your study records from My Studyinfo",
-                                                                                                           :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
-                                                                                                           :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"},
-                                                                                                   :params {:size "L",
-                                                                                                            :hidden false,
-                                                                                                            :info-text {:label {:en "This question applies only study programmes listed above, under \"Show study programmes\".
-
-                                                                                                                                   You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
-
-                                                                                                                                   To create a link to your completed study records:
-
-                                                                                                                                   1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
-                                                                                                                                   2. Choose \"Proceed to studies\".
-                                                                                                                                   3. Choose \"Jaa suoritustietoja\" (share study records).
-                                                                                                                                   4. Choose the study records you wish to share.
-                                                                                                                                   5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
-                                                                                                                                   6. Choose \"Kopioi linkki\" (copy link).
-                                                                                                                                   7. Paste the copied link to the text field below.
-                                                                                                                                   ",
-                                                                                                                                :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
-
-                                                                                                                                   Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
-
-                                                                                                                                   Näin luot linkin omiin suoritustietoihisi:
-
-                                                                                                                                   1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
-                                                                                                                                   2. Valitse ”Siirry opintosuorituksiin”.
-                                                                                                                                   3. Valitse näytöltä ”Jaa suoritustietoja”.
-                                                                                                                                   4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
-                                                                                                                                   5. Valitse ”Jaa valitsemasi opinnot”.
-                                                                                                                                   6. Valitse ”Kopioi linkki”.
-                                                                                                                                   7. Liitä linkki alla olevaan tekstikenttään.",
-                                                                                                                                :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
-
-                                                                                                                                   Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
-
-                                                                                                                                   Så här skapar du en länk till dina prestationsuppgifter:
-
-                                                                                                                                   1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
-                                                                                                                                   2. Välj ”Fortsätt till studierna”.
-                                                                                                                                   3. Välj ”Dela dina prestationsuppgifter”.
-                                                                                                                                   4. Välj de prestationsuppgifter du vill dela.
-                                                                                                                                   5. Välj ”Dela valda studier”.
-                                                                                                                                   6. Välj ”Kopiera länk”.
-                                                                                                                                   7. Klistra in länken i fältet nedan på ansökningsblanketten."}}},
-                                                                                                   :fieldType "textField",
-                                                                                                   :fieldClass "formField"}]}],
+                                                                                                  (deadline-next-to-request-attachment-followup {:en "Higher education degree certificate",
+                                                                                                                                                 :fi "Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
+                                                                                                                                                 :sv "Högskoleexamensbetyg"})
+                                                                                                  share-link-followup]}],
                                                                            :fieldType "singleChoice",
                                                                            :fieldClass "formField",
                                                                            :validators ["required"]}]}
@@ -523,53 +484,7 @@
                                                                           (seven-day-attachment-followup {:en "Higher education degree certificate",
                                                                                                           :fi "Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
                                                                                                           :sv "Högskoleexamensbetyg"})
-                                                                          {:label {:en "Share a link to your study records from My Studyinfo",
-                                                                                   :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
-                                                                                   :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"},
-                                                                           :params {:size "L",
-                                                                                    :hidden false,
-                                                                                    :info-text {:label {:en "This question applies only study programmes listed above, under \"Show study programmes\".
-
-                                                                                                           You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
-
-                                                                                                           To create a link to your completed study records:
-
-                                                                                                           1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
-                                                                                                           2. Choose \"Proceed to studies\".
-                                                                                                           3. Choose \"Jaa suoritustietoja\" (share study records).
-                                                                                                           4. Choose the study records you wish to share.
-                                                                                                           5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
-                                                                                                           6. Choose \"Kopioi linkki\" (copy link).
-                                                                                                           7. Paste the copied link to the text field below.
-                                                                                                           ",
-                                                                                                        :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
-
-                                                                                                           Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
-
-                                                                                                           Näin luot linkin omiin suoritustietoihisi:
-
-                                                                                                           1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
-                                                                                                           2. Valitse ”Siirry opintosuorituksiin”.
-                                                                                                           3. Valitse näytöltä ”Jaa suoritustietoja”.
-                                                                                                           4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
-                                                                                                           5. Valitse ”Jaa valitsemasi opinnot”.
-                                                                                                           6. Valitse ”Kopioi linkki”.
-                                                                                                           7. Liitä linkki alla olevaan tekstikenttään.",
-                                                                                                        :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
-
-                                                                                                           Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
-
-                                                                                                           Så här skapar du en länk till dina prestationsuppgifter:
-
-                                                                                                           1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
-                                                                                                           2. Välj ”Fortsätt till studierna”.
-                                                                                                           3. Välj ”Dela dina prestationsuppgifter”.
-                                                                                                           4. Välj de prestationsuppgifter du vill dela.
-                                                                                                           5. Välj ”Dela valda studier”.
-                                                                                                           6. Välj ”Kopiera länk”.
-                                                                                                           7. Klistra in länken i fältet nedan på ansökningsblanketten."}}},
-                                                                           :fieldType "textField",
-                                                                           :fieldClass "formField"}]}],
+                                                                          share-link-followup]}],
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
@@ -889,40 +804,9 @@
                                                                                                                           (seven-day-attachment-followup {:en "Predicted grades from IB completed in Finland",
                                                                                                                                                           :fi "Oppilaitoksen ennakkoarvio Suomessa suoritettavan tutkinnon arvosanoista (Candidate Predicted Grades)",
                                                                                                                                                           :sv "Predicted grades från IB-studentexamen som avlagts i Finland "})
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Diploma Programme (DP) Results from IB completed in Finland",
-                                                                                                                                   :fi "Diploma Programme (DP) Results -asiakirja Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Diploma Programme (DP) Results from IB completed in Finland",
+                                                                                                                                                                         :fi "Diploma Programme (DP) Results -asiakirja Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts i Finland"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}
@@ -956,40 +840,9 @@
                                                                                                                           (seven-day-attachment-followup {:en "Predicted grades from EB completed in Finland",
                                                                                                                                                           :fi "Oppilaitoksen ennakkoarvio Suomessa suoritettavan EB-tutkinnon arvosanoista",
                                                                                                                                                           :sv "Läroanstaltens preliminära vitsord från EB-studentexamen som avlagts i Finland"})
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "European Baccalaureate diploma completed in Finland",
-                                                                                                                                   :fi "European Baccalaureate Diploma -tutkintotodistus Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "European Baccalaureate diploma completed in Finland",
+                                                                                                                                                                         :fi "European Baccalaureate Diploma -tutkintotodistus Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts i Finland"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}
@@ -1026,40 +879,9 @@
                                                                                                                           (seven-day-attachment-followup {:en "Grade page of a Deutsches Internationales Abitur (DIA) diploma completed in Finland",
                                                                                                                                                           :fi "DIA-tutkintotodistuksen arvosanasivu Suomessa suoritettavasta tutkinnosta",
                                                                                                                                                           :sv "Examensbetygets vitsordssida av Deutsches Internationales Abitur (DIA) -examen avlagd i Finland"})
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "DIA diploma completed in Finland",
-                                                                                                                                   :fi "DIA-tutkintotodistus Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "DIA -examensbetyg från DIA-studentexamen som avlagts i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "DIA diploma completed in Finland",
+                                                                                                                                                                         :fi "DIA-tutkintotodistus Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "DIA -examensbetyg från DIA-studentexamen som avlagts i Finland"})
                                                                                                                           (seven-day-attachment-followup {:en "An equivalency certificate on upper secondary education based on DIA provisions",
                                                                                                                                                           :fi "Vastaavuustodistus lukio-opinnoista, jotka perustuvat DIA-tutkinnon säännöksiin",
                                                                                                                                                           :sv "Motsvarighetsintyget av gymnasiestudier, som är baserad på DIA-bestämmelser"})]}],
@@ -1266,39 +1088,9 @@
                                                                                                   (seven-day-attachment-followup {:en "Latest transcript of study records (upper secondary education diploma)",
                                                                                                                                   :fi "Ennakkoarvio tai viimeisin todistus suoritetuista opinnoista muualla kuin Suomessa suoritettavasta toisen asteen tutkinnosta",
                                                                                                                                   :sv "Förhandsexamensbetyg eller betyg över slutförda studier om examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                                                                                  {:params {:hidden false,
-                                                                                                            :deadline nil,
-                                                                                                            :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                                                                                                                   Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                   Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                   Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                                                                                                                :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                   Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                   Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                   Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                                                :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                   Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                   Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                   Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                   Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                   Rekommenderade filformat är PDF, JPG, PNG och DOCX.
-                                                                                                                                   "},
-                                                                                                                        :enabled? true}},
-                                                                                                   :fieldClass "formField",
-                                                                                                   :label {:en "Original upper secondary education diploma",
-                                                                                                           :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
-                                                                                                           :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"},
-                                                                                                   :options [],
-                                                                                                   :fieldType "attachment"}
+                                                                                                  (deadline-next-to-request-attachment-followup {:en "Original upper secondary education diploma",
+                                                                                                                                                 :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
+                                                                                                                                                 :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
                                                                                                   {:label {:en "Are your attachments in Finnish, Swedish or English?",
                                                                                                            :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
                                                                                                            :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
@@ -1314,39 +1106,9 @@
                                                                                                               :followups [(seven-day-attachment-followup {:en "Official translation of the latest transcript of study records to Finnish, Swedish or English",
                                                                                                                                                           :fi "Virallinen käännös ennakkoarviosta tai viimeisimmästä todistuksestasi suomeksi, ruotsiksi tai englanniksi",
                                                                                                                                                           :sv "Officiell översättning av förhandsexamensbetyget eller betyget över slutförda studier till finska, svenska eller engelska"})
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX.
-                                                                                                                                                           "},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                                   :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                   :sv "Officiell översättning av examensbetyget till finska, svenska eller engelska"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Official translation of the diploma to Finnish, Swedish or English",
+                                                                                                                                                                         :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                         :sv "Officiell översättning av examensbetyget till finska, svenska eller engelska"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}],
@@ -1485,74 +1247,12 @@
                                                                                                                            :fieldType "textField",
                                                                                                                            :fieldClass "formField",
                                                                                                                            :validators ["required"]}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Predicted grades from IB completed outside Finland",
-                                                                                                                                   :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan tutkinnon arvosanoista (Candidate Predicted Grades)",
-                                                                                                                                   :sv "Predicted grades från IB-studentexamen som avlagts annanstans än i Finland "},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Diploma Programme (DP) Results from IB completed outside Finland",
-                                                                                                                                   :fi "Diploma Programme (DP) Results -asiakirja muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts annanstans än i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Predicted grades from IB completed outside Finland",
+                                                                                                                                                                         :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan tutkinnon arvosanoista (Candidate Predicted Grades)",
+                                                                                                                                                                         :sv "Predicted grades från IB-studentexamen som avlagts annanstans än i Finland "})
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Diploma Programme (DP) Results from IB completed outside Finland",
+                                                                                                                                                                         :fi "Diploma Programme (DP) Results -asiakirja muualla kuin Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts annanstans än i Finland"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}
@@ -1583,74 +1283,12 @@
                                                                                                                            :fieldType "textField",
                                                                                                                            :fieldClass "formField",
                                                                                                                            :validators ["required"]}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Predicted grades from EB completed outside Finland",
-                                                                                                                                   :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan EB-tutkinnon arvosanoista",
-                                                                                                                                   :sv "Läroanstaltens preliminära vitsord från EB-studentexamen som avlagts annanstans än i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "European Baccalaureate diploma completed outside Finland",
-                                                                                                                                   :fi "European Baccalaureate Diploma -tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts annanstans än i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Predicted grades from EB completed outside Finland",
+                                                                                                                                                                         :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan EB-tutkinnon arvosanoista",
+                                                                                                                                                                         :sv "Läroanstaltens preliminära vitsord från EB-studentexamen som avlagts annanstans än i Finland"})
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "European Baccalaureate diploma completed outside Finland",
+                                                                                                                                                                         :fi "European Baccalaureate Diploma -tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts annanstans än i Finland"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}
@@ -1681,74 +1319,12 @@
                                                                                                                            :fieldType "textField",
                                                                                                                            :fieldClass "formField",
                                                                                                                            :validators ["required"]}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Grade page of a Deutsches Internationales Abitur (DIA) diploma completed outside Finland",
-                                                                                                                                   :fi "DIA-tutkintotodistuksen arvosanasivu muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "Examensbetygets vitsordssida av Deutsches Internationales Abitur (DIA) -examen avlagd annanstans än i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The attachment has to be submitted  by the deadline informed next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX."},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "DIA -diploma from DIA completed outside Finland",
-                                                                                                                                   :fi "DIA-tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                   :sv "DIA -examensbetyg från DIA-studentexamen som avlagts annanstans än i Finland"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Grade page of a Deutsches Internationales Abitur (DIA) diploma completed outside Finland",
+                                                                                                                                                                         :fi "DIA-tutkintotodistuksen arvosanasivu muualla kuin Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "Examensbetygets vitsordssida av Deutsches Internationales Abitur (DIA) -examen avlagd annanstans än i Finland"})
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "DIA -diploma from DIA completed outside Finland",
+                                                                                                                                                                         :fi "DIA-tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
+                                                                                                                                                                         :sv "DIA -examensbetyg från DIA-studentexamen som avlagts annanstans än i Finland"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}],
@@ -1844,38 +1420,9 @@
                                                                                                   (seven-day-attachment-followup {:en "Transcript of records of higher education degree completed outside Finland",
                                                                                                                                   :fi "Opintosuoritusote muualla kuin Suomessa suoritettavaan korkeakoulututkintoon sisältyvistä opinnoista",
                                                                                                                                   :sv "Studieprestationsutdrag om högskoleexamen som avlagts annanstans än i Finland"})
-                                                                                                  {:params {:hidden false,
-                                                                                                            :deadline nil,
-                                                                                                            :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                                                                                                                   Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                   Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                   Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                                                                                                                :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                   Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                   Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                   Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                                                :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                   Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                   Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                   Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                   Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                   Rekommenderade filformat är PDF, JPG, PNG och DOCX. "},
-                                                                                                                        :enabled? true}},
-                                                                                                   :fieldClass "formField",
-                                                                                                   :label {:en "Higher education degree certificate",
-                                                                                                           :fi "Muualla kuin Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
-                                                                                                           :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"},
-                                                                                                   :options [],
-                                                                                                   :fieldType "attachment"}
+                                                                                                  (deadline-next-to-request-attachment-followup {:en "Higher education degree certificate",
+                                                                                                                                                 :fi "Muualla kuin Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
+                                                                                                                                                 :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
                                                                                                   {:label {:en "Are your attachments in Finnish, Swedish or English?",
                                                                                                            :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
                                                                                                            :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
@@ -1891,38 +1438,9 @@
                                                                                                               :followups [(seven-day-attachment-followup {:en "Official translation of the transcript of records to Finnish, Swedish or English",
                                                                                                                                                           :fi "Virallinen käännös opintosuoritusotteesta suomeksi, ruotsiksi tai englanniksi",
                                                                                                                                                           :sv "Officiell översättning av studieprestationsutdraget till finska, svenska eller engelska"})
-                                                                                                                          {:params {:hidden false,
-                                                                                                                                    :deadline nil,
-                                                                                                                                    :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                                                                                                                                           Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                                                                                           Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                                                                                           Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                                                                                                                                        :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                                                                                           Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                                                                                           Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                                                                                           Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                                                                                                                                        :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                                                                                           Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                                                                                           Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                                                                                           Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                                                                                           Kontrollera att dokumenten i filen är rättvända.
-
-                                                                                                                                                           Rekommenderade filformat är PDF, JPG, PNG och DOCX. "},
-                                                                                                                                                :enabled? true}},
-                                                                                                                           :fieldClass "formField",
-                                                                                                                           :label {:en "Official translation of the higher education degree certificate to Finnish, Swedish or English",
-                                                                                                                                   :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                   :sv "Officiell översättning av högskoleexamensbetyget till finska, svenska eller engelska"},
-                                                                                                                           :options [],
-                                                                                                                           :fieldType "attachment"}]}],
+                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Official translation of the higher education degree certificate to Finnish, Swedish or English",
+                                                                                                                                                                         :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                         :sv "Officiell översättning av högskoleexamensbetyget till finska, svenska eller engelska"})]}],
                                                                                                    :fieldType "singleChoice",
                                                                                                    :fieldClass "formField",
                                                                                                    :validators ["required"]}]}],
@@ -2036,41 +1554,9 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
-                                                  {:params {:hidden false,
-                                                            :deadline nil,
-                                                            :info-text {:value {:en "The attachment has to be submitted within 7 (seven) days after the application period has closed. The exact deadline is available next to the attachment request.
-
-                                                                                   Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                                                                   Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                                                                   Recommended file formats are: PDF, JPG, PNG and DOCX.
-                                                                                   ",
-                                                                                :fi "Liite täytyy tallentaa viimeistään 7 vuorokautta hakuajan päättymisen jälkeen. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                                                                   Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                                                                   Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                                                                   Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                   ",
-                                                                                :sv "Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått.Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                                                                   Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                                                                   Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                                                                   Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                                                                   Kontrollera att dokumenten i filen är rättvända.\t
-
-                                                                                   Rekommenderade filformat är PDF, JPG, PNG och DOCX.
-                                                                                   "},
-                                                                        :enabled? true}},
-                                                   :fieldClass "formField",
-                                                   :label {:en "Open university / university of applied sciences studies",
-                                                           :fi "Todistus avoimen korkeakoulun opinnoista",
-                                                           :sv "Studier inom den öppna högskolan"},
-                                                   :options [],
-                                                   :fieldType "attachment"}
+                                                  (seven-day-attachment-followup {:en "Open university / university of applied sciences studies",
+                                                                                  :fi "Todistus avoimen korkeakoulun opinnoista",
+                                                                                  :sv "Studier inom den öppna högskolan"})
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
                                                            :fi "Paina lisää, jos haluat lisätä useampia opintokokonaisuuksia.",
