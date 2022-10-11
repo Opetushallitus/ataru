@@ -68,6 +68,41 @@
    :options [],
    :fieldType "attachment"})
 
+(defn- are-your-attachments-in-fi-se-en-followup
+  [followups]
+  {:label {:en "Are your attachments in Finnish, Swedish or English?",
+           :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
+           :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
+   :params {:hidden false},
+   :options [{:label {:en "Yes",
+                      :fi "Kyllä",
+                      :sv "Ja"},
+              :value "0"}
+             {:label {:en "No",
+                      :fi "Ei",
+                      :sv "Nej"},
+              :value "1",
+              :followups followups}],
+   :fieldType "singleChoice",
+   :fieldClass "formField",
+   :validators ["required"]}
+  )
+
+(defn- country-of-completion
+  [params]
+  {:params params
+   :koodisto-source {:uri "maatjavaltiot2",
+                     :title "Maat ja valtiot",
+                     :version 2,
+                     :allow-invalid? true},
+   :validators ["required"],
+   :fieldClass "formField",
+   :label {:en "Country of completion",
+           :fi "Suoritusmaa",
+           :sv "Land där examen är avlagd"},
+   :options [],
+   :fieldType "dropdown"})
+
 (def share-link-followup
   {:label {:en "Share a link to your study records from My Studyinfo",
            :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
@@ -1091,27 +1126,12 @@
                                                                                                   (deadline-next-to-request-attachment-followup {:en "Original upper secondary education diploma",
                                                                                                                                                  :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
                                                                                                                                                  :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                                                                                  {:label {:en "Are your attachments in Finnish, Swedish or English?",
-                                                                                                           :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-                                                                                                           :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-                                                                                                   :params {:hidden false},
-                                                                                                   :options [{:label {:en "Yes",
-                                                                                                                      :fi "Kyllä",
-                                                                                                                      :sv "Ja"},
-                                                                                                              :value "0"}
-                                                                                                             {:label {:en "No",
-                                                                                                                      :fi "Ei",
-                                                                                                                      :sv "Nej"},
-                                                                                                              :value "1",
-                                                                                                              :followups [(seven-day-attachment-followup {:en "Official translation of the latest transcript of study records to Finnish, Swedish or English",
-                                                                                                                                                          :fi "Virallinen käännös ennakkoarviosta tai viimeisimmästä todistuksestasi suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                          :sv "Officiell översättning av förhandsexamensbetyget eller betyget över slutförda studier till finska, svenska eller engelska"})
-                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                                                                         :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                                         :sv "Officiell översättning av examensbetyget till finska, svenska eller engelska"})]}],
-                                                                                                   :fieldType "singleChoice",
-                                                                                                   :fieldClass "formField",
-                                                                                                   :validators ["required"]}]}],
+                                                                                                  (are-your-attachments-in-fi-se-en-followup [(seven-day-attachment-followup {:en "Official translation of the latest transcript of study records to Finnish, Swedish or English",
+                                                                                                                                                                              :fi "Virallinen käännös ennakkoarviosta tai viimeisimmästä todistuksestasi suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                              :sv "Officiell översättning av förhandsexamensbetyget eller betyget över slutförda studier till finska, svenska eller engelska"})
+                                                                                                                                              (deadline-next-to-request-attachment-followup {:en "Official translation of the diploma to Finnish, Swedish or English",
+                                                                                                                                                                                             :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                                             :sv "Officiell översättning av examensbetyget till finska, svenska eller engelska"})])]}],
                                                                            :fieldType "singleChoice",
                                                                            :fieldClass "formField",
                                                                            :validators ["required"]}]}
@@ -1122,24 +1142,9 @@
                                                               :followups [(seven-day-attachment-followup {:en "Upper secondary education diploma",
                                                                                                           :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
                                                                                                           :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                                                          {:label {:en "Are your attachments in Finnish, Swedish or English?",
-                                                                                   :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-                                                                                   :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-                                                                           :params {:hidden false},
-                                                                           :options [{:label {:en "Yes",
-                                                                                              :fi "Kyllä",
-                                                                                              :sv "Ja"},
-                                                                                      :value "0"}
-                                                                                     {:label {:en "No",
-                                                                                              :fi "Ei",
-                                                                                              :sv "Nej"},
-                                                                                      :value "1",
-                                                                                      :followups [(seven-day-attachment-followup {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                                  :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                  :sv "Officiell översättning av intyget till finska, svenska eller engelska"})]}],
-                                                                           :fieldType "singleChoice",
-                                                                           :fieldClass "formField",
-                                                                           :validators ["required"]}]}],
+                                                                          (are-your-attachments-in-fi-se-en-followup [(seven-day-attachment-followup {:en "Official translation of the diploma to Finnish, Swedish or English",
+                                                                                                                                                      :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                      :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])]}],
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
@@ -1153,17 +1158,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
-                                                  {:koodisto-source {:uri "maatjavaltiot2",
-                                                                     :title "Maat ja valtiot",
-                                                                     :version 2,
-                                                                     :allow-invalid? true},
-                                                   :validators ["required"],
-                                                   :fieldClass "formField",
-                                                   :label {:en "Country of completion",
-                                                           :fi "Suoritusmaa",
-                                                           :sv "Land där examen är avlagd"},
-                                                   :options [],
-                                                   :fieldType "dropdown"}
+                                                  (country-of-completion {})
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
                                                            :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
@@ -1340,17 +1335,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
-                                                  {:koodisto-source {:uri "maatjavaltiot2",
-                                                                     :title "Maat ja valtiot",
-                                                                     :version 2,
-                                                                     :allow-invalid? true},
-                                                   :validators ["required"],
-                                                   :fieldClass "formField",
-                                                   :label {:en "Country of completion",
-                                                           :fi "Suoritusmaa",
-                                                           :sv "Land där examen är avlagd"},
-                                                   :options [],
-                                                   :fieldType "dropdown"}
+                                                  (country-of-completion {})
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
                                                            :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
@@ -1386,24 +1371,9 @@
                                                                                                   (seven-day-attachment-followup {:en "Higher education degree certificate",
                                                                                                                                   :fi "Muualla kuin Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
                                                                                                                                   :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                                                                                  {:label {:en "Are your attachments in Finnish, Swedish or English?",
-                                                                                                           :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-                                                                                                           :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-                                                                                                   :params {:hidden false},
-                                                                                                   :options [{:label {:en "Yes",
-                                                                                                                      :fi "Kyllä",
-                                                                                                                      :sv "Ja"},
-                                                                                                              :value "0"}
-                                                                                                             {:label {:en "No",
-                                                                                                                      :fi "Ei",
-                                                                                                                      :sv "Nej"},
-                                                                                                              :value "1",
-                                                                                                              :followups [(seven-day-attachment-followup {:en "Official translation of the certificate to Finnish, Swedish or English",
-                                                                                                                                                          :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                          :sv "Officiell översättning av intyget till finska, svenska eller engelska"})]}],
-                                                                                                   :fieldType "singleChoice",
-                                                                                                   :fieldClass "formField",
-                                                                                                   :validators ["required"]}]}
+                                                                                                  (are-your-attachments-in-fi-se-en-followup [(seven-day-attachment-followup {:en "Official translation of the certificate to Finnish, Swedish or English",
+                                                                                                                                                                              :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                              :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])]}
                                                                                      {:label {:en "No",
                                                                                               :fi "En",
                                                                                               :sv "Nej"},
@@ -1423,27 +1393,12 @@
                                                                                                   (deadline-next-to-request-attachment-followup {:en "Higher education degree certificate",
                                                                                                                                                  :fi "Muualla kuin Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
                                                                                                                                                  :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                                                                                  {:label {:en "Are your attachments in Finnish, Swedish or English?",
-                                                                                                           :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-                                                                                                           :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-                                                                                                   :params {:hidden false},
-                                                                                                   :options [{:label {:en "Yes",
-                                                                                                                      :fi "Kyllä",
-                                                                                                                      :sv "Ja"},
-                                                                                                              :value "0"}
-                                                                                                             {:label {:en "No",
-                                                                                                                      :fi "Ei",
-                                                                                                                      :sv "Nej"},
-                                                                                                              :value "1",
-                                                                                                              :followups [(seven-day-attachment-followup {:en "Official translation of the transcript of records to Finnish, Swedish or English",
-                                                                                                                                                          :fi "Virallinen käännös opintosuoritusotteesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                          :sv "Officiell översättning av studieprestationsutdraget till finska, svenska eller engelska"})
-                                                                                                                          (deadline-next-to-request-attachment-followup {:en "Official translation of the higher education degree certificate to Finnish, Swedish or English",
-                                                                                                                                                                         :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                                         :sv "Officiell översättning av högskoleexamensbetyget till finska, svenska eller engelska"})]}],
-                                                                                                   :fieldType "singleChoice",
-                                                                                                   :fieldClass "formField",
-                                                                                                   :validators ["required"]}]}],
+                                                                                                  (are-your-attachments-in-fi-se-en-followup [(seven-day-attachment-followup {:en "Official translation of the transcript of records to Finnish, Swedish or English",
+                                                                                                                                                                              :fi "Virallinen käännös opintosuoritusotteesta suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                              :sv "Officiell översättning av studieprestationsutdraget till finska, svenska eller engelska"})
+                                                                                                                                              (deadline-next-to-request-attachment-followup {:en "Official translation of the higher education degree certificate to Finnish, Swedish or English",
+                                                                                                                                                                                             :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                                                             :sv "Officiell översättning av högskoleexamensbetyget till finska, svenska eller engelska"})])]}],
                                                                            :fieldType "singleChoice",
                                                                            :fieldClass "formField",
                                                                            :validators ["required"]}]}
@@ -1457,28 +1412,16 @@
                                                                           (seven-day-attachment-followup {:en "Higher education degree certificate",
                                                                                                           :fi "Muualla kuin Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
                                                                                                           :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                                                          {:sensitive-answer true,
-                                                                           :params {:hidden false,
-                                                                                    :info-text {:label {:en "",
+                                                                          (merge (are-your-attachments-in-fi-se-en-followup [(seven-day-attachment-followup {:en "Official translation of the certificate to Finnish, Swedish or English",
+                                                                                                                                                             :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
+                                                                                                                                                             :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])
+                                                                                 {:sensitive-answer true,
+                                                                                  :params {:hidden false,
+                                                                                           :info-text {:label
+                                                                                                       {:en "",
                                                                                                         :fi "** HUOM! Alla olevat vastausvaihtoehdot voivat näkyä harmaana. Tässä tilanteessa poista pohjakoulutusvaihtoehto \"Muualla kuin Suomessa suoritettu korkeakoulututkinto\" ja ole yhteydessä hakemasi korkeakoulun hakijapalveluihin. Tällöin voit lähettää muut muutoksesi ja pohjakoulutustietosi voidaan täydentää virkailijoiden toimesta myöhemmin.**",
-                                                                                                        :sv "**OBS! Svarsalternativen nedan kan vara gråa, vilket betyder att du inte kan svara på frågan. I sådant fall ta bort ditt grundutbildningsalternativ ”Högskoleexamen som avlagts annanstans än i Finland” och kontakta den högskola som du söker till. Då kan du fylla i dina övriga ändringar och högskolan kan komplettera uppgifterna om din utbildningsbakgrund senare.**"}}},
-                                                                           :validators ["required"],
-                                                                           :fieldClass "formField",
-                                                                           :label {:en "Are your attachments in Finnish, Swedish or English?",
-                                                                                   :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-                                                                                   :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-                                                                           :options [{:label {:en "Yes",
-                                                                                              :fi "Kyllä",
-                                                                                              :sv "Ja"},
-                                                                                      :value "0"}
-                                                                                     {:label {:en "No",
-                                                                                              :fi "Ei",
-                                                                                              :sv "Nej"},
-                                                                                      :value "1",
-                                                                                      :followups [(seven-day-attachment-followup {:en "Official translation of the certificate to Finnish, Swedish or English",
-                                                                                                                                  :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                  :sv "Officiell översättning av intyget till finska, svenska eller engelska"})]}],
-                                                                           :fieldType "singleChoice"}]}],
+                                                                                                        :sv "**OBS! Svarsalternativen nedan kan vara gråa, vilket betyder att du inte kan svara på frågan. I sådant fall ta bort ditt grundutbildningsalternativ ”Högskoleexamen som avlagts annanstans än i Finland” och kontakta den högskola som du söker till. Då kan du fylla i dina övriga ändringar och högskolan kan komplettera uppgifterna om din utbildningsbakgrund senare.**"
+                                                                                                        }}}})]}],
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
@@ -1502,17 +1445,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
-                                                  {:koodisto-source {:uri "maatjavaltiot2",
-                                                                     :title "Maat ja valtiot",
-                                                                     :version 2,
-                                                                     :allow-invalid? true},
-                                                   :validators ["required"],
-                                                   :fieldClass "formField",
-                                                   :label {:en "Country of completion",
-                                                           :fi "Suoritusmaa",
-                                                           :sv "Land där examen är avlagd"},
-                                                   :options [],
-                                                   :fieldType "dropdown"}
+                                                  (country-of-completion {})
                                                   {:text {:fi ""},
                                                    :label {:en "Click add if you want to add further qualifications.",
                                                            :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
@@ -1602,20 +1535,9 @@
                                             :sv "Denna uppgift frågas för statistik."}}},
                :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
                           :value "0",
-                          :followups [{:params {:info-text {:label {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
-                                                                    :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa, mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti- tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
-                                                                    :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}}},
-                                       :koodisto-source {:uri "maatjavaltiot2",
-                                                         :title "Maat ja valtiot",
-                                                         :version 2,
-                                                         :allow-invalid? true},
-                                       :validators ["required"],
-                                       :fieldClass "formField",
-                                       :label {:en "Country of completion",
-                                               :fi "Suoritusmaa",
-                                               :sv "Land där du avlagt examen"},
-                                       :options [],
-                                       :fieldType "dropdown"}]}
+                          :followups [(country-of-completion {:info-text {:label {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
+                                                                                  :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa, mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti- tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
+                                                                                  :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}}})]}
                          {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}],
                :fieldType "singleChoice",
                :fieldClass "formField",
