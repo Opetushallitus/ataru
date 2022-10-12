@@ -1,5 +1,25 @@
 (ns ataru.component-data.base-education-module-kk
-  (:require [ataru.translations.texts :refer [higher-base-education-module-texts general-texts virkailija-texts]]))
+  (:require [ataru.translations.texts :refer [higher-base-education-module-texts general-texts virkailija-texts]]
+            [ataru.component-data.component :as component]))
+
+(defn- year-of-completion [metadata max-value min-value]
+  (assoc (component/text-field metadata)
+    :label {:en "Year of completion" :fi "Suoritusvuosi" :sv "Avlagd år"}
+    :params {:size "S"
+             :numeric true
+             :decimals nil
+             :max-value max-value
+             :min-value min-value}
+    :validators ["numeric" "required"]))
+
+(defn- name-of-degree [metadata]
+  (assoc (component/dropdown metadata)
+    :koodisto-source {:uri "tutkinto",
+                      :title "Tutkinto",
+                      :version 2,
+                      :allow-invalid? true}
+    :validators ["required"]
+    :label {:en "Name of the degree", :fi "Tutkinnon nimi", :sv "Examens namn"}))
 
 (defn- seven-day-attachment-followup
   [label]
@@ -152,9 +172,8 @@
    :fieldType "textField",
    :fieldClass "formField"})
 
-(def my-large-json
-  {:label (:educational-background higher-base-education-module-texts),
-   :children [{:params {:hidden false,
+(defn- education-question [metadata]
+  {:params {:hidden false,
                         :info-text {:label {:en "[Read more about who can apply for bachelor's and master's programmes](https://opintopolku.fi/konfo/en/sivu/how-to-apply-for-bachelors-and-masters)",
                                             :fi "Lue lisää siitä millä koulutuksella voit hakea
                                                - [yliopistokoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-yliopistoon)
@@ -533,15 +552,7 @@
                                                    :label {:en "Degree level", :fi "Tutkintotaso", :sv "Examensnivå"},
                                                    :options [],
                                                    :fieldType "dropdown"}
-                                                  {:koodisto-source {:uri "tutkinto",
-                                                                     :title "Tutkinto",
-                                                                     :version 2,
-                                                                     :allow-invalid? false},
-                                                   :validators ["required"],
-                                                   :fieldClass "formField",
-                                                   :label {:en "Degree", :fi "Tutkinto", :sv "Examen"},
-                                                   :options [],
-                                                   :fieldType "dropdown"}
+                                                  (name-of-degree metadata)
                                                   {:label {:en "Higher education institution",
                                                            :fi "Korkeakoulu",
                                                            :sv "Högskola"},
@@ -954,15 +965,7 @@
                                        :fieldType "p",
                                        :fieldClass "infoElement"}
                                       {:label {:fi "", :sv ""},
-                                       :children [{:label {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"},
-                                                   :params {:size "S",
-                                                            :hidden false,
-                                                            :numeric true,
-                                                            :max-value "2005",
-                                                            :min-value "1900"},
-                                                   :fieldType "textField",
-                                                   :fieldClass "formField",
-                                                   :validators ["numeric" "required"]}
+                                       :children [(year-of-completion metadata "2005" "1900")
                                                   {:label {:en "Type of vocational qualification",
                                                            :fi "Ammatillisen tutkinnon tyyppi",
                                                            :sv "Yrkesinriktad examens typ"},
@@ -1148,7 +1151,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
-                                                  {:label {:en "Degree", :fi "Tutkinto", :sv "Examen"},
+                                                  {:label {:en "Name of the degree", :fi "Tutkinnon nimi", :sv "Examens namn"},
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
@@ -1425,7 +1428,7 @@
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["numeric" "required"]}
-                                                  {:label {:en "Degree", :fi "Tutkinto", :sv "Examen"},
+                                                  {:label {:en "Name of the degree", :fi "Tutkinnon nimi", :sv "Examens namn"},
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
                                                    :validators ["required"]}
@@ -1459,14 +1462,7 @@
                                   :sv "Studier som högskolan kräver vid en öppen högskola"},
                           :value "pohjakoulutus_avoin",
                           :followups [{:label {:fi "", :sv ""},
-                                       :children [{:label {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"},
-                                                   :params {:size "S",
-                                                            :numeric true,
-                                                            :max-value "2022",
-                                                            :min-value "1900"},
-                                                   :fieldType "textField",
-                                                   :fieldClass "formField",
-                                                   :validators ["required" "numeric"]}
+                                       :children [(year-of-completion metadata "2022" "1900")
                                                   {:label {:en "Study field", :fi "Ala", :sv "Bransch"},
                                                    :fieldType "textField",
                                                    :fieldClass "formField",
@@ -1526,56 +1522,49 @@
                                                    :fieldClass "infoElement"}],
                                        :fieldType "fieldset",
                                        :fieldClass "questionGroup"}]}],
-               :fieldType "multipleChoice"}
-              {:label {:en "Have you completed general upper secondary education or a vocational qualification?",
-                       :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?",
-                       :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"},
-               :params {:info-text {:label {:en "This is required for statistical reasons",
-                                            :fi "Tämä tieto kysytään tilastointia varten.",
-                                            :sv "Denna uppgift frågas för statistik."}}},
-               :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
-                          :value "0",
-                          :followups [(country-of-completion {:info-text {:label {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
-                                                                                  :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa, mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti- tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
-                                                                                  :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}}})]}
-                         {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}],
-               :fieldType "singleChoice",
-               :fieldClass "formField",
-               :validators ["required"]}
-              {:label {:en "Have you completed a university or university of applied sciences ( prev. polytechnic) degree in Finland before 2003?",
-                       :fi "Oletko suorittanut suomalaisen ammattikorkeakoulu- tai yliopistotutkinnon ennen vuotta 2003?",
-                       :sv "Har du avlagt en finländsk yrkeshögskole- eller universitetsexamen före år 2003?"},
-               :params {:info-text {:label {:en "Write your university or university of applied sciences degree only if you have completed it before 2003. After that date the information of completed degrees will be received automatically from the higher education institutions. If you have completed a university/university of applied sciences degree or have received a study place in higher education in Finland after autumn 2014 your admission can be affected. More information on [the quota for first-time applicants](https://opintopolku.fi/konfo/en/sivu/provisions-and-restrictions-regarding-student-admissions-to-higher-education#quota-for-first-time-applicants).",
-                                            :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa, jos olet suorittanut sen ennen vuotta 2003. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#ensikertalaiskiinti).",
-                                            :sv "Ange här den högskoleexamen som du avlagt före år 2003. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om [kvoten för förstagångssökande](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#kvot-fr-frstagangsskande)."}}},
-               :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
-                          :value "0",
-                          :followups [{:label {:en "Year of completion", :fi "Suoritusvuosi", :sv "Avlagd år"},
-                                       :params {:size "S",
-                                                :numeric true,
-                                                :decimals nil,
-                                                :max-value "2002",
-                                                :min-value "1900"},
-                                       :fieldType "textField",
-                                       :fieldClass "formField",
-                                       :validators ["numeric" "required"]}
-                                      {:koodisto-source {:uri "tutkinto",
-                                                         :title "Tutkinto",
-                                                         :version 2,
-                                                         :allow-invalid? true},
-                                       :validators ["required"],
-                                       :fieldClass "formField",
-                                       :label {:en "Name of the degree", :fi "Tutkinnon nimi", :sv "Examens namn"},
-                                       :options [],
-                                       :fieldType "dropdown"}
-                                      {:label {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"},
-                                       :fieldType "textField",
-                                       :fieldClass "formField",
-                                       :validators ["required"]}]}
-                         {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}],
-               :fieldType "singleChoice",
-               :fieldClass "formField",
-               :validators ["required"]}],
-   :fieldType "fieldset",
-   :fieldClass "wrapperElement"}
-  )
+               :fieldType "multipleChoice"})
+
+(defn- education-statistics-question [metadata]
+  (assoc (component/single-choice-button metadata)
+         :label {:en "Have you completed general upper secondary education or a vocational qualification?"
+                 :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"
+                 :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
+         :params {:info-text {:label {:en "This is required for statistical reasons",
+                                      :fi "Tämä tieto kysytään tilastointia varten.",
+                                      :sv "Denna uppgift frågas för statistik."}}}
+         :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
+                    :value "0",
+                    :followups [(country-of-completion {:info-text {:label {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
+                                                                            :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa, mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti- tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
+                                                                            :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}}})]}
+                   {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}]
+    ))
+
+(defn- name-of-higher-education-institution [metadata]
+  (assoc  (component/text-field metadata)
+          :label {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"}
+          :validators ["required"]))
+
+(defn- education-question-before-2003 [metadata]
+  (assoc (component/single-choice-button metadata)
+          :label {:en "Have you completed a university or university of applied sciences ( prev. polytechnic) degree in Finland before 2003?"
+                  :fi "Oletko suorittanut suomalaisen ammattikorkeakoulu- tai yliopistotutkinnon ennen vuotta 2003?"
+                  :sv "Har du avlagt en finländsk yrkeshögskole- eller universitetsexamen före år 2003?"}
+          :params {:info-text
+                    {:label {:en "Write your university or university of applied sciences degree only if you have completed it before 2003. After that date the information of completed degrees will be received automatically from the higher education institutions. If you have completed a university/university of applied sciences degree or have received a study place in higher education in Finland after autumn 2014 your admission can be affected. More information on [the quota for first-time applicants](https://opintopolku.fi/konfo/en/sivu/provisions-and-restrictions-regarding-student-admissions-to-higher-education#quota-for-first-time-applicants).",
+                             :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa, jos olet suorittanut sen ennen vuotta 2003. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#ensikertalaiskiinti).",
+                             :sv "Ange här den högskoleexamen som du avlagt före år 2003. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om [kvoten för förstagångssökande](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#kvot-fr-frstagangsskande)."}}},
+          :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
+                     :value "0",
+                     :followups [(year-of-completion metadata "2002" "1900")
+                                 (name-of-degree metadata)
+                                 (name-of-higher-education-institution metadata)]}
+                   {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}],
+          :validators ["required"]))
+
+(defn base-education-module-higher [metadata]
+  (assoc (component/form-section metadata)
+          :label (:educational-background higher-base-education-module-texts)
+          :children [(education-question metadata)
+                     (education-statistics-question metadata)
+                     (education-question-before-2003 metadata)]))
