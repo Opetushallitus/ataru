@@ -78,6 +78,7 @@
                                                       (s/optional-key :description)               localized-schema/LocalizedStringOptional
                                                       (s/optional-key :selection-limit)           (s/maybe s/Int)
                                                       (s/optional-key :default-value)             (s/maybe s/Bool)
+                                                      (s/optional-key :hidden)                    (s/maybe s/Bool)
                                                       (s/optional-key :condition)                 option-condition-schema
                                                       (s/optional-key :belongs-to-hakukohteet)    [s/Str]
                                                       (s/optional-key :belongs-to-hakukohderyhma) [s/Str]

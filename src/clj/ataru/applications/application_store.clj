@@ -153,6 +153,7 @@
   (filter (fn [field]
             (and (= "attachment" (:fieldType field))
                  (-> field :params :hidden not)
+                 (-> field :hidden not)
                  (loop [followup field]
                    (cond (:children-of followup)
                          (recur (get fields-by-id (keyword (:children-of followup))))

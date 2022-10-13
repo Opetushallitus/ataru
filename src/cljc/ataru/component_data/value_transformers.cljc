@@ -26,9 +26,13 @@
                     (keep-indexed (fn [index option]
                                     (when (= value (:value option))
                                       [index option]))
-                                  options))]
-    (vec (remove nil? (map-indexed (fn [index option]
-                                     (let [last-option (first (last (identical option)))]
-                                       (when (= index last-option)
-                                         option)))
-                                   options)))))
+                                  options))
+        remove-hidden? (fn [{:keys [hidden] :as koodi}]
+                         (if (or (nil? koodi) hidden)
+                           true
+                           false))]
+    (vec (remove remove-hidden? (map-indexed (fn [index option]
+                                               (let [last-option (first (last (identical option)))]
+                                                 (when (= index last-option)
+                                                   option)))
+                                             options)))))

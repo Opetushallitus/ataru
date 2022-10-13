@@ -96,6 +96,13 @@
       (and content (> (count content) 0)))))
 
 (re-frame/reg-sub
+  :editor/get-options-parent
+  (fn [[_ & path] _]
+    (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
+  (fn get-options-parent [component [_ & path]]
+    (get-in component (rest (drop-last 2 (flatten path))))))
+
+(re-frame/reg-sub
   :editor/get-component-value
   (fn [[_ & path] _]
     (re-frame/subscribe [:editor/top-level-content (first (flatten path))]))
