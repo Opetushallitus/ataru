@@ -36,7 +36,7 @@
    [:base-education-module-2nd base-education-2nd-module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
-   [:lupatiedot component/lupatiedot]
+   [:lupatiedot-kk component/lupatiedot-kk]
    [:lupatiedot-toinen-aste component/lupatiedot-toinen-aste]
    [:guardian-contact-information component/huoltajan-yhteystiedot]
    [:harkinnanvaraisuus component/harkinnanvaraisuus]])
