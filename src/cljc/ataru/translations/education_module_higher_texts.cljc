@@ -17,9 +17,6 @@
    :notification-competence-based-qualification            {:en "Please note that if you have completed your vocational qualification as a competence-based qualification, you do not take part in the certificate-based admission."
                                                             :fi "Huomaathan, ettet ole mukana todistusvalinnassa, jos olet suorittanut tutkinnon näyttötutkintona. "
                                                             :sv "Obs! En examen som är avlagd som fristående examen beaktas inte i betygsbaserad antagning."}
-   :notification-disabled-options                          {:en ""
-                                                            :fi "** HUOM! Alla olevat vastausvaihtoehdot voivat näkyä harmaana. Tässä tilanteessa poista pohjakoulutusvaihtoehto \"Muualla kuin Suomessa suoritettu korkeakoulututkinto\" ja ole yhteydessä hakemasi korkeakoulun hakijapalveluihin. Tällöin voit lähettää muut muutoksesi ja pohjakoulutustietosi voidaan täydentää virkailijoiden toimesta myöhemmin.**"
-                                                            :sv "** OBS! Svarsalternativen nedan kan vara gråa, vilket betyder att du inte kan svara på frågan. I sådant fall ta bort ditt grundutbildningsalternativ ”Högskoleexamen som avlagts annanstans än i Finland” och kontakta den högskola som du söker till. Då kan du fylla i dina övriga ändringar och högskolan kan komplettera uppgifterna om din utbildningsbakgrund senare.**"}
    :add-more-qualifications                                {:en "Click add if you want to add further qualifications."
                                                             :fi "Paina lisää, jos haluat lisätä useampia tutkintoja."
                                                             :sv "Tryck på lägg till om du vill lägga till flera examina."}
