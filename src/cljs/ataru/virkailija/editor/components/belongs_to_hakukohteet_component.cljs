@@ -4,43 +4,38 @@
 
 (defn- belongs-to-hakukohteet-modal
   [_ id _ _ _]
-  (let [used-by-haku?   (subscribe [:editor/used-by-haku?])
-        haut            (subscribe [:editor/filtered-haut id])
+  (let [used-by-haku? (subscribe [:editor/used-by-haku?])
+        haut (subscribe [:editor/filtered-haut id])
         hakukohderyhmat (subscribe [:editor/filtered-hakukohderyhmat id])]
     (fn [path id selected-hakukohteet selected-hakukohderyhmat is-option?]
-      (let [is-koodisto? (:koodisto-source (if is-option?
-                                             @(subscribe [:editor/get-options-parent path])
-                                             @(subscribe [:editor/get-component-value path])))]
-        (if @used-by-haku?
-          [h-and-h/popup
-           [h-and-h/search-input
-            {:id                       id
-             :haut                     (map second @haut)
-             :hakukohderyhmat          @hakukohderyhmat
-             :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
-             :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
-           (when is-koodisto?
-             [h-and-h/visibility-checkbox id path is-option?])
-           [h-and-h/search-listing
-            {:id                         id
-             :haut                       (map second @haut)
-             :hakukohderyhmat            @hakukohderyhmat
-             :hakukohde-selected?        #(contains? (set selected-hakukohteet) %)
-             :hakukohderyhma-selected?   #(contains? (set selected-hakukohderyhmat) %)
-             :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
-             :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
-             :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
-             :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}]
-           #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]
-          [h-and-h/popup
-           [:div.belongs-to-hakukohteet-modal__no-haku-row
-            [:p.belongs-to-hakukohteet-modal__no-haku
-             @(subscribe [:editor/virkailija-translation :set-haku-to-form])]]
-           (when is-koodisto?
-             [h-and-h/visibility-checkbox id path is-option?])
-           [:div]
-           #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])
-           ])))))
+      (if @used-by-haku?
+        [h-and-h/popup
+         [h-and-h/search-input
+          {:id                       id
+           :haut                     (map second @haut)
+           :hakukohderyhmat          @hakukohderyhmat
+           :hakukohde-selected?      #(contains? (set selected-hakukohteet) %)
+           :hakukohderyhma-selected? #(contains? (set selected-hakukohderyhmat) %)}]
+         [h-and-h/visibility-checkbox id path is-option?]
+         [h-and-h/search-listing
+          {:id                         id
+           :haut                       (map second @haut)
+           :hakukohderyhmat            @hakukohderyhmat
+           :hakukohde-selected?        #(contains? (set selected-hakukohteet) %)
+           :hakukohderyhma-selected?   #(contains? (set selected-hakukohderyhmat) %)
+           :on-hakukohde-select        #(dispatch [:editor/add-to-belongs-to-hakukohteet path %])
+           :on-hakukohde-unselect      #(dispatch [:editor/remove-from-belongs-to-hakukohteet path %])
+           :on-hakukohderyhma-select   #(dispatch [:editor/add-to-belongs-to-hakukohderyhma path %])
+           :on-hakukohderyhma-unselect #(dispatch [:editor/remove-from-belongs-to-hakukohderyhma path %])}]
+         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])]
+        [h-and-h/popup
+         [:div.belongs-to-hakukohteet-modal__no-haku-row
+          [:p.belongs-to-hakukohteet-modal__no-haku
+           @(subscribe [:editor/virkailija-translation :set-haku-to-form])]]
+         [h-and-h/visibility-checkbox id path is-option?]
+         [:div]
+         #(dispatch [:editor/hide-belongs-to-hakukohteet-modal id])
+         ]))))
 
 (defn- belongs-to
   [_ _ _ _]
