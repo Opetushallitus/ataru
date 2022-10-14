@@ -578,10 +578,7 @@
                                        :comparison-operator "<"}
                            :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher texts))
                                        (seven-day-attachment-followup metadata (:higher-education-degree-certificate-alien texts))
-                                       (merge (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-certificate texts))])
-                                              {:sensitive-answer true,
-                                               :params {:hidden false,
-                                                        :info-text {:label (:notification-disabled-options texts)}}})])])
+                                       (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-certificate texts))])])])
                (name-of-degree-text-field metadata)
                (assoc (component/dropdown metadata)
                 :koodisto-source {:uri "kktutkinnot"
