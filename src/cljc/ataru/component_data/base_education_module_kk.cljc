@@ -1,67 +1,55 @@
 (ns ataru.component-data.base-education-module-kk
-  (:require [ataru.translations.texts :refer [higher-base-education-module-texts general-texts virkailija-texts]]
+  (:require [ataru.translations.texts :refer [general-texts virkailija-texts]]
+            [ataru.translations.education-module-higher-texts :refer [texts]]
             [ataru.component-data.component :as component]))
 
 (defn- koski-info-notification [metadata]
   (assoc (component/info-element metadata)
-    :text {:en "Your final vocational qualification details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the educational institution to correct any errors.
-                                                                                                             ",
-          :fi "Saamme lopulliset ammatillisen perustutkinnon suoritustietosi valtakunnallisesta [Koski-tietovarannosta](https://www.oph.fi/fi/palvelut/koski-tietovaranto). Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedoissasi on puutteita, ole yhteydessä oppilaitokseesi tietojen korjaamiseksi.
-                                                                                                             ",
-          :sv "Vi får slutliga uppgifterna om din yrkesinriktade grundexamen ur den nationella [informationsresursen Koski](https://www.oph.fi/sv/tjanster/informationsresurser-koski). Du kan kolla dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta din läroanstalt som kan korrigera felen.
-                                                                                                             "}))
+    :text (:koski-vocational-info texts)))
 
 (defn- vocational-qualification-text-field [metadata]
   (assoc (component/text-field metadata)
-    :label (:vocational-qualification higher-base-education-module-texts)
+    :label (:vocational-qualification texts)
     :validators ["required"]))
 
 (defn- scope-of-education-unit-dropdown [metadata]
   (assoc (component/dropdown metadata)
-    :label {:en "The scope unit",
-            :fi "Laajuuden yksikkö",
-            :sv "Omfattningens enhet"},
-    :options [{:label {:en "Courses", :fi "Kurssia", :sv "Kurser"},
+    :label (:scope-unit texts)
+    :options [{:label {:courses texts},
                :value "0"}
-              {:label (:ects-credits higher-base-education-module-texts),
+              {:label (:ects-credits texts),
                :value "1"}
-              {:label (:study-weeks higher-base-education-module-texts),
+              {:label (:study-weeks texts),
                :value "2"}
-              {:label (:competence-points higher-base-education-module-texts),
+              {:label (:competence-points texts),
                :value "3"}
-              {:label (:hours higher-base-education-module-texts),
+              {:label (:hours texts),
                :value "4"}
-              {:label (:weekly-lessons higher-base-education-module-texts),
+              {:label (:weekly-lessons texts),
                :value "5"}
-              {:label (:years higher-base-education-module-texts),
+              {:label (:years texts),
                :value "6"}]
     :validators ["required"]))
 
 (defn- estimated-graduation-date-text-field [metadata]
   (assoc (component/text-field metadata)
-    :label {:en "Estimated graduation date (dd.mm.yyyy)",
-            :fi "Arvioitu valmistumispäivämäärä (pp.kk.vvvv)",
-            :sv "Beräknat examensdatum (dd.mm.åååå)"}
+    :label (:estimated-graduation-date texts)
     :params {:size "S"}
     :validators ["required"]))
 
 (defn- higher-education-text-field [metadata]
   (assoc (component/text-field metadata)
-    :label {:en "Higher education institution"
-            :fi "Korkeakoulu"
-            :sv "Högskola"}
+    :label (:higher-education-institution texts)
     :validators ["required"]))
 
 (defn- education-institution-text-field [metadata]
   (assoc (component/text-field metadata)
-    :label {:en "Educational institution"
-            :fi "Oppilaitos"
-            :sv "Läroanstalt"}
+    :label (:educational-institution texts)
     :validators ["required"]))
 
 (defn- year-of-completion [metadata max-value min-value]
   (assoc (component/text-field metadata)
-    :label (:year-of-completion higher-base-education-module-texts)
+    :label (:year-of-completion texts)
     :params {:size "S"
              :numeric true
              :decimals nil
@@ -76,92 +64,41 @@
                       :version 2,
                       :allow-invalid? true}
     :validators ["required"]
-    :label {:en "Name of the degree", :fi "Tutkinnon nimi", :sv "Examens namn"}))
+    :options []
+    :label (:name-of-degree texts)))
 
 (defn- name-of-degree-text-field [metadata]
   (assoc (component/text-field metadata)
-    :label {:en "Name of the degree" :fi "Tutkinnon nimi" :sv "Examens namn"}
+    :label (:name-of-degree texts)
     :validators ["required"]))
 
 (defn- seven-day-attachment-followup
   [metadata label]
   (assoc (component/attachment metadata)
-          :params {:hidden false,
-                   :deadline nil,
-                   :info-text {:value {:en "Submit the attachment within 7 (seven) days after the application period has closed. The exact deadline is available next to the attachment request.
-
-                                     Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                     Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                     Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                :fi "Tallenna liite viimeistään 7 vuorokauden sisällä hakuajan päättymisestä. Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                     Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                     Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                     Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.
-                                                                                                                                                           ",
-                                :sv "Spara bilagan senast inom 7 dygn efter att ansökningstiden har utgått. Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                     Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                     Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                     Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                     Kontrollera att dokumenten i filen är rättvända.
-
-                                     Rekommenderade filformat är PDF, JPG, PNG och DOCX.
-                                                                                                                                                           "},
-                        :enabled? true}}
-   :label label))
+          :params {:hidden false
+                   :deadline nil
+                   :info-text {:value (:submit-attachment-7-days texts)
+                               :enabled? true}}
+          :label label))
 
 (defn- deadline-next-to-request-attachment-followup
   [metadata label]
   (assoc (component/attachment metadata)
-    :params {:hidden false,
-            :deadline nil,
-            :info-text {:value {:en "The exact deadline is available next to the attachment request.
-
-                                     Name the attachment file(s) in the following way: Lastname\\_First name\\_description/name of document. For example, Smith\\_Mary\\_highschooldiploma.
-
-                                     Scan all the pages of the required document or take good quality pictures. Make sure that the pictures/scans are legible. Combine the pages of the same document into one file. For example, an educational certificate should be in one file that can include several pages. Check that the documents are all positioned in the same way upright.
-
-                                     Recommended file formats are: PDF, JPG, PNG and DOCX.",
-                                :fi "Määräaika ilmoitetaan liitepyynnön vieressä.
-
-                                     Nimeä tiedostot muotoon \"Sukunimi\\_Etunimi\\_dokumentti\", esimerkiksi Meikäläinen\\_Maija\\_tutkintotodistus
-
-                                     Skannaa vaadittavan dokumentin kaikki sivut, joissa on tekstiä, tai ota niistä hyvälaatuiset kuvat. Varmista, että kuvista saa selvää. Kokoa samaan kokonaisuuteen liittyvät sivut yhteen tiedostoon. Esimerkiksi tutkintotodistuksen tulisi olla yksi tiedosto, joka voi sisältää useita sivuja. Tarkista, että dokumentit ovat tiedostossa oikein päin.
-
-                                     Suositeltuja tiedostomuotoja ovat PDF, JPG, PNG ja DOCX.",
-                                :sv "Den angivna tidpunkten syns invid begäran om bilagor.
-
-                                     Namnge bilagorna i formen ”Efternamn\\_Förnamn\\_dokument”, t.ex. Svensson\\_Sven\\_examensbetyg
-
-                                     Skanna samtliga textsidor i dokumentet, eller fotografera sidorna med tillräckligt hög kvalitet. Kontrollera att bilderna är tydliga.
-                                     Samla samtliga sidor som hör till samma helhet i en gemensam fil. T.ex. ska examensbetyget ingå i en fil, som dock kan innehålla flera sidor.
-                                     Kontrollera att dokumenten i filen är rättvända.
-
-                                     Rekommenderade filformat är PDF, JPG, PNG och DOCX. "},
-                        :enabled? true}},
+    :params {:hidden false
+            :deadline nil
+            :info-text {:value (:deadline-next-to-attachment texts)
+                        :enabled? true}}
    :label label))
 
 (defn- are-your-attachments-in-fi-se-en-followup
   [metadata followups]
   (assoc (component/single-choice-button metadata)
-    :label {:en "Are your attachments in Finnish, Swedish or English?",
-           :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?",
-           :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"},
-   :params {:hidden false},
-   :options [{:label {:en "Yes",
-                      :fi "Kyllä",
-                      :sv "Ja"},
+    :label (:are-attachments-in-fi-en-sv texts)
+   :params {:hidden false}
+   :options [{:label (:yes general-texts)
               :value "0"}
-             {:label {:en "No",
-                      :fi "Ei",
-                      :sv "Nej"},
-              :value "1",
+             {:label (:no general-texts)
+              :value "1"
               :followups followups}]
    :validators ["required"]))
 
@@ -169,62 +106,19 @@
   [metadata params]
   (assoc (component/dropdown metadata)
     :params params
-   :koodisto-source {:uri "maatjavaltiot2",
-                     :title "Maat ja valtiot",
-                     :version 2,
-                     :allow-invalid? true},
-   :validators ["required"],
-   :label {:en "Country of completion",
-           :fi "Suoritusmaa",
-           :sv "Land där examen är avlagd"}))
+    :koodisto-source {:uri "maatjavaltiot2"
+                     :title "Maat ja valtiot"
+                     :version 2
+                     :allow-invalid? true}
+    :validators ["required"]
+    :label (:country-of-completion texts)))
 
 (defn- share-link-followup [metadata]
   (assoc (component/text-field metadata)
-    :label {:en "Share a link to your study records from My Studyinfo",
-           :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa",
-           :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"},
+    :label (:share-link-to-studyinfo texts)
     :params {:size "L",
             :hidden false,
-            :info-text {:label {:en "This question applies only study programmes listed above, under \"Show study programmes\".
-
-                                                                                                                                   You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
-
-                                                                                                                                   To create a link to your completed study records:
-
-                                                                                                                                   1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
-                                                                                                                                   2. Choose \"Proceed to studies\".
-                                                                                                                                   3. Choose \"Jaa suoritustietoja\" (share study records).
-                                                                                                                                   4. Choose the study records you wish to share.
-                                                                                                                                   5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
-                                                                                                                                   6. Choose \"Kopioi linkki\" (copy link).
-                                                                                                                                   7. Paste the copied link to the text field below.
-                                                                                                                                   ",
-                                :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
-
-                                                                                                                                   Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
-
-                                                                                                                                   Näin luot linkin omiin suoritustietoihisi:
-
-                                                                                                                                   1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
-                                                                                                                                   2. Valitse ”Siirry opintosuorituksiin”.
-                                                                                                                                   3. Valitse näytöltä ”Jaa suoritustietoja”.
-                                                                                                                                   4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
-                                                                                                                                   5. Valitse ”Jaa valitsemasi opinnot”.
-                                                                                                                                   6. Valitse ”Kopioi linkki”.
-                                                                                                                                   7. Liitä linkki alla olevaan tekstikenttään.",
-                                :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
-
-                                                                                                                                   Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
-
-                                                                                                                                   Så här skapar du en länk till dina prestationsuppgifter:
-
-                                                                                                                                   1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
-                                                                                                                                   2. Välj ”Fortsätt till studierna”.
-                                                                                                                                   3. Välj ”Dela dina prestationsuppgifter”.
-                                                                                                                                   4. Välj de prestationsuppgifter du vill dela.
-                                                                                                                                   5. Välj ”Dela valda studier”.
-                                                                                                                                   6. Välj ”Kopiera länk”.
-                                                                                                                                   7. Klistra in länken i fältet nedan på ansökningsblanketten."}}}))
+            :info-text {:label (:how-to-share-link-to-my-studyinfo texts)}}))
 
 (defn- finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -233,42 +127,24 @@
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated",
-                                                :fi "Oletko valmistunut?",
-                                                :sv "Har du tagit examen"},
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä",
-                                                           :sv "Ja"},
+                                         :label (:have-you-graduated texts)
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed in Finland",
-                                                                                                        :fi "Opintosuoritusote Suomessa suoritettuun korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                                                        :sv "Studieprestationsutdrag om högskoleexamen som avlagts i Finland"})
-                                                               (seven-day-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                                               :fi "Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
-                                                                                               :sv "Högskoleexamensbetyg"})
+                                                   :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher-finland texts))
+                                                               (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
                                                                (share-link-followup metadata)]}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
+                                                  {:label (:have-not general-texts)
                                                    :value "1",
                                                    :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed in Finland",
-                                                                                               :fi "Opintosuoritusote Suomessa suoritettavaan korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                                               :sv "Studieprestationsutdrag om högskoleexamen som avlagts i Finland"})
-                                                               (deadline-next-to-request-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                                                              :fi "Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
-                                                                                                              :sv "Högskoleexamensbetyg"})
+                                                               (seven-day-attachment-followup metadata (:transcript-of-records-higher-finland-in-progress texts))
+                                                               (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-in-progress texts))
                                                                (share-link-followup metadata)]}]
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
-                           :followups [(seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed in Finland",
-                                                                       :fi "Opintosuoritusote Suomessa suoritettuun korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                       :sv "Studieprestationsutdrag om högskoleexamen som avlagts i Finland"})
-                                       (seven-day-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                       :fi "Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
-                                                                       :sv "Högskoleexamensbetyg"})
+                           :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher-finland texts))
+                                       (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
                                        (share-link-followup metadata)])])
                (assoc (component/dropdown metadata)
                  :koodisto-source {:uri "kktutkinnot",
@@ -277,13 +153,11 @@
                                   :allow-invalid? false},
                 :koodisto-ordered-by-user true,; TODO: Check order
                 :validators ["required"],
-                :label {:en "Degree level", :fi "Tutkintotaso", :sv "Examensnivå"})
+                :label (:finnish-higher-education-degree-level texts))
                (name-of-degree metadata)
                (higher-education-text-field metadata)
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- finnish-vocational-or-special-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -292,89 +166,60 @@
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="}
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated?",
-                                                :fi "Oletko valmistunut?",
-                                                :sv "Har du tagit examen?"},
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä",
-                                                           :sv "Ja"},
+                                         :label (:have-you-graduated texts)
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
                                                    :followups []}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
+                                                  {:label (:have-not general-texts)
                                                    :value "1",
                                                    :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata {:en "Preliminary certificate from the educational institution",
-                                                                                               :fi "Ennakkoarvio ammattitutkinnosta",
-                                                                                               :sv "Läroanstaltens preliminär intyg"})]}]
+                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational texts))]}]
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2018,
                                        :comparison-operator "<"},
-                           :followups [(seven-day-attachment-followup metadata {:en "Vocational or specialist vocational qualification diploma",
-                                                                       :fi "Tutkintotodistus ammatti- tai erikoisammattitutkinnosta",
-                                                                       :sv "Betyg av yrkesexamen eller en specialyrkesexamen"})])
+                           :followups [(seven-day-attachment-followup metadata (:vocational-or-special-diploma texts))])
                           (assoc (component/text-field-conditional-option "2")
                            :condition {:answer-compared-to 2017,
                                        :comparison-operator ">"},
                            :followups [(assoc (component/info-element metadata)
-                                         :text {:en "Your final vocational qualification details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the educational institution to correct any errors. ",
-                                               :fi "Saamme lopulliset ammattitutkinnon suoritustietosi valtakunnallisesta [Koski-tietovarannosta](https://www.oph.fi/fi/palvelut/koski-tietovaranto). Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedoissasi on puutteita, ole yhteydessä oppilaitokseesi tietojen korjaamiseksi. ",
-                                               :sv "Vi får de slutliga uppgifterna om din yrkesexamen ur den nationella [informationsresursen Koski](https://www.oph.fi/sv/tjanster/informationsresurser-koski). Du kan kontrollera dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta din läroanstalt som kan korrigera felen."},
-                                        :label {:fi ""},
-                                        :fieldType "p",
-                                        :fieldClass "infoElement")])])
+                                         :text (:koski-vocational-special-info texts))])])
                (assoc (component/text-field metadata)
-                 :label {:en "Qualification", :fi "Tutkinto", :sv "Examen"}
-                :validators ["required"])
+                      :label (:qualification texts)
+                      :validators ["required"])
                (assoc (component/text-field metadata)
-                 :label {:en "Scope of qualification"
-                        :fi "Laajuus"
-                        :sv "Examens omfattning"}
-                :params {:size "S", :numeric true, :decimals 1}
-                :validators ["numeric"])
+                      :label (:scope-of-qualification texts)
+                      :params {:size "S", :numeric true, :decimals 1}
+                      :validators ["numeric"])
                (scope-of-education-unit-dropdown metadata)
                (assoc (component/dropdown metadata)
-                 :params {:info-text {:label {:en "Select \"Unknown\", if the educational institution where you have completed your degree cannot be found on the list.",
-                                             :fi "Valitse \"Tuntematon\", jos et löydä listasta oppilaitosta, jossa olet suorittanut tutkintosi.",
-                                             :sv "Välj \"Okänd\" om du inte hittar den läroanstalt, där du har avlagt din examen."}}},
-                :koodisto-source {:uri "oppilaitostyyppi",
-                                  :title "Ammatilliset oppilaitokset",
-                                  :version 1,
-                                  :allow-invalid? true},
+                 :params {:info-text {:label (:select-unknown texts)}}
+                :koodisto-source {:uri "oppilaitostyyppi"
+                                  :title "Ammatilliset oppilaitokset"
+                                  :version 1
+                                  :allow-invalid? true}
                 :validators ["required"],
-                :label {:en "Educational institution",
-                        :fi "Oppilaitos ",
-                        :sv "Läroanstalt "})
+                :label (:educational-institution texts))
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- vocational-upper-secondary-qualification-option-followups [metadata]
   [(assoc (component/info-element metadata)
-          :text {:en "Please make sure that your degree is truly a Finnish vocational upper secondary qualification (ammatillinen perustutkinto). As a rule, these degrees were not available before 1994. It is not possible to enter the year of completion earlier than 1994 on the form.",
-                 :fi "Tarkistathan, että kyseessä on varmasti ammatillinen perustutkinto. Näitä tutkintoja on voinut suorittaa pääsääntöisesti vuodesta 1994 alkaen. Vuotta 1994 aiempia suoritusvuosia ammatilliselle perustutkinnolle ei lomakkeella pysty ilmoittamaan.",
-                 :sv "Kontrollera att det verkligen är en yrkesinriktad grundexamen. Dessa examina har i regel kunnat avläggas från och med 1994. Det är inte möjligt att ange tidigare än år 1994 avlagda examina på blanketten."})
+          :text (:check-if-really-vocational texts))
    (assoc (component/question-group metadata)
           :children [(assoc (year-of-completion metadata "2022" "1994")
                       :options [(assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated",
-                                                :fi "Oletko valmistunut?",
-                                                :sv "Har du tagit examen"},
+                                         :label (:have-you-graduated texts)
                                         :options [{:label (:yes general-texts),
                                                    :value "0",
                                                    :followups []}
                                                   {:label (:have-not general-texts),
                                                    :value "1",
                                                    :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata {:en "Preliminary certificate from the educational institution",
-                                                                                               :fi "Ennakkoarvio ammatillisesta perustutkinnosta",
-                                                                                               :sv "Läroanstaltens preliminär intyg om yrkesinriktad grundexamen"})]}],
+                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))]}],
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "2")
                            :condition {:answer-compared-to 2017,
@@ -384,107 +229,71 @@
                            :condition {:answer-compared-to 2017,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you completed your qualification as a competence based qualification in its entirety?",
-                                                :fi "Oletko suorittanut ammatillisen perustutkinnon näyttötutkintona?",
-                                                :sv "Har du avlagt examen som fristående yrkesexamen?"},
-                                        :options [{:label (:yes general-texts),
-                                                   :value "0",
+                                         :label (:have-competence-based-qualification texts)
+                                        :options [{:label (:yes general-texts)
+                                                   :value "0"
                                                    :followups [(assoc (component/info-element metadata)
-                                                                 :text {:fi "Huomaathan, ettet ole mukana todistusvalinnassa, jos olet suorittanut tutkinnon näyttötutkintona. ",
-                                                                       :sv "Obs! En examen som är avlagd som fristående examen beaktas inte i betygsbaserad antagning."})
-                                                               (seven-day-attachment-followup metadata {:en "Vocational qualification diploma",
-                                                                                               :fi "Ammatillisen perustutkinnon tutkintotodistus",
-                                                                                               :sv "Yrkesinriktad grundexamens betyg"})]}
+                                                                 :text (:notification-competence-based-qualification texts))
+                                                               (seven-day-attachment-followup metadata (:vocational-diploma texts))]}
                                                   {:label (:have-not general-texts),
                                                    :value "1",
                                                    :followups [(koski-info-notification metadata)]}]
                                         :validators ["required"])])])
                (vocational-qualification-text-field metadata)
                (assoc (component/text-field metadata)
-                       :label {:en "Scope of vocational qualification"
-                              :fi "Ammatillisen tutkinnon laajuus"
-                              :sv "Omfattning av yrkesinriktad examen"}
+                       :label (:scope-of-vocational-qualification texts)
                 :params {:size "S", :numeric true, :decimals 1}
                 :validators ["numeric" "required"])
                (scope-of-education-unit-dropdown metadata)
                (assoc (component/dropdown metadata)
-                       :params {:info-text {:label {:en "Select \"Unknown\", if the educational institution where you have completed your degree cannot be found on the list.",
-                                             :fi "Valitse \"Tuntematon\", jos et löydä listasta oppilaitosta, jossa olet suorittanut tutkintosi.",
-                                             :sv "Välj \"Okänd\" om du inte hittar den läroanstalt, där du har avlagt din examen."}}},
+                       :params {:info-text {:label (:select-unknown texts)}}
                         :koodisto-source {:uri "oppilaitostyyppi",
                                   :title "Ammatilliset oppilaitokset",
                                   :version 1,
                                   :allow-invalid? true},
                         :validators ["required"],
-                        :label (:educational-institution higher-base-education-module-texts))
+                        :label (:educational-institution texts))
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- finnish-matriculation-examination-option-followups [metadata]
   [(assoc (year-of-completion metadata "2022" "1900")
      :options [(assoc (component/text-field-conditional-option "0")
                 :condition {:answer-compared-to 1990, :comparison-operator "<"},
-                :followups [(seven-day-attachment-followup metadata {:en "Finnish matriculation examination certificate",
-                                                             :fi "Ylioppilastutkintotodistus",
-                                                             :sv "Studentexamensbetyg"})])
+                :followups [(seven-day-attachment-followup metadata (:matriculation-exam-certificate texts))])
                (assoc (component/text-field-conditional-option "1")
                 :condition {:answer-compared-to 1989, :comparison-operator ">"},
                 :followups [(assoc (component/info-element metadata)
-                              :text {:en "Your matriculation examination details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the Matriculation Examination Board to correct any errors. ",
-                                    :fi "Saamme ylioppilastutkinnon suoritustietosi ylioppilastutkintorekisteristä. Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedossasi on puutteita, ole yhteydessä ylioppilastutkintolautakuntaan tietojen korjaamiseksi.
-                                                                         ",
-                                    :sv "Vi får uppgifterna om din studentexamen ur studentexamensregistret. Du kan kolla dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta Studentexamensnämnden som kan korrigera felen.
-                                                                         "})])])])
+                              :text (:automatic-matriculation-info texts))])])])
 
 (defn- upper-secodary-double-degree-option-followups [metadata]
   [(assoc (component/question-group metadata)
     :children [(assoc (component/info-element metadata)
-                 :text {:en "Your matriculation examination details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the Matriculation Examination Board to correct any errors.",
-                       :fi "Saamme ylioppilastutkinnon suoritustietosi ylioppilastutkintorekisteristä. Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedossasi on puutteita, ole yhteydessä ylioppilastutkintolautakuntaan tietojen korjaamiseksi.
-                                                             ",
-                       :sv "Vi får uppgifterna om din studentexamen ur studentexamensregistret. Du kan kontrollera dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta Studentexamensnämnden som kan korrigera felen."})
+                 :text (:automatic-marticulation-info texts))
                (assoc (year-of-completion metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated",
-                                                :fi "Oletko valmistunut?",
-                                                :sv "Har du tagit examen"},
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä",
-                                                           :sv "Ja"},
+                                         :label (:have-you-graduated texts)
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
                                                    :followups []}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
+                                                  {:label (:have-not general-texts)
                                                    :value "1",
                                                    :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata {:en "Preliminary certificate from the educational institution",
-                                                                                               :fi "Ennakkoarvio ammatillisesta perustutkinnosta",
-                                                                                               :sv "Läroanstaltens preliminär intyg om yrkesinriktad grundexamen"})]}]
+                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))]}]
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "2")
                            :condition {:answer-compared-to 2017,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you completed your qualification as a competence based qualification in its entirety?",
-                                                :fi "Oletko suorittanut ammatillisen perustutkinnon näyttötutkintona?",
-                                                :sv "Har du avlagt examen som fristående yrkesexamen?"},
+                                         :label (:have-competence-based-qualification texts)
                                         :params {:info-text {:label nil}},
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä",
-                                                           :sv "Ja"},
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Vocational qualification diploma",
-                                                                                               :fi "Ammatillisen perustutkinnon tutkintotodistus",
-                                                                                               :sv "Yrkesinriktad grundexamens betyg"})]}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
+                                                   :followups [(seven-day-attachment-followup metadata (:vocational-diploma texts))]}
+                                                  {:label (:have-not general-texts)
                                                    :value "1",
                                                    :followups [(koski-info-notification metadata)]}])])
                           (assoc (component/text-field-conditional-option "3")
@@ -493,55 +302,39 @@
                            :followups [(koski-info-notification metadata)])])
                (vocational-qualification-text-field metadata)
                (assoc (component/text-field metadata)
-                :label {:en "Scope of vocational qualification",
-                        :fi "Ammatillisen perustutkinnon laajuus",
-                        :sv "Omfattning av yrkesinriktad grundexamen"},
+                :label (:scope-of-basic-vocational-qualification texts)
                 :params {:size "S", :numeric true, :decimals 1},
                 :validators ["numeric" "required"])
                (scope-of-education-unit-dropdown metadata)
                (assoc (component/dropdown metadata)
-                 :params {:info-text {:label {:en "Select \"Unknown\", if the educational institution where you have completed your degree cannot be found on the list.",
-                                             :fi "Valitse \"Tuntematon\", jos et löydä listasta oppilaitosta, jossa olet suorittanut tutkintosi.",
-                                             :sv "Välj \"Okänd\" om du inte hittar den läroanstalt, där du har avlagt din examen."}}},
-                :koodisto-source {:uri "oppilaitostyyppi",
-                                  :title "Ammatilliset oppilaitokset",
-                                  :version 1,
-                                  :allow-invalid? true},
-                :validators ["required"]
-                :label {:en "Vocational institution",
-                        :fi "Ammatillinen oppilaitos ",
-                        :sv "Yrkesinriktad läroanstalt "})
+                  :params {:info-text {:label (:select-unknown texts)}},
+                  :koodisto-source {:uri "oppilaitostyyppi",
+                                    :title "Ammatilliset oppilaitokset",
+                                    :version 1,
+                                    :allow-invalid? true},
+                  :validators ["required"]
+                  :label (:vocational-institution texts))
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- gymnasium-without-yo-certificate-option-followups [metadata]
   [(assoc (year-of-completion metadata "2022" "1900")
     :options [(assoc (component/text-field-conditional-option "0")
                :condition {:answer-compared-to 2022, :comparison-operator "="},
                :followups [(assoc (component/single-choice-button metadata)
-                             :label {:en "Have you graduated?",
-                                    :fi "Oletko valmistunut",
-                                    :sv "Har du tagit examen?"},
-                            :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
+                             :label (:have-you-graduated texts)
+                            :options [{:label (:yes general-texts)
                                        :value "0",
-                                       :followups [(seven-day-attachment-followup metadata {:en "General upper secondary education certificate",
-                                                                                   :fi "Lukion päättötodistus",
-                                                                                   :sv "Gymnasiets avgångsbetyg"})]}
-                                      {:label {:en "No", :fi "En", :sv "Nej"},
+                                       :followups [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))]}
+                                      {:label (:have-not general-texts)
                                        :value "1",
                                        :followups [(estimated-graduation-date-text-field metadata)
-                                                   (seven-day-attachment-followup metadata {:en "Latest transcript of study records from Finnish upper secondary school",
-                                                                                   :fi "Ennakkoarvio tai viimeisin todistus suoritetuista opinnoista lukiossa",
-                                                                                   :sv "Förhandsexamensbetyg eller betyg över slutförda studier om gymnasiestudier"})]}]
+                                                   (seven-day-attachment-followup metadata (:transcript-of-records-secondary-finland texts))]}]
                             :validators ["required"])])
               {:label {:fi "", :sv ""},
                :value "1",
                :condition {:answer-compared-to 2022, :comparison-operator "<"},
-               :followups [(seven-day-attachment-followup metadata {:en "General upper secondary education certificate",
-                                                           :fi "Lukion päättötodistus",
-                                                           :sv "Gymnasiets avgångsbetyg"})]}])])
+               :followups [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))]}])])
 
 (defn- international-matriculation-exam-in-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -550,199 +343,107 @@
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Matriculation examination",
-                                                :fi "Ylioppilastutkinto",
-                                                :sv "Studentexamen"},
-                                        :options [{:label {:en "International Baccalaureate -diploma",
-                                                           :fi "International Baccalaureate -tutkinto",
-                                                           :sv "International Baccalaureate -examen"},
+                                         :label (:international-matriculation-outside-finland-name texts)
+                                        :options [{:label (:international-baccalaureate texts)
                                                    :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "IB Diploma completed in Finland",
-                                                                                               :fi "IB Diploma -tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "IB Diploma från IB-studentexamen som avlagts i Finland"})]}
-                                                  {:label {:en "European Baccalaureate -diploma",
-                                                           :fi "Eurooppalainen ylioppilastutkinto",
-                                                           :sv "European Baccalaureate -examen"},
+                                                   :followups [(seven-day-attachment-followup metadata (:ib-diploma-finland texts))]}
+                                                  {:label (:european-baccalaureate texts)
                                                    :value "1",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "IB Diploma completed in Finland",
-                                                                                               :fi "IB Diploma -tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "IB Diploma från IB-studentexamen som avlagts i Finland"})]}
-                                                  {:label {:en "Deutsche Internationale Abiturprüfung/Reifeprüfung -diploma",
-                                                           :fi "Deutsche Internationale Abiturprüfung/Reifeprüfung -tutkinto",
-                                                           :sv "Deutsche Internationale Abiturprüfung/Reifeprüfung -examen"},
+                                                   :followups [(seven-day-attachment-followup metadata (:ib-diploma-finland texts))]}
+                                                  {:label (:reifeprufung texts)
                                                    :value "2",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Reifeprüfung/DIA diploma completed in Finland",
-                                                                                               :fi "Reifeprüfung/DIA-tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "Reifeprüfung/DIA -examensbetyg from RP/DIA-studentexamen som avlagts i Finland"})
-                                                               (seven-day-attachment-followup metadata {:en "An equivalency certificate on upper secondary education based on Reifeprüfung or DIA provisions",
-                                                                                               :fi "Vastaavuustodistus lukio-opinnoista, jotka perustuvat RP- tai DIA-tutkinnon säännöksiin",
-                                                                                               :sv "Motsvarighetsintyget av gymnasiestudier, som är baserad på RP- eller DIA-bestämmelser"})]}]
+                                                   :followups [(seven-day-attachment-followup metadata (:reifeprufung-diploma-finland texts))
+                                                               (seven-day-attachment-followup metadata (:equivalency-certificate-second texts))]}]
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Matriculation examination",
-                                                :fi "Ylioppilastutkinto",
-                                                :sv "Studentexamen"},
-                                        :options [{:label {:en "International Baccalaureate -diploma",
-                                                           :fi "International Baccalaureate -tutkinto",
-                                                           :sv "International Baccalaureate -examen"},
+                                         :label (:matriculation-exam texts)
+                                        :options [{:label (:international-baccalaureate texts)
                                                    :value "0",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated?",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen?"},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "IB Diploma completed in Finland",
-                                                                                                                       :fi "IB Diploma -tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "IB Diploma från IB-studentexamen som avlagts i Finland"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:ib-diploma-finland texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata {:en "Predicted grades from IB completed in Finland",
-                                                                                                                       :fi "Oppilaitoksen ennakkoarvio Suomessa suoritettavan tutkinnon arvosanoista (Candidate Predicted Grades)",
-                                                                                                                       :sv "Predicted grades från IB-studentexamen som avlagts i Finland "})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "Diploma Programme (DP) Results from IB completed in Finland",
-                                                                                                                                      :fi "Diploma Programme (DP) Results -asiakirja Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts i Finland"})]}]
+                                                                                       (seven-day-attachment-followup metadata (:predicted-grades-ib-finland texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib-finland texts))]}]
                                                                 :validators ["required"])]}
-                                                  {:label {:en "European Baccalaureate -diploma",
-                                                           :fi "Eurooppalainen ylioppilastutkinto",
-                                                           :sv "European Baccalaureate -examen"},
+                                                  {:label (:european-baccalaureate texts)
                                                    :value "1",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated?",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen?"},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "European Baccalaureate diploma completed in Finland",
-                                                                                                                       :fi "European Baccalaureate Diploma -tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts i Finland"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma-finland texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata {:en "Predicted grades from EB completed in Finland",
-                                                                                                                       :fi "Oppilaitoksen ennakkoarvio Suomessa suoritettavan EB-tutkinnon arvosanoista",
-                                                                                                                       :sv "Läroanstaltens preliminära vitsord från EB-studentexamen som avlagts i Finland"})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "European Baccalaureate diploma completed in Finland",
-                                                                                                                                      :fi "European Baccalaureate Diploma -tutkintotodistus Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts i Finland"})]}]
+                                                                                       (seven-day-attachment-followup metadata (:predicted-grades-eb-finland texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-eb-finland texts))]}]
                                                                 :validators ["required"])]}
-                                                  {:label {:en "Deutsche Internationale Abiturprüfung/Reifeprüfung -diploma",
-                                                           :fi "Deutsche Internationale Abiturprüfung/Reifeprüfung -tutkinto",
-                                                           :sv "Deutsche Internationale Abiturprüfung/Reifeprüfung -examen"},
+                                                  {:label (:reifeprufung texts)
                                                    :value "2",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen"},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "DIA diploma completed in Finland",
-                                                                                                                       :fi "DIA-tutkintotodistus Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "DIA -examensbetyg from DIA-studentexamen som avlagts i Finland"})
-                                                                                       (seven-day-attachment-followup metadata {:en "An equivalency certificate on upper secondary education based on DIA provisions",
-                                                                                                                       :fi "Vastaavuustodistus lukio-opinnoista, jotka perustuvat DIA-tutkinnon säännöksiin",
-                                                                                                                       :sv "Motsvarighetsintyget av gymnasiestudier, som är baserad på DIA-bestämmelser"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:dia-diploma-finland texts))
+                                                                                       (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata {:en "Grade page of a Deutsches Internationales Abitur (DIA) diploma completed in Finland",
-                                                                                                                       :fi "DIA-tutkintotodistuksen arvosanasivu Suomessa suoritettavasta tutkinnosta",
-                                                                                                                       :sv "Examensbetygets vitsordssida av Deutsches Internationales Abitur (DIA) -examen avlagd i Finland"})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "DIA diploma completed in Finland",
-                                                                                                                                      :fi "DIA-tutkintotodistus Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "DIA -examensbetyg från DIA-studentexamen som avlagts i Finland"})
-                                                                                       (seven-day-attachment-followup metadata {:en "An equivalency certificate on upper secondary education based on DIA provisions",
-                                                                                                                       :fi "Vastaavuustodistus lukio-opinnoista, jotka perustuvat DIA-tutkinnon säännöksiin",
-                                                                                                                       :sv "Motsvarighetsintyget av gymnasiestudier, som är baserad på DIA-bestämmelser"})]}]
+                                                                                       (seven-day-attachment-followup metadata (:grade-page-dia-finland texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:dia-diploma-finland texts))
+                                                                                       (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))]}]
                                                                 :validators ["required"])]}]
                                         :validators ["required"])])])
                (education-institution-text-field metadata)
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- vocational-upper-secondary-qualification-finland-option-followups [metadata]
   [(assoc (component/info-element metadata)
-     :text {:en "Please make sure that your degree is truly a Finnish school level (kouluaste), post-secondary level degree (opistoaste) or a higher vocational level degree (ammatillinen korkea-aste). As a rule, these degrees are no longer available in the 2000s. It is not possible to enter the year of completion later than 2005 on the form.",
-           :fi "Tarkistathan, että kyseessä on varmasti kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto. Näitä tutkintoja ei pääsääntöisesti ole ollut enää 2000-luvulla. Vuotta 2005 myöhempiä kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkintoja ei lomakkeella pysty ilmoittamaan.",
-           :sv "Kontrollera att det verkligen är en examen på skolnivå, institutsnivå eller inom yrkesutbildning på högre nivå. Dessa examina fanns i regel inte kvar på 2000-talet. Det är inte möjligt att ange senare än år 2005 avlagda examina på blanketten."})
+     :text (:check-if-really-opistoaste texts))
    (assoc (component/question-group metadata)
     :children [(year-of-completion metadata "2005" "1900")
                (assoc (component/dropdown metadata)
-                 :label {:en "Type of vocational qualification",
-                        :fi "Ammatillisen tutkinnon tyyppi",
-                        :sv "Yrkesinriktad examens typ"},
+                 :label (:type-of-vocational texts)
                 :params {:hidden false},
-                :options [{:label {:en "Vocational qualification (kouluaste)",
-                                   :fi "Kouluasteen tutkinto",
-                                   :sv "Yrkesinriktad examen på skolnivå"},
-                           :value "0",
+                :options [{:label (:kouluaste-of-vocational-qualification texts)
+                           :value "0"
                            :followups [(assoc (component/info-element metadata)
-                                         :text {:en "Please make sure that your degree is truly a Finnish school level degree (kouluasteen tutkinto). As a rule, these degrees are no longer available in the 2000s. For example, the degrees of agronom, a commercial school graduate (merkonomi) and a technician are not school level degrees.",
-                                               :fi "Tarkistathan, että kyseessä on varmasti kouluasteen tutkinto. Näitä tutkintoja ei pääsääntöisesti ole ollut enää 2000-luvulla. Esimerkiksi agrologin, teknikon tai merkonomin tutkinnot eivät ole kouluasteen tutkintoja.",
-                                               :sv "Kontrollera att det verkligen är en examen på skolnivå. Dessa examina fanns i regel inte kvar på 2000-talet. Exempelvis agrolog-, tekniker- och merkonomexamina är inte examina på skolnivå."})]}
-                          {:label {:en "Vocational qualification (opistoaste)",
-                                   :fi "Opistoasteen tutkinto",
-                                   :sv "Yrkesinriktad examen på institutsnivå"},
-                           :value "1",
+                                         :text (:check-if-really-kouluaste texts))]}
+                          {:label (:vocational-opistoaste-qualification texts)
+                           :value "1"
                            :followups [(assoc (component/info-element metadata)
-                                         :text {:en "Please make sure that your degree is truly a Finnish post-secondary level degree (opistoasteen tutkinto). As a rule, these degrees are no longer available in the 2000s. For example, the degrees of a practical nurse, a commercial school graduate (merkantti) and a mechanic are not post-secondary level degrees.",
-                                               :fi "Tarkistathan, että kyseessä on varmasti opistoasteen tutkinto. Näitä tutkintoja ei pääsääntöisesti ole ollut enää 2000-luvulla. Esimerkiksi lähihoitajan, merkantin ja mekaanikon tutkinnot eivät ole opistoasteen tutkintoja.",
-                                               :sv "Kontrollera att det verkligen är en examen på institutnivå. Dessa examina fanns i regel inte kvar på 2000-talet. Exempelvis närvårdar-, merkant- och mekanikerexamina är inte examina på institutnivå."})]}
-                          {:label {:en "Vocational qualification (ammatillinen korkea-aste)",
-                                   :fi "Ammatillisen korkea-asteen tutkinto",
-                                   :sv "Yrkesinriktad examen på högre nivå"},
-                           :value "2",
+                                         :text (:check-if-really-post-secondary texts))]}
+                          {:label (:vocational-korkea-aste-qualification texts)
+                           :value "2"
                            :followups [(assoc (component/info-element metadata)
-                                         :text {:en "Please make sure that your degree is truly a Finnish higher vocational level degree. As a rule, these degrees are no longer available in the 2000s. For example, the degrees of a practical nurse, a vocational qualification in business and administration (merkonomi) and a datanome are not higher vocational level degrees.",
-                                               :fi "Tarkistathan, että kyseessä on varmasti ammatillisen korkea-asteen tutkinto. Näitä tutkintoja ei pääsääntöisesti ole ollut enää 2000-luvulla. Esimerkiksi lähihoitajan, merkonomin ja datanomin tutkinnot eivät ole ammatillisen korkea-asteen tutkintoja.",
-                                               :sv "Kontrollera att det verkligen är en examen inom yrkesutbildning på högre nivå. Dessa examina fanns i regel inte kvar på 2000-talet. Exempelvis närvårdar-, merkonom- och datanomexamina är inte examina inom yrkesutbildning på högre nivå."})]}]
+                                         :text (:check-if-really-higher-vocational texts))]}]
                 :validators ["required"])
                (vocational-qualification-text-field metadata)
                (assoc (component/text-field metadata)
-                 :label {:en "Scope of vocational qualification"
-                        :fi "Ammatillisen tutkinnon laajuus"
-                        :sv "Omfattning av yrkesinriktad examen"}
+                 :label (:scope-of-vocational-qualification texts)
                 :params {:size "S", :numeric true, :decimals 1}
                 :validators ["numeric" "required"])
                (scope-of-education-unit-dropdown metadata)
                (assoc (component/dropdown metadata)
-                :params {:info-text {:label {:en "Select \"Unknown\", if the educational institution where you have completed your degree cannot be found on the list."
-                                             :fi "Valitse \"Tuntematon\", jos et löydä listasta oppilaitosta, jossa olet suorittanut tutkintosi."
-                                             :sv "Välj \"Okänd\" om du inte hittar den läroanstalt, där du har avlagt din examen."}}}
+                :params {:info-text {:label (:select-unknown texts)}}
                 :koodisto-source {:uri "oppilaitostyyppi"
                                   :title "Ammatilliset oppilaitokset"
                                   :version 1
                                   :allow-invalid? true}
                 :validators ["required"]
-                :label {:en "Educational institution"
-                        :fi "Oppilaitos "
-                        :sv "Läroanstalt "})
-               (seven-day-attachment-followup metadata {:en "Vocational qualification diploma (kouluaste, opistoaste, ammatillinen korkea-aste",
-                                               :fi "Kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkintotodistus",
-                                               :sv "Betyg från yrkesinriktad examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå"})
+                :label (:educational-institution texts))
+               (seven-day-attachment-followup metadata (:vocational-qualification-diploma texts))
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- upper-secondary-qualification-not-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -751,67 +452,37 @@
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated",
-                                                :fi "Oletko valmistunut?",
-                                                :sv "Har du tagit examen"},
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä",
-                                                           :sv "Ja"},
+                                         :label (:have-you-graduated texts)
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Upper secondary education diploma",
-                                                                                               :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
-                                                                                               :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
+                                                   :followups [(seven-day-attachment-followup metadata (:upper-secondary-education-diploma texts))
                                                                (assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Is your original diploma in Finnish, Swedish or English?",
-                                                                        :fi "Onko todistuksesi suomen-, ruotsin- tai englanninkielinen?",
-                                                                        :sv "Är ditt betyg finsk-, svensk-, eller engelskspråkigt?"},
-                                                                :params {:hidden false},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:diploma-in-fi-sv-en texts)
+                                                                 :params {:hidden false},
+                                                                 :options [{:label (:yes general-texts)
                                                                            :value "0"}
-                                                                          {:label {:en "No",
-                                                                                   :fi "Ei",
-                                                                                   :sv "Nej"},
-                                                                           :value "1",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                       :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                       :sv "Officiell översättning av intyget till finska, svenska eller engelska"})]}],
+                                                                          {:label (:no general-texts)
+                                                                           :value "1"
+                                                                           :followups [(seven-day-attachment-followup metadata (:translation-of-diploma texts))]}],
                                                                 :validators ["required"])]}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
-                                                   :value "1",
+                                                  {:label (:have-not general-texts)
+                                                   :value "1"
                                                    :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata {:en "Latest transcript of study records (upper secondary education diploma)",
-                                                                                               :fi "Ennakkoarvio tai viimeisin todistus suoritetuista opinnoista muualla kuin Suomessa suoritettavasta toisen asteen tutkinnosta",
-                                                                                               :sv "Förhandsexamensbetyg eller betyg över slutförda studier om examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                                               (deadline-next-to-request-attachment-followup metadata {:en "Original upper secondary education diploma",
-                                                                                                              :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
-                                                                                                              :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata {:en "Official translation of the latest transcript of study records to Finnish, Swedish or English",
-                                                                                                                                           :fi "Virallinen käännös ennakkoarviosta tai viimeisimmästä todistuksestasi suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                           :sv "Officiell översättning av förhandsexamensbetyget eller betyget över slutförda studier till finska, svenska eller engelska"})
-                                                                                                           (deadline-next-to-request-attachment-followup metadata {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                                                          :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                          :sv "Officiell översättning av examensbetyget till finska, svenska eller engelska"})])]}]
+                                                               (seven-day-attachment-followup metadata (:transcript-of-records-upper-secondary texts))
+                                                               (deadline-next-to-request-attachment-followup metadata (:original-upper-secondary-diploma texts))
+                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-study-records texts))
+                                                                                                           (deadline-next-to-request-attachment-followup metadata (:translation-of-diploma texts))])]}]
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"}
-                           :followups [(seven-day-attachment-followup metadata {:en "Upper secondary education diploma",
-                                                                       :fi "Tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
-                                                                       :sv "Examensbetyg som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"})
-                                       (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata {:en "Official translation of the diploma to Finnish, Swedish or English",
-                                                                                                                   :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                   :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])])])
+                           :followups [(seven-day-attachment-followup metadata (:upper-secondary-education-diploma texts))
+                                       (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-diploma texts))])])])
                (name-of-degree-text-field metadata)
                (education-institution-text-field metadata)
                (country-of-completion metadata {})
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications.",
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja.",
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- internation-matriculation-examination-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -820,126 +491,66 @@
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Matriculation examination"
-                                                 :fi "Ylioppilastutkinto"
-                                                 :sv "Studentexamen"}
-                                         :options [{:label {:en "International Baccalaureate -diploma",
-                                                            :fi "International Baccalaureate -tutkinto",
-                                                            :sv "International Baccalaureate -examen"},
-                                                   :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "IB Diploma completed outside Finland",
-                                                                                               :fi "IB Diploma -tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "IB Diploma från IB-studentexamen som avlagts annanstans än i Finland"})]}
-                                                  {:label {:en "European Baccalaureate -diploma",
-                                                           :fi "European Baccalaureate -tutkinto",
-                                                           :sv "European Baccalaureate -examen"},
+                                         :label (:matriculation-exam texts)
+                                         :options [{:label (:international-baccalaureate texts)
+                                                   :value "0"
+                                                   :followups [(seven-day-attachment-followup metadata (:ib-diploma texts))]}
+                                                  {:label (:european-baccalaureate texts)
                                                    :value "1",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "European Baccalaureate diploma completed outside Finland",
-                                                                                               :fi "European Baccalaureate Diploma -tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts annanstans än i Finland"})]}
-                                                  {:label {:en "Deutsche Internationale Abiturprüfung/Reifeprüfung -diploma",
-                                                           :fi "Deutsche Internationale Abiturprüfung/Reifeprüfung -tutkinto",
-                                                           :sv "Deutsche Internationale Abiturprüfung/Reifeprüfung -examen"},
+                                                   :followups [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma texts))]}
+                                                  {:label (:reifeprufung texts),
                                                    :value "2",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Reifeprüfung/DIA diploma completed outside Finland",
-                                                                                               :fi "Reifeprüfung/DIA-tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                               :sv "Reifeprüfung/DIA -examensbetyg from RP/DIA-studentexamen som avlagts annanstans än i Finland"})]}],
+                                                   :followups [(seven-day-attachment-followup metadata (:reifeprufung-diploma texts))]}],
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
-                                        :label {:en "Matriculation examination",
-                                                :fi "Ylioppilastutkinto",
-                                                :sv "Studentexamen"},
-                                        :options [{:label {:en "International Baccalaureate -diploma",
-                                                           :fi "International Baccalaureate -tutkinto",
-                                                           :sv "International Baccalaureate -examen"},
+                                        :label (:matriculation-exam texts)
+                                        :options [{:label (:international-baccalaureate texts)
                                                    :value "0",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen"},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "IB Diploma completed outside Finland",
-                                                                                                                       :fi "IB Diploma -tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "IB Diploma från IB-studentexamen som avlagts i annanstans än Finland"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:ib-diploma texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "Predicted grades from IB completed outside Finland",
-                                                                                                                                      :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan tutkinnon arvosanoista (Candidate Predicted Grades)",
-                                                                                                                                      :sv "Predicted grades från IB-studentexamen som avlagts annanstans än i Finland "})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "Diploma Programme (DP) Results from IB completed outside Finland",
-                                                                                                                                      :fi "Diploma Programme (DP) Results -asiakirja muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "Diploma Programme (DP) Results från IB-studentexamen som avlagts annanstans än i Finland"})]}]
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:predicted-grades-ib texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib texts))]}]
                                                                 :validators ["required"])]}
-                                                  {:label {:en "European Baccalaureate -diploma",
-                                                           :fi "Eurooppalainen ylioppilastutkinto",
-                                                           :sv "European Baccalaureate -examen"},
+                                                  {:label (:european-baccalaureate texts)
                                                    :value "1",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen"},
-                                                                :options [{:label {:en "Yes",
-                                                                                   :fi "Kyllä",
-                                                                                   :sv "Ja"},
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "European Baccalaureate diploma completed outside Finland",
-                                                                                                                       :fi "European Baccalaureate Diploma -tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts annanstans än i Finland"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "Predicted grades from EB completed outside Finland",
-                                                                                                                                      :fi "Oppilaitoksen ennakkoarvio muualla kuin Suomessa suoritettavan EB-tutkinnon arvosanoista",
-                                                                                                                                      :sv "Läroanstaltens preliminära vitsord från EB-studentexamen som avlagts annanstans än i Finland"})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "European Baccalaureate diploma completed outside Finland",
-                                                                                                                                      :fi "European Baccalaureate Diploma -tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts annanstans än i Finland"})]}],
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:predicted-grades-eb texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:european-baccalaureate-diploma texts))]}],
                                                                  :validators ["required"])]}
-                                                  {:label {:en "Deutsche Internationale Abiturprüfung/Reifeprüfung -diploma",
-                                                           :fi "Deutsche Internationale Abiturprüfung/Reifeprüfung -tutkinto",
-                                                           :sv "Deutsche Internationale Abiturprüfung/Reifeprüfung -examen"},
+                                                  {:label (:reifeprufung texts)
                                                    :value "2",
                                                    :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label {:en "Have you graduated",
-                                                                        :fi "Oletko valmistunut?",
-                                                                        :sv "Har du tagit examen"},
-                                                                :options [{:label {:en "Yes"
-                                                                                   :fi "Kyllä"
-                                                                                   :sv "Ja"}
+                                                                 :label (:have-you-graduated texts)
+                                                                :options [{:label (:yes general-texts)
                                                                            :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata {:en "Reifeprüfung/DIA diploma from RP/DIA completed outside Finland",
-                                                                                                                       :fi "Reifeprüfung/DIA-tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta",
-                                                                                                                       :sv "Reifeprüfung/DIA -examensbetyg from RP/DIA-studentexamen som avlagts annanstans än i Finland"})]}
-                                                                          {:label {:en "No",
-                                                                                   :fi "En",
-                                                                                   :sv "Nej"},
+                                                                           :followups [(seven-day-attachment-followup metadata (:reifeprufung-diploma texts))]}
+                                                                          {:label (:have-not general-texts)
                                                                            :value "1",
                                                                            :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "Grade page of a Deutsches Internationales Abitur (DIA) diploma completed outside Finland",
-                                                                                                                                      :fi "DIA-tutkintotodistuksen arvosanasivu muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "Examensbetygets vitsordssida av Deutsches Internationales Abitur (DIA) -examen avlagd annanstans än i Finland"})
-                                                                                       (deadline-next-to-request-attachment-followup metadata {:en "DIA -diploma from DIA completed outside Finland",
-                                                                                                                                      :fi "DIA-tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta",
-                                                                                                                                      :sv "DIA -examensbetyg från DIA-studentexamen som avlagts annanstans än i Finland"})]}]
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:grade-page-dia texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:dia-diploma texts))]}]
                                                                  :validators ["required"])]}]
                                         :validators ["required"])])])
                (education-institution-text-field metadata)
                (country-of-completion metadata {})
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications."
-                        :fi "Paina lisää, jos haluat lisätä useampia tutkintoja."
-                        :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                :label (:add-more-qualifications texts))])])
 
 (defn- non-finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -948,63 +559,29 @@
                            :condition {:answer-compared-to 2022
                                        :comparison-operator "="}
                            :followups [(assoc (component/single-choice-button metadata)
-                                         :label {:en "Have you graduated?"
-                                                 :fi "Oletko valmistunut?"
-                                                 :sv "Har du tagit examen?"}
-                                        :options [{:label {:en "Yes",
-                                                           :fi "Kyllä", :sv "Ja"},
+                                         :label (:have-you-graduated texts)
+                                        :options [{:label (:yes general-texts)
                                                    :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed outside Finland",
-                                                                                               :fi "Opintosuoritusote muualla kuin Suomessa suoritettuun korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                                               :sv "Studieprestationsutdrag om högskoleexamen som avlagts annanstans än i Finland"})
-                                                               (seven-day-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                                               :fi "Muualla kuin Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
-                                                                                               :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                                               (are-your-attachments-in-fi-se-en-followup metadata[(seven-day-attachment-followup metadata {:en "Official translation of the certificate to Finnish, Swedish or English",
-                                                                                                                                           :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                           :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])]}
-                                                  {:label {:en "No",
-                                                           :fi "En",
-                                                           :sv "Nej"},
+                                                   :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher texts))
+                                                               (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
+                                                               (are-your-attachments-in-fi-se-en-followup metadata[(seven-day-attachment-followup metadata (:translation-of-certificate texts))])]}
+                                                  {:label (:have-not general-texts)
                                                    :value "1",
-                                                   :followups [(assoc (component/text-field metadata)
-                                                                      :label {:en "Estimated graduation date (dd.mm.yyyy)"
-                                                                              :fi "Arvioitu valmistumispäivämäärä (pp.kk.vvvv)"
-                                                                              :sv "Beräknat examensdatum (dd.mm.åååå)"}
-                                                                      :params {:size "S"}
-                                                                      :validators ["required"])
-                                                               (seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed outside Finland",
-                                                                                               :fi "Opintosuoritusote muualla kuin Suomessa suoritettavaan korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                                               :sv "Studieprestationsutdrag om högskoleexamen som avlagts annanstans än i Finland"})
-                                                               (deadline-next-to-request-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                                                              :fi "Muualla kuin Suomessa suoritettavan korkeakoulututkinnon tutkintotodistus",
-                                                                                                              :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata {:en "Official translation of the transcript of records to Finnish, Swedish or English",
-                                                                                                                                           :fi "Virallinen käännös opintosuoritusotteesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                           :sv "Officiell översättning av studieprestationsutdraget till finska, svenska eller engelska"})
-                                                                                                           (deadline-next-to-request-attachment-followup metadata {:en "Official translation of the higher education degree certificate to Finnish, Swedish or English",
-                                                                                                                                                          :fi "Virallinen käännös tutkintotodistuksesta suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                                                          :sv "Officiell översättning av högskoleexamensbetyget till finska, svenska eller engelska"})])]}],
+                                                   :followups [(estimated-graduation-date-text-field metadata)
+                                                               (seven-day-attachment-followup metadata (:transcript-of-records-in-progress texts))
+                                                               (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-alien-in-progress texts))
+                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-transcript-of-records texts))
+                                                                                                           (deadline-next-to-request-attachment-followup metadata (:translation-of-degree-higher texts))])]}],
                                         :validators ["required"])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"}
-                           :followups [(seven-day-attachment-followup metadata {:en "Transcript of records of higher education degree completed outside Finland",
-                                                                       :fi "Opintosuoritusote muualla kuin Suomessa suoritettuun korkeakoulututkintoon sisältyvistä opinnoista",
-                                                                       :sv "Studieprestationsutdrag om högskoleexamen som avlagts annanstans än i Finland"})
-                                       (seven-day-attachment-followup metadata {:en "Higher education degree certificate",
-                                                                       :fi "Muualla kuin Suomessa suoritetun korkeakoulututkinnon tutkintotodistus",
-                                                                       :sv "Högskoleexamensbetyg som avlagts annanstans än i Finland"})
-                                       (merge (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata {:en "Official translation of the certificate to Finnish, Swedish or English",
-                                                                                                                          :fi "Virallinen käännös suomeksi, ruotsiksi tai englanniksi",
-                                                                                                                          :sv "Officiell översättning av intyget till finska, svenska eller engelska"})])
+                           :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher texts))
+                                       (seven-day-attachment-followup metadata (:higher-education-degree-certificate-alien texts))
+                                       (merge (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-certificate texts))])
                                               {:sensitive-answer true,
                                                :params {:hidden false,
-                                                        :info-text {:label
-                                                                    {:en "",
-                                                                     :fi "** HUOM! Alla olevat vastausvaihtoehdot voivat näkyä harmaana. Tässä tilanteessa poista pohjakoulutusvaihtoehto \"Muualla kuin Suomessa suoritettu korkeakoulututkinto\" ja ole yhteydessä hakemasi korkeakoulun hakijapalveluihin. Tällöin voit lähettää muut muutoksesi ja pohjakoulutustietosi voidaan täydentää virkailijoiden toimesta myöhemmin.**",
-                                                                     :sv "**OBS! Svarsalternativen nedan kan vara gråa, vilket betyder att du inte kan svara på frågan. I sådant fall ta bort ditt grundutbildningsalternativ ”Högskoleexamen som avlagts annanstans än i Finland” och kontakta den högskola som du söker till. Då kan du fylla i dina övriga ändringar och högskolan kan komplettera uppgifterna om din utbildningsbakgrund senare.**"
-                                                                     }}}})])])
+                                                        :info-text {:label (:notification-disabled-options texts)}}})])])
                (name-of-degree-text-field metadata)
                (assoc (component/dropdown metadata)
                 :koodisto-source {:uri "kktutkinnot"
@@ -1013,13 +590,11 @@
                                   :allow-invalid? false}
                 :koodisto-ordered-by-user true ; TODO: check if this is required, then order options
                 :validators ["required"],
-                :label {:en "Degree level" :fi "Tutkintotaso" :sv "Examensnivå"})
+                :label (:finnish-higher-education-degree-level texts))
                (higher-education-text-field metadata)
                (country-of-completion metadata {})
                (assoc (component/info-element metadata)
-                 :label {:en "Click add if you want to add further qualifications."
-                         :fi "Paina lisää, jos haluat lisätä useampia tutkintoja."
-                         :sv "Tryck på lägg till om du vill lägga till flera examina."})])])
+                 :label (:add-more-qualifications texts))])])
 
 (defn- open-university-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -1029,63 +604,44 @@
                     :validators ["required"])
                  (higher-education-text-field metadata)
                  (assoc (component/text-field metadata)
-                    :label {:en "Study module",
-                            :fi "Opintokokonaisuus"
-                            :sv "Studiehelhet"}
+                    :label (:module texts)
                     :validators ["required"])
                  (assoc (component/text-field metadata)
-                    :label {:en "Scope of studies" :fi "Laajuus" :sv "Omfattning"}
+                    :label (:scope-of-studies texts)
                     :validators ["required"])
-                 (seven-day-attachment-followup metadata {:en "Open university / university of applied sciences studies",
-                                                 :fi "Todistus avoimen korkeakoulun opinnoista",
-                                                 :sv "Studier inom den öppna högskolan"})
+                 (seven-day-attachment-followup metadata (:certificate-open-studies texts))
                  (assoc (component/info-element metadata)
-                        :label {:en "Click add if you want to add further qualifications.",
-                                :fi "Paina lisää, jos haluat lisätä useampia opintokokonaisuuksia.",
-                                :sv "Tryck på lägg till om du vill lägga till flera studiehelheter."})])])
+                        :label (:add-more-studies texts))])])
 
 (defn- other-eligibility-option-followups [metadata]
   [(assoc (component/question-group metadata)
     :children [(year-of-completion metadata "2022" "1900")
                (assoc (component/text-area metadata)
-                      :label {:en "Description of your other eligibility"
-                              :fi "Kelpoisuuden kuvaus"
-                              :sv "Beskrivning av behörigheten"}
+                      :label (:base-education-other-description texts)
                       :params {:max-length "500"}
                       :validators ["required"])
-               (seven-day-attachment-followup metadata {:en "Other eligibility for higher education"
-                                               :fi "Todistus muusta korkeakoulukelpoisuudesta"
-                                               :sv "Övrig högskolebehörighet"})
+               (seven-day-attachment-followup metadata (:other-eligibility-attachment texts))
                (assoc (component/info-element metadata)
-                :label {:en "Click add if you want to add further qualifications."
-                        :fi "Paina lisää, jos haluat lisätä useampia kokonaisuuksia."
-                        :sv "Tryck på lägg till om du vill lägga till flera helheter."})])])
+                :label (:add-more-wholes texts))])])
 
 (defn- education-question [metadata]
   (assoc (component/multiple-choice metadata)
   :params {:hidden false,
-                        :info-text {:label {:en "[Read more about who can apply for bachelor's and master's programmes](https://opintopolku.fi/konfo/en/sivu/how-to-apply-for-bachelors-and-masters)",
-                                            :fi "Lue lisää siitä millä koulutuksella voit hakea
-                                               - [yliopistokoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-yliopistoon)
-                                               - [ammattikorkeakoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-ammattikorkeakouluun)",
-                                            :sv "Mer information om vem som kan söka till
-                                               - [universitetsutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-universitet)
-                                               - [yrkeshögskoleutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-yrkeshgskolor)
-                                               "}}},
+                        :info-text {:label (:read-who-can-apply texts)}},
                :koodisto-source {:uri "pohjakoulutuskklomake",
                                  :title "Kk-pohjakoulutusvaihtoehdot",
                                  :version 2,
                                  :allow-invalid? false},
                :koodisto-ordered-by-user true,
                :validators ["required"],
-               :label (:completed-education higher-base-education-module-texts),
-               :options [{:label (:matriculation-exam-in-finland higher-base-education-module-texts),
+               :label (:completed-education texts),
+               :options [{:label (:matriculation-exam-in-finland texts),
                           :value "pohjakoulutus_yo",
                           :followups (finnish-matriculation-examination-option-followups metadata)}
                          {:label (:pohjakoulutus_amp virkailija-texts),
                           :value "pohjakoulutus_amp",
                           :followups (vocational-upper-secondary-qualification-option-followups metadata)}
-                         {:label (:finnish-vocational-or-special higher-base-education-module-texts),
+                         {:label (:finnish-vocational-or-special texts),
                           :value "pohjakoulutus_amt",
                           :followups (finnish-vocational-or-special-option-followups metadata)}
                          {:label {:en "Bachelor’s/Master’s/Doctoral degree completed in Finland",
@@ -1141,45 +697,38 @@
 
 (defn- education-statistics-question [metadata]
   (assoc (component/single-choice-button metadata)
-         :label {:en "Have you completed general upper secondary education or a vocational qualification?"
-                 :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"
-                 :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
-         :params {:info-text {:label {:en "This is required for statistical reasons",
-                                      :fi "Tämä tieto kysytään tilastointia varten.",
-                                      :sv "Denna uppgift frågas för statistik."}}}
-         :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
+         :label (:have-you-completed texts)
+         :params {:info-text {:label (:required-for-statistics texts)}}
+         :options [{:label (:yes general-texts)
                     :value "0",
-                    :followups [(country-of-completion metadata {:info-text {:label {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification, school-level qualification, post-secondary level qualification, higher vocational level qualification, further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification.",
-                                                                            :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa, mutta olet suorittamassa sellaista, valitse se maa, jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto, ammatti- tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata.",
-                                                                            :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå, yrkesinriktad examen på högre nivå, yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}}})]}
-                   {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}]
+                    :followups [(country-of-completion metadata {:info-text {:label (:choose-country-of-latest-qualification texts)}})]}
+                   {:label (:have-not general-texts)
+                    :value "1"}]
+         :validators ["required"]
     ))
 
 (defn- name-of-higher-education-institution [metadata]
   (assoc  (component/text-field metadata)
-          :label {:en "Higher education institution", :fi "Korkeakoulu", :sv "Högskola"}
+          :label (:higher-education-institution texts)
           :validators ["required"]))
 
 (defn- education-question-before-2003 [metadata]
   (assoc (component/single-choice-button metadata)
-          :label {:en "Have you completed a university or university of applied sciences ( prev. polytechnic) degree in Finland before 2003?"
-                  :fi "Oletko suorittanut suomalaisen ammattikorkeakoulu- tai yliopistotutkinnon ennen vuotta 2003?"
-                  :sv "Har du avlagt en finländsk yrkeshögskole- eller universitetsexamen före år 2003?"}
+          :label (:have-you-completed-before-2003 texts)
           :params {:info-text
-                    {:label {:en "Write your university or university of applied sciences degree only if you have completed it before 2003. After that date the information of completed degrees will be received automatically from the higher education institutions. If you have completed a university/university of applied sciences degree or have received a study place in higher education in Finland after autumn 2014 your admission can be affected. More information on [the quota for first-time applicants](https://opintopolku.fi/konfo/en/sivu/provisions-and-restrictions-regarding-student-admissions-to-higher-education#quota-for-first-time-applicants).",
-                             :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa, jos olet suorittanut sen ennen vuotta 2003. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#ensikertalaiskiinti).",
-                             :sv "Ange här den högskoleexamen som du avlagt före år 2003. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om [kvoten för förstagångssökande](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#kvot-fr-frstagangsskande)."}}},
-          :options [{:label {:en "Yes", :fi "Kyllä", :sv "Ja"},
+                    {:label (:write-completed-before-2003 texts)}},
+          :options [{:label (:yes general-texts),
                      :value "0",
                      :followups [(year-of-completion metadata "2002" "1900")
                                  (name-of-degree metadata)
                                  (name-of-higher-education-institution metadata)]}
-                   {:label {:en "No", :fi "En", :sv "Nej"}, :value "1"}],
+                   {:label (:have-not general-texts)
+                    :value "1"}]
           :validators ["required"]))
 
 (defn base-education-module-higher [metadata]
   (assoc (component/form-section metadata)
-          :label (:educational-background higher-base-education-module-texts)
+          :label (:educational-background texts)
           :children [(education-question metadata)
                      (education-statistics-question metadata)
                      (education-question-before-2003 metadata)]))
