@@ -632,63 +632,43 @@
                :koodisto-ordered-by-user true,
                :validators ["required"],
                :label (:completed-education texts),
-               :options [{:label (:matriculation-exam-in-finland texts),
+               :options [{:label (:pohjakoulutus_yo virkailija-texts),
                           :value "pohjakoulutus_yo",
                           :followups (finnish-matriculation-examination-option-followups metadata)}
                          {:label (:pohjakoulutus_amp virkailija-texts),
                           :value "pohjakoulutus_amp",
                           :followups (vocational-upper-secondary-qualification-option-followups metadata)}
-                         {:label (:finnish-vocational-or-special texts),
+                         {:label (:pohjakoulutus_amt virkailija-texts),
                           :value "pohjakoulutus_amt",
                           :followups (finnish-vocational-or-special-option-followups metadata)}
-                         {:label {:en "Bachelor’s/Master’s/Doctoral degree completed in Finland",
-                                  :fi "Suomessa suoritettu korkeakoulututkinto",
-                                  :sv "Högskoleexamen som avlagts i Finland"},
+                         {:label (:pohjakoulutus_kk virkailija-texts),
                           :value "pohjakoulutus_kk",
                           :followups (finnish-higher-education-option-followups metadata)}
-                         {:label {:en "Upper secondary double degree completed in Finland (kaksoistutkinto)",
-                                  :fi "Suomessa suoritettu kaksoistutkinto (ammatillinen perustutkinto ja ylioppilastutkinto)",
-                                  :sv "Dubbelexamen som avlagts i Finland"},
-                          :value "pohjakoulutus_yo_ammatillinen",
+                         {:label (:pohjakoulutus_yo_ammatillinen virkailija-texts)
+                          :value "pohjakoulutus_yo_ammatillinen"
                           :followups (upper-secodary-double-degree-option-followups metadata)}
-                         {:label {:en "General upper secondary school syllabus completed in Finland (lukion oppimäärä ilman ylioppilastutkintoa)",
-                                  :fi "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa",
-                                  :sv "Gymnasiets lärokurs som avlagts i Finland utan studentexamen"},
+                         {:label (:pohjakoulutus_lk virkailija-texts)
                           :value "pohjakoulutus_lk",
                           :followups (gymnasium-without-yo-certificate-option-followups metadata)}
-                         {:label {:en "International matriculation examination completed in Finland (IB, EB and RP/DIA)",
-                                  :fi "Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)",
-                                  :sv "Internationell studentexamen som avlagts i Finland (IB, EB och RP/DIA)"},
-                          :value "pohjakoulutus_yo_kansainvalinen_suomessa",
+                         {:label (:pohjakoulutus_yo_kansainvalinen_suomessa virkailija-texts)
+                          :value "pohjakoulutus_yo_kansainvalinen_suomessa"
                           :followups (international-matriculation-exam-in-finland-option-followups metadata)}
-                         {:label {:en "Vocational upper secondary qualification completed in Finland (kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto)",
-                                  :fi "Suomessa suoritettu kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto",
-                                  :sv "Yrkesinriktad examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"},
+                         {:label (:pohjakoulutus_amv virkailija-texts)
                           :value "pohjakoulutus_amv",
                           :followups (vocational-upper-secondary-qualification-finland-option-followups metadata)}
-                         {:label {:en "Upper secondary education completed outside Finland (general or vocational)",
-                                  :fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun",
-                                  :sv "Övrig examen som avlagts annanstans än i Finland, och ger behörighet för högskolestudier i ifrågavarande land"},
+                         {:label (:pohjakoulutus_ulk virkailija-texts)
                           :value "pohjakoulutus_ulk",
                           :followups (upper-secondary-qualification-not-finland-option-followups metadata)}
-                         {:label {:en "International matriculation examination completed outside Finland (IB, EB and RP/DIA)",
-                                  :fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)",
-                                  :sv "Internationell studentexamen som avlagts annanstans än i Finland (IB, EB och RP/DIA)"},
+                         {:label (:pohjakoulutus_yo_ulkomainen virkailija-texts)
                           :value "pohjakoulutus_yo_ulkomainen",
                           :followups (internation-matriculation-examination-option-followups metadata)}
-                         {:label {:en "Bachelor’s/Master’s/Doctoral degree completed outside Finland",
-                                  :fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto",
-                                  :sv "Högskoleexamen som avlagts annanstans än i Finland"},
+                         {:label (:pohjakoulutus_kk_ulk virkailija-texts)
                           :value "pohjakoulutus_kk_ulk",
                           :followups (non-finnish-higher-education-option-followups metadata)}
-                         {:label {:en "Open university/UAS studies required by the higher education institution",
-                                  :fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot",
-                                  :sv "Studier som högskolan kräver vid en öppen högskola"},
+                         {:label (:pohjakoulutus_avoin virkailija-texts)
                           :value "pohjakoulutus_avoin",
                           :followups (open-university-option-followups metadata)}
-                         {:label {:en "Other eligibility for higher education",
-                                  :fi "Muu korkeakoulukelpoisuus",
-                                  :sv "Övrig högskolebehörighet"},
+                         {:label (:pohjakoulutus_muu virkailija-texts)
                           :value "pohjakoulutus_muu",
                           :followups (other-eligibility-option-followups metadata)}]))
 
