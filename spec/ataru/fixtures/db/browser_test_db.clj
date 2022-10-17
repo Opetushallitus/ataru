@@ -7,7 +7,7 @@
             [ataru.db.db :as db]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as person-info-module]
-            [ataru.component-data.base-education-module-kk :refer [base-education-module-higher]]
+            [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.config.core :refer [config]]
             [ataru.db.migrations :as migrations]
             [ataru.log.audit-log :as audit-log]))

@@ -3,7 +3,7 @@
             [cheshire.core :as json]
             [ataru.application.option-visibility :refer [visibility-checker]]
             [ataru.application.review-states :as application-review-states]
-            [ataru.component-data.base-education-module-kk :as higher-module]
+            [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]

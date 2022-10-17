@@ -1,4 +1,4 @@
-(ns ataru.component-data.base-education-module-kk
+(ns ataru.component-data.base-education-module-higher
   (:require [ataru.translations.texts :refer [general-texts virkailija-texts]]
             [ataru.translations.education-module-higher-texts :refer [texts]]
             [ataru.component-data.component :as component]

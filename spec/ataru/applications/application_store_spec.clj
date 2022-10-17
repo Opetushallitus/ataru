@@ -1,7 +1,7 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
             [ataru.applications.application-store-queries :as queries]
-            [ataru.component-data.base-education-module-kk :as higher-module]
+            [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.db.db :as db]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
