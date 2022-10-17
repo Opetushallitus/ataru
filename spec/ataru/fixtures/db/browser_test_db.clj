@@ -7,7 +7,7 @@
             [ataru.db.db :as db]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as person-info-module]
-            [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
+            [ataru.component-data.base-education-module-kk :refer [base-education-module-higher]]
             [ataru.config.core :refer [config]]
             [ataru.db.migrations :as migrations]
             [ataru.log.audit-log :as audit-log]))
@@ -108,7 +108,7 @@
    :locked-by        nil
    :content          [(component/hakukohteet)
                       (person-info-module/person-info-module)
-                      (higher-education-base-education-module/module metadata)
+                      (base-education-module-higher metadata)
                       {:label                  {:fi "Random liite"
                                                 :sv "Randöm liitö"}
                        :fieldClass             "formField"

@@ -6,7 +6,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.component-data.base-education-module-kk :as higher-module]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.person-info-fields :as person-info-fields]
@@ -445,7 +445,7 @@
 
                                      :else
                                      [])
-        excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
+        excluded-attachment-ids-when-yo-and-jyemp (higher-module/non-yo-attachment-ids form)
         questions                  (demo/apply-when-demo db form demo/remove-unwanted-validators (:content form))
         hakukohde-oids-to-duplicate (if-let [application-hakukohde-oids (get-in db [:application :hakukohde])]
                                       application-hakukohde-oids

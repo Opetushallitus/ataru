@@ -1,7 +1,10 @@
 (ns ataru.component-data.base-education-module-kk
   (:require [ataru.translations.texts :refer [general-texts virkailija-texts]]
             [ataru.translations.education-module-higher-texts :refer [texts]]
-            [ataru.component-data.component :as component]))
+            [ataru.component-data.component :as component]
+            [ataru.util :as util]))
+
+(def higher-completed-base-education-id "higher-completed-base-education")
 
 (defn- koski-info-notification [metadata]
   (assoc (component/info-element metadata)
@@ -624,7 +627,7 @@
 
 (defn- education-question [metadata]
   (assoc (component/multiple-choice metadata)
-    :id "higher-completed-base-education"
+    :id higher-completed-base-education-id
     :params {:hidden false,
                         :info-text {:label (:read-who-can-apply texts)}},
                :koodisto-source {:uri "pohjakoulutuskklomake",
@@ -714,3 +717,25 @@
           :children [(education-question metadata)
                      (education-statistics-question metadata)
                      (education-question-before-2003 metadata)]))
+
+(def higher-education-base-education-questions
+  (->> (base-education-module-higher {})
+       :children
+       util/flatten-form-fields
+       (map (comp name :id))
+       set))
+
+(defn non-yo-attachment-ids
+  [form]
+  (->> (util/find-field (:content form) higher-completed-base-education-id)
+       :options
+       (remove #(contains? #{"pohjakoulutus_yo"
+                             "pohjakoulutus_yo_ammatillinen"
+                             "pohjakoulutus_yo_kansainvalinen_suomessa"
+                             "pohjakoulutus_yo_ulkomainen"}
+                           (:value %)))
+       (mapcat :followups)
+       util/flatten-form-fields
+       (filter #(= "attachment" (:fieldType %)))
+       (map :id)
+       set))
