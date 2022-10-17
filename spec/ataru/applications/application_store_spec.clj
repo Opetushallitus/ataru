@@ -1,7 +1,7 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
             [ataru.applications.application-store-queries :as queries]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.component-data.base-education-module-kk :as higher-module]
             [ataru.db.db :as db]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
@@ -267,7 +267,7 @@
                 "pohjakoulutus_ulk--attachment"
                 "pohjakoulutus_kk--attachment"
                 "pohjakoulutus_muu--attachment"}
-              (hebem/non-yo-attachment-ids
+              (higher-module/non-yo-attachment-ids
                form-fixtures/base-education-attachment-test-form))))
 
 (defn- do-payment-obligation-review

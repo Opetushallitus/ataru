@@ -3,7 +3,7 @@
             [cheshire.core :as json]
             [ataru.application.option-visibility :refer [visibility-checker]]
             [ataru.application.review-states :as application-review-states]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.component-data.base-education-module-kk :as higher-module]
             [ataru.db.db :as db]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.dob :as dob]
@@ -210,7 +210,7 @@
   [application applied-hakukohteet old-answers form update? connection]
   (let [flat-form-content                         (-> form :content util/flatten-form-fields)
         fields-by-id                              (util/form-fields-by-id form)
-        excluded-attachment-ids-when-yo-and-jyemp (hebem/non-yo-attachment-ids form)
+        excluded-attachment-ids-when-yo-and-jyemp (higher-module/non-yo-attachment-ids form)
         answers-by-key                            (-> application :content :answers util/answers-by-key)
         visible-attachments                       (filter-visible-attachments answers-by-key flat-form-content fields-by-id)
         reviews                                   (create-application-attachment-reviews
