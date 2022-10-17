@@ -1847,41 +1847,41 @@
                                                               :sv "Yrkesinriktad grundexamen som avlagts i Finland"
                                                               :en "Vocational upper secondary qualification completed in Finland (ammatillinen perustutkinto)"}
    :pohjakoulutus_amt                                        {:fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
-                                                              :sv "I Finland avlagd yrkes- eller specialyrkesexamen"
-                                                              :en "EN: Suomessa suoritettu ammatti- tai erikoisammattitutkinto"}
-   :pohjakoulutus_amv                                        {:fi "Suomessa suoritettu kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
-                                                              :sv "Yrkesinriktad examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"
-                                                              :en "Former vocational qualification completed in Finland (kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto)"}
-   :pohjakoulutus_avoin                                      {:fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
-                                                              :sv "Studier inom öppen högskoleundervisning som högskolan förutsätter"
-                                                              :en "EN: Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"}
+                                                              :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"
+                                                              :en "Further or specialist vocational qualification completed in Finland (ammatti- tai erikoisammattitutkinto)"}
+   :pohjakoulutus_amv                                        {:en "Vocational upper secondary qualification completed in Finland (kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto)"
+                                                              :fi "Suomessa suoritettu kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
+                                                              :sv "Yrkesinriktad examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"}
+   :pohjakoulutus_avoin                                      {:en "Open university/UAS studies required by the higher education institution"
+                                                              :fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
+                                                              :sv "Studier som högskolan kräver vid en öppen högskola"}
    :pohjakoulutus_kk                                         {:fi "Suomessa suoritettu korkeakoulututkinto"
-                                                              :sv "I Finland avlagd högskoleexamen"
-                                                              :en "EN: Suomessa suoritettu korkeakoulututkinto"}
-   :pohjakoulutus_kk_ulk                                     {:fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
-                                                              :sv "Högskoleexamen som avlagt annanstans än i Finland"
-                                                              :en "EN: Muualla kuin Suomessa suoritettu korkeakoulututkinto"}
-   :pohjakoulutus_lk                                         {:fi "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
-                                                              :sv "I Finland avlagd gymnasiets lärokurs utan studentexamen"
-                                                              :en "EN: Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"}
-   :pohjakoulutus_muu                                        {:fi "Muu korkeakoulukelpoisuus"
-                                                              :sv "Annan högskolebehörighet"
-                                                              :en "EN: Muu korkeakoulukelpoisuus"}
-   :pohjakoulutus_ulk                                        {:fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                                              :sv "Annan examen som avlagts annanstans än i Finland och som i ifrågavarande land ger ansökningsbehörighet för högskola"
-                                                              :en "EN: Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"}
+                                                              :sv "Högskoleexamen som avlagts i Finland"
+                                                              :en "Bachelor’s/Master’s/Doctoral degree completed in Finland"}
+   :pohjakoulutus_kk_ulk                                     {:en "Bachelor’s/Master’s/Doctoral degree completed outside Finland"
+                                                              :fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
+                                                              :sv "Högskoleexamen som avlagts annanstans än i Finland"}
+   :pohjakoulutus_lk                                         {:en "General upper secondary school syllabus completed in Finland (lukion oppimäärä ilman ylioppilastutkintoa)"
+                                                              :fi "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
+                                                              :sv "Gymnasiets lärokurs som avlagts i Finland utan studentexamen"}
+   :pohjakoulutus_muu                                        {:en "Other eligibility for higher education"
+                                                              :fi "Muu korkeakoulukelpoisuus"
+                                                              :sv "Övrig högskolebehörighet"}
+   :pohjakoulutus_ulk                                        {:en "Upper secondary education completed outside Finland (general or vocational)"
+                                                              :fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
+                                                              :sv "Övrig examen som avlagts annanstans än i Finland, och ger behörighet för högskolestudier i ifrågavarande land"}
    :pohjakoulutus_yo                                         {:fi "Suomessa suoritettu ylioppilastutkinto"
-                                                              :sv "I Finland avlagd studentexamen"
-                                                              :en "EN: Suomessa suoritettu ylioppilastutkinto"}
-   :pohjakoulutus_yo_ammatillinen                            {:fi "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"
-                                                              :sv "Yrkesinriktad grundexamen och studentexamen (dubbelexamen)"
-                                                              :en "EN: Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"}
-   :pohjakoulutus_yo_kansainvalinen_suomessa                 {:fi "Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                                              :sv "I Finland avlagd internationell studentexamen"
-                                                              :en "EN: Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
-   :pohjakoulutus_yo_ulkomainen                              {:fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                                              :sv "Internationell studentexamen som avlagts annanstans än i Finland"
-                                                              :en "EN: Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"}
+                                                              :sv "Studentexamen som avlagts i Finland"
+                                                              :en "Matriculation examination completed in Finland"}
+   :pohjakoulutus_yo_ammatillinen                            {:en "Upper secondary double degree completed in Finland (kaksoistutkinto)",
+                                                              :fi "Suomessa suoritettu kaksoistutkinto (ammatillinen perustutkinto ja ylioppilastutkinto)",
+                                                              :sv "Dubbelexamen som avlagts i Finland"}
+   :pohjakoulutus_yo_kansainvalinen_suomessa                 {:en "International matriculation examination completed in Finland (IB, EB and RP/DIA)"
+                                                              :fi "Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)"
+                                                              :sv "Internationell studentexamen som avlagts i Finland (IB, EB och RP/DIA)"}
+   :pohjakoulutus_yo_ulkomainen                              {:en "International matriculation examination completed outside Finland (IB, EB and RP/DIA)"
+                                                              :fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)"
+                                                              :sv "Internationell studentexamen som avlagts annanstans än i Finland (IB, EB och RP/DIA)"}
    :pohjakoulutusristiriita                                  {:fi "Pohjakoulutusristiriita"
                                                               :sv "Motstridighet i grundutbildningen"
                                                               :en "EN: Pohjakoulutusristiriita"}

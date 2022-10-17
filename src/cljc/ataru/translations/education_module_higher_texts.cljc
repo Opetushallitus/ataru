@@ -139,9 +139,6 @@
    :completed-education                                    {:en "Fill in the education that you have completed or will complete during the admission process."
                                                             :fi "Ilmoita suorittamasi koulutukset. Ilmoita myös ne, jotka suoritat hakukautena."
                                                             :sv "Ange de utbildningar som du har avlagt. Ange också dem som du avlägger under ansökningsperioden."}
-   :matriculation-exam-in-finland                          {:en "Matriculation examination completed in Finland"
-                                                            :fi "Suomessa suoritettu ylioppilastutkinto"
-                                                            :sv "Studentexamen som avlagts i Finland"}
    :matriculation-exam                                     {:en "Matriculation examination"
                                                             :fi "Ylioppilastutkinto"
                                                             :sv "Studentexamen"}
@@ -327,9 +324,6 @@
    :click-to-add-more-qualifications                       {:en "Click ADD if you want add further qualifications."
                                                             :fi "Paina LISÄÄ jos haluat lisätä useampia opintokokonaisuuksia."
                                                             :sv "Tryck på LÄGG TILL om du vill lägga till flera studiehelheter."}
-   :finnish-vocational-or-special                          {:en "Further or specialist vocational qualification completed in Finland (ammatti- tai erikoisammattitutkinto)"
-                                                            :fi "Suomessa suoritettu ammatti- tai erikoisammattitutkinto"
-                                                            :sv "Yrkesexamen eller specialyrkesexamen som avlagts i Finland"}
    :finnish-special-before-2018                            {:en "Have you completed you Further vocational or Specialist vocational qualification in 2018?"
                                                             :fi "Oletko suorittanut ammatti- tai erikoisammattitutkinnon vuonna 2018?"
                                                             :sv "Har du avlagt en yrkesexamen eller en specialyrkesexamen år 2018?"}
