@@ -2,7 +2,7 @@
   (:require
    [ataru.component-data.base-education-module :refer [base-education-questions]]
    [ataru.component-data.component :refer [lupatiedot-questions]]
-   [ataru.component-data.base-education-module-kk :refer [higher-education-base-education-questions]]
+   [ataru.component-data.base-education-module-higher :refer [higher-education-base-education-questions]]
    [ataru.component-data.person-info-module :refer [person-info-questions]]))
 
 (def answer-to-always-include?

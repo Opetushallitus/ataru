@@ -1,6 +1,6 @@
 (ns ataru.fixtures.form
   (:require [ataru.component-data.component :as component]
-            [ataru.component-data.base-education-module-kk :refer [base-education-module-higher]]
+            [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.component-data.person-info-module :as person-info-module]
             [clojure.string :as string]))
 
