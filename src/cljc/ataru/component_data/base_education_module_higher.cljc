@@ -125,26 +125,32 @@
             :hidden false,
             :info-text {:label (:how-to-share-link-to-my-studyinfo texts)}}))
 
+(defn- have-you-graduated-with-followups
+  [metadata yes-followups no-followups]
+  (assoc (component/single-choice-button metadata)
+    :label (:have-you-graduated texts)
+    :options [{:label (:yes general-texts)
+               :value "0",
+               :followups yes-followups}
+              {:label (:have-not general-texts)
+               :value "1",
+               :followups no-followups}]
+    :validators ["required"]))
+
 (defn- finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
     :children [(assoc (year-of-completion "pohjakoulutus_kk--completion-date" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts)
-                                                   :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher-finland texts))
-                                                               (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
-                                                               (share-link-followup metadata)]}
-                                                  {:label (:have-not general-texts)
-                                                   :value "1",
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:transcript-of-records-higher-finland-in-progress texts))
-                                                               (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-in-progress texts))
-                                                               (share-link-followup metadata)]}]
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata
+                                         [(seven-day-attachment-followup metadata (:transcript-of-records-higher-finland texts))
+                                          (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
+                                          (share-link-followup metadata)]
+                                         [(estimated-graduation-date-text-field metadata)
+                                          (seven-day-attachment-followup metadata (:transcript-of-records-higher-finland-in-progress texts))
+                                          (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-in-progress texts))
+                                          (share-link-followup metadata)])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
@@ -170,16 +176,10 @@
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="}
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts)
-                                                   :value "0",
-                                                   :followups []}
-                                                  {:label (:have-not general-texts)
-                                                   :value "1",
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational texts))]}]
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata
+                                         []
+                                         [(estimated-graduation-date-text-field metadata)
+                                          (seven-day-attachment-followup metadata (:preliminary-certificate-vocational texts))])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2018,
                                        :comparison-operator "<"},
@@ -216,15 +216,9 @@
                       :options [(assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts),
-                                                   :value "0"}
-                                                  {:label (:have-not general-texts),
-                                                   :value "1",
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))]}],
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata []
+                                                                          [(estimated-graduation-date-text-field metadata)
+                                                                           (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))])])
                           (assoc (component/text-field-conditional-option "2")
                            :condition {:answer-compared-to 2017,
                                        :comparison-operator ">"},
@@ -278,16 +272,9 @@
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts)
-                                                   :value "0",
-                                                   :followups []}
-                                                  {:label (:have-not general-texts)
-                                                   :value "1",
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))]}]
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata []
+                                                                          [(estimated-graduation-date-text-field metadata)
+                                                                           (seven-day-attachment-followup metadata (:preliminary-certificate-vocational-basic texts))])])
                           (assoc (component/text-field-conditional-option "2")
                            :condition {:answer-compared-to 2017,
                                        :comparison-operator "="},
@@ -325,20 +312,13 @@
   [(assoc (year-of-completion "pohjakoulutus_lk--year-of-completion" metadata "2022" "1900")
     :options [(assoc (component/text-field-conditional-option "0")
                :condition {:answer-compared-to 2022, :comparison-operator "="},
-               :followups [(assoc (component/single-choice-button metadata)
-                             :label (:have-you-graduated texts)
-                            :options [{:label (:yes general-texts)
-                                       :value "0",
-                                       :followups [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))]}
-                                      {:label (:have-not general-texts)
-                                       :value "1",
-                                       :followups [(estimated-graduation-date-text-field metadata)
-                                                   (seven-day-attachment-followup metadata (:transcript-of-records-secondary-finland texts))]}]
-                            :validators ["required"])])
-              {:label {:fi "", :sv ""},
-               :value "1",
-               :condition {:answer-compared-to 2022, :comparison-operator "<"},
-               :followups [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))]}])])
+               :followups [(have-you-graduated-with-followups metadata
+                             [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))]
+                             [(estimated-graduation-date-text-field metadata)
+                             (seven-day-attachment-followup metadata (:transcript-of-records-secondary-finland texts))])])
+              (assoc (component/text-field-conditional-option "1")
+               :condition {:answer-compared-to 2022, :comparison-operator "<"}
+               :followups [(seven-day-attachment-followup metadata (:upper-secondary-school-attachment texts))])])])
 
 (defn- international-matriculation-exam-in-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
@@ -366,45 +346,27 @@
                                          :label (:matriculation-exam texts)
                                         :options [{:label (:international-baccalaureate texts)
                                                    :value "0",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:ib-diploma-finland texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata (:predicted-grades-ib-finland texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib-finland texts))]}]
-                                                                :validators ["required"])]}
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                [(seven-day-attachment-followup metadata (:ib-diploma-finland texts))]
+                                                                [(estimated-graduation-date-text-field metadata)
+                                                                  (seven-day-attachment-followup metadata (:predicted-grades-ib-finland texts))
+                                                                  (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib-finland texts))])]}
                                                   {:label (:european-baccalaureate texts)
                                                    :value "1",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma-finland texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata (:predicted-grades-eb-finland texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-eb-finland texts))]}]
-                                                                :validators ["required"])]}
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                 [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma-finland texts))]
+                                                                 [(estimated-graduation-date-text-field metadata)
+                                                                  (seven-day-attachment-followup metadata (:predicted-grades-eb-finland texts))
+                                                                  (deadline-next-to-request-attachment-followup metadata (:diploma-programme-eb-finland texts))])]}
                                                   {:label (:reifeprufung texts)
                                                    :value "2",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:dia-diploma-finland texts))
-                                                                                       (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (seven-day-attachment-followup metadata (:grade-page-dia-finland texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:dia-diploma-finland texts))
-                                                                                       (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))]}]
-                                                                :validators ["required"])]}]
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                 [(seven-day-attachment-followup metadata (:dia-diploma-finland texts))
+                                                                  (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))]
+                                                                 [(estimated-graduation-date-text-field metadata)
+                                                                  (seven-day-attachment-followup metadata (:grade-page-dia-finland texts))
+                                                                  (deadline-next-to-request-attachment-followup metadata (:dia-diploma-finland texts))
+                                                                  (seven-day-attachment-followup metadata (:equivalency-certificate-second-dia texts))])]}]
                                         :validators ["required"])])])
                (education-institution-text-field metadata)
                (assoc (component/info-element metadata)
@@ -455,28 +417,22 @@
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts)
-                                                   :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata (:upper-secondary-education-diploma texts))
-                                                               (assoc (component/single-choice-button metadata)
-                                                                 :label (:diploma-in-fi-sv-en texts)
-                                                                 :params {:hidden false},
-                                                                 :options [{:label (:yes general-texts)
-                                                                           :value "0"}
-                                                                          {:label (:no general-texts)
-                                                                           :value "1"
-                                                                           :followups [(seven-day-attachment-followup metadata (:translation-of-diploma texts))]}],
-                                                                :validators ["required"])]}
-                                                  {:label (:have-not general-texts)
-                                                   :value "1"
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:transcript-of-records-upper-secondary texts))
-                                                               (deadline-next-to-request-attachment-followup metadata (:original-upper-secondary-diploma texts))
-                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-study-records texts))
-                                                                                                           (deadline-next-to-request-attachment-followup metadata (:translation-of-diploma texts))])]}]
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata
+                                         [(seven-day-attachment-followup metadata (:upper-secondary-education-diploma texts))
+                                           (assoc (component/single-choice-button metadata)
+                                             :label (:diploma-in-fi-sv-en texts)
+                                             :params {:hidden false},
+                                             :options [{:label (:yes general-texts)
+                                                       :value "0"}
+                                                      {:label (:no general-texts)
+                                                       :value "1"
+                                                       :followups [(seven-day-attachment-followup metadata (:translation-of-diploma texts))]}]
+                                             :validators ["required"])]
+                                         [(estimated-graduation-date-text-field metadata)
+                                           (seven-day-attachment-followup metadata (:transcript-of-records-upper-secondary texts))
+                                           (deadline-next-to-request-attachment-followup metadata (:original-upper-secondary-diploma texts))
+                                           (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-study-records texts))
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:translation-of-diploma texts))])])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"}
@@ -513,43 +469,25 @@
                                         :label (:matriculation-exam texts)
                                         :options [{:label (:international-baccalaureate texts)
                                                    :value "0",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:ib-diploma texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                 [(seven-day-attachment-followup metadata (:ib-diploma texts))]
+                                                                 [(estimated-graduation-date-text-field metadata)
                                                                                        (deadline-next-to-request-attachment-followup metadata (:predicted-grades-ib texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib texts))]}]
-                                                                :validators ["required"])]}
+                                                                                       (deadline-next-to-request-attachment-followup metadata (:diploma-programme-ib texts))])]}
                                                   {:label (:european-baccalaureate texts)
                                                    :value "1",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:predicted-grades-eb texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:european-baccalaureate-diploma texts))]}],
-                                                                 :validators ["required"])]}
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                                                  [(seven-day-attachment-followup metadata (:european-baccalaureate-diploma texts))]
+                                                                                                  [(estimated-graduation-date-text-field metadata)
+                                                                                                    (deadline-next-to-request-attachment-followup metadata (:predicted-grades-eb texts))
+                                                                                                    (deadline-next-to-request-attachment-followup metadata (:european-baccalaureate-diploma texts))])]}
                                                   {:label (:reifeprufung texts)
                                                    :value "2",
-                                                   :followups [(assoc (component/single-choice-button metadata)
-                                                                 :label (:have-you-graduated texts)
-                                                                :options [{:label (:yes general-texts)
-                                                                           :value "0",
-                                                                           :followups [(seven-day-attachment-followup metadata (:reifeprufung-diploma texts))]}
-                                                                          {:label (:have-not general-texts)
-                                                                           :value "1",
-                                                                           :followups [(estimated-graduation-date-text-field metadata)
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:grade-page-dia texts))
-                                                                                       (deadline-next-to-request-attachment-followup metadata (:dia-diploma texts))]}]
-                                                                 :validators ["required"])]}]
+                                                   :followups [(have-you-graduated-with-followups metadata
+                                                                                                  [(seven-day-attachment-followup metadata (:reifeprufung-diploma texts))]
+                                                                                                  [(estimated-graduation-date-text-field metadata)
+                                                                                                    (deadline-next-to-request-attachment-followup metadata (:grade-page-dia texts))
+                                                                                                    (deadline-next-to-request-attachment-followup metadata (:dia-diploma texts))])]}]
                                         :validators ["required"])])])
                (education-institution-text-field metadata)
                (country-of-completion "pohjakoulutus_yo-country" metadata {})
@@ -562,21 +500,15 @@
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022
                                        :comparison-operator "="}
-                           :followups [(assoc (component/single-choice-button metadata)
-                                         :label (:have-you-graduated texts)
-                                        :options [{:label (:yes general-texts)
-                                                   :value "0",
-                                                   :followups [(seven-day-attachment-followup metadata (:transcript-of-records-higher texts))
-                                                               (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
-                                                               (are-your-attachments-in-fi-se-en-followup metadata[(seven-day-attachment-followup metadata (:translation-of-certificate texts))])]}
-                                                  {:label (:have-not general-texts)
-                                                   :value "1",
-                                                   :followups [(estimated-graduation-date-text-field metadata)
-                                                               (seven-day-attachment-followup metadata (:transcript-of-records-in-progress texts))
-                                                               (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-alien-in-progress texts))
-                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-transcript-of-records texts))
-                                                                                                           (deadline-next-to-request-attachment-followup metadata (:translation-of-degree-higher texts))])]}],
-                                        :validators ["required"])])
+                           :followups [(have-you-graduated-with-followups metadata
+                                                                          [(seven-day-attachment-followup metadata (:transcript-of-records-higher texts))
+                                                                            (seven-day-attachment-followup metadata (:higher-education-degree-certificate texts))
+                                                                            (are-your-attachments-in-fi-se-en-followup metadata[(seven-day-attachment-followup metadata (:translation-of-certificate texts))])]
+                                                                          [(estimated-graduation-date-text-field metadata)
+                                                                            (seven-day-attachment-followup metadata (:transcript-of-records-in-progress texts))
+                                                                            (deadline-next-to-request-attachment-followup metadata (:higher-education-degree-certificate-alien-in-progress texts))
+                                                                            (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-transcript-of-records texts))
+                                                                                                           (deadline-next-to-request-attachment-followup metadata (:translation-of-degree-higher texts))])])])
                           (assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"}
