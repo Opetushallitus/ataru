@@ -104,8 +104,9 @@
    :validators ["required"]))
 
 (defn- country-of-completion
-  [metadata params]
+  [id metadata params]
   (assoc (component/dropdown metadata)
+    :id id
     :params params
     :koodisto-source {:uri "maatjavaltiot2"
                      :title "Maat ja valtiot"
@@ -480,7 +481,7 @@
                                        (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup metadata (:translation-of-diploma texts))])])])
                (name-of-degree-text-field metadata)
                (education-institution-text-field metadata)
-               (country-of-completion metadata {})
+               (country-of-completion "pohjakoulutus_ulk-country" metadata {})
                (assoc (component/info-element metadata)
                 :label (:add-more-qualifications texts))])])
 
@@ -548,7 +549,7 @@
                                                                  :validators ["required"])]}]
                                         :validators ["required"])])])
                (education-institution-text-field metadata)
-               (country-of-completion metadata {})
+               (country-of-completion "pohjakoulutus_yo-country" metadata {})
                (assoc (component/info-element metadata)
                 :label (:add-more-qualifications texts))])])
 
@@ -589,7 +590,7 @@
                 :validators ["required"],
                 :label (:finnish-higher-education-degree-level texts))
                (higher-education-text-field metadata)
-               (country-of-completion metadata {})
+               (country-of-completion "pohjakoulutus_kk_ulk-country" metadata {})
                (assoc (component/info-element metadata)
                  :label (:add-more-qualifications texts))])])
 
@@ -623,7 +624,8 @@
 
 (defn- education-question [metadata]
   (assoc (component/multiple-choice metadata)
-  :params {:hidden false,
+    :id "higher-completed-base-education"
+    :params {:hidden false,
                         :info-text {:label (:read-who-can-apply texts)}},
                :koodisto-source {:uri "pohjakoulutuskklomake",
                                  :title "Kk-pohjakoulutusvaihtoehdot",
@@ -674,11 +676,12 @@
 
 (defn- education-statistics-question [metadata]
   (assoc (component/single-choice-button metadata)
+         :id "secondary-completed-base-education"
          :label (:have-you-completed texts)
          :params {:info-text {:label (:required-for-statistics texts)}}
          :options [{:label (:yes general-texts)
                     :value "0",
-                    :followups [(country-of-completion metadata {:info-text {:label (:choose-country-of-latest-qualification texts)}})]}
+                    :followups [(country-of-completion "secondary-completed-base-education–country" metadata {:info-text {:label (:choose-country-of-latest-qualification texts)}})]}
                    {:label (:have-not general-texts)
                     :value "1"}]
          :validators ["required"]
@@ -691,12 +694,13 @@
 
 (defn- education-question-before-2003 [metadata]
   (assoc (component/single-choice-button metadata)
+          :id "finnish-vocational-before-1995"
           :label (:have-you-completed-before-2003 texts)
           :params {:info-text
                     {:label (:write-completed-before-2003 texts)}},
           :options [{:label (:yes general-texts),
                      :value "0",
-                     :followups [(year-of-completion "pohjakoulutus_2003--year-of-completion" metadata "2002" "1900")
+                     :followups [(year-of-completion "finnish-vocational-before-1995--year-of-completion" metadata "2002" "1900")
                                  (name-of-degree metadata)
                                  (name-of-higher-education-institution metadata)]}
                    {:label (:have-not general-texts)
