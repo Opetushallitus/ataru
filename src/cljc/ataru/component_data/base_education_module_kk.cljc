@@ -15,7 +15,7 @@
 (defn- scope-of-education-unit-dropdown [metadata]
   (assoc (component/dropdown metadata)
     :label (:scope-unit texts)
-    :options [{:label {:courses texts},
+    :options [{:label (:courses texts),
                :value "0"}
               {:label (:ects-credits texts),
                :value "1"}
@@ -47,8 +47,9 @@
     :label (:educational-institution texts)
     :validators ["required"]))
 
-(defn- year-of-completion [metadata max-value min-value]
+(defn- year-of-completion [id metadata max-value min-value]
   (assoc (component/text-field metadata)
+    :id id
     :label (:year-of-completion texts)
     :params {:size "S"
              :numeric true
@@ -115,14 +116,14 @@
 
 (defn- share-link-followup [metadata]
   (assoc (component/text-field metadata)
-    :label (:share-link-to-studyinfo texts)
+    :label (:share-link-to-my-studyinfo texts)
     :params {:size "L",
             :hidden false,
             :info-text {:label (:how-to-share-link-to-my-studyinfo texts)}}))
 
 (defn- finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_kk--completion-date" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
@@ -161,7 +162,7 @@
 
 (defn- finnish-vocational-or-special-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_amt--year-of-completion" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="}
@@ -207,15 +208,14 @@
   [(assoc (component/info-element metadata)
           :text (:check-if-really-vocational texts))
    (assoc (component/question-group metadata)
-          :children [(assoc (year-of-completion metadata "2022" "1994")
+          :children [(assoc (year-of-completion "pohjakoulutus_amp--year-of-completion" metadata "2022" "1994")
                       :options [(assoc (component/text-field-conditional-option "1")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
                            :followups [(assoc (component/single-choice-button metadata)
                                          :label (:have-you-graduated texts)
                                         :options [{:label (:yes general-texts),
-                                                   :value "0",
-                                                   :followups []}
+                                                   :value "0"}
                                                   {:label (:have-not general-texts),
                                                    :value "1",
                                                    :followups [(estimated-graduation-date-text-field metadata)
@@ -257,7 +257,7 @@
                 :label (:add-more-qualifications texts))])])
 
 (defn- finnish-matriculation-examination-option-followups [metadata]
-  [(assoc (year-of-completion metadata "2022" "1900")
+  [(assoc (year-of-completion "pohjakoulutus_yo--yes-year-of-completion" metadata "2022" "1900")
      :options [(assoc (component/text-field-conditional-option "0")
                 :condition {:answer-compared-to 1990, :comparison-operator "<"},
                 :followups [(seven-day-attachment-followup metadata (:matriculation-exam-certificate texts))])
@@ -269,8 +269,8 @@
 (defn- upper-secodary-double-degree-option-followups [metadata]
   [(assoc (component/question-group metadata)
     :children [(assoc (component/info-element metadata)
-                 :text (:automatic-marticulation-info texts))
-               (assoc (year-of-completion metadata "2022" "1900")
+                 :text (:automatic-matriculation-info texts))
+               (assoc (year-of-completion "pohjakoulutus_yo_ammatillinen--vocational-completion-year" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
@@ -318,7 +318,7 @@
                 :label (:add-more-qualifications texts))])])
 
 (defn- gymnasium-without-yo-certificate-option-followups [metadata]
-  [(assoc (year-of-completion metadata "2022" "1900")
+  [(assoc (year-of-completion "pohjakoulutus_lk--year-of-completion" metadata "2022" "1900")
     :options [(assoc (component/text-field-conditional-option "0")
                :condition {:answer-compared-to 2022, :comparison-operator "="},
                :followups [(assoc (component/single-choice-button metadata)
@@ -338,7 +338,7 @@
 
 (defn- international-matriculation-exam-in-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_yo_kansainvalinen_suomessa--year-of-completion" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
@@ -410,7 +410,7 @@
   [(assoc (component/info-element metadata)
      :text (:check-if-really-opistoaste texts))
    (assoc (component/question-group metadata)
-    :children [(year-of-completion metadata "2005" "1900")
+    :children [(year-of-completion "pohjakoulutus_amv--year-of-completion" metadata "2005" "1900")
                (assoc (component/dropdown metadata)
                  :label (:type-of-vocational texts)
                 :params {:hidden false},
@@ -447,7 +447,7 @@
 
 (defn- upper-secondary-qualification-not-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_ulk--year-of-completion" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "="},
@@ -486,7 +486,7 @@
 
 (defn- internation-matriculation-examination-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_yo_ulkomainen--year-of-completion" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022,
                                        :comparison-operator "<"},
@@ -554,7 +554,7 @@
 
 (defn- non-finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(assoc (year-of-completion metadata "2022" "1900")
+    :children [(assoc (year-of-completion "pohjakoulutus_kk_ulk--year-of-completion" metadata "2022" "1900")
                 :options [(assoc (component/text-field-conditional-option "0")
                            :condition {:answer-compared-to 2022
                                        :comparison-operator "="}
@@ -595,7 +595,7 @@
 
 (defn- open-university-option-followups [metadata]
   [(assoc (component/question-group metadata)
-      :children [(year-of-completion metadata "2022" "1900")
+      :children [(year-of-completion "pohjakoulutus_avoin--year-of-completion" metadata "2022" "1900")
                  (assoc (component/text-field metadata)
                     :label {:en "Study field", :fi "Ala", :sv "Bransch"}
                     :validators ["required"])
@@ -612,7 +612,7 @@
 
 (defn- other-eligibility-option-followups [metadata]
   [(assoc (component/question-group metadata)
-    :children [(year-of-completion metadata "2022" "1900")
+    :children [(year-of-completion "pohjakoulutus_muu--year-of-completion" metadata "2022" "1900")
                (assoc (component/text-area metadata)
                       :label (:base-education-other-description texts)
                       :params {:max-length "500"}
@@ -716,7 +716,7 @@
                     {:label (:write-completed-before-2003 texts)}},
           :options [{:label (:yes general-texts),
                      :value "0",
-                     :followups [(year-of-completion metadata "2002" "1900")
+                     :followups [(year-of-completion "pohjakoulutus_2003--year-of-completion" metadata "2002" "1900")
                                  (name-of-degree metadata)
                                  (name-of-higher-education-institution metadata)]}
                    {:label (:have-not general-texts)
@@ -725,6 +725,7 @@
 
 (defn base-education-module-higher [metadata]
   (assoc (component/form-section metadata)
+          :id "higher-base-education-module"
           :label (:educational-background texts)
           :children [(education-question metadata)
                      (education-statistics-question metadata)
