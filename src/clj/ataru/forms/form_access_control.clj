@@ -118,10 +118,10 @@
 
 (defn- validate-form-field-id-change [form old-field-id new-field-id superuser? has-applications?]
   (when (not superuser?) (throw (user-feedback-exception "Ei oikeuksia muokata lomakkeen kentän id:tä")))
+  (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
   (let [content (-> form :content util/flatten-form-fields)
         contains-old-id? (some? (first (filter #(= (:id %) old-field-id) content)))
         contains-new-id? (some? (first (filter #(= (:id %) new-field-id) content)))]
-    (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
     (when (not contains-old-id?) (throw (user-feedback-exception (str "Lomakkeelta ei löytynyt kenttää vanhalla id:llä " old-field-id))))
     (when contains-new-id? (throw (user-feedback-exception (str "Lomakkeelta löytyi jo kenttä uudella id:llä " new-field-id))))))
 
