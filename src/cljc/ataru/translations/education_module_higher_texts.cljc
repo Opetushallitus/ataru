@@ -145,43 +145,16 @@
    :matriculation-exam-certificate                         {:en "Finnish matriculation examination certificate"
                                                             :fi "Ylioppilastutkintotodistus"
                                                             :sv "Studentexamensbetyg"}
-   :completed-marticaulation-before-1990?                  {:en "Have you completed your Matriculation examination in Finland in 1990 or after?"
-                                                            :fi "Oletko suorittanut ylioppilastutkinnon vuonna 1990 tai sen jälkeen?"
-                                                            :sv "Har du avlagt studentexamen år 1990 eller senare?"}
-   :marticaulation-before-1990                             {:en "Matriculation examination (completed before 1990)"
-                                                            :fi "Ylioppilastutkinto (ennen vuotta 1990)"
-                                                            :sv "Studentexamen (före år 1990)"}
    :year-of-completion                                     {:en "Year of completion"
                                                             :fi "Suoritusvuosi"
                                                             :sv "Avlagd år"}
    :automatic-matriculation-info                           {:en "Your matriculation examination details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the Matriculation Examination Board to correct any errors. "
                                                             :fi "Saamme ylioppilastutkinnon suoritustietosi ylioppilastutkintorekisteristä. Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedossasi on puutteita, ole yhteydessä ylioppilastutkintolautakuntaan tietojen korjaamiseksi."
                                                             :sv "Vi får uppgifterna om din studentexamen ur studentexamensregistret. Du kan kolla dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta Studentexamensnämnden som kan korrigera felen."}
-   :automatic-qualification-info                           {:en "Your qualification details will be received automatically from Koski-register."
-                                                            :fi "Saamme tutkintosi rekisteristämme."
-                                                            :sv "Vi får uppgifterna om din examen ur vårt register."}
-   :automatic-higher-qualification-info                    {:en "We will receive your degree details automatically."
-                                                            :fi "Saamme korkeakoulututkintosi tiedot rekisteristämme."
-                                                            :sv "Vi får uppgifterna om din högskoleexamen ur vårt register."}
-   :submit-your-attachments                                {:en "Submit your attachments in pdf/jpg/png -format. If you cannot submit your attachments online please contact the higher education institution in question directly. The attachments have to be submitted or returned by 26 Sept at 3 pm Finnish time at the latest."
-                                                            :fi "Tallenna liitteesi PDF/JPG/PNG-muodossa. Jos et voi tallentaa liitettä sähköisessä muodossa niin ota yhteyttä hakemaasi korkeakouluun joka pyytää liitettä. Liite tulee olla tallennettuna tai palautettuna viimeistään 26.9.2018 klo 15.00."
-                                                            :sv "Spara dina bilagor i PDF/JPG/PNG form. Om du inte kan spara bilagorna i elektronisk forma, ska du kontakta den högskola som du har sökt till, vilken begär bilagor. Bilagorna ska vara sparade eller returnerade senast 26.9.2018 kl. 15.00."}
-   :general-upper-secondary-school                         {:en "General upper secondary school syllabus completed in Finland (without matriculation examination)"
-                                                            :fi "Suomessa suoritettu lukion oppimäärä ilman ylioppilastutkintoa"
-                                                            :sv "Gymnasiets lärokurs som avlagts i Finland utan studentexamen"}
-   :secondary-school-year-of-completion                    {:en "Year of the completion of general upper secondary school syllabus"
-                                                            :fi "Lukion oppimäärän suoritusvuosi"
-                                                            :sv "Gymnasiet lärokurs avlagd år"}
-   :fill-year-of-completion                                {:en "Please fill in/choose the year of completion"
-                                                            :fi "Merkitse vuosi jolloin sait lukion päättötodistuksen."
-                                                            :sv "Ange det år då du fick gymnasiets avgångsbetyg. "}
    :educational-institution                                {:en "Educational institution" :fi "Oppilaitos" :sv "Läroanstalt"}
    :upper-secondary-school-attachment                      {:en "General upper secondary education certificate"
                                                             :fi "Lukion päättötodistus"
                                                             :sv "Gymnasiets avgångsbetyg"}
-   :international-marticulation-exam                       {:en "International matriculation examination completed in Finland"
-                                                            :fi "Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                                            :sv "Internationell studentexamen som avlagts i Finland"}
    :international-baccalaureate                            {:en "International Baccalaureate -diploma"
                                                             :fi "International Baccalaureate -tutkinto"
                                                             :sv "International Baccalaureate -examen"}
@@ -257,24 +230,6 @@
    :equivalency-certificate-second-dia                     {:en "An equivalency certificate on upper secondary education based on DIA provisions"
                                                             :fi "Vastaavuustodistus lukio-opinnoista, jotka perustuvat DIA-tutkinnon säännöksiin"
                                                             :sv "Motsvarighetsintyget av gymnasiestudier, som är baserad på DIA-bestämmelser"}
-   :request-attachment-international-exam                  {:en "Request for attachment on international examination"
-                                                            :fi "Kansainvälisen ylioppilastutkinnon liitepyyntö"
-                                                            :sv "Begäran om bilagor för internationell studentexamen"}
-   :double-degree                                          {:en "Double degree (secondary level)"
-                                                            :fi "Ammatillinen perustutkinto ja ylioppilastutkinto (kaksoistutkinto)"
-                                                            :sv "Yrkesinriktad grundexamen och studentexamen (dubbelexamen"}
-   :double-degree-vocational-attachment                    {:en "Request for attachment on vocational qualification"
-                                                            :fi "Kaksoistutkinnon liitepyyntö (ammatillinen tutkinto)"
-                                                            :sv "Begäran om bilagor för dubbelexamen (yrkesinriktad examen)"}
-   :double-degree-marticulation-attachment                 {:en "Request for attachment on Double degree/ matriculation examination before 1990."
-                                                            :fi "Kaksoistutkinnon liitepyyntö (ylioppilastutkinto ennen vuotta 1990)"
-                                                            :sv "Begäran om bilagor för dubbelexamen (studentexamen före år 1990)"}
-   :marticulation-completion-year                          {:en "The year of completion of Matriculation examination"
-                                                            :fi "Ylioppilastutkinnon suoritusvuosi"
-                                                            :sv "Studentexamen avlagd år"}
-   :vocational-completion-year                             {:en "The year of completion of vocational qualification"
-                                                            :fi "Ammatillisen tutkinnon suoritusvuosi"
-                                                            :sv "Yrkesinriktad examen avlagd år"}
    :vocational-qualification                               {:en "Vocational qualification"
                                                             :fi "Ammatillinen tutkinto"
                                                             :sv "Yrkesinriktad examen"}
@@ -306,36 +261,9 @@
    :finnish-vocational                                     {:en "Vocational upper secondary qualification, school-level qualification, post-secondary level qualification or higher vocational level qualification completed in Finland"
                                                             :fi "Suomessa suoritettu ammatillinen perustutkinto, kouluasteen, opistoasteen tai ammatillisen korkea-asteen tutkinto"
                                                             :sv "Yrkesinriktad grundexamen, examen på skolnivå, examen på institutsnivå eller yrkesinriktad examen på högre nivå som avlagts i Finland"}
-   :finnish-vocational-2017-or-after                       {:en "Have you completed the qualification in 2017 or after?"
-                                                            :fi "Oletko suorittanut tutkinnon vuonna 2017 tai sen jälkeen?"
-                                                            :sv "Har du avlagt examen år 2017 eller senare?"}
    :qualification                                          {:en "Qualification"
                                                             :fi "Tutkinto"
                                                             :sv "Examen"}
-   :finnish-vocational-completed                           {:en "Have you completed your qualification as a competence based qualification in its entiretity?"
-                                                            :fi "Oletko suorittanut tutkinnon kokonaan näyttötutkintona?"
-                                                            :sv "Har du avlagt examen som fristående yrkesexamen?"}
-   :finnish-vocational-attachment                          {:en "Request for attachment on vocational qualification."
-                                                            :fi "Ammatillinen perustutkinto kouluasteen opistoasteen tai ammatillisen korkea-asteen tutkinnon liitepyyntö"
-                                                            :sv "Begäran om bilagor för yrkesinriktad grundexamen, examen på skolnivå, examen på institutnivå eller examen på yrkesinriktad högre nivå"}
-   :click-to-add-more                                      {:en "Click ADD if you want add further qualifications."
-                                                            :fi "Paina LISÄÄ jos haluat lisätä useampia tutkintoja."
-                                                            :sv "Tryck på LÄGG TILL om du vill lägga till flera examina."}
-   :click-to-add-more-qualifications                       {:en "Click ADD if you want add further qualifications."
-                                                            :fi "Paina LISÄÄ jos haluat lisätä useampia opintokokonaisuuksia."
-                                                            :sv "Tryck på LÄGG TILL om du vill lägga till flera studiehelheter."}
-   :finnish-special-before-2018                            {:en "Have you completed you Further vocational or Specialist vocational qualification in 2018?"
-                                                            :fi "Oletko suorittanut ammatti- tai erikoisammattitutkinnon vuonna 2018?"
-                                                            :sv "Har du avlagt en yrkesexamen eller en specialyrkesexamen år 2018?"}
-   :finnish-special-attachment                             {:en "Vocational or specialist vocational qualification"
-                                                            :fi "Ammatti- tai erikoisammattitutkinto"
-                                                            :sv "En yrkesexamen eller en specialyrkesexamen"}
-   :finnish-higher-education                               {:en "Higher education qualification completed in Finland"
-                                                            :fi "Suomessa suoritettu korkeakoulututkinto"
-                                                            :sv "Högskoleexamen som avlagts i Finland"}
-   :finnish-higher-education-1995-or-after                 {:en "Have you compeleted your university or university of applied sciences degree in 1995 or after?"
-                                                            :fi "Oletko suorittanut korkeakoulututkintosi vuonna 1995 tai sen jälkeen? "
-                                                            :sv "Har du avlagt din högskoleexamen år 1995 eller senare? *"}
    :finnish-higher-education-degree-level                  {:en "Degree level"
                                                             :fi "Tutkintotaso"
                                                             :sv "Examensnivå"}
@@ -351,72 +279,32 @@
    :higher-education-degree                                {:en "Higher education degree"
                                                             :fi "Korkeakoulututkinto"
                                                             :sv "Högskoleexamen"}
-   :international-marticulation-outside-finland            {:en "International matriculation examination completed outside Finland"
-                                                            :fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                                            :sv "Internationell studentexamen som avlagts annanstans än i Finland"}
    :international-matriculation-outside-finland-name       {:en "Matriculation examination"
                                                             :fi "Ylioppilastutkinto"
                                                             :sv "Studentexamen"}
-   :international-marticulation-outside-finland-attachment {:en "International matriculation examination completed outside Finland"
-                                                            :fi "Muualla kuin Suomessa suoritettu kansainvälinen ylioppilastutkinto"
-                                                            :sv "Internationell studentexamen som avlagts annanstans än i Finland"}
    :country-of-completion                                  {:en "Country of completion"
                                                             :fi "Suoritusmaa"
                                                             :sv "Land där examen är avlagd"}
    :higher-education-outside-finland                       {:en "Higher education qualification completed outside Finland"
                                                             :fi "Muualla kuin Suomessa suoritettu korkeakoulututkinto"
                                                             :sv "Högskoleexamen som avlagts annanstans än i Finland"}
-   :level-of-degree                                        {:en "Level of degree" :fi "Tutkintotaso" :sv "Examensnivå"}
-   :year-and-date-of-completion                            {:en "Year and date of completion (DD.MM.YYYY)"
-                                                            :fi "Suorituspäivämäärä - ja vuosi (pp.kk.vvvv)"
-                                                            :sv "År och datum då examen avlagts (dd.mm.åååå)"}
-   :other-qualification-foreign                            {:en "Other qualification completed outside Finland that provides eligibility to apply for higher education in the country in question"
-                                                            :fi "Muualla kuin Suomessa suoritettu muu tutkinto, joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                                            :sv "Övrig examen som avlagts annanstans än i Finland, som ger behörighet för högskolestudier i ifrågavarande land"}
-   :other-qualification-foreign-attachment                 {:en "Request for attachment on education that provides eligibility for higher education in the awarding country."
-                                                            :fi "Liitepyyntö muualla kuin Suomessa suoritetusta muusta tutkinnosta joka asianomaisessa maassa antaa hakukelpoisuuden korkeakouluun"
-                                                            :sv "Begäran om bilagor för examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola. "}
-   :base-education-open                                    {:en "Studies required by the higher education institution completed at open university or open polytechnic/UAS"
-                                                            :fi "Korkeakoulun edellyttämät avoimen korkeakoulun opinnot"
-                                                            :sv "Studier som högskolan kräver vid en öppen högskola"}
-   :base-education-open-studies                            {:en "Open university/university of applied sciences studies"
-                                                            :fi "Avoimen korkeakoulun opinnot"
-                                                            :sv "Studier inom den öppna högskolan"}
-   :base-education-open-attachment                         {:en "Request for attachment on open university/university of applied sciences studies"
-                                                            :fi "Avoimen korkeakouluopintojen liitepyyntö"
-                                                            :sv "Begäran om bilagor för studier inom den öppna högskolan"}
    :field                                                  {:en "Study field" :fi "Ala" :sv "Bransch"}
    :module                                                 {:en "Study module"
                                                             :fi "Opintokokonaisuus"
                                                             :sv "Studiehelhet"}
-   :base-education-other                                   {:en "Other eligibility for higher education"
-                                                            :fi "Muu korkeakoulukelpoisuus"
-                                                            :sv "Övrig högskolebehörighet"}
    :other-eligibility-attachment                           {:en "Other eligibility for higher education"
                                                             :fi "Todistus muusta korkeakoulukelpoisuudesta"
                                                             :sv "Övrig högskolebehörighet"}
    :base-education-other-description                       {:en "Description of your other eligibility"
                                                             :fi "Kelpoisuuden kuvaus"
                                                             :sv "Beskrivning av behörigheten"}
-   :secondary-completed-base-education                     {:en "Have you completed general upper secondary education or vocational qualification?"
-                                                            :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon? "
-                                                            :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
    :secondary-completed-country                            {:en "Choose the country where you have completed your most recent qualification. If you have not yet completed a general upper secondary school syllabus/matriculation examination or vocational qualification but are in the process of doing so please choose the country where you will complete the qualification. NB: a vocational qualification can be a vocational upper secondary qualification school-level qualification post-secondary level qualification higher vocational level qualification further vocational qualification or specialist vocational qualification. Do not fill in the country where you have completed a higher education qualification."
                                                             :fi "Merkitse viimeisimmän tutkintosi suoritusmaa. Jos sinulla ei ole vielä lukion päättötodistusta/ylioppilastutkintoa tai ammatillista tutkintoa mutta olet suorittamassa sellaista valitse se maa jossa parhaillaan suoritat kyseistä tutkintoa. Huom: ammatillinen tutkinto voi olla ammatillinen perustutkinto kouluasteen opistoasteen tai ammatillisen korkea-asteen tutkinto ammatti-tai erikoisammattitutkinto. Älä merkitse tähän korkeakoulututkinnon suoritusmaata."
                                                             :sv "Ange land där din senaste examen avlagts. Om du ännu inte har avlagt gymnasiet/studentexamen eller yrkesinriktad examen men håller på att göra det välj då det land där du som bäst avlägger examen i fråga. Obs: yrkesinriktad examen kan vara yrkesinriktad grundexamen examen på skolnivå examen på institutsnivå yrkesinriktad examen på högre nivå yrkesexamen eller specialyrkesexamen. Ange inte här landet där du har avlagt högskoleexamen."}
    :choose-country                                         {:en "Choose country"
                                                             :fi "Valitse suoritusmaa"
                                                             :sv " Välj land där du avlagt examen"}
-   :finnish-vocational-before-1995                         {:en "Have you completed a university or university of applied sciences ( prev.  polytechnic) degree in Finland before 1995?"
-                                                            :fi "Oletko suorittanut suomalaisen ammattikorkeakoulu- tai yliopistotutkinnon ennen vuotta 1995?"
-                                                            :sv "Har du avlagt en finländsk yrkeshögskole- eller universitetsexamen före år 1995?"}
-   :finnish-vocational-before-1995-degree                  {:en "Write your university or university of applied sciences degree only if you have completed it before 1995. After that date the information of completed degrees will be received automatically from the higher education institutions. If you have completed a university/university of applied sciences degree or have received a study place in higher education in Finland after autumn 2014 your admission can be affected. More information on the quota for first -time applicants is available on https://studyinfo.fi/wp2/en/higher-education/applying/quota-for-first-time-applicants/"
-                                                            :fi "Merkitse tähän suorittamasi korkeakoulututkinto vain siinä tapauksessa jos olet suorittanut sen ennen vuotta 1995. Sen jälkeen suoritetut tutkinnot saadaan automaattisesti korkeakouluilta. Suomessa suoritettu korkeakoulututkinto tai syksyllä 2014 tai sen jälkeen alkaneesta koulutuksesta vastaanotettu korkeakoulututkintoon johtava opiskelupaikka voivat vaikuttaa valintaan. Lue lisää [ensikertalaiskiintiöstä](https://opintopolku.fi/wp/valintojen-tuki/yhteishaku/korkeakoulujen-yhteishaku/ensikertalaiskiintio/)."
-                                                            :sv "Ange här den högskoleexamen som du avlagt före år 1995. Examina som avlagts efter detta fås automatiskt av högskolorna. En högskoleexamen som avlagts i Finland eller en studieplats inom utbildning som leder till högskoleexamen som mottagits år 2014 eller senare kan inverka på antagningen. Läs mera om kvoten för förstagångssökande (https://studieinfo.fi/wp/stod-for-studievalet/gemensam-ansokan/gemensam-ansokan-till-hogskolor/kvot-for-forstagangssokande/)"}
    :name-of-degree                                         {:en "Name of the degree" :fi "Tutkinnon nimi" :sv "Examens namn"}
-   :base-education-other-attachment                        {:en "Request for attachment on other eligibility for higher education "
-                                                            :fi "Muun korkeakoulukelpoisuuden liitepyyntö"
-                                                            :sv "Begäran om bilagor för övrig högskolebehörighet"}
    :have-you-completed-before-2003                         {:en "Have you completed a university or university of applied sciences ( prev. polytechnic) degree in Finland before 2003?"
                                                             :fi "Oletko suorittanut suomalaisen ammattikorkeakoulu- tai yliopistotutkinnon ennen vuotta 2003?"
                                                             :sv "Har du avlagt en finländsk yrkeshögskole- eller universitetsexamen före år 2003?"}
