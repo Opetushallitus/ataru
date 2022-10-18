@@ -70,7 +70,7 @@
         })
       })
     })
-    describe('when yo-tutkinto', () => {
+    xdescribe('when yo-tutkinto', () => {
       const firstSegmentLabel = () =>
         formSections()
           .eq(2)
