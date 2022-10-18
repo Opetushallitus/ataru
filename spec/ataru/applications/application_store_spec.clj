@@ -259,15 +259,40 @@
           (tags :unit :attachments)
 
   (it "should be possible to extract attachment ids from base education module"
-    (should== #{"pohjakoulutus_kk_ulk--attachement"
+    (should== #{"pohjakoulutus_kk_ulk--attachment"
                 "pohjakoulutus_lk--attachment"
+                "pohjakoulutus_ulk--attachment_past_translation"
                 "pohjakoulutus_avoin--attachment"
+                "pohjakoulutus_kk_ulk--attachment_transcript"
+                "pohjakoulutus_ulk--attachment_translation"
+                "pohjakoulutus_kk_ulk--attachment_past"
                 "pohjakoulutus_amp--attachment"
+                "pohjakoulutus_ulk--attachment_transcript"
+                "pohjakoulutus_kk_ulk--attachment_transcript_progress_translation"
                 "pohjakoulutus_amt--attachment"
-                "pohjakoulutus_amv--attachment"
+                "pohjakoulutus_kk_ulk--attachment_progress"
+                "pohjakoulutus_ulk--attachment_transcript_translation"
+                "pohjakoulutus_kk_ulk--attachment_progress_translation"
+                "pohjakoulutus_kk_ulk--attachment_translation"
+                "pohjakoulutus_lk--attachment_progress"
+                "pohjakoulutus_amp--attachment_past"
+                "pohjakoulutus_kk--attachment_past"
+                "pohjakoulutus_kk--attachment_transcript"
+                "pohjakoulutus_ulk--attachment_progress"
+                "pohjakoulutus_ulk--attachment_past"
+                "pohjakoulutus_ulk--attachment_progress_translation"
+                "pohjakoulutus_kk--attachment_transcript_past"
                 "pohjakoulutus_ulk--attachment"
+                "pohjakoulutus_kk--attachment_transcript_progress"
+                "pohjakoulutus_amt--attachment_past"
                 "pohjakoulutus_kk--attachment"
-                "pohjakoulutus_muu--attachment"}
+                "pohjakoulutus_kk--attachment_progress"
+                "pohjakoulutus_lk--attachment_past"
+                "pohjakoulutus_kk_ulk--attachment_transcript_past"
+                "pohjakoulutus_kk_ulk--attachment_transcript_progress"
+                "pohjakoulutus_amv--attachment"
+                "pohjakoulutus_muu--attachment"
+                "pohjakoulutus_kk_ulk--attachment_translation_past"}
               (higher-module/non-yo-attachment-ids
                form-fixtures/base-education-attachment-test-form))))
 

@@ -481,20 +481,20 @@
                               :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata
-                                                                             [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript" metadata (:transcript-of-records-higher texts))
-                                                                              (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement" metadata (:higher-education-degree-certificate texts))
-                                                                              (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_translation" metadata (:translation-of-certificate texts))])]
+                                                                             [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_transcript" metadata (:transcript-of-records-higher texts))
+                                                                              (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment" metadata (:higher-education-degree-certificate texts))
+                                                                              (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_translation" metadata (:translation-of-certificate texts))])]
                                                                              [(estimated-graduation-date-text-field metadata)
-                                                                              (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript_progress" metadata (:transcript-of-records-in-progress texts))
-                                                                              (deadline-next-to-request-attachment-followup "pohjakoulutus_kk_ulk--attachement_progress" metadata (:higher-education-degree-certificate-alien-in-progress texts))
-                                                                              (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript_progress_translation" metadata (:translation-of-transcript-of-records texts))
-                                                                                                                                   (deadline-next-to-request-attachment-followup "pohjakoulutus_kk_ulk--attachement_progress_translation" metadata (:translation-of-degree-higher texts))])])])
+                                                                              (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_transcript_progress" metadata (:transcript-of-records-in-progress texts))
+                                                                              (deadline-next-to-request-attachment-followup "pohjakoulutus_kk_ulk--attachment_progress" metadata (:higher-education-degree-certificate-alien-in-progress texts))
+                                                                              (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_transcript_progress_translation" metadata (:translation-of-transcript-of-records texts))
+                                                                                                                                   (deadline-next-to-request-attachment-followup "pohjakoulutus_kk_ulk--attachment_progress_translation" metadata (:translation-of-degree-higher texts))])])])
                             (assoc (component/text-field-conditional-option "1")
                               :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
-                              :followups [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript_past" metadata (:transcript-of-records-higher texts))
-                                          (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_past" metadata (:higher-education-degree-certificate-alien texts))
-                                          (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_translation_past" metadata (:translation-of-certificate texts))])])])
+                              :followups [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_transcript_past" metadata (:transcript-of-records-higher texts))
+                                          (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_past" metadata (:higher-education-degree-certificate-alien texts))
+                                          (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachment_translation_past" metadata (:translation-of-certificate texts))])])])
                 (name-of-degree-text-field metadata)
                 (assoc (component/dropdown metadata)
                   :koodisto-source {:uri            "kktutkinnot"
