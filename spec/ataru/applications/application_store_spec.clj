@@ -262,8 +262,9 @@
     (should== #{"pohjakoulutus_kk_ulk--attachement"
                 "pohjakoulutus_lk--attachment"
                 "pohjakoulutus_avoin--attachment"
-                "pohjakoulutus_am--attachment"
+                "pohjakoulutus_amp--attachment"
                 "pohjakoulutus_amt--attachment"
+                "pohjakoulutus_amv--attachment"
                 "pohjakoulutus_ulk--attachment"
                 "pohjakoulutus_kk--attachment"
                 "pohjakoulutus_muu--attachment"}

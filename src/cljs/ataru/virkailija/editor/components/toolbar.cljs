@@ -1,6 +1,6 @@
 (ns ataru.virkailija.editor.components.toolbar
   (:require [ataru.component-data.component :as component]
-            [ataru.component-data.base-education-module-kk :as kk-base-education-module]
+            [ataru.component-data.base-education-module-higher :as kk-base-education-module]
             [ataru.component-data.base-education-module-2nd :refer [base-education-2nd-module]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
