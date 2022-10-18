@@ -343,7 +343,7 @@
                                                       {:label     (:european-baccalaureate texts)
                                                        :value     "1"
                                                        :followups [(have-you-graduated-with-followups metadata
-                                                                                                      [(seven-day-attachment-followup metadata "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_eb" (:european-baccalaureate-diploma-finland texts))]
+                                                                                                      [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_eb" metadata (:european-baccalaureate-diploma-finland texts))]
                                                                                                       [(estimated-graduation-date-text-field metadata)
                                                                                                        (seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_grades_eb" metadata (:predicted-grades-eb-finland texts))
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_progress_eb" metadata (:diploma-programme-eb-finland texts))])]}
@@ -633,7 +633,7 @@
   (->> (base-education-module-higher {})
        :children
        util/flatten-form-fields
-       (map :id)
+       (map (comp name :id))
        set))
 
 (defn non-yo-attachment-ids
