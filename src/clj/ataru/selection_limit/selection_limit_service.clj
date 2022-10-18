@@ -44,7 +44,9 @@
             {:selection-id selection-id})))))
 
 (defn remove-initial-selection [form-key selection-id question-id selection-group-id]
-  (exec-db :db yesql-remove-existing-initial-selection! {:selection_id selection-id :selection_group_id selection-group-id})
+  (exec-db :db yesql-remove-existing-initial-selection! {:selection_id       selection-id
+                                                         :selection_group_id selection-group-id
+                                                         :question_id        question-id})
   (query-available-selections form-key selection-id))
 
 (defn limit-exception [message]
@@ -98,7 +100,8 @@
              question-id        key
              answer-id          value]
          (yesql-remove-existing-initial-selection! {:selection_id       selection-id
-                                                    :selection_group_id selection-group-id} connection)
+                                                    :selection_group_id selection-group-id
+                                                    :question_id        question-id} connection)
          (when-not (= 1 (-> (yesql-has-permanent-selection {:application_key    application-key
                                                             :question_id        question-id
                                                             :answer_id          answer-id
@@ -106,7 +109,8 @@
                             first
                             :n))
            (yesql-remove-existing-selection! {:application_key    application-key
-                                              :selection_group_id selection-group-id} connection)
+                                              :selection_group_id selection-group-id
+                                              :question_id        question-id} connection)
            (yesql-new-selection! {:application_key    application-key
                                   :question_id        question-id
                                   :answer_id          answer-id

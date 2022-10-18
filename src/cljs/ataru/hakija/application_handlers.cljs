@@ -781,9 +781,8 @@
           answer         (assoc initial-answer :original-value (:value initial-answer))
           limit-reached  (get-in db [:application :answers id :limit-reached])]
       (println "unset-non-question-group-field-value" (:fi (:label field-descriptor)))
-      (assoc-in db [:application :answers id] answer)
-      (when (not (nil? limit-reached))
-        (assoc-in db [:application :answers id :limit-reached] limit-reached)))))
+      (cond-> (assoc-in db [:application :answers id] answer)
+              (some? limit-reached) (assoc-in [:application :answers id :limit-reached] limit-reached)))))
 
 (defn- set-empty-value-dispatch
   [group-idx field-descriptor]
