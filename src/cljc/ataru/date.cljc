@@ -23,3 +23,9 @@
     (let [today (c/today)
           born  (f/parse-local-date birthday-formatter birth-date)]
       (not (years-between? born today 18)))))
+
+(defn current-year []
+  (c/year (c/now)))
+
+(defn current-year-as-str []
+  (str (current-year)))

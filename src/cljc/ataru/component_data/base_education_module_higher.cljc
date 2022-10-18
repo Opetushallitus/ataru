@@ -2,7 +2,8 @@
   (:require [ataru.translations.texts :refer [general-texts virkailija-texts]]
             [ataru.translations.education-module-higher-texts :refer [texts]]
             [ataru.component-data.component :as component]
-            [ataru.util :as util]))
+            [ataru.util :as util]
+            [ataru.date :refer [current-year current-year-as-str]]))
 
 (def higher-completed-base-education-id "higher-completed-base-education")
 
@@ -158,9 +159,9 @@
 
 (defn- finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_kk--completion-date" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_kk--completion-date" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata
                                                                              [(seven-day-attachment-followup "pohjakoulutus_kk--attachment_transcript" metadata (:transcript-of-records-higher-finland texts))
@@ -171,7 +172,7 @@
                                                                               (deadline-next-to-request-attachment-followup "pohjakoulutus_kk--attachment_progress" metadata (:higher-education-degree-certificate-in-progress texts))
                                                                               (share-link-followup metadata)])])
                             (assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
                               :followups [(seven-day-attachment-followup "pohjakoulutus_kk--attachment_transcript_past" metadata (:transcript-of-records-higher-finland texts))
                                           (seven-day-attachment-followup "pohjakoulutus_kk--attachment_past" metadata (:higher-education-degree-certificate texts))
@@ -191,9 +192,9 @@
 
 (defn- finnish-vocational-or-special-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_amt--year-of-completion" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_amt--year-of-completion" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata
                                                                              []
@@ -221,20 +222,20 @@
   [(assoc (component/info-element metadata)
      :text (:check-if-really-vocational texts))
    (assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_amp--year-of-completion" metadata "2022" "1994")
+     :children [(assoc (year-of-completion "pohjakoulutus_amp--year-of-completion" metadata (current-year-as-str) "1994")
                   :options [(assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata []
                                                                              [(estimated-graduation-date-text-field metadata)
                                                                               (seven-day-attachment-followup "pohjakoulutus_amp--attachment" metadata (:preliminary-certificate-vocational-basic texts))])])
                             (assoc (component/text-field-conditional-option "2")
-                              :condition {:answer-compared-to  2017
+                              :condition {:answer-compared-to  2016
                                           :comparison-operator ">"}
                               :followups [(koski-info-notification metadata)])
                             (assoc (component/text-field-conditional-option "3")
                               :condition {:answer-compared-to  2017
-                                          :comparison-operator "="}
+                                          :comparison-operator "<"}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:have-competence-based-qualification texts)
                                             :options [{:label     (:yes general-texts)
@@ -254,7 +255,7 @@
                   :label (:add-more-qualifications texts))])])
 
 (defn- finnish-matriculation-examination-option-followups [metadata]
-  [(assoc (year-of-completion "pohjakoulutus_yo--yes-year-of-completion" metadata "2022" "1900")
+  [(assoc (year-of-completion "pohjakoulutus_yo--yes-year-of-completion" metadata (current-year-as-str) "1900")
      :options [(assoc (component/text-field-conditional-option "0")
                  :condition {:answer-compared-to 1990 :comparison-operator "<"}
                  :followups [(seven-day-attachment-followup "pohjakoulutus_yo--attachment" metadata (:matriculation-exam-certificate texts))])
@@ -267,16 +268,16 @@
   [(assoc (component/question-group metadata)
      :children [(assoc (component/info-element metadata)
                   :text (:automatic-matriculation-info texts))
-                (assoc (year-of-completion "pohjakoulutus_yo_ammatillinen--vocational-completion-year" metadata "2022" "1900")
+                (assoc (year-of-completion "pohjakoulutus_yo_ammatillinen--vocational-completion-year" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata []
                                                                              [(estimated-graduation-date-text-field metadata)
                                                                               (seven-day-attachment-followup "pohjakoulutus_yo_ammatillinen--attachment" metadata (:preliminary-certificate-vocational-basic texts))])])
                             (assoc (component/text-field-conditional-option "2")
-                              :condition {:answer-compared-to  2017
-                                          :comparison-operator "="}
+                              :condition {:answer-compared-to  2018
+                                          :comparison-operator "<"}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:have-competence-based-qualification texts)
                                             :params {:info-text {:label nil}}
@@ -298,22 +299,22 @@
                   :label (:add-more-qualifications texts))])])
 
 (defn- gymnasium-without-yo-certificate-option-followups [metadata]
-  [(assoc (year-of-completion "pohjakoulutus_lk--year-of-completion" metadata "2022" "1900")
+  [(assoc (year-of-completion "pohjakoulutus_lk--year-of-completion" metadata (current-year-as-str) "1900")
      :options [(assoc (component/text-field-conditional-option "0")
-                 :condition {:answer-compared-to 2022 :comparison-operator "="}
+                 :condition {:answer-compared-to (current-year) :comparison-operator "="}
                  :followups [(have-you-graduated-with-followups metadata
                                                                 [(seven-day-attachment-followup "pohjakoulutus_lk--attachment" metadata (:upper-secondary-school-attachment texts))]
                                                                 [(estimated-graduation-date-text-field metadata)
                                                                  (seven-day-attachment-followup "pohjakoulutus_lk--attachment_progress" metadata (:transcript-of-records-secondary-finland texts))])])
                (assoc (component/text-field-conditional-option "1")
-                 :condition {:answer-compared-to 2022 :comparison-operator "<"}
+                 :condition {:answer-compared-to (current-year) :comparison-operator "<"}
                  :followups [(seven-day-attachment-followup "pohjakoulutus_lk--attachment_past" metadata (:upper-secondary-school-attachment texts))])])])
 
 (defn- international-matriculation-exam-in-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_yo_kansainvalinen_suomessa--year-of-completion" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_yo_kansainvalinen_suomessa--year-of-completion" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:international-matriculation-outside-finland-name texts)
@@ -329,7 +330,7 @@
                                                                    (seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_past-equi" metadata (:equivalency-certificate-second texts))]}]
                                             :validators ["required"])])
                             (assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:matriculation-exam texts)
@@ -392,9 +393,9 @@
 
 (defn- upper-secondary-qualification-not-finland-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_ulk--year-of-completion" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_ulk--year-of-completion" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata
                                                                              [(seven-day-attachment-followup "pohjakoulutus_ulk--attachment" metadata (:upper-secondary-education-diploma texts))
@@ -413,7 +414,7 @@
                                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_ulk--attachment_transcript_translation" metadata (:translation-of-study-records texts))
                                                                                                                                    (deadline-next-to-request-attachment-followup "pohjakoulutus_ulk--attachment_progress_translation" metadata (:translation-of-diploma texts))])])])
                             (assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
                               :followups [(seven-day-attachment-followup "pohjakoulutus_ulk--attachment_past" metadata (:upper-secondary-education-diploma texts))
                                           (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_ulk--attachment_past_translation" metadata (:translation-of-diploma texts))])])])
@@ -425,9 +426,9 @@
 
 (defn- internation-matriculation-examination-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_yo_ulkomainen--year-of-completion" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_yo_ulkomainen--year-of-completion" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:matriculation-exam texts)
@@ -442,7 +443,7 @@
                                                        :followups [(seven-day-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_past_dia" metadata (:reifeprufung-diploma texts))]}]
                                             :validators ["required"])])
                             (assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:matriculation-exam texts)
@@ -475,9 +476,9 @@
 
 (defn- non-finnish-higher-education-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(assoc (year-of-completion "pohjakoulutus_kk_ulk--year-of-completion" metadata "2022" "1900")
+     :children [(assoc (year-of-completion "pohjakoulutus_kk_ulk--year-of-completion" metadata (current-year-as-str) "1900")
                   :options [(assoc (component/text-field-conditional-option "0")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}
                               :followups [(have-you-graduated-with-followups metadata
                                                                              [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript" metadata (:transcript-of-records-higher texts))
@@ -489,7 +490,7 @@
                                                                               (are-your-attachments-in-fi-se-en-followup metadata [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript_progress_translation" metadata (:translation-of-transcript-of-records texts))
                                                                                                                                    (deadline-next-to-request-attachment-followup "pohjakoulutus_kk_ulk--attachement_progress_translation" metadata (:translation-of-degree-higher texts))])])])
                             (assoc (component/text-field-conditional-option "1")
-                              :condition {:answer-compared-to  2022
+                              :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "<"}
                               :followups [(seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_transcript_past" metadata (:transcript-of-records-higher texts))
                                           (seven-day-attachment-followup "pohjakoulutus_kk_ulk--attachement_past" metadata (:higher-education-degree-certificate-alien texts))
@@ -510,7 +511,7 @@
 
 (defn- open-university-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(year-of-completion "pohjakoulutus_avoin--year-of-completion" metadata "2022" "1900")
+     :children [(year-of-completion "pohjakoulutus_avoin--year-of-completion" metadata (current-year-as-str) "1900")
                 (assoc (component/text-field metadata)
                   :label {:en "Study field" :fi "Ala" :sv "Bransch"}
                   :validators ["required"])
@@ -527,7 +528,7 @@
 
 (defn- other-eligibility-option-followups [metadata]
   [(assoc (component/question-group metadata)
-     :children [(year-of-completion "pohjakoulutus_muu--year-of-completion" metadata "2022" "1900")
+     :children [(year-of-completion "pohjakoulutus_muu--year-of-completion" metadata (current-year-as-str) "1900")
                 (assoc (component/text-area metadata)
                   :label (:base-education-other-description texts)
                   :params {:max-length "500"}
