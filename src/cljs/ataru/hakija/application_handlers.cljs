@@ -6,7 +6,7 @@
             [ataru.application.option-visibility :as option-visibility]
             [ataru.feature-config :as fc]
             [ataru.hakija.schema :as schema]
-            [ataru.component-data.base-education-module-kk :as higher-module]
+            [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
             [ataru.hakija.person-info-fields :as person-info-fields]
