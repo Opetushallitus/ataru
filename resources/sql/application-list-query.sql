@@ -9,6 +9,13 @@ AND (SELECT t.h
 AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
 /*~   ) ~*/
 
+-- :snip edited-hakutoiveet-snip
+/*~ (if (contains? params :only-edited) */
+AND a.hakukohde <> la.hakukohde
+/*~*/
+AND a.hakukohde = la.hakukohde
+/*~   ) ~*/
+
 -- :snip attachment-snip
 AND EXISTS (SELECT 1
             FROM application_hakukohde_attachment_reviews
@@ -169,6 +176,7 @@ FROM applications AS a
 LEFT JOIN applications AS la
   ON la.key = a.key AND
      la.id > a.id
+--~ (when (contains? params :edited-hakutoiveet-snip) ":snip:edited-hakutoiveet-snip")
 WHERE la.id IS NULL
 /*~ (when (contains? params :form) */
   AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = :form
