@@ -154,7 +154,7 @@
   {:ssn ssn})
 (defn ->edited-hakutoiveet-query
   [edited?]
-  {:edited edited?})
+  {:edited-hakutoiveet edited?})
 (defn ->dob-query
   [dob]
   {:dob dob})
