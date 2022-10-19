@@ -491,16 +491,21 @@
           db)
         (map keyword (:selection-limited db))))))
 
+(defn- get-question-ids-by-question-parent-id [flat-form-content question-id]
+  (let [parent-id (:children-of (first (filter (fn [item] (= (:id item) question-id)) flat-form-content)))]
+    (map #(:id %) (filter (fn [item] (= (:children-of item) parent-id)) flat-form-content))))
+
 (defn reset-other-selections [db question-id _]
-  (reduce (fn [db key]
-            (if (= key question-id)
-              db
-              (-> db
-                  (assoc-in [:application :answers key :values :value] nil)
-                  (assoc-in [:application :answers key :value] nil)
-                  (assoc-in [:application :answers key :valid] false))))
-          db
-          (map keyword (:selection-limited db))))
+  (let [question-group-question-ids (get-question-ids-by-question-parent-id (:flat-form-content db) (name question-id))]
+    (reduce (fn [db key]
+              (if (= key question-id)
+                db
+                (-> db
+                    (assoc-in [:application :answers key :values :value] nil)
+                    (assoc-in [:application :answers key :value] nil)
+                    (assoc-in [:application :answers key :valid] false))))
+            db
+            (map keyword question-group-question-ids))))
 
 (reg-event-fx
   :application/handle-update-selection-limits
