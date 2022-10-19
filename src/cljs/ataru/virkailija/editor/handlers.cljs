@@ -913,7 +913,7 @@
                                                 (contains? (set target-path) :children)
                                                 (= "wrapperElement" (:fieldClass component)))
              adjacent-fieldset-cut?            (and
-                                                 (not copy?)
+                                                 copy-component-cut?
                                                  (= "adjacentfieldset" (:fieldType component)))]
          (when (or (not result-is-nested-component-group?) adjacent-fieldset-cut?)
            (if copy?
