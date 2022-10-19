@@ -420,7 +420,7 @@
           (update-modified-by path)))))
 
 (defn generate-component
-  [db [_ generate-fn sub-path]]
+  [{db :db} [_ generate-fn sub-path]]
   (let [yhteishaku?           (subscribe [:editor/yhteishaku?])
         parent-component-path (cond-> (db/current-form-content-path db)
                                       (not (number? sub-path))
@@ -444,7 +444,16 @@
                                                      (assoc-in [:params :hidden] @yhteishaku?))))
         first-component-idx   (cond-> sub-path
                                       (not (number? sub-path))
-                                      (last))]
+                                      (last))
+        get-koodisto-params-fn (fn [component]
+                                 {:uri (get-in component [:koodisto-source :uri])
+                                  :version (get-in component [:koodisto-source :version])
+                                  :allow-invalid? (get-in component [:koodisto-source :allow-invalid?])})
+        koodisto-components-to-dispatch (->> components
+                                             util/flatten-form-fields
+                                             (filter #(some? (:koodisto-source %)))
+                                             (map (fn [component]
+                                                    [:editor/fetch-koodisto-for-component-with-id (:id component) (get-koodisto-params-fn component)])))]
     (as-> db db'
       (update-in db' parent-component-path (cu/vector-of-length (count components)))
       (reduce (fn [db' [idx component]]
@@ -452,9 +461,11 @@
                   (assoc-in db' path component)))
               db'
               (map vector (range) components))
-      (assoc-in db' [:editor :ui (-> components first :id) :focus?] true))))
+      (assoc-in db' [:editor :ui (-> components first :id) :focus?] true)
+      {:db db'
+       :dispatch-n koodisto-components-to-dispatch})))
 
-(reg-event-db :generate-component generate-component)
+(reg-event-fx :generate-component generate-component)
 
 (defn- remove-component
   [db path]
