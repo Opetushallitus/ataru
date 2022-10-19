@@ -462,6 +462,12 @@
                                 connection
                                 "varchar"))))))
 
+(defn- query->edited-hakutoiveet-snip
+  [query]
+  (let [only-edited? (:edited-hakutoiveet query)]
+    (queries/edited-hakutoiveet-snip
+      (when only-edited? {:only-edited true}))))
+
 (defn- query->option-answers-snip
   [connection query]
   (let [option-answers (first (:option-answers query))]
@@ -508,6 +514,9 @@
 
                       (contains? query :attachment-review-states)
                       (assoc :attachment-snip (query->attachment-snip connection query))
+
+                      (contains? query :edited-hakutoiveet)
+                      (assoc :edited-hakutoiveet-snip (query->edited-hakutoiveet-snip query))
 
                       (contains? query :option-answers)
                       (assoc :option-answers-snip (query->option-answers-snip connection query))

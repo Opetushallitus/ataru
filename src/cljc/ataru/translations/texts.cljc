@@ -2141,6 +2141,12 @@
    :active-status                                            {:fi "Aktiivisuus"
                                                               :sv "Aktivitet"
                                                               :en "Active"}
+   :only-edited-hakutoiveet-edited                           {:fi "Muokatut"
+                                                              :sv "Redigerade"
+                                                              :en "Edited"}
+   :only-edited-hakutoiveet-unedited                         {:fi "Muokkaamattomat"
+                                                              :sv "Oredigerad"
+                                                              :en "Unedited"}
    :active-status-active                                     {:fi "Aktiiviset"
                                                               :sv "Aktiva"
                                                               :en "Actives"}
@@ -2489,6 +2495,9 @@
    :language-requirement   {:fi "Kielitaitovaatimus"
                             :sv "Språkkunskapskrav"
                             :en "Language requirement"}
+   :only-edited-hakutoiveet {:fi "Muokatut hakutoiveet"
+                             :sv "Bearbetad ansökningsönskemål"
+                             :en "Edited study program"}
    :degree-requirement     {:fi "Tutkinnon kelpoisuus"
                             :sv "Examens behörighet"
                             :en "Degree requirement"}

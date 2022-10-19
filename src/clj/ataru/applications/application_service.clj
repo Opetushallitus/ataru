@@ -152,7 +152,9 @@
 (defn ->ssn-query
   [ssn]
   {:ssn ssn})
-
+(defn ->edited-hakutoiveet-query
+  [edited?]
+  {:edited edited?})
 (defn ->dob-query
   [dob]
   {:dob dob})
@@ -742,6 +744,8 @@
                                          (filter (fn [hakukohde]
                                                    (some #(= hakukohderyhma-oid %) (:ryhmaliitokset hakukohde)))
                                                  (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)))
+          edited-hakutoiveet?          (-> states-and-filters :filters :only-edited-hakutoiveet :edited)
+          unedited-hakutoiveet?        (-> states-and-filters :filters :only-edited-hakutoiveet :unedited)
           person-oids                  (when-let [oppilaitos-oid (:school-filter states-and-filters)]
                                          (let [haku       (tarjonta-service/get-haku tarjonta-service haku-oid)
                                                hakuvuodet (->> (:hakuajat haku)
@@ -773,6 +777,10 @@
                                  (->hakukohde-query tarjonta-service hakukohde-oid ensisijaisesti)
                                  (some? haku-oid)
                                  (->haku-query haku-oid)
+                                 :else
+                                 (->empty-query))
+                           (cond (not= edited-hakutoiveet? unedited-hakutoiveet?)
+                                 (->edited-hakutoiveet-query edited-hakutoiveet?)
                                  :else
                                  (->empty-query))
                            (cond (some? ssn)
