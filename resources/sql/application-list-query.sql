@@ -11,9 +11,9 @@ AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
 
 -- :snip edited-hakutoiveet-snip
 /*~ (if (contains? params :only-edited) */
-AND a.hakukohde <> la.hakukohde
+AND 1 <> (SELECT COUNT(DISTINCT hakukohde) FROM applications WHERE key = a.key)
 /*~*/
-AND a.hakukohde = la.hakukohde
+AND 1 = (SELECT COUNT(DISTINCT hakukohde) FROM applications WHERE key = a.key)
 /*~   ) ~*/
 
 -- :snip attachment-snip
@@ -176,7 +176,6 @@ FROM applications AS a
 LEFT JOIN applications AS la
   ON la.key = a.key AND
      la.id > a.id
---~ (when (contains? params :edited-hakutoiveet-snip) ":snip:edited-hakutoiveet-snip")
 WHERE la.id IS NULL
 /*~ (when (contains? params :form) */
   AND a.haku IS NULL AND (SELECT key FROM forms WHERE id = a.form_id) = :form
@@ -208,6 +207,7 @@ WHERE la.id IS NULL
 /*~ (when (contains? params :hakukohde) */
   AND a.hakukohde && :hakukohde
 /*~ ) ~*/
+--~ (when (contains? params :edited-hakutoiveet-snip) ":snip:edited-hakutoiveet-snip")
 --~ (when (contains? params :ensisijainen-hakukohde-snip) ":snip:ensisijainen-hakukohde-snip")
 --~ (when (contains? params :attachment-snip) ":snip:attachment-snip")
 --~ (when (contains? params :option-answers-snip) ":snip:option-answers-snip")
