@@ -101,7 +101,6 @@
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
         form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
-    (log/info "post-form " (:key form))
     (check-form-field-id-duplicates form)
     (check-edit-authorization
      form-with-org
@@ -127,7 +126,7 @@
 
 (defn update-field-id-in-form
   [form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger]
-  (log/info (str "updating field in form " form-key "from " old-field-id "to" new-field-id))
+  (log/info (str "Updating field in form " form-key "from " old-field-id " to " new-field-id))
   (let [superuser? (-> session :identity :superuser)
         form (form-store/fetch-by-key form-key)
         has-applications? (form-store/form-has-applications form-key)]
@@ -139,7 +138,7 @@
                                                                                  (= (val x) old-field-id))
                                                                           [:id new-field-id] x)) content))
           updated-form (update form :content update-form-content-fn)]
-      (log/info (str "*** saving updated form " form))
+      (log/info (str "Saving updated form " form-key ", changed field id " old-field-id " to " new-field-id))
       (post-form updated-form session tarjonta-service organization-service audit-logger))))
 
 (defn edit-form-with-operations
