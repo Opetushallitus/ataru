@@ -3,11 +3,13 @@
     [ataru.forms.form-store :as form-store]
     [ataru.schema.form-schema :as form-schema]
     [clojure.walk :refer [prewalk]]
+    [ataru.util :as util]
     [ataru.virkailija.editor.form-diff :as form-diff]
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
-    [ataru.tarjonta.haku :as haku]))
+    [ataru.tarjonta.haku :as haku]
+    [taoensso.timbre :as log]))
 
 (defn- form-allowed-by-id?
   [authorized-organization-oids form-id]
@@ -112,6 +114,32 @@
          :created-by (-> session :identity :username))
         session
         audit-logger)))))
+
+(defn- validate-form-field-id-change [form old-field-id new-field-id superuser? has-applications?]
+  (when (not superuser?) (throw (user-feedback-exception "Ei oikeuksia muokata lomakkeen kentän id:tä.")))
+  (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
+  (let [content (-> form :content util/flatten-form-fields)
+        contains-old-id? (some? (first (filter #(= (:id %) old-field-id) content)))
+        contains-new-id? (some? (first (filter #(= (:id %) new-field-id) content)))]
+    (when (not contains-old-id?) (throw (user-feedback-exception (str "Lomakkeelta ei löytynyt kenttää vanhalla id:llä " old-field-id))))
+    (when contains-new-id? (throw (user-feedback-exception (str "Lomakkeelta löytyi jo kenttä uudella id:llä " new-field-id))))))
+
+(defn update-field-id-in-form
+  [form-key old-field-id new-field-id session tarjonta-service organization-service audit-logger]
+  (log/info (str "Updating field in form " form-key "from " old-field-id " to " new-field-id))
+  (let [superuser? (-> session :identity :superuser)
+        form (form-store/fetch-by-key form-key)
+        has-applications? (form-store/form-has-applications form-key)]
+    (when (nil? form) (throw (user-feedback-exception (str "Lomaketta avaimella " form-key " ei löytynyt"))))
+    (validate-form-field-id-change form old-field-id new-field-id superuser? has-applications?)
+    (let [update-form-content-fn (fn [content] (clojure.walk/postwalk (fn [x]
+                                                                        (if (and (map-entry? x)
+                                                                                 (= (key x) :id)
+                                                                                 (= (val x) old-field-id))
+                                                                          [:id new-field-id] x)) content))
+          updated-form (update form :content update-form-content-fn)]
+      (log/info (str "Saving updated form " form-key ", changed field id " old-field-id " to " new-field-id))
+      (post-form updated-form session tarjonta-service organization-service audit-logger))))
 
 (defn edit-form-with-operations
   [id operations session tarjonta-service organization-service audit-logger]
