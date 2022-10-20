@@ -11,9 +11,9 @@ AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
 
 -- :snip edited-hakutoiveet-snip
 /*~ (if (contains? params :only-edited) */
-AND 1 <> (SELECT COUNT(DISTINCT hakukohde) FROM applications WHERE key = a.key)
+AND a.hakukohde <> (SELECT hakukohde FROM applications WHERE key = a.key ORDER BY id ASC LIMIT 1)
 /*~*/
-AND 1 = (SELECT COUNT(DISTINCT hakukohde) FROM applications WHERE key = a.key)
+AND a.hakukohde = (SELECT hakukohde FROM applications WHERE key = a.key ORDER BY id ASC LIMIT 1)
 /*~   ) ~*/
 
 -- :snip attachment-snip
