@@ -230,11 +230,11 @@
                                                                              [(estimated-graduation-date-text-field metadata)
                                                                               (seven-day-attachment-followup "pohjakoulutus_amp--attachment" metadata (:preliminary-certificate-vocational-basic texts))])])
                             (assoc (component/text-field-conditional-option "2")
-                              :condition {:answer-compared-to  2016
+                              :condition {:answer-compared-to  2017
                                           :comparison-operator ">"}
                               :followups [(koski-info-notification metadata)])
                             (assoc (component/text-field-conditional-option "3")
-                              :condition {:answer-compared-to  2017
+                              :condition {:answer-compared-to  2018
                                           :comparison-operator "<"}
                               :followups [(assoc (component/single-choice-button metadata)
                                             :label (:have-competence-based-qualification texts)
