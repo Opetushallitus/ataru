@@ -1089,19 +1089,37 @@
                           :dispatch [:editor/set-belongs-to-hakukohteet-modal-search-term
                                      id search-term]}}))
 
-(reg-event-db
-  :editor/toggle-element-visibility-on-form
-  (fn [db [_ path]]
-    (let [content-path (conj (vec (db/current-form-content-path db path))
-                         :params :hidden)]
-      (-> db
-          (update-in content-path #(boolean (not %)))
-          (update-modified-by [path])))))
-
 (defn remove-option-path [path]
   (if (= :options (last (butlast path)))
     (vec (butlast (butlast path)))
     path))
+
+
+(reg-event-db
+  :editor/toggle-element-visibility-on-form
+  (fn [db [_ path]]
+    (let [content-path (conj (vec (db/current-form-content-path db path))
+                             :params :hidden)]
+      (-> db
+          (update-in content-path #(boolean (not %)))
+          (update-modified-by [path])))))
+
+(reg-event-db
+  :editor/toggle-option-visibility-on-form
+  (fn [db [_ path]]
+    (let [option-path  (vec (db/current-form-content-path db path))
+          content-path (conj option-path :hidden)
+          is-hidden? (-> db
+                         (get-in content-path)
+                         boolean)
+          flip (fn [db]
+                 (if is-hidden?
+                   (update-in db option-path dissoc :hidden)
+                   (assoc-in db content-path true)))]
+      (-> db
+          (flip)
+          (update-modified-by [(remove-option-path path)])))))
+
 
 (reg-event-db
   :editor/add-to-belongs-to-hakukohteet

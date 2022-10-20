@@ -149,7 +149,8 @@
          jyemp?                 (jyemp? ylioppilastutkinto? db field-descriptor)
          form                   (:form db)
          answers                (get-in db [:application :answers])
-         visible?               (and (not (get-in field-descriptor [:params :hidden]))
+         visible?               (and (not (or (get-in field-descriptor [:params :hidden])
+                                              (get-in field-descriptor [:hidden])))
                                      visible?
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
                                      (or (empty? belongs-to)
