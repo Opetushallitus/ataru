@@ -911,8 +911,11 @@
                                                  (recalculate-target-path-prevent-oob copy-component-path target-path))
              result-is-nested-component-group? (and
                                                 (contains? (set target-path) :children)
-                                                (= "wrapperElement" (:fieldClass component)))]
-         (when-not result-is-nested-component-group?
+                                                (= "wrapperElement" (:fieldClass component)))
+             adjacent-fieldset-cut?            (and
+                                                 copy-component-cut?
+                                                 (= "adjacentfieldset" (:fieldType component)))]
+         (when (or (not result-is-nested-component-group?) adjacent-fieldset-cut?)
            (if copy?
              (let [reset-uuid               (fn [x] (if (and (:id x) (cu/valid-uuid? (:id x)))
                                                       (assoc x :id (cu/new-uuid))
