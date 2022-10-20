@@ -1676,6 +1676,9 @@
    :lupatiedot-kk                                            {:fi "Lupatiedot (korkeakoulutus)"
                                                               :sv "Tillståndsuppgifter (högre utbildning)"
                                                               :en "Permissions (higher education)"}
+   :permission-for-electronic-transactions-kylla             {:fi "Hyväksyn sähköisen asioinnin ehdot"
+                                                              :sv "Jag godkänner villkoren för elektronisk ärendehantering"
+                                                              :en "I agree on the terms of online/electronic service"}
    :lupatiedot-toinen-aste                                   {:fi "Lupatiedot (2. aste)"
                                                               :sv "Tillståndsuppgifter (2. stadiet)"
                                                               :en "Permissions"}

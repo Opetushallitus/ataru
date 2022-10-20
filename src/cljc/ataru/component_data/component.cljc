@@ -203,7 +203,7 @@
          :params {:info-text {:label (:permission-for-electronic-transactions-info texts/translation-mapping)}}
          :validators ["required-hakija"]
          :options [{:value "Kyllä"
-                    :label (:yes texts/general-texts)}]))
+                    :label (:permission-for-electronic-transactions-kylla texts/translation-mapping)}]))
 
 (defn asiointikieli [metadata]
   (assoc (dissoc (dropdown metadata) :options)
