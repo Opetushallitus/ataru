@@ -13,10 +13,10 @@
         initial-form {:key     form-key
                       :content [{:some :component}]}
         new-content  (with-redefs [subscribe (constantly (atom false))]
-                       (-> {:editor {:selected-form-key form-key
-                                     :forms             {form-key initial-form}}}
+                       (-> {:db {:editor {:selected-form-key form-key
+                                          :forms             {form-key initial-form}}}}
                            (h/generate-component [:generate-component generate-fn 1])
-                           (get-in [:editor :forms form-key :content])))]
+                           (get-in [:db :editor :forms form-key :content])))]
     (are [expected actual] (= expected actual)
       2 (count new-content)
       {:some :component} (first new-content)
@@ -27,14 +27,28 @@
         initial-form {:key     form-key
                       :content [{:children [{:child :component}]}]}
         new-children (with-redefs [subscribe (constantly (atom false))]
-                       (-> {:editor {:selected-form-key form-key
-                                     :forms             {form-key initial-form}}}
+                       (-> {:db {:editor {:selected-form-key form-key
+                                     :forms             {form-key initial-form}}}}
                            (h/generate-component [:generate-component generate-fn [0 :children 1]])
-                           (get-in [:editor :forms form-key :content 0 :children])))]
+                           (get-in [:db :editor :forms form-key :content 0 :children])))]
     (are [expected actual] (= expected actual)
       2 (count new-children)
       {:child :component} (first new-children)
       {:fake :component} (second new-children))))
+
+(deftest generate-component-with-koodisto-sources-sends-events
+  (let [generate-koodisto-fn (fn [] {:id "koodisto-child" :koodisto-source {:uri "tutkinnot" :version 2 :allow-invalid? false}})
+        form-key     1234
+        initial-form {:key     form-key
+                      :content [{:some :component}]}
+        events  (with-redefs [subscribe (constantly (atom false))]
+                                  (-> {:db {:editor {:selected-form-key form-key
+                                                     :forms             {form-key initial-form}}}}
+                                      (h/generate-component [:generate-component generate-koodisto-fn 1])
+                                      (get :dispatch-n)))]
+    (are [expected actual] (= expected actual)
+                           1 (count events)
+                           [:editor/fetch-koodisto-for-component-with-id "koodisto-child"  {:uri "tutkinnot" :version 2 :allow-invalid? false}] (first events))))
 
 (deftest remove-component-removes-from-root-level
   (let [form-key 1234
