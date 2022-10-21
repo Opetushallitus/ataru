@@ -491,11 +491,11 @@
           db)
         (map keyword (:selection-limited db))))))
 
-(defn- get-question-ids-by-question-parent-id [db parent-id]
+(defn get-question-ids-by-question-parent-id [db parent-id]
   (map
     #(:id %) (filter (fn [item] (= (:children-of item) parent-id)) (:flat-form-content db))))
 
-(defn- get-selection-parent-id [db question-id]
+(defn get-selection-parent-id [db question-id]
   (:children-of
     (first (filter (fn [item] (= (:id item) (name question-id))) (:flat-form-content db)))))
 

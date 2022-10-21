@@ -11,7 +11,8 @@
             [cemerick.url :as url]
             [ataru.hakukohde.liitteet :as liitteet]
             [ataru.hakija.demo :as demo]
-            [ataru.tarjonta.haku :as haku]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.hakija.application-handlers :as handlers]))
 
 (defonce attachment-modify-grace-period-days
   (get (js->clj js/config) "attachment-modify-grace-period-days" 14))
@@ -626,9 +627,11 @@
 (re-frame/reg-sub
   :application/fetching-selection-limits?
   (fn [db [_ id]]
-    (if-let [limited (get db :selection-limited)]
-      (and (limited (name id))
-           (some #(get-in db [:application :validators-processing (keyword %)]) limited)))))
+    (let [parent-id (handlers/get-selection-parent-id db id)
+          selection-ids (handlers/get-question-ids-by-question-parent-id db parent-id)]
+      (if-let [limited (get db :selection-limited)]
+        (and (limited (name id))
+             (some #(get-in db [:application :validators-processing (keyword %)]) selection-ids))))))
 
 (re-frame/reg-sub
   :application/selection-over-network-uncertain?
