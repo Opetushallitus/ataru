@@ -9,6 +9,13 @@ AND (SELECT t.h
 AND a.hakukohde[1] = ANY (:ensisijainen-hakukohde)
 /*~   ) ~*/
 
+-- :snip edited-hakutoiveet-snip
+/*~ (if (contains? params :only-edited) */
+AND a.hakukohde <> (SELECT hakukohde FROM applications WHERE key = a.key ORDER BY id ASC LIMIT 1)
+/*~*/
+AND a.hakukohde = (SELECT hakukohde FROM applications WHERE key = a.key ORDER BY id ASC LIMIT 1)
+/*~   ) ~*/
+
 -- :snip attachment-snip
 AND EXISTS (SELECT 1
             FROM application_hakukohde_attachment_reviews
@@ -200,6 +207,7 @@ WHERE la.id IS NULL
 /*~ (when (contains? params :hakukohde) */
   AND a.hakukohde && :hakukohde
 /*~ ) ~*/
+--~ (when (contains? params :edited-hakutoiveet-snip) ":snip:edited-hakutoiveet-snip")
 --~ (when (contains? params :ensisijainen-hakukohde-snip) ":snip:ensisijainen-hakukohde-snip")
 --~ (when (contains? params :attachment-snip) ":snip:attachment-snip")
 --~ (when (contains? params :option-answers-snip) ":snip:option-answers-snip")

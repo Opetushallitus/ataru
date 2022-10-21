@@ -20,6 +20,8 @@
                                                           :conditionally-eligible true}
                       :eligibility-set-automatically     {:yes true
                                                           :no  true}
+                      :only-edited-hakutoiveet           {:edited   true
+                                                          :unedited true}
                       :payment-obligation                {:unreviewed    true
                                                           :obligated     true
                                                           :not-obligated true}
