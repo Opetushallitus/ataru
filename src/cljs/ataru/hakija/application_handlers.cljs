@@ -502,7 +502,8 @@
 (defn reset-other-selections [db question-id _]
   (let [parent-id (get-selection-parent-id db question-id)
         question-group-question-ids (get-question-ids-by-question-parent-id db parent-id)]
-    (reduce (fn [db key]
+    (if (some? parent-id)
+      (reduce (fn [db key]
               (if (= key question-id)
                 db
                 (-> db
@@ -510,9 +511,8 @@
                     (assoc-in [:application :answers key :value] nil)
                     (assoc-in [:application :answers key :valid] false))))
             db
-            (if (some? parent-id)
-              (map keyword question-group-question-ids)
-              (map keyword (:selection-limited db))))))
+              (map keyword question-group-question-ids))
+      db)))
 
 (reg-event-fx
   :application/handle-update-selection-limits

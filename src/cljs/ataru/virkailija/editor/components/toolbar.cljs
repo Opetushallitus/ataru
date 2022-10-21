@@ -119,11 +119,15 @@
              :else
              [:div.plus-component [:span "+"]])])))
 
+(defn handle-root-level-components [elements]
+  (let [elements-with-arvosanat (conj elements [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
+                                      [:arvosanat-lukio arvosanat/arvosanat-lukio])]
+    (filterv (fn [x] (not (= (first x) :single-choice-button))) elements-with-arvosanat)))
+
 (defn add-component [path root-level-add-component?]
   (let [elements (cond-> (toolbar-elements)
                          root-level-add-component?
-                         (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-                               [:arvosanat-lukio arvosanat/arvosanat-lukio]))]
+                         (handle-root-level-components))]
     [custom-add-component elements path
      (fn [generate-fn]
        (dispatch [:generate-component generate-fn path]))]))
