@@ -107,6 +107,11 @@ export const komponentinLisays = {
   avaaValikko: () =>
     cy.get('[data-test-id=component-toolbar]:visible').trigger('mouseover'),
 
+  avaaLomakeosioValikko: () =>
+    cy
+      .get('[data-test-id=component-subform-toolbar]:visible')
+      .trigger('mouseover'),
+
   haeLisaaArvosanatLinkki: () =>
     cy.get('[data-test-id=component-toolbar-arvosanat]:visible'),
 
