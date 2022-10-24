@@ -47,8 +47,9 @@
                                       (h/generate-component [:generate-component generate-koodisto-fn 1])
                                       (get :dispatch-n)))]
     (are [expected actual] (= expected actual)
-                           1 (count events)
-                           [:editor/fetch-koodisto-for-component-with-id "koodisto-child"  {:uri "tutkinnot" :version 2 :allow-invalid? false}] (first events))))
+                           2 (count events)
+                           [:editor/start-load-spinner 1] (first events)
+                           [:editor/fetch-koodisto-for-component-with-id "koodisto-child"  {:uri "tutkinnot" :version 2 :allow-invalid? false}] (last events))))
 
 (deftest remove-component-removes-from-root-level
   (let [form-key 1234

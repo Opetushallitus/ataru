@@ -453,7 +453,10 @@
                                              util/flatten-form-fields
                                              (filter #(some? (:koodisto-source %)))
                                              (map (fn [component]
-                                                    [:editor/fetch-koodisto-for-component-with-id (:id component) (get-koodisto-params-fn component)])))]
+                                                    [:editor/fetch-koodisto-for-component-with-id (:id component) (get-koodisto-params-fn component)])))
+        koodisto-components-with-load (if (> (count koodisto-components-to-dispatch) 0)
+                                        (into [] (concat [[:editor/start-load-spinner (count koodisto-components-to-dispatch)]] koodisto-components-to-dispatch))
+                                        koodisto-components-to-dispatch)]
     (as-> db db'
       (update-in db' parent-component-path (cu/vector-of-length (count components)))
       (reduce (fn [db' [idx component]]
@@ -463,9 +466,21 @@
               (map vector (range) components))
       (assoc-in db' [:editor :ui (-> components first :id) :focus?] true)
       {:db db'
-       :dispatch-n koodisto-components-to-dispatch})))
+       :dispatch-n koodisto-components-with-load})))
 
 (reg-event-fx :generate-component generate-component)
+
+(reg-event-db
+  :editor/start-load-spinner
+  (fn [db [_ amount]]
+    (assoc-in db [:editor :ui :spinner] amount)))
+
+(reg-event-db
+  :editor/remove-from-load-spinner
+  (fn [db _]
+    (let [amount (get-in db [:editor :ui :spinner])
+          amount-after (js/Math.max 0 (- amount 1))]
+      (assoc-in db [:editor :ui :spinner] amount-after))))
 
 (defn- remove-component
   [db path]
@@ -1018,9 +1033,9 @@
             :handler-or-dispatch :editor/set-new-koodisto-while-keeping-existing-followups
             :handler-args        {:id id :uri uri :version version}}}))
 
-(reg-event-db
+(reg-event-fx
   :editor/set-new-koodisto-while-keeping-existing-followups
-  (fn [db [_ new-koodisto {:keys [id uri version]}]]
+  (fn [{db :db} [_ new-koodisto {:keys [id uri version]}]]
     (let [key                       (get-in db [:editor :selected-form-key])
           form                      (get-in db [:editor :forms key :content])
           lang                      (keyword (get-in db [:editor :user-info :lang]))
@@ -1037,8 +1052,10 @@
                                                (= version (get-in component [:koodisto-source :version])))
                                         (update-koodisto-component component)
                                         component))
-          updated-form              (walk/prewalk find-koodisto-component form)]
-      (assoc-in db [:editor :forms key :content] updated-form))))
+          updated-form              (walk/prewalk find-koodisto-component form)
+          updated-db                (assoc-in db [:editor :forms key :content] updated-form)]
+      {:db updated-db
+       :dispatch [:editor/remove-from-load-spinner]})))
 
 (reg-event-fx
   :editor/fetch-attachment-types-koodisto

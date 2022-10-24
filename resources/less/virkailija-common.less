@@ -296,3 +296,20 @@ body {
   max-height: 400px;
   overflow-y: scroll;
 }
+
+.loading__curtain {
+  position: fixed;
+  z-index: 999;
+  background-color: rgba(0,0,0,30%);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  text-align: center;
+  padding-top: 30vh;
+
+  i.zmdi.zmdi-spinner.spin {
+    font-size: 60px;
+    color: white;
+  }
+}

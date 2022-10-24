@@ -440,6 +440,12 @@
     (get-in db [:editor :copy-component])))
 
 (re-frame/reg-sub
+  :editor/load-spinner-running?
+  (fn load-spinner-running? [db _]
+    (let [amount-in-spinner (get-in db [:editor :ui :spinner])]
+      (and (some? amount-in-spinner) (> amount-in-spinner 0)))))
+
+(re-frame/reg-sub
   :editor/component-button-state
   (fn [[_ path] _]
     [(re-frame/subscribe [:editor/ui])
