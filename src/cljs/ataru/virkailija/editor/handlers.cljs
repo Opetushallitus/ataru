@@ -448,7 +448,7 @@
         get-koodisto-params-fn (fn [component]
                                  {:uri (get-in component [:koodisto-source :uri])
                                   :version (get-in component [:koodisto-source :version])
-                                  :allow-invalid? (get-in component [:koodisto-source :allow-invalid?])})
+                                  :allow-invalid? (get-in component [:koodisto-source :allow-invalid?] false)})
         koodisto-components-to-dispatch (->> components
                                              util/flatten-form-fields
                                              (filter #(and (some? (:koodisto-source %)) (> (count (get-in % [:koodisto-source :uri])) 0)))
