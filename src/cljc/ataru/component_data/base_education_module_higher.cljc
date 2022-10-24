@@ -236,17 +236,7 @@
                             (assoc (component/text-field-conditional-option "3")
                               :condition {:answer-compared-to  2018
                                           :comparison-operator "<"}
-                              :followups [(assoc (component/single-choice-button metadata)
-                                            :label (:have-competence-based-qualification texts)
-                                            :options [{:label     (:yes general-texts)
-                                                       :value     "0"
-                                                       :followups [(assoc (component/info-element metadata)
-                                                                     :text (:notification-competence-based-qualification texts))
-                                                                   (seven-day-attachment-followup "pohjakoulutus_amp--attachment_past" metadata (:vocational-diploma texts))]}
-                                                      {:label     (:have-not general-texts)
-                                                       :value     "1"
-                                                       :followups [(koski-info-notification metadata)]}]
-                                            :validators ["required"])])])
+                              :followups [(seven-day-attachment-followup "pohjakoulutus_amp--attachment_past" metadata (:vocational-diploma texts))])])
                 (vocational-qualification-text-field metadata)
                 (scope-of-education-text-field metadata (:scope-of-vocational-qualification texts))
                 (scope-of-education-unit-dropdown metadata)
@@ -278,15 +268,7 @@
                             (assoc (component/text-field-conditional-option "2")
                               :condition {:answer-compared-to  2018
                                           :comparison-operator "<"}
-                              :followups [(assoc (component/single-choice-button metadata)
-                                            :label (:have-competence-based-qualification texts)
-                                            :params {:info-text {:label nil}}
-                                            :options [{:label     (:yes general-texts)
-                                                       :value     "0"
-                                                       :followups [(seven-day-attachment-followup "pohjakoulutus_yo_ammatillinen--attachment_competence" metadata (:vocational-diploma texts))]}
-                                                      {:label     (:have-not general-texts)
-                                                       :value     "1"
-                                                       :followups [(koski-info-notification metadata)]}])])
+                              :followups [(seven-day-attachment-followup "pohjakoulutus_yo_ammatillinen--attachment_competence" metadata (:vocational-diploma texts))])
                             (assoc (component/text-field-conditional-option "3")
                               :condition {:answer-compared-to  2017
                                           :comparison-operator ">"}

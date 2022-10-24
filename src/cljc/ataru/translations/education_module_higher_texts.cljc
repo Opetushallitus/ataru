@@ -11,12 +11,6 @@
    :preliminary-certificate-vocational-basic               {:en "Preliminary certificate from the educational institution"
                                                             :fi "Ennakkoarvio ammatillisesta perustutkinnosta"
                                                             :sv "Läroanstaltens preliminär intyg om yrkesinriktad grundexamen"}
-   :have-competence-based-qualification                    {:en "Have you completed your qualification as a competence based qualification in its entirety?"
-                                                            :fi "Oletko suorittanut ammatillisen perustutkinnon näyttötutkintona?"
-                                                            :sv "Har du avlagt examen som fristående yrkesexamen?"}
-   :notification-competence-based-qualification            {:en "Please note that if you have completed your vocational qualification as a competence-based qualification, you do not take part in the certificate-based admission."
-                                                            :fi "Huomaathan, ettet ole mukana todistusvalinnassa, jos olet suorittanut tutkinnon näyttötutkintona. "
-                                                            :sv "Obs! En examen som är avlagd som fristående examen beaktas inte i betygsbaserad antagning."}
    :add-more-qualifications                                {:en "Click add if you want to add further qualifications."
                                                             :fi "Paina lisää, jos haluat lisätä useampia tutkintoja."
                                                             :sv "Tryck på lägg till om du vill lägga till flera examina."}
