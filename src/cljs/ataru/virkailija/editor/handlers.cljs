@@ -451,7 +451,7 @@
                                   :allow-invalid? (get-in component [:koodisto-source :allow-invalid?])})
         koodisto-components-to-dispatch (->> components
                                              util/flatten-form-fields
-                                             (filter #(some? (:koodisto-source %)))
+                                             (filter #(and (some? (:koodisto-source %)) (> (count (get-in % [:koodisto-source :uri])) 0)))
                                              (map (fn [component]
                                                     [:editor/fetch-koodisto-for-component-with-id (:id component) (get-koodisto-params-fn component)])))
         koodisto-components-with-load (if (> (count koodisto-components-to-dispatch) 0)
