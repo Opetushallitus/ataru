@@ -1420,7 +1420,7 @@
    :integer                                                  {:fi "kokonaisluku"
                                                               :sv "heltal"
                                                               :en "integer"}
-   :kk-base-education-module                                 {:fi "Pohjakoulutusmoduuli (kk-yhteishaku)"
+   :kk-base-education-module                                 {:fi "Pohjakoulutusmoduuli (korkeakoulut)"
                                                               :sv "Grundutbildningsmodul (Gea till högskolor)"
                                                               :en "EN: Pohjakoulutusmoduuli (kk-yhteishaku)"}
    :koodisto                                                 {:fi "Koodisto"
