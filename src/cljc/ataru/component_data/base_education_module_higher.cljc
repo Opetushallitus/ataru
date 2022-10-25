@@ -57,16 +57,19 @@
     :label (:educational-institution texts)
     :validators ["required"]))
 
-(defn- year-of-completion [id metadata max-value min-value]
-  (assoc (component/text-field metadata)
-    :id id
-    :label (:year-of-completion texts)
-    :params {:size      "S"
-             :numeric   true
-             :decimals  nil
-             :max-value max-value
-             :min-value min-value}
-    :validators ["numeric" "required"]))
+(defn- year-of-completion
+  ([id metadata max-value min-value]
+   (year-of-completion id metadata max-value min-value (:year-of-completion texts)))
+  ([id metadata max-value min-value year-label]
+    (assoc (component/text-field metadata)
+      :id id
+      :label year-label
+      :params {:size      "S"
+               :numeric   true
+               :decimals  nil
+               :max-value max-value
+               :min-value min-value}
+      :validators ["numeric" "required"])))
 
 (defn- name-of-degree [metadata]
   (assoc (component/dropdown metadata)
@@ -258,7 +261,7 @@
   [(assoc (component/question-group metadata)
      :children [(assoc (component/info-element metadata)
                   :text (:automatic-matriculation-info texts))
-                (assoc (year-of-completion "pohjakoulutus_yo_ammatillinen--vocational-completion-year" metadata (current-year-as-str) "1900")
+                (assoc (year-of-completion "pohjakoulutus_yo_ammatillinen--vocational-completion-year" metadata (current-year-as-str) "1900" (:year-of-completion-vocational texts))
                   :options [(assoc (component/text-field-conditional-option "0")
                               :condition {:answer-compared-to  (current-year)
                                           :comparison-operator "="}

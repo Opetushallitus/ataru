@@ -142,6 +142,9 @@
    :year-of-completion                                     {:en "Year of completion"
                                                             :fi "Suoritusvuosi"
                                                             :sv "Avlagd år"}
+   :year-of-completion-vocational                          {:en "Year of completion for vocational qualification"
+                                                            :fi "Ammatillisen tutkinnon suoritusvuosi"
+                                                            :sv "År för avläggande av yrkesinriktad examen"}
    :automatic-matriculation-info                           {:en "Your matriculation examination details are received automatically from the national registry for study rights and completed studies. You can check your study rights and completed studies in Finland from [My Studyinfo's](https://studyinfo.fi/oma-opintopolku/) section: My completed studies (Only available in Finnish/Swedish). If your information is incorrect or information is missing, please contact the Matriculation Examination Board to correct any errors. "
                                                             :fi "Saamme ylioppilastutkinnon suoritustietosi ylioppilastutkintorekisteristä. Voit tarkistaa opintosuorituksesi [Oma Opintopolku -palvelun](https://opintopolku.fi/oma-opintopolku/) Omat opintosuoritukseni -osiosta. Jos tiedossasi on puutteita, ole yhteydessä ylioppilastutkintolautakuntaan tietojen korjaamiseksi."
                                                             :sv "Vi får uppgifterna om din studentexamen ur studentexamensregistret. Du kan kolla dina studieprestationer i [Min Studieinfos](https://studieinfo.fi/oma-opintopolku/) del Mina studier. Om dina uppgifter är felaktiga, ska du kontakta Studentexamensnämnden som kan korrigera felen."}
@@ -314,46 +317,9 @@
    :share-link-to-my-studyinfo                             {:en "Share a link to your study records from My Studyinfo"
                                                             :fi "Jaa linkki opintosuoritustietoihisi Oma Opintopolku -palvelussa"
                                                             :sv "Dela dina prestationsuppgifter direkt från Min Studieinfo"}
-   :how-to-share-link-to-my-studyinfo                      {:en "This question applies only study programmes listed above, under \"Show study programmes\".
-
-                                                                                                                                   You can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.
-
-                                                                                                                                   To create a link to your completed study records:
-
-                                                                                                                                   1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)
-                                                                                                                                   2. Choose \"Proceed to studies\".
-                                                                                                                                   3. Choose \"Jaa suoritustietoja\" (share study records).
-                                                                                                                                   4. Choose the study records you wish to share.
-                                                                                                                                   5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).
-                                                                                                                                   6. Choose \"Kopioi linkki\" (copy link).
-                                                                                                                                   7. Paste the copied link to the text field below.
-                                                                                                                                   "
-                                                            :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".
-
-                                                                                                                                   Halutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.
-
-                                                                                                                                   Näin luot linkin omiin suoritustietoihisi:
-
-                                                                                                                                   1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).
-                                                                                                                                   2. Valitse ”Siirry opintosuorituksiin”.
-                                                                                                                                   3. Valitse näytöltä ”Jaa suoritustietoja”.
-                                                                                                                                   4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.
-                                                                                                                                   5. Valitse ”Jaa valitsemasi opinnot”.
-                                                                                                                                   6. Valitse ”Kopioi linkki”.
-                                                                                                                                   7. Liitä linkki alla olevaan tekstikenttään."
-                                                            :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.
-
-                                                                                                                                   Du kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.
-
-                                                                                                                                   Så här skapar du en länk till dina prestationsuppgifter:
-
-                                                                                                                                   1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).
-                                                                                                                                   2. Välj ”Fortsätt till studierna”.
-                                                                                                                                   3. Välj ”Dela dina prestationsuppgifter”.
-                                                                                                                                   4. Välj de prestationsuppgifter du vill dela.
-                                                                                                                                   5. Välj ”Dela valda studier”.
-                                                                                                                                   6. Välj ”Kopiera länk”.
-                                                                                                                                   7. Klistra in länken i fältet nedan på ansökningsblanketten."}
+   :how-to-share-link-to-my-studyinfo                      {:en "This question applies only study programmes listed above, under \"Show study programmes\".\n\nYou can share the information about your completed studies using a link via My Studyinfo service. In this case you do not need to submit transcript of records and degree certificate separately as an attachment to your application.\n\nTo create a link to your completed study records:\n\n1. Log in to [My Studyinfo service](https://studyinfo.fi/oma-opintopolku/) (requires Finnish e-identification and respective means of identification)\n2. Choose \"Proceed to studies\".\n3. Choose \"Jaa suoritustietoja\" (share study records).\n4. Choose the study records you wish to share.\n5. Choose \"Jaa valitsemasi opinnot\" (share studyrecords you have chosen).\n6. Choose \"Kopioi linkki\" (copy link).\n7. Paste the copied link to the text field below."
+                                                            :fi "Tämä kysymys koskee vain yllä mainittuja hakukohteita, jotka näet painamalla \"näytä hakukohteet\".\n\nHalutessasi voit jakaa opintosuoritustietosi sekä läsnä- ja poissaolokausitietosi Oma Opintopolku -palvelusta saatavan linkin avulla. Tällöin sinun ei tarvitse toimittaa erillistä opintosuoritusotetta ja tutkintotodistusta hakemuksesi liitteeksi.\n\nNäin luot linkin omiin suoritustietoihisi:\n\n1. Kirjaudu sisään [Oma Opintopolku -palveluun](https://opintopolku.fi/oma-opintopolku/).\n2. Valitse ”Siirry opintosuorituksiin”.\n3. Valitse näytöltä ”Jaa suoritustietoja”.\n4. Valitse suoritustiedot, jotka haluat jakaa. Valitse ainakin koulutus, jonka perusteella haet.\n5. Valitse ”Jaa valitsemasi opinnot”.\n6. Valitse ”Kopioi linkki”.\n7. Liitä linkki alla olevaan tekstikenttään."
+                                                            :sv "Denna fråga gäller de ovannämnda ansökningsmålen som du får fram genom att klicka på ”visa ansökningsmål”.\n\nDu kan meddela uppgifterna om dina studieprestationer och dina närvaro- och frånvaroperioder med hjälp av en länk. Då behöver du inte lämna in ett separat studieutdrag och betyg som bilaga till din ansökan.\n\nSå här skapar du en länk till dina prestationsuppgifter:\n\n1. Logga in i [tjänsten Min Studieinfo](https://studieinfo.fi/oma-opintopolku/).\n2. Välj ”Fortsätt till studierna”.\n3. Välj ”Dela dina prestationsuppgifter”.\n4. Välj de prestationsuppgifter du vill dela.\n5. Välj ”Dela valda studier”.\n6. Välj ”Kopiera länk”.\n7. Klistra in länken i fältet nedan på ansökningsblanketten."}
    :are-attachments-in-fi-en-sv                            {:en "Are your attachments in Finnish, Swedish or English?"
                                                             :fi "Ovatko liitteesi suomen-, ruotsin- tai englanninkielisiä?"
                                                             :sv "Är dina bilagor finsk-, svensk-, eller engelskspråkiga?"}
