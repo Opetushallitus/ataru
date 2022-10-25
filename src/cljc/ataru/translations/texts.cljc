@@ -386,6 +386,9 @@
    :permission-for-electronic-transactions-info {:fi "Täyttämällä sähköisen hakulomakkeen annat samalla luvan siihen, että opiskelijavalintaan liittyvä viestintä voidaan hoitaa pelkästään sähköisesti. Jos et suostu näihin ehtoihin, ota yhteyttä ensisijaisen hakutoiveesi korkeakoulun hakijapalveluihin."
                                                  :sv "Genom att fylla i denna elektroniska ansökningsblankett ger du samtidigt ditt medgivande till att kommunikationen gällande studerandeantagningen kan skötas enbart elektroniskt. Om du inte går med på dessa villkor, kontakta ansökningsservicen vid högskolan."
                                                  :en "By filling in this electronic application form you also give your consent that communication regarding student admissions can be carried out only by email. If you do not agree to these terms, please contact the admissions services of the higher education institution that you are applying to."}
+   :permission-for-electronic-transactions-kylla  {:fi "Hyväksyn sähköisen asioinnin ehdot"
+                                                   :sv "Jag godkänner villkoren för elektronisk ärendehantering"
+                                                   :en "I agree on the terms of online/electronic service"}
    :paatos-opiskelijavalinnasta-sahkopostiin    {:fi "Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"
                                                  :sv "Läroanstalten får skicka beslutet för studerandeantagningen till min e-post"
                                                  :en "EN: Oppilaitos saa toimittaa päätöksen opiskelijavalinnasta sähköpostiini"}
