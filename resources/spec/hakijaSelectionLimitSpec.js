@@ -8,7 +8,7 @@
       before(
         newForm('testSelectionLimitForm'),
         wait.until(() => {
-          return formSections().length == 1
+          return formSections().length == 2
         })
       )
       it('loads form with selection limit', () => {
