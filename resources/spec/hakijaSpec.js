@@ -12,10 +12,10 @@
         })
       )
       it('with complete form', () => {
-        expect(formFields().length).to.equal(28)
+        expect(formFields().length).to.equal(27)
         expect(submitButton().prop('disabled')).to.equal(true)
         expect(formHeader().text()).to.equal('Testilomake')
-        expect(invalidFieldsStatus().text()).to.equal('Tarkista 13 tietoa')
+        expect(invalidFieldsStatus().text()).to.equal('Tarkista 12 tietoa')
         expect(
           formFields()
             .eq(15)
@@ -84,9 +84,9 @@
           expect(formFields().eq(10).find('input').val()).to.equal('JYVÄSKYLÄ')
           expect(formFields().eq(12).find('select').val()).to.equal('FI')
           expect(invalidFieldNames().join(';')).to.equal(
-            'Toinen kysymys;Osiokysymys;Lyhyen listan kysymys'
+            'Toinen kysymys;Osiokysymys'
           )
-          expect(invalidFieldsStatus().text()).to.equal('Tarkista 3 tietoa')
+          expect(invalidFieldsStatus().text()).to.equal('Tarkista 2 tietoa')
         })
       })
     })
@@ -123,9 +123,22 @@
           'textarea',
           'Toisen pakollisen tekstialueen vastaus'
         ),
-        clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
-        clickNthFieldRadio(27, 'Jatkokysymys A'),
-        clickNthFieldRadio(27, 'Jatkokysymys B'),
+        // setNthFieldInputValue(24, 'info'),
+        setNthFieldOption(25, '120'),
+        // clickNthFieldRadio(26, 'Ensimmäinen vaihtoehto'),
+        // clickNthFieldRadio(27, 'Jatkokysymys A'),
+        // clickNthFieldRadio(27, 'Jatkokysymys B'),
+        // setNthFieldSubInputValue(28, 0, 'A1'),
+        // setNthFieldSubInputValue(28, 1, 'B1'),
+        // setNthFieldSubInputValue(28, 2, 'C1'),
+        // clickElement(() => {
+        //   return formFields().eq(28).find('.application__form-add-new-row')
+        // }),
+        // setNthFieldSubInputValue(28, 3, 'A2'),
+        // setNthFieldSubInputValue(28, 5, 'C2'),
+        setNthFieldSubInputValue(26, 0, 'Vasen vierekkäinen'),
+        setNthFieldSubInputValue(26, 1, 'Oikea vierekkäinen'),
+        setNthFieldOption(27, '0'),
         setNthFieldSubInputValue(28, 0, 'A1'),
         setNthFieldSubInputValue(28, 1, 'B1'),
         setNthFieldSubInputValue(28, 2, 'C1'),
@@ -134,19 +147,8 @@
         }),
         setNthFieldSubInputValue(28, 3, 'A2'),
         setNthFieldSubInputValue(28, 5, 'C2'),
-        setNthFieldSubInputValue(29, 0, 'Vasen vierekkäinen'),
-        setNthFieldSubInputValue(29, 1, 'Oikea vierekkäinen'),
-        setNthFieldOption(30, '0'),
-        setNthFieldSubInputValue(31, 0, 'A1'),
-        setNthFieldSubInputValue(31, 1, 'B1'),
-        setNthFieldSubInputValue(31, 2, 'C1'),
-        clickElement(() => {
-          return formFields().eq(31).find('.application__form-add-new-row')
-        }),
-        setNthFieldSubInputValue(31, 3, 'A2'),
-        setNthFieldSubInputValue(31, 5, 'C2'),
-        setNthFieldInputValue(32, '1,323'),
-        setNthFieldOption(33, '810'),
+        setNthFieldInputValue(29, '1,323'),
+        setNthFieldOption(30, '810'),
         wait.until(() => {
           return !submitButton().prop('disabled')
         })
@@ -205,10 +207,7 @@
           'En',
           'Arkkitehti',
           'Toisen pakollisen tekstialueen vastaus',
-          '',
-          'Ensimmäinen vaihtoehto',
-          'Jatkokysymys A',
-          'Jatkokysymys B',
+          'Tekniikan lisensiaatti',
           'Pudotusvalikon 1. kysymys',
           '1,323',
           'Entinen Neuvostoliitto',
@@ -221,12 +220,6 @@
           }
         )
         const expectedTabularValues = [
-          'A1',
-          'B1',
-          'C1',
-          'A2',
-          '',
-          'C2',
           'A1',
           'B1',
           'C1',
