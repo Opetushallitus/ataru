@@ -491,9 +491,12 @@
           db)
         (map keyword (:selection-limited db))))))
 
+(defn- is-selection-limit? [item]
+  (boolean (some #(= "selection-limit" %) item)))
+
 (defn get-question-ids-by-question-parent-id [db parent-id]
   (map
-    #(:id %) (filter (fn [item] (= (:children-of item) parent-id)) (:flat-form-content db))))
+    #(:id %) (filter (fn [item] (and (= (:children-of item) parent-id) (is-selection-limit? (:validators item)))) (:flat-form-content db))))
 
 (defn get-selection-parent-id [db question-id]
   (:children-of
