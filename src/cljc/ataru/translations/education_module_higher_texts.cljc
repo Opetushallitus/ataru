@@ -27,13 +27,8 @@
                                                             :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"
                                                             :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
    :read-who-can-apply                                     {:en "[Read more about who can apply for bachelor's and master's programmes](https://opintopolku.fi/konfo/en/sivu/how-to-apply-for-bachelors-and-masters)"
-                                                            :fi "Lue lisää siitä millä koulutuksella voit hakea
-                                                                 - [yliopistokoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-yliopistoon)
-                                                                 - [ammattikorkeakoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-ammattikorkeakouluun)"
-                                                            :sv "Mer information om vem som kan söka till
-                                                                 - [universitetsutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-universitet)
-                                                                 - [yrkeshögskoleutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-yrkeshgskolor)
-                                                                 "}
+                                                            :fi "Lue lisää siitä millä koulutuksella voit hakea\n- [yliopistokoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-yliopistoon)\n- [ammattikorkeakoulutuksiin](https://opintopolku.fi/konfo/fi/sivu/valmistaudu-korkeakoulujen-yhteishakuun#hakukelpoisuus-ammattikorkeakouluun)"
+                                                            :sv "Mer information om vem som kan söka till\n- [universitetsutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-universitet)\n- [yrkeshögskoleutbildning](https://opintopolku.fi/konfo/sv/sivu/forbered-dig-for-gemensam-ansokan-till-hogskolor#anskningsbehrighet-till-yrkeshgskolor)"}
    :transcript-of-records-upper-secondary                  {:en "Latest transcript of study records (upper secondary education diploma)"
                                                             :fi "Ennakkoarvio tai viimeisin todistus suoritetuista opinnoista muualla kuin Suomessa suoritettavasta toisen asteen tutkinnosta"
                                                             :sv "Förhandsexamensbetyg eller betyg över slutförda studier om examen som avlagts annanstans än i Finland och som i landet ifråga ger ansökningsbehörighet för högskola"}
@@ -170,6 +165,9 @@
    :european-baccalaureate-diploma-finland                 {:en "European Baccalaureate diploma completed in Finland"
                                                             :fi "European Baccalaureate Diploma -tutkintotodistus Suomessa suoritetusta tutkinnosta"
                                                             :sv "European Baccalaureate Diploma från EB-studentexamen som avlagts i Finland"}
+   :abiturprufung                                          {:en "Deutsche Internationale Abiturprüfung -diploma"
+                                                            :fi "Deutsche Internationale Abiturprüfung -tutkinto"
+                                                            :sv "Deutsche Internationale Abiturprüfung -examen"}
    :reifeprufung                                           {:en "Deutsche Internationale Abiturprüfung/Reifeprüfung -diploma"
                                                             :fi "Deutsche Internationale Abiturprüfung/Reifeprüfung -tutkinto"
                                                             :sv "Deutsche Internationale Abiturprüfung/Reifeprüfung -examen"}
@@ -181,6 +179,9 @@
                                                             :sv "Reifeprüfung/DIA -examensbetyg from RP/DIA-studentexamen som avlagts i Finland"}
    :dia-diploma                                            {:en "DIA -diploma from DIA completed outside Finland"
                                                             :fi "DIA-tutkintotodistus muualla kuin Suomessa suoritettavasta tutkinnosta"
+                                                            :sv "DIA -examensbetyg från DIA-studentexamen som avlagts annanstans än i Finland"}
+   :dia-diploma-completed                                  {:en "DIA -diploma from DIA completed outside Finland"
+                                                            :fi "DIA-tutkintotodistus muualla kuin Suomessa suoritetusta tutkinnosta"
                                                             :sv "DIA -examensbetyg från DIA-studentexamen som avlagts annanstans än i Finland"}
    :dia-diploma-finland                                    {:en "DIA diploma completed in Finland"
                                                             :fi "DIA-tutkintotodistus Suomessa suoritetusta tutkinnosta"

@@ -308,7 +308,7 @@
                                                        :followups [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_past_ib" metadata (:ib-diploma-finland texts))]}
                                                       {:label     (:european-baccalaureate texts)
                                                        :value     "1"
-                                                       :followups [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_past_eb" metadata (:ib-diploma-finland texts))]}
+                                                       :followups [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_past_eb" metadata (:european-baccalaureate-diploma-finland texts))]}
                                                       {:label     (:reifeprufung texts)
                                                        :value     "2"
                                                        :followups [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_past_dia" metadata (:reifeprufung-diploma-finland texts))
@@ -333,7 +333,7 @@
                                                                                                       [(estimated-graduation-date-text-field metadata)
                                                                                                        (seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_grades_eb" metadata (:predicted-grades-eb-finland texts))
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_progress_eb" metadata (:diploma-programme-eb-finland texts))])]}
-                                                      {:label     (:reifeprufung texts)
+                                                      {:label     (:abiturprufung texts)
                                                        :value     "2"
                                                        :followups [(have-you-graduated-with-followups metadata
                                                                                                       [(seven-day-attachment-followup "pohjakoulutus_yo_kansainvalinen_suomessa--attachment_dia" metadata (:dia-diploma-finland texts))
@@ -446,10 +446,10 @@
                                                                                                       [(estimated-graduation-date-text-field metadata)
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_grades_eb" metadata (:predicted-grades-eb texts))
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_progress_eb" metadata (:european-baccalaureate-diploma texts))])]}
-                                                      {:label     (:reifeprufung texts)
+                                                      {:label     (:abiturprufung texts)
                                                        :value     "2"
                                                        :followups [(have-you-graduated-with-followups metadata
-                                                                                                      [(seven-day-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_dia" metadata (:reifeprufung-diploma texts))]
+                                                                                                      [(seven-day-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_dia" metadata (:dia-diploma-completed texts))]
                                                                                                       [(estimated-graduation-date-text-field metadata)
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_grades_dia" metadata (:grade-page-dia texts))
                                                                                                        (deadline-next-to-request-attachment-followup "pohjakoulutus_yo_ulkomainen--attachment_progress_dia" metadata (:dia-diploma texts))])]}]
