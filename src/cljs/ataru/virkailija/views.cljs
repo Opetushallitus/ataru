@@ -16,6 +16,11 @@
 (defn no-privileges []
   [:div.privilege-info-outer [:div.privilege-info-inner "Ei oikeuksia"]])
 
+(defn- loading-spinner
+  []
+  [:div.loading__curtain
+   [:i.zmdi.zmdi-spinner.spin]])
+
 (defn some-right-exists-for-user? [rights orgs]
   (boolean (some rights (->> orgs (map :rights) flatten (map keyword)))))
 
@@ -39,7 +44,8 @@
   (let [active-panel             (re-frame/subscribe [:active-panel])
         template-editor-visible? (re-frame/subscribe [:state-query [:editor :ui :template-editor-visible?]])
         texts                    (re-frame/subscribe [:editor/virkailija-texts])
-        attachment-skimming-mode? (re-frame/subscribe [:state-query [:application :attachment-skimming :visible?]])]
+        attachment-skimming-mode? (re-frame/subscribe [:state-query [:application :attachment-skimming :visible?]])
+        load-spinner-running? (re-frame/subscribe [:editor/load-spinner-running?])]
     (fn []
       (when (not-empty @texts)
         [:div.main-container
@@ -51,6 +57,8 @@
           (when @template-editor-visible?
             [email-template-editor])]
          [top-banner]
+         (when @load-spinner-running?
+           [loading-spinner])
          (if @attachment-skimming-mode?
            [attachments/attachment-skimming]
            [:div (panels @active-panel)])]))))

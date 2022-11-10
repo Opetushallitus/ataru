@@ -1,7 +1,6 @@
 (ns ataru.applications.application-store-spec
   (:require [ataru.applications.application-store :as store]
             [ataru.applications.application-store-queries :as queries]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
             [ataru.db.db :as db]
             [ataru.fixtures.application :as fixtures]
             [ataru.fixtures.form :as form-fixtures]
@@ -254,21 +253,6 @@
                  true
                  fields-by-id
                  #{})))))
-
-(describe "application with base education"
-          (tags :unit :attachments)
-
-  (it "should be possible to extract attachment ids from base education module"
-    (should== #{"pohjakoulutus_kk_ulk--attachement"
-                "pohjakoulutus_lk--attachment"
-                "pohjakoulutus_avoin--attachment"
-                "pohjakoulutus_am--attachment"
-                "pohjakoulutus_amt--attachment"
-                "pohjakoulutus_ulk--attachment"
-                "pohjakoulutus_kk--attachment"
-                "pohjakoulutus_muu--attachment"}
-              (hebem/non-yo-attachment-ids
-               form-fixtures/base-education-attachment-test-form))))
 
 (defn- do-payment-obligation-review
   "Emulates automation by performing a review."

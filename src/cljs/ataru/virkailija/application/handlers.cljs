@@ -12,7 +12,7 @@
             [cljs-time.core :as t]
             [clojure.set :as clj-set]
             [clojure.string :as clj-string]
-            [ataru.component-data.higher-education-base-education-module :as hebem]
+            [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.application.application-states :as application-states]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
@@ -463,7 +463,7 @@
   [application form]
   (assoc application
     :excluded-attachment-ids-when-yo-and-jyemp
-    (hebem/non-yo-attachment-ids form)))
+    (higher-module/non-yo-attachment-ids form)))
 
 (defn- review-notes-by-hakukohde-and-state-name
   [review-notes]

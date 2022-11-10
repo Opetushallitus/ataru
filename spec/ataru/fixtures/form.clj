@@ -1,6 +1,6 @@
 (ns ataru.fixtures.form
   (:require [ataru.component-data.component :as component]
-            [ataru.component-data.higher-education-base-education-module :as higher-education-base-education-module]
+            [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.component-data.person-info-module :as person-info-module]
             [clojure.string :as string]))
 
@@ -264,7 +264,7 @@
    :created-by "1.2.246.562.11.11111111111"
    :content    [(component/hakukohteet)
                 (person-info-module/person-info-module)
-                (higher-education-base-education-module/module metadata)
+                (base-education-module-higher metadata)
                 {:id         "att__1"
                  :fieldClass "formField"
                  :metadata   metadata
