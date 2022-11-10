@@ -478,19 +478,6 @@
          (set)
          (not-empty))))
 
-(defn set-limit-reached [db {:keys [selection-id limit-reached] :as selection}]
-  (if (nil? selection)
-    db
-    (let [new-limits (group-by :question-id limit-reached)]
-      (reduce (fn [db question-id]
-                (if-let [answers (new-limits (name question-id))]
-                  (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
-                  (assoc-in db [:application :answers question-id :limit-reached] nil)))
-        (if selection-id
-          (assoc-in db [:application :selection-id] selection-id)
-          db)
-        (map keyword (:selection-limited db))))))
-
 (defn- is-selection-limit? [item]
   (boolean (some #(= "selection-limit" %) item)))
 
@@ -501,6 +488,26 @@
 (defn get-selection-parent-id [db question-id]
   (:children-of
     (first (filter (fn [item] (= (:id item) (name question-id))) (:flat-form-content db)))))
+
+(defn set-limit-reached [db {:keys [selection-id limit-reached] :as selection} ;question-id
+                         ]
+  (if (nil? selection)
+    db
+    (let [new-limits (group-by :question-id limit-reached)]
+      (reduce (fn [db question-id]
+                (if-let [answers (new-limits (name question-id))]
+                  (assoc-in db [:application :answers question-id :limit-reached] (set (map :answer-id answers)))
+                  (assoc-in db [:application :answers question-id :limit-reached] nil)))
+        (if selection-id
+          (assoc-in db [:application :selection-id] selection-id)
+          db)
+          ;(if (nil? question-id)
+              (map keyword (:selection-limited db))
+          ;(let [parent-id (get-selection-parent-id db question-id)
+          ;      question-group-question-ids (get-question-ids-by-question-parent-id db parent-id)]
+          ;  (map keyword question-group-question-ids))
+              ;)
+              ))))
 
 (defn reset-other-selections [db question-id _]
   (let [parent-id (get-selection-parent-id db question-id)
@@ -523,21 +530,26 @@
   (fn [{:keys [db]} [_ selection valid? question-id answer-id]]
     {:db (cond (false? valid?)
                (-> db
-                   (set-limit-reached selection))
+                   (set-limit-reached selection             ;question-id
+                                      ))
 
                (not (and valid? question-id answer-id))
-               (set-limit-reached db selection)
+               (set-limit-reached db selection              ;question-id
+                                  )
 
                (and question-id answer-id)
                (-> db
-                   (set-limit-reached selection)
+                   (set-limit-reached selection             ;question-id
+                                      )
                    (reset-other-selections question-id answer-id)))}))
 
 (reg-event-db
   :application/handle-selection-limit
   [check-schema-interceptor]
   (fn [db [_ response]]
-    (set-limit-reached db (:body response))))
+    ;todo: selvittele onko tämä tarpeellinen
+    (set-limit-reached db (:body response)                  ;nil
+                       )))
 
 (reg-event-fx
   :application/post-handle-form-dispatches
@@ -766,9 +778,12 @@
   (fn [db [_ field-descriptor]]
     (let [id             (keyword (:id field-descriptor))
           initial-answer (get (create-initial-answers [field-descriptor] []) id)
-          answer         (assoc initial-answer :original-value (:value initial-answer))]
+          answer         (assoc initial-answer :original-value (:value initial-answer))
+          limit-reached  (get-in db [:application :answers id :limit-reached])]
       (println "unset-non-question-group-field-value" (:fi (:label field-descriptor)))
-      (assoc-in db [:application :answers id] answer))))
+      (assoc-in db [:application :answers id] answer)
+      (when (not (nil? limit-reached))
+        (assoc-in db [:application :answers id :limit-reached] limit-reached)))))
 
 (defn- set-empty-value-dispatch
   [group-idx field-descriptor]
@@ -874,15 +889,22 @@
     (seq (:section-visibility-conditions field-descriptor))
     (#{"dropdown" "singleChoice" "multipleChoice"} (:fieldType field-descriptor))))
 
+;(defn get-follow-up-selection-group-question-id [field-descriptor follow-up-selection-group-id]
+;  (:id (first (filter
+;                (fn [x] (= follow-up-selection-group-id (get-in x [:params :selection-group-id])))
+;                (tree-seq coll? seq field-descriptor)))))
+
 (reg-event-fx
   :application/set-repeatable-application-field
   [check-schema-interceptor]
   (fn [{db :db} [_ field-descriptor question-group-idx data-idx value]]
-    (let [id                 (keyword (:id field-descriptor))
-          value              (transform-value value field-descriptor)
-          form-key           (get-in db [:form :key])
-          selection-id       (get-in db [:application :selection-id])
-          selection-group-id (get-in field-descriptor [:params :selection-group-id])
+    (let [id                            (keyword (:id field-descriptor))
+          value                         (transform-value value field-descriptor)
+          form-key                      (get-in db [:form :key])
+          selection-id                  (get-in db [:application :selection-id])
+          selection-group-id            (get-in field-descriptor [:params :selection-group-id])
+          ;follow-up-selection-group-id  (:selection-group-id (first (filter :selection-group-id (tree-seq coll? seq field-descriptor))))
+          ;follow-up-id                  (get-follow-up-selection-group-question-id field-descriptor follow-up-selection-group-id)
           db                 (-> db
                                  (set-repeatable-field-values id question-group-idx data-idx value)
                                  (set-repeatable-field-value id)
