@@ -606,7 +606,7 @@
             unselectable?        (and (or (not checked?)
                                           (not @valid?))
                                       @limit-reached?)
-            disabled?            (or @verifying? @cannot-edit? unselectable?)
+            disabled?            (or @cannot-edit? unselectable?)
             selection-uncertain? @uncertain?
             has-selection-limit? (:selection-limit option)
             sure-if-selected?    (or (not has-selection-limit?) (and (-> field-descriptor :params :selection-group-id) (not selection-uncertain?)))
@@ -641,7 +641,7 @@
             [:span.application__form-single-choice-button--verifying
              [:i.zmdi.zmdi-spinner.spin]])
           label
-          (when (and (not @verifying?) unselectable?)
+          (when unselectable?
             (str " (" (tu/get-hakija-translation :limit-reached @lang) ")"))]
          (when (and @valid? checked? (not-empty followups))
            (if use-multi-choice-style?
