@@ -60,12 +60,14 @@
             .find('.application__form-single-choice-button:disabled + label')
             .text()
         ).to.equal('Aina täynnä (ei valittavissa)')
-        expect(
-          formFields()
-            .eq(13)
-            .find('.application__form-single-choice-button:checked + label')
-            .text()
-        ).to.equal('Aina tilaa')
+        wait.until(() => {
+          return expect(
+            formFields()
+              .eq(13)
+              .find('.application__form-single-choice-button:checked + label')
+              .text()
+          ).to.equal('Aina tilaa')
+        })
       })
     })
 
@@ -88,12 +90,15 @@
             .find('.application__form-single-choice-button:disabled + label')
             .text()
         ).to.equal('Aina täynnä (ei valittavissa)')
-        expect(
-          formFields()
-            .eq(13)
-            .find('.application__form-single-choice-button:checked + label')
-            .text()
-        ).to.equal('Yksi paikka')
+
+        wait.until(() => {
+          return expect(
+            formFields()
+              .eq(13)
+              .find('.application__form-single-choice-button:checked + label')
+              .text()
+          ).to.equal('Yksi paikka')
+        })
       })
     })
 
