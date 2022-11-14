@@ -14,14 +14,14 @@
     describe('form loads', () => {
       before(
         wait.until(() => {
-          return formSections().length == 2
+          return formSections().length == 3
         }),
         wait.until(() => {
           return testFrame().find('#postal-office').val() === 'JYVÄSKYLÄ'
         })
       )
       it('with complete form', () => {
-        expect(formFields().length).to.equal(31)
+        expect(formFields().length).to.equal(34)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -59,6 +59,12 @@
           'C2',
           'Toisen pakollisen tekstialueen vastaus',
           '',
+          'A1',
+          'B1',
+          'C1',
+          'A2',
+          '',
+          'C2',
           'Vasen vierekkäinen',
           'Oikea vierekkäinen',
           'A1',
@@ -83,7 +89,7 @@
           'suomi',
           'Kolmas vaihtoehto',
           'Lisensiaatin tutkinto',
-          'Tekniikan lisensiaatti',
+          '',
           'Pudotusvalikon 1. kysymys',
           'Entinen Neuvostoliitto',
         ]
@@ -99,7 +105,12 @@
               return $(e).text()
             }
           )
-        ).to.eql(['Toinen vaihtoehto', 'Arkkitehti'])
+        ).to.eql([
+          'Toinen vaihtoehto',
+          'Arkkitehti',
+          'Jatkokysymys A',
+          'Jatkokysymys B',
+        ])
       })
     })
 
@@ -111,12 +122,14 @@
         clickElement(invalidFieldsStatus),
         wait.until(submitButtonDisabled),
         wait.until(() => {
-          return invalidFieldsStatus().text() === 'Tarkista 1 tietoa'
+          return invalidFieldsStatus().text() === 'Tarkista 2 tietoa'
         })
       )
 
       it('shows invalidity errors', () => {
-        expect(invalidFieldNames().join(';')).to.equal('Osiokysymys')
+        expect(invalidFieldNames().join(';')).to.equal(
+          'Osiokysymys;Lyhyen listan kysymys'
+        )
       })
     })
 
@@ -174,7 +187,8 @@
           'En',
           'Arkkitehti',
           'Muokattu vastaus',
-          'Tekniikan lisensiaatti',
+          '',
+          'Toinen vaihtoehto',
           'Pudotusvalikon 1. kysymys',
           '1,323',
           'Entinen Neuvostoliitto',

@@ -116,7 +116,6 @@
           clickSubComponentMenuItem('Painikkeet, yksi valittavissa', () =>
             formComponents().eq(0)
           ),
-          // clickSubComponentMenuItem('Painikkeet, yksi valittavissa'),
           setTextFieldValue(
             () => formSections().eq(0).find('.editor-form__text-field:eq(1)'),
             'Rajoitettu valinta'

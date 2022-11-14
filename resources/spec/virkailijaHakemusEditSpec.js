@@ -10,11 +10,11 @@
     describe('shows application with secret', () => {
       before(
         wait.until(
-          () => formSections().length == 2 && formFields().length == 31
+          () => formSections().length == 3 && formFields().length == 32
         )
       )
       it('with complete form', () => {
-        expect(formFields().length).to.equal(31)
+        expect(formFields().length).to.equal(32)
         expect(formHeader().text()).to.equal('Testilomake')
         expect(submitButton().prop('disabled')).to.equal(true)
       })
@@ -64,7 +64,8 @@
           'En',
           'Arkkitehti',
           'Muokattu vastaus',
-          'Tekniikan lisensiaatti',
+          '',
+          'Toinen vaihtoehto',
           'Pudotusvalikon 1. kysymys',
           '1,323',
           'Entinen Neuvostoliitto',
@@ -74,8 +75,6 @@
           testFrame().find('.application__form-field table td'),
           (e) => $(e).text()
         )
-        console.log('tabularValues')
-        console.log(tabularValues)
         const expectedTabularValues = [
           'A1',
           'B1',

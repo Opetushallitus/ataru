@@ -90,7 +90,6 @@
             .find('.application__form-single-choice-button:disabled + label')
             .text()
         ).to.equal('Aina täynnä (ei valittavissa)')
-
         wait.until(() => {
           return expect(
             formFields()
@@ -104,6 +103,7 @@
 
     describe('submit the application', () => {
       before(
+        wait.until(submitButtonEnabled),
         clickElement(submitButton),
         wait.until(() => {
           return (
