@@ -134,6 +134,9 @@
    :continuous-period                           {:fi "Jatkuva haku"
                                                  :sv "Kontinuerlig ansökningstid"
                                                  :en "Continuous application period"}
+   :rolling-period                              {:fi "Joustava haku"
+                                                 :sv "Flexibel ansökningstid"
+                                                 :en "Rolling application period"}
    :do-not-share-warning-text                   {:fi "Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
                                                  :en "Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application."
                                                  :sv "Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet, om du använder en offentlig dator."}
