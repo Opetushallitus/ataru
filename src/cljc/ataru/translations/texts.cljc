@@ -132,11 +132,11 @@
                                                  :sv "Välj det språk på vilket du vill få information om studerandeantagningen. Ditt önskemål tas i beaktande om möjligt."
                                                  :en "Choose the language in which you wish to receive information regarding the student selection. Your choice will be taken into consideration if possible."}
    :continuous-period                           {:fi "Jatkuva haku"
-                                                 :sv "Kontinuerlig ansökningstid"
-                                                 :en "Continuous application period"}
+                                                 :sv "Kontinuerlig ansökan"
+                                                 :en "Continuous admissions"}
    :rolling-period                              {:fi "Joustava haku"
-                                                 :sv "Flexibel ansökningstid"
-                                                 :en "Rolling application period"}
+                                                 :sv "Flexibel ansökan"
+                                                 :en "Rolling admissions"}
    :do-not-share-warning-text                   {:fi "Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
                                                  :en "Do not share the link with others. If you are using a public or shared computer, remember to log out of the email application."
                                                  :sv "Dela inte länken vidare till utomstående. Kom ihåg att logga ut från e-postprogrammet, om du använder en offentlig dator."}
