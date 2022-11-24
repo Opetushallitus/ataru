@@ -29,18 +29,20 @@
         virkailija?                        @(subscribe [:application/virkailija?])
         lang                               @(subscribe [:application/form-language])
         apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
-                                             (if (:jatkuva-haku? hakuaika)
-                                               (translations/get-hakija-translation :continuous-period lang)
-                                               [:span (str (translations/get-hakija-translation :application-period lang)
-                                                           " "
-                                                           (-> hakuaika :label :start selected-lang)
-                                                           " - "
-                                                           (-> hakuaika :label :end selected-lang)
-                                                           )
-                                                [:br]
-                                                (when (and (not (:on hakuaika))
-                                                           (not virkailija?))
-                                                  (str " (" (translations/get-hakija-translation :not-within-application-period lang) ")"))]))]
+                                             (if (:joustava-haku? hakuaika)
+                                               (translations/get-hakija-translation :rolling-period lang)
+                                               (if (:jatkuva-haku? hakuaika)
+                                                 (translations/get-hakija-translation :continuous-period lang)
+                                                 [:span (str (translations/get-hakija-translation :application-period lang)
+                                                             " "
+                                                             (-> hakuaika :label :start selected-lang)
+                                                             " - "
+                                                             (-> hakuaika :label :end selected-lang)
+                                                             )
+                                                  [:br]
+                                                  (when (and (not (:on hakuaika))
+                                                             (not virkailija?))
+                                                    (str " (" (translations/get-hakija-translation :not-within-application-period lang) ")"))])))]
     [:div
      [:div.application__header-container
       [:h1.application__header

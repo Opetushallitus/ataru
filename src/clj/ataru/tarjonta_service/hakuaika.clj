@@ -162,6 +162,7 @@
                           :on                                  (:on hakuaika)
                           :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
                           :jatkuva-haku?                       (jatkuva-haku? haku)
+                          :joustava-haku?                      (joustava-haku? haku)
                           :jatkuva-or-joustava-haku?           (jatkuva-or-joustava-haku? haku)
                           :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))
 
@@ -182,5 +183,6 @@
       :on                                  (:on hakuaika)
       :attachment-modify-grace-period-days (-> ohjausparametrit :PH_LMT :value)
       :jatkuva-haku?                       (jatkuva-haku? haku)
+      :joustava-haku?                      (joustava-haku? haku)
       :jatkuva-or-joustava-haku?           (jatkuva-or-joustava-haku? haku)
       :hakukierros-end                     (-> ohjausparametrit :PH_HKP :date)})))

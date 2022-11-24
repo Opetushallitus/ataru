@@ -195,6 +195,7 @@
                                  :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                  :hakukierros-end                     nil
                                  :jatkuva-haku?                       false
+                                 :joustava-haku?                      false
                                  :jatkuva-or-joustava-haku?           false
                                  :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
@@ -208,6 +209,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     nil
                                    :jatkuva-haku?                       false
+                                   :joustava-haku?                      false
                                    :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
@@ -221,6 +223,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                    :jatkuva-haku?                       false
+                                   :joustava-haku?                      false
                                    :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
@@ -234,6 +237,7 @@
                                    :end                                 (- (System/currentTimeMillis) (* end 24 3600 1000))
                                    :hakukierros-end                     (+ (System/currentTimeMillis) (* 2 24 3600 1000))
                                    :jatkuva-haku?                       false
+                                   :joustava-haku?                      false
                                    :jatkuva-or-joustava-haku?           false
                                    :attachment-modify-grace-period-days edit-grace-period})))
 
