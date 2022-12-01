@@ -106,7 +106,6 @@
 
     describe('adding elements:', () => {
       describe('create single choice with limited selection', () => {
-        console.log(formSections())
         before(
           clickComponentMenuItem('Lomakeosio'),
           setTextFieldValue(
