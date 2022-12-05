@@ -103,15 +103,17 @@
                 @(subscribe [:editor/virkailija-translation component-name])]])))))
 
 
-(defn custom-add-component [_ _ _]
+(defn custom-add-component [_ _ _ _]
   (let [mouse-over?  (r/atom false)
         form-locked? (subscribe [:editor/form-locked?])]
-    (fn [toolbar path generator]
+    (fn [toolbar path generator root-level-add-component?]
       [:div.editor-form__add-component-toolbar
        {:class          (when @form-locked? "disabled")
         :on-mouse-enter #(reset! mouse-over? true)
         :on-mouse-leave #(reset! mouse-over? false)
-        :data-test-id   "component-toolbar"}
+        :data-test-id   (if root-level-add-component?
+                          "component-toolbar"
+                          "component-subform-toolbar")}
        (cond @form-locked?
              [:div.plus-component.plus-component--disabled [:span "+"]]
              @mouse-over?
@@ -119,20 +121,25 @@
              :else
              [:div.plus-component [:span "+"]])])))
 
+(defn handle-root-level-components [elements]
+  (let [elements-with-arvosanat (conj elements [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
+                                      [:arvosanat-lukio arvosanat/arvosanat-lukio])]
+    (filterv (fn [x] (not (= (first x) :single-choice-button))) elements-with-arvosanat)))
+
 (defn add-component [path root-level-add-component?]
   (let [elements (cond-> (toolbar-elements)
                          root-level-add-component?
-                         (conj [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-                               [:arvosanat-lukio arvosanat/arvosanat-lukio]))]
+                         (handle-root-level-components))]
     [custom-add-component elements path
      (fn [generate-fn]
-       (dispatch [:generate-component generate-fn path]))]))
+       (dispatch [:generate-component generate-fn path]))
+     root-level-add-component?]))
 
 (defn followup-toolbar [option-path generator]
-  [custom-add-component (followup-toolbar-elements) option-path generator])
+  [custom-add-component (followup-toolbar-elements) option-path generator true])
 
 (defn question-group-toolbar [option-path generator]
-  [custom-add-component (question-group-toolbar-elements) option-path generator])
+  [custom-add-component (question-group-toolbar-elements) option-path generator true])
 
 (defn adjacent-fieldset-toolbar [path generator]
-  [custom-add-component adjacent-fieldset-toolbar-elements path generator])
+  [custom-add-component adjacent-fieldset-toolbar-elements path generator true])

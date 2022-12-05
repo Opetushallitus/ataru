@@ -10,7 +10,7 @@
     describe('shows application with secret', () => {
       before(
         wait.until(
-          () => formSections().length == 2 && formFields().length == 32
+          () => formSections().length == 3 && formFields().length == 32
         )
       )
       it('with complete form', () => {

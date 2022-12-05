@@ -14,7 +14,7 @@
     describe('form loads', () => {
       before(
         wait.until(() => {
-          return formSections().length == 2
+          return formSections().length == 3
         }),
         wait.until(() => {
           return testFrame().find('#postal-office').val() === 'JYVÄSKYLÄ'

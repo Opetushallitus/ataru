@@ -8,7 +8,7 @@
       before(
         newForm('testForm'),
         wait.until(() => {
-          return formSections().length == 2
+          return formSections().length == 3
         })
       )
       it('with complete form', () => {

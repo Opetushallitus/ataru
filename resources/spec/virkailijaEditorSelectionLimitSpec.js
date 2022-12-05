@@ -59,8 +59,24 @@
     return clickElement(() => menuItem(title))
   }
 
-  const clickSubComponentMenuItem = (element, title) => {
-    return clickElement(() => subMenuItem(element, title))
+  const clickSubComponentMenuItem = (title, element) => {
+    const menuItem = () => {
+      triggerEvent(
+        element().find('.editor-form__add-component-toolbar'),
+        'mouseover'
+      )
+      return element().find(
+        '.editor-form__add-component-toolbar a:contains("' + title + '")'
+      )
+    }
+    return clickElement(menuItem)
+  }
+  const formSections = () => {
+    return testFrame()
+      .find('.editor-form__component-wrapper')
+      .filter(
+        (i, node) => $(node).find("header:contains('Lomakeosio')").length > 0
+      )
   }
 
   before(() => {
@@ -91,59 +107,68 @@
     describe('adding elements:', () => {
       describe('create single choice with limited selection', () => {
         before(
-          clickComponentMenuItem('Painikkeet, yksi valittavissa'),
+          clickComponentMenuItem('Lomakeosio'),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(0)'),
+            () => formSections().eq(0).find('.editor-form__text-field:first'),
+            'Lomakeosio'
+          ),
+          clickSubComponentMenuItem('Painikkeet, yksi valittavissa', () =>
+            formComponents().eq(0)
+          ),
+          setTextFieldValue(
+            () => formSections().eq(0).find('.editor-form__text-field:eq(1)'),
             'Rajoitettu valinta'
           ),
           clickElement(() =>
-            formComponents().find(
-              '.editor-form__checkbox + label:contains("Pakollinen")'
-            )
+            formSections()
+              .eq(0)
+              .find('.editor-form__checkbox + label:contains("Pakollinen")')
           ), // required
           clickElement(() =>
-            formComponents().find(
-              '.editor-form__checkbox + label:contains("Rajoitettu valinta")'
-            )
+            formSections()
+              .eq(0)
+              .find(
+                '.editor-form__checkbox + label:contains("Rajoitettu valinta")'
+              )
           ), // selection limit
           clickElement(() =>
-            formComponents().find(
-              '.editor-form__add-dropdown-item a:contains("Lisää")'
-            )
+            formSections()
+              .eq(0)
+              .find('.editor-form__add-dropdown-item a:contains("Lisää")')
           ),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(1)'),
+            () => formSections().eq(0).find('.editor-form__text-field:eq(2)'),
             'Aina täynnä'
           ),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(2)'),
+            () => formSections().eq(0).find('.editor-form__text-field:eq(3)'),
             '0'
           ),
           clickElement(() =>
-            formComponents().find(
-              '.editor-form__add-dropdown-item a:contains("Lisää")'
-            )
+            formSections()
+              .eq(0)
+              .find('.editor-form__add-dropdown-item a:contains("Lisää")')
           ),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(3)'),
+            () => formComponents().find('.editor-form__text-field:eq(4)'),
             'Aina tilaa'
           ),
           clickElement(() =>
-            formComponents().find(
-              '.editor-form__add-dropdown-item a:contains("Lisää")'
-            )
+            formSections()
+              .eq(0)
+              .find('.editor-form__add-dropdown-item a:contains("Lisää")')
           ),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(5)'),
+            () => formSections().eq(0).find('.editor-form__text-field:eq(6)'),
             'Yksi paikka'
           ),
           setTextFieldValue(
-            () => formComponents().find('.editor-form__text-field:eq(6)'),
+            () => formSections().eq(0).find('.editor-form__text-field:eq(7)'),
             '1'
           )
         )
         it('has expected contents', () => {
-          expect(formComponents()).to.have.length(1)
+          expect(formSections().eq(0)).to.have.length(1)
         })
       })
     })

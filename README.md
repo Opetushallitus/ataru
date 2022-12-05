@@ -183,7 +183,7 @@ Then, load the test data fixture to database:
 make load-test-fixture
 ```
 
-After the service starts and fixture data is loaded, navigate to local URL to run the tests: http://localhost:8350/lomake-editori/virkailija-test.html
+After the service starts and fixture data is loaded, navigate to local URL to run the tests (in incognito mode): http://localhost:8350/lomake-editori/virkailija-test.html
 
 Test suites can be found in karma-runner.js
 

@@ -19,7 +19,7 @@ const haeLomakeosionPiilottaminenArvonPerusteellaOsio = () =>
 export const painikkeet = {
   lisaaPainikkeetYksiValittavissa: (formId: number) =>
     lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(formId, () => {
-      lomakkeenMuokkaus.komponentinLisays.avaaValikko()
+      lomakkeenMuokkaus.komponentinLisays.avaaLomakeosioValikko()
       return haeLisaaLinkki().click()
     }),
 

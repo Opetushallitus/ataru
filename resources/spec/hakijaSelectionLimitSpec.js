@@ -8,7 +8,7 @@
       before(
         newForm('testSelectionLimitForm'),
         wait.until(() => {
-          return formSections().length == 1
+          return formSections().length == 2
         })
       )
       it('loads form with selection limit', () => {
@@ -60,12 +60,14 @@
             .find('.application__form-single-choice-button:disabled + label')
             .text()
         ).to.equal('Aina täynnä (ei valittavissa)')
-        expect(
-          formFields()
-            .eq(13)
-            .find('.application__form-single-choice-button:checked + label')
-            .text()
-        ).to.equal('Aina tilaa')
+        wait.until(() => {
+          return expect(
+            formFields()
+              .eq(13)
+              .find('.application__form-single-choice-button:checked + label')
+              .text()
+          ).to.equal('Aina tilaa')
+        })
       })
     })
 
@@ -88,17 +90,20 @@
             .find('.application__form-single-choice-button:disabled + label')
             .text()
         ).to.equal('Aina täynnä (ei valittavissa)')
-        expect(
-          formFields()
-            .eq(13)
-            .find('.application__form-single-choice-button:checked + label')
-            .text()
-        ).to.equal('Yksi paikka')
+        wait.until(() => {
+          return expect(
+            formFields()
+              .eq(13)
+              .find('.application__form-single-choice-button:checked + label')
+              .text()
+          ).to.equal('Yksi paikka')
+        })
       })
     })
 
     describe('submit the application', () => {
       before(
+        wait.until(submitButtonEnabled),
         clickElement(submitButton),
         wait.until(() => {
           return (

@@ -4,34 +4,37 @@ import hakijanNakymaanSiirtyminen from '../testit/hakijanNakymaanSiirtyminen'
 import * as hakijanNakyma from '../hakijanNakyma'
 import { painikkeet } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/painikkeet'
 import * as lomakkeenMuokkaus from '../lomakkeenMuokkaus'
+import { lomakeosio } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/lomakeosio'
 
 describe('Lomakeosion näkyvyys painikkeen perusteella', () => {
   kirjautuminenVirkailijanNakymaan('lomakkeiden käsittelyä varten', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       before(() =>
-        lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
-          lomakkeenTunnisteet().lomakkeenId,
-          () =>
-            painikkeet
-              .lisaaPainikkeetYksiValittavissa(
-                lomakkeenTunnisteet().lomakkeenId
-              )
-              .then(() => painikkeet.asetaKysymys('Kysymys'))
-              .then(() =>
-                painikkeet.valitseLomakeosionPiilottaminenArvonPerusteella()
-              )
-              .then(() => painikkeet.lisääVastausvaihtoehto('A'))
-              .then(() => painikkeet.lisääVastausvaihtoehto('B'))
-              .then(() =>
-                painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaVertailuarvo(
-                  'B'
+        lomakeosio.lisaaLomakeosio(lomakkeenTunnisteet().lomakkeenId).then(() =>
+          lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
+            lomakkeenTunnisteet().lomakkeenId,
+            () =>
+              painikkeet
+                .lisaaPainikkeetYksiValittavissa(
+                  lomakkeenTunnisteet().lomakkeenId
                 )
-              )
-              .then(() =>
-                painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaOsio(
-                  'Henkilötiedot'
+                .then(() => painikkeet.asetaKysymys('Kysymys'))
+                .then(() =>
+                  painikkeet.valitseLomakeosionPiilottaminenArvonPerusteella()
                 )
-              )
+                .then(() => painikkeet.lisääVastausvaihtoehto('A'))
+                .then(() => painikkeet.lisääVastausvaihtoehto('B'))
+                .then(() =>
+                  painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaVertailuarvo(
+                    'B'
+                  )
+                )
+                .then(() =>
+                  painikkeet.asetaLomakeosionPiilottaminenArvonPerusteellaOsio(
+                    'Henkilötiedot'
+                  )
+                )
+          )
         )
       )
 
