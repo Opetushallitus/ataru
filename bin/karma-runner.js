@@ -119,6 +119,8 @@ const getUrl = () => {
     }
 };
 
+console.log('starting puppeteer')
+
 puppeteer.launch({
     devtools: false,
     headless: true,
