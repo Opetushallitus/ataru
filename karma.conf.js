@@ -1,7 +1,7 @@
 // karma.conf.js
 module.exports = (config) => {
   config.set({
-    browsers: ['Chrome', 'Chrome_without_gpu'],
+    browsers: ['Chrome_without_gpu'],
     customLaunchers: {
       Chrome_without_gpu: {
         base: 'Chrome',
