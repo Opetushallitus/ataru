@@ -122,6 +122,10 @@ const getUrl = () => {
 puppeteer.launch({
     devtools: false,
     headless: true,
+    args: [
+      '--disable-gpu',
+      '--disable-software-rasterizer'
+    ]
     /* slowMo: 500 */
 }).then(browser => {
     browser.newPage()
