@@ -125,7 +125,8 @@ puppeteer.launch({
     args: [
       '--disable-gpu',
       '--disable-software-rasterizer',
-      '--no-sandbox'
+      '--no-sandbox',
+      '--use-gl'
     ]
     /* slowMo: 500 */
 }).then(browser => {
