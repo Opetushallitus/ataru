@@ -141,7 +141,7 @@
                 {"customLaunchers"
                  {"Chrome"
                   {"base" "ChromeHeadless"
-                   "flags" ["--disable-gpu" "--disable-software-rasterizer"]}}}}}
+                   "flags" ["--disable-gpu" "--disable-software-rasterizer" "--no-sandbox"]}}}}}
 
   :clean-targets ^{:protect false} ["resources/public/js/compiled"
                                     "resources/public/css"
