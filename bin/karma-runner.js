@@ -119,17 +119,9 @@ const getUrl = () => {
     }
 };
 
-console.log('starting puppeteer')
-
 puppeteer.launch({
     devtools: false,
     headless: true,
-    args: [
-      '--disable-gpu',
-      '--disable-software-rasterizer',
-      '--no-sandbox',
-      '--use-gl'
-    ]
     /* slowMo: 500 */
 }).then(browser => {
     browser.newPage()
