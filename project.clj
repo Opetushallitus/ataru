@@ -138,9 +138,8 @@
   :doo {:debug true
         :paths {:karma "./node_modules/karma/bin/karma"}
         :karma {:config
-                {"browsers" ["ChromeWithoutGpu"]
-                 "customLaunchers"
-                 {"ChromeWithoutGpu"
+                {"customLaunchers"
+                 {"Chrome"
                   {"base" "ChromeHeadless"
                    "flags" ["--disable-gpu" "--disable-software-rasterizer"]}}}}}
 

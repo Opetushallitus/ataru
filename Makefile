@@ -199,7 +199,7 @@ compile-test-code:
 	lein with-profile test cljsbuild once virkailija-min hakija-min
 
 test-clojurescript: $(NODE_MODULES)
-	lein with-profile test doo chrome-headless test once
+	lein with-profile test doo chrome test once
 
 test-browser: $(NODE_MODULES) compile-test-code run-fake-deps-server
 	lein with-profile test spec -t ui
