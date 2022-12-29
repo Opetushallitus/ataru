@@ -1,15 +1,19 @@
 (ns ataru.hakija.ssn)
 
+(def last-century #{"-" "U" "V" "W" "X" "Y"})
+(def this-century #{"A" "B" "C" "D" "E" "F"})
+
 (defn- do-parse-birth-date-from-ssn
   [ssn]
   (let [century-sign (nth ssn 6)
         day          (subs ssn 0 2)
         month        (subs ssn 2 4)
         year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
+        century      (cond
+                       (contains? this-century century-sign) "20"
+                       (contains? last-century century-sign) "19"
+                       (= century-sign "+") 18
+                       :else (throw (js/Error. (str "Eis ais"))))]
     (str day "." month "." century year)))
 
 (defn parse-birth-date-from-ssn
