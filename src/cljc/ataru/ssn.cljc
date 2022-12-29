@@ -3,7 +3,7 @@
                :cljs [cljs-time.core :as c])
             [clojure.string :as string]))
 
-(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A])(\d{3})([0-9a-zA-Z])$")
+(def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A-F|U-Y])(\d{3})([0-9a-zA-Z])$")
 
 (def ^:private check-chars {0  "0"
                             1  "1"
@@ -37,6 +37,9 @@
                             29 "X"
                             30 "Y"})
 
+(def last-century #{"-" "U" "V" "W" "X" "Y"})
+(def this-century #{"A" "B" "C" "D" "E" "F"})
+
 (defn- ->int [thestr]
   #?(:clj  (Integer/parseInt thestr)
      :cljs (js/parseInt thestr 10)))
@@ -44,18 +47,11 @@
 (defn valid-year? [year century]
   {:pre [(integer? year)]}
   (let [current-year (c/year (c/now))]
-    (and
-      ; not (given year between 2000 and current-year)
+      ; not (given century is A, B, C, D, E or F and year in future)
       (not
         (and
-          (= "-" century)
-          (-> year (>= 2000))
-          (-> year (<= current-year))))
-      ; not (given century is A and year in future)
-      (not
-        (and
-          (or (= "A" century) (= "a" century))
-          (-> year (>= (+ current-year 1))))))))
+          (contains? this-century (string/upper-case century))
+          (-> year (>= (+ current-year 1)))))))
 
 (defn ssn?
   [value]
@@ -75,10 +71,10 @@
         day          (subs ssn 0 2)
         month        (subs ssn 2 4)
         year         (subs ssn 4 6)
-        century      (case century-sign
-                       "+" "18"
-                       "-" "19"
-                       "A" "20")]
+        century      (cond
+                       (contains? this-century century-sign) "20"
+                       (contains? last-century century-sign) "19"
+                       (= century-sign "+") 18)]
     (str day "." month "." century year)))
 
 (defn ssn->birth-date [ssn]
