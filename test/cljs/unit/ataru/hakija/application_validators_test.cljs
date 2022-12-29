@@ -29,7 +29,7 @@
   (async done
          (asyncm/go
            (doseq [ssn ssn/ssn-list]
-             (doseq [century-char ["A"]]
+             (doseq [century-char ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]]
                (let [ssn (str (:start ssn) century-char (:end ssn))]
                  (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
                      (str "SSN " ssn " is not valid")))))
