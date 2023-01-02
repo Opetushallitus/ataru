@@ -114,7 +114,7 @@
               [:div.application__form-info-text-inner.application__form-info-text-inner--collapsed
                {:dangerouslySetInnerHTML {:__html sanitized-html}}]
               [:div.application__form-info-text-inner
-               {:style                   {:height @scroll-height}
+               {:style                   {:height "auto"}
                 :dangerouslySetInnerHTML {:__html sanitized-html}}])
             (when collapsable?
               [:button.application__form-info-text-collapse-button
