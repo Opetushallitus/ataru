@@ -69,7 +69,7 @@
         modifying?     (some? original-value)]
     (async/go
       (cond (not (ssn/ssn? value))
-            [false []]
+            [false [(texts/person-info-validation-error :ssn)]]
             (and (not multiple?)
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
@@ -91,10 +91,11 @@
           value          (:value this-answer)
           verify-value   (:verify this-answer)]
       (async/go
-        (cond (or (not (email/email? value))
-                  (and verify-value
-                       (not= verify-value value)))
-              [false []]
+        (cond (not (email/email? value))
+              [false [{:email-main-error [(texts/person-info-validation-error :email)]}]]
+              (and verify-value
+                   (not= verify-value value))
+              [false [{:email-verify-error [(texts/person-info-validation-error :different-email)]}]]
               (and modifying? (= value original-value))
               [true []]
               (and (not multiple?)
@@ -334,7 +335,8 @@
   [{:keys [validator] :as params}]
   (if-let [pure-validator ((keyword validator) pure-validators)]
     (let [valid? (pure-validator params)]
-      (async/go [valid? []]))
+      (if valid? (async/go [valid? []])
+                 (async/go [valid? [(texts/person-info-validation-error (keyword validator))]])))
     (if-let [async-validator ((keyword validator) async-validators)]
       (async-validator params)
       (async/go [false []]))))

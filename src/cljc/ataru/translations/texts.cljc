@@ -2564,9 +2564,43 @@
         [:p "If you have any problems, please contact the educational
              institution you are applying to."]]})
 
+
+(def person-info-module-validation-error-texts
+  {:ssn           {:fi "Henkilötunnuksesi on väärässä muodossa."
+                   :sv "SV Henkilötunnuksesi on väärässä muodossa."
+                   :en "EN Henkilötunnuksesi on väärässä muodossa."}
+   :phone         {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
+                   :sv "SV Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
+                   :en "EN Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."}
+   :email         {:fi "Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
+                   :sv "SV Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
+                   :en "ENSähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."}
+   :different-email {:fi "Sähköpostiosoitteet eivät ole samat."
+                     :sv "SV Sähköpostiosoitteet eivät ole samat."
+                     :en "EN Sähköpostiosoitteet eivät ole samat."}
+   :postal-code   {:fi "Postinumero on virheellinen."
+                   :sv "SV Postinumero on virheellinen"
+                   :en "EN Postinumero on virheellinen"}
+   :main-first-name {:fi "Kutsumanimen tulee olla yksi etunimistäsi."
+                     :sv "SV Kutsumanimen tulee olla yksi etunimistäsi."
+                     :en "EN Kutsumanimen tulee olla yksi etunimistäsi."
+                     }
+   })
+
+(defn person-info-validation-error [msg-key]
+  (when (and (some? msg-key) (some? (get person-info-module-validation-error-texts msg-key)))
+    {:fi [:div.application__person-info-validation-error-dialog
+          [:p (get-in person-info-module-validation-error-texts [msg-key :fi])]]
+     :sv [:div.application__person-info-validation-error-dialog
+          [:p (get-in person-info-module-validation-error-texts [msg-key :sv])]]
+     :en [:div.application__person-info-validation-error-dialog
+          [:p (get-in person-info-module-validation-error-texts [msg-key :en])]]}))
+
 (defn ssn-applied-error
   [preferred-name]
-  {:fi [:div
+  {:fi [:div.application__validation-error-dialog
+        [:div
+
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
@@ -2580,7 +2614,8 @@
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
          jättäessäsi edellisen hakemuksen."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-   :sv [:div
+        ]
+   :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
@@ -2595,7 +2630,7 @@
           du skickade din tidigare ansökning."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
-   :en [:div
+   :en [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
