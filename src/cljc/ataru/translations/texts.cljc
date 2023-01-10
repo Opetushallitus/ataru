@@ -2583,18 +2583,20 @@
                    :en "EN Postinumero on virheellinen"}
    :main-first-name {:fi "Kutsumanimen tulee olla yksi etunimistäsi."
                      :sv "SV Kutsumanimen tulee olla yksi etunimistäsi."
-                     :en "EN Kutsumanimen tulee olla yksi etunimistäsi."
-                     }
-   })
+                     :en "EN Kutsumanimen tulee olla yksi etunimistäsi."}
+   :past-date {:fi "Syntymäaika oltava muodossa pp.kk.vvvv."
+               :sv "SV Syntymäaika oltava muodossa dd.mm.åååå."
+               :en "EN Syntymäaika oltava muodossa dd.mm.yyyy."}})
 
 (defn person-info-validation-error [msg-key]
-  (when (and (some? msg-key) (some? (get person-info-module-validation-error-texts msg-key)))
-    {:fi [:div.application__person-info-validation-error-dialog
-          [:p (get-in person-info-module-validation-error-texts [msg-key :fi])]]
-     :sv [:div.application__person-info-validation-error-dialog
-          [:p (get-in person-info-module-validation-error-texts [msg-key :sv])]]
-     :en [:div.application__person-info-validation-error-dialog
-          [:p (get-in person-info-module-validation-error-texts [msg-key :en])]]}))
+  (when (some? msg-key)
+    (if-let [texts (get person-info-module-validation-error-texts msg-key)]
+      {:fi [:div.application__person-info-validation-error-dialog
+            [:p (:fi texts)]]
+       :sv [:div.application__person-info-validation-error-dialog
+            [:p (:sv texts)]]
+       :en [:div.application__person-info-validation-error-dialog
+            [:p (:en texts)]]})))
 
 (defn ssn-applied-error
   [preferred-name]
