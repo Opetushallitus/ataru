@@ -2251,47 +2251,38 @@ th.application__readonly-adjacent--header {
   font-size: 14px;
 }
 
-.application__person-info-validation-error-dialog {
-  color: @red;
-  p {
-    color: @red;
-  }
- }
-
 .application__validation-error-dialog-container {
-
   .application__person-info-validation-error-dialog p {
     color: @red;
   }
-}
-
-.application__validation-error-dialog {
-  width: 610px;
-  margin-top: 18px;
-  background: @primary-green-700;
-  color: white;
-  padding: 20px;
-  font-size: 16px;
-  border-radius: 6px;
-  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
-
-  div p,
-  p {
+  .application__validation-error-dialog {
+    width: 610px;
+    margin-top: 18px;
+    background: @primary-green-700;
     color: white;
-  }
+    padding: 20px;
+    font-size: 16px;
+    border-radius: 6px;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
 
-  & p:first-child {
-    margin-top: 0px;
-  }
+    div p,
+    p {
+      color: white;
+    }
 
-  & p:last-child {
-    margin-bottom: 0px;
-  }
+    & p:first-child {
+      margin-top: 0px;
+    }
 
-  .arrow(top, @primary-green-700, 16px, 38px);
+    & p:last-child {
+      margin-bottom: 0px;
+    }
 
-  @media only screen and (max-width: @desktop-content-width) {
-    width: 305px;
+    .arrow(top, @primary-green-700, 16px, 38px);
+
+    @media only screen and (max-width: @desktop-content-width) {
+      width: 305px;
+    }
   }
 }
 

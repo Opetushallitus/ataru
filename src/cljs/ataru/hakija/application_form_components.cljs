@@ -59,7 +59,7 @@
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
     (when (not-empty errors)
-      [:div.application__validation-error-dialog
+      [:div.application__validation-error-dialog-container
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
