@@ -585,7 +585,8 @@ body {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-  margin-bottom: 0px;
+  margin-bottom: 10px;
+  position: relative;
 
   @media only screen and (max-width: @desktop-content-width) {
     margin: 0;
@@ -2252,9 +2253,24 @@ th.application__readonly-adjacent--header {
 }
 
 .application__validation-error-dialog-container {
+  position: relative;
+  white-space: normal;
+  height: 60px;
+
   .application__person-info-validation-error-dialog p {
+    height: 40px;
     color: @red;
   }
+
+  .application__person-info-validation-error-dialog.postal-code p,
+  .application__person-info-validation-error-dialog.past-date p {
+    position: absolute;
+    bottom: 0px;
+    width: 610px;
+    height: 20px;
+    color: @red;
+  }
+
   .application__validation-error-dialog {
     width: 610px;
     margin-top: 18px;
