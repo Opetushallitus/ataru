@@ -2565,27 +2565,27 @@
              institution you are applying to."]]})
 
 (def person-info-module-validation-error-texts
-  {:ssn           {:fi "Henkilötunnuksesi on väärässä muodossa."
-                   :sv "SV Henkilötunnuksesi on väärässä muodossa."
-                   :en "Your identification number is in the wrong format."}
-   :phone         {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
-                   :sv "SV Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
-                   :en "The mobile phone number is in incorrect format. The number has to be in format 050123456 or +35850123456."}
-   :email         {:fi "Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
-                   :sv "SV Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
-                   :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}
+  {:ssn             {:fi "Henkilötunnuksesi on väärässä muodossa."
+                     :sv "Din personbeteckning är i fel form."
+                     :en "Your identification number is in the wrong format."}
+   :phone           {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
+                     :sv "Din mobiltelefonnummer är fel. Numret ska anges i formen 050123456 eller +35850123456."
+                     :en "The mobile phone number is in incorrect format. The number has to be in format 050123456 or +35850123456."}
+   :email           {:fi "Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
+                     :sv "Din e-postadress är i fel form. E-postadressen ska anges i formen namn@adress.fi."
+                     :en "Your email address is in incorrect format. The email address has to be in the format name@address.com."}
    :different-email {:fi "Sähköpostiosoitteet eivät ole samat."
-                     :sv "SV Sähköpostiosoitteet eivät ole samat."
+                     :sv "E-postadresserna motsvarar inte varandra."
                      :en "The email addresses are not identical."}
-   :postal-code   {:fi "Postinumero on virheellinen."
-                   :sv "SV Postinumero on virheellinen"
-                   :en "The postal code is incorrect or does not exist."}
+   :postal-code     {:fi "Postinumero on virheellinen."
+                     :sv "Postnumret är felaktigt."
+                     :en "The postal code is incorrect or does not exist."}
    :main-first-name {:fi "Kutsumanimen tulee olla yksi etunimistäsi."
-                     :sv "SV Kutsumanimen tulee olla yksi etunimistäsi."
+                     :sv "Ditt tilltalsnamn ska vara ett av dina förnamn."
                      :en "The preferred name has to be on of your first/given names."}
-   :past-date {:fi "Syntymäajan on oltava muodossa pp.kk.vvvv."
-               :sv "SV Syntymäaika oltava muodossa dd.mm.åååå."
-               :en "The date of birth has to be in the format dd.mm.yyyy."}})
+   :past-date       {:fi "Syntymäajan on oltava muodossa pp.kk.vvvv."
+                     :sv "Födelsetiden ska anges i formen dd.mm.åååå."
+                     :en "The date of birth has to be in the format dd.mm.yyyy."}})
 
 (defn person-info-validation-error [msg-key]
   (when (some? msg-key)
