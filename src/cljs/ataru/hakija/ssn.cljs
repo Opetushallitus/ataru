@@ -13,7 +13,7 @@
                        (contains? this-century century-sign) "20"
                        (contains? last-century century-sign) "19"
                        (= century-sign "+") 18
-                       :else (throw (js/Error. (str "Eis ais"))))]
+                       :else (throw (js/Error. (str "Unknown century: " century-sign))))]
     (str day "." month "." century year)))
 
 (defn parse-birth-date-from-ssn
