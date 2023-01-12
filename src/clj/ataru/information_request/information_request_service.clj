@@ -10,8 +10,20 @@
             [ataru.applications.application-store :as app-store]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
+            [clojure.string :as string]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
+
+(def application-number-prefix
+  {:fi "Hakemusnumero"
+   :sv "Ansökningsnummer"
+   :en "Application number"})
+
+(defn- enrich-subject-with-application-key [prefix application-key lang]
+  (if application-key
+    (let [postfix (str "(" (get application-number-prefix lang) ": " application-key ")")]
+      (string/join " " [prefix postfix]))
+    prefix))
 
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
@@ -42,12 +54,14 @@
                                                     (if guardian?
                                                       {}
                                                       {:application-url application-url})
-                                                    translations))]
+                                                    translations))
+        subject-with-application-key (enrich-subject-with-application-key (:subject information-request) (:application-key information-request) lang)]
     (when (not-empty recipient-emails)
-      (-> (select-keys information-request [:subject :application-key :id])
+      (-> (select-keys information-request [:application-key :id])
           (merge {:from       "no-reply@opintopolku.fi"
                   :recipients recipient-emails
-                  :body       body})))))
+                  :body       body})
+          (assoc :subject subject-with-application-key)))))
 
 (defn- start-email-job [job-runner connection information-request]
   (let [job-type (:type information-request-job/job-definition)
