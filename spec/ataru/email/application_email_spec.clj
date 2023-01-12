@@ -23,7 +23,7 @@
                                        nil)
             body    (:body email)]
         (should= ["tiina@testaaja.fi"] (:recipients email))
-        (should= (:fi email/edit-email-subjects) (:subject email))
+        (should= (str (:fi email/edit-email-subjects) " " (:key fixtures/application)) (:subject email))
         (should= true (str/includes? body "Hakutoiveesi ovat:"))
         (should= true (str/includes? body "Elintarvikealan perustutkinto - Stadin ammatti- ja aikuisopisto, Hattulantien toimipaikka"))
         (should= true (str/includes? body "Hammastekniikan perustutkinto - Stadin ammatti- ja aikuisopisto, Vilppulantien toimipaikka"))
@@ -47,6 +47,7 @@
                                          false
                                          nil)
             body    (:body email)]
+        (should= (str (:fi email/edit-email-subjects) " " (:key fixtures/application)) (:subject email))
         (should= true (str/includes? body "Lähetä liite osoitteeseen: Toimisto, Elintie 5, 00100 HELSINKI"))
         (should= true (str/includes? body "Palautettava viimeistään 28.2.2022 klo 00:00"))
         (should= true (str/includes? body "Lähetä liite osoitteeseen: Hiuskatu 2, 00500 HELSINKI"))
@@ -94,6 +95,7 @@
                                          false
                                          nil)
             body    (:body email)]
+          (should= (str (:fi email/edit-email-subjects) " " (:key fixtures/application)) (:subject email))
           (should= true (str/includes? body "Upload liite"))
           (should= true (str/includes? body "Perinteinen liitepyyntö"))))
 
@@ -116,5 +118,6 @@
                                        false
                                        nil)
           body    (:body email)]
+      (should= (str (:fi email/edit-email-subjects) " " (:key fixtures/application)) (:subject email))
       (should= false (str/includes? body "Upload liite"))
       (should= true (str/includes? body "Perinteinen liitepyyntö")))))
