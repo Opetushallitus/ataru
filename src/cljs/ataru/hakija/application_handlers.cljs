@@ -766,7 +766,6 @@
           initial-answer (get (create-initial-answers [field-descriptor] []) id)
           answer         (assoc initial-answer :original-value (:value initial-answer))
           limit-reached  (get-in db [:application :answers id :limit-reached])]
-      (println "unset-non-question-group-field-value" (:fi (:label field-descriptor)))
       (cond-> (assoc-in db [:application :answers id] answer)
               (some? limit-reached) (assoc-in [:application :answers id :limit-reached] limit-reached)))))
 
