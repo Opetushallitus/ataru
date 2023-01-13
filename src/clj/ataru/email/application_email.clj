@@ -189,7 +189,7 @@
 
 (defn- enrich-subject-with-application-key [prefix application-key lang]
   (if application-key
-    (let [postfix (str "(" (get application-number-prefix lang) ": " application-key ")")]
+    (let [postfix (str "(" (get-in email-default-texts [:hakemusnumero (or lang :fi)]) ": " application-key ")")]
       (string/join " " [prefix postfix]))
     prefix))
 

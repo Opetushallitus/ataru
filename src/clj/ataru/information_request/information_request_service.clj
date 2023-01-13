@@ -3,6 +3,7 @@
             [ataru.db.db :as db]
             [ataru.log.audit-log :as audit-log]
             [ataru.translations.translation-util :as translations]
+            [ataru.translations.texts :refer [email-default-texts]]
             [ataru.util :as u]
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
@@ -14,14 +15,9 @@
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
 
-(def application-number-prefix
-  {:fi "Hakemusnumero"
-   :sv "Ansökningsnummer"
-   :en "Application number"})
-
 (defn- enrich-subject-with-application-key [prefix application-key lang]
   (if application-key
-    (let [postfix (str "(" (get application-number-prefix lang) ": " application-key ")")]
+    (let [postfix (str "(" (get-in email-default-texts [:hakemusnumero (or lang :fi)]) ": " application-key ")")]
       (string/join " " [prefix postfix]))
     prefix))
 
