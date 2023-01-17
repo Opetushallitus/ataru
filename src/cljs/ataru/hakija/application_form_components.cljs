@@ -58,7 +58,7 @@
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
-    (when (not-empty errors)
+    (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
        (doall
          (map-indexed (fn [idx error]
