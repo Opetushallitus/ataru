@@ -8,7 +8,8 @@
             [ataru.hakija.demo :as demo]
             [clojure.string :as string]
             [ataru.hakija.ssn :as ssn]
-            [ataru.hakija.form-tools :as form-tools])
+            [ataru.hakija.form-tools :as form-tools]
+            [ataru.translations.texts :as texts])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (defn- update-value [current-value update-fn]
@@ -356,7 +357,9 @@
       (and first-name (not (string/blank? preferred-name)))
       (-> db
           (update-in [:application :answers :preferred-name] merge
-                     {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})})
+                     (let [valid? (pn/main-first-name? {:value preferred-name :answers-by-key answers})]
+                       {:valid valid?
+                        :errors (if valid? [] [(texts/person-info-validation-error :main-first-name)])}))
           (update-in [:application :answers :preferred-name :values] merge
                      {:valid (pn/main-first-name? {:value preferred-name :answers-by-key answers})}))
 
