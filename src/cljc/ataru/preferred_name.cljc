@@ -1,4 +1,5 @@
-(ns ataru.preferred-name)
+(ns ataru.preferred-name
+  (:require [clojure.string :as string]))
 
 (defn main-first-name?
   [{:keys [value answers-by-key]}]
@@ -10,4 +11,5 @@
                                 start-idx  (range 0 num-first-names)
                                 :when (<= (+ sub-length start-idx) num-first-names)]
                             (clojure.string/join " " (subvec first-names start-idx (+ start-idx sub-length)))))]
-    (contains? possible-names (clojure.string/replace value "-" " "))))
+    (or (and (empty? (filter #(not (string/blank? %)) first-names)) (string/blank? value))
+        (contains? possible-names (clojure.string/replace value "-" " ")))))
