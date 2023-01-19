@@ -34,6 +34,11 @@
    :sv "Studieinfo: ny länk till din ansökan"
    :en "Studyinfo: your new application link"})
 
+(def application-number-prefix
+  {:fi "Hakemusnumero"
+   :sv "Ansökningsnummer"
+   :en "Application number"})
+
 (defn- ->string-array
   [& elements]
   (into-array String elements))
@@ -182,6 +187,12 @@
   (fn [attachment-type]
     (koodisto/get-attachment-type-label koodisto-cache attachment-type)))
 
+(defn- enrich-subject-with-application-key [prefix application-key lang]
+  (if application-key
+    (let [postfix (str "(" (get-in email-default-texts [:hakemusnumero (or lang :fi)]) ": " application-key ")")]
+      (string/join " " [prefix postfix]))
+    prefix))
+
 (defn create-emails
   [subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url]
    (let [now                             (t/now)
@@ -227,7 +238,8 @@
                                                           (#{"guardian-email" "guardian-email-secondary"} (:key answer))))
                                                 (mapcat :value)
                                                 (filter (comp not clojure.string/blank?))))
-         subject                         (if subject (subject lang) (email-template :subject))
+         subject-prefix                  (if subject (subject lang) (email-template :subject))
+         subject                         (enrich-subject-with-application-key subject-prefix (:key application) lang)
          application-url                 (modify-link (:secret application))
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
