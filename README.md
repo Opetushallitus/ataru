@@ -39,7 +39,7 @@ Currently S3 integration is used in non-dev environments for storage of
 temporary files accrued when uploading attachments in parts (for upload resume
 support). By default the local file system (/tmp) is used for temporary file
 storage.
-  
+
 In order to use S3 in development environments, add the following to your
 configuration file:
 
@@ -137,7 +137,9 @@ make start-docker test-clojure
 ```
 lein spec <PATH_TO_TEST_FILE>
 ```
+
 e.g.
+
 ```
 lein spec spec/ataru/applications/suoritus_filter_spec.clj
 ```
@@ -197,13 +199,13 @@ make compile-test-code load-test-fixture
 
 Swagger specs for the APIs can be found at
 
-* <http://localhost:8351/hakemus/swagger.json>
-* <http://localhost:8350/lomake-editori/swagger.json>
+- <http://localhost:8351/hakemus/swagger.json>
+- <http://localhost:8350/lomake-editori/swagger.json>
 
-Swagger UI can be found at 
+Swagger UI can be found at
 
-* <http://localhost:8351/hakemus/api-docs/index.html>
-* <http://localhost:8350/lomake-editori/api-docs/index.html>
+- <http://localhost:8351/hakemus/api-docs/index.html>
+- <http://localhost:8350/lomake-editori/api-docs/index.html>
 
 ## Anonymize data
 
@@ -249,8 +251,76 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 ```
 
 try running Docker Compose manually with
+
 ```bash
 docker-compose up -d
 ```
 
 If everything starts, run `make stop` and now `make start` should work as expected. Why? Who knows...
+
+## Running locally (Mac OS X)
+
+In order to run locally against qa, hahtuva or untuva another cloned repo is needed: https://github.com/Opetushallitus/ataru-secrets, cloned e.g. in parallel folder with _ataru_
+
+then local run whould be launched e.q. as follows:
+
+```
+make start VIRKAILIJA_CONFIG=../ataru-secrets/virkailija-qa.edn HAKIJA_CONFIG=../ataru-secrets/hakija-qa.edn
+```
+
+### Leiningen installation and possible issues
+
+[leiningen](https://formulae.brew.sh/formula/leiningen) - `brew install leiningen`
+
+Preferred version of Java for leiningen is Java11. Before project run check that Leiningen tool points to correct Java Open JDK version: `lein -v`
+
+```
+Leiningen 2.10.0 on Java 11.0.17 OpenJDK 64-Bit Server VM
+```
+
+and this is the same version that system uses as default e.g.: `java --version` and `java -version`
+
+```
+openjdk version "11.0.17" 2022-10-18
+OpenJDK Runtime Environment Temurin-11.0.17+8 (build 11.0.17+8)
+OpenJDK 64-Bit Server VM Temurin-11.0.17+8 (build 11.0.17+8, mixed mode)
+```
+
+Test `lein` tool by running the following command to compile less to css
+
+```
+lein less once
+```
+
+Output should not be like this:
+
+```Compiling {less} css:
+resources/less/virkailija-site.less => resources/public/css/compiled/virkailija-site.css
+resources/less/ellipsis-loader.less => resources/public/css/compiled/ellipsis-loader.css
+resources/less/components.less => resources/public/css/compiled/components.css
+resources/less/arvosanat-hakija.less => resources/public/css/compiled/arvosanat-hakija.css
+resources/less/editor.less => resources/public/css/compiled/editor.css
+resources/less/hakija.less => resources/public/css/compiled/hakija.css
+resources/less/hyvaksynnan-ehto.less => resources/public/css/compiled/hyvaksynnan-ehto.css
+resources/less/virkailija-kevyt-valinta.less => resources/public/css/compiled/virkailija-kevyt-valinta.css
+resources/less/hakija-site.less => resources/public/css/compiled/hakija-site.css
+resources/less/virkailija-common.less => resources/public/css/compiled/virkailija-common.css
+resources/less/component-fonts.less => resources/public/css/compiled/component-fonts.css
+resources/less/component-remove-default-styles.less => resources/public/css/compiled/component-remove-default-styles.css
+resources/less/virkailija-banner.less => resources/public/css/compiled/virkailija-banner.css
+resources/less/dropdown-component.less => resources/public/css/compiled/dropdown-component.css
+resources/less/virkailija-application-tutu.less => resources/public/css/compiled/virkailija-application-tutu.css
+resources/less/component-layout.less => resources/public/css/compiled/component-layout.css
+resources/less/virkailija-application.less => resources/public/css/compiled/virkailija-application.css
+resources/less/arvosanat-valinnat-virkailija.less => resources/public/css/compiled/arvosanat-valinnat-virkailija.css
+resources/less/general-style-settings.less => resources/public/css/compiled/general-style-settings.css
+resources/less/button-component.less => resources/public/css/compiled/button-component.css
+resources/less/component-colors.less => resources/public/css/compiled/component-colors.css
+resources/less/mocha.less => resources/public/css/compiled/mocha.css
+resources/less/mixins.less => resources/public/css/compiled/mixins.css
+resources/less/vars.less => resources/public/css/compiled/vars.css
+resources/less/component-link.less => resources/public/css/compiled/component-link.css
+Done.
+```
+
+More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/)
