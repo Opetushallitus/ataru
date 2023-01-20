@@ -292,7 +292,7 @@ Test `lein` tool by running the following command to compile less to css
 lein less once
 ```
 
-Output should not be like this:
+Output should be like this:
 
 ```Compiling {less} css:
 resources/less/virkailija-site.less => resources/public/css/compiled/virkailija-site.css
