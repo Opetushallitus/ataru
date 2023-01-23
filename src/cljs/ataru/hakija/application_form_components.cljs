@@ -58,8 +58,8 @@
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
-    (when (not-empty errors)
-      [:div.application__validation-error-dialog
+    (when (not-empty (filter #(some? %) errors))
+      [:div.application__validation-error-dialog-container
        (doall
          (map-indexed (fn [idx error]
                         (with-meta (util/non-blank-val error languages)
@@ -144,14 +144,20 @@
                               :data-test-id  "email-input"}
                              (when @(subscribe [:application/cannot-edit? id])
                                    {:disabled true}))]
-                     [validation-error (:errors answer)]
+                     [validation-error (some-> answer
+                                               :errors
+                                               first
+                                               :email-main-error)]
                      (let [id           :verify-email
-                           get-verify-value (fn [] (cond cannot-view?
+                           get-verify-value (fn []
+                                              (cond cannot-view?
                                                          "***********"
                                                          (:focused-verify? @local-state)
                                                          (:value-verify @local-state)
                                                          :else
-                                                         (:verify answer)))]
+                                                         (:verify answer)))
+
+                           ]
                           [:div
                            [:label.application__form-field-label.label.application__form-field-label--verify-email
                             {:id  "application-form-field-label-verify-email"
@@ -181,7 +187,12 @@
                                                     " application__form-text-input--normal"))
                              :aria-invalid (not (:valid answer))
                              :autoComplete autocomplete-off
-                             :data-test-id "verify-email-input"}]])]))))
+                             :data-test-id "verify-email-input"}]])
+                     [validation-error (some-> answer
+                                               :errors
+                                               first
+                                               :email-verify-error)]
+                     ]))))
 
 (defn- options-satisfying-condition [field-descriptor answer-value options]
   (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
