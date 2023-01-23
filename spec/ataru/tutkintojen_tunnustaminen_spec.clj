@@ -237,41 +237,41 @@
                                                 {:connection connection})))
           wrong-form    (form-store/fetch-by-id wrong-form-id)
           application   (application-store/get-application
-                         (application-store/add-application
-                          {:form      form-id
-                           :answers   [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
-                                        :value     "024"
-                                        :fieldType "dropdown"}
-                                       {:key       "liite-1"
-                                        :value     ["liite-1-id"]
-                                        :fieldType "attachment"}
-                                       {:key       "liite-2"
-                                        :value     ["liite-2-1-id" "liite-2-2-id"]
-                                        :fieldType "attachment"}
-                                       {:key       "liite-3"
-                                        :value     [["liite-3-1-1-id"]
-                                                    []
-                                                    ["liite-3-2-1-id" "liite-3-2-2-id"]]
-                                        :fieldType "attachment"}
-                                       {:key       "first-name"
-                                        :value     "Etunimi Toinenetunimi"
-                                        :fieldType "textField"}
-                                       {:key       "last-name"
-                                        :value     "Sukunimi"
-                                        :fieldType "textField"}
-                                       {:key       "birth-date"
-                                        :fieldType "textField"
-                                        :value     "24.09.1989"}
-                                       {:key       "email"
-                                        :fieldType "textField"
-                                        :value     "test@example.com"}]
-                           :lang      "fi"
-                           :hakukohde []
-                           :haku      nil}
-                          []
-                          form
-                          {}
-                          audit-logger))
+                          (:id (application-store/add-application
+                            {:form      form-id
+                             :answers   [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                          :value     "024"
+                                          :fieldType "dropdown"}
+                                         {:key       "liite-1"
+                                          :value     ["liite-1-id"]
+                                          :fieldType "attachment"}
+                                         {:key       "liite-2"
+                                          :value     ["liite-2-1-id" "liite-2-2-id"]
+                                          :fieldType "attachment"}
+                                         {:key       "liite-3"
+                                          :value     [["liite-3-1-1-id"]
+                                                      []
+                                                      ["liite-3-2-1-id" "liite-3-2-2-id"]]
+                                          :fieldType "attachment"}
+                                         {:key       "first-name"
+                                          :value     "Etunimi Toinenetunimi"
+                                          :fieldType "textField"}
+                                         {:key       "last-name"
+                                          :value     "Sukunimi"
+                                          :fieldType "textField"}
+                                         {:key       "birth-date"
+                                          :fieldType "textField"
+                                          :value     "24.09.1989"}
+                                         {:key       "email"
+                                          :fieldType "textField"
+                                          :value     "test@example.com"}]
+                             :lang      "fi"
+                             :hakukohde []
+                             :haku      nil}
+                            []
+                            form
+                            {}
+                            audit-logger)))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           event-id      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id (yesql-add-application-event<! {:application_key          (:key application)
@@ -283,7 +283,7 @@
                                                                :virkailija_organizations nil}
                                                               {:connection connection})))
           _             (Thread/sleep 1000) ;; avoid equal created_time
-          edited        (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+          edited        (:id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (application-store/update-application
                            (update application :answers #(map (fn [answer]
                                                                 (cond (= (get-in config [:tutkintojen-tunnustaminen :country-question-id]) (:key answer))
@@ -295,8 +295,8 @@
                            []
                            form
                            {}
-                           audit-logger))
-          in-wrong-form (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
+                           audit-logger)))
+          in-wrong-form (:id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (application-store/update-application
                            (-> edited
                                application-store/get-application
@@ -304,7 +304,7 @@
                            []
                            wrong-form
                            {}
-                           audit-logger))]
+                           audit-logger)))]
       (binding [*form-id*                      form-id
                 *wrong-form-id*                wrong-form-id
                 *application-id*               (:id application)
