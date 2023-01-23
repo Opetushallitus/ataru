@@ -573,27 +573,29 @@
                :email (s/maybe s/Str)})
 
 (s/defschema HakurekisteriApplicationToinenAste
-  {:oid                                               s/Str
-   :personOid                                         s/Str
-   :createdTime                                       s/Str
-   :kieli                                             s/Str
-   :hakukohteet                                       [HakurekisteriHakukohde]
-   :email                                             s/Str
-   :matkapuhelin                                      s/Str
-   :lahiosoite                                        s/Str
-   :postinumero                                       s/Str
-   :postitoimipaikka                                  (s/maybe s/Str)
-   :asuinmaa                                          s/Str
-   :kotikunta                                         (s/maybe s/Str)
-   :attachments                                       {s/Str s/Str}
-   :pohjakoulutus                                     s/Str
-   :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
-   :sahkoisenAsioinninLupa                            s/Bool
-   :valintatuloksenJulkaisulupa                       s/Bool
-   :koulutusmarkkinointilupa                          s/Bool
-   :tutkintoVuosi                                     (s/maybe s/Int)
-   :tutkintoKieli                                     (s/maybe s/Str)
-   :huoltajat                                         [GuardianContactInfo]})
+  {:oid                                  s/Str
+   :personOid                            s/Str
+   :createdTime                          s/Str
+   :kieli                                s/Str
+   :hakukohteet                          [HakurekisteriHakukohde]
+   :email                                s/Str
+   :matkapuhelin                         s/Str
+   :lahiosoite                           s/Str
+   :postinumero                          s/Str
+   :postitoimipaikka                     (s/maybe s/Str)
+   :asuinmaa                             s/Str
+   :kotikunta                            (s/maybe s/Str)
+   :attachments                          {s/Str s/Str}
+   :pohjakoulutus                        s/Str
+   :kiinnostunutOppisopimusKoulutuksesta (s/maybe s/Bool)
+   :sahkoisenAsioinninLupa               s/Bool
+   :valintatuloksenJulkaisulupa          s/Bool
+   :koulutusmarkkinointilupa             s/Bool
+   :tutkintoVuosi                        (s/maybe s/Int)
+   :tutkintoKieli                        (s/maybe s/Str)
+   :huoltajat                            [GuardianContactInfo]
+   :hakemusFirstSubmittedTime            s/Str
+   :urheilijanLisakysymykset             (s/maybe s/Any)})
 
 (s/defschema OnrApplication
   {:oid          s/Str

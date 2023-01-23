@@ -371,7 +371,7 @@
   [tarjonta-service form-by-haku-oid-str-cache applications]
   (let [haku-oid (first (set (map :hakuOid applications))) ;fixme, either make it work for multiple or handle it as a bad request when params result in hakemukses from different hakus
         form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
-        questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)]
+        questions (question-util/get-hakurekisteri-toinenaste-specific-questions form haku-oid)]
     (->> applications
       (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service))
       (map (partial question-util/assoc-deduced-vakio-answers-for-toinen-aste-application questions)))))
@@ -697,7 +697,7 @@
     (let [form        (json/parse-string (cache/get-from form-by-haku-oid-str-cache haku-oid) true)
           person-oids (when (seq person-oids)
                         (mapcat #(:linked-oids (second %)) (person-service/linked-oids person-service person-oids)))
-          questions (question-util/get-hakurekisteri-toinenaste-specific-questions form)
+          questions (question-util/get-hakurekisteri-toinenaste-specific-questions form haku-oid)
           haun-hakukohteet (tarjonta-service/hakukohde-search tarjonta-service haku-oid nil)
           urheilija-amm-hakukohdes (->> haun-hakukohteet
                                         (filter (fn [hakukohde] (seq (set/intersection

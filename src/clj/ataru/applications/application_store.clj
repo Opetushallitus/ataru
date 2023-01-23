@@ -972,80 +972,117 @@
      :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
-(defn- unwrap-hakurekisteri-application-toinenaste
-  [questions urheilija-amm-hakukohdes haun-hakukohteet {:keys [key hakukohde created_time person_oid lang email content attachment_reviews]}]
 
-  (try (let [answers     (answers-by-key (:answers content))
-        foreign?    (not= finland-country-code (-> answers :country-of-residence :value))
-        form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
-        sports-key (:urheilijan-amm-lisakysymys-key questions)
-        interested-in-sports-amm? (-> answers sports-key :value)
-        get-hakukohde-fn (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
-        hakukohteet (map (fn [oid]
-                           {:oid oid
-                            :harkinnanvaraisuus
-                            (get-harkinnanvaraisuus-reason-for-hakukohde answers (get-hakukohde-fn oid))
-                            :terveys (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
-                            :aiempiPeruminen (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key questions) oid) answers)))
-                            :kiinnostunutKaksoistutkinnosta (->> (:kaksoistutkinto-keys questions)
-                                                                 (map #(:value ((form-hakukohde-key % oid) answers)))
-                                                                 (some #(= "0" %)))
-                            :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (when (and interested-in-sports-amm?
-                                                                                          (some #(= oid %) urheilija-amm-hakukohdes))
-                                                                                 (= "0" interested-in-sports-amm?))})
-                         hakukohde)
-        first-huoltaja (when (or (-> answers :guardin-name :value)
-                                 (-> answers :guardian-email :value)
-                                 (-> answers :guardian-phone :value))
-                         {:nimi (-> answers :guardian-name :value first)
-                          :matkapuhelin (-> answers :guardian-phone :value first)
-                          :email (-> answers :guardian-email :value first)})
-        second-huoltaja (when (or (-> answers :guardian-name-secondary :value)
-                                  (-> answers :guardian-email-secondary :value)
-                                  (-> answers :guardian-phone-secondary :value))
-                          {:nimi (-> answers :guardian-name-secondary :value first)
-                           :matkapuhelin (-> answers :guardian-phone-secondary :value first)
-                           :email (-> answers :guardian-email-secondary :value first)})
-        huoltajat   (->> []
-                         (concat [first-huoltaja second-huoltaja])
-                         (filter #(not (nil? %))))
-        base-education-key (keyword base-education-choice-key)
-        oppisopimuskoulutus-key (:oppisopimuskoulutus-key questions)
-        tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
-                                (filter #(not (nil? (% answers))))
-                                first)
-        tutkinto-vuosi (when tutkinto-vuosi-key
-                         (-> answers tutkinto-vuosi-key :value))
-        tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
-                                (filter #(not (nil? (% answers))))
-                                first)
-        tutkinto-kieli (when tutkinto-kieli-key
-                         (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang)))]
-    {:oid                         key
-     :personOid                   person_oid
-     :createdTime                 (.print JodaFormatter created_time)
-     :kieli                       lang
-     :hakukohteet                 hakukohteet
-     :email                       email
-     :matkapuhelin                (-> answers :phone :value)
-     :lahiosoite                  (-> answers :address :value)
-     :postinumero                 (-> answers :postal-code :value)
-     :postitoimipaikka            (if foreign?
-                                    (-> answers :city :value)
-                                    (-> answers :postal-office :value))
-     :asuinmaa                    (-> answers :country-of-residence :value)
-     :kotikunta                   (-> answers :home-town :value)
-     :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :paatos-opiskelijavalinnasta-sahkopostiin :value))
-     :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
-     :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
-     :attachments                 (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
-     :huoltajat                   huoltajat
-     :pohjakoulutus               (-> answers base-education-key :value)
-     :tutkintoKieli               tutkinto-kieli
-     :tutkintoVuosi               (edn/read-string tutkinto-vuosi)
-     :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
-     }) (catch Exception e
-              (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
+(def urheilija-fields [:keskiarvo :peruskoulu :tamakausi :viimekausi
+                       :toissakausi :sivulaji :valmennusryhma-seurajoukkue
+                       :valmennusryhma-piirijoukkue :valmennusryhma-maajoukkue
+                       :valmentaja-nimi
+                       :valmentaja-email
+                       :valmentaja-puh])
+
+(def urheilija-fields-with-multiple-keys [:liitto :seura])
+
+(defn- get-urheilija-laji [abk lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
+  ;(log/info (str "get-urheilija-laji " laji-dropdown-key muu-laji-key value-to-label " - " lang))
+  (let [dropdown-answer (-> abk
+                            laji-dropdown-key
+                            :value)
+        option-text (if (= dropdown-answer "21")
+                      (-> abk
+                          muu-laji-key
+                          :value)
+                      ((keyword lang) (get value-to-label dropdown-answer)))]
+    {:laji option-text}))
+
+(defn- get-urheilijan-lisakysymykset [abk keys]
+  (let [single-results (into {} (map (fn [field] {field (-> abk (get (-> keys field keyword)) :value)}) urheilija-fields))
+        multi-fields-results (into {} (map (fn [field]
+                                             {field (->> (-> keys field)
+                                                         (map keyword)
+                                                         (map (fn [field-id] (field-id abk)))
+                                                         (filter some?)
+                                                         first
+                                                         :value)}) urheilija-fields-with-multiple-keys))]
+    (merge single-results multi-fields-results)))
+
+(defn- unwrap-hakurekisteri-application-toinenaste
+  [questions urheilija-amm-hakukohdes haun-hakukohteet {:keys [key hakukohde created_time submitted person_oid lang email content attachment_reviews]}]
+
+  (try (let [answers (answers-by-key (:answers content))
+             foreign? (not= finland-country-code (-> answers :country-of-residence :value))
+             form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
+             sports-key (:urheilijan-amm-lisakysymys-key questions)
+             interested-in-sports-amm? (-> answers sports-key :value)
+             get-hakukohde-fn (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
+             hakukohteet (map (fn [oid]
+                                {:oid                                               oid
+                                 :harkinnanvaraisuus
+                                 (get-harkinnanvaraisuus-reason-for-hakukohde answers (get-hakukohde-fn oid))
+                                 :terveys                                           (= "1" (:value ((form-hakukohde-key (:sora-terveys-key questions) oid) answers)))
+                                 :aiempiPeruminen                                   (= "1" (:value ((form-hakukohde-key (:sora-aiempi-key questions) oid) answers)))
+                                 :kiinnostunutKaksoistutkinnosta                    (->> (:kaksoistutkinto-keys questions)
+                                                                                         (map #(:value ((form-hakukohde-key % oid) answers)))
+                                                                                         (some #(= "0" %)))
+                                 :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (when (and interested-in-sports-amm?
+                                                                                               (some #(= oid %) urheilija-amm-hakukohdes))
+                                                                                      (= "0" interested-in-sports-amm?))})
+                              hakukohde)
+             first-huoltaja (when (or (-> answers :guardin-name :value)
+                                      (-> answers :guardian-email :value)
+                                      (-> answers :guardian-phone :value))
+                              {:nimi         (-> answers :guardian-name :value first)
+                               :matkapuhelin (-> answers :guardian-phone :value first)
+                               :email        (-> answers :guardian-email :value first)})
+             second-huoltaja (when (or (-> answers :guardian-name-secondary :value)
+                                       (-> answers :guardian-email-secondary :value)
+                                       (-> answers :guardian-phone-secondary :value))
+                               {:nimi         (-> answers :guardian-name-secondary :value first)
+                                :matkapuhelin (-> answers :guardian-phone-secondary :value first)
+                                :email        (-> answers :guardian-email-secondary :value first)})
+             huoltajat (->> []
+                            (concat [first-huoltaja second-huoltaja])
+                            (filter #(not (nil? %))))
+             base-education-key (keyword base-education-choice-key)
+             oppisopimuskoulutus-key (:oppisopimuskoulutus-key questions)
+             tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
+                                     (filter #(not (nil? (% answers))))
+                                     first)
+             tutkinto-vuosi (when tutkinto-vuosi-key
+                              (-> answers tutkinto-vuosi-key :value))
+             tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
+                                     (filter #(not (nil? (% answers))))
+                                     first)
+             tutkinto-kieli (when tutkinto-kieli-key
+                              (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang)))
+             urheilija-laji (get-urheilija-laji answers lang (:urheilijan-lisakysymys-laji-key-and-mapping questions))
+             urheilijan-lisakysymykset (get-urheilijan-lisakysymykset answers (:urheilijan-lisakysymys-keys questions))]
+         {:oid                                  key
+          :personOid                            person_oid
+          :createdTime                          (.print JodaFormatter created_time) ;viimeisimmän hakemusversion luontihetki
+          :hakemusFirstSubmittedTime            (.print JodaFormatter submitted) ;ensimmäisen hakemusversion luontihetki
+          :kieli                                lang
+          :hakukohteet                          hakukohteet
+          :email                                email
+          :matkapuhelin                         (-> answers :phone :value)
+          :lahiosoite                           (-> answers :address :value)
+          :postinumero                          (-> answers :postal-code :value)
+          :postitoimipaikka                     (if foreign?
+                                                  (-> answers :city :value)
+                                                  (-> answers :postal-office :value))
+          :asuinmaa                             (-> answers :country-of-residence :value)
+          :kotikunta                            (-> answers :home-town :value)
+          :sahkoisenAsioinninLupa               (= "Kyllä" (-> answers :paatos-opiskelijavalinnasta-sahkopostiin :value))
+          :valintatuloksenJulkaisulupa          (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
+          :koulutusmarkkinointilupa             (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
+          :attachments                          (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
+          :huoltajat                            huoltajat
+          :pohjakoulutus                        (-> answers base-education-key :value)
+          :tutkintoKieli                        tutkinto-kieli
+          :tutkintoVuosi                        (edn/read-string tutkinto-vuosi)
+          :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
+          :urheilijanLisakysymykset             (merge urheilijan-lisakysymykset urheilija-laji)
+          }) (catch Exception e
+               (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
 
 (defn suoritusrekisteri-applications
   [haku-oid hakukohde-oids person-oids modified-after offset]
