@@ -354,7 +354,7 @@
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form connection)
 
-      id)))
+      {:id id :key key})))
 
 (defn- form->form-id [{:keys [form] :as application}]
   (assoc (dissoc application :form) :form-id form))
@@ -422,7 +422,7 @@
                                    session
                                    (assoc-in session [:identity :oid] virkailija-oid))
                       :id        {:applicationOid key}})
-      id)))
+      {:id id :key key})))
 
 (defn- str->name-query-value
   [name]

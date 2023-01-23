@@ -19,6 +19,7 @@
     [ataru.maksut.maksut-protocol :as maksut-protocol]
     [ataru.person-service.person-integration :as person-integration]
     [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
@@ -30,15 +31,19 @@
     [clojure.java.jdbc :as jdbc]
     [clojure.string :as string]
     [taoensso.timbre :as log]
-    [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]))
+    [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]
+    [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
+    [ataru.tarjonta.haku :as h]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        application-id (store-fn application applied-hakukohteet form session audit-logger)]
-    (log/info "Stored application with id: " application-id)
+        key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
+    (log/info "Stored application with id: " (:id key-and-id))
+    (when harkinnanvaraisuus-process-fn
+      (harkinnanvaraisuus-process-fn (:id key-and-id) (:key key-and-id)))
     {:passed?        true
-     :id application-id
+     :id (:id key-and-id)
      :application application}))
 
 (defn in-processing-state?
@@ -222,6 +227,9 @@
                                               true
                                               (:strict-warnings-on-unchanged-edits? application))
         now                           (time/now)
+        haku                          (tarjonta-service/get-haku
+                                        tarjonta-service
+                                        (:haku application))
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -258,7 +266,7 @@
         use-toisen-asteen-yhteishaku-restrictions? (toisen-asteen-yhteishaku-logic/use-toisen-asteen-yhteishaku-restrictions?
                                                      form-roles
                                                      rewrite?
-                                                     (:haku application))
+                                                     haku)
         form                          (cond (some? (:haku application))
                                             (hakija-form-service/fetch-form-by-haku-oid-and-id
                                              form-by-id-cache
@@ -324,7 +332,10 @@
                                        applied-hakukohderyhmat
                                        (some? virkailija-secret)
                                        (get latest-application :id "NEW_APPLICATION_ID")
-                                       (get latest-application :key "NEW_APPLICATION_KEY"))]
+                                       (get latest-application :key "NEW_APPLICATION_KEY"))
+        harkinnanvaraisuus-process-fn (when (h/toisen-asteen-yhteishaku? haku)
+                                        (fn [application-id application-key]
+                                          (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
     (when (not-empty cannot-edit-fields)
       (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
     (cond
@@ -380,7 +391,7 @@
       :else
       (do
         (remove-orphan-attachments liiteri-cas-client final-application latest-application)
-        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)
+        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn)
           :key (:key latest-application))))))
 
 (defn- start-person-creation-job [job-runner application-id]
