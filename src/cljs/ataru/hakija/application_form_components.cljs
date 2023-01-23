@@ -631,13 +631,13 @@
          {:key option-id}
          [:input
           (merge {:id        option-id
-                  :type      "checkbox"
+                  :type      "radio"
                   :checked   (and (not @verifying?) (not unselectable?) sure-if-selected? checked?)
                   :value     option-value
                   :on-change #(toggle-value-fn (.. % -target -value))
                   :role      "radio"
                   :class     (if use-multi-choice-style?
-                               "application__form-checkbox"
+                               "application__form-radio"
                                "application__form-single-choice-button")}
                  (when disabled? {:disabled true}))]
          [:label
