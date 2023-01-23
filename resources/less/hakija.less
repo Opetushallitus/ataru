@@ -1026,6 +1026,29 @@ textarea.application__form-text-area__size-large {
   color: @white;
 }
 
+.application__form-radio {
+  display: none;
+}
+
+.application__form-radio + label {
+  .primary-button;
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-flow: row nowrap;
+  min-height: 43px;
+  justify-content: flex-start;
+  padding: 10px 19px;
+  margin-bottom: 1px;
+  font-size: 14px;
+}
+
+.application__form-radio:checked + label {
+  background-color: @primary-green-700;
+  color: @white;
+}
+
+
 button.application__maksut-button {
   .button-mixin;
   margin-top: 50px;
@@ -1046,7 +1069,23 @@ button.application__maksut-button {
   margin-right: 6px;
 }
 
+.application__form-radio:checked + label::before {
+  content: "";
+  display: block;
+  height: 20px;
+  width: 20px;
+  background-size: 20px 20px;
+  background-image: url('../../images/radio-button-white-checked.svg');
+  background-repeat: no-repeat;
+  margin-right: 6px;
+
+
+ }
+
 .application__form-checkbox:checked + label.disabled {
+  background-color: @neutral-grey-500;
+}
+.application__form-radio:checked + label.disabled {
   background-color: @neutral-grey-500;
 }
 
