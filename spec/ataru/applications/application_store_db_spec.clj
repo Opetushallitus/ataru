@@ -84,12 +84,13 @@
 
   (it "should find application with attachments query"
     (let [existing-attachment-id "att__1"
-          application-id         (store/add-application
-                                  (dissoc application :key)
-                                  []
-                                  form-fixtures/attachment-test-form
-                                  {}
-                                  audit-logger)
+          application-id         (-> (store/add-application
+                                      (dissoc application :key)
+                                      []
+                                      form-fixtures/attachment-test-form
+                                      {}
+                                      audit-logger)
+                                     :id)
           application-key        (find-application-key-by-id application-id)
           new-reviews            (create-new-reviews application application-key)
           query                  {:attachment-review-states {existing-attachment-id ["not-checked"]}}
@@ -167,49 +168,57 @@
                                                   :answers [{:key       "painike"
                                                              :value     "0"
                                                              :fieldType "singleChoice"}]}
-                                                  (store/add-application [] form {} audit-logger))
+                                                  (store/add-application [] form {} audit-logger)
+                                                 :id)
             nonselected-painike-application-id       (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "painike"
                                                                      :value     nil
                                                                      :fieldType "singleChoice"}]}
-                                                         (store/add-application [] form {} audit-logger))
+                                                         (store/add-application [] form {} audit-logger)
+                                                         :id)
             valikko-application-id                   (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "valikko"
                                                                      :value     "0"
                                                                      :fieldType "dropdown"}]}
-                                             (store/add-application [] form {} audit-logger))
+                                             (store/add-application [] form {} audit-logger)
+                                                         :id)
             lista-application-id                     (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "lista"
                                                                      :value     ["0"]
                                                                      :fieldType "multipleChoice"}]}
-                                                          (store/add-application [] form {} audit-logger))
+                                                          (store/add-application [] form {} audit-logger)
+                                                         :id)
             group-painike-application-id             (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-painike"
                                                                      :value     [["0"]]
                                                                      :fieldType "singleChoice"}]}
-                                                          (store/add-application [] form {} audit-logger))
+                                                          (store/add-application [] form {} audit-logger)
+                                                         :id)
             nonselected-group-painike-application-id (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-painike"
                                                                      :value     [[nil]]
                                                                      :fieldType "singleChoice"}]}
-                                                         (store/add-application [] form {} audit-logger))
+                                                         (store/add-application [] form {} audit-logger)
+                                                         :id)
             group-valikko-application-id             (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-valikko"
                                                                      :value     [["0"]]
                                                                      :fieldType "dropdown"}]}
-                                                          (store/add-application [] form {} audit-logger))
+                                                          (store/add-application [] form {} audit-logger)
+                                                         :id)
             group-lista-application-id               (-> {:lang    "fi"
                                                           :form    form-id
                                                           :answers [{:key       "group-lista"
                                                                      :value     [["0"]]
                                                                      :fieldType "multipleChoice"}]}
-                                                          (store/add-application [] form {} audit-logger))
+                                                          (store/add-application [] form {} audit-logger)
+                                                         :id)
             per-hakukohde-application-id  (-> {
                                                :lang    "fi"
                                                :form    form-id
@@ -218,7 +227,8 @@
                                                           :value "1"
                                                           :fieldType "singleChoice"
                                                           :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.29.123454321"}]}
-                                              (store/add-application [] form {} audit-logger))
+                                              (store/add-application [] form {} audit-logger)
+                                              :id)
             per-hakukohde-followup-application-id (-> {
                                                        :lang    "fi"
                                                        :form    form-id
@@ -232,7 +242,8 @@
                                                                   :fieldType "singleChoice"
                                                                   :value "2"
                                                                   :duplikoitu-followup-hakukohde-oid "1.2.246.562.29.123454321"}]}
-                                                        (store/add-application [] form {} audit-logger))]
+                                                        (store/add-application [] form {} audit-logger)
+                                                      :id)]
         (binding [*painike-application-id*                   painike-application-id
                   *nonselected-painike-application-id*       nonselected-painike-application-id
                   *valikko-application-id*                   valikko-application-id
