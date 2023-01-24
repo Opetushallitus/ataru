@@ -147,10 +147,9 @@
     (some contains-required-validators? (:validators field-descriptor))))
 
 (defn required-hint
-  [field-descriptor]
+  [field-descriptor lang]
   (if (is-required-field? field-descriptor)
-    " *"
-    ""))
+    (str " " (translations/get-hakija-translation :required lang)) ""))
 
 (defn get-value [answer group-idx]
   (if (some? group-idx)

@@ -111,7 +111,7 @@
   [:label.application__form-field-label
    [:span
     (str (util/from-multi-lang (:label field-descriptor) lang)
-         (required-hint field-descriptor))
+         (required-hint field-descriptor lang))
     [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
 
 (defn text [field-descriptor application hakukohteet-and-ryhmat lang group-idx]
@@ -173,7 +173,7 @@
      [:label.application__form-field-label
       [:span
        (str (util/from-multi-lang (:label field-descriptor) lang)
-            (required-hint field-descriptor))
+            (required-hint field-descriptor lang))
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
@@ -217,14 +217,14 @@
     [:div.application__form-field
      [:label.application__form-field-label
       (str (util/from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor))]
+           (required-hint field-descriptor lang))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
              (for [child children]
                [:th.application__readonly-adjacent--header
                 (str (util/from-multi-lang (:label child) lang)
-                     (required-hint field-descriptor))]))]
+                     (required-hint field-descriptor lang))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application hakukohteet-and-ryhmat lang question-group-idx]
@@ -369,7 +369,7 @@
       :id    id}
      [:label.application__form-field-label
       (str (util/from-multi-lang (:label field) lang)
-           (required-hint field))]
+           (required-hint field lang))]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (string/join ", " values)]]]))
