@@ -64,7 +64,7 @@
   [:div.application__form-field-label
    {:id (application-field/id-for-label field-descriptor group-idx)}
    (str (util/from-multi-lang (:label field-descriptor) lang)
-        (application-field/required-hint field-descriptor))])
+        (application-field/required-hint field-descriptor lang))])
 
 (defn text [field-descriptor application lang group-idx]
   (let [id         (keyword (:id field-descriptor))
@@ -150,14 +150,14 @@
     [:div.application__form-field
      [:div.application__form-field-label
       (str (util/from-multi-lang (:label field-descriptor) lang)
-           (application-field/required-hint field-descriptor))]
+           (application-field/required-hint field-descriptor lang))]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
          (for [child children]
            [:th.application__readonly-adjacent--header
             (str (util/from-multi-lang (:label child) lang)
-                 (application-field/required-hint field-descriptor))]))]
+                 (application-field/required-hint field-descriptor lang))]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application lang question-group-idx]
