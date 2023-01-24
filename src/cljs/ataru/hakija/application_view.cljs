@@ -212,6 +212,9 @@
                           [star-classes
                            {:key         (str "rating-star-" n)
                             :tabIndex    "0"
+                            :title       (if (> n 0)
+                                           (get (translations/get-hakija-translation :feedback-ratings @lang) n)
+                                           "")
                             :data-star-n (inc n)}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
