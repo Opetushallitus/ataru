@@ -197,6 +197,11 @@
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
+                :on-key-down   (fn [e]
+                                 (when (or (= " " (.-key e))
+                                           (= "Enter" (.-key e)))
+                                   (.preventDefault e)
+                                   (dispatch [:application/rating-submit (star-number-from-event e)])))
                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
                 :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
                (let [stars-active (or @stars @star-hovered 0)]
@@ -206,6 +211,7 @@
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
                           [star-classes
                            {:key         (str "rating-star-" n)
+                            :tabIndex    "0"
                             :data-star-n (inc n)}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
