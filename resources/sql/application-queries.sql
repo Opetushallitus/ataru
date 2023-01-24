@@ -784,7 +784,7 @@ SELECT
                   application_id = a.id),
             a.lang) AS "lang",
   a.email,
-  a.created_time, --muokkaushetki
+  a.created_time, --uusimman hakemusversion luontihetki
   a.submitted, --hakemuksen alkuperäinen jättöhetki
   (SELECT content
    FROM answers_as_content
