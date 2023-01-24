@@ -42,20 +42,20 @@
                                            :valmennusryhma-piirijoukkue "58125631-762a-499b-a402-717778bf8233"
                                            :valmennusryhma-maajoukkue   "261d7ffc-54a7-4c5c-ab80-82f7de49f648"
                                            :paalajiSeuraLiittoParent    "98951abd-fdd5-46a0-8427-78fe9706d286"}
-    {:keskiarvo                   "7b88594a-c308-41f8-bac3-2d3779ea4443"
-     :peruskoulu                  "9a4de985-9a70-4de6-bfa7-0a5c2f18cb8c"
-     :tamakausi                   "f944c9c3-c1f8-43c7-a27e-49d89d4e8eec"
-     :viimekausi                  "e3e8b5ef-f8d9-4256-8ef6-1a52d562a370"
-     :toissakausi                 "95b565ee-f64e-4805-b319-55b99bbce1a8"
-     :sivulaji                    "dbfc1215-896a-47d4-bc07-b9f1494658f4"
-     :valmentaja-nimi             "a1f1147a-d466-4d98-9a62-079a42dd4089"
-     :valmentaja-email            "625fe96d-a5ff-4b3a-8ace-e36524215d1c"
-     :valmentaja-puh              "f1c5986c-bea8-44f7-8324-d1cac179e6f4"
-     :valmennusryhma-seurajoukkue "92d579fb-dafa-4edc-9e05-8f493badc4f3"
-     :valmennusryhma-piirijoukkue "58125631-762a-499b-a402-717778bf8233"
-     :valmennusryhma-maajoukkue   "261d7ffc-54a7-4c5c-ab80-82f7de49f648"
+    {:keskiarvo                   "urheilija-2nd-keskiarvo"
+     :peruskoulu                  "urheilija-2nd-peruskoulu"
+     :tamakausi                   "urheilija-2nd-tamakausi"
+     :viimekausi                  "urheilija-2nd-viimekausi"
+     :toissakausi                 "urheilija-2nd-toissakausi"
+     :sivulaji                    "urheilija-2nd-sivulaji"
+     :valmentaja-nimi             "urheilija-2nd-valmentaja-nimi"
+     :valmentaja-email            "urheilija-2nd-valmentaja-email"
+     :valmentaja-puh              "urheilija-2nd-valmentaja-puh"
+     :valmennusryhma-seurajoukkue "urheilija-2nd-valmennus-seurajoukkue"
+     :valmennusryhma-piirijoukkue "urheilija-2nd-valmennus-piirijoukkue"
+     :valmennusryhma-maajoukkue   "urheilija-2nd-valmennus-maajoukkue"
      :valmennusryhmatParent       "84cd8829-ee39-437f-b730-9d68f0f07555"
-     :paalajiSeuraLiittoParent    "98951abd-fdd5-46a0-8427-78fe9706d286"}))
+     :paalajiSeuraLiittoParent    "urheilija-2nd-lajivalinta-dropdown"}))
 
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
@@ -85,12 +85,9 @@
                                                           laji-options)))
         seura-keys (filter-keys-by-label-fn urheilija-seura-label)
         liitto-keys (filter-keys-by-label-fn urheilija-liitto-label)]
-    ;(log/info (str "seura-keys " seura-keys))
-    ;(log/info (str "liitto-keys " liitto-keys))
     {:seura seura-keys
      :liitto liitto-keys}))
 
-;98951abd-fdd5-46a0-8427-78fe9706d286
 (defn get-hakurekisteri-toinenaste-specific-questions
   ([form] (get-hakurekisteri-toinenaste-specific-questions form "unknown haku"))
   ([form haku-oid]
@@ -130,6 +127,7 @@
                                                               first
                                                               :children
                                                               first)
+         urheilija-base-keys (urheilijan-lisakysymys-keys haku-oid)
          laji-options (->> content
                            (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
                            first
@@ -146,7 +144,7 @@
                            first
                            :id)
          urheilija-seura-and-liitto-keys (get-seura-and-liitto-keys-from-laji-options laji-options)
-         urheilija-keys (merge (urheilijan-lisakysymys-keys haku-oid) urheilija-seura-and-liitto-keys)]
+         urheilija-keys (merge urheilija-base-keys urheilija-seura-and-liitto-keys)]
      {:tutkintovuosi-keys                          tutkintovuosi-keys
       :tutkintokieli-keys                          tutkintokieli-keys
       :sora-terveys-key                            sora-terveys-question
@@ -156,6 +154,6 @@
       :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
-      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword urheilijan-lisakysymykset-laji-seura-liitto-key)
+      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalajiSeuraLiittoParent urheilija-base-keys))
                                                     :muu-laji-key      (keyword muu-laji-key)
                                                     :value-to-label    laji-value-to-label}})))

@@ -973,36 +973,48 @@
      :eligibilities               (reduce-kv #(assoc %1 (name %2) %3) {} eligibilities)}))
 
 
-(def urheilija-fields [:keskiarvo :peruskoulu :tamakausi :viimekausi
-                       :toissakausi :sivulaji :valmennusryhma-seurajoukkue
-                       :valmennusryhma-piirijoukkue :valmennusryhma-maajoukkue
-                       :valmentaja-nimi
-                       :valmentaja-email
-                       :valmentaja-puh])
+(def urheilija-fields-with-single-key [:keskiarvo
+                                       :peruskoulu
+                                       :tamakausi
+                                       :viimekausi
+                                       :toissakausi
+                                       :sivulaji
+                                       :valmennusryhma-seurajoukkue
+                                       :valmennusryhma-piirijoukkue
+                                       :valmennusryhma-maajoukkue
+                                       :valmentaja-nimi
+                                       :valmentaja-email
+                                       :valmentaja-puh])
 
 (def urheilija-fields-with-multiple-keys [:liitto :seura])
 
-(defn- get-urheilija-laji [abk lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
-  ;(log/info (str "get-urheilija-laji " laji-dropdown-key muu-laji-key value-to-label " - " lang))
-  (let [dropdown-answer (-> abk
+(defn- get-urheilija-laji [answers-by-key lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
+  (let [dropdown-answer (-> answers-by-key
                             laji-dropdown-key
                             :value)
         option-text (if (= dropdown-answer "21")
-                      (-> abk
+                      (-> answers-by-key
                           muu-laji-key
                           :value)
                       ((keyword lang) (get value-to-label dropdown-answer)))]
     {:laji option-text}))
 
+;Valmentajan yhteystietokentissä vastaukset ovat arrayn sisällä, mutta niitä voi nykytilanteessa olla vain yksi.
+(defn- to-single-value [value]
+  (if (coll? value)
+    (first value)
+    value))
+
 (defn- get-urheilijan-lisakysymykset [abk keys]
-  (let [single-results (into {} (map (fn [field] {field (-> abk (get (-> keys field keyword)) :value)}) urheilija-fields))
+  (let [single-results (into {} (map (fn [field] {field (-> abk (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key))
         multi-fields-results (into {} (map (fn [field]
                                              {field (->> (-> keys field)
                                                          (map keyword)
                                                          (map (fn [field-id] (field-id abk)))
                                                          (filter some?)
                                                          first
-                                                         :value)}) urheilija-fields-with-multiple-keys))]
+                                                         :value
+                                                         to-single-value)}) urheilija-fields-with-multiple-keys))]
     (merge single-results multi-fields-results)))
 
 (defn- unwrap-hakurekisteri-application-toinenaste

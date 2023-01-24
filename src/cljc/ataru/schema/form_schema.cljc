@@ -572,6 +572,23 @@
                :matkapuhelin (s/maybe s/Str)
                :email (s/maybe s/Str)})
 
+(s/defschema UrheilijanLisakysymykset
+  {:keskiarvo                   (s/maybe s/Str)
+   :peruskoulu                  (s/maybe s/Str)
+   :tamakausi                   (s/maybe s/Str)
+   :viimekausi                  (s/maybe s/Str)
+   :toissakausi                 (s/maybe s/Str)
+   :sivulaji                    (s/maybe s/Str)
+   :valmennusryhma-seurajoukkue (s/maybe s/Str)
+   :valmennusryhma-piirijoukkue (s/maybe s/Str)
+   :valmennusryhma-maajoukkue   (s/maybe s/Str)
+   :valmentaja-nimi             (s/maybe s/Str)
+   :valmentaja-email            (s/maybe s/Str)
+   :valmentaja-puh              (s/maybe s/Str)
+   :laji                        (s/maybe s/Str)
+   :seura                       (s/maybe s/Str)
+   :liitto                      (s/maybe s/Str)})
+
 (s/defschema HakurekisteriApplicationToinenAste
   {:oid                                  s/Str
    :personOid                            s/Str
@@ -595,7 +612,7 @@
    :tutkintoKieli                        (s/maybe s/Str)
    :huoltajat                            [GuardianContactInfo]
    :hakemusFirstSubmittedTime            s/Str
-   :urheilijanLisakysymykset             (s/maybe s/Any)})
+   :urheilijanLisakysymykset             (s/maybe UrheilijanLisakysymykset)})
 
 (s/defschema OnrApplication
   {:oid          s/Str
