@@ -232,7 +232,7 @@
     [:div.application__form-field
      [:div.application__form-field-label
       (str (util/from-multi-lang (:label field-descriptor) lang)
-        (application-field/required-hint field-descriptor))]
+        (application-field/required-hint field-descriptor lang))]
      (when-let [address @(subscribe [:application/attachment-address field-descriptor])]
        [application-field/markdown-paragraph address])
      (when-let [deadline @(subscribe [:application/attachment-deadline field-descriptor])]

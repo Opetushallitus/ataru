@@ -6,7 +6,8 @@
             [ataru.hakija.components.hakukohde-details-component :refer [hakukohde-details-component]]))
 
 (defn form-field-label [_ _]
-  (let [languages  (re-frame/subscribe [:application/default-languages])]
+  (let [languages  (re-frame/subscribe [:application/default-languages])
+        lang  @(re-frame/subscribe [:application/form-language])]
     (fn [field-descriptor form-field-id]
       (let [label (util/non-blank-val (:label field-descriptor) @languages)
             is-duplicate-question (not (nil? (:duplikoitu-kysymys-hakukohde-oid field-descriptor)))
@@ -15,7 +16,7 @@
          {:class duplicate-question-class
           :for form-field-id}
          (when-not is-duplicate-question
-           [:span (str label (application-field/required-hint field-descriptor))])
+           [:span (str label (application-field/required-hint field-descriptor lang))])
          (when is-duplicate-question
            [hakukohde-details-component field-descriptor])
          [application-field/scroll-to-anchor field-descriptor]]))))
