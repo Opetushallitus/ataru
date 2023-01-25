@@ -16,7 +16,7 @@
          {:class duplicate-question-class
           :for form-field-id}
          (when-not is-duplicate-question
-           [:span (str label (application-field/required-hint field-descriptor lang))])
+           [:span label [:span.application__form-field-label.application__form-field-label--required (application-field/required-hint field-descriptor lang)]])
          (when is-duplicate-question
            [hakukohde-details-component field-descriptor])
          [application-field/scroll-to-anchor field-descriptor]]))))
