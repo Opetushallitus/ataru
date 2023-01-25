@@ -110,8 +110,8 @@
 (defn- text-form-field-label [id field-descriptor lang]
   [:label.application__form-field-label
    [:span
-    (str (util/from-multi-lang (:label field-descriptor) lang)
-         (required-hint field-descriptor lang))
+    (util/from-multi-lang (:label field-descriptor) lang)
+         [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]
     [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
 
 (defn text [field-descriptor application hakukohteet-and-ryhmat lang group-idx]
@@ -172,8 +172,8 @@
     [:div.application__form-field
      [:label.application__form-field-label
       [:span
-       (str (util/from-multi-lang (:label field-descriptor) lang)
-            (required-hint field-descriptor lang))
+       (util/from-multi-lang (:label field-descriptor) lang)
+            [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
@@ -216,15 +216,15 @@
                                   (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
-      (str (util/from-multi-lang (:label field-descriptor) lang)
-           (required-hint field-descriptor lang))]
+      (util/from-multi-lang (:label field-descriptor) lang)
+           [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
              (for [child children]
                [:th.application__readonly-adjacent--header
-                (str (util/from-multi-lang (:label child) lang)
-                     (required-hint field-descriptor lang))]))]
+                (util/from-multi-lang (:label child) lang)
+                     [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application hakukohteet-and-ryhmat lang question-group-idx]
@@ -368,8 +368,8 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      (str (util/from-multi-lang (:label field) lang)
-           (required-hint field lang))]
+      (util/from-multi-lang (:label field) lang)
+           [:span.application__form-field-label.application__form-field-label--required (required-hint field lang)]]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (string/join ", " values)]]]))
