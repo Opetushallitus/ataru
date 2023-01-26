@@ -28,7 +28,8 @@
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
             [ataru.log.audit-log :as audit-log]
-            [medley.core :refer [find-first]])
+            [medley.core :refer [find-first]]
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job])
   (:import (java.time ZonedDateTime ZoneId)))
 
 (defonce migration-session {:user-agent "migration"})
@@ -354,6 +355,12 @@
                          (:type attachment-finalizer-job/job-definition)
                          {:application-id application-id})))
 
+(defn- migrate-add-harkinnanvaraisuus-checks
+  [connection]
+  (job-store/store-new connection
+                       (:type harkinnanvaraisuus-job/job-definition)
+                       {}))
+
 (defn- update-home-town
   [new-home-town-component form]
   (clojure.walk/prewalk
@@ -670,6 +677,12 @@
   "Add multiple nationality support to forms & applications"
   (with-db-transaction [conn {:connection connection}]
     (migrate-nationality-to-question-group conn)))
+
+(migrations/defmigration
+  add-harkinnanvaraisuus-checks "20230125094000"
+  "Infinite harkinnanvaraisuus job that checks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot"
+  (with-db-transaction [conn {:connection connection}]
+                       (migrate-add-harkinnanvaraisuus-checks conn)))
 
 (defn migrate
   [audit-logger-to-use]
