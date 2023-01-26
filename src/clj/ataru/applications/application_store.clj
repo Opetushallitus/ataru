@@ -979,12 +979,12 @@
                                        :viimekausi
                                        :toissakausi
                                        :sivulaji
-                                       :valmennusryhma-seurajoukkue
-                                       :valmennusryhma-piirijoukkue
-                                       :valmennusryhma-maajoukkue
-                                       :valmentaja-nimi
-                                       :valmentaja-email
-                                       :valmentaja-puh])
+                                       :valmennusryhma_seurajoukkue
+                                       :valmennusryhma_piirijoukkue
+                                       :valmennusryhma_maajoukkue
+                                       :valmentaja_nimi
+                                       :valmentaja_email
+                                       :valmentaja_puh])
 
 (def urheilija-fields-with-multiple-keys [:liitto :seura])
 
@@ -1005,12 +1005,12 @@
     (first value)
     value))
 
-(defn- get-urheilijan-lisakysymykset [abk keys]
-  (let [single-results (into {} (map (fn [field] {field (-> abk (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key))
+(defn- get-urheilijan-lisakysymykset [answers-by-key keys]
+  (let [single-results (into {} (map (fn [field] {field (-> answers-by-key (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key))
         multi-fields-results (into {} (map (fn [field]
                                              {field (->> (-> keys field)
                                                          (map keyword)
-                                                         (map (fn [field-id] (field-id abk)))
+                                                         (map (fn [field-id] (field-id answers-by-key)))
                                                          (filter some?)
                                                          first
                                                          :value
