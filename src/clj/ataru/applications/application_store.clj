@@ -979,14 +979,14 @@
                                        :viimekausi
                                        :toissakausi
                                        :sivulaji
-                                       :valmennusryhma-seurajoukkue
-                                       :valmennusryhma-piirijoukkue
-                                       :valmennusryhma-maajoukkue
-                                       :valmentaja-nimi
-                                       :valmentaja-email
-                                       :valmentaja-puh])
-
-(def urheilija-fields-with-multiple-keys [:liitto :seura])
+                                       :valmennusryhma_seurajoukkue
+                                       :valmennusryhma_piirijoukkue
+                                       :valmennusryhma_maajoukkue
+                                       :valmentaja_nimi
+                                       :valmentaja_email
+                                       :valmentaja_puh
+                                       :liitto
+                                       :seura])
 
 (defn- get-urheilija-laji [answers-by-key lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
   (let [dropdown-answer (-> answers-by-key
@@ -1005,17 +1005,8 @@
     (first value)
     value))
 
-(defn- get-urheilijan-lisakysymykset [abk keys]
-  (let [single-results (into {} (map (fn [field] {field (-> abk (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key))
-        multi-fields-results (into {} (map (fn [field]
-                                             {field (->> (-> keys field)
-                                                         (map keyword)
-                                                         (map (fn [field-id] (field-id abk)))
-                                                         (filter some?)
-                                                         first
-                                                         :value
-                                                         to-single-value)}) urheilija-fields-with-multiple-keys))]
-    (merge single-results multi-fields-results)))
+(defn- get-urheilijan-lisakysymykset [answers-by-key keys]
+  (into {} (map (fn [field] {field (-> answers-by-key (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key)))
 
 (defn- unwrap-hakurekisteri-application-toinenaste
   [questions urheilija-amm-hakukohdes haun-hakukohteet {:keys [key hakukohde created_time submitted person_oid lang email content attachment_reviews]}]
@@ -1024,7 +1015,7 @@
              foreign? (not= finland-country-code (-> answers :country-of-residence :value))
              form-hakukohde-key (fn [id hakukohde-oid] (keyword (str id "_" hakukohde-oid)))
              sports-key (:urheilijan-amm-lisakysymys-key questions)
-             interested-in-sports-amm? (-> answers sports-key :value)
+             interested-in-sports-amm? (when sports-key (-> answers sports-key :value))
              get-hakukohde-fn (fn [oid] (first (filter #(= oid (:oid %)) haun-hakukohteet)))
              hakukohteet (map (fn [oid]
                                 {:oid                                               oid
@@ -1088,10 +1079,10 @@
           :koulutusmarkkinointilupa             (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
           :attachments                          (reduce-kv #(assoc %1 (name %2) %3) {} attachment_reviews)
           :huoltajat                            huoltajat
-          :pohjakoulutus                        (-> answers base-education-key :value)
+          :pohjakoulutus                        (or (-> answers base-education-key :value) "")
           :tutkintoKieli                        tutkinto-kieli
           :tutkintoVuosi                        (edn/read-string tutkinto-vuosi)
-          :kiinnostunutOppisopimusKoulutuksesta (= "0" (-> answers oppisopimuskoulutus-key :value))
+          :kiinnostunutOppisopimusKoulutuksesta (when oppisopimuskoulutus-key (= "0" (-> answers oppisopimuskoulutus-key :value)))
           :urheilijanLisakysymykset             (merge urheilijan-lisakysymykset urheilija-laji)
           }) (catch Exception e
                (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
