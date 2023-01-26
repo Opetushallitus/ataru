@@ -55,7 +55,7 @@
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
 
-(defn- hakukierros-paattynyt?
+(defn hakukierros-paattynyt?
   [ohjausparametrit-service now haku-oid]
   (if-let [hkp (some-> (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid)
                        (get-in [:PH_HKP :date])
