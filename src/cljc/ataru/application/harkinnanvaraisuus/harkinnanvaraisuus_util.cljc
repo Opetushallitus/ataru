@@ -3,7 +3,16 @@
             [clojure.walk :refer [keywordize-keys]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-option-values-affecting-harkinnanvaraisuus
                                                                     yksilollistetty-key-values-affecting-harkinnanvaraisuus
+                                                                    base-education-option-where-harkinnanvaraisuus-do-not-need-to-be-checked
                                                                     base-education-choice-key]]))
+
+(defn can-skip-recheck-for-yks-ma-ai
+  [application]
+  (let [answers (:answers application)
+        base-education-value ((keyword base-education-choice-key) answers)]
+    (-> (vals base-education-option-where-harkinnanvaraisuus-do-not-need-to-be-checked)
+        (set)
+        (contains? base-education-value))))
 
 (defn get-common-harkinnanvaraisuus-reason
   [answers pick-value-fn]
@@ -51,6 +60,15 @@
 
       :else
       (:none harkinnanvaraisuus-reasons))))
+
+; following returns true only if there are common harkinnanvaraisuus reasons
+(defn does-application-belong-to-only-harkinnanvarainen-valinta?
+  [application]
+  (let [answers (:answers application)
+        pick-value-fn (fn [answers question]
+                        (:value (question answers)))
+        common-reason (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
+    (not (nil? common-reason))))
 
 (defn decide-reason
   [common-reason targeted-reason]

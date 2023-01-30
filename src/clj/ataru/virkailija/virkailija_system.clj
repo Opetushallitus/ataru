@@ -281,7 +281,6 @@
                  (job/new-job-runner (merge virkailija-jobs/job-definitions
                                             hakija-jobs/job-definitions))
                  [:form-by-id-cache
-                  :ohjausparametrit-cache
                   :ohjausparametrit-service
                   :henkilo-cache
                   :koodisto-cache
@@ -290,6 +289,7 @@
                   :suoritus-service
                   :hakukohderyhmapalvelu-service
                   :hakukohderyhma-settings-cache
+                  :valintalaskentakoostepalvelu-service
                   :audit-logger
                   :liiteri-cas-client])
 
