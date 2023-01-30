@@ -55,12 +55,20 @@
 (defn- remove-organization-oid [haku]
   (dissoc haku :organization-oid))
 
-(defn hakukierros-paattynyt?
+(defn- hakukierros-paattynyt?
   [ohjausparametrit-service now haku-oid]
   (if-let [hkp (some-> (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid)
                        (get-in [:PH_HKP :date])
                        c/from-long)]
     (t/after? now hkp)
+    false))
+
+(defn harkinnanvarainen-valinta-paattynyt?
+  [ohjausparametrit-service now haku-oid]
+  (if-let [hvvptp (some-> (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid)
+                    (get-in [:PH_HVVPTP :date])
+                    c/from-long)]
+    (t/after? now hvvptp)
     false))
 
 (defn- remove-if-hakukierros-paattynyt
