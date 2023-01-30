@@ -230,13 +230,15 @@
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
                  :placeholder (translations/get-hakija-translation :feedback-text-placeholder @lang)
-                 :max-length  2000}]])
+                 :max-length  2000
+                 :tabindex    "0"}]])
             (when (and (not submitted?)
                        rated?)
               [:button.application__overlay-button.application__overlay-button--enabled
                {:on-click (fn [evt]
                             (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))}
+                            (dispatch [:application/rating-feedback-submit]))
+                :tabindex "0"}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
