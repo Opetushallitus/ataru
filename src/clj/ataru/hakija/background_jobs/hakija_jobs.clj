@@ -4,12 +4,10 @@
             [ataru.background-job.email-job :as email-job]
             [ataru.person-service.person-integration :as person-integration]
             [ataru.hakija.background-jobs.attachment-finalizer-job :as attachment-finalizer-job]
-            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]))
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]))
 
 (def job-definitions
-  {(:type harkinnanvaraisuus-job/job-definition)       harkinnanvaraisuus-job/job-definition
-   (:type email-job/job-definition)                    email-job/job-definition
+  {(:type email-job/job-definition)                    email-job/job-definition
    person-integration/job-type                         person-integration/job-definition
    "update-person-info-job"                            {:steps {:initial person-integration/update-person-info-job-step}
                                                         :type  "update-person-info-job"}
