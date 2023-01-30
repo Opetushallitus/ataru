@@ -22,7 +22,7 @@
           valid-haku-oids (->> processes
                               (map #(:haku_oid %))
                               (distinct)
-                              (filter #(not (haku-service/hakukierros-paattynyt? ohjausparametrit-service now %)))
+                              (filter #(not (haku-service/harkinnanvarainen-valinta-paattynyt? ohjausparametrit-service now %)))
                               (set))
           processids-where-check-can-be-skipped (->> processes
                                                      (filter #(not (contains? valid-haku-oids (:haku_oid %))))
