@@ -187,7 +187,7 @@
          {:label (:home-town person-info-module-texts)
           :id :home-town
           :validators [:home-town]
-          :koodisto-source {:uri "kunta" :version 1}
+          :koodisto-source {:uri "kunta" :version 2}
           :exclude-from-answers-if-hidden true}))
 
 (defn- city-component
