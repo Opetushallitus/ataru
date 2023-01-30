@@ -203,7 +203,8 @@
                                    (.preventDefault e)
                                    (dispatch [:application/rating-submit (star-number-from-event e)])))
                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
-                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
+                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])
+                :role          "radiogroup"}
                (let [stars-active (or @stars @star-hovered 0)]
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
@@ -212,7 +213,8 @@
                           [star-classes
                            {:key         (str "rating-star-" n)
                             :tabIndex    "0"
-                            :title       (if (> n 0)
+                            :role        "radio"
+                            :aria-label  (if (> n 0)
                                            (get (translations/get-hakija-translation :feedback-ratings @lang) n)
                                            "")
                             :data-star-n (inc n)}])) (range 5)))])
