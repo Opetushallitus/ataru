@@ -5,6 +5,7 @@
             [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.translations.translation-util :as translations]
             [re-frame.core :refer [subscribe dispatch]]
             [goog.string :as gstring]
@@ -187,9 +188,11 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           [:a.application-feedback-form__close-button
-            {:on-click #(dispatch [:application/rating-form-toggle])
-             :data-test-id "close-feedback-form-button"}
+           [:button.a-button.application-feedback-form__close-button
+            {:on-click     #(dispatch [:application/rating-form-toggle])
+             :data-test-id "close-feedback-form-button"
+             :tab-index    "0"
+             :aria-label   (get (:close general-texts) @lang)}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
@@ -212,7 +215,7 @@
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
                           [star-classes
                            {:key         (str "rating-star-" n)
-                            :tabIndex    "0"
+                            :tab-index    "0"
                             :role        "radio"
                             :aria-label  (if (> n 0)
                                            (get (translations/get-hakija-translation :feedback-ratings @lang) n)
@@ -231,14 +234,15 @@
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
                  :placeholder (translations/get-hakija-translation :feedback-text-placeholder @lang)
                  :max-length  2000
-                 :tabindex    "0"}]])
+                 :tab-index   "0"}]])
             (when (and (not submitted?)
                        rated?)
               [:button.application__overlay-button.application__overlay-button--enabled
-               {:on-click (fn [evt]
-                            (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))
-                :tabindex "0"}
+               {:on-click   (fn [evt]
+                              (.preventDefault evt)
+                              (dispatch [:application/rating-feedback-submit]))
+                :tab-index  "0"
+                :aria-label (translations/get-hakija-translation :feedback-send @lang)}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
