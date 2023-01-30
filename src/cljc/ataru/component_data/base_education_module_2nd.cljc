@@ -8,6 +8,10 @@
   {:ei-paattotodistusta-value "7"
    :ulkomailla-suoritettu-value "0"})
 
+(def base-education-option-where-harkinnanvaraisuus-do-not-need-to-be-checked
+  {:opetusjarjestetty-toiminta-alueittain "3"
+   :ulkomailla-suoritettu-value "0"})
+
 (def yksilollistetty-key-values-affecting-harkinnanvaraisuus
   {:matematiikka-ja-aidinkieli-yksilollistetty_1 "1"
    :matematiikka-ja-aidinkieli-yksilollistetty_2 "1"})
