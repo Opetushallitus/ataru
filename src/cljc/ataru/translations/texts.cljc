@@ -2063,6 +2063,12 @@
    :question-answers-selected                                {:fi "vastausvaihtoehtoa valittu"
                                                               :sv "Svarsalternativ valt"
                                                               :en "EN: vastausvaihtoehtoa valittu"}
+   :email-vain-harkinnanvaraisessa                           {:fi "Tietojemme mukaan olet mukana vain harkinnanvaraisessa valinnassa"
+                                                              :sv ""
+                                                              :en ""}
+   :email-myos-pistevalinnassa                               {:fi "Tietojemme mukaan olet mukana pistevalinnssa"
+                                                              :sv ""
+                                                              :en ""}
    :tutu-amount-label                                        {:fi "Maksun määrä"
                                                               :sv ""
                                                               :en ""}
