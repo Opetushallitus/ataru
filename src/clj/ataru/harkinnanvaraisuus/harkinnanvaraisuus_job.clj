@@ -12,10 +12,13 @@
             [taoensso.timbre :as log]
             [ataru.background-job.job :as job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
-            [ataru.db.db :as db]))
+            [ataru.db.db :as db]
+            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
 (def MAXIMUM_PROCESSES_TO_HANDLE 1000)
 (def DAYS_UNTIL_NEXT_RECHECK 4)
+
+(def KOULUTUSTYYPIT_THAT_MUST_BE_CHECKED #{"koulutustyyppi_26" "koulutustyyppi_2"}) ; 26 = ammatillinen 2 = lukiokoulutus
 
 (defn- assoc-only-harkinnanvarainen-to-application
   [application]
@@ -114,8 +117,16 @@
     (log/debug (str "Asetetaan " (count applications) " hakemusta tarkistetuksi harkinnanvaraisuuden osalta"))
     (handle-harkinnanvaraisuus-processes-to-save job-runner applications now)))
 
+(defn- can-skip-checking-application-due-to-hakukohteet
+  [tarjonta-service application]
+  (let [hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service (:hakukohteet application))]
+    (->> hakukohteet
+         (map #(:koulutustyyppikoodi %))
+         (some #(contains? KOULUTUSTYYPIT_THAT_MUST_BE_CHECKED %))
+         not)))
+
 (defn check-harkinnanvaraisuus-step
-  [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
+  [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service tarjonta-service] :as job-runner}]
   (log/debug "Check harkinnanvaraisuus step starting")
   (let [now       (time/now)
         processes (store/fetch-unprocessed-harkinnanvaraisuus-processes)
@@ -123,7 +134,8 @@
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
         applications-to-check (->> processes-to-check
                                    (map #(application-store/get-application (:application_id %)))
-                                   (filter #(not (hutil/can-skip-recheck-for-yks-ma-ai %))))
+                                   (filter #(not (hutil/can-skip-recheck-for-yks-ma-ai %)))
+                                   (filter #(not (can-skip-checking-application-due-to-hakukohteet tarjonta-service %))))
         application-keys-to-check (map #(:key %) applications-to-check)
         application-ids-to-check (->> applications-to-check
                                       (map #(:id %))
