@@ -562,7 +562,13 @@
                                                  :en "Archived"}
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
-                                                 :en "(mandatory information)"}})
+                                                 :en "(mandatory information)"}
+   :email-vain-harkinnanvaraisessa              {:fi "Tietojemme mukaan olet mukana vain harkinnanvaraisessa valinnassa"
+                                                 :sv ""
+                                                 :en ""}
+   :email-myos-pistevalinnassa                  {:fi "Tietojemme mukaan olet mukana pistevalinnssa"
+                                                 :sv ""
+                                                 :en ""}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -2063,12 +2069,6 @@
    :question-answers-selected                                {:fi "vastausvaihtoehtoa valittu"
                                                               :sv "Svarsalternativ valt"
                                                               :en "EN: vastausvaihtoehtoa valittu"}
-   :email-vain-harkinnanvaraisessa                           {:fi "Tietojemme mukaan olet mukana vain harkinnanvaraisessa valinnassa"
-                                                              :sv ""
-                                                              :en ""}
-   :email-myos-pistevalinnassa                               {:fi "Tietojemme mukaan olet mukana pistevalinnssa"
-                                                              :sv ""
-                                                              :en ""}
    :tutu-amount-label                                        {:fi "Maksun määrä"
                                                               :sv ""
                                                               :en ""}
