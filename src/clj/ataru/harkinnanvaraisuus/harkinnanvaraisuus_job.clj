@@ -14,6 +14,9 @@
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
             [ataru.db.db :as db]))
 
+(def MAXIMUM_PROCESSES_TO_HANDLE 1000)
+(def DAYS_UNTIL_NEXT_RECHECK 4)
+
 (defn- assoc-only-harkinnanvarainen-to-application
   [application]
   (assoc application :harkinnanvarainen-only? (hutil/does-application-belong-to-only-harkinnanvarainen-valinta? application)))
@@ -48,12 +51,15 @@
         subject-key (if (:sure-harkinnanvarainen-only? application)
                       "email-vain-harkinnanvaraisessa"
                       "email-myos-pistevalinnassa")
-        job-id (job/start-job job-runner
+        email (harkinnanvarainen-email application template-name subject-key)]
+    (if email
+      (let [job-id (job/start-job job-runner
                                   connection
                                   job-type
                                   (harkinnanvarainen-email application template-name subject-key))]
-        (log/info (str "Started harkinnanvarainen valinta notification email job with job id " job-id
-                       " for application " (:key application)))))
+        (log/info (str "Luotu emailin lähetys tehtävä " job-id
+                       " kertomaan hakijalle valintatavan muutoksesta hakemukselle " (:key application))))
+      (log/warn (str "Emailin lähetystehtävää hakemukselle " (:key application) " epäonnistui")))))
 
 (defn- assoc-valintalaskentakoostepalvelu-harkinnainen-only
   [application-with-harkinnanvaraisuus applications-from-valintalaskentakoostepalvelu]
@@ -61,9 +67,6 @@
         has-only-sure-harkinnanvarainen? (->> (get-in applications-from-valintalaskentakoostepalvelu [application-key :hakutoiveet])
                                               (map #(:harkinnanvaraisuudenSyy %))
                                               (some #(contains? sure-harkinnanvarainen-only-reasons %)))]
-    (prn sure-harkinnanvarainen-only-reasons)
-    (prn (->> (get-in applications-from-valintalaskentakoostepalvelu [application-key :hakutoiveet])
-              (map #(:harkinnanvaraisuudenSyy %))))
     (assoc application-with-harkinnanvaraisuus :sure-harkinnanvarainen-only? (boolean has-only-sure-harkinnanvarainen?))))
 
 (defn- inform-about-harkinnanvarainen
@@ -76,10 +79,6 @@
   (let [connection {:datasource (db/get-datasource :db)}
         apps-without-email-job (filter #(= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %)) applications-with-harkinnanvaraisuus)
         email-job-apps (filter #(not (= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %))) applications-with-harkinnanvaraisuus)]
-    (prn "Saving PROCESSES")
-    (prn apps-without-email-job)
-    (prn (count apps-without-email-job))
-    (prn email-job-apps)
     (when (< 0 (count apps-without-email-job))
       (doall
         (for [app apps-without-email-job]
@@ -101,78 +100,71 @@
          (map #(:application_id %))
          (set))))
 
+(defn- mark-do-not-check-processes
+  [process-ids]
+  (when (< 0 (count process-ids))
+    (log/debug (str "Merkataan " (count process-ids) " harkinnanvaraisuus-prosessia skippaamaan harkinnanvaraisuuden tarkistus"))
+    (store/mark-do-not-check-harkinnanvaraisuus-processes process-ids)))
+
+(defn- handle-processess-to-save
+  [job-runner applications now]
+  (when (< 0 (count applications))
+    (log/debug (str "Asetetaan " (count applications) " hakemusta tarkistetuksi harkinnanvaraisuuden osalta"))
+    (handle-harkinnanvaraisuus-processes-to-save job-runner applications now)))
+
 (defn check-harkinnanvaraisuus-step
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
-  (try
-    (let [now       (time/now)
-          processes (store/fetch-unprocessed-harkinnanvaraisuus-processes)
-          processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
-          processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
-          applications-to-check (->> processes-to-check
-                                     (map #(application-store/get-application (:application_id %)))
-                                     (filter #(not (hutil/can-skip-recheck-for-yks-ma-ai %))))
-          application-keys-to-check (map #(:key %) applications-to-check)
-          application-ids-to-check (->> applications-to-check
-                                        (map #(:id %))
-                                        (set))
-          processes-that-can-be-skipped (->> processes-to-check
-                                             (filter #(not (contains? application-ids-to-check (:application_id %))))
-                                             (map #(:application_id %))
-                                             (set))
-          applications-with-harkinnanvaraisuus (->> applications-to-check
-                                                    (map #(assoc-only-harkinnanvarainen-to-application %)))
-          harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
-          applications-to-save (->> applications-with-harkinnanvaraisuus
-                                    (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
-      (prn processes)
-      (prn processes-that-can-be-skipped)
-      (prn applications-to-check)
-      (prn applications-with-harkinnanvaraisuus)
-      (prn harkinnanvaraisuudet-from-koostepalvelu)
-      (prn applications-to-save)
-      (when (< 0 (count processes-that-can-be-skipped))
-        (store/mark-do-not-check-harkinnanvaraisuus-processes processes-that-can-be-skipped))
-      (when (< 0 (count applications-to-save))
-        (handle-harkinnanvaraisuus-processes-to-save job-runner applications-to-save now))
-      {:transition      {:id :to-next :step :initial}
-       :updated-state   {:last-run-long (coerce/to-long now)}
-       :next-activation (time/plus now (time/hours 1))})
-     (catch Exception e
-       (prn e)
-       )))
+  (log/debug "Check harkinnanvaraisuus step starting")
+  (let [now       (time/now)
+        processes (store/fetch-unprocessed-harkinnanvaraisuus-processes)
+        processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
+        processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
+        applications-to-check (->> processes-to-check
+                                   (map #(application-store/get-application (:application_id %)))
+                                   (filter #(not (hutil/can-skip-recheck-for-yks-ma-ai %))))
+        application-keys-to-check (map #(:key %) applications-to-check)
+        application-ids-to-check (->> applications-to-check
+                                      (map #(:id %))
+                                      (set))
+        processes-that-can-be-skipped (->> processes-to-check
+                                           (filter #(not (contains? application-ids-to-check (:application_id %))))
+                                           (map #(:application_id %))
+                                           (set))
+        applications-with-harkinnanvaraisuus (->> applications-to-check
+                                                  (map #(assoc-only-harkinnanvarainen-to-application %)))
+        harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
+        applications-to-save (->> applications-with-harkinnanvaraisuus
+                                  (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
+    (mark-do-not-check-processes processes-that-can-be-skipped)
+    (handle-processess-to-save job-runner applications-to-save now)
+    (log/debug "Check harkinnanvaraisuus step finishing")
+    {:transition      {:id :to-next :step :initial}
+     :updated-state   {:last-run-long (coerce/to-long now)}
+     :next-activation (time/plus now (time/hours 1))}))
 
 (defn recheck-harkinnanvaraisuus-step
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
-  (try
-    (let [now       (time/now)
-          processes (store/fetch-checked-harkinnanvaraisuus-processes (time/minus now (time/minutes 4)))
-          next-activation (if (< (count processes) 1000)
-                            (time/with-time-at-start-of-day (time/plus now (time/days 4)))
-                            (time/plus now (time/minutes 5)))
-          processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
-          processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
-          applications-with-harkinnanvaraisuus (map
-                                                 #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
-                                                 processes-to-check)
-          application-keys-to-check (map #(:key %) applications-with-harkinnanvaraisuus)
-          harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
-          applications-to-save (->> applications-with-harkinnanvaraisuus
-                                    (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
-      (prn processes)
-      (prn processids-where-check-can-be-skipped)
-      (prn applications-with-harkinnanvaraisuus)
-      (prn harkinnanvaraisuudet-from-koostepalvelu)
-      (prn applications-to-save)
-      (when (< 0 (count processids-where-check-can-be-skipped))
-        (store/mark-do-not-check-harkinnanvaraisuus-processes processids-where-check-can-be-skipped))
-      (when (< 0 (count applications-to-save))
-        (handle-harkinnanvaraisuus-processes-to-save job-runner applications-to-save now))
-      {:transition      {:id :to-next :step :initial}
-       :updated-state   {:last-run-long (coerce/to-long now)}
-       :next-activation next-activation})
-    (catch Exception e
-      (prn e)
-      )))
+  (log/debug "Recheck harkinnanvaraisuus step starting")
+  (let [now       (time/now)
+        processes (store/fetch-checked-harkinnanvaraisuus-processes (time/minus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
+        next-activation (if (< (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
+                          (time/with-time-at-start-of-day (time/plus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
+                          (time/plus now (time/minutes 5)))
+        processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
+        processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
+        applications-with-harkinnanvaraisuus (map
+                                               #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
+                                               processes-to-check)
+        application-keys-to-check (map #(:key %) applications-with-harkinnanvaraisuus)
+        harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
+        applications-to-save (->> applications-with-harkinnanvaraisuus
+                                  (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
+    (mark-do-not-check-processes processids-where-check-can-be-skipped)
+    (handle-processess-to-save job-runner applications-to-save now)
+    (log/debug "Recheck harkinnanvaraisuus step finishing")
+    {:transition      {:id :to-next :step :initial}
+     :updated-state   {:last-run-long (coerce/to-long now)}
+     :next-activation next-activation}))
 
 (def job-definition {:steps {:initial check-harkinnanvaraisuus-step}
                      :type  "harkinnanvaraisuus-check"})
