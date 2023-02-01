@@ -33,7 +33,9 @@
 
 (defn- harkinnanvarainen-email [application template-name subject-key]
   (let [lang             (-> application :lang keyword)
-        emails           [(extract-answer-value "email" application)] ; guardians too
+        emails           [(extract-answer-value "email" application)
+                          (extract-answer-value "guardian-email" application)
+                          (extract-answer-value "guardian-email-secondary" application)]
         translations     (translations/get-translations lang)
         subject          ((keyword subject-key) translations)
         body             (selmer/render-file template-name translations)]
