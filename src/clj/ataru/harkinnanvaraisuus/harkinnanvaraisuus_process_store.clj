@@ -9,6 +9,7 @@
 (declare yesql-fetch-harkinnanvaraisuus-unprocessed)
 (declare yesql-skip-checking-harkinnanvaraisuus-processes!)
 (declare yesql-update-harkinnanvaraisuus-process!)
+(declare yesql-fetch-checked-harkinnanvaraisuus-processes)
 
 (defn- execute [yesql-query-fn params]
   (exec :db yesql-query-fn params))
@@ -24,11 +25,11 @@
 (defn mark-do-not-check-harkinnanvaraisuus-processes [ids]
   (execute yesql-skip-checking-harkinnanvaraisuus-processes! {:ids ids}))
 
-(defn yesql-update-harkinnanvaraisuus-process
+(defn update-harkinnanvaraisuus-process
   [application-id harkinnanvarainen-only? checked-time]
-  (prn application-id)
-  (prn harkinnanvarainen-only?)
-  (prn checked-time)
   (execute yesql-update-harkinnanvaraisuus-process! {:application_id application-id
                                                      :harkinnanvarainen_only harkinnanvarainen-only?
                                                      :last_checked checked-time}))
+
+(defn fetch-checked-harkinnanvaraisuus-processes [before-this]
+  (execute yesql-fetch-checked-harkinnanvaraisuus-processes {:before_this before-this}))

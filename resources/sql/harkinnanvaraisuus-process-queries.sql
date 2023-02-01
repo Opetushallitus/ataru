@@ -21,3 +21,13 @@ SET skip_check = true WHERE application_id in (:ids);
 UPDATE harkinnanvaraisuus_process
 SET last_checked = :last_checked, harkinnanvarainen_only = :harkinnanvarainen_only
 WHERE application_id = :application_id;
+
+-- name: yesql-fetch-checked-harkinnanvaraisuus-processes
+SELECT
+    application_id,
+    application_key,
+    haku_oid,
+    harkinnanvarainen_only
+FROM harkinnanvaraisuus_process
+WHERE last_checked IS NOT NULL AND last_checked < :before_this AND skip_check = false AND harkinnanvarainen_only IS NOT NULL
+ORDER BY application_id ASC LIMIT 1000;

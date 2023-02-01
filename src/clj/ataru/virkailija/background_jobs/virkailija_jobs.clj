@@ -11,19 +11,20 @@
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]))
 
 (def job-definitions
-  {(:type email-job/job-definition)                     email-job/job-definition
-   (:type information-request-job/job-definition)       information-request-job/job-definition
-   (:type harkinnanvaraisuus-job/job-definition)        harkinnanvaraisuus-job/job-definition
-   (:type harkinnanvaraisuus-email-job/job-definition)  harkinnanvaraisuus-email-job/job-definition
-   "automatic-eligibility-if-ylioppilas-job"            {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
-                                                         :type  "automatic-eligibility-if-ylioppilas-job"}
-   "automatic-payment-obligation-job"                   {:steps {:initial automatic-payment-obligation/automatic-payment-obligation-job-step}
-                                                         :type  "automatic-payment-obligation-job"}
-   "mass-information-request-job"                       {:steps {:initial information-request-service/mass-information-request-job-step}
-                                                         :type  "mass-information-request-job"}
-   "tutkintojen-tunnustaminen-review-state-changed-job" {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step}
-                                                         :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
-   "update-person-info-job"                             {:steps {:initial person-integration/update-person-info-job-step}
-                                                         :type  "update-person-info-job"}
-   "clean-old-forms-job"                                {:steps {:initial clean-old-forms/clean-old-forms-job-step}
-                                                         :type  "clean-old-forms-job"}})
+  {(:type email-job/job-definition)                      email-job/job-definition
+   (:type information-request-job/job-definition)        information-request-job/job-definition
+   (:type harkinnanvaraisuus-job/job-definition)         harkinnanvaraisuus-job/job-definition
+   (:type harkinnanvaraisuus-job/recheck-job-definition) harkinnanvaraisuus-job/recheck-job-definition
+   (:type harkinnanvaraisuus-email-job/job-definition)   harkinnanvaraisuus-email-job/job-definition
+   "automatic-eligibility-if-ylioppilas-job"             {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
+                                                          :type  "automatic-eligibility-if-ylioppilas-job"}
+   "automatic-payment-obligation-job"                    {:steps {:initial automatic-payment-obligation/automatic-payment-obligation-job-step}
+                                                          :type  "automatic-payment-obligation-job"}
+   "mass-information-request-job"                        {:steps {:initial information-request-service/mass-information-request-job-step}
+                                                          :type  "mass-information-request-job"}
+   "tutkintojen-tunnustaminen-review-state-changed-job"  {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step}
+                                                          :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
+   "update-person-info-job"                              {:steps {:initial person-integration/update-person-info-job-step}
+                                                          :type  "update-person-info-job"}
+   "clean-old-forms-job"                                 {:steps {:initial clean-old-forms/clean-old-forms-job-step}
+                                                          :type  "clean-old-forms-job"}})
