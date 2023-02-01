@@ -361,6 +361,12 @@
                        (:type harkinnanvaraisuus-job/job-definition)
                        {}))
 
+(defn- migrate-add-harkinnanvaraisuus-rechecks
+  [connection]
+  (job-store/store-new connection
+                       (:type harkinnanvaraisuus-job/recheck-job-definition)
+                       {}))
+
 (defn- update-home-town
   [new-home-town-component form]
   (clojure.walk/prewalk
@@ -683,6 +689,12 @@
   "Infinite harkinnanvaraisuus job that checks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot"
   (with-db-transaction [conn {:connection connection}]
                        (migrate-add-harkinnanvaraisuus-checks conn)))
+
+(migrations/defmigration
+  add-harkinnanvaraisuus-rechecks "20230201150700"
+  "Infinite harkinnanvaraisuus job that rechecks harkinnanvaraisuus of 2 asteen yhteishaun applikaatiot"
+  (with-db-transaction [conn {:connection connection}]
+                       (migrate-add-harkinnanvaraisuus-rechecks conn)))
 
 (defn migrate
   [audit-logger-to-use]
