@@ -7,12 +7,14 @@
             [ataru.person-service.person-integration :as person-integration]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.background-job.clean-old-forms :as clean-old-forms]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]))
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-job :as harkinnanvaraisuus-job]
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]))
 
 (def job-definitions
   {(:type email-job/job-definition)                     email-job/job-definition
    (:type information-request-job/job-definition)       information-request-job/job-definition
    (:type harkinnanvaraisuus-job/job-definition)        harkinnanvaraisuus-job/job-definition
+   (:type harkinnanvaraisuus-email-job/job-definition)  harkinnanvaraisuus-email-job/job-definition
    "automatic-eligibility-if-ylioppilas-job"            {:steps {:initial automatic-eligibility/automatic-eligibility-if-ylioppilas-job-step}
                                                          :type  "automatic-eligibility-if-ylioppilas-job"}
    "automatic-payment-obligation-job"                   {:steps {:initial automatic-payment-obligation/automatic-payment-obligation-job-step}
