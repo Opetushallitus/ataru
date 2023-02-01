@@ -8,14 +8,11 @@
             [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :as hartyp]
             [selmer.parser :as selmer]
-            [ataru.background-job.email-job :as email-job]
             [ataru.translations.translation-util :as translations]
             [taoensso.timbre :as log]
-            [ataru.background-job.job :as job]))
-
-
-(def email-job-definition {:steps {:initial email-job/send-email-step}
-                           :type  "harkinnanvarainen-laskenta-email-notification"})
+            [ataru.background-job.job :as job]
+            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
+            [ataru.db.db :as db]))
 
 (defn- assoc-only-harkinnanvarainen-to-application
   [application]
@@ -35,7 +32,7 @@
   (let [lang             (-> application :lang keyword)
         emails           [(extract-answer-value "email" application)]
         translations     (translations/get-translations lang)
-        subject          (subject-key translations)
+        subject          ((keyword subject-key) translations)
         body             (selmer/render-file template-name translations)]
     (when (not-empty emails)
       {:from       "no-reply@opintopolku.fi"
@@ -44,13 +41,13 @@
        :subject subject})))
 
 (defn- start-email-job [job-runner connection application]
-  (let [job-type (:type email-job-definition)
+  (let [job-type (:type harkinnanvaraisuus-email-job/job-definition)
         template-name (if (:sure-harkinnanvarainen-only? application)
-                        "templates/email_vain_harkinnanvaraisessa"
-                        "templates/email_myos_pistelaskennassa")
+                        "templates/email_vain_harkinnanvaraisessa.html"
+                        "templates/email_myos_pistelaskennassa.html")
         subject-key (if (:sure-harkinnanvarainen-only? application)
-                      :email-vain-harkinnanvaraisessa
-                      :email-myos-pistevalinnassa)
+                      "email-vain-harkinnanvaraisessa"
+                      "email-myos-pistevalinnassa")
         job-id (job/start-job job-runner
                                   connection
                                   job-type
@@ -60,11 +57,13 @@
 
 (defn- assoc-valintalaskentakoostepalvelu-harkinnainen-only
   [application-with-harkinnanvaraisuus applications-from-valintalaskentakoostepalvelu]
-  (let [application-id (keyword (:key application-with-harkinnanvaraisuus))
-        application-from-kooste (application-id applications-from-valintalaskentakoostepalvelu)
-        has-only-sure-harkinnanvarainen? (->> (:hakutoiveet application-from-kooste)
+  (let [application-key (:key application-with-harkinnanvaraisuus)
+        has-only-sure-harkinnanvarainen? (->> (get-in applications-from-valintalaskentakoostepalvelu [application-key :hakutoiveet])
                                               (map #(:harkinnanvaraisuudenSyy %))
                                               (some #(contains? sure-harkinnanvarainen-only-reasons %)))]
+    (prn sure-harkinnanvarainen-only-reasons)
+    (prn (->> (get-in applications-from-valintalaskentakoostepalvelu [application-key :hakutoiveet])
+              (map #(:harkinnanvaraisuudenSyy %))))
     (assoc application-with-harkinnanvaraisuus :sure-harkinnanvarainen-only? (boolean has-only-sure-harkinnanvarainen?))))
 
 (defn- inform-about-harkinnanvarainen
@@ -73,8 +72,9 @@
   (start-email-job job-runner connection app))
 
 (defn- handle-harkinnanvaraisuus-processes-to-save
-  [job-runner connection applications-with-harkinnanvaraisuus checked-time]
-  (let [apps-without-email-job (filter #(= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %)) applications-with-harkinnanvaraisuus)
+  [job-runner applications-with-harkinnanvaraisuus checked-time]
+  (let [connection {:datasource (db/get-datasource :db)}
+        apps-without-email-job (filter #(= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %)) applications-with-harkinnanvaraisuus)
         email-job-apps (filter #(not (= (:sure-harkinnanvarainen-only? %) (:harkinnanvarainen-only? %))) applications-with-harkinnanvaraisuus)]
     (prn "Saving PROCESSES")
     (prn apps-without-email-job)
@@ -90,8 +90,8 @@
           (inform-about-harkinnanvarainen job-runner connection app checked-time))))))
 
 (defn check-harkinnanvaraisuus-step
-  [{:keys [last-run-long job-runner connection]}
-   {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service]}]
+  [{:keys [last-run-long]}
+   {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
   (try
     (let [now       (time/now)
           processes (store/fetch-unprocessed-harkinnanvaraisuus-processes)
@@ -131,7 +131,7 @@
       (when (< 0 (count processes-that-can-be-skipped))
         (store/mark-do-not-check-harkinnanvaraisuus-processes processes-that-can-be-skipped))
       (when (< 0 (count applications-to-save))
-        (handle-harkinnanvaraisuus-processes-to-save job-runner connection applications-to-save now))
+        (handle-harkinnanvaraisuus-processes-to-save job-runner applications-to-save now))
       {:transition      {:id :to-next :step :initial}
        :updated-state   {:last-run-long (coerce/to-long now)}
        :next-activation (time/plus now (time/hours 1))})
