@@ -28,7 +28,7 @@
                 :id       "koulutustyyppi-btn"}]
    (if is-open?
      [:i.zmdi.zmdi-caret-up]
-     [:label {:for "koulutustyyppi-btn"} [:i.zmdi.zmdi-caret-down]])])
+     [:i.zmdi.zmdi-caret-down])])
 
 (defn- koulutustyypit-filter [idx]
   (let [is-open (r/atom false)
