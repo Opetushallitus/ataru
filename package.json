@@ -49,7 +49,7 @@
     "fp-ts": "2.6.3",
     "http-server": "^0.12.3",
     "husky": "4.2.5",
-    "karma": "5.1.0",
+    "karma": "6.4.1",
     "karma-chai": "0.1.0",
     "karma-chrome-launcher": "3.1.0",
     "karma-cljs-test": "0.1.0",
