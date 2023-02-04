@@ -1,12 +1,15 @@
 (ns ataru.virkailija.authentication.virkailija-edit
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
-            [ataru.config.core :refer [config]]
             [ataru.util :as u]
             [clojure.java.jdbc :as jdbc]
             [camel-snake-kebab.core :as t]
             [camel-snake-kebab.extras :as te])
   (:import (java.util UUID)))
+
+(declare yesql-update-virkailija-settings!)
+(declare yesql-get-virkailija-for-update)
+(declare yesql-get-virkailija)
 
 (sql/defqueries "sql/virkailija-queries.sql")
 
@@ -112,8 +115,10 @@
       review-setting)))
 
 (defn get-review-settings [session]
-  (or (->> (db/exec :db yesql-get-virkailija {:oid (-> session :identity :oid)})
-           (eduction (map (partial te/transform-keys t/->kebab-case-keyword))
-             (map :settings))
-           (first))
-      {:review {}}))
+  (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
+    (or (->> (yesql-get-virkailija {:oid (-> session :identity :oid)}
+                                   {:connection conn})
+             (eduction (map (partial te/transform-keys t/->kebab-case-keyword))
+                       (map :settings))
+             (first))
+        {:review {}})))

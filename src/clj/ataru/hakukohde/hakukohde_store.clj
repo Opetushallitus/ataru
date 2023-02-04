@@ -2,19 +2,15 @@
   (:require [ataru.db.db :as db]
             [ataru.hakukohde.hakukohde-store-queries :as queries]))
 
-(defn- exec-db
-  [ds-key query params]
-  (db/exec ds-key query params))
-
 (defn selection-state-used-in-hakukohde?
   [hakukohde-oid]
-  (-> (exec-db :db queries/yesql-selection-state-used-in-hakukohde {:hakukohde_oid hakukohde-oid})
+  (-> (db/exec :db queries/yesql-selection-state-used-in-hakukohde {:hakukohde_oid hakukohde-oid})
       first
       :exists))
 
 (defn selection-state-used-in-hakukohdes?
   [hakukohde-oids]
   (if (seq hakukohde-oids)
-    (->> (exec-db :db queries/yesql-selection-state-used-in-hakukohdes {:hakukohde_oids hakukohde-oids})
+    (->> (db/exec :db queries/yesql-selection-state-used-in-hakukohdes {:hakukohde_oids hakukohde-oids})
         (map #(:hakukohde %)))
     []))

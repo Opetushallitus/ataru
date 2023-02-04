@@ -5,6 +5,13 @@
                    :server-name   "localhost"
                    :port-number   5432
                    :schema        "public"}
+ :db-read-only    {:database-name "ataru-dev"
+                   :pool-name     "ataru-pool"
+                   :username      "oph"
+                   :password      "oph"
+                   :server-name   "localhost"
+                   :port-number   5432
+                   :schema        "public"}
  :aws             {:region "eu-west-1"
                    :henkilo-modified-queue {:enabled?      false
                                             :drain-failed? false
