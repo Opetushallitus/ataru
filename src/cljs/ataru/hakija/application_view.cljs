@@ -139,6 +139,7 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
+       {:role "document"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -192,7 +193,8 @@
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
              :tab-index    "0"
-             :aria-label   (get (:close general-texts) @lang)}
+             :aria-label   (get (:close general-texts) @lang)
+             :role         "document"}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
