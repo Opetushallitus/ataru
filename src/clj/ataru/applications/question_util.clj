@@ -57,7 +57,7 @@
      :valmennusryhmatParent       "84cd8829-ee39-437f-b730-9d68f0f07555"
      :paalajiSeuraLiittoParent    "urheilija-2nd-lajivalinta-dropdown"
      :seura                       "urheilija-2nd-seura"
-     :liitto                      "urheilija2nd-liitto"}))
+     :liitto                      "urheilija-2nd-liitto"}))
 
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
