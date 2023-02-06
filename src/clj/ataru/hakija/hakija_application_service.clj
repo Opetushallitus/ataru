@@ -227,9 +227,10 @@
                                               true
                                               (:strict-warnings-on-unchanged-edits? application))
         now                           (time/now)
-        haku                          (tarjonta-service/get-haku
+        haku                          (when (:haku application)
+                                        (tarjonta-service/get-haku
                                         tarjonta-service
-                                        (:haku application))
+                                        (:haku application)))
         tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -333,7 +334,7 @@
                                        (some? virkailija-secret)
                                        (get latest-application :id "NEW_APPLICATION_ID")
                                        (get latest-application :key "NEW_APPLICATION_KEY"))
-        harkinnanvaraisuus-process-fn (when (h/toisen-asteen-yhteishaku? haku)
+        harkinnanvaraisuus-process-fn (when (and haku (h/toisen-asteen-yhteishaku? haku))
                                         (fn [application-id application-key]
                                           (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
     (when (not-empty cannot-edit-fields)
