@@ -55,7 +55,9 @@
      :valmennusryhma_piirijoukkue "urheilija-2nd-valmennus-piirijoukkue"
      :valmennusryhma_maajoukkue   "urheilija-2nd-valmennus-maajoukkue"
      :valmennusryhmatParent       "84cd8829-ee39-437f-b730-9d68f0f07555"
-     :paalajiSeuraLiittoParent    "urheilija-2nd-lajivalinta-dropdown"}))
+     :paalajiSeuraLiittoParent    "urheilija-2nd-lajivalinta-dropdown"
+     :seura                       "urheilija-2nd-seura"
+     :liitto                      "urheilija2nd-liitto"}))
 
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
@@ -76,17 +78,6 @@
                                                  (update application :keyValues (fn [kv] (merge kv {"pohjakoulutus_vuosi" pohjakoulutus-vuosi
                                                                                                     "pohjakoulutus_kieli" pohjakoulutus-kieli})))))
 
-;jokaisella lajilla on omat tunnisteet jatkokysymyksille. Kerätään tässä tunnisteet lomakkeella,
-;jotta voidaan myöhemmin poimia vastaus avaimella hakemuksen vastauksista.
-(defn- get-seura-and-liitto-keys-from-laji-options [laji-options]
-  (let [filter-keys-by-label-fn (fn [label] (into [] (map (fn [laji-option] (-> (filter #(= label (:label %)) (:followups laji-option))
-                                                                                first
-                                                                                :id))
-                                                          laji-options)))
-        seura-keys (filter-keys-by-label-fn urheilija-seura-label)
-        liitto-keys (filter-keys-by-label-fn urheilija-liitto-label)]
-    {:seura seura-keys
-     :liitto liitto-keys}))
 
 (defn get-hakurekisteri-toinenaste-specific-questions
   ([form] (get-hakurekisteri-toinenaste-specific-questions form "unknown haku"))
@@ -127,7 +118,7 @@
                                                               first
                                                               :children
                                                               first)
-         urheilija-base-keys (urheilijan-lisakysymys-keys haku-oid)
+         urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
          laji-options (->> content
                            (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
                            first
@@ -142,9 +133,7 @@
                            :followups
                            (filter #(= urheilija-paalaji-folloup-label (:label %)))
                            first
-                           :id)
-         urheilija-seura-and-liitto-keys (get-seura-and-liitto-keys-from-laji-options laji-options)
-         urheilija-keys (merge urheilija-base-keys urheilija-seura-and-liitto-keys)]
+                           :id)]
      {:tutkintovuosi-keys                          tutkintovuosi-keys
       :tutkintokieli-keys                          tutkintokieli-keys
       :sora-terveys-key                            sora-terveys-question
@@ -154,6 +143,6 @@
       :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
-      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalajiSeuraLiittoParent urheilija-base-keys))
+      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalajiSeuraLiittoParent urheilija-keys))
                                                     :muu-laji-key      (keyword muu-laji-key)
                                                     :value-to-label    laji-value-to-label}})))
