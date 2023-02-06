@@ -34,7 +34,7 @@
       (catch Exception _
         (t/to-time-zone (f/parse fmt s) tz)))))
 
-(defn- parse-haku
+(defn parse-haku
   [haku hakukohteet ohjausparametrit]
   (let [hakuajat (mapv (fn [hakuaika]
                          (merge
@@ -101,7 +101,7 @@
        (:liitteet)
        (map #(parse-liite %)))))
 
-(defn- parse-hakukohde
+(defn parse-hakukohde
   [hakukohde tarjoajat hakukohderyhmas settings]
   (merge
     {:oid                                                         (:oid hakukohde)

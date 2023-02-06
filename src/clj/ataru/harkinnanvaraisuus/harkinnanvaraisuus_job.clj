@@ -119,7 +119,7 @@
 
 (defn- can-skip-checking-application-due-to-hakukohteet
   [tarjonta-service application]
-  (let [hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service (:hakukohteet application))]
+  (let [hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service (:hakukohde application))]
     (->> hakukohteet
          (map #(:koulutustyyppikoodi %))
          (some #(contains? KOULUTUSTYYPIT_THAT_MUST_BE_CHECKED %))
@@ -140,13 +140,13 @@
         application-ids-to-check (->> applications-to-check
                                       (map #(:id %))
                                       (set))
-        processes-that-can-be-skipped (->> processes-to-check
+        processes-that-can-be-skipped (->> processes
                                            (filter #(not (contains? application-ids-to-check (:application_id %))))
-                                           (map #(:application_id %))
-                                           (set))
+                                           (map #(:application_id %)))
         applications-with-harkinnanvaraisuus (->> applications-to-check
                                                   (map #(assoc-only-harkinnanvarainen-to-application %)))
-        harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
+        harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
+                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes processes-that-can-be-skipped)
@@ -173,7 +173,7 @@
         harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
-    (mark-do-not-check-processes processids-where-check-can-be-skipped)
+    (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
     (handle-processess-to-save job-runner applications-to-save now)
     (log/debug "Recheck harkinnanvaraisuus step finishing")
     {:transition      {:id :to-next :step :initial}
