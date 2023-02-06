@@ -189,12 +189,12 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
+           {:role "document"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
              :tab-index    "0"
-             :aria-label   (get (:close general-texts) @lang)
-             :role         "document"}
+             :aria-label   (get (:close general-texts) @lang)}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
