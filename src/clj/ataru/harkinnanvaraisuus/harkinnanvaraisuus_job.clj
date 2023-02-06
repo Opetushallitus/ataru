@@ -34,13 +34,13 @@
        (map :value)
        (first)))
 
-(defn- harkinnanvarainen-email [application template-name subject-key]
+(defn- harkinnanvarainen-email [application template-name]
   (let [lang             (-> application :lang keyword)
         emails           [(extract-answer-value "email" application)
                           (extract-answer-value "guardian-email" application)
                           (extract-answer-value "guardian-email-secondary" application)]
         translations     (translations/get-translations lang)
-        subject          ((keyword subject-key) translations)
+        subject          (:email-vain-harkinnanvaraisessa-subject translations)
         body             (selmer/render-file template-name translations)]
     (when (not-empty emails)
       {:from       "no-reply@opintopolku.fi"
@@ -53,15 +53,12 @@
         template-name (if (:sure-harkinnanvarainen-only? application)
                         "templates/email_vain_harkinnanvaraisessa.html"
                         "templates/email_myos_pistevalinnassa.html")
-        subject-key (if (:sure-harkinnanvarainen-only? application)
-                      "email-vain-harkinnanvaraisessa"
-                      "email-myos-pistevalinnassa")
-        email (harkinnanvarainen-email application template-name subject-key)]
+        email (harkinnanvarainen-email application template-name)]
     (if email
       (let [job-id (job/start-job job-runner
                                   connection
                                   job-type
-                                  (harkinnanvarainen-email application template-name subject-key))]
+                                  email)]
         (log/info (str "Luotu emailin lähetys tehtävä " job-id
                        " kertomaan hakijalle valintatavan muutoksesta hakemukselle " (:key application))))
       (log/warn (str "Emailin lähetystehtävää hakemukselle " (:key application) " epäonnistui")))))
