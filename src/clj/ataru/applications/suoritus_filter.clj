@@ -11,5 +11,5 @@
 
 (defn luokkatasot-for-suoritus-filter-opiskelija
   []
-  ["7" "8" "9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI" "VALMENTAVA"])
+  ["7" "8" "9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI" "valmistava"])
 
