@@ -5,6 +5,7 @@
             [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.translations.translation-util :as translations]
             [re-frame.core :refer [subscribe dispatch]]
             [goog.string :as gstring]
@@ -138,6 +139,7 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
+       {:role "document"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -187,9 +189,12 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           [:a.application-feedback-form__close-button
-            {:on-click #(dispatch [:application/rating-form-toggle])
-             :data-test-id "close-feedback-form-button"}
+           {:role "document"}
+           [:button.a-button.application-feedback-form__close-button
+            {:on-click     #(dispatch [:application/rating-form-toggle])
+             :data-test-id "close-feedback-form-button"
+             :tab-index    "0"
+             :aria-label   (get (:close general-texts) @lang)}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
@@ -197,8 +202,14 @@
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
+                :on-key-down   (fn [e]
+                                 (when (or (= " " (.-key e))
+                                           (= "Enter" (.-key e)))
+                                   (.preventDefault e)
+                                   (dispatch [:application/rating-submit (star-number-from-event e)])))
                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
-                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
+                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])
+                :role          "radiogroup"}
                (let [stars-active (or @stars @star-hovered 0)]
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
@@ -206,6 +217,11 @@
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
                           [star-classes
                            {:key         (str "rating-star-" n)
+                            :tab-index    "0"
+                            :role        "radio"
+                            :aria-label  (if (> n 0)
+                                           (get (translations/get-hakija-translation :feedback-ratings @lang) n)
+                                           "")
                             :data-star-n (inc n)}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
@@ -219,13 +235,16 @@
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
                  :placeholder (translations/get-hakija-translation :feedback-text-placeholder @lang)
-                 :max-length  2000}]])
+                 :max-length  2000
+                 :tab-index   "0"}]])
             (when (and (not submitted?)
                        rated?)
               [:button.application__overlay-button.application__overlay-button--enabled
-               {:on-click (fn [evt]
-                            (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))}
+               {:on-click   (fn [evt]
+                              (.preventDefault evt)
+                              (dispatch [:application/rating-feedback-submit]))
+                :tab-index  "0"
+                :aria-label (translations/get-hakija-translation :feedback-send @lang)}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
