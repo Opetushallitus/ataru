@@ -9,7 +9,10 @@
 (defn can-skip-recheck-for-yks-ma-ai
   [application]
   (let [answers (:answers application)
-        base-education-value ((keyword base-education-choice-key) answers)]
+        base-education-value (->> answers
+                                  (filter #(= (:key %) base-education-choice-key))
+                                  first
+                                  :value)]
     (-> (vals base-education-option-where-harkinnanvaraisuus-do-not-need-to-be-checked)
         (set)
         (contains? base-education-value))))
@@ -66,7 +69,10 @@
   [application]
   (let [answers (:answers application)
         pick-value-fn (fn [answers question]
-                        (:value (question answers)))
+                        (->> answers
+                             (filter #(= question (keyword (:key %))))
+                             first
+                             :value))
         common-reason (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
     (not (nil? common-reason))))
 

@@ -1,7 +1,8 @@
 (ns ataru.tarjonta-service.mock-tarjonta-service
   (:require [com.stuartsierra.component :as component]
             [ataru.tarjonta-service.tarjonta-client :as tarjonta-client]
-            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]))
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService]]
+            [ataru.tarjonta-service.kouta.kouta-client :as kouta-client]))
 
 (def toisen-asteen-yhteishaku-kohdejokko "haunkohdejoukko_11#1")
 
@@ -411,3 +412,125 @@
     (into {} (keep #(when-let [v (get koulutus (keyword %))]
                       [% v])
                    koulutus-oids))))
+
+(def base-kouta-hakukohde
+  {:kaytetaanHaunAikataulua true
+   :tila "julkaistu"
+   :hakulomakeKuvaus {}
+   :pohjakoulutusvaatimusKoodiUrit ["pohjakoulutusvaatimuskouta_pk#1" "pohjakoulutusvaatimuskouta_er#1"]
+   :koulutustyyppikoodi "koulutustyyppi_26"
+   :organisaatioNimi {:fi "Espoon seudun koulutuskuntayhtymä Omnia", :sv "Espoon seudun koulutuskuntayhtymä Omnia", :en "Espoon seudun koulutuskuntayhtymä Omnia"}
+   :kaytetaanHaunHakulomaketta true
+   :aloituspaikat 80
+   :kaytetaanHaunAlkamiskautta true
+   :modified "2022-12-15T15:35:32"
+   :paateltyAlkamiskausi {:alkamiskausityyppi "alkamiskausi ja -vuosi", :source "1.2.246.562.29.00000000000000021303", :kausiUri "kausi_s#1", :vuosi "2023"}
+   :toteutusOid "1.2.246.562.17.00000000000000006915"
+   :salliikoHakukohdeHarkinnanvaraisuudenKysymisen true
+   :muuPohjakoulutusvaatimus {}
+   :toinenAsteOnkoKaksoistutkinto true
+   :muokkaaja "1.2.246.562.24.77641069200"
+   :liitteetOnkoSamaToimitusaika false
+   :hakuajat []
+   :valintaperusteValintakokeet []
+   :hakuOid "1.2.246.562.29.00000000000000021303"
+   :uudenOpiskelijanUrl {}
+   :tarjoaja "1.2.246.562.10.74572512155"
+   :liitteetOnkoSamaToimitusosoite true
+   :liitteet []
+   :hakukohde {:koodiUri "hakukohteetperusopetuksenjalkeinenyhteishaku_1027#1"}
+   :yhdenPaikanSaanto {:voimassa false, :syy "Ei korkeakoulutus koulutusta"}
+   :kielivalinta ["fi"]
+   :liitteidenToimitustapa "osoite"
+   :jarjestaaUrheilijanAmmKoulutusta true
+   :voikoHakukohteessaOllaHarkinnanvaraisestiHakeneita true
+   :valintaperusteId "2306d148-9fa9-451b-9a1e-0c6ca0ca5d3f"
+   :valintakokeet []
+   :organisaatioOid "1.2.246.562.10.53642770753"
+   :painotetutArvosanat []})
+
+(def kouta-hakukohdes {
+                       :1.2.246.562.20.00000000000000024371 (merge base-kouta-hakukohde {
+                                                                                   :oid "1.2.246.562.20.00000000000000024371"
+                                                                                   :koulutustyyppikoodi "koulutustyyppi_26"
+                                                                                   :nimi {:fi "Ajoneuvoalan perustutkinto"}})
+                       :1.2.246.562.20.00000000000000024372 (merge base-kouta-hakukohde {
+                                                                                   :oid "1.2.246.562.20.00000000000000024372"
+                                                                                   :koulutustyyppikoodi "koulutustyyppi_3"
+                                                                                   :nimi {:fi "Ei tarvi tarkistaa harkinnanvaraisuutta"}})
+                       })
+
+(defrecord MockTarjontaKoutaService []
+  component/Lifecycle
+  TarjontaService
+
+  (start [this] this)
+  (stop [this] this)
+
+  (get-hakukohde [this hakukohde-oid]
+    (when-let [h ((keyword hakukohde-oid) kouta-hakukohdes)]
+      (kouta-client/parse-hakukohde h [] [] {})))
+
+  (get-hakukohteet [this hakukohde-oids]
+    (keep #(.get-hakukohde this %) hakukohde-oids))
+
+  (get-hakukohde-name [this hakukohde-oid]
+    (if (contains? #{"hakukohde.oid" "hakukohde-in-ryhma.oid"} hakukohde-oid)
+      {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
+      {:fi "Testihakukohde"}))
+
+  (hakukohde-search [_ haku-oid _]
+    (let [to-hakukohteet (fn [hakukohde-oids] (->> (map #(get hakukohde %) hakukohde-oids)
+                                                   (map #(kouta-client/parse-hakukohde % [] [] {}))
+                                                   (map #(assoc % :user-organization? true))))]
+      (case haku-oid
+        "1.2.246.562.29.65950024187" (to-hakukohteet [:1.2.246.562.20.49028100001
+                                                      :1.2.246.562.20.49028100002
+                                                      :1.2.246.562.20.49028100003
+                                                      :1.2.246.562.20.490281000035])
+        "1.2.246.562.29.65950024188" (to-hakukohteet [:1.2.246.562.20.49028100004])
+        (to-hakukohteet [:1.2.246.562.20.49028196523
+                         :1.2.246.562.20.49028196524
+                         :1.2.246.562.20.49028196525]))))
+
+  (get-haku [this haku-oid]
+    (when-let [h ((keyword haku-oid) haut)]
+      (kouta-client/parse-haku h [] [])))
+
+  (hakus-by-form-key [this form-key]
+    (if-let [haku-key
+             (case form-key
+               "hakukohteen-organisaatiosta-form"
+               "1.2.246.562.29.65950024188"
+
+               "belongs-to-hakukohteet-test-form"
+               "1.2.246.562.29.65950024185"
+
+               "hakija-hakukohteen-hakuaika-test-form"
+               "1.2.246.562.29.65950024187"
+
+               "form-access-control-test-basic-form"
+               "form-access-control-test-basic-haku"
+
+               "form-access-control-test-hakukohde-form"
+               "form-access-control-test-hakukohde-haku"
+
+               "form-access-control-test-yhteishaku-form"
+               "form-access-control-test-yhteishaku-haku"
+
+               nil)]
+      [(.get-haku this haku-key)]
+      []))
+
+  (get-haku-name [this haku-oid]
+    (when (= haku-oid "1.2.246.562.29.65950024185")
+      {:fi "testing2"}))
+
+  (get-koulutus [this koulutus-id]
+    ((keyword koulutus-id) koulutus))
+
+  (get-koulutukset [this koulutus-oids]
+    (into {} (keep #(when-let [v (get koulutus (keyword %))]
+                      [% v])
+                   koulutus-oids))))
+
