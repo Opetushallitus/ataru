@@ -1,6 +1,7 @@
 @import "component-colors";
 @import "component-fonts";
 @import "component-layout";
+@import "vars";
 
 .arvosanat-taulukko {
   .default-font();
@@ -11,11 +12,11 @@
 }
 
 .arvosana__oppimaara:not(.arvosanat-taulukko__otsikko) {
-  color: @component-gray;
+  color: @gray_text_contrast;
 }
 
 .arvosana__arvosana:not(.arvosanat-taulukko__otsikko) {
-  color: @component-gray;
+  color: @gray_text_contrast;
 }
 
 .arvosana__lisaa-valinnaisaine--solu {
@@ -23,7 +24,7 @@
 }
 
 .arvosana__lisaa-valinnaisaine--ei-kaytossa {
-  color: @component-gray;
+  color: @gray_text_contrast;
 }
 
 .arvosana__lisaa-valinnaisaine--ikoni {
@@ -78,7 +79,7 @@
   }
 
   .oppiaineen-arvosana-rivi__oppiaine--valinnaisaine {
-    color: @component-gray;
+    color: @gray_text_contrast;
   }
 
   .arvosana__arvosana {
