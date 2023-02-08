@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [ataru.util :as util]
-            [re-frame.core :as re-frame]))
+            [re-frame.core :as re-frame]
+            [clojure.string :as string]))
 
 (defn attachment-preview-pages-to-display []
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
@@ -93,17 +94,22 @@
   liitepyynnot-for-selected-hakukohteet)
 
 (defn- to-liitteet-with-hakukohde
-  [hakutoiveet]
+  [hakutoiveet liitekoodisto]
   (let [hakukohteen-tiedot-fn (fn [hk] {:oid (:oid hk)
                                         :name (:name hk)
                                         :tarjoaja (:tarjoaja-name hk)})
         toive-to-liitteet-fn (fn [hk] (->> hk
                                            :liitteet
                                            flatten
+                                           (filter #(true? (:toimitetaan-erikseen %)))
                                            (map #(assoc % :hakukohde (hakukohteen-tiedot-fn hk)))))
+        get-koodi-fn (fn [liite] (->> liitekoodisto
+                                      (filter #(string/includes? (:tyyppi liite) (:uri %)))
+                                      (first)))
         toiveet-to-liitteet (->> hakutoiveet
                                  (map toive-to-liitteet-fn)
                                  flatten
+                                 (map #(assoc % :tyyppi-label (get (get-koodi-fn %) :label (:tyyppi %))))
                                  (group-by :tyyppi))]
     toiveet-to-liitteet))
 
@@ -111,13 +117,16 @@
   :virkailija-attachments/liitepyynnot-hakemuksen-hakutoiveille
   (fn []
     [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
-     (re-frame/subscribe [:application/hakukohteet])])
-  (fn [[hakemuksen-hakutoiveet hakukohteet]]
+     (re-frame/subscribe [:application/hakukohteet])
+     (re-frame/subscribe [:editor/get-attachment-types-koodisto])])
+  (fn [[hakemuksen-hakutoiveet hakukohteet liitekoodisto]]
     (let [hakutoiveet (->> hakemuksen-hakutoiveet
                            (map #(get hakukohteet %)))]
+      (prn "TÄÄLLÄ")
+      (prn liitekoodisto)
       (prn hakutoiveet)
-      (prn (to-liitteet-with-hakukohde hakutoiveet))
-      (to-liitteet-with-hakukohde hakutoiveet))))
+      (prn (to-liitteet-with-hakukohde hakutoiveet liitekoodisto))
+      (to-liitteet-with-hakukohde hakutoiveet liitekoodisto))))
 
 (re-frame/reg-sub
   :virkailija-attachments/selected-attachment-and-liitepyynto
