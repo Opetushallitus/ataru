@@ -560,17 +560,9 @@
    :archived                                    {:fi "Arkistoitu"
                                                  :sv "Arkiverad"
                                                  :en "Archived"}
-<<<<<<< HEAD
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
                                                  :en "(mandatory information)"}
-   :email-vain-harkinnanvaraisessa              {:fi "Tietojemme mukaan olet mukana vain harkinnanvaraisessa valinnassa"
-                                                 :sv ""
-                                                 :en ""}
-   :email-myos-pistevalinnassa                  {:fi "Tietojemme mukaan olet mukana pistevalinnssa"
-                                                 :sv ""
-                                                 :en ""}})
-=======
    :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
                                                  :sv "Ändring i antagningssättet i den gemensamma ansökan"
                                                  :en "EN: Muutos yhteishaun valintatapaan"}
@@ -586,7 +578,6 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}})
->>>>>>> Update email texts for vain harkinnanvarainen notification
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
