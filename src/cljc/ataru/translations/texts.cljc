@@ -2063,6 +2063,9 @@
    :question-answers-selected                                {:fi "vastausvaihtoehtoa valittu"
                                                               :sv "Svarsalternativ valt"
                                                               :en "EN: vastausvaihtoehtoa valittu"}
+   :attachments-tab-header                                   {:fi "Toimitettavat liitteet"
+                                                              :sv ""
+                                                              :en ""}
    :tutu-amount-label                                        {:fi "Maksun määrä"
                                                               :sv ""
                                                               :en ""}

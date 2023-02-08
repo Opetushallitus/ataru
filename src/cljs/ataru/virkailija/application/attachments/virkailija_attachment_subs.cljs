@@ -92,6 +92,33 @@
      (re-frame/subscribe [:state-query [:application :review :attachment-reviews]])])
   liitepyynnot-for-selected-hakukohteet)
 
+(defn- to-liitteet-with-hakukohde
+  [hakutoiveet]
+  (let [hakukohteen-tiedot-fn (fn [hk] {:oid (:oid hk)
+                                        :name (:name hk)
+                                        :tarjoaja (:tarjoaja-name hk)})
+        toive-to-liitteet-fn (fn [hk] (->> hk
+                                           :liitteet
+                                           flatten
+                                           (map #(assoc % :hakukohde (hakukohteen-tiedot-fn hk)))))
+        toiveet-to-liitteet (->> hakutoiveet
+                                 (map toive-to-liitteet-fn)
+                                 flatten
+                                 (group-by :tyyppi))]
+    toiveet-to-liitteet))
+
+(re-frame/reg-sub
+  :virkailija-attachments/liitepyynnot-hakemuksen-hakutoiveille
+  (fn []
+    [(re-frame/subscribe [:application/valitun-hakemuksen-hakukohteet])
+     (re-frame/subscribe [:application/hakukohteet])])
+  (fn [[hakemuksen-hakutoiveet hakukohteet]]
+    (let [hakutoiveet (->> hakemuksen-hakutoiveet
+                           (map #(get hakukohteet %)))]
+      (prn hakutoiveet)
+      (prn (to-liitteet-with-hakukohde hakutoiveet))
+      (to-liitteet-with-hakukohde hakutoiveet))))
+
 (re-frame/reg-sub
   :virkailija-attachments/selected-attachment-and-liitepyynto
   (fn []
