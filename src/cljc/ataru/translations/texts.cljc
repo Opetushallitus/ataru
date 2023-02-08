@@ -559,7 +559,10 @@
                                                  :en "EN: Tai käytä"}
    :archived                                    {:fi "Arkistoitu"
                                                  :sv "Arkiverad"
-                                                 :en "Archived"}})
+                                                 :en "Archived"}
+   :required                                    {:fi "(pakollinen tieto)"
+                                                 :sv "(obligatorisk uppgift)"
+                                                 :en "(mandatory information)"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

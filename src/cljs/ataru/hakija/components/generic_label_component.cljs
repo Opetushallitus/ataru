@@ -20,7 +20,7 @@
         [:div
          {:id (id-for-label field-descriptor idx) :class duplicate-question-class}
          (when-not is-duplicate-question
-           [:span (str label (application-field/required-hint field-descriptor))])
+           [:span label [:span.application__form-field-label.application__form-field-label--required (application-field/required-hint field-descriptor lang)]])
          (when is-duplicate-question
            [:span (str name " " tarjoaja-name)])
          [application-field/scroll-to-anchor field-descriptor]]))))

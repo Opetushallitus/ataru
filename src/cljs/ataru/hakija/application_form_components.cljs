@@ -158,11 +158,11 @@
                                                          (:verify answer)))
 
                            ]
-                          [:div
+                          [:div.application__form-field
                            [:label.application__form-field-label.label.application__form-field-label--verify-email
                             {:id  "application-form-field-label-verify-email"
                              :for id}
-                            [:span (str text-verify (required-hint field-descriptor))]]
+                            [:span text-verify [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]]
                            [:input.application__form-text-input
                             {:id           id
                              :type         "text"
