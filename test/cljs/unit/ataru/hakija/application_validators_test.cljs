@@ -12,6 +12,19 @@
 
 (defn- has-never-applied [_ _] (asyncm/go false))
 
+(deftest required-validation
+  (async done
+         (asyncm/go
+           (doseq [input ["" " " [] [""] ["" ""]]]
+             (is (false? (first (async/<! (validator/validate {:has-applied    has-never-applied
+                                                               :validator      "required"
+                                                               :value          input}))))))
+           (doseq [input ["f" ["f"] ["" "f"]]]
+             (is (true? (first (async/<! (validator/validate {:has-applied    has-never-applied
+                                                              :validator      "required"
+                                                              :value          input}))))))
+           (done))))
+
 (deftest ssn-validation
   (async done
          (asyncm/go
