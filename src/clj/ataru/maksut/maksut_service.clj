@@ -40,14 +40,10 @@
                                          "response body: " (:body result))))))
 
 (defn- receipt-get [maksut-cas-client order-id]
-  (let [url    (url/resolve-url :maksut-service.virkailija-receipt order-id)
-        result (cas/cas-authenticated-get maksut-cas-client url)]
-    (match/match result
-                 {:status 200 :body body}
-                 body
-                 :else (throw-error (str "Could not download receipt for order-id " order-id ", "
-                                         "status: " (:status result))))))
-
+  (let [url (url/resolve-url :maksut-service.virkailija-receipt order-id)
+        result (cas/cas-authenticated-get-as-stream maksut-cas-client url)]
+    (when (= (:status result) 200)
+      {:body (:body result)})))
 
 (defn- list-statuses [maksut-cas-client keys]
   (let [url    (url/resolve-url :maksut-service.background-lasku-status)

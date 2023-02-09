@@ -942,13 +942,10 @@
       (api/GET "/kuitti/:order-id" {session :session}
         :path-params [order-id :- s/Str]
         :summary "Lataa maksuun liittyvän kuitin"
-        (if-let [body (maksut-protocol/download-receipt maksut-service order-id)]
-          (-> (ok (:body body))
-              (header
-                "Content-Disposition"
-                (str "attachment; filename=\"" order-id ".html\"")))
-          (not-found
-              {:error (str "Kuittia ei löytynyt annetulla viitteellä")})))
+        (if-let [resp (maksut-protocol/download-receipt maksut-service order-id)]
+          (-> (ok (:body resp))
+              (header "Content-Disposition" (str "attachment; filename=\"" order-id ".html\"")))
+          (not-found {:error (str "Kuittia ei löytynyt annetulla viitteellä")})))
 
       (api/POST "/resend-maksu-link" {session :session}
         :body [input maksut-schema/TutuProcessingEmailRequest]
