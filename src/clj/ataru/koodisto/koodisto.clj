@@ -27,7 +27,8 @@
   [field]
   (and (:koodisto-source field)
     (or (= "multipleChoice" (:fieldType field))
-      (= "dropdown" (:fieldType field)))))
+        (= "singleChoice" (:fieldType field))
+        (= "dropdown" (:fieldType field)))))
 
 (defn- attachment-from-kouta?
   [field]
