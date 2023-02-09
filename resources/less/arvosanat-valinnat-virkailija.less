@@ -7,6 +7,7 @@
 .grades {
   .default-font();
   display: flex;
+  border-top: solid 1px #e6e6e6;
 
   &__left-panel {
     flex: 0 0 245px;
@@ -78,6 +79,31 @@
       li {
         line-height: 25px;
       }
+    }
+  }
+
+  &__info {
+    display: flex;
+    border-radius: 4px;
+    border: 2px solid @application-notification-display-border-color;
+    &__icon {
+      text-align: center;
+      background-color: @application-notification-display-border-color;
+      width: 47px;
+      height: 47px;
+      i {
+        display: inline;
+        vertical-align: middle;
+        color: @white;
+        font-size: 32px;
+        line-height: 47px;
+      }
+    }
+    &__text {
+      font-size: 14px;
+      padding-left: 13px;
+      padding-right: 10px;
+      line-height: 17px;
     }
   }
 }

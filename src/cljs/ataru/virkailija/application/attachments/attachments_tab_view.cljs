@@ -32,6 +32,10 @@
      [:div.attachments-tab__left-panel
       [:h2 @(subscribe [:editor/virkailija-translation :attachments-tab-header])]]
      [:div.attachments-tab__right-panel
+      [:div.attachments-tab__info
+       [:div.attachments-tab__info__icon
+        [:i.zmdi.zmdi-alert-circle-o]]
+       [:p.attachments-tab__info__text "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."]]
       (doall
         (for [liitegroup (keys liitteet)]
           ^{:key liitegroup}
