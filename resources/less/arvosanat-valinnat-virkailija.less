@@ -3,6 +3,7 @@
 @import "component-layout";
 
 .valinnat,
+.attachments-tab,
 .grades {
   .default-font();
   display: flex;
@@ -54,6 +55,28 @@
       &__lang {
         grid-area: lang;
         color: @neutral-grey-700;
+      }
+    }
+  }
+}
+
+.attachments-tab {
+  &__content {
+    &__type {
+      font-size: 17px;
+      line-height: 20px;
+      font-weight: 600;
+    }
+
+    &__hakukohde {
+      font-weight: 600;
+      line-height: 20px;
+      font-size: 14px;
+    }
+    ul {
+      padding-left: 1.3rem;
+      li {
+        line-height: 25px;
       }
     }
   }
