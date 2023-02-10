@@ -97,12 +97,18 @@
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
         secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
+        submit-status          (subscribe [:state-query [:application :submit-status]])
+        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
+        feedback-hidden?       (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                  (subscribe [:application/demo?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
                            :div.application__form-content-area)]
         [root-element
+         {:aria-hidden (and (= :submitted @submit-status)
+                            (or (not @feedback-hidden?)
+                                (not @submit-notification-hidden?)))}
          (when-not (or @load-failure?
                      @form)
            [:div.application__form-loading-spinner
@@ -214,15 +220,17 @@
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
-                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
+                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)
+                              star-number (inc n)]
                           [star-classes
-                           {:key         (str "rating-star-" n)
+                           {:key          (str "rating-star-" n)
                             :tab-index    "0"
-                            :role        "radio"
-                            :aria-label  (if (> n 0)
-                                           (get (translations/get-hakija-translation :feedback-ratings @lang) n)
-                                           "")
-                            :data-star-n (inc n)}])) (range 5)))])
+                            :role         "radio"
+                            :aria-checked (= @stars star-number)
+                            :aria-label   (if (< 0 star-number 6)
+                                            (get (translations/get-hakija-translation :feedback-ratings @lang) star-number)
+                                            "")
+                            :data-star-n  star-number}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
                (let [stars-selected (or @stars @star-hovered)]
@@ -262,7 +270,7 @@
   []
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
         submit-details              (subscribe [:state-query [:application :submit-details]])
-        submit-notification-hidden? (r/atom false)
+        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                       (subscribe [:application/demo?])]
     (fn []
