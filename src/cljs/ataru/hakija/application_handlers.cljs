@@ -1252,13 +1252,21 @@
 (reg-event-fx
   :application/handle-attachment-delete
   [check-schema-interceptor]
-  (fn [{db :db} [_ field-descriptor question-group-idx _ _ _]]
+  (fn [{db :db} [_ field-descriptor question-group-idx attachment-idx attachment-key _]]
     (let [id     (keyword (:id field-descriptor))
           new-db (-> (if (some? question-group-idx)
                        (update-in db [:application :answers id :values] (util/vector-of-length (inc question-group-idx)))
                        db)
+                     (update-in (cond-> [:application :answers id :values]
+                                  (some? question-group-idx)
+                                  (conj question-group-idx))
+                                (fn [values]
+                                  (if (some? attachment-idx)
+                                    (autil/remove-nth values attachment-idx)
+                                    (vec (remove #(= attachment-key (:value %)) values)))))
                      (set-repeatable-field-value id)
                      (set-validator-processing id))]
+
       {:db                 new-db
        :validate-debounced {:value                        (if (some? question-group-idx)
                                                             (get-in new-db [:application :answers id :value question-group-idx])
