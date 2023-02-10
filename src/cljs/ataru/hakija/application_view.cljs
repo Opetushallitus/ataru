@@ -214,15 +214,17 @@
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
-                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
+                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)
+                              star-number (inc n)]
                           [star-classes
-                           {:key         (str "rating-star-" n)
+                           {:key          (str "rating-star-" n)
                             :tab-index    "0"
-                            :role        "radio"
-                            :aria-label  (if (> n 0)
-                                           (get (translations/get-hakija-translation :feedback-ratings @lang) n)
-                                           "")
-                            :data-star-n (inc n)}])) (range 5)))])
+                            :role         "radio"
+                            :aria-checked (= @stars star-number)
+                            :aria-label   (if (< 0 star-number 6)
+                                            (get (translations/get-hakija-translation :feedback-ratings @lang) star-number)
+                                            "")
+                            :data-star-n  star-number}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
                (let [stars-selected (or @stars @star-hovered)]
