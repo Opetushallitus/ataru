@@ -681,8 +681,10 @@
                            (let [new-value (-> evt .-target .-value)]
                              (when (valid-display-score? new-value)
                                (reset! display-value new-value))
-                             (when-let [number (score->number new-value)]
-                               (dispatch [:application/update-review-field :score number])))))}]])])))
+                             (if (string/blank? new-value)
+                               (dispatch [:application/update-review-field :score nil]) ;jotta saadan pistekenttä myös tyhjennettyä
+                               (when-let [number (score->number new-value)]
+                                (dispatch [:application/update-review-field :score number]))))))}]])])))
 
 (defn- application-modify-link [superuser?]
   (let [application-key   (subscribe [:state-query [:application :selected-key]])
