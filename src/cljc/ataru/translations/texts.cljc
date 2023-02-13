@@ -904,6 +904,15 @@
    :search-placeholder                                       {:fi "Hae.."
                                                               :sv "Sök.."
                                                               :en "Search.."}
+   :use                                                      {:fi "Käytä: "
+                                                              :sv "Använda: "
+                                                              :en "Use: "}
+   :or-use                                                   {:fi ". Tai käytä: "
+                                                              :sv ". Eller använda: "
+                                                              :en ". Or use: "}
+   :return-latest                                           {:fi "Palautettava viimeistään"
+                                                             :sv "Sista leveransdatum"
+                                                             :en "Deadline in"}
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
                                                               :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                               :en "Valintatieto tuotu valintarekisteristä"}
@@ -2355,7 +2364,10 @@
                             :en "Päätös maksettu (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
-                            :en "Multiple values"}})
+                            :en "Multiple values"}
+   :attachments-tab-info   {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
+                            :sv "SV: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
+                            :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}})
 
 (def tutu-decision-email
   {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"

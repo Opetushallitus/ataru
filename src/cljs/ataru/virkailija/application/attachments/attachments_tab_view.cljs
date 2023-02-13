@@ -11,10 +11,16 @@
 
 (defn- form-address
   [lang address]
-  (str (format-attachment-address @lang address)
-       (when (some? (:verkkosivu address))
-         (str "Tai käytä: "
-              (:verkkosivu address)))))
+  (let [formatted-address (format-attachment-address @lang address)
+        address-string (str formatted-address
+                            (when (and formatted-address (:verkkosivu address))
+                                   @(subscribe [:editor/virkailija-translation :or-use]))
+                            (when (and (nil? formatted-address) (:verkkosivu address))
+                                  @(subscribe [:editor/virkailija-translation :use])))]
+    [:span address-string
+     (when (:verkkosivu address)
+       [:a {:href (:verkkosivu address)}
+        (:verkkosivu address)])]))
 
 (defn- liite-info
   [lang liite]
@@ -22,8 +28,9 @@
    [:p.attachments-tab__content__hakukohde (form-hakukohde-name lang (:hakukohde liite))]
    [:ul
     [:li (form-address lang (:toimitusosoite liite))]
-    [:li (str "Palautettava viimeistään "
-              (@lang (:toimitusaika liite)))]]])
+    [:li (str @(subscribe [:editor/virkailija-translation :return-latest])
+                          " "
+                           (@lang (:toimitusaika liite)))]]])
 
 (defn attachments-tab-view []
   (let [liitteet @(subscribe [:virkailija-attachments/liitepyynnot-hakemuksen-hakutoiveille])
@@ -35,12 +42,11 @@
       [:div.attachments-tab__info
        [:div.attachments-tab__info__icon
         [:i.zmdi.zmdi-alert-circle-o]]
-       [:p.attachments-tab__info__text "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."]]
+       [:p.attachments-tab__info__text @(subscribe [:editor/virkailija-translation :attachments-tab-info])]]
       (doall
         (for [liitegroup (keys liitteet)]
           ^{:key liitegroup}
           [:div.attachments-tab__content
-           (prn (get liitteet liitegroup))
            [:h3.attachments-tab__content__type (@lang (:tyyppi-label (first (get liitteet liitegroup))))]
            (for [liite (get liitteet liitegroup)]
              ^{:key (get-in liite [:hakukohde :oid])}
