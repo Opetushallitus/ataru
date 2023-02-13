@@ -94,6 +94,22 @@
      (re-frame/subscribe [:state-query [:application :review :attachment-reviews]])])
   liitepyynnot-for-selected-hakukohteet)
 
+(defn- liite-with-hakukohde-is-in-answers
+  [attachment-answers liite]
+  (let [liitetyyppi (:tyyppi liite)
+        hakukohde (get-in liite [:hakukohde :oid])
+        matching-answers-by-tyyppi (->> attachment-answers
+                                        (filter #(string/includes? liitetyyppi (:attachment-type %))))
+        matching-answers-with-no-duplication (->> matching-answers-by-tyyppi
+                                                  (filter #(not (or (:original-followup %) (:original-question %)))))
+        matching-answers-with-duplication (set/difference matching-answers-by-tyyppi matching-answers-with-no-duplication)
+        answer-has-hakukohde (fn [answer]
+                               (or (= hakukohde (:duplikoitu-kysymys-hakukohde-oid answer))
+                                   (= hakukohde (:duplikoitu-followup-hakukohde-oid answer))))]
+    (or
+      (< 0 (count matching-answers-with-no-duplication))
+      (< 0 (count (filter #(answer-has-hakukohde %) matching-answers-with-duplication))))))
+
 (defn- to-liitteet-with-hakukohde
   [attachment-answers hakutoiveet liitekoodisto]
   (let [hakukohteen-tiedot-fn (fn [hk] {:oid (:oid hk)
@@ -106,31 +122,11 @@
                                            (map #(assoc % :hakukohde (hakukohteen-tiedot-fn hk)))))
         get-koodi-fn (fn [liite] (->> liitekoodisto
                                       (filter #(string/includes? (:tyyppi liite) (:uri %)))
-                                      (first)))
-        is-in-answers (fn [liite]
-                        (let [liitetyyppi (:tyyppi liite)
-                              hakukohde (get-in liite [:hakukohde :oid])
-                              matching-answers-by-tyyppi (->> attachment-answers
-                                                              (filter #(string/includes? liitetyyppi (:attachment-type %))))
-                              matching-answers-with-no-duplication (->> matching-answers-by-tyyppi
-                                                                        (filter #(not (or (:original-followup %) (:original-question %)))))
-                              matching-answers-with-duplication (set/difference matching-answers-by-tyyppi matching-answers-with-no-duplication)
-                              answer-has-hakukohde (fn [answer]
-                                                     (or (= hakukohde (:duplikoitu-kysymys-hakukohde-oid answer))
-                                                         (= hakukohde (:duplikoitu-followup-hakukohde-oid answer))))]
-                          (cond
-                            (< 0 (count matching-answers-with-no-duplication))
-                            true
-
-                            (< 0 (count (filter #(answer-has-hakukohde %) matching-answers-with-duplication)))
-                            true
-
-                            :else
-                            false)))]
+                                      (first)))]
     (->> hakutoiveet
          (map toive-to-liitteet-fn)
          flatten
-         (filter is-in-answers)
+         (filter #(liite-with-hakukohde-is-in-answers attachment-answers %))
          (map #(assoc % :tyyppi-label (get (get-koodi-fn %) :label (:tyyppi %))))
          (group-by :tyyppi))))
 
