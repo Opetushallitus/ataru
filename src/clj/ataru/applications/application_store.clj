@@ -988,11 +988,13 @@
                                        :liitto
                                        :seura])
 
+(def ^:private option-muu "21")
+
 (defn- get-urheilija-laji [answers-by-key lang {:keys [laji-dropdown-key muu-laji-key value-to-label]}]
   (let [dropdown-answer (-> answers-by-key
                             laji-dropdown-key
                             :value)
-        option-text (if (= dropdown-answer "21")
+        option-text (if (= dropdown-answer option-muu)
                       (-> answers-by-key
                           muu-laji-key
                           :value)
