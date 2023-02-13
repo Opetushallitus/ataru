@@ -97,18 +97,12 @@
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
         secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
-        submit-status          (subscribe [:state-query [:application :submit-status]])
-        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
-        feedback-hidden?       (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                  (subscribe [:application/demo?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
                            :div.application__form-content-area)]
         [root-element
-         {:aria-hidden (and (= :submitted @submit-status)
-                            (or (not @feedback-hidden?)
-                                (not @submit-notification-hidden?)))}
          (when-not (or @load-failure?
                      @form)
            [:div.application__form-loading-spinner
@@ -145,7 +139,8 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
-       {:role "document"}
+       {:role "alertdialog"
+        :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -195,7 +190,8 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           {:role "document"}
+           {:role "alertdialog"
+            :aria-modal "true"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
@@ -270,7 +266,7 @@
   []
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
         submit-details              (subscribe [:state-query [:application :submit-details]])
-        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
+        submit-notification-hidden? (r/atom false)
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                       (subscribe [:application/demo?])]
     (fn []
