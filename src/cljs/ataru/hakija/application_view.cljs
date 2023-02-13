@@ -139,7 +139,8 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
-       {:role "alertdialog"}
+       {:role "alertdialog"
+        :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -189,7 +190,8 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           {:role "alertdialog"}
+           {:role "alertdialog"
+            :aria-modal "true"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
