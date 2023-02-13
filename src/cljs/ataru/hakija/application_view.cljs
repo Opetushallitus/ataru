@@ -97,18 +97,12 @@
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
         secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
-        submit-status          (subscribe [:state-query [:application :submit-status]])
-        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
-        feedback-hidden?       (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                  (subscribe [:application/demo?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
                            :div.application__form-content-area)]
         [root-element
-         {:aria-hidden (and (= :submitted @submit-status)
-                            (or (not @feedback-hidden?)
-                                (not @submit-notification-hidden?)))}
          (when-not (or @load-failure?
                      @form)
            [:div.application__form-loading-spinner
@@ -270,7 +264,7 @@
   []
   (let [submit-status               (subscribe [:state-query [:application :submit-status]])
         submit-details              (subscribe [:state-query [:application :submit-details]])
-        submit-notification-hidden? (subscribe [:state-query [:application :submit-notification :hidden?]])
+        submit-notification-hidden? (r/atom false)
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                       (subscribe [:application/demo?])]
     (fn []
