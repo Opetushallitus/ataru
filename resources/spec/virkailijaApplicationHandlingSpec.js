@@ -465,6 +465,7 @@
           .then(done)
           .fail(done)
       })
+
       it('Successfully clears score for an application', (done) => {
         const scoreForVatanen = Math.floor(Math.random() * 50 + 1)
 
