@@ -1,8 +1,7 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs
   (:require [ataru.util :as util]
             [re-frame.core :as re-frame]
-            [clojure.string :as string]
-            [clojure.set :as set]))
+            [clojure.string :as string]))
 
 (defn attachment-preview-pages-to-display []
          (get (js->clj js/config) "attachment-preview-pages-to-display" 15))
@@ -102,7 +101,9 @@
                                         (filter #(string/includes? liitetyyppi (:attachment-type %))))
         matching-answers-with-no-duplication (->> matching-answers-by-tyyppi
                                                   (filter #(not (or (:original-followup %) (:original-question %)))))
-        matching-answers-with-duplication (set/difference matching-answers-by-tyyppi matching-answers-with-no-duplication)
+        difference (fn [answer]
+                     (not-any? #(= (:key %) (:key answer)) matching-answers-with-no-duplication))
+        matching-answers-with-duplication (filter difference matching-answers-by-tyyppi)
         answer-has-hakukohde (fn [answer]
                                (or (= hakukohde (:duplikoitu-kysymys-hakukohde-oid answer))
                                    (= hakukohde (:duplikoitu-followup-hakukohde-oid answer))))]
@@ -112,6 +113,7 @@
 
 (defn- to-liitteet-with-hakukohde
   [attachment-answers hakutoiveet liitekoodisto]
+
   (let [hakukohteen-tiedot-fn (fn [hk] {:oid (:oid hk)
                                         :name (:name hk)
                                         :tarjoaja (:tarjoaja-name hk)})
@@ -150,6 +152,18 @@
                                       (remove nil?))]
     answers-with-attachments))
 
+(defn liitepyynnot-hakemuksen-hakutoiveille
+  [[hakemuksen-hakutoiveet hakukohteet liitekoodisto answers form forms]]
+  (let [hakutoiveet (->> hakemuksen-hakutoiveet
+                         (map #(get hakukohteet %)))
+        fields-with-attachments (->> form
+                                     :key
+                                     (get forms)
+                                     :flat-form-fields
+                                     (filter #(true? (get-in % [:params :mail-attachment?]))))
+        answers-with-attachments (answers-with-attachments (vals answers) fields-with-attachments)]
+    (to-liitteet-with-hakukohde answers-with-attachments hakutoiveet liitekoodisto)))
+
 (re-frame/reg-sub
   :virkailija-attachments/liitepyynnot-hakemuksen-hakutoiveille
   (fn []
@@ -159,16 +173,7 @@
      (re-frame/subscribe [:application/selected-application-answers])
      (re-frame/subscribe [:application/selected-form])
      (re-frame/subscribe [:application/forms])])
-  (fn [[hakemuksen-hakutoiveet hakukohteet liitekoodisto answers form forms]]
-    (let [hakutoiveet (->> hakemuksen-hakutoiveet
-                           (map #(get hakukohteet %)))
-          fields-with-attachments (->> form
-                                       :key
-                                       (get forms)
-                                       :flat-form-fields
-                                       (filter #(true? (get-in % [:params :mail-attachment?]))))
-          answers-with-attachments (answers-with-attachments (vals answers) fields-with-attachments)]
-      (to-liitteet-with-hakukohde answers-with-attachments hakutoiveet liitekoodisto))))
+  liitepyynnot-hakemuksen-hakutoiveille)
 
 (re-frame/reg-sub
   :virkailija-attachments/selected-attachment-and-liitepyynto
