@@ -141,7 +141,8 @@
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
                                             [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache
                                              :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache
-                                             :valintalaskentakoostepalvelu-cas-client])
+                                             :valintalaskentakoostepalvelu-cas-client
+                                             :hakukohde-cache])
 
     :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))

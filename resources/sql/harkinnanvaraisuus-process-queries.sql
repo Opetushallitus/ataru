@@ -11,7 +11,7 @@ SELECT
     haku_oid
 FROM harkinnanvaraisuus_process
 WHERE last_checked is NULL AND skip_check = false
-ORDER BY application_id ASC LIMIT 1000;
+ORDER BY application_id ASC LIMIT 250;
 
 -- name: yesql-skip-checking-harkinnanvaraisuus-processes!
 UPDATE harkinnanvaraisuus_process
