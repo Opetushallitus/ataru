@@ -18,7 +18,8 @@
   [{:keys [value]}]
   (if (string? value)
     (not (clojure.string/blank? value))
-    (not (empty? value))))
+    (not (or (empty? value)
+             (every? clojure.string/blank? value)))))
 
 (defn- required-valinnainen-oppimaara
   [params]
