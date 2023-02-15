@@ -36,7 +36,9 @@
        (first)))
 
 (defn- harkinnanvarainen-email [application template-name]
-  (let [lang             (-> application :lang keyword)
+  (let [lang             (-> application
+                             (get :lang "fi")
+                             keyword)
         emails           [(extract-answer-value "email" application)
                           (extract-answer-value "guardian-email" application)
                           (extract-answer-value "guardian-email-secondary" application)]
@@ -156,12 +158,12 @@
 
 (defn recheck-harkinnanvaraisuus-step
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
-  (log/debug "Recheck harkinnanvaraisuus step starting")
+  (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
         processes (store/fetch-checked-harkinnanvaraisuus-processes (-> now
                                                                         (time/minus (time/days DAYS_UNTIL_NEXT_RECHECK))
                                                                         (time/with-time-at-start-of-day)
-                                                                        (time/plus (time/hours 20))))
+                                                                        (time/plus (time/hours 23))))
         next-activation (if (< (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
                           (time/with-time-at-start-of-day (time/plus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
                           (time/plus now (time/minutes 1)))
@@ -171,12 +173,17 @@
                                                #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
                                                processes-to-check)
         application-keys-to-check (map #(:key %) applications-with-harkinnanvaraisuus)
-        harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache valintalaskentakoostepalvelu-service application-keys-to-check)
+        harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
+                                                      (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache valintalaskentakoostepalvelu-service application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
     (handle-processess-to-save job-runner applications-to-save now)
-    (log/debug "Recheck harkinnanvaraisuus step finishing")
+    (log/info (str "Recheck harkinnanvaraisuus step finishing, processed "
+                   (count processes)
+                   " applications in "
+                   (- (coerce/to-long (time/now)) (coerce/to-long now))
+                   " ms"))
     {:transition      {:id :to-next :step :initial}
      :updated-state   {:last-run-long (coerce/to-long now)}
      :next-activation next-activation}))
