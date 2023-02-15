@@ -140,7 +140,8 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
        {:role "alertdialog"
-        :aria-modal "true"}
+        :aria-modal "true"
+        :aria-live  "assertive"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -191,7 +192,8 @@
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            {:role "alertdialog"
-            :aria-modal "true"}
+            :aria-modal "true"
+            :aria-live  "assertive"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
