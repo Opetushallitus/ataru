@@ -81,7 +81,7 @@
     (component/using
       (redis-cache/map->Cache
         {:name          "valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
-         :ttl           [3 TimeUnit/DAYS]
+         :ttl           [(get-in config [:cache :ttl-amounts :valintalaskentakoostepalvelu-hakukohde-valintalaskenta] 3) TimeUnit/DAYS]
          :refresh-after [1 TimeUnit/DAYS]
          :lock-timeout  [10000 TimeUnit/MILLISECONDS]})
       {:redis  :redis
@@ -92,7 +92,7 @@
       (two-layer-cache/map->Cache
         {:name                "in-memory-valintalaskentakoostepalvelu-hakukohde-valintalaskenta"
          :size                200000
-         :expire-after-access [3 TimeUnit/DAYS]
+         :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-valintalaskentakoostepalvelu-hakukohde-valintalaskenta] 3) TimeUnit/DAYS]
          :refresh-after       [1 TimeUnit/SECONDS]})
       {:redis-cache :valintalaskentakoostepalvelu-hakukohde-valintalaskenta-redis-cache})
 
@@ -100,8 +100,8 @@
     (component/using
       (redis-cache/map->Cache
         {:name          "valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus"
-         :ttl           [32 TimeUnit/HOURS]
-         :refresh-after [1 TimeUnit/DAYS]
+         :ttl           [(get-in config [:cache :ttl-amounts :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus] 2) TimeUnit/DAYS]
+         :refresh-after [2 TimeUnit/HOURS]
          :lock-timeout  [1 TimeUnit/MINUTES]})
       {:redis  :redis
        :loader :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache-loader})
@@ -141,7 +141,8 @@
                                             (koostepalvelu-service/new-valintalaskentakoostepalvelu-service)
                                             [:valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache
                                              :valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache
-                                             :valintalaskentakoostepalvelu-cas-client])
+                                             :valintalaskentakoostepalvelu-cas-client
+                                             :hakukohde-cache])
 
     :valintaperusteet-cas-client (cas/new-client "/valintaperusteet-service" "j_spring_cas_security_check"
                                                  "JSESSIONID" (-> config :public-config :virkailija-caller-id))
@@ -153,7 +154,7 @@
     :valintatapajono-redis-cache (component/using
                                   (redis-cache/map->Cache
                                    {:name          "valintatapajono"
-                                    :ttl           [3 TimeUnit/DAYS]
+                                    :ttl           [(get-in config [:cache :ttl-amounts :valintatapajono] 3) TimeUnit/DAYS]
                                     :refresh-after [1 TimeUnit/DAYS]
                                     :lock-timeout  [1 TimeUnit/SECONDS]})
                                   {:redis  :redis
@@ -163,7 +164,7 @@
                             (two-layer-cache/map->Cache
                              {:name                "in-memory-valintatapajono"
                               :size                10000
-                              :expire-after-access [3 TimeUnit/DAYS]
+                              :expire-after-access [(get-in config [:cache :ttl-amounts :in-memory-valintatapajono] 3) TimeUnit/DAYS]
                               :refresh-after       [12 TimeUnit/HOURS]})
                             {:redis-cache :valintatapajono-redis-cache})
 

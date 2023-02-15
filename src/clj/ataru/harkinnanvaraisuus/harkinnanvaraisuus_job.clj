@@ -13,10 +13,11 @@
             [ataru.background-job.job :as job]
             [ataru.harkinnanvaraisuus.harkinnanvaraisuus-email-job :as harkinnanvaraisuus-email-job]
             [ataru.db.db :as db]
+            [ataru.config.core :refer [config]]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]))
 
 (def MAXIMUM_PROCESSES_TO_HANDLE 1000)
-(def DAYS_UNTIL_NEXT_RECHECK 4)
+(def DAYS_UNTIL_NEXT_RECHECK (get-in config [:harkinnanvaraisuus :recheck-delay-in-days] 1))
 
 (def KOULUTUSTYYPIT_THAT_MUST_BE_CHECKED #{"koulutustyyppi_26" "koulutustyyppi_2"}) ; 26 = ammatillinen 2 = lukiokoulutus
 
@@ -35,7 +36,9 @@
        (first)))
 
 (defn- harkinnanvarainen-email [application template-name]
-  (let [lang             (-> application :lang keyword)
+  (let [lang             (-> application
+                             (get :lang "fi")
+                             keyword)
         emails           [(extract-answer-value "email" application)
                           (extract-answer-value "guardian-email" application)
                           (extract-answer-value "guardian-email-secondary" application)]
@@ -151,28 +154,36 @@
     (log/debug "Check harkinnanvaraisuus step finishing")
     {:transition      {:id :to-next :step :initial}
      :updated-state   {:last-run-long (coerce/to-long now)}
-     :next-activation (time/plus now (time/hours 1))}))
+     :next-activation (time/plus now (time/minutes 15))}))
 
 (defn recheck-harkinnanvaraisuus-step
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
-  (log/debug "Recheck harkinnanvaraisuus step starting")
+  (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
-        processes (store/fetch-checked-harkinnanvaraisuus-processes (time/minus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
+        processes (store/fetch-checked-harkinnanvaraisuus-processes (-> now
+                                                                        (time/minus (time/days DAYS_UNTIL_NEXT_RECHECK))
+                                                                        (time/with-time-at-start-of-day)
+                                                                        (time/plus (time/hours 23))))
         next-activation (if (< (count processes) MAXIMUM_PROCESSES_TO_HANDLE)
                           (time/with-time-at-start-of-day (time/plus now (time/days DAYS_UNTIL_NEXT_RECHECK)))
-                          (time/plus now (time/minutes 5)))
+                          (time/plus now (time/minutes 1)))
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
         applications-with-harkinnanvaraisuus (map
                                                #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
                                                processes-to-check)
         application-keys-to-check (map #(:key %) applications-with-harkinnanvaraisuus)
-        harkinnanvaraisuudet-from-koostepalvelu (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check)
+        harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
+                                                      (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache valintalaskentakoostepalvelu-service application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
     (handle-processess-to-save job-runner applications-to-save now)
-    (log/debug "Recheck harkinnanvaraisuus step finishing")
+    (log/info (str "Recheck harkinnanvaraisuus step finishing, processed "
+                   (count processes)
+                   " applications in "
+                   (- (coerce/to-long (time/now)) (coerce/to-long now))
+                   " ms"))
     {:transition      {:id :to-next :step :initial}
      :updated-state   {:last-run-long (coerce/to-long now)}
      :next-activation next-activation}))

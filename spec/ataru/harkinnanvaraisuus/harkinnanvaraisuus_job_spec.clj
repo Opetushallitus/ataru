@@ -52,7 +52,9 @@
   (opiskelijan-suoritukset [_ _ _] [])
   (opiskelijoiden-suoritukset [_ _ _] [])
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
-         (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "EI_HARKINNANVARAINEN")))
+         (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "EI_HARKINNANVARAINEN"))
+  (hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache [_ hakemus-oids]
+    (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "EI_HARKINNANVARAINEN")))
 
 (defrecord MockHarkinnanvarainenValintalaskentakoostepalveluService []
   ValintalaskentakoostepalveluService
@@ -61,6 +63,8 @@
   (opiskelijan-suoritukset [_ _ _] [])
   (opiskelijoiden-suoritukset [_ _ _] [])
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
+    (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "SURE_YKS_MAT_AI"))
+  (hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache [_ hakemus-oids]
     (to-hakemus-with-harkinnanvaraisuus (first hakemus-oids) "SURE_YKS_MAT_AI")))
 
 (def vlkp (->MockValintalaskentakoostepalveluService))
@@ -191,7 +195,7 @@
                               _ (init (create-application))
                               resp (check-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp})
                               next-activation (:next-activation resp)
-                              future (time/minus (time/plus now (time/hours 1)) (time/seconds 1))]
+                              future (time/minus (time/plus now (time/minutes 15)) (time/seconds 1))]
                           (should= true (time/after? next-activation future))
                           (should= false (time/after? next-activation (time/plus future (time/minutes 2)))))))
 
@@ -221,12 +225,12 @@
                           (should= false (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
-                    (it "sets next check 4 days in the future"
+                    (it "sets next check 1 days in the future"
                         (let [now (time/now)
                               ops (->MockOhjausparametritServiceWithFuture)
                               _ (init-with-check (create-application) (runner-with-deps vlkp))
                               resp (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp})
                               next-activation (:next-activation resp)
-                              future (time/minus (time/with-time-at-start-of-day (time/plus now (time/days 4))) (time/seconds 1))]
+                              future (time/minus (time/with-time-at-start-of-day (time/plus now (time/days 1))) (time/seconds 1))]
                           (should= true (time/after? next-activation future))
                           (should= false (time/after? next-activation (time/plus future (time/minutes 2))))))))
