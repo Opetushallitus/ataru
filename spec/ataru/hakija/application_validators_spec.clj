@@ -8,12 +8,12 @@
             [ataru.fixtures.hakukohde :as hakukohde]
             [ataru.fixtures.numeric-input :refer [numbers integers value-between]]
             [ataru.hakija.application-validators :as validator]
-            [speclj.core :refer :all]
+            [speclj.core :refer [describe tags it should should-not should=]]
             [clojure.core.async :as async]))
 
 (defn- validate!
   ([validator value answers-by-key field-descriptor]
-   (validate! (fn [haku-oid identifier] (async/go false))
+   (validate! (fn [_ _] (async/go false))
               validator
               value
               answers-by-key
@@ -36,6 +36,18 @@
 
   (it "should not allow string with only whitespace"
     (should-not (validate! :required " " {} nil)))
+
+  (it "should not allow empty vector"
+    (should-not (validate! :required [] {} nil)))
+
+  (it "should not allow vector with empty string"
+    (should-not (validate! :required [""] {} nil)))
+
+  (it "should not allow vector with empty strings"
+    (should-not (validate! :required ["" ""] {} nil)))
+
+  (it "should allow vector with at least one non-empty string"
+    (should (validate! :required ["" "f"] {} nil)))
 
   (it "should allow string with at least one character"
     (should (validate! :required "a" {} nil))))
