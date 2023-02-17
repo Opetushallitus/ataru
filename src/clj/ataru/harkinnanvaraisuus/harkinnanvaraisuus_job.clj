@@ -150,6 +150,12 @@
     (filter #(or (nil? (:person-oid %))
                  (contains? yksiloimattomat-persons (:person-oid %))) applications)))
 
+(defn- remove-yksiloimattomat-applications
+  [applications-not-yksiloity application-keys]
+  (remove (fn [application-key]
+              (boolean (first (filter #(= application-key (:key %)) applications-not-yksiloity))))
+          application-keys))
+
 (defn check-harkinnanvaraisuus-step
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service tarjonta-service person-service] :as job-runner}]
   (log/debug "Check harkinnanvaraisuus step starting")
@@ -172,10 +178,12 @@
         applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
         application-keys-to-check (->> applications-to-check
                                        (map :key)
-                                       (remove (fn [application-key] (boolean (first (filter #(= application-key (:key %)) applications-not-yksiloity)))))
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
                                        set)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
-                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service application-keys-to-check))
+                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                    valintalaskentakoostepalvelu-service
+                                                    application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
                                   (remove #(not (contains? application-keys-to-check (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
@@ -188,7 +196,7 @@
      :next-activation (time/plus now (time/minutes 15))}))
 
 (defn recheck-harkinnanvaraisuus-step
-  [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service] :as job-runner}]
+  [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service person-service] :as job-runner}]
   (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
         processes (store/fetch-checked-harkinnanvaraisuus-processes (-> now
@@ -203,13 +211,21 @@
         applications-with-harkinnanvaraisuus (map
                                                #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
                                                processes-to-check)
-        application-keys-to-check (map #(:key %) applications-with-harkinnanvaraisuus)
+        applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
+        application-keys-to-check (->> applications-with-harkinnanvaraisuus
+                                       (map :key)
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
+                                       set)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
-                                                      (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache valintalaskentakoostepalvelu-service application-keys-to-check))
+                                                      (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
+                                                        valintalaskentakoostepalvelu-service
+                                                        application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
+                                  (remove #(not (contains? application-keys-to-check (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
     (handle-processess-to-save job-runner applications-to-save now)
+    (handle-yksiloimattomat-processes applications-not-yksiloity now)
     (log/info (str "Recheck harkinnanvaraisuus step finishing, processed "
                    (count processes)
                    " applications in "

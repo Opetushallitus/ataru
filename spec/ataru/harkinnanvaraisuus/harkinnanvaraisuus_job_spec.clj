@@ -225,7 +225,7 @@
                     (it "skips recheck if haku is not open"
                         (init-with-check (create-application) (runner-with-deps vlkp))
                         (let [ops (->MockOhjausparametritServiceWithPast)]
-                          (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp})
+                          (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                           (should= true (:skip_check (get-stored-process)))))
 
                     (it "rechecks application and sets harkinnanvarainen due to result from valintalaskentakoostepalvelu-servie"
@@ -234,6 +234,14 @@
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
+                          (should= false (nil? (:last_checked process)))))
+
+                    (it "rechecks yksiloimaton application and does not use valintalaskentakoostepalvelu-servie"
+                        (init-with-check (assoc (create-application) :person-oid "1.2.3.4.5.6") (runner-with-deps harvlkp))
+                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps harvlkp))
+                        (let [process (get-stored-process)]
+                          (should= false (:skip_check process))
+                          (should= false (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
                     (it "rechecks harkinnanvarainen application and sets harkinnanvarainen false due to result from valintalaskentakoostepalvelu-servie"
@@ -247,11 +255,26 @@
                           (should= false (:harkinnanvarainen_only process))
                           (should= false (nil? (:last_checked process)))))
 
+                    (it "rechecks yksiloimaton harkinnanvarainen application and does not use valintalaskentakoostepalvelu-servie"
+                        (init-with-check
+                          (assoc (create-application [{:key       "base-education-2nd"
+                                                       :label     {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen" :sv ""}
+                                                       :value     "7"
+                                                       :fieldType "singleChoice"}])
+                                  :person-oid
+                                  "1.2.3.4.5.6")
+                          (runner-with-deps harvlkp))
+                        (recheck-harkinnanvaraisuus-step {} (runner-with-deps vlkp))
+                        (let [process (get-stored-process)]
+                          (should= false (:skip_check process))
+                          (should= true (:harkinnanvarainen_only process))
+                          (should= false (nil? (:last_checked process)))))
+
                     (it "sets next check 1 days in the future"
                         (let [now (time/now)
                               ops (->MockOhjausparametritServiceWithFuture)
                               _ (init-with-check (create-application) (runner-with-deps vlkp))
-                              resp (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp})
+                              resp (recheck-harkinnanvaraisuus-step {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
                               next-activation (:next-activation resp)
                               future (time/minus (time/with-time-at-start-of-day (time/plus now (time/days 1))) (time/seconds 1))]
                           (should= true (time/after? next-activation future))
