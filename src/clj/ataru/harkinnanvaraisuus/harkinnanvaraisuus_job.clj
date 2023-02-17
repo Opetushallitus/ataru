@@ -40,9 +40,14 @@
   (let [lang             (-> application
                              (get :lang "fi")
                              keyword)
-        emails           [(extract-answer-value "email" application)
-                          (extract-answer-value "guardian-email" application)
-                          (extract-answer-value "guardian-email-secondary" application)]
+        guardian-emails  (distinct
+                           (flatten
+                             (filter some?
+                                     [(extract-answer-value "guardian-email" application)
+                                      (extract-answer-value "guardian-email-secondary" application)])))
+        emails           (->> [(extract-answer-value "email" application)]
+                              (concat guardian-emails)
+                              (remove nil?))
         translations     (translations/get-translations lang)
         subject          (:email-vain-harkinnanvaraisessa-subject translations)
         body             (selmer/render-file template-name translations)]
