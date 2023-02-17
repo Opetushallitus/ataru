@@ -155,7 +155,17 @@
      (-> db
        (assoc :demo-requested true)
        (assoc :demo-lang demo-lang)
+       (assoc :demo-modal-open? true)
        (assoc :today now))}))
+
+(reg-event-fx
+ :application/close-demo-modal
+ [check-schema-interceptor (inject-cofx :now)]
+ (fn [{:keys [db]} [_]]
+   (prn "kutsutaanko?")
+   {:db
+    (-> db
+        (assoc :demo-modal-open? false))}))
 
 (defn- send-application-with-api
   [db method]

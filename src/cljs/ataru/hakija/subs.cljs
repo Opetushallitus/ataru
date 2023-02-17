@@ -296,6 +296,14 @@
     (demo/demo-open? db)))
 
 (re-frame/reg-sub
+ :application/demo-modal-open?
+  (fn [_ _]
+     [(re-frame/subscribe [:state-query [:demo-modal-open?]])
+      (re-frame/subscribe [:application/demo-open?])])
+ (fn [[demo-modal-open? demo-open?] _]
+   (and demo-open? demo-modal-open?)))
+
+(re-frame/reg-sub
   :application/demo-lang
   (fn [db]
     (let [value (get db :demo-lang)]

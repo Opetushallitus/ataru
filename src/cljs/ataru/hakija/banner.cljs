@@ -120,10 +120,11 @@
 (defn- preview-toggle
   []
   (let [toggle-fn     (fn [_] (dispatch [:state-update #(update-in % [:application :preview-enabled] not)]))
-        submit-status @(subscribe [:state-query [:application :submit-status]])
-        enabled?      @(subscribe [:state-query [:application :preview-enabled]])
-        lang          @(subscribe [:application/form-language])]
-    (when (not submit-status)
+        submit-status    @(subscribe [:state-query [:application :submit-status]])
+        enabled?         @(subscribe [:state-query [:application :preview-enabled]])
+        demo-modal-open? @(subscribe [:application/demo-modal-open?])
+        lang             @(subscribe [:application/form-language])]
+    (when (not (or demo-modal-open? submit-status))
       [:div.application__preview-toggle-container
        [:button.application__preview-link
         {:disabled (not enabled?)
@@ -170,9 +171,10 @@
 
 (defn status-controls []
   (let [can-apply? (subscribe [:application/can-apply?])
+        demo-modal-open? (subscribe [:application/demo-modal-open?])
         editing?   (subscribe [:state-query [:application :editing?]])]
     (fn []
-      (when (or @can-apply? @editing?)
+      (when (and (or @can-apply? @editing?) (not @demo-modal-open?))
         [:div.application__status-controls-container
          [:div.application__status-controls
           [send-button-or-placeholder]
