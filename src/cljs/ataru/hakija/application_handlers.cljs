@@ -162,7 +162,6 @@
  :application/close-demo-modal
  [check-schema-interceptor (inject-cofx :now)]
  (fn [{:keys [db]} [_]]
-   (prn "kutsutaanko?")
    {:db
     (-> db
         (assoc :demo-modal-open? false))}))
