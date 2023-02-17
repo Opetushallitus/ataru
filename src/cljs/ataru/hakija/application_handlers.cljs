@@ -158,13 +158,11 @@
        (assoc :demo-modal-open? true)
        (assoc :today now))}))
 
-(reg-event-fx
- :application/close-demo-modal
- [check-schema-interceptor (inject-cofx :now)]
- (fn [{:keys [db]} [_]]
-   {:db
-    (-> db
-        (assoc :demo-modal-open? false))}))
+(reg-event-db
+  :application/close-demo-modal
+  [check-schema-interceptor]
+  (fn [db _]
+    (assoc db :demo-modal-open? false)))
 
 (defn- send-application-with-api
   [db method]
