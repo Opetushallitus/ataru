@@ -466,6 +466,37 @@
           .fail(done)
       })
 
+      it('Successfully clears score for an application', (done) => {
+        const scoreForVatanen = Math.floor(Math.random() * 50 + 1)
+
+        setTextFieldValue(score, scoreForVatanen)
+          .then(clickElement(secondApplication))
+          .then(
+            wait.until(
+              applicationHeadingIs('Kuikeloinen, Seija Susanna — 020202A0202')
+            )
+          )
+          .then(clickElement(firstApplication))
+          .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
+          .then(() => {
+            expect(score().val()).to.equal(scoreForVatanen + '')
+          })
+          .then(setTextFieldValue(score, ''))
+          .then(clickElement(thirdApplication))
+          .then(
+            wait.until(
+              applicationHeadingIs('Tyrni, Johanna Irmeli — 020202A0202')
+            )
+          )
+          .then(clickElement(firstApplication))
+          .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
+          .then(() => {
+            expect(score().val()).to.equal('')
+          })
+          .then(done)
+          .fail(done)
+      })
+
       it('shows yksilointitieto for application', (done) => {
         clickElement(firstApplication)()
           .then(wait.until(applicationHeadingIs('Vatanen, Ari — 141196-933S')))
