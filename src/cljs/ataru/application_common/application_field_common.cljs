@@ -151,6 +151,11 @@
   (if (is-required-field? field-descriptor)
     (str " " (translations/get-hakija-translation :required lang)) ""))
 
+(defn virkailija-required-hint
+  [field-descriptor]
+  (if (is-required-field? field-descriptor)
+    " *" ""))
+
 (defn get-value [answer group-idx]
   (if (some? group-idx)
     (get-in answer [:value group-idx])
