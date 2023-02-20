@@ -7,7 +7,7 @@
 
 (ns ataru.virkailija.views.virkailija-readonly
   (:require [ataru.application-common.application-field-common :refer [answer-key
-                                                                       required-hint
+                                                                       virkailija-required-hint
                                                                        get-value
                                                                        render-paragraphs
                                                                        replace-with-option-label
@@ -110,8 +110,7 @@
 (defn- text-form-field-label [id field-descriptor lang]
   [:label.application__form-field-label
    [:span
-    (util/from-multi-lang (:label field-descriptor) lang)
-         [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]
+    (util/from-multi-lang (:label field-descriptor) lang) (virkailija-required-hint field-descriptor)
     [copy-link id :shared-use-warning? false :include? exclude-always-included]]])
 
 (defn text [field-descriptor application hakukohteet-and-ryhmat lang group-idx]
@@ -172,8 +171,7 @@
     [:div.application__form-field
      [:label.application__form-field-label
       [:span
-       (util/from-multi-lang (:label field-descriptor) lang)
-            [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]
+       (util/from-multi-lang (:label field-descriptor) lang) (virkailija-required-hint field-descriptor)
        [copy-link id :shared-use-warning? false :include? exclude-always-included]]]
      [attachment-list values]]))
 
@@ -216,15 +214,13 @@
                                   (apply map vector))]
     [:div.application__form-field
      [:label.application__form-field-label
-      [:span (util/from-multi-lang (:label field-descriptor) lang)
-           [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]]
+      [:span (util/from-multi-lang (:label field-descriptor) lang) (virkailija-required-hint field-descriptor)]]
      [:table.application__readonly-adjacent
       [:thead
        (into [:tr]
              (for [child children]
                [:th.application__readonly-adjacent--header
-                [:span (util/from-multi-lang (:label child) lang)
-                     [:span.application__form-field-label.application__form-field-label--required (required-hint field-descriptor lang)]]]))]
+                [:span (util/from-multi-lang (:label child) lang) (virkailija-required-hint field-descriptor)]]))]
       [fieldset-answer-table fieldset-answers]]]))
 
 (defn- selectable [content application hakukohteet-and-ryhmat lang question-group-idx]
@@ -368,8 +364,7 @@
      {:class (when @highlight-field? "highlighted")
       :id    id}
      [:label.application__form-field-label
-      [:span (util/from-multi-lang (:label field) lang)
-           [:span.application__form-field-label.application__form-field-label--required (required-hint field lang)]]]
+      [:span (util/from-multi-lang (:label field) lang) (virkailija-required-hint field)]]
      [:div.application__form-field-value
       [:p.application__text-field-paragraph
        (string/join ", " values)]]]))
