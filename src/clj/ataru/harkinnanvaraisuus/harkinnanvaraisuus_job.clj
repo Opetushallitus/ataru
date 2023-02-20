@@ -183,14 +183,14 @@
         applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
         application-keys-to-check (->> applications-to-check
                                        (map :key)
-                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
-                                       set)
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity))
+        application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
                                                   (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                     valintalaskentakoostepalvelu-service
                                                     application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
-                                  (remove #(not (contains? application-keys-to-check (:key %))))
+                                  (remove #(not (contains? application-keys-to-check-set (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
@@ -219,14 +219,14 @@
         applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
         application-keys-to-check (->> applications-with-harkinnanvaraisuus
                                        (map :key)
-                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
-                                       set)
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity))
+        application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
                                                       (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
                                                         valintalaskentakoostepalvelu-service
                                                         application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
-                                  (remove #(not (contains? application-keys-to-check (:key %))))
+                                  (remove #(not (contains? application-keys-to-check-set (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
     (handle-processess-to-save job-runner applications-to-save now)
