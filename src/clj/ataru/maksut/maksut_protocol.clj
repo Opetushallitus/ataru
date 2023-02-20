@@ -7,4 +7,6 @@
 
   (list-lasku-statuses [this keys])
 
-  (list-laskut-by-application-key [this application-key]))
+  (list-laskut-by-application-key [this application-key])
+
+  (download-receipt [this order-id]))

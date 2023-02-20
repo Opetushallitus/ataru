@@ -79,7 +79,16 @@
                        @(subscribe [:editor/virkailija-translation :tutu-payment-unknown])))]
     [:<>
      [:div header]
-     [:div (when icon [icon]) (str label)]
+     [:div
+      (when icon [icon])
+      (str label)
+      (when (= :paid (keyword (:status payment)))
+        [:a
+         {:href (str "/lomake-editori/api/maksut/kuitti/" (:order_id payment))
+          :download (str (:order_id payment) ".html")
+          :title @(subscribe [:editor/virkailija-translation :tutu-payment-download-receipt])}
+         [:i.application-handling__tutu-receipt-icon.zmdi.zmdi-download.zmdi-hc-lg]])
+      ]
      ]
     ))
 

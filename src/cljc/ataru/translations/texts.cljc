@@ -2132,6 +2132,9 @@
    :tutu-amount-input-placeholder                            {:fi "Anna summa muodossa 123 tai 123.00"
                                                               :sv ""
                                                               :en ""}
+   :tutu-payment-download-receipt                            {:fi "Lataa kuitti"
+                                                              :sv "Lataa kuitti"
+                                                              :en "Lataa kuitti"}
    :prevent-submission                                       {:fi "Valinta estää hakemuksen lähettämisen"
                                                               :sv "SV: Valinta estää hakemuksen lähettämisen"
                                                               :en "EN: Valinta estää hakemuksen lähettämisen"}

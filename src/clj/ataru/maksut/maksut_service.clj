@@ -39,6 +39,11 @@
                                          "status: " (:status result)
                                          "response body: " (:body result))))))
 
+(defn- receipt-get [maksut-cas-client order-id]
+  (let [url (url/resolve-url :maksut-service.virkailija-receipt order-id)
+        result (cas/cas-authenticated-get-as-stream maksut-cas-client url)]
+    (when (= (:status result) 200)
+      {:body (:body result)})))
 
 (defn- list-statuses [maksut-cas-client keys]
   (let [url    (url/resolve-url :maksut-service.background-lasku-status)
@@ -64,10 +69,13 @@
                   (assoc lasku :index 2)))
 
   (list-laskut-by-application-key [this application-key]
-      (list-get maksut-cas-client application-key))
+    (list-get maksut-cas-client application-key))
 
   (list-lasku-statuses [this keys]
-    (list-statuses maksut-cas-client keys)))
+    (list-statuses maksut-cas-client keys))
+
+  (download-receipt [this order-id]
+    (receipt-get maksut-cas-client order-id)))
 
 (defn new-maksut-service []
   (map->MaksutService {}))
