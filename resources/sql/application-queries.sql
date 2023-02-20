@@ -808,7 +808,8 @@ SELECT
                   application_id = a.id),
             a.lang) AS "lang",
   a.email,
-  a.created_time,
+  a.created_time, --uusimman hakemusversion luontihetki
+  a.submitted, --hakemuksen alkuperäinen jättöhetki
   (SELECT content
    FROM answers_as_content
    WHERE application_id = a.id) AS content,
