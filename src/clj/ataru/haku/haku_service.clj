@@ -63,6 +63,14 @@
     (t/after? now hkp)
     false))
 
+(defn harkinnanvarainen-valinta-paattynyt?
+  [ohjausparametrit-service now haku-oid]
+  (if-let [hvvptp (some-> (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid)
+                    (get-in [:PH_HVVPTP :date])
+                    c/from-long)]
+    (t/after? now hvvptp)
+    false))
+
 (defn- remove-if-hakukierros-paattynyt
   [ohjausparametrit-service show-hakukierros-paattynyt? rows]
   (if show-hakukierros-paattynyt?

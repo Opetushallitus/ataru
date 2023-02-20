@@ -354,7 +354,7 @@
 
       (selection-limit/permanent-select-on-store-application key new-application selection-id form connection)
 
-      id)))
+      {:id id :key key})))
 
 (defn- form->form-id [{:keys [form] :as application}]
   (assoc (dissoc application :form) :form-id form))
@@ -422,7 +422,7 @@
                                    session
                                    (assoc-in session [:identity :oid] virkailija-oid))
                       :id        {:applicationOid key}})
-      id)))
+      {:id id :key key})))
 
 (defn- str->name-query-value
   [name]
@@ -608,6 +608,9 @@
 
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db queries/yesql-get-application-by-id {:application_id application-id}))))
+
+(defn get-not-inactivated-application [application-id]
+  (unwrap-application (first (exec-db :db queries/yesql-get-not-inactivated-application-by-id {:application_id application-id}))))
 
 (defn get-latest-application-by-key-in-tx
   [connection application-key]

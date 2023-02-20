@@ -33,11 +33,12 @@
     (throw (Exception. (str "Incorrect fixture data, application should refer the given form"))))
   (let [audit-logger       (audit-log/new-dummy-audit-logger)
         form-id            (init-db-form-fixture form-fixture)
-        application-id     (application-store/add-application
+        application-id     (-> (application-store/add-application
                                application-fixture
                                (:hakukohde application-fixture)
                                form-fixture
                                {} audit-logger)
+                               :id)
         stored-application (application-store/get-application application-id)]
     (doseq [{hakukohde :hakukohde review-requirement :review-requirement review-state :review-state} application-reviews-fixture]
       (application-store/save-application-hakukohde-review
