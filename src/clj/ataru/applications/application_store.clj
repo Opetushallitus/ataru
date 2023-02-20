@@ -950,7 +950,7 @@
     {:oid                         key
      :personOid                   person_oid
      :createdTime                 (.print JodaFormatter created_time) ; viimeisimmän hakemusversion luontihetki
-     ::hakemusFirstSubmittedTime  (.print JodaFormatter submitted) ; ensimmäisen hakemusversion luontihetki
+     :hakemusFirstSubmittedTime  (.print JodaFormatter submitted) ; ensimmäisen hakemusversion luontihetki
      :applicationSystemId         haku
      :kieli                       lang
      :hakukohteet                 hakukohde
