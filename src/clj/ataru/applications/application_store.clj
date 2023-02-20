@@ -609,6 +609,9 @@
 (defn get-application [application-id]
   (unwrap-application (first (exec-db :db queries/yesql-get-application-by-id {:application_id application-id}))))
 
+(defn get-not-inactivated-application [application-id]
+  (unwrap-application (first (exec-db :db queries/yesql-get-not-inactivated-application-by-id {:application_id application-id}))))
+
 (defn get-latest-application-by-key-in-tx
   [connection application-key]
   (-> (queries/yesql-get-latest-application-by-key

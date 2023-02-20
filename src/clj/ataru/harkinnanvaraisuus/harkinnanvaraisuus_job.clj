@@ -169,7 +169,8 @@
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
         applications-to-check (->> processes-to-check
-                                   (map #(application-store/get-application (:application_id %)))
+                                   (map #(application-store/get-not-inactivated-application (:application_id %)))
+                                   (filter some?)
                                    (filter #(not (hutil/can-skip-recheck-for-yks-ma-ai %)))
                                    (filter #(not (can-skip-checking-application-due-to-hakukohteet tarjonta-service %))))
         application-ids-to-check (->> applications-to-check
@@ -183,14 +184,14 @@
         applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
         application-keys-to-check (->> applications-to-check
                                        (map :key)
-                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
-                                       set)
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity))
+        application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
                                                   (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
                                                     valintalaskentakoostepalvelu-service
                                                     application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
-                                  (remove #(not (contains? application-keys-to-check (:key %))))
+                                  (remove #(not (contains? application-keys-to-check-set (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
     (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
@@ -213,22 +214,34 @@
                           (time/plus now (time/minutes 1)))
         processids-where-check-can-be-skipped (processids-where-check-can-be-skipped-due-to-haku ohjausparametrit-service processes now)
         processes-to-check (filter #(not (contains? processids-where-check-can-be-skipped (:application_id %))) processes)
-        applications-with-harkinnanvaraisuus (map
-                                               #(assoc (application-store/get-application (:application_id %)) :harkinnanvarainen-only? (:harkinnanvarainen_only %))
-                                               processes-to-check)
+        applications-to-check (->> processes-to-check
+                                   (map #(application-store/get-not-inactivated-application (:application_id %)))
+                                   (filter some?))
+        application-ids-to-check (->> applications-to-check
+                                      (map #(:id %))
+                                      (set))
+        processes-that-can-be-skipped (->> processes
+                                           (filter #(not (contains? application-ids-to-check (:application_id %))))
+                                           (map #(:application_id %)))
+        assoc-harkinnanvarainen-fn (fn [application]
+                                     (let [matching-process (->> processes-to-check
+                                                                 (filter #(= (:application_id %) (:id application)))
+                                                                 first)]
+                                       (assoc application :harkinnanvarainen-only? (:harkinnanvarainen_only matching-process))))
+        applications-with-harkinnanvaraisuus (map assoc-harkinnanvarainen-fn applications-to-check)
         applications-not-yksiloity (yksiloimattomat-applications person-service applications-with-harkinnanvaraisuus)
         application-keys-to-check (->> applications-with-harkinnanvaraisuus
                                        (map :key)
-                                       (remove-yksiloimattomat-applications applications-not-yksiloity)
-                                       set)
+                                       (remove-yksiloimattomat-applications applications-not-yksiloity))
+        application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
                                                       (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
                                                         valintalaskentakoostepalvelu-service
                                                         application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
-                                  (remove #(not (contains? application-keys-to-check (:key %))))
+                                  (remove #(not (contains? application-keys-to-check-set (:key %))))
                                   (map #(assoc-valintalaskentakoostepalvelu-harkinnainen-only % harkinnanvaraisuudet-from-koostepalvelu)))]
-    (mark-do-not-check-processes (vec processids-where-check-can-be-skipped))
+    (mark-do-not-check-processes processes-that-can-be-skipped)
     (handle-processess-to-save job-runner applications-to-save now)
     (handle-yksiloimattomat-processes applications-not-yksiloity now)
     (log/info (str "Recheck harkinnanvaraisuus step finishing, processed "

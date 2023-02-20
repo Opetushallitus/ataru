@@ -259,6 +259,30 @@ JOIN LATERAL (SELECT secret
               LIMIT 1) AS las ON true
 WHERE a.id = :application_id;
 
+-- name: yesql-get-not-inactivated-application-by-id
+SELECT
+    a.id,
+    a.key,
+    a.lang,
+    a.form_id AS form,
+    a.created_time,
+    a.submitted,
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    a.haku,
+    a.hakukohde,
+    a.person_oid,
+    las.secret
+FROM applications a
+JOIN LATERAL (SELECT secret
+              FROM application_secrets
+              WHERE application_key = a.key
+              ORDER BY id DESC
+    LIMIT 1) AS las ON true
+LEFT JOIN application_reviews AS ar ON ar.application_key = a.key
+WHERE a.id = :application_id AND ar.state <> 'inactivated';
+
 -- name: yesql-has-ssn-applied
 SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                               JOIN application_reviews
