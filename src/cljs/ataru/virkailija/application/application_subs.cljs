@@ -1153,3 +1153,8 @@
     (let [user-info (-> db :editor :user-info)]
       (or opinto-ohjaaja-or-admin?
         (some (fn [org] (some #(= "valinnat-valilehti" % ) (:rights org))) (:organizations user-info))))))
+
+(re-frame/reg-sub
+  :application/forms
+  (fn forms [db _]
+    (get-in db [:forms])))

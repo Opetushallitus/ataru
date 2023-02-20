@@ -54,25 +54,32 @@
   (when (:liitteet-onko-sama-toimitusaika? hakukohde)
     (:liitteiden-toimitusaika hakukohde)))
 
-(defn- format-address
+(defn format-attachment-address
   [lang address]
   (let [street-address (util/from-multi-lang (:osoite address) lang)
         postal-code    (:koodiUri (:postinumero address))
-        post-office    (util/from-multi-lang (:nimi (:postinumero address)) lang)
-        website        (:verkkosivu address)]
+        post-office    (util/from-multi-lang (:nimi (:postinumero address)) lang)]
     (when (not-any? nil? [street-address postal-code post-office])
       (str
         (lang (:toimitusosoite texts/translation-mapping)) ": "
         (format-street-address street-address) ", "
         (format-postal-code postal-code) " "
-        (format-post-office post-office)
+        (format-post-office post-office)))))
+
+(defn- format-address-with-website
+  [lang address]
+  (let [formatted-address    (format-attachment-address lang address)
+        website        (:verkkosivu address)]
+    (when (some? formatted-address)
+      (str
+        formatted-address
         (when website
           (str "\n\n" (lang (:verkkosivu texts/translation-mapping)) ": " (format-website website)))))))
 
 (defn attachment-address
   [lang attachment hakukohde]
   (let [address (or (hakukohde-common-address hakukohde) (:toimitusosoite attachment))]
-    (format-address lang address)))
+    (format-address-with-website lang address)))
 
 (defn attachment-address-with-hakukohde
   [lang attachment hakukohde]
