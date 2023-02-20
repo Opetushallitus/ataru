@@ -140,8 +140,7 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
        {:role "alertdialog"
-        :aria-modal "true"
-        :aria-live  "assertive"}
+        :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -159,6 +158,8 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-payment
        [:div.application__submitted-submit-payment-inner
+        {:role "alertdialog"
+         :aria-modal "true"}
         [:div.application__submitted-submit-payment-icon
           [icons/icon-check]]
           [:h1.application__submitted-submit-notification-heading
@@ -192,8 +193,7 @@
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            {:role "alertdialog"
-            :aria-modal "true"
-            :aria-live  "assertive"}
+            :aria-modal "true"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
@@ -272,15 +272,17 @@
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                       (subscribe [:application/demo?])]
     (fn []
-      (when (and (= :submitted @submit-status)
-                 (or (not @feedback-hidden?)
-                     (not @submit-notification-hidden?)))
-        [:div.application__submitted-overlay
-         (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
-         (when (not @submit-notification-hidden?)
-               (if @submit-details
-                   [submit-notification-payment submit-notification-hidden? @submit-details]
-                   [submit-notification submit-notification-hidden? demo?]))]))))
+      [:div.application__submitted-overlay-wrapper
+       {:aria-live "assertive"}
+       (when (and (= :submitted @submit-status)
+                  (or (not @feedback-hidden?)
+                      (not @submit-notification-hidden?)))
+         [:div.application__submitted-overlay
+          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
+          (when (not @submit-notification-hidden?)
+            (if @submit-details
+              [submit-notification-payment submit-notification-hidden? @submit-details]
+              [submit-notification submit-notification-hidden? demo?]))])])))
 
 (defn- modal-info-element-overlay-inner
   [field]
