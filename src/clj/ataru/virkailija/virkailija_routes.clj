@@ -476,7 +476,7 @@
               hakuvuodet (->> (:hakuajat haku)
                               (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
                               distinct)
-              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter-opiskelija)
+              luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
               linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
               aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
               opiskelijat (map #(suoritus-service/opiskelija suoritus-service % hakuvuodet luokkatasot) aliases)]
