@@ -7,12 +7,9 @@
 
 
 (def urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key "8466feca-1993-4af3-b82c-59003ca2fd63")
-(def urheilijan-lisakysymykset-laji-seura-liitto-key "98951abd-fdd5-46a0-8427-78fe9706d286")
 
 (def urheilija-muu-laji-label {:fi "Muu, mikä?", :sv "Annan, vad?"})
 (def urheilija-paalaji-folloup-label {:fi "Päälaji", :sv "Huvudgren"})
-(def urheilija-seura-label {:fi "Seura" :sv "Förening"})
-(def urheilija-liitto-label {:fi "Lajiliitto" :sv "Grenförbund"})
 
 (def lukio-kaksoistutkinto-wrapper-label {:fi "Ammatilliset opinnot lukiokoulutuksen ohella",
                                           :sv "Yrkesinriktade studier vid sidan av gymnasieutbildningen"})
@@ -55,7 +52,7 @@
      :valmennusryhma_piirijoukkue "urheilija-2nd-valmennus-piirijoukkue"
      :valmennusryhma_maajoukkue   "urheilija-2nd-valmennus-maajoukkue"
      :valmennusryhmatParent       "84cd8829-ee39-437f-b730-9d68f0f07555"
-     :paalajiSeuraLiittoParent    "urheilija-2nd-lajivalinta-dropdown"
+     :paalaji-dropdown            "urheilija-2nd-lajivalinta-dropdown"
      :seura                       "urheilija-2nd-seura"
      :liitto                      "urheilija-2nd-liitto"}))
 
@@ -123,7 +120,7 @@
                            (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
                            first
                            :children
-                           (filter #(= urheilijan-lisakysymykset-laji-seura-liitto-key (:id %)))
+                           (filter #(= (:paalaji-dropdown urheilija-keys) (:id %)))
                            first
                            :options)
          laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
@@ -143,6 +140,6 @@
       :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
-      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalajiSeuraLiittoParent urheilija-keys))
+      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalaji-dropdown urheilija-keys))
                                                     :muu-laji-key      (keyword muu-laji-key)
                                                     :value-to-label    laji-value-to-label}})))
