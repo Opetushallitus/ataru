@@ -26,7 +26,7 @@
   [application]
   (assoc application :harkinnanvarainen-only? (hutil/does-application-belong-to-only-harkinnanvarainen-valinta? application)))
 
-(def sure-harkinnanvarainen-only-reasons
+(def valintalaskentakoostepalvelu-harkinnanvarainen-only-reasons
   (-> [(:sure-ei-paattotodistusta hartyp/harkinnanvaraisuus-reasons) (:sure-yks-mat-ai hartyp/harkinnanvaraisuus-reasons)
        (:ataru-ei-paattotodistusta hartyp/harkinnanvaraisuus-reasons) (:ataru-yks-mat-ai hartyp/harkinnanvaraisuus-reasons)
        (:ataru-ulkomailla-opiskelu hartyp/harkinnanvaraisuus-reasons)]
@@ -79,7 +79,7 @@
   (let [application-key (:key application-with-harkinnanvaraisuus)
         has-only-sure-harkinnanvarainen? (->> (get-in applications-from-valintalaskentakoostepalvelu [application-key :hakutoiveet])
                                               (map #(:harkinnanvaraisuudenSyy %))
-                                              (some #(contains? sure-harkinnanvarainen-only-reasons %)))]
+                                              (some #(contains? valintalaskentakoostepalvelu-harkinnanvarainen-only-reasons %)))]
     (assoc application-with-harkinnanvaraisuus :sure-harkinnanvarainen-only? (boolean has-only-sure-harkinnanvarainen?))))
 
 (defn- inform-about-harkinnanvarainen
