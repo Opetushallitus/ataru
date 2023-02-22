@@ -27,7 +27,9 @@
   (assoc application :harkinnanvarainen-only? (hutil/does-application-belong-to-only-harkinnanvarainen-valinta? application)))
 
 (def sure-harkinnanvarainen-only-reasons
-  (-> [(:sure-ei-paattotodistusta hartyp/harkinnanvaraisuus-reasons) (:sure-yks-mat-ai hartyp/harkinnanvaraisuus-reasons)]
+  (-> [(:sure-ei-paattotodistusta hartyp/harkinnanvaraisuus-reasons) (:sure-yks-mat-ai hartyp/harkinnanvaraisuus-reasons)
+       (:ataru-ei-paattotodistusta hartyp/harkinnanvaraisuus-reasons) (:ataru-yks-mat-ai hartyp/harkinnanvaraisuus-reasons)
+       (:ataru-ulkomailla-opiskelu hartyp/harkinnanvaraisuus-reasons)]
       set))
 
 (defn- extract-answer-value [answer-key-str application]
