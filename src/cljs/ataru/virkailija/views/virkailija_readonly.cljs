@@ -228,7 +228,7 @@
    [:div.application__form-field-label--selectable
     [:div.application__form-field-label
      [:span
-      (util/from-multi-lang (:label content) lang)
+      (util/from-multi-lang (:label content) lang) (virkailija-required-hint content)
       [copy-link (:id content) :shared-use-warning? false :include? exclude-always-included]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
