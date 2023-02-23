@@ -12,4 +12,5 @@
                          {:uri "kunta" :version 1 :title "Kunta"}
                          {:uri "AmmatillisetOPSperustaiset" :version 1 :title "Ammatilliset tutkinnot"}
                          {:uri "oppilaitostyyppi" :version 1 :title "Ammatilliset oppilaitokset"}
+                         {:uri "pohjakoulutusjatkuvahaku2023" :version 1 :title "Pohjakoulutus (jatkuva haku) 2023"}
                          {:uri "opiskelukieli" :version 1 :title "Opiskelukieli"}])
