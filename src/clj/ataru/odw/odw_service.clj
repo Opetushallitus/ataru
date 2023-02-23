@@ -38,7 +38,7 @@
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                   (into {}))
         persons (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-        yksiloimattomat-henkilo-oidit (set (map :oidHenkilo (filter (fn [person] (or (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
+        yksiloimattomat-henkilo-oidit (set (map :oidHenkilo (filter (fn [person] (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
         toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
         toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)))
