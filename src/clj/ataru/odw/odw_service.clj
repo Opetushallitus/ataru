@@ -38,7 +38,7 @@
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                   (into {}))
         persons (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-        yksiloimattomat-persons (set (map :oidHenkilo (filter (fn [person] (or (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
+        yksiloimattomat-henkilo-oidit (set (map :oidHenkilo (filter (fn [person] (or (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
         toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
         toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)))
@@ -46,12 +46,12 @@
                                         (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         {})
         kooste-data-toinen-aste (into {} (map (fn [hakuOid] (let [hakemus-oids (vec (doall (map :key (filter (fn [application] (= hakuOid (:haku application)))
-                                                                                                             (yksiloidyt-hakemukset active-applications yksiloimattomat-persons)))))]
-                                                              (when (not-empty yksiloimattomat-persons) (log/info (str "Ei haeta koosteDataa yksilöimättömille hakijoille: " yksiloimattomat-persons)))
+                                                                                                             (yksiloidyt-hakemukset active-applications yksiloimattomat-henkilo-oidit)))))]
+                                                              (when (not-empty yksiloimattomat-henkilo-oidit) (log/info (str "ODW Ei haeta koosteDataa yksilöimättömille hakijoille: " yksiloimattomat-henkilo-oidit)))
                                                               (if (not-empty hakemus-oids)
-                                                                (do (log/info "Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
+                                                                (do (log/info "ODW Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                                                     (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid hakemus-oids))
-                                                                (do (log/warn "Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
+                                                                (do (log/warn "ODW Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
                                                                     {}))))
                                                  toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
