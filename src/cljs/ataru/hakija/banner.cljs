@@ -22,6 +22,7 @@
     (fn []
       (when (seq (:invalid-fields @valid-status))
         [:div.application__invalid-field-status
+         {:role "alertdialog"}
          [:span.application__invalid-field-status-title
           {:on-click toggle-show-details}
           (first (translations/get-hakija-translation :check-answers @lang))
@@ -50,17 +51,21 @@
     (fn []
       (match [@submit-status @virkailija-secret]
              [:submitting _]
-             [:div.application__sent-indicator (translations/get-hakija-translation :application-sending @lang)]
+             [:div.application__sent-indicator
+              {:role "alert"}
+              (translations/get-hakija-translation :application-sending @lang)]
 
              [:submitted (_ :guard #(nil? %))]
              (if @demo?
                [:div.application__sent-indicator.animated.fadeIn
+                {:role "alert"}
                 (translations/get-hakija-translation :application-confirmation-demo @lang)]
                (when (-> @answers
                          (get-in [:email :value])
                          (string/blank?)
                          not)
                  [:div.application__sent-indicator.animated.fadeIn
+                  {:role "alert"}
                   (translations/get-hakija-translation :application-confirmation @lang)]))
 
              :else nil))))
@@ -96,6 +101,7 @@
         demo?                 @(subscribe [:application/demo?])]
     (match submit-status
       :submitted [:div.application__sent-placeholder.animated.fadeIn
+                  {:role "alert"}
                   [:i.zmdi.zmdi-check]
                   [:span.application__sent-placeholder-text
                    (translations/get-hakija-translation
@@ -204,6 +210,7 @@
 (defn banner []
   (let [form? @(subscribe [:application/form])]
     [:div.application__banner-container
+     {:aria-live "polite"}
      [virkailija-fill-ribbon]
      [:div.application__top-banner-container
       [:div.application-top-banner
