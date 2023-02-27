@@ -103,6 +103,7 @@
                            :div.application__form-content-area.application__form-content-area--demo
                            :div.application__form-content-area)]
         [root-element
+         {:aria-flowto "application-submit-notification application-feedback-form"}
          (when-not (or @load-failure?
                      @form)
            [:div.application__form-loading-spinner
@@ -140,6 +141,7 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
        {:role "alertdialog"
+        :id "application-submit-notification"
         :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
@@ -159,6 +161,7 @@
       [:div.application__submitted-submit-payment
        [:div.application__submitted-submit-payment-inner
         {:role "alertdialog"
+         :id "application-submit-notification"
          :aria-modal "true"}
         [:div.application__submitted-submit-payment-icon
           [icons/icon-check]]
@@ -193,6 +196,7 @@
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
            {:role "alertdialog"
+            :id "application-feedback-form"
             :aria-modal "true"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
