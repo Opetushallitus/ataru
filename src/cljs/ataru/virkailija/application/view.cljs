@@ -20,6 +20,7 @@
             [re-frame.core :refer [subscribe dispatch]]
             [ataru.virkailija.application.application-review-view :as application-review]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.grades-view :refer [grades]]
+            [ataru.virkailija.application.attachments.attachments-tab-view :refer [attachments-tab-view]]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view :refer [valinnat]]))
 
 (defn excel-download-link
@@ -212,6 +213,10 @@
             :disabled (= "application" @selected-application-tab)}
            @(subscribe [:editor/virkailija-translation :application])]
           [:button
+           {:on-click #(dispatch [:application/select-application-tab "attachments"])
+            :disabled (= "attachments" @selected-application-tab)}
+           @(subscribe [:editor/virkailija-translation :attachments])]
+          [:button
            {:on-click #(dispatch [:application/select-application-tab "grades"])
             :disabled (= "grades" @selected-application-tab)}
            @(subscribe [:editor/virkailija-translation :grades])]
@@ -223,6 +228,9 @@
        (cond
          (or (not @toisen-asteen-yhteishaku?) (= "application" @selected-application-tab))
          [application-review/application-review-area]
+
+         (= "attachments" @selected-application-tab)
+         [attachments-tab-view]
 
          (= "grades" @selected-application-tab)
          [grades]
