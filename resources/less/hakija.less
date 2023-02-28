@@ -1998,8 +1998,8 @@ th.application__readonly-adjacent--header {
   right: 0;
   position: fixed;
   display: flex;
-  flex-flow: column-reverse nowrap;
-  justify-content: space-between;
+  flex-flow: column nowrap;
+  justify-content: flex-end;
 }
 
 .application__submitted-submit-notification {
@@ -2161,6 +2161,9 @@ th.application__readonly-adjacent--header {
   right: 20px;
   color: @gray-of-the-beast;
   font-size: 1.5em;
+  &:focus {
+    outline: auto;
+  }
 }
 
 .application-feedback-form__header {
@@ -2243,6 +2246,9 @@ th.application__readonly-adjacent--header {
   height: 41px;
   justify-content: center;
   padding: 0 30px;
+  &:focus {
+    outline: auto;
+  }
 }
 
 .application__thanks {
