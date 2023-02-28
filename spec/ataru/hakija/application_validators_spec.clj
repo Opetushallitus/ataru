@@ -60,7 +60,7 @@
                 (let [ssn (str (:start ssn) century-char (:end ssn))]
                   (it (str "should validate " ssn)
                     (should (validate! :ssn ssn {} nil)))))
-              ["A"]))
+              ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]))
        ssn/ssn-list)
 
   (it "should fail to validate nil"
@@ -69,15 +69,16 @@
   (it "should fail to validate empty string"
       (should-not (validate! :ssn "" {} nil)))
 
-  (it "should fail to validate SSN with century - and year between 2000-current_year"
+  (it "should fail to validate SSN with this century and year in the future"
       (let [fun (partial validate! :ssn)]
-        (doseq [experiment ["020202-0202"
-                            "020202-0202"
-                            "020200-020J"]]
+        (doseq [experiment ["020266B0202"
+                            "020277C202"
+                            "020288D020J"]]
           (should-not (fun experiment {} nil)))
         (doseq [experiment ["020202A0202"
                             "020202A0202"
-                            "020200A020J"]]
+                            "020200A020J"
+                            "020200F020J"]]
           (should (fun experiment {} nil)))))
 
   (it "should fail to validate SSN if cannot submit multiple applications and has applied"
