@@ -101,6 +101,7 @@
         demo?                 @(subscribe [:application/demo?])]
     (match submit-status
       :submitted [:div.application__sent-placeholder.animated.fadeIn
+                  {:role "alert"}
                   [:i.zmdi.zmdi-check]
                   [:span.application__sent-placeholder-text
                    (translations/get-hakija-translation
