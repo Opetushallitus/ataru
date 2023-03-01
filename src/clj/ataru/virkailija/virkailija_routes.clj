@@ -1594,6 +1594,19 @@
                  {:unauthorized _}
                  (response/unauthorized {:error "Unauthorized"}))))
 
+      (api/GET "/kouta/hakukohde/:hakukohde-oid" {session :session}
+        :summary "get hakukohde info for kouta"
+        :path-params [hakukohde-oid :- String]
+        :return {:applicationCount s/Int}
+        (if (nil? hakukohde-oid)
+          (response/bad-request {:error "HakukohdeOid is required"})
+          (if-let [response (application-service/kouta-application-count-for-hakukohde
+                              application-service
+                              session
+                              hakukohde-oid)]
+            (response/ok response)
+            (response/unauthorized {:error "Unauthorized"}))))
+
       (api/GET "/application-identifier/:application-identifier" {session :session}
         :summary "Get the application oid and person oid matching the
                   application identifier"

@@ -1095,6 +1095,12 @@ WHERE a.person_oid IS NOT NULL
   AND (array_length(ARRAY[:application_keys], 1) < 2 OR a.key IN (:application_keys))
   AND ar.state <> 'inactivated';
 
+--name: yesql-kouta-application-count-for-hakukohde
+SELECT
+    count(*) as application_count
+FROM latest_applications AS a
+WHERE :hakukohde_oid = ANY (a.hakukohde);
+
 --name: yesql-get-latest-application-keys-distinct-by-person-oid
 SELECT a.key
 FROM applications AS a
