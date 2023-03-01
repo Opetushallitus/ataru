@@ -2,6 +2,7 @@
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.answer-util :as answer-util]
             [ataru.util :as util]
+            [clojure.set]
             [ataru.tarjonta.haku :as h]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.person-service.person-service :as person-service]
@@ -25,8 +26,16 @@
     "obligated" "REQUIRED"
     "not-obligated" "NOT_REQUIRED"))
 
-(defn- yksiloidyt-hakemukset [applications yksiloimattomat-henkilot]
-  (filter #(not (contains? yksiloimattomat-henkilot (:person-oid %))) applications))
+(defn- filter-applications-for-koostedata [toinen-aste-applications persons]
+  (let [yksiloimaton-tai-aidinkieleton-henkilo-oids (set (map :oidHenkilo (filter (fn [person] (or (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))
+                                                                                                   (empty? (get-in person [:aidinkieli :kieliKoodi]))))
+                                                                                  (vals persons))))
+        persons-from-applications (set (map :person-oid toinen-aste-applications))
+        dropped-oids (clojure.set/intersection yksiloimaton-tai-aidinkieleton-henkilo-oids persons-from-applications)
+        wanted-applications (filter #(not (contains? yksiloimaton-tai-aidinkieleton-henkilo-oids (:person-oid %))) toinen-aste-applications)]
+    (when (not-empty dropped-oids)
+      (log/info (str "ODW Ei haeta koosteDataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
+    wanted-applications))
 
 (defn get-applications-for-odw [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service date limit offset application-key]
   (let [applications (if application-key
@@ -38,16 +47,16 @@
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                   (into {}))
         persons (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-        yksiloimattomat-henkilo-oidit (set (map :oidHenkilo (filter (fn [person] (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
         toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
-        toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)))
+        toisen-asteen-yhteishakujen-hakemukset (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)
+        toisen-asteen-yhteishakujen-hakemusten-oidit (map :key toisen-asteen-yhteishakujen-hakemukset)
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         {})
+        applications-for-koostedata (filter-applications-for-koostedata toisen-asteen-yhteishakujen-hakemukset persons)
         kooste-data-toinen-aste (into {} (map (fn [hakuOid] (let [hakemus-oids (vec (doall (map :key (filter (fn [application] (= hakuOid (:haku application)))
-                                                                                                             (yksiloidyt-hakemukset active-applications yksiloimattomat-henkilo-oidit)))))]
-                                                              (when (not-empty yksiloimattomat-henkilo-oidit) (log/info (str "ODW Ei haeta koosteDataa yksilöimättömille hakijoille: " yksiloimattomat-henkilo-oidit)))
+                                                                                                             applications-for-koostedata))))]
                                                               (if (not-empty hakemus-oids)
                                                                 (do (log/info "ODW Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
                                                                     (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid hakemus-oids))
