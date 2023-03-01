@@ -25,6 +25,9 @@
     "obligated" "REQUIRED"
     "not-obligated" "NOT_REQUIRED"))
 
+(defn- yksiloidyt-hakemukset [applications yksiloimattomat-henkilot]
+  (filter #(not (contains? yksiloimattomat-henkilot (:person-oid %))) applications))
+
 (defn get-applications-for-odw [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service date limit offset application-key]
   (let [applications (if application-key
                        (application-store/get-latest-application-by-key-for-odw application-key)
@@ -35,19 +38,21 @@
                   (map (fn [oid] [oid (tarjonta-protocol/get-haku tarjonta-service oid)]))
                   (into {}))
         persons (person-service/get-persons person-service (distinct (keep :person-oid applications)))
-
+        yksiloimattomat-henkilo-oidit (set (map :oidHenkilo (filter (fn [person] (and (not (:yksiloity person)) (not (:yksiloityVTJ person)))) (vals persons))))
         toisen-asteen-yhteishaut (into {} (filter #(->> % val h/toisen-asteen-yhteishaku?) haut))
         toisen-asteen-yhteishaku-oids (set (map key toisen-asteen-yhteishaut))
         toisen-asteen-yhteishakujen-hakemusten-oidit (vec (map :key (filter (fn [application] (contains? toisen-asteen-yhteishaku-oids (:haku application))) active-applications)))
         harkinnanvaraisuus-by-hakemus (if (not-empty toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-service toisen-asteen-yhteishakujen-hakemusten-oidit)
                                         {})
-        koosteDataToiselleAsteelle (into {} (map (fn [hakuOid] (let [haun-hakemusOids (vec (doall (map :key (filter (fn [application] (= hakuOid (:haku application))) active-applications))))]
-                                                                 (if (not-empty haun-hakemusOids)
-                                                                   (do (log/info "Haetaan koosteData haulle" hakuOid ",   hakemusOids " haun-hakemusOids)
-                                                                       (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid haun-hakemusOids))
-                                                                   (do (log/warn "Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia hakemuksia")
-                                                                       {}))))
+        kooste-data-toinen-aste (into {} (map (fn [hakuOid] (let [hakemus-oids (vec (doall (map :key (filter (fn [application] (= hakuOid (:haku application)))
+                                                                                                             (yksiloidyt-hakemukset active-applications yksiloimattomat-henkilo-oidit)))))]
+                                                              (when (not-empty yksiloimattomat-henkilo-oidit) (log/info (str "ODW Ei haeta koosteDataa yksilöimättömille hakijoille: " yksiloimattomat-henkilo-oidit)))
+                                                              (if (not-empty hakemus-oids)
+                                                                (do (log/info "ODW Haetaan koosteData haulle" hakuOid ",   hakemusOids " hakemus-oids)
+                                                                    (valintalaskentakoostepalvelu/opiskelijoiden-suoritukset valintalaskentakoostepalvelu-service hakuOid hakemus-oids))
+                                                                (do (log/warn "ODW Ei haeta koosteDataa haulle" hakuOid "koska on vain passiivisia tai yksilöimättömiä hakemuksia")
+                                                                    {}))))
                                                  toisen-asteen-yhteishaku-oids))
         results (map (fn [application]
                        (try
@@ -85,7 +90,7 @@
                                                                             "ACTIVE")
                                         :kk_pohjakoulutus                 (answer-util/get-kk-pohjakoulutus (get haut (:haku application)) answers (:key application))}
                                        (when (and toinen-aste? (not= state "inactivated"))
-                                         (let [koosteData (get koosteDataToiselleAsteelle (keyword person-oid))
+                                         (let [koosteData (get kooste-data-toinen-aste (keyword person-oid))
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData)

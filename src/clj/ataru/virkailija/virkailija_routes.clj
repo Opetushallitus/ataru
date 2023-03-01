@@ -71,8 +71,8 @@
             [ring.middleware.session :as ring-session]
             [ring.util.io :as ring-io]
             [ring.swagger.json-schema :as json-schema]
-            [ring.util.http-response :refer [ok internal-server-error not-found bad-request content-type] :as response]
-            [ring.util.response :refer [redirect header] :as ring-util]
+            [ring.util.http-response :refer [ok internal-server-error not-found bad-request] :as response]
+            [ring.util.response :refer [redirect header content-type] :as ring-util]
             [schema.core :as s]
             [selmer.parser :as selmer]
             [taoensso.timbre :as log]
@@ -938,6 +938,14 @@
           (response/ok list)
           (response/not-found
               {:error (str "Hakemukseen " application-key " liittyvien laskujen listaus epäonnistui")})))
+
+      (api/GET "/kuitti/:order-id" {session :session}
+        :path-params [order-id :- s/Str]
+        :summary "Lataa maksuun liittyvän kuitin"
+        (if-let [resp (maksut-protocol/download-receipt maksut-service order-id)]
+          (-> (ok (:body resp))
+              (header "Content-Disposition" (str "attachment; filename=\"" order-id ".html\"")))
+          (not-found {:error (str "Kuittia ei löytynyt annetulla viitteellä")})))
 
       (api/POST "/resend-maksu-link" {session :session}
         :body [input maksut-schema/TutuProcessingEmailRequest]

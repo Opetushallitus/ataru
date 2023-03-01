@@ -573,28 +573,47 @@
                :matkapuhelin (s/maybe s/Str)
                :email (s/maybe s/Str)})
 
+(s/defschema UrheilijanLisakysymykset
+  {:keskiarvo                   (s/maybe s/Str)
+   :peruskoulu                  (s/maybe s/Str)
+   :tamakausi                   (s/maybe s/Str)
+   :viimekausi                  (s/maybe s/Str)
+   :toissakausi                 (s/maybe s/Str)
+   :sivulaji                    (s/maybe s/Str)
+   :valmennusryhma_seurajoukkue (s/maybe s/Str)
+   :valmennusryhma_piirijoukkue (s/maybe s/Str)
+   :valmennusryhma_maajoukkue   (s/maybe s/Str)
+   :valmentaja_nimi             (s/maybe s/Str)
+   :valmentaja_email            (s/maybe s/Str)
+   :valmentaja_puh              (s/maybe s/Str)
+   :laji                        (s/maybe s/Str)
+   :seura                       (s/maybe s/Str)
+   :liitto                      (s/maybe s/Str)})
+
 (s/defschema HakurekisteriApplicationToinenAste
-  {:oid                                               s/Str
-   :personOid                                         s/Str
-   :createdTime                                       s/Str
-   :kieli                                             s/Str
-   :hakukohteet                                       [HakurekisteriHakukohde]
-   :email                                             s/Str
-   :matkapuhelin                                      s/Str
-   :lahiosoite                                        s/Str
-   :postinumero                                       s/Str
-   :postitoimipaikka                                  (s/maybe s/Str)
-   :asuinmaa                                          s/Str
-   :kotikunta                                         (s/maybe s/Str)
-   :attachments                                       {s/Str s/Str}
-   :pohjakoulutus                                     s/Str
-   :kiinnostunutOppisopimusKoulutuksesta              (s/maybe s/Bool)
-   :sahkoisenAsioinninLupa                            s/Bool
-   :valintatuloksenJulkaisulupa                       s/Bool
-   :koulutusmarkkinointilupa                          s/Bool
-   :tutkintoVuosi                                     (s/maybe s/Int)
-   :tutkintoKieli                                     (s/maybe s/Str)
-   :huoltajat                                         [GuardianContactInfo]})
+  {:oid                                  s/Str
+   :personOid                            s/Str
+   :createdTime                          s/Str
+   :kieli                                s/Str
+   :hakukohteet                          [HakurekisteriHakukohde]
+   :email                                s/Str
+   :matkapuhelin                         s/Str
+   :lahiosoite                           s/Str
+   :postinumero                          s/Str
+   :postitoimipaikka                     (s/maybe s/Str)
+   :asuinmaa                             s/Str
+   :kotikunta                            (s/maybe s/Str)
+   :attachments                          {s/Str s/Str}
+   :pohjakoulutus                        s/Str
+   :kiinnostunutOppisopimusKoulutuksesta (s/maybe s/Bool)
+   :sahkoisenAsioinninLupa               s/Bool
+   :valintatuloksenJulkaisulupa          s/Bool
+   :koulutusmarkkinointilupa             s/Bool
+   :tutkintoVuosi                        (s/maybe s/Int)
+   :tutkintoKieli                        (s/maybe s/Str)
+   :huoltajat                            [GuardianContactInfo]
+   :hakemusFirstSubmittedTime            s/Str
+   :urheilijanLisakysymykset             (s/maybe UrheilijanLisakysymykset)})
 
 (s/defschema OnrApplication
   {:oid          s/Str

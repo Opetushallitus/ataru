@@ -1,9 +1,7 @@
 (ns ataru.virkailija.application.attachments.virkailija-attachment-subs-test
   (:require [cljs.test :refer-macros [deftest is]]
-            [clojure.string :refer [includes?]]
-            [re-frame.core :refer [dispatch subscribe]]
-            [reagent.ratom :as r :refer-macros [reaction]]
-            [ataru.virkailija.application.attachments.virkailija-attachment-subs :refer [liitepyynnot-for-selected-hakukohteet]]
+            [ataru.virkailija.application.attachments.virkailija-attachment-subs :refer [liitepyynnot-for-selected-hakukohteet
+                                                                                        liitepyynnot-hakemuksen-hakutoiveille]]
             [ataru.util :as util]))
 
 (def test-form-with-attachments-everywhere
@@ -87,3 +85,113 @@
                   application
                   liitepyynnot-for-hakukohteet])]
     (is (= result expected-value))))
+
+(deftest extracts-attachments-from-application
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}}
+        answers {"liite-vastaus" {:key "liite-vastaus" :original-followup nil :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen true,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}]}]
+    (is (= result expected-result))))
+
+(deftest extracts-no-attachments-from-application-with-no-attachment-answers
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}
+                                          {:id "joku-vastaus"}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}}
+        answers {"joku-vastaus" {:key "joku-vastaus" :original-followup nil :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {}]
+    (is (= result expected-result))))
+
+(deftest extracts-attachments-from-application-with-duplicates
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}}
+        answers {"liite-vastaus_4321" {:key "liite-vastaus_4321" :original-followup nil :original-question "liite-vastaus" :duplikoitu-kysymys-hakukohde-oid "4321" :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen true,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil},
+                                  :tyyppi-label "lt-1"}]}]
+    (is (= result expected-result))))
+
+(deftest extracts-attachments-from-application-with-duplicate-followups
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}}
+        answers {"liite-vastaus_4321" {:key "liite-vastaus_4321" :original-followup "liite-vastaus" :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid "4321"}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen true,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}]}]
+    (is (= result expected-result))))
+
+(deftest extracts-multiple-attachments-from-application
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}
+                                          {:id "liite-vastaus2" :params {:mail-attachment? true :attachment-type "lt-2"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}
+                     "5432" {:oid "5432" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-1"}]}
+                     "6543" {:oid "6543" :liitteet [{:toimitetaan-erikseen true :tyyppi "lt-2"}]}}
+        answers {"liite-vastaus_4321" {:key "liite-vastaus_4321" :original-followup "liite-vastaus" :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid "4321"}
+                 "liite-vastaus_5432" {:key "liite-vastaus_5432" :original-followup "liite-vastaus" :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid "5432"}
+                 "liite-vastaus2" {:key "liite-vastaus2" :original-followup nil :original-question nil :duplikoitu-kysymys-hakukohde-oid nil :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321" "5432" "6543" "7654"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen true,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}
+                                 {:toimitetaan-erikseen true,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "5432" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}],
+                         "lt-2" [{:toimitetaan-erikseen true,
+                                  :tyyppi "lt-2",
+                                  :hakukohde {:oid "6543" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-2"}]}]
+    (is (= result expected-result))))
+
+(deftest extracts-attachments-with-common-attachment-address
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet-onko-sama-toimitusosoite? true :liitteet [{:toimitetaan-erikseen false :tyyppi "lt-1"}]}}
+        answers {"liite-vastaus_4321" {:key "liite-vastaus_4321" :original-followup nil :original-question "liite-vastaus" :duplikoitu-kysymys-hakukohde-oid "4321" :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen false,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? true
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}]}]
+    (is (= result expected-result))))

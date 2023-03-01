@@ -663,6 +663,9 @@
                                        [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]
                                        (pohjakoulutus-toinen-aste-handlers/create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku (:application response))))]
       {:db         db
+       :dispatch-debounced {:timeout 500
+                            :id :fetch-attachment-types
+                            :dispatch [:editor/fetch-attachment-types-koodisto]}
        :dispatch-n dispatches})))
 
 (reg-event-db

@@ -38,6 +38,14 @@
         request-body (map #(convert-application-to-have-harkinnanvaraisuus-reasons hakukohde-cache %) applications)]
     (client/hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client request-body)))
 
+(defn- fetch-hakemusten-harkinnanvaraisuus-valintalaskennasta
+  [application-oids valintalaskentakoostepalvelu-cas-client hakukohde-cache]
+  (let [applications (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
+                                                                       hakukohde-cache
+                                                                       application-oids)]
+    (reduce (fn [acc application]
+              (assoc acc (:hakemusOid application) application)) {} applications)))
+
 (defrecord HakukohdeValintalaskentaCacheLoader [valintalaskentakoostepalvelu-cas-client]
   cache/CacheLoader
 
@@ -68,11 +76,7 @@
                                                       [application-oid]))
 
   (load-many [_ application-oids]
-    (let [applications (hakemusten-harkinnanvaraisuus-valintalaskennasta valintalaskentakoostepalvelu-cas-client
-                                                                         hakukohde-cache
-                                                                         application-oids)]
-      (reduce (fn [acc application]
-                (assoc acc (:hakemusOid application) application)) {} applications)))
+    (fetch-hakemusten-harkinnanvaraisuus-valintalaskennasta application-oids valintalaskentakoostepalvelu-cas-client hakukohde-cache))
 
   (load-many-size [_]
     100)
@@ -82,7 +86,8 @@
 
 (defrecord CachedValintalaskentakoostepalveluService [valintalaskentakoostepalvelu-hakukohde-valintalaskenta-cache
                                                       valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache
-                                                      valintalaskentakoostepalvelu-cas-client]
+                                                      valintalaskentakoostepalvelu-cas-client
+                                                      hakukohde-cache]
   ValintalaskentakoostepalveluService
 
   (hakukohde-uses-valintalaskenta? [_ hakukohde-oid]
@@ -102,7 +107,10 @@
       hakemus-oids))
 
   (hakemusten-harkinnanvaraisuus-valintalaskennasta [_ hakemus-oids]
-    (cache/get-many-from valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache hakemus-oids)))
+    (cache/get-many-from valintalaskentakoostepalvelu-hakukohde-harkinnanvaraisuus-cache hakemus-oids))
+
+  (hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache [_ hakemus-oids]
+    (fetch-hakemusten-harkinnanvaraisuus-valintalaskennasta hakemus-oids valintalaskentakoostepalvelu-cas-client hakukohde-cache)))
 
 (defn new-valintalaskentakoostepalvelu-service []
   (map->CachedValintalaskentakoostepalveluService {}))

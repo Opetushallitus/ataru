@@ -562,7 +562,22 @@
                                                  :en "Archived"}
    :required                                    {:fi "(pakollinen tieto)"
                                                  :sv "(obligatorisk uppgift)"
-                                                 :en "(mandatory information)"}})
+                                                 :en "(mandatory information)"}
+   :email-vain-harkinnanvaraisessa-subject      {:fi "Muutos yhteishaun valintatapaan"
+                                                 :sv "Ändring i antagningssättet i den gemensamma ansökan"
+                                                 :en "EN: Muutos yhteishaun valintatapaan"}
+   :email-vain-harkinnanvaraisessa              {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Pohjakoulutustietosi mukaan olet mukana vain harkintaan perustuvassa valinnassa."
+                                                 :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. Enligt uppgifter om din grundutbildning är du endast med i antagning enligt prövning."
+                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Pohjakoulutustietosi mukaan olet mukana vain harkintaan perustuvassa valinnassa."}
+   :email-vain-harkinnanvaraisessa-link-text    {:fi "Lue lisää harkintaan perustuvasta valinnasta Opintopolusta."
+                                                 :sv "Läs mera om antagning enligt prövning i Studieinfo."
+                                                 :en "EN: Lue lisää harkintaan perustuvasta valinnasta Opintopolusta."}
+   :email-vain-harkinnanvaraisessa-link         {:fi "https://opintopolku.fi/konfo/fi/sivu/hakeminen-harkinnanvaraisen-valinnan-kautta"
+                                                 :sv "https://opintopolku.fi/konfo/sv/sivu/ansoekan-via-antagning-enligt-proevning"
+                                                 :en "https://opintopolku.fi/konfo/en/sivu/student-admission-in-the-joint-application-to-upper-secondary-education-and"}
+   :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
+                                                 :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
+                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
@@ -904,6 +919,15 @@
    :search-placeholder                                       {:fi "Hae.."
                                                               :sv "Sök.."
                                                               :en "Search.."}
+   :use                                                      {:fi "Käytä: "
+                                                              :sv "Använda: "
+                                                              :en "Use: "}
+   :or-use                                                   {:fi ". Tai käytä: "
+                                                              :sv ". Eller använda: "
+                                                              :en ". Or use: "}
+   :return-latest                                           {:fi "Palautettava viimeistään"
+                                                             :sv "Sista leveransdatum"
+                                                             :en "Deadline in"}
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
                                                               :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                               :en "Valintatieto tuotu valintarekisteristä"}
@@ -2063,6 +2087,9 @@
    :question-answers-selected                                {:fi "vastausvaihtoehtoa valittu"
                                                               :sv "Svarsalternativ valt"
                                                               :en "EN: vastausvaihtoehtoa valittu"}
+   :attachments-tab-header                                   {:fi "Toimitettavat liitteet"
+                                                              :sv ""
+                                                              :en ""}
    :tutu-amount-label                                        {:fi "Maksun määrä"
                                                               :sv ""
                                                               :en ""}
@@ -2117,6 +2144,9 @@
    :tutu-amount-input-placeholder                            {:fi "Anna summa muodossa 123 tai 123.00"
                                                               :sv ""
                                                               :en ""}
+   :tutu-payment-download-receipt                            {:fi "Lataa kuitti"
+                                                              :sv "Lataa kuitti"
+                                                              :en "Lataa kuitti"}
    :prevent-submission                                       {:fi "Valinta estää hakemuksen lähettämisen"
                                                               :sv "SV: Valinta estää hakemuksen lähettämisen"
                                                               :en "EN: Valinta estää hakemuksen lähettämisen"}
@@ -2352,7 +2382,10 @@
                             :en "Päätös maksettu (en) TODO"}
    :multiple-values        {:fi "Monta arvoa"
                             :sv "Multipla värden"
-                            :en "Multiple values"}})
+                            :en "Multiple values"}
+   :attachments-tab-info   {:fi "Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."
+                            :sv "Alla uppgifter om bilagor syns nödvändigtvis inte om läroanstalten inte sparat uppgifterna."
+                            :en "EN: Kaikkien hakukohteiden liitetiedot eivät välttämättä näy tässä, mikäli oppilaitos ei ole tallentanut tietoja."}})
 
 (def tutu-decision-email
   {:header                {:fi "Päätös tutkintosi tunnustamisesta on tehty"

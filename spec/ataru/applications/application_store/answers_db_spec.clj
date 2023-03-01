@@ -53,7 +53,8 @@
                             []
                             test-form
                             {}
-                            audit-logger))]
+                            audit-logger)
+                           :id)]
     (reset! test-form-id form-id)
     (reset! test-application-id application-id)
     application-id))
