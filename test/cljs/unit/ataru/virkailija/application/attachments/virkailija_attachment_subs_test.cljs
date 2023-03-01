@@ -95,7 +95,10 @@
                  [["4321"] hakukohteet [] answers form forms])
         expected-result {"lt-1" [{:toimitetaan-erikseen true,
                                   :tyyppi "lt-1",
-                                  :hakukohde {:oid "4321", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
                                   :tyyppi-label "lt-1"}]}]
     (is (= result expected-result))))
 
@@ -119,7 +122,10 @@
                  [["4321"] hakukohteet [] answers form forms])
         expected-result {"lt-1" [{:toimitetaan-erikseen true,
                                   :tyyppi "lt-1",
-                                  :hakukohde {:oid "4321", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil},
                                   :tyyppi-label "lt-1"}]}]
     (is (= result expected-result))))
 
@@ -132,7 +138,10 @@
                  [["4321"] hakukohteet [] answers form forms])
         expected-result {"lt-1" [{:toimitetaan-erikseen true,
                                   :tyyppi "lt-1",
-                                  :hakukohde {:oid "4321", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
                                   :tyyppi-label "lt-1"}]}]
     (is (= result expected-result))))
 
@@ -150,14 +159,39 @@
                  [["4321" "5432" "6543" "7654"] hakukohteet [] answers form forms])
         expected-result {"lt-1" [{:toimitetaan-erikseen true,
                                   :tyyppi "lt-1",
-                                  :hakukohde {:oid "4321", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
                                   :tyyppi-label "lt-1"}
                                  {:toimitetaan-erikseen true,
                                   :tyyppi "lt-1",
-                                  :hakukohde {:oid "5432", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "5432" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
                                   :tyyppi-label "lt-1"}],
                          "lt-2" [{:toimitetaan-erikseen true,
                                   :tyyppi "lt-2",
-                                  :hakukohde {:oid "6543", :name nil, :tarjoaja nil},
+                                  :hakukohde {:oid "6543" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? nil
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
                                   :tyyppi-label "lt-2"}]}]
+    (is (= result expected-result))))
+
+(deftest extracts-attachments-with-common-attachment-address
+  (let [form {:key "1234"}
+        forms {"1234" {:flat-form-fields [{:id "liite-vastaus" :params {:mail-attachment? true :attachment-type "lt-1"}}]}}
+        hakukohteet {"4321" {:oid "4321" :liitteet-onko-sama-toimitusosoite? true :liitteet [{:toimitetaan-erikseen false :tyyppi "lt-1"}]}}
+        answers {"liite-vastaus_4321" {:key "liite-vastaus_4321" :original-followup nil :original-question "liite-vastaus" :duplikoitu-kysymys-hakukohde-oid "4321" :duplikoitu-followup-hakukohde-oid nil}}
+        result (liitepyynnot-hakemuksen-hakutoiveille
+                 [["4321"] hakukohteet [] answers form forms])
+        expected-result {"lt-1" [{:toimitetaan-erikseen false,
+                                  :tyyppi "lt-1",
+                                  :hakukohde {:oid "4321" :name nil :tarjoaja nil
+                                              :liitteet-onko-sama-toimitusosoite? true
+                                              :liitteiden-toimitusosoite nil
+                                              :liitteiden-toimitusaika nil}
+                                  :tyyppi-label "lt-1"}]}]
     (is (= result expected-result))))

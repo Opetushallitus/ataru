@@ -24,13 +24,17 @@
 
 (defn- liite-info
   [lang liite]
+  (let [toimitusosoite (if (true? (get-in liite [:hakukohde :liitteet-onko-sama-toimitusosoite?]))
+                         (get-in liite [:hakukohde :liitteiden-toimitusosoite])
+                         (:toimitusosoite liite))
+        toimitusaika (or (:toimitusaika liite) (get-in liite [:hakukohde :liitteiden-toimitusaika]))]
   [:div
    [:p.attachments-tab__content__hakukohde (form-hakukohde-name lang (:hakukohde liite))]
    [:ul
-    [:li (form-address lang (:toimitusosoite liite))]
+    [:li (form-address lang toimitusosoite)]
     [:li (str @(subscribe [:editor/virkailija-translation :return-latest])
                           " "
-                           (@lang (:toimitusaika liite)))]]])
+                           (@lang toimitusaika))]]]))
 
 (defn attachments-tab-view []
   (let [liitteet @(subscribe [:virkailija-attachments/liitepyynnot-hakemuksen-hakutoiveille])

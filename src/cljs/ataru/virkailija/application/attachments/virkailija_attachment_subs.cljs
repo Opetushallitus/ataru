@@ -113,14 +113,17 @@
 
 (defn- to-liitteet-with-hakukohde
   [attachment-answers hakutoiveet liitekoodisto]
-
   (let [hakukohteen-tiedot-fn (fn [hk] {:oid (:oid hk)
                                         :name (:name hk)
-                                        :tarjoaja (:tarjoaja-name hk)})
+                                        :tarjoaja (:tarjoaja-name hk)
+                                        :liitteet-onko-sama-toimitusosoite? (:liitteet-onko-sama-toimitusosoite? hk)
+                                        :liitteiden-toimitusosoite (:liitteiden-toimitusosoite hk)
+                                        :liitteiden-toimitusaika (:liitteiden-toimitusaika hk)})
         toive-to-liitteet-fn (fn [hk] (->> hk
                                            :liitteet
                                            flatten
-                                           (filter #(true? (:toimitetaan-erikseen %)))
+                                           (filter #(or (true? (:toimitetaan-erikseen %))
+                                                        (true? (:liitteet-onko-sama-toimitusosoite? hk))))
                                            (map #(assoc % :hakukohde (hakukohteen-tiedot-fn hk)))))
         get-koodi-fn (fn [liite] (->> liitekoodisto
                                       (filter #(string/includes? (:tyyppi liite) (:uri %)))
