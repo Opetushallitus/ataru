@@ -1,7 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
     [ataru.log.audit-log :as audit-log]
-    [taoensso.timbre :as log]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-store :as application-store]
@@ -36,6 +35,11 @@
   (boolean
    (some #(authorized-by-tarjoaja? authorized-organization-oids %)
          (:hakukohde application))))
+
+(defn authorized-by-hakukohde?
+  [authorized-organization-oids hakukohde-oid]
+  (boolean
+    (authorized-by-tarjoaja? authorized-organization-oids hakukohde-oid)))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
@@ -358,6 +362,18 @@
          (map remove-organization-oid))
    #(->> (application-store/siirto-applications hakukohde-oid application-keys)
          (map remove-organization-oid))))
+
+(defn kouta-application-count-for-hakukohde
+  [organization-service session hakukohde-oid]
+  (session-orgs/run-org-authorized
+    session
+    organization-service
+    [:view-applications :edit-applications]
+    (constantly nil)
+    #(if (authorized-by-hakukohde? % hakukohde-oid)
+       (application-store/kouta-application-count-for-hakukohde hakukohde-oid)
+       (constantly nil))
+    #(application-store/kouta-application-count-for-hakukohde hakukohde-oid)))
 
 (defn valinta-ui-applications
   [organization-service tarjonta-service person-service session query]
