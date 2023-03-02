@@ -85,10 +85,16 @@
      {:id            option-id
       :on-click      (fn dropdown-list-option-on-click []
                        (on-click value))
+      :on-key-down   (fn [e]
+                       (when (or (= " " (.-key e))
+                                 (= "Enter" (.-key e)))
+                         (.preventDefault e)
+                         (on-click value)))
       :role          "option"
       :aria-selected (when selected?
                        true)
-      :data-test-id  data-test-id}
+      :data-test-id  data-test-id
+      :tab-index     "0"}
      (when selected?
        [:i.zmdi.zmdi-check.a-dropdown-list-option__checked])
      [:span label]]))
@@ -184,11 +190,12 @@
                                     {:aria-labelledby label-id
                                      :aria-expanded   expanded?}
                                     button-label]
-                                   (seq unselected-label-icon)
-                                   (conj [:<> unselected-label-icon]))
+                            (seq unselected-label-icon)
+                            (conj [:<> unselected-label-icon]))
             :on-click     on-dropdown-button-click
             :data-test-id (str data-test-id "-button")
-            :aria-attrs   {:aria-haspopup "listbox"}}]
+            :aria-attrs   {:aria-haspopup "listbox"}
+            :tab-index    "0"}]
           (when-not (seq unselected-label-icon)
             [dropdown-chevron
              {:expanded? expanded?}])]
