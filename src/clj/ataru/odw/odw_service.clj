@@ -4,6 +4,7 @@
             [ataru.util :as util]
             [clojure.set]
             [ataru.tarjonta.haku :as h]
+            [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.koodisto.koodisto-codes :refer [finland-country-code]]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
@@ -103,7 +104,7 @@
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData)
-                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) ["9" "10" "VALMA" "TELMA" "ML" "OPISTOVUOSI"])
+                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector suoritusvuosi) (suoritus-filter/luokkatasot-for-suoritus-filter))
                                                lahtoluokka (:luokka luokkatieto)
                                                luokkataso (:luokkataso luokkatieto)
                                                lahtokoulu-oid (:oppilaitos-oid luokkatieto)
