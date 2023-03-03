@@ -2,6 +2,7 @@
   (:require [ataru.component-data.component :as component]
             [ataru.component-data.base-education-module-higher :as kk-base-education-module]
             [ataru.component-data.base-education-module-2nd :refer [base-education-2nd-module]]
+            [ataru.component-data.base-education-continuous-admissions-module :refer [base-education-continuous-admissions-module]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]
             [ataru.component-data.arvosanat-module :as arvosanat]))
@@ -32,6 +33,7 @@
    [:modal-info-element component/modal-info-element]
    [:kk-base-education-module kk-base-education-module/base-education-module-higher]
    [:base-education-module-2nd base-education-2nd-module]
+   [:base-education-continuous-admission base-education-continuous-admissions-module]
    [:pohjakoulutusristiriita component/pohjakoulutusristiriita]
    [:lupa-sahkoiseen-asiointiin component/lupa-sahkoiseen-asiointiin]
    [:lupatiedot-kk component/lupatiedot-kk]
