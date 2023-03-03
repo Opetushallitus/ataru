@@ -10,7 +10,6 @@
 
 (defn- base-education-question
   [metadata]
-  (prn "pohjakoulutus-continuous-admissions metadata" metadata )
   (assoc (component/single-choice-button metadata)
     :id base-education-choice-key
     :label (:choose-base-education base-education-cotinuous-admissions-module-texts)
