@@ -37,7 +37,7 @@
     "chai": "4.2.0",
     "child-process": "^1.0.2",
     "clj-kondo": "2020.1.13",
-    "cypress": "4.11.0",
+    "cypress": "4.12.1",
     "eslint": "7.5.0",
     "eslint-config-airbnb-base": "14.2.0",
     "eslint-config-prettier": "6.11.0",
