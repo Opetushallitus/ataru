@@ -822,7 +822,7 @@
 (def base-education-cotinuous-admissions-module-texts
   {:section-title                           {:fi "Pohjakoulutuksesi"
                                              :sv "Grundutbildning"
-                                             :en "EN: Pohjakoulutuksesi"}
+                                             :en "Your educational background"}
    :choose-base-education                   {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
                                              :sv "Välj den grundutbildning med vilken du söker till utbildningen"
                                              :en "Fill in the education that you have completed"}
