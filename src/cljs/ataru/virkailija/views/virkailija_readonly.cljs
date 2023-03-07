@@ -371,6 +371,9 @@
 
 (defn field
   [content application hakukohteet-and-ryhmat lang group-idx person-info-field?]
+  (prn "field")
+  (prn content)
+  (prn (visible? content application hakukohteet-and-ryhmat))
   (when (visible? content application hakukohteet-and-ryhmat)
     (match content
       {:module "person-info"} [person-info-module content application hakukohteet-and-ryhmat lang]
@@ -426,6 +429,9 @@
                    (application-language application)       ; language is set to application when in officer side
                    :fi)
           hakukohteet-and-ryhmat (selected-hakukohteet-and-ryhmat-from-application application hakukohteet)]
+      (prn "readonly-fields")
+      (prn form)
+      (prn application)
       (into [:div.application__readonly-container]
         (for [question (:content form)]
           (if (:per-hakukohde question)

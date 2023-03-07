@@ -66,9 +66,9 @@
    [:hakukohde-union-cache-loader
     (component/using
      (union-cache/map->CacheLoader
-      {:high-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
+      {:low-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-hakukohde
                                                           tarjonta-client/hakukohde-checker)})
-     {:low-priority-loader :kouta-hakukohde-cache-loader})]
+     {:high-priority-loader :kouta-hakukohde-cache-loader})]
    [:hakukohde-redis-cache
     (component/using
      (redis/map->Cache
@@ -133,10 +133,10 @@
    [:haku-union-cache-loader
     (component/using
      (union-cache/map->CacheLoader
-      {:high-priority-loader (cache/->FunctionCacheLoader
+      {:low-priority-loader (cache/->FunctionCacheLoader
                               tarjonta-client/get-haku
                               tarjonta-client/haku-checker)})
-     {:low-priority-loader :kouta-haku-cache-loader})]
+     {:high-priority-loader :kouta-haku-cache-loader})]
    [:haku-redis-cache
     (component/using
      (redis/map->Cache
@@ -205,9 +205,9 @@
 
    [:koulutus-union-cache-loader
     (union-cache/map->CacheLoader
-     {:high-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
+     {:low-priority-loader (cache/->FunctionCacheLoader tarjonta-client/get-koulutus
                                                          tarjonta-client/koulutus-checker)
-      :low-priority-loader  (cache/->FunctionCacheLoader kouta-client/get-toteutus
+      :high-priority-loader  (cache/->FunctionCacheLoader kouta-client/get-toteutus
                                                          kouta-client/toteutus-checker)})]
    [:koulutus-redis-cache
     (component/using
@@ -251,12 +251,12 @@
    [:hakukohde-search-union-cache-loader
     (component/using
      (union-cache/map->CacheLoader
-      {:high-priority-loader (cache/->FunctionCacheLoader
+      {:low-priority-loader (cache/->FunctionCacheLoader
                               (fn [key]
                                 (let [[haku-oid organization-oid] (s/split key #"#")]
                                   (tarjonta-client/hakukohde-search haku-oid organization-oid)))
                               tarjonta-client/hakukohde-search-checker)})
-     {:low-priority-loader :kouta-hakukohde-search-cache-loader})]
+     {:high-priority-loader :kouta-hakukohde-search-cache-loader})]
    [:hakukohde-search-cache
     (component/using
      (redis/map->Cache
