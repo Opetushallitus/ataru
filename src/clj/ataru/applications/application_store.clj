@@ -912,6 +912,21 @@
                      (clojure.string/blank? (-> answers id :value first first)))))
        (map first)))
 
+(defn- kk-base-educations-old-module-pohjakoulutuskklomake [answers]
+  (->> [["pohjakoulutus_kk" :higher-education-qualification-in-finland-year-and-date]
+        ["pohjakoulutus_avoin" :studies-required-by-higher-education-field]
+        ["pohjakoulutus_ulk" :higher-education-qualification-outside-finland-year-and-date]
+        ["pohjakoulutus_muu" :other-eligibility-year-of-completion]]
+       (remove (fn [[_ id]]
+                 (or (not (sequential? (-> answers id :value)))
+                     (not (sequential? (-> answers id :value first)))
+                     (clojure.string/blank? (-> answers id :value first first)))))
+       (map first)))
+
+(defn- kk-base-educations-pohjakoulutuskklomake [answers]
+  (distinct (concat (answers :higher-completed-base-education :value)
+                    (kk-base-educations-old-module-pohjakoulutuskklomake answers))))
+
 (defn- kk-base-educations-new-module [answers]
   (let [m {"pohjakoulutus_yo"              ["yo"]
            "pohjakoulutus_yo_ammatillinen" ["yo" "am"]
@@ -968,7 +983,10 @@
      ;; country-of-residence was implemented, or copied from those forms.
      :asuinmaa                    (or (-> answers :country-of-residence :value) "246")
      :kotikunta                   (-> answers :home-town :value)
+     ; Newer Sure APIs use the unmapped kkPohjakoulutusLomake codes.
+     ; Older ones still require mapped ones for compatibility.
      :kkPohjakoulutus             (kk-base-educations answers)
+     :kkPohjakoulutusLomake       (kk-base-educations-pohjakoulutuskklomake answers)
      :sahkoisenAsioinninLupa      (= "Kyllä" (-> answers :sahkoisen-asioinnin-lupa :value))
      :valintatuloksenJulkaisulupa (= "Kyllä" (-> answers :valintatuloksen-julkaisulupa :value))
      :koulutusmarkkinointilupa    (= "Kyllä" (-> answers :koulutusmarkkinointilupa :value))
