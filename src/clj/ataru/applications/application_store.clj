@@ -924,7 +924,7 @@
        (map first)))
 
 (defn- kk-base-educations-pohjakoulutuskklomake [answers]
-  (distinct (concat (answers :higher-completed-base-education :value)
+  (distinct (concat (-> answers :higher-completed-base-education :value)
                     (kk-base-educations-old-module-pohjakoulutuskklomake answers))))
 
 (defn- kk-base-educations-new-module [answers]
