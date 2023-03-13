@@ -409,7 +409,8 @@
             (get-in db [:application :user-allowed-fetching?]))
       (let [haku-oid (or (get-in db [:application :selected-haku])
                          (first (get-in db [:application :selected-hakukohderyhma])))
-            hakukohde-oid (get-in db [:application :selected-hakukohde])]
+            hakukohde-oid (get-in db [:application :selected-hakukohde])
+            fetch-paattyneet-haut? (not (or (boolean haku-oid) (boolean hakukohde-oid)))]
         (cond-> {:db       (-> db
                                (assoc-in [:application :applications] [])
                                (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
@@ -419,7 +420,7 @@
                                (update-in [:application :sort] dissoc :offset)
                                (assoc-in [:application :fetching-applications?] true)
                                (assoc-in [:application :user-allowed-fetching?] true))
-                 :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid [[:application/fetch-applications
+                 :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
                                                                                                {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
                                                                                               [:application/fetch-form-contents]]]}
                 (some? (get-in db [:request-handles :applications-list]))
@@ -768,7 +769,7 @@
 
 (reg-event-fx
   :application/refresh-haut-and-hakukohteet
-  (fn [{:keys [db]} [_ haku-oid hakukohde-oid dispatch-n-after]]
+  (fn [{:keys [db]} [_ haku-oid hakukohde-oid fetch-paattyneet-haut? dispatch-n-after]]
     {:db   (-> db
                (update :fetching-haut inc)
                (update :fetching-hakukohteet inc))
@@ -779,7 +780,7 @@
                                        (str "/lomake-editori/api/haku?hakukohde-oid=" hakukohde-oid)
                                        :else
                                        (str "/lomake-editori/api/haut?show-hakukierros-paattynyt="
-                                            (boolean (:show-hakukierros-paattynyt db))))
+                                            (or fetch-paattyneet-haut? (boolean (:show-hakukierros-paattynyt db)))))
             :handler-or-dispatch :application/handle-refresh-haut-and-hakukohteet
             :handler-args        {:dispatch-n-after dispatch-n-after}
             :skip-parse-times?   true
@@ -1143,7 +1144,7 @@
   :application/toggle-show-hakukierros-paattynyt
   (fn toggle-show-hakukierros-paattynyt [{:keys [db]} _]
     {:db       (update db :show-hakukierros-paattynyt not)
-     :dispatch [:application/refresh-haut-and-hakukohteet nil nil []]}))
+     :dispatch [:application/refresh-haut-and-hakukohteet nil nil false []]}))
 
 (reg-event-fx
   :application/fetch-classes-of-school
