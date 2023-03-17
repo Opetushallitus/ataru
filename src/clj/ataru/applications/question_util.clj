@@ -7,6 +7,7 @@
 
 
 (def urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key "8466feca-1993-4af3-b82c-59003ca2fd63")
+(def urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key "d26bac09-1fb2-4be3-8bd1-5071a81decb7")
 
 (def urheilija-muu-laji-label {:fi "Muu, mikä?", :sv "Annan, vad?"})
 (def urheilija-paalaji-folloup-label {:fi "Päälaji", :sv "Huvudgren"})
@@ -20,10 +21,6 @@
 (def kiinnostunut-oppisopimuskoulutuksesta-wrapper-label {:fi "Oppisopimuskoulutus ",
                                                           :sv "Läroavtalsutbildning"})
 
-(def urheilijan-lisakysymykset-wrapper-label {:fi "Urheilijan lisäkysymykset ammatillisissa kohteissa",
-                                              :sv "Tilläggsfrågor för idrottare i yrkesinriktade ansökningsmål"})
-
-;fixme, kysymys-id:t kohdilleen.
 (defn- urheilijan-lisakysymys-keys [haku-oid]
   (case haku-oid
     "1.2.246.562.29.00000000000000005368" {:keskiarvo                   "7b88594a-c308-41f8-bac3-2d3779ea4443"
@@ -99,6 +96,26 @@
      :seura                       "urheilija-2nd-amm-seura"
      :liitto                      "urheilija-2nd-amm-liitto"}))
 
+(defn- main-sport-keys-and-options [content wrapper-key sport-keys]
+  (let [laji-options (->> content
+                          (filter #(= wrapper-key (:id %)))
+                          first
+                          :children
+                          (filter #(= (:paalaji-dropdown sport-keys) (:id %)))
+                          first
+                          :options)
+        laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
+        muu-laji-key (->> laji-options
+                          (filter #(= urheilija-muu-laji-label (:label %)))
+                          first
+                          :followups
+                          (filter #(= urheilija-paalaji-folloup-label (:label %)))
+                          first
+                          :id)]
+    {:laji-dropdown-key (keyword (:paalaji-dropdown sport-keys))
+     :muu-laji-key      (keyword muu-laji-key)
+     :value-to-label    laji-value-to-label}))
+
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
                                                (let [answers (:keyValues application)
@@ -154,27 +171,12 @@
                                       first
                                       :id)
          urhelijian-ammatilliset-lisakysymykset-question (->> content
-                                                              (filter #(= urheilijan-lisakysymykset-wrapper-label (:label %)))
+                                                              (filter #(= urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key (:id %)))
                                                               first
                                                               :children
                                                               first)
          urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
-         urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)
-         laji-options (->> content
-                           (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
-                           first
-                           :children
-                           (filter #(= (:paalaji-dropdown urheilija-keys) (:id %)))
-                           first
-                           :options)
-         laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
-         muu-laji-key (->> laji-options
-                           (filter #(= urheilija-muu-laji-label (:label %)))
-                           first
-                           :followups
-                           (filter #(= urheilija-paalaji-folloup-label (:label %)))
-                           first
-                           :id)]
+         urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)]
      {:tutkintovuosi-keys                          tutkintovuosi-keys
       :tutkintokieli-keys                          tutkintokieli-keys
       :sora-terveys-key                            sora-terveys-question
@@ -184,7 +186,11 @@
       :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
-      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalaji-dropdown urheilija-keys))
-                                                    :muu-laji-key      (keyword muu-laji-key)
-                                                    :value-to-label    laji-value-to-label}
-      :urheilijan-amm-lisakysymys-keys             urheilija-amm-keys})))
+      :urheilijan-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options content
+                                                                                urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key
+                                                                                urheilija-keys)
+      :urheilijan-amm-lisakysymys-keys             urheilija-amm-keys
+      :urheilijan-ammatillinen-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options
+                                                                  content
+                                                                  urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key
+                                                                  urheilija-amm-keys)})))
