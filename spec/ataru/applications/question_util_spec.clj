@@ -5,14 +5,13 @@
                                                              amm-kaksoistutkinto-wrapper-label
                                                              lukio-kaksoistutkinto-wrapper-label
                                                              sora-question-wrapper-label
-                                                             urheilijan-lisakysymykset-wrapper-label]]
+                                                             urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key]]
             [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-wrapper-key]]))
 
 (def form-2nd-aste {"content" [{"id" "oppikeywrapper"
                                 "label" kiinnostunut-oppisopimuskoulutuksesta-wrapper-label
                                 "children" [{"id" "oppikey"}]}
-                               {"id" "urheilukeywrapper"
-                                "label" urheilijan-lisakysymykset-wrapper-label
+                               {"id" urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key
                                 "children" [{"id" "urheilija-amm-key"
                                              "belongs-to-hakukohderyhma" ["ryhma1" "ryhma2"]}]}
                                {"id" "ammkaksoistutkintowrapper"
