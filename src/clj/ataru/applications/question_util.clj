@@ -56,6 +56,49 @@
      :seura                       "urheilija-2nd-seura"
      :liitto                      "urheilija-2nd-liitto"}))
 
+(defn- urheilijan-ammatilliset-lisakysymys-keys [haku-oid]
+  (case haku-oid
+    "1.2.246.562.29.00000000000000005368" {:peruskoulu                  "22e8cc0a-ef4b-4f47-b0e3-a34bb1c3c07d"
+                                           :tamakausi                   "a9a32f30-86b4-4e41-a6d4-4a6863a086ab"
+                                           :viimekausi                  "6822dcb8-86b7-400b-a92f-4d02be6b7063"
+                                           :toissakausi                 "0278ea3f-e6c1-41c3-a9cc-b3be8acd493d"
+                                           :sivulaji                    "25c3adca-8a4f-41f2-91d2-7c787a47d166"
+                                           :valmentaja_nimi             "548e2d07-ac5d-49c5-a744-9bc49550c742"
+                                           :valmentaja_email            "83a487b1-3485-4763-a996-82a9640d1812"
+                                           :valmentaja_puh              "346ac362-4f75-4225-a7ba-3ddcb9b0498d"
+                                           :valmennusryhma_seurajoukkue "fc52158d-0d80-42d5-b16b-852e0e50e4d6"
+                                           :valmennusryhma_piirijoukkue "6437bc3e-e554-4b9e-982d-4622fc77be50"
+                                           :valmennusryhma_maajoukkue   "01a4a834-0128-4147-a890-6e2932c915d6"
+                                           :paalajiSeuraLiittoParent    "09257557-0bbf-4e94-a19b-44b561817eda"}
+    "1.2.246.562.29.00000000000000021303" {:peruskoulu                  "22e8cc0a-ef4b-4f47-b0e3-a34bb1c3c07d"
+                                           :tamakausi                   "a9a32f30-86b4-4e41-a6d4-4a6863a086ab"
+                                           :viimekausi                  "6822dcb8-86b7-400b-a92f-4d02be6b7063"
+                                           :toissakausi                 "0278ea3f-e6c1-41c3-a9cc-b3be8acd493d"
+                                           :sivulaji                    "25c3adca-8a4f-41f2-91d2-7c787a47d166"
+                                           :valmentaja_nimi             "548e2d07-ac5d-49c5-a744-9bc49550c742"
+                                           :valmentaja_email            "83a487b1-3485-4763-a996-82a9640d1812"
+                                           :valmentaja_puh              "346ac362-4f75-4225-a7ba-3ddcb9b0498d"
+                                           :valmennusryhma_seurajoukkue "fc52158d-0d80-42d5-b16b-852e0e50e4d6"
+                                           :valmennusryhma_piirijoukkue "6437bc3e-e554-4b9e-982d-4622fc77be50"
+                                           :valmennusryhma_maajoukkue   "01a4a834-0128-4147-a890-6e2932c915d6"
+                                           :paalaji-dropdown            "09257557-0bbf-4e94-a19b-44b561817eda"
+                                           :seura                       "06900eee-7949-445d-ac4f-e8738a904185"
+                                           :liitto                      "2b2ede36-e520-4727-8151-93115d26ef7f"}
+    {:peruskoulu                  "urheilija-2nd-amm-peruskoulu"
+     :tamakausi                   "urheilija-2nd-amm-tamakausi"
+     :viimekausi                  "urheilija-2nd-amm-viimekausi"
+     :toissakausi                 "urheilija-2nd-amm-toissakausi"
+     :sivulaji                    "urheilija-2nd-amm-sivulaji"
+     :valmentaja_nimi             "urheilija-2nd-amm-valmentaja-nimi"
+     :valmentaja_email            "urheilija-2nd-amm-valmentaja-email"
+     :valmentaja_puh              "urheilija-2nd-amm-valmentaja-puh"
+     :valmennusryhma_seurajoukkue "urheilija-2nd-amm-valmennus-seurajoukkue"
+     :valmennusryhma_piirijoukkue "urheilija-2nd-amm-valmennus-piirijoukkue"
+     :valmennusryhma_maajoukkue   "urheilija-2nd-amm-valmennus-maajoukkue"
+     :paalaji-dropdown            "urheilija-2nd-amm-lajivalinta-dropdown"
+     :seura                       "urheilija-2nd-amm-seura"
+     :liitto                      "urheilija-2nd-amm-liitto"}))
+
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
                                                (let [answers (:keyValues application)
@@ -116,6 +159,7 @@
                                                               :children
                                                               first)
          urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
+         urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)
          laji-options (->> content
                            (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
                            first
@@ -142,4 +186,5 @@
       :urheilijan-lisakysymys-keys                 urheilija-keys
       :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalaji-dropdown urheilija-keys))
                                                     :muu-laji-key      (keyword muu-laji-key)
-                                                    :value-to-label    laji-value-to-label}})))
+                                                    :value-to-label    laji-value-to-label}
+      :urheilijan-amm-lisakysymys-keys             urheilija-amm-keys})))
