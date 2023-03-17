@@ -170,7 +170,7 @@
                                       :children
                                       first
                                       :id)
-         urhelijian-ammatilliset-lisakysymykset-question (->> content
+         urheilijan-ammatilliset-lisakysymykset-question (->> content
                                                               (filter #(= urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key (:id %)))
                                                               first
                                                               :children
@@ -183,8 +183,8 @@
       :sora-aiempi-key                             sora-aiempi-question
       :kaksoistutkinto-keys                        kaksoistutkinto-questions
       :oppisopimuskoulutus-key                     (keyword oppisopimuskoulutus-key)
-      :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
-      :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
+      :urheilijan-amm-lisakysymys-key              (keyword (:id urheilijan-ammatilliset-lisakysymykset-question))
+      :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urheilijan-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
       :urheilijan-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options content
                                                                                 urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key
