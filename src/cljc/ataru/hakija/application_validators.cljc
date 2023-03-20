@@ -102,10 +102,9 @@
               (and (not multiple?)
                    (async/<! (has-applied haku-oid {:email value})))
               [false
-               [((if modifying?
-                   texts/email-applied-error-when-modifying
-                   texts/email-applied-error) value (when (:valid preferred-name)
-                                                      (:value preferred-name)))]]
+               [{:email-has-applied-error [((if modifying?
+                                             texts/email-applied-error-when-modifying
+                                             texts/email-applied-error) value (when (:valid preferred-name) (:value preferred-name)))]}]]
               :else
               [true []])))))
 
