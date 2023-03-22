@@ -2647,10 +2647,15 @@
                            :en "The preferred name has to be on of your first/given names."}
    :past-date             {:fi "Syntymäajan on oltava muodossa pp.kk.vvvv."
                            :sv "Födelsetiden ska anges i formen dd.mm.åååå."
-                           :en "The date of birth has to be in the format dd.mm.yyyy."}})
+                           :en "The date of birth has to be in the format dd.mm.yyyy."}
+   :email-simple          {:fi "Huoltajan sähköpostiosoite on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi."
+                           :sv "XXX e-postadress är i fel form. E-postadressen ska anges i formen namn@adress.fi."
+                           :en "XXX email address is in incorrect format. The email address has to be in the format name@address.com."}
+   })
 
 (defn person-info-validation-error [msg-key]
   (when (some? msg-key)
+    (print "PERSON INFO VALIDATION ERROR for key: " msg-key)
     (if-let [texts (get person-info-module-validation-error-texts msg-key)]
       {:fi [:div.application__person-info-validation-error-dialog {:class msg-key}
             [:p (:fi texts)]]

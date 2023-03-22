@@ -58,6 +58,8 @@
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
+    (print "ERRORS")
+    (print errors)
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
        (doall
@@ -704,9 +706,13 @@
 (defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
+    (print "adjacent field input")
+    (print id)
     (fn [{:keys [field-descriptor labelledby question-group-idx row-idx]}]
       (let [{:keys [value
-                    valid]} @(subscribe [:application/answer id question-group-idx row-idx])
+                    valid
+                    errors]} @(subscribe [:application/answer id question-group-idx row-idx])
+            answer          @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
             show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
             on-blur         (fn [_]
@@ -722,6 +728,8 @@
                                            question-group-idx
                                            row-idx
                                            value])))]
+        (print "ANSWER: " answer)
+        (print "subscribettu errors: " errors)
         [:input.application__form-text-input
          {:class           (if show-error?
                              " application__form-field-error"
