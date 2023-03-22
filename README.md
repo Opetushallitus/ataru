@@ -323,4 +323,4 @@ resources/less/component-link.less => resources/public/css/compiled/component-li
 Done.
 ```
 
-More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/)
+More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/).
