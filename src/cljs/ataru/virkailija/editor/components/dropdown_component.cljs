@@ -329,7 +329,8 @@
         component-locked?         (subscribe [:editor/component-locked? path])
         is-per-hakukohde-allowed  (subscribe [:editor/is-per-hakukohde-allowed path])
         allow-invalid-koodis-id   (util/new-uuid)
-        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])
+        admin?                    (subscribe [:editor/superuser?])]
     (fn [initial-content followups path {:keys [question-group-element?]}]
       (let [languages      @languages
             field-type     (:fieldType @value)
@@ -370,7 +371,7 @@
                 :header? true)]
              [:div.editor-form__checkbox-wrapper
               [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-              (when @toisen-asteen-yhteishaku?
+              (when (or @toisen-asteen-yhteishaku? (and @admin? (-> initial-content :sensitive-answer boolean)))
                 [checkbox-component/checkbox path initial-content :sensitive-answer])
               (when (and (seq (:belongs-to-hakukohderyhma initial-content))
                       @is-per-hakukohde-allowed
