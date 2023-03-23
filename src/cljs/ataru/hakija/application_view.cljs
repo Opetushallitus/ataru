@@ -5,6 +5,7 @@
             [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
             [ataru.hakija.hakija-readonly :as readonly-view]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.translations.translation-util :as translations]
             [re-frame.core :refer [subscribe dispatch]]
             [goog.string :as gstring]
@@ -138,6 +139,8 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-notification
+       {:role "alertdialog"
+        :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
@@ -155,6 +158,8 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-payment
        [:div.application__submitted-submit-payment-inner
+        {:role "alertdialog"
+         :aria-modal "true"}
         [:div.application__submitted-submit-payment-icon
           [icons/icon-check]]
           [:h1.application__submitted-submit-notification-heading
@@ -187,9 +192,13 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           [:a.application-feedback-form__close-button
-            {:on-click #(dispatch [:application/rating-form-toggle])
-             :data-test-id "close-feedback-form-button"}
+           {:role "alertdialog"
+            :aria-modal "true"}
+           [:button.a-button.application-feedback-form__close-button
+            {:on-click     #(dispatch [:application/rating-form-toggle])
+             :data-test-id "close-feedback-form-button"
+             :tab-index    "0"
+             :aria-label   (get (:close general-texts) @lang)}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
@@ -197,16 +206,29 @@
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
+                :on-key-down   (fn [e]
+                                 (when (or (= " " (.-key e))
+                                           (= "Enter" (.-key e)))
+                                   (.preventDefault e)
+                                   (dispatch [:application/rating-submit (star-number-from-event e)])))
                 :on-mouse-out  #(dispatch [:application/rating-hover 0])
-                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])}
+                :on-mouse-over #(dispatch [:application/rating-hover (star-number-from-event %)])
+                :role          "radiogroup"}
                (let [stars-active (or @stars @star-hovered 0)]
                  (map (fn [n]
                         (let [star-classes (if (< n stars-active)
                                              :i.application-feedback-form__rating-star.application-feedback-form__rating-star--active.zmdi.zmdi-star
-                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)]
+                                             :i.application-feedback-form__rating-star.application-feedback-form__rating-star--inactive.zmdi.zmdi-star-outline)
+                              star-number (inc n)]
                           [star-classes
-                           {:key         (str "rating-star-" n)
-                            :data-star-n (inc n)}])) (range 5)))])
+                           {:key          (str "rating-star-" n)
+                            :tab-index    "0"
+                            :role         "radio"
+                            :aria-checked (= @stars star-number)
+                            :aria-label   (if (< 0 star-number 6)
+                                            (get (translations/get-hakija-translation :feedback-ratings @lang) star-number)
+                                            "")
+                            :data-star-n  star-number}])) (range 5)))])
             (when (not submitted?)
               [:div.application-feedback-form__rating-text
                (let [stars-selected (or @stars @star-hovered)]
@@ -219,13 +241,16 @@
                [:textarea.application__form-text-input.application__form-text-area.application__form-text-area__size-medium
                 {:on-change   #(dispatch [:application/rating-update-feedback (.-value (.-target %))])
                  :placeholder (translations/get-hakija-translation :feedback-text-placeholder @lang)
-                 :max-length  2000}]])
+                 :max-length  2000
+                 :tab-index   "0"}]])
             (when (and (not submitted?)
                        rated?)
               [:button.application__overlay-button.application__overlay-button--enabled
-               {:on-click (fn [evt]
-                            (.preventDefault evt)
-                            (dispatch [:application/rating-feedback-submit]))}
+               {:on-click   (fn [evt]
+                              (.preventDefault evt)
+                              (dispatch [:application/rating-feedback-submit]))
+                :tab-index  "0"
+                :aria-label (translations/get-hakija-translation :feedback-send @lang)}
                (translations/get-hakija-translation :feedback-send @lang)])
             (when (and (not submitted?)
                        (not rated?))
@@ -247,15 +272,17 @@
         feedback-hidden?            (subscribe [:state-query [:application :feedback :hidden?]])
         demo?                       (subscribe [:application/demo?])]
     (fn []
-      (when (and (= :submitted @submit-status)
-                 (or (not @feedback-hidden?)
-                     (not @submit-notification-hidden?)))
-        [:div.application__submitted-overlay
-         (when (not @feedback-hidden?) [feedback-form feedback-hidden?])
-         (when (not @submit-notification-hidden?)
-               (if @submit-details
-                   [submit-notification-payment submit-notification-hidden? @submit-details]
-                   [submit-notification submit-notification-hidden? demo?]))]))))
+      [:div.application__submitted-overlay-wrapper
+       {:aria-live "assertive"}
+       (when (and (= :submitted @submit-status)
+                  (or (not @feedback-hidden?)
+                      (not @submit-notification-hidden?)))
+         [:div.application__submitted-overlay
+          (when (not @submit-notification-hidden?)
+            (if @submit-details
+              [submit-notification-payment submit-notification-hidden? @submit-details]
+              [submit-notification submit-notification-hidden? demo?]))
+          (when (not @feedback-hidden?) [feedback-form feedback-hidden?])])])))
 
 (defn- modal-info-element-overlay-inner
   [field]
