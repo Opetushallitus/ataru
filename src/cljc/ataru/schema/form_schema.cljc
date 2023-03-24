@@ -612,7 +612,8 @@
    :tutkintoKieli                        (s/maybe s/Str)
    :huoltajat                            [GuardianContactInfo]
    :hakemusFirstSubmittedTime            s/Str
-   :urheilijanLisakysymykset             (s/maybe UrheilijanLisakysymykset)})
+   :urheilijanLisakysymykset             (s/maybe UrheilijanLisakysymykset)
+   :urheilijanLisakysymyksetAmmatillinen (s/maybe UrheilijanLisakysymykset)})
 
 (s/defschema OnrApplication
   {:oid          s/Str
