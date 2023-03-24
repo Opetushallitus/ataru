@@ -2491,7 +2491,7 @@
 
 (defn email-applied-error
   [email preferred-name]
-  {:fi [:div
+  {:fi [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
@@ -2508,7 +2508,7 @@
          [:strong email]
          " on varmasti oikein."]
         [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]
-   :sv [:div
+   :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
@@ -2526,7 +2526,7 @@
          " säkert är korrekt."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
              söker till."]]
-   :en [:div
+   :en [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
@@ -2548,7 +2548,9 @@
 
 (defn email-applied-error-when-modifying
   [email preferred-name]
-  {:fi [:div
+  {:fi
+   [:div.application__validation-error-dialog
+   [:div
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
@@ -2564,8 +2566,8 @@
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
-        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]
-   :sv [:div
+        [:p "Ongelmatilanteissa ole yhteydessä oppilaitokseen johon haet."]]]
+   :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")
               "Hej!")]
@@ -2583,7 +2585,7 @@
          " säkert är korrekt."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
              söker till."]]
-   :en [:div
+   :en [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Dear " preferred-name ",")
               "Dear applicant,")]
@@ -2642,8 +2644,6 @@
 (defn ssn-applied-error
   [preferred-name]
   {:fi [:div.application__validation-error-dialog
-        [:div
-
         [:p (if (not (string/blank? preferred-name))
               (str "Hei " preferred-name "!")
               "Hei!")]
@@ -2657,7 +2657,6 @@
          " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
          jättäessäsi edellisen hakemuksen."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
-        ]
    :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
               (str "Hej " preferred-name "!")

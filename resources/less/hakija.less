@@ -2334,22 +2334,32 @@ th.application__readonly-adjacent--header {
 .application__validation-error-dialog-container {
   position: relative;
   white-space: normal;
-  height: 60px;
 
   .application__person-info-validation-error-dialog p {
     height: 40px;
     color: @red;
   }
 
-  .application__person-info-validation-error-dialog.postal-code p,
-  .application__person-info-validation-error-dialog.past-date p,
-  .application__person-info-validation-error-dialog.main-first-name p,
-  .application__person-info-validation-error-dialog.postal-office-missing p {
+  .application__person-info-validation-error-dialog.past-date p
+   {
     position: absolute;
     bottom: 0px;
     width: 460px;
     height: 20px;
     color: @red;
+    top: -5px;
+  }
+
+  .application__person-info-validation-error-dialog.postal-code p,
+  .application__person-info-validation-error-dialog.postal-office-missing p,
+  .application__person-info-validation-error-dialog.different-email p {
+    top: 0px;
+    height: 20px;
+  }
+
+  .application__person-info-validation-error-dialog.main-first-name p {
+    height: 20px;
+    bottom: 0px;
   }
 
   .application__validation-error-dialog {

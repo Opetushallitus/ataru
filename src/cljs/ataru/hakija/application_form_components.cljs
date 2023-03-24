@@ -187,12 +187,15 @@
                                                     " application__form-text-input--normal"))
                              :aria-invalid (not (:valid answer))
                              :autoComplete autocomplete-off
-                             :data-test-id "verify-email-input"}]])
-                     [validation-error (some-> answer
-                                               :errors
-                                               first
-                                               :email-verify-error)]
-                     ]))))
+                             :data-test-id "verify-email-input"}]
+                           [validation-error (some-> answer
+                                                     :errors
+                                                     first
+                                                     :email-verify-error)]
+                           [validation-error (some-> answer
+                                                     :errors
+                                                     first
+                                                     :email-has-applied-error)]])]))))
 
 (defn- options-satisfying-condition [field-descriptor answer-value options]
   (filter (option-visibility/visibility-checker field-descriptor answer-value) options))
