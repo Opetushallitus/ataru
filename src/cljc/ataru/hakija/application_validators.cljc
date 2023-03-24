@@ -336,7 +336,7 @@
   (if-let [pure-validator ((keyword validator) pure-validators)]
     (let [valid? (pure-validator params)]
       (if valid? (async/go [valid? []])
-                 (async/go [valid? [(texts/person-info-validation-error (keyword validator))]])))
+                 (async/go [valid? [{(keyword validator) [(texts/person-info-validation-error (keyword validator))]}]])))
     (if-let [async-validator ((keyword validator) async-validators)]
       (async-validator params)
       (async/go [false []]))))

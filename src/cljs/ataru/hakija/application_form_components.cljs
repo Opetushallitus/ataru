@@ -58,8 +58,6 @@
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
-    (print "ERRORS")
-    (print errors)
     (when (not-empty (filter #(some? %) errors))
       [:div.application__validation-error-dialog-container
        (doall
@@ -294,7 +292,10 @@
                   :data-test-id data-test-id}
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
-         [validation-error errors]
+         [validation-error (some-> errors
+                                   first
+                                   vals
+                                   first)] ;toistaiseksi tiedetään että on vain yksi virhe per kenttä
          (when (not (or (string/blank? value)
                         show-error?))
            [text-field-followups-container field-descriptor options value idx])]))))
@@ -706,13 +707,9 @@
 (defn- adjacent-field-input [{:keys [field-descriptor]}]
   (let [id          (keyword (:id field-descriptor))
         local-state (r/atom {:focused? false :value nil})]
-    (print "adjacent field input")
-    (print id)
     (fn [{:keys [field-descriptor labelledby question-group-idx row-idx]}]
       (let [{:keys [value
-                    valid
-                    errors]} @(subscribe [:application/answer id question-group-idx row-idx])
-            answer          @(subscribe [:application/answer id question-group-idx row-idx])
+                    valid]} @(subscribe [:application/answer id question-group-idx row-idx])
             cannot-edit?    @(subscribe [:application/cannot-edit? id])
             show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
             on-blur         (fn [_]
@@ -728,8 +725,6 @@
                                            question-group-idx
                                            row-idx
                                            value])))]
-        (print "ANSWER: " answer)
-        (print "subscribettu errors: " errors)
         [:input.application__form-text-input
          {:class           (if show-error?
                              " application__form-field-error"
@@ -746,6 +741,14 @@
           :aria-labelledby labelledby
           :tab-index       "0"
           :autoComplete    autocomplete-off}]))))
+
+(defn- validation-error-component [{:keys [field-descriptor]}]
+  (let [id          (keyword (:id field-descriptor))]
+    (fn []
+      (let [{:keys [errors]} @(subscribe [:application/answer id])]
+        [validation-error (some-> errors
+                                  first
+                                  :email-simple)]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
@@ -789,7 +792,8 @@
                                           {:field-descriptor   child
                                            :labelledby         (str header-label-id " " field-label-id)
                                            :question-group-idx question-group-idx
-                                           :row-idx            row-idx}]]))
+                                           :row-idx            row-idx}]
+                                         [validation-error-component {:field-descriptor   child}]]))
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
