@@ -96,11 +96,19 @@
      :seura                       "urheilija-2nd-amm-seura"
      :liitto                      "urheilija-2nd-amm-liitto"}))
 
-(defn- main-sport-keys-and-options [content wrapper-key sport-keys]
-  (let [laji-options (->> content
+(defn- main-sport-keys-and-options [content wrapper-key sport-keys isAmmatillinen?]
+  (let [get-children-fn (fn [wrapper]
+                          (if isAmmatillinen?
+                            (->> (:children wrapper)
+                                  first
+                                  :options
+                                  first
+                                  :followups)
+                            (:children wrapper)))
+        laji-options (->> content
                           (filter #(= wrapper-key (:id %)))
                           first
-                          :children
+                          get-children-fn
                           (filter #(= (:paalaji-dropdown sport-keys) (:id %)))
                           first
                           :options)
@@ -188,9 +196,11 @@
       :urheilijan-lisakysymys-keys                 urheilija-keys
       :urheilijan-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options content
                                                                                 urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key
-                                                                                urheilija-keys)
+                                                                                urheilija-keys
+                                                                                false)
       :urheilijan-amm-lisakysymys-keys             urheilija-amm-keys
       :urheilijan-ammatillinen-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options
                                                                   content
                                                                   urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key
-                                                                  urheilija-amm-keys)})))
+                                                                  urheilija-amm-keys
+                                                                  true)})))
