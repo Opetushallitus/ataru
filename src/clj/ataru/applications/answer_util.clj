@@ -53,6 +53,7 @@
       (if-not (empty? (remove nil? upcoming-completion-year))
         upcoming-completion-year
         (->> [:pohjakoulutus_yo_ammatillinen--vocational-completion-year
+              :b7a391cc-7ad9-4719-a35a-4cffe4e445e6 ; Korkeakoulujen kevään 2023 toinen yhteishaku
               :98519703-70ca-4ab4-b3c8-a2ff78fa98fd ; Korkeakoulujen kevään 2022 ensimmäinen yhteishaku, lomake-id d4af1394-5e0f-4cd6-92b3-990cfbbb700a --> kysymys-id: 98519703-70ca-4ab4-b3c8-a2ff78fa98fd
               :bc3723b0-471e-4983-ad88-083d64c5616e ; Korkeakoulujen yhteishaku syksy 2021, lomake-id b3f2f760-40d3-42c5-9ff8-37d004b633c6 --> kysymys-id: bc3723b0-471e-4983-ad88-083d64c5616e
               :60ce79f9-b37a-4b7e-a7e0-f25ba430f055]
