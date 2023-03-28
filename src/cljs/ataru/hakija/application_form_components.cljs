@@ -295,7 +295,7 @@
          [validation-error (some-> errors
                                    first
                                    vals
-                                   first)] ;toistaiseksi tiedetään että on vain yksi virhe per kenttä
+                                   first)] ;tiedetään että toistaiseksi on vain yksi virhe per kenttä
          (when (not (or (string/blank? value)
                         show-error?))
            [text-field-followups-container field-descriptor options value idx])]))))

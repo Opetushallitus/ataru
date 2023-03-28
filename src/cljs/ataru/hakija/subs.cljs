@@ -733,8 +733,12 @@
      (re-frame/subscribe [:application/validator-processing? id])])
   (fn [[field {:keys [value valid]} validator-processing?] _]
     (and (not valid)
-         (or (afc/is-required-field? field)
-             (-> field :params :numeric))
+         (or (afc/is-required-field? field) ;pakollinen kenttä
+             (-> field :params :numeric) ;numeerisuusvalidointi
+             (contains? #{"email-optional" "email-simple"} ;ei-pakollisen sähköpostikentän validointi
+                        (some-> field
+                                :validators
+                                first)))
          (if (string? value)
            (not (cstr/blank? value))
            (not (empty? value)))
