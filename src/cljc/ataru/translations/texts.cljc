@@ -819,6 +819,21 @@
                                              :en "EN: Valitse tämä vain silloin, kun olet keskeyttänyt perusopetuksen. \n\nHaet automaattisesti harkintaan perustuvassa valinnassa. "}
    })
 
+(def base-education-cotinuous-admissions-module-texts
+  {:section-title                           {:fi "Pohjakoulutuksesi"
+                                             :sv "Grundutbildning"
+                                             :en "Your educational background"}
+   :choose-base-education                   {:fi "Valitse yksi pohjakoulutus, jolla haet koulutukseen"
+                                             :sv "Välj den grundutbildning med vilken du söker till utbildningen"
+                                             :en "Fill in the education that you have completed"}
+   :choose-base-education-info              {:fi "Jos olet suorittanut useamman pohjakoulutuksen, \nvalitse ylin koulutuksesi."
+                                             :sv "Om du har avlagt mer än en grundutbildning, välj \ndin högsta utbildning."
+                                             :en "If you have completed several qualifications, fill in \nthe highest level that you have completed."}
+   :base-education                          {:fi "Perusopetuksen oppimäärä"
+                                             :sv "Den grundläggande utbildningens lärokurs"
+                                             :en "EN: Perusopetuksen oppimäärä"}
+   })
+
 (def person-info-module-texts
   {:forenames            {:fi "Etunimet"
                           :sv "Förnamn"
@@ -1123,6 +1138,9 @@
    :base-education-module-2nd                                {:fi "Pohjakoulutusmoduuli (peruskoulu)"
                                                               :sv "Grundutbildningsmodul (grundskolan)"
                                                               :en "EN: Pohjakoulutusmoduuli (peruskoulu)"}
+   :base-education-continuous-admission                      {:fi "Pohjakoulutusmoduuli (jatkuva haku)"
+                                                              :sv "Grundutbildningsmodul (kontinuerlig ansökan)"
+                                                              :en "EN: Pohjakoulutusmoduuli (jatkuva haku)"}
    :cannot-display-file-type-in-attachment-skimming          {:fi "Tätä liitettä ei valitettavasti voida näyttää esikatselussa, mutta voit ladata sen tästä tiedostona."
                                                               :sv "Denna bilaga kan tyvärr inte visas i förhandsgranskningen, men du kan ladda ner bilagan som en fil."
                                                               :en "This attachment can't unfortunately be shown but you can download it here."}
