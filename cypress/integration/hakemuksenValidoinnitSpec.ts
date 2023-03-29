@@ -34,6 +34,9 @@ describe('Hakulomakkeen validoinnit', () => {
             .henkilotunnus()
             .invoke('attr', 'aria-invalid')
             .should('eq', 'true')
+          cy.contains('Henkilötunnus on oltava muodossa PPKKVVXNNNT.', {
+            matchCase: true,
+          }).should('exist')
         })
         it('Näyttää huoltajan yhteystietokentät kun täyttää alaikäisen hetun', () => {
           tekstinSyotto.syotaTeksti(
