@@ -75,6 +75,45 @@
   [hakukohde-reviews hakukohde-oid requirement]
   (:state (first (get hakukohde-reviews [hakukohde-oid requirement]))))
 
+(defn- hakemuksen-vastaanoton-tila-sarake [{:keys [application-key
+                                                application-hakukohde-reviews
+                                                hakukohde-oid
+                                                lang]}]
+  (let [selection-state                                      (hakukohde-review-state
+                                                               application-hakukohde-reviews
+                                                               hakukohde-oid
+                                                               "selection-state")
+        kevyt-valinta-enabled-for-application-and-hakukohde? @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                                          application-key
+                                                                          hakukohde-oid])
+        kevyt-valinta-property-value                         (when kevyt-valinta-enabled-for-application-and-hakukohde?
+                                                               @(subscribe [:virkailija-kevyt-valinta/kevyt-valinta-property-value
+                                                                            :kevyt-valinta/vastaanotto-tila
+                                                                            application-key
+                                                                            hakukohde-oid]))]
+    [:span.application-handling__hakukohde-selection-cell
+     [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
+      (if kevyt-valinta-enabled-for-application-and-hakukohde?
+        (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
+              translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
+                                             :kevyt-valinta/vastaanotto-tila
+                                             kevyt-valinta-property-value)]
+          [:<>
+           @(subscribe [:editor/virkailija-translation translation-key])
+           [:i.zmdi.zmdi-info.application-handling__valinnan-tila-info-ikoni
+            {:class (if kevyt-valinta-property-exists?
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista"
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
+             :title (if kevyt-valinta-property-exists?
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]])
+        (or
+          (application-states/get-review-state-label-by-name
+            review-states/application-hakukohde-selection-states
+            selection-state
+            lang)
+          @(subscribe [:editor/virkailija-translation :incomplete])))]]))
+
 (defn- hakemuksen-valinnan-tila-sarake [{:keys [application-key
                                                 application-hakukohde-reviews
                                                 hakukohde-oid
@@ -185,7 +224,12 @@
                [hakemuksen-valinnan-tila-sarake {:application-key               (:key application)
                                                  :hakukohde-oid                 hakukohde-oid
                                                  :application-hakukohde-reviews application-hakukohde-reviews
-                                                 :lang                          @lang}])]))
+                                                 :lang                          @lang}])
+             (when (:selection-state review-settings true) ;fixme, vastaanoton tila? Vai näytetäänkö aina kun muutakin valintatietoa.
+               [hakemuksen-vastaanoton-tila-sarake {:application-key               (:key application)
+                                                    :hakukohde-oid                 hakukohde-oid
+                                                    :application-hakukohde-reviews application-hakukohde-reviews
+                                                    :lang                          @lang}])]))
         application-hakukohde-oids))))
 
 (defn- application-list-row [application selected? select-application]
@@ -835,4 +879,18 @@
           {:selection-state-filter
            @(subscribe [:state-query [:application :selection-state-counts]])
            :kevyt-valinta-selection-state-filter
+           @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])
+     (when (:selection-state @review-settings true)
+       [:div.application-handling__list-row--selection
+        [hakukohde-state-filter-controls
+         {:title
+          @(subscribe [:editor/virkailija-translation :vastaanotto])
+          :filter-titles
+          {:kevyt-valinta-vastaanotto-state-filter
+           :vastaanotto}
+          :states
+          {:kevyt-valinta-vastaanotto-state-filter
+           review-states/kevyt-valinta-vastaanoton-tila-selection-states}
+          :state-counts-subs
+          {:kevyt-valinta-vastaanotto-state-filter
            @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])]))
