@@ -50,6 +50,22 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
+(def vastaanotto-tila-translation-key-mapping
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :perunut
+   "PERUUTETTU"                    :peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
+   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
+   "KESKEN"                        :kesken
+   "VASTAANOTTANUT"                :vastaanottanut})
+
+(def kevyt-valinta-vastaanoton-tila-selection-states
+  (map (fn [[value key]]
+         [value
+          (key virkailija-texts)])
+       vastaanotto-tila-translation-key-mapping))
+
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla
@@ -69,16 +85,6 @@
 (def julkaisun-tila-translation-key-mapping
   {true  :julkaistu
    false :ei-julkaistu})
-
-(def vastaanotto-tila-translation-key-mapping
-  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
-   "PERUNUT"                       :perunut
-   "PERUUTETTU"                    :peruutettu
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
-   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
-   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
-   "KESKEN"                        :kesken
-   "VASTAANOTTANUT"                :vastaanottanut})
 
 (def ilmoittautumisen-tila-translation-key-mapping
   {"EI_TEHTY"              :ei-tehty
