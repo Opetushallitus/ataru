@@ -3,7 +3,8 @@
             [ataru.collections :as coll]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
-            [re-frame.core :as re-frame])
+            [re-frame.core :as re-frame]
+            [clojure.string :as string])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (re-frame/reg-sub
@@ -173,7 +174,7 @@
   (fn [[haku]]
     (true? (some-> haku
                    :kohdejoukko-uri
-                   (clojure.string/starts-with? "haunkohdejoukko_12#")))))
+                   (string/starts-with? "haunkohdejoukko_12#")))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value
@@ -282,8 +283,6 @@
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :unchecked})]
       (kevyt-valinta-states kevyt-valinta-property))))
-
-(def ^:private not-nil? (comp not nil?))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-checkmark-state
