@@ -6,7 +6,8 @@
    :LISAKOULUTUS_VALMA              :lisapistekoulutus-valma
    :LISAKOULUTUS_MAAHANMUUTTO_LUKIO :lisapistekoulutus-luva
    :LISAKOULUTUS_KANSANOPISTO       :lisapistekoulutus-kansanopisto
-   :LISAKOULUTUS_OPISTOVUOSI        :lisapistekoulutus-opistovuosi})
+   :LISAKOULUTUS_OPISTOVUOSI        :lisapistekoulutus-opistovuosi
+   :LISAKOULUTUS_TUVA               :lisapistekoulutus-tuva})
 
 (def oppiaine-lang-postfix "_OPPIAINE")
 (def oppiaine-valinnainen-postfix "_VAL")
