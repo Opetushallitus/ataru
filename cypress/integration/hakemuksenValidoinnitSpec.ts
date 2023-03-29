@@ -60,6 +60,12 @@ describe('Hakulomakkeen validoinnit', () => {
             .huoltajanSahkoposti()
             .invoke('attr', 'aria-invalid')
             .should('eq', 'true')
+          cy.contains(
+            'Sähköpostiosoitteesi on väärässä muodossa. Sähköpostiosoite on oltava muodossa nimi@osoite.fi.',
+            {
+              matchCase: true,
+            }
+          ).should('exist')
         })
       })
     })
