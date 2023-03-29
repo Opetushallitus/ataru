@@ -127,8 +127,9 @@
          (not selection-state-used?))))
 
 (defn- default-kevyt-valinta-property-value [kevyt-valinta-property]
-  (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
-    "KESKEN"))
+  (cond
+    (= kevyt-valinta-property :kevyt-valinta/valinnan-tila) "KESKEN"
+    (= kevyt-valinta-property :kevyt-valinta/vastaanotto-tila) "KESKEN")) ;fixme, oletusarvo vastaanoton tilalle?
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/hakukohde-oid
