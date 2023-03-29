@@ -292,10 +292,10 @@
                   :data-test-id data-test-id}
                  (when (or disabled? cannot-edit?)
                    {:disabled true}))]
-         [validation-error (some-> errors
-                                   first
-                                   vals
-                                   first)] ;tiedetään että toistaiseksi on vain yksi virhe per kenttä
+         [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
+                                   first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
+                                   vals ;mapin arvot listana (jonka koko 1)
+                                   first)] ;kaivettava listan sisältä se varsinainen errors-vector
          (when (not (or (string/blank? value)
                         show-error?))
            [text-field-followups-container field-descriptor options value idx])]))))
@@ -742,13 +742,14 @@
           :tab-index       "0"
           :autoComplete    autocomplete-off}]))))
 
-(defn- validation-error-component [{:keys [field-descriptor]}]
-  (let [id          (keyword (:id field-descriptor))]
+(defn- validation-error-for-validator [{:keys [field-descriptor]} validator-keyword]
+  (let [id          (keyword (:id field-descriptor))
+        validator-name validator-keyword]
     (fn []
       (let [{:keys [errors]} @(subscribe [:application/answer id])]
         [validation-error (some-> errors
                                   first
-                                  :email-simple)]))))
+                                  validator-name)]))))
 
 (defn adjacent-text-fields [field-descriptor _]
   (let [cannot-edits? (map #(subscribe [:application/cannot-edit? (keyword (:id %))])
@@ -793,7 +794,7 @@
                                            :labelledby         (str header-label-id " " field-label-id)
                                            :question-group-idx question-group-idx
                                            :row-idx            row-idx}]
-                                         [validation-error-component {:field-descriptor   child}]]))
+                                         [validation-error-for-validator {:field-descriptor child} :email-simple]])) ;tässä komponentissa toistaiseksi validoidaan vain huoltajan sähköposti
                                     (:children field-descriptor))
                        (when (and (pos? row-idx) (not (some deref cannot-edits?)))
                          [:a {:data-row-idx row-idx
