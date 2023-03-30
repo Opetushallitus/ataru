@@ -23,11 +23,12 @@
 (defn base-education-2nd-language-value-to-lang
   [value]
   (match [value]
+         ["0"] "fi"
          ["1"] "sv"
          ["2"] "sa"
          ["3"] "en"
          ["4"] "de"
-         :else "fi"))
+         :else nil))
 
 (defn- base-education-language-question
   [metadata]
