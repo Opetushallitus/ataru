@@ -7,6 +7,7 @@
 
 
 (def urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key "8466feca-1993-4af3-b82c-59003ca2fd63")
+(def urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key "d26bac09-1fb2-4be3-8bd1-5071a81decb7")
 
 (def urheilija-muu-laji-label {:fi "Muu, mikä?", :sv "Annan, vad?"})
 (def urheilija-paalaji-folloup-label {:fi "Päälaji", :sv "Huvudgren"})
@@ -20,10 +21,6 @@
 (def kiinnostunut-oppisopimuskoulutuksesta-wrapper-label {:fi "Oppisopimuskoulutus ",
                                                           :sv "Läroavtalsutbildning"})
 
-(def urheilijan-lisakysymykset-wrapper-label {:fi "Urheilijan lisäkysymykset ammatillisissa kohteissa",
-                                              :sv "Tilläggsfrågor för idrottare i yrkesinriktade ansökningsmål"})
-
-;fixme, kysymys-id:t kohdilleen.
 (defn- urheilijan-lisakysymys-keys [haku-oid]
   (case haku-oid
     "1.2.246.562.29.00000000000000005368" {:keskiarvo                   "7b88594a-c308-41f8-bac3-2d3779ea4443"
@@ -55,6 +52,77 @@
      :paalaji-dropdown            "urheilija-2nd-lajivalinta-dropdown"
      :seura                       "urheilija-2nd-seura"
      :liitto                      "urheilija-2nd-liitto"}))
+
+(defn- urheilijan-ammatilliset-lisakysymys-keys [haku-oid]
+  (case haku-oid
+    "1.2.246.562.29.00000000000000005368" {:peruskoulu                  "22e8cc0a-ef4b-4f47-b0e3-a34bb1c3c07d"
+                                           :tamakausi                   "a9a32f30-86b4-4e41-a6d4-4a6863a086ab"
+                                           :viimekausi                  "6822dcb8-86b7-400b-a92f-4d02be6b7063"
+                                           :toissakausi                 "0278ea3f-e6c1-41c3-a9cc-b3be8acd493d"
+                                           :sivulaji                    "25c3adca-8a4f-41f2-91d2-7c787a47d166"
+                                           :valmentaja_nimi             "548e2d07-ac5d-49c5-a744-9bc49550c742"
+                                           :valmentaja_email            "83a487b1-3485-4763-a996-82a9640d1812"
+                                           :valmentaja_puh              "346ac362-4f75-4225-a7ba-3ddcb9b0498d"
+                                           :valmennusryhma_seurajoukkue "fc52158d-0d80-42d5-b16b-852e0e50e4d6"
+                                           :valmennusryhma_piirijoukkue "6437bc3e-e554-4b9e-982d-4622fc77be50"
+                                           :valmennusryhma_maajoukkue   "01a4a834-0128-4147-a890-6e2932c915d6"
+                                           :paalajiSeuraLiittoParent    "09257557-0bbf-4e94-a19b-44b561817eda"}
+    "1.2.246.562.29.00000000000000021303" {:peruskoulu                  "22e8cc0a-ef4b-4f47-b0e3-a34bb1c3c07d"
+                                           :tamakausi                   "a9a32f30-86b4-4e41-a6d4-4a6863a086ab"
+                                           :viimekausi                  "6822dcb8-86b7-400b-a92f-4d02be6b7063"
+                                           :toissakausi                 "0278ea3f-e6c1-41c3-a9cc-b3be8acd493d"
+                                           :sivulaji                    "25c3adca-8a4f-41f2-91d2-7c787a47d166"
+                                           :valmentaja_nimi             "548e2d07-ac5d-49c5-a744-9bc49550c742"
+                                           :valmentaja_email            "83a487b1-3485-4763-a996-82a9640d1812"
+                                           :valmentaja_puh              "346ac362-4f75-4225-a7ba-3ddcb9b0498d"
+                                           :valmennusryhma_seurajoukkue "fc52158d-0d80-42d5-b16b-852e0e50e4d6"
+                                           :valmennusryhma_piirijoukkue "6437bc3e-e554-4b9e-982d-4622fc77be50"
+                                           :valmennusryhma_maajoukkue   "01a4a834-0128-4147-a890-6e2932c915d6"
+                                           :paalaji-dropdown            "09257557-0bbf-4e94-a19b-44b561817eda"
+                                           :seura                       "06900eee-7949-445d-ac4f-e8738a904185"
+                                           :liitto                      "2b2ede36-e520-4727-8151-93115d26ef7f"}
+    {:peruskoulu                  "urheilija-2nd-amm-peruskoulu"
+     :tamakausi                   "urheilija-2nd-amm-tamakausi"
+     :viimekausi                  "urheilija-2nd-amm-viimekausi"
+     :toissakausi                 "urheilija-2nd-amm-toissakausi"
+     :sivulaji                    "urheilija-2nd-amm-sivulaji"
+     :valmentaja_nimi             "urheilija-2nd-amm-valmentaja-nimi"
+     :valmentaja_email            "urheilija-2nd-amm-valmentaja-email"
+     :valmentaja_puh              "urheilija-2nd-amm-valmentaja-puh"
+     :valmennusryhma_seurajoukkue "urheilija-2nd-amm-valmennus-seurajoukkue"
+     :valmennusryhma_piirijoukkue "urheilija-2nd-amm-valmennus-piirijoukkue"
+     :valmennusryhma_maajoukkue   "urheilija-2nd-amm-valmennus-maajoukkue"
+     :paalaji-dropdown            "urheilija-2nd-amm-lajivalinta-dropdown"
+     :seura                       "urheilija-2nd-amm-seura"
+     :liitto                      "urheilija-2nd-amm-liitto"}))
+
+(defn- main-sport-keys-and-options [content wrapper-key sport-keys isAmmatillinen?]
+  (let [get-children-fn (fn [wrapper]
+                          (if isAmmatillinen?
+                            (->> (:children wrapper)
+                                  first
+                                  :options
+                                  first
+                                  :followups)
+                            (:children wrapper)))
+        laji-options (->> content
+                          (filter #(= wrapper-key (:id %)))
+                          first
+                          get-children-fn
+                          (filter #(= (:paalaji-dropdown sport-keys) (:id %)))
+                          first
+                          :options)
+        laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
+        muu-laji-key (->> laji-options
+                          (filter #(= urheilija-muu-laji-label (:label %)))
+                          first
+                          :followups
+                          (filter #(= urheilija-paalaji-folloup-label (:label %)))
+                          first
+                          :id)]
+    {:laji-dropdown-key (keyword (:paalaji-dropdown sport-keys))
+     :muu-laji-key      (keyword muu-laji-key)
+     :value-to-label    laji-value-to-label}))
 
 ;This should at some point be replaced by hardcoded id's for the fields.
 (defn assoc-deduced-vakio-answers-for-toinen-aste-application [questions application]
@@ -110,36 +178,29 @@
                                       :children
                                       first
                                       :id)
-         urhelijian-ammatilliset-lisakysymykset-question (->> content
-                                                              (filter #(= urheilijan-lisakysymykset-wrapper-label (:label %)))
+         urheilijan-ammatilliset-lisakysymykset-question (->> content
+                                                              (filter #(= urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key (:id %)))
                                                               first
                                                               :children
                                                               first)
          urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
-         laji-options (->> content
-                           (filter #(= urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key (:id %)))
-                           first
-                           :children
-                           (filter #(= (:paalaji-dropdown urheilija-keys) (:id %)))
-                           first
-                           :options)
-         laji-value-to-label (into {} (map (fn [laji] {(:value laji) (:label laji)}) laji-options))
-         muu-laji-key (->> laji-options
-                           (filter #(= urheilija-muu-laji-label (:label %)))
-                           first
-                           :followups
-                           (filter #(= urheilija-paalaji-folloup-label (:label %)))
-                           first
-                           :id)]
+         urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)]
      {:tutkintovuosi-keys                          tutkintovuosi-keys
       :tutkintokieli-keys                          tutkintokieli-keys
       :sora-terveys-key                            sora-terveys-question
       :sora-aiempi-key                             sora-aiempi-question
       :kaksoistutkinto-keys                        kaksoistutkinto-questions
       :oppisopimuskoulutus-key                     (keyword oppisopimuskoulutus-key)
-      :urheilijan-amm-lisakysymys-key              (keyword (:id urhelijian-ammatilliset-lisakysymykset-question))
-      :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urhelijian-ammatilliset-lisakysymykset-question))
+      :urheilijan-amm-lisakysymys-key              (keyword (:id urheilijan-ammatilliset-lisakysymykset-question))
+      :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urheilijan-ammatilliset-lisakysymykset-question))
       :urheilijan-lisakysymys-keys                 urheilija-keys
-      :urheilijan-lisakysymys-laji-key-and-mapping {:laji-dropdown-key (keyword (:paalaji-dropdown urheilija-keys))
-                                                    :muu-laji-key      (keyword muu-laji-key)
-                                                    :value-to-label    laji-value-to-label}})))
+      :urheilijan-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options content
+                                                                                urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key
+                                                                                urheilija-keys
+                                                                                false)
+      :urheilijan-amm-lisakysymys-keys             urheilija-amm-keys
+      :urheilijan-ammatillinen-lisakysymys-laji-key-and-mapping (main-sport-keys-and-options
+                                                                  content
+                                                                  urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key
+                                                                  urheilija-amm-keys
+                                                                  true)})))
