@@ -56,9 +56,8 @@
    "PERUUTETTU"                    :peruutettu
    "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
    "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
-   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
-   "KESKEN"                        :kesken
-   "VASTAANOTTANUT"                :vastaanottanut})
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut
+   "KESKEN"                        :kesken})
 
 (def kevyt-valinta-vastaanoton-tila-selection-states
   (map (fn [[value key]]
