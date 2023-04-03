@@ -80,7 +80,7 @@
 
 (defn add-kevyt-valinta-vastaanotto-state-counts
   [counts db applications selected-hakukohde-oids]
-  (let [korkeakouluhaku? (subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
+  (let [korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
     (reduce (fn [counts
                  {application-key :key
                   hakukohde-oids  :hakukohde}]
