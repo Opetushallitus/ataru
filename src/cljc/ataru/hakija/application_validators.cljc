@@ -70,12 +70,12 @@
         modifying?     (some? original-value)]
     (async/go
       (cond (not (ssn/ssn? value))
-            [false [(texts/person-info-validation-error :ssn)]]
+            [false [{:ssn [(texts/person-info-validation-error :ssn)]}]]
             (and (not multiple?)
                  (not (and modifying? (= value original-value)))
                  (async/<! (has-applied haku-oid {:ssn value})))
-            [false [(texts/ssn-applied-error (when (:valid preferred-name)
-                                               (:value preferred-name)))]]
+            [false [{:ssn [(texts/ssn-applied-error (when (:valid preferred-name)
+                                               (:value preferred-name)))]}]]
             :else
             [true []]))))
 
@@ -336,7 +336,7 @@
   (if-let [pure-validator ((keyword validator) pure-validators)]
     (let [valid? (pure-validator params)]
       (if valid? (async/go [valid? []])
-                 (async/go [valid? [(texts/person-info-validation-error (keyword validator))]])))
+                 (async/go [valid? [{(keyword validator) [(texts/person-info-validation-error (keyword validator))]}]])))
     (if-let [async-validator ((keyword validator) async-validators)]
       (async-validator params)
       (async/go [false []]))))

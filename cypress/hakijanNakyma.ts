@@ -175,6 +175,12 @@ export const henkilotiedot = {
   },
 }
 
+export const huoltajantiedot = {
+  huoltajanNimi: () => cy.get('[id$=guardian-name-0]'),
+  huoltajanPuhelin: () => cy.get('[id$=guardian-phone-0]'),
+  huoltajanSahkoposti: () => cy.get('[id$=guardian-email-0]'),
+}
+
 export const klikkaa = (elementinTeksti: string) =>
   cy.get(`label:contains(${elementinTeksti})`).click({ multiple: true })
 
