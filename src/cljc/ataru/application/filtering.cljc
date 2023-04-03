@@ -1,6 +1,7 @@
 (ns ataru.application.filtering
   (:require [ataru.application.review-states :as review-states]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [re-frame.core :refer [subscribe]]))
 
 (defn filter-by-hakukohde-review
   [application selected-hakukohteet requirement-name states-to-include]
@@ -79,28 +80,33 @@
 
 (defn add-kevyt-valinta-vastaanotto-state-counts
   [counts db applications selected-hakukohde-oids]
-  (reduce (fn [counts
-               {application-key :key
-                hakukohde-oids  :hakukohde}]
-            (->> hakukohde-oids
-                 (filter (fn [hakukohde-oid]
-                           (contains? selected-hakukohde-oids hakukohde-oid)))
-                 (map (fn [hakukohde-oid]
-                        (let [vastaanoton-tila (or (-> db
-                                                       :valinta-tulos-service
-                                                       (get application-key)
-                                                       (get hakukohde-oid)
-                                                       :valinnantulos
-                                                       :vastaanottotila)
-                                                   "KESKEN")]
-                          vastaanoton-tila)))
-                 (reduce (fn [acc vastaanoton-tila]
-                           (update acc
-                                   vastaanoton-tila
-                                   (fnil inc 0)))
-                         counts)))
-          counts
-          applications))
+  (let [korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
+    (reduce (fn [counts
+                 {application-key :key
+                  hakukohde-oids  :hakukohde}]
+              (->> hakukohde-oids
+                   (filter (fn [hakukohde-oid]
+                             (contains? selected-hakukohde-oids hakukohde-oid)))
+                   (map (fn [hakukohde-oid]
+                          (let [raw-vastaanoton-tila (-> db
+                                                         :valinta-tulos-service
+                                                         (get application-key)
+                                                         (get hakukohde-oid)
+                                                         :valinnantulos
+                                                         :vastaanottotila)
+                                vastaanoton-tila (if (and (not korkeakouluhaku?)
+                                                          (= raw-vastaanoton-tila "VASTAANOTTANUT_SITOVASTI"))
+                                                   "VASTAANOTTANUT"
+                                                   raw-vastaanoton-tila)]
+                            (or vastaanoton-tila
+                                "KESKEN"))))
+                   (reduce (fn [acc vastaanoton-tila]
+                             (update acc
+                                     vastaanoton-tila
+                                     (fnil inc 0)))
+                           counts)))
+            counts
+            applications)))
 
 (defn add-kevyt-valinta-selection-state-counts
   [counts db applications selected-hakukohde-oids]
