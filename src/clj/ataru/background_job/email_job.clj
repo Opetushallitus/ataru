@@ -9,8 +9,6 @@
   (resolve-url :ryhmasahkoposti-service))
 
 (defn- send-email [from recipients subject body]
-  (log/info "lähettämässä emailia")
-  (log/info recipients)
   (let [url                (viestintapalvelu-address)
         wrapped-recipients (mapv (fn [rcp] {:email rcp}) recipients)
         response           (http-util/do-post url {:headers      {"content-type" "application/json"}
