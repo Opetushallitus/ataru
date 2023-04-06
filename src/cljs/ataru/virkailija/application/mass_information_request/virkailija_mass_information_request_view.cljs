@@ -13,7 +13,7 @@
         form-status        (subscribe [:application/mass-information-request-form-status])
         applications-count (subscribe [:application/loaded-applications-count])
         button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
-    (fn [application-information-request-contains-modification-link]
+    (fn [application-information-request-contains-modification-link application-information-request-applicant-email-disclaimer]
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
         {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility true])}
@@ -40,6 +40,7 @@
             {:value     @message
              :on-change #(dispatch [:application/set-mass-information-request-message (-> % .-target .-value)])}]]
           [application-information-request-contains-modification-link]
+          [application-information-request-applicant-email-disclaimer]
           (when @guardian-enabled?
             [:div.application-handling__information-request-row
              [:div.application-handling__information-request-row
