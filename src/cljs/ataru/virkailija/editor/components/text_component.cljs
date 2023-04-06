@@ -436,7 +436,8 @@
                                     (dispatch-sync [:editor/set-component-value new-size path :params :size]))
         text-area?                (= "Tekstialue" header-label)
         component-locked?         (subscribe [:editor/component-locked? path])
-        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])]
+        toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])
+        admin?                    (subscribe [:editor/superuser?])]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
@@ -489,7 +490,8 @@
                 :on-change #(max-length-change (get-val %))}]])]
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
-           (when (and text-area? @toisen-asteen-yhteishaku?)
+           (when (and text-area? (or @toisen-asteen-yhteishaku?
+                                     (and @admin? (-> initial-content :sensitive-answer boolean))))
              [checkbox-component/checkbox path initial-content :sensitive-answer])
            (when-not text-area?
              [repeater-checkbox-component/repeater-checkbox path initial-content])
