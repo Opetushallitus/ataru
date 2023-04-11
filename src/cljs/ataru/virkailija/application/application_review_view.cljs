@@ -14,7 +14,6 @@
             [ataru.virkailija.application.hyvaksynnan-ehto.view :as hyvaksynnan-ehto]
             [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-view :as kv]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-handlers]
@@ -518,16 +517,12 @@
             [:span @(subscribe [:application/hakukohde-and-tarjoaja-name (:hakukohde event)])]]]]
 
          {:event-type "kevyt-valinta-valinnan-tila-change" :valinnan-tila valinnan-tila}
-         (let [kevyt-valinta-property-value (mappings/valinta-tulos-service-value->kevyt-valinta-property-value
-                                              valinnan-tila
+         (let [translation-key              (kvt/kevyt-valinta-value-translation-key
                                               :kevyt-valinta/valinnan-tila
-                                              korkeakouluhaku?)
-               translation-key              (kvt/kevyt-valinta-value-translation-key
-                                              :kevyt-valinta/valinnan-tila
-                                              kevyt-valinta-property-value)
+                                              valinnan-tila)
                event-text                   @(subscribe [:editor/virkailija-translation
                                                          translation-key
-                                                         kevyt-valinta-property-value])]
+                                                         valinnan-tila])]
            [[:span event-text]])
 
          {:subject _ :message _ :message-type message-type}
