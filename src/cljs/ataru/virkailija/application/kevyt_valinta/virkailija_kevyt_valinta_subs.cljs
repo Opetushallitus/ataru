@@ -179,15 +179,11 @@
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value
   (fn [[_ _ application-key hakukohde-oid]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
-  (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid])])
+  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
     (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           kevyt-valinta-property-value   (some-> valinnan-tulos-for-application
-                                                 (valinta-tulos-service-property)
-                                                 (mappings/valinta-tulos-service-value->kevyt-valinta-property-value
-                                                   kevyt-valinta-property
-                                                   korkeakouluhaku?))]
+                                                 (valinta-tulos-service-property))]
       (if (nil? kevyt-valinta-property-value)
         (default-kevyt-valinta-property-value kevyt-valinta-property)
         kevyt-valinta-property-value))))
@@ -401,7 +397,7 @@
    "EI_VASTAANOTETTU_MAARA_AIKANA"
    "PERUNUT"
    "PERUUTETTU"
-   "VASTAANOTTANUT"])
+   "VASTAANOTTANUT_SITOVASTI"])
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
