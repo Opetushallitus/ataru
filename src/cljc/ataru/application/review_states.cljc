@@ -50,20 +50,24 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
-(def vastaanotto-tila-translation-key-mapping
+(defn get-vastaanotto-tila-translation-key-mapping [kk-haku?]
   {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
    "PERUNUT"                       :perunut
    "PERUUTETTU"                    :peruutettu
    "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
    "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
-   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      (if kk-haku?
+                                     :vastaanottanut-sitovasti
+                                     :vastaanottanut)
    "KESKEN"                        :kesken})
 
+;fixme, tämän voi varmaankin refaktoroida pois. Huolehditaan käännöksistä toisaalla (virkailija-kevyt-valinta-translations).
+; Tämän kutsujat eivät oikeasti tarvitse nyt kaikkea palautuvaa tietoa.
 (def kevyt-valinta-vastaanoton-tila-selection-states
   (map (fn [[value key]]
          [value
           (key virkailija-texts)])
-       vastaanotto-tila-translation-key-mapping))
+       (get-vastaanotto-tila-translation-key-mapping true)))
 
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
