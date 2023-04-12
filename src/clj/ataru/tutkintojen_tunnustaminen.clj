@@ -4,6 +4,8 @@
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
             [ataru.files.file-store :as file-store]
+            [ataru.forms.form-store :as forms]
+            [ataru.applications.application-store :as a]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.util :as util]
             [clojure.string :as string]
@@ -35,6 +37,7 @@
   [application]
   (when (or (not (string? (:country application)))
             (string/blank? (:country application)))
+    (println "################" application)
     (throw (new RuntimeException
                 (str "Application " (:id application)
                      " has invalid country: " (:country application)))))
@@ -124,6 +127,23 @@
          (cons (application->document application form attachments)
                attachments))))
 
+(defn- ->information-request-document
+  [application information-request timestamp]
+  (let [lang    (:lang application)
+        encoder (Base64/getEncoder)
+        doc     (.getBytes (str "<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body><h4>"
+                                (:subject information-request)
+                                "</h4><p>"
+                                (:message information-request)
+                                "</p></body></html>"))]
+    [(xml/element :createDocument {}
+                  (xml/element :properties {}
+                               (->property-string "ams_language" lang)
+                               (->property-string "ams_documenttype" "Täydennyspyyntö"))
+                  (xml/element :contentStream {}
+                               (xml/element :filename {} (str "taydennyspyynto_" timestamp ".html"))
+                               (xml/element :stream {} (new String (.encode encoder doc) "UTF-8"))))]))
+
 (defn- ->application-submitted
   [application form attachments]
   (apply
@@ -131,6 +151,14 @@
    (->case application)
    (->action "Hakemuksen saapuminen" "01.01")
    (->documents application form attachments)))
+
+(defn- ->application-information-request-sent
+  [application information-request timestamp]
+  (apply
+   xml/element :message {}
+   (->case application)
+   (->action "Täydennyspyyntö" "02.02")
+   (->information-request-document application information-request timestamp)))
 
 (defn- ->application-edited
   [application form attachments]
@@ -184,6 +212,10 @@
     {:review-key  (:review-key id-and-state)
      :state       (:state id-and-state)
      :application (get-application country-question-id (:id id-and-state))}))
+
+(defn get-latest-application-id [application-key]
+  (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+    (first (yesql-get-latest-application-id {:key application-key} {:connection connection}))))
 
 (defn- attachment-as-bytes
   [liiteri-cas-client key]
@@ -265,6 +297,16 @@
                                "tutkintojen-tunnustaminen-review-state-changed-job"
                                {:event-id event-id})))))
 
+(defn start-tutkintojen-tunnustaminen-information-request-sent-job
+  [job-runner information-request]
+  (when (get-in config [:tutkintojen-tunnustaminen :enabled?])
+    (log/info "Started tutkintojen tunnustaminen information request sent job with job id"
+              (jdbc/with-db-connection [connection {:datasource (db/get-datasource :db)}]
+                (job/start-job job-runner
+                               connection
+                               "tutkintojen-tunnustaminen-information-request-sent-job"
+                               {:information-request information-request})))))
+
 (defn- form-key-matches?
   [cfg-form-key test]
   (let [keys (string/split cfg-form-key #",")]
@@ -336,6 +378,27 @@
                   (str (:key application) "_" (:id application) "_" event-id ".xml")
                   message)
         (log/info "Sent application inactivated message to ASHA for application"
+                  (:id application))
+        {:transition {:id :final}})
+      {:transition {:id :final}})))
+
+(defn timestamp [] (System/currentTimeMillis))
+
+(defn tutkintojen-tunnustaminen-information-request-sent-job-step
+  [{:keys [information-request]} _]
+  (let [{:keys [form-key country-question-id ftp]} (get-configuration)
+        application-id (:id (get-latest-application-id (:application-key information-request)))
+        application (get-application country-question-id application-id)]
+    (if (and (form-key-matches? form-key (:form-key application))
+             (= "information-request" (:message-type information-request)))
+      (let [ts (timestamp)
+            message (->application-information-request-sent application information-request ts)]
+        (log/info "Sending application information request sent message to ASHA for application"
+                  (:id application))
+        (transfer ftp
+                  (str (:key application) "_" (:id application) "_taydennyspyynto_" ts ".xml")
+                  message)
+        (log/info "Sent application information request sent message to ASHA for application"
                   (:id application))
         {:transition {:id :final}})
       {:transition {:id :final}})))
