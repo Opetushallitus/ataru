@@ -1063,7 +1063,9 @@
              tutkinto-kieli (when tutkinto-kieli-key
                               (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang)))
              urheilija-laji (get-urheilija-laji answers lang (:urheilijan-lisakysymys-laji-key-and-mapping questions))
-             urheilijan-lisakysymykset (get-urheilijan-lisakysymykset answers (:urheilijan-lisakysymys-keys questions))]
+             urheilija-laji-ammatillinen (get-urheilija-laji answers lang (:urheilijan-ammatillinen-lisakysymys-laji-key-and-mapping questions))
+             urheilijan-lisakysymykset (get-urheilijan-lisakysymykset answers (:urheilijan-lisakysymys-keys questions))
+             urheilijan-lisakysymykset-ammatillinen (get-urheilijan-lisakysymykset answers (:urheilijan-amm-lisakysymys-keys questions))]
          {:oid                                  key
           :personOid                            person_oid
           :createdTime                          (.print JodaFormatter created_time) ;viimeisimmän hakemusversion luontihetki
@@ -1089,6 +1091,7 @@
           :tutkintoVuosi                        (edn/read-string tutkinto-vuosi)
           :kiinnostunutOppisopimusKoulutuksesta (when oppisopimuskoulutus-key (= "0" (-> answers oppisopimuskoulutus-key :value)))
           :urheilijanLisakysymykset             (merge urheilijan-lisakysymykset urheilija-laji)
+          :urheilijanLisakysymyksetAmmatillinen (merge urheilijan-lisakysymykset-ammatillinen urheilija-laji-ammatillinen)
           }) (catch Exception e
                (log/warn e "Exception while mapping suoritusrekisteri-application-toinenaste for application " key ". Exception: " e))))
 
