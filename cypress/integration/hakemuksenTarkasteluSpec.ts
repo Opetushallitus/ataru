@@ -69,15 +69,15 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.get('.application__search-control-tab-selector').first().click()
       }
 
+      const clickFirstHaku = () => {
+        cy.get('.application__search-control-haku').first().click()
+      }
+
       it('Navigoi hakemusten käsittelynäkymään', () => {
         goToApplicationHandling()
       })
 
       describe('Hakemusten rajaus toisen asteen yhteishaussa', () => {
-        const clickFirstHaku = () => {
-          cy.get('.application__search-control-haku').first().click()
-        }
-
         before(() => {
           goToApplicationHandling()
         })
@@ -201,6 +201,35 @@ describe('Hakemuksen tietojen tarkastelu', () => {
               cy.get('#notification-link-henkilo-info-incomplete').should(
                 'be.visible'
               )
+            })
+          }
+        )
+      })
+
+      describe('Massaviestin lähetystoiminto', () => {
+        avaaHenkilonHakemus(
+          'Toimivan hakemuksen lähettänyt testihenkilö',
+          'Tatu Tuntematon',
+          '1.2.246.562.11.00000000000000000001',
+          () => {
+            it('Massaviestipainike on näkyvissä', () => {
+              cy.get(
+                '.application-handling__mass-information-request-link'
+              ).should('be.visible')
+            })
+            it('Massaviesti-ikkuna latautuu oikeilla teksteillä', () => {
+              cy.get(
+                '.application-handling__mass-information-request-link'
+              ).click()
+              cy.get(
+                '.application-handling__mass-information-request-popup'
+              ).should('be.visible')
+              cy.get(
+                '.application-handling__mass-edit-review-states-title-container > h4'
+              ).contains('Massaviesti')
+              cy.get('p')
+                .contains('Lähetä sähköposti 2 hakijalle')
+                .should('exist')
             })
           }
         )

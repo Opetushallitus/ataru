@@ -759,11 +759,6 @@
    [:p.application-handling__information-request-contains-modification-link
     @(subscribe [:editor/virkailija-translation :edit-link-sent-automatically])]])
 
-(defn- application-information-request-applicant-email-disclaimer []
-  [:div.application-handling__information-request-row
-   [:p.application-handling__information-request-applicant-email-disclaimer
-    @(subscribe [:editor/virkailija-translation :applicant-email-disclaimer])]])
-
 (defn- application-information-request-submitted []
   [:div.application-handling__information-request-row.application-handling__information-request-row--checkmark-container
    [:div.application-handling__information-request-submitted-loader]
@@ -788,7 +783,6 @@
                   [application-information-request-subject]
                   [application-information-request-message]
                   [application-information-request-contains-modification-link]
-                  [application-information-request-applicant-email-disclaimer]
                   [application-information-request-submit-button])))
         [:div.application-handling__information-request-show-container-link
          [:a
