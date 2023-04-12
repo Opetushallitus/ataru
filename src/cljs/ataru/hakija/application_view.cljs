@@ -142,13 +142,16 @@
        {:role "alertdialog"
         :aria-modal "true"}
        [:div.application__submitted-submit-notification-inner
+         {:role "alert"
+          :aria-live "assertive"}
         [:h1.application__submitted-submit-notification-heading
          (translations/get-hakija-translation
            (if @demo? :application-submitted-demo :application-submitted)
            lang)]]
        [:div.application__submitted-submit-notification-inner
         [:button.application__overlay-button.application__overlay-button--enabled
-         {:on-click     #(reset! hidden? true)
+         {:tab-index    "1"
+          :on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
