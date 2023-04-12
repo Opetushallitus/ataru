@@ -2211,7 +2211,7 @@
                                                               :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
    :lisapistekoulutus-tuva                                   {:fi "Tutkintokoulutukseen valmentava koulutus"
-                                                              :sv "SV: Utbildning som handleder för examensutbildning"
+                                                              :sv "Utbildning som handleder för examensutbildning"
                                                               :en "EN: Tutkintokoulutukseen valmentava koulutus"}
    :error-loading-harkinnanvaraisuus                         {:fi "Virhe harkinnanvaraisuustietojen hakemisessa"
                                                               :sv "Fel i sökning av uppgifter om individualiseringar"
