@@ -8,6 +8,7 @@
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.application-store :as app-store]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
@@ -107,7 +108,10 @@
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (store-in-tx session information-request job-runner connection)))
+    (store-in-tx session information-request job-runner connection)
+    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
+      job-runner
+      information-request)))
 
 (defn mass-information-request-job-step
   [state job-runner]
