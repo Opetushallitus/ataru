@@ -51,3 +51,8 @@ WHERE ae.id = :id AND
       a.created_time < ae.time
 ORDER BY a.id DESC
 LIMIT 1;
+
+-- name: yesql-get-latest-application-id
+SELECT a.id
+FROM latest_applications a
+WHERE a.key = :key;
