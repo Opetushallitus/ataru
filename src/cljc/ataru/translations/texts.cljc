@@ -1195,9 +1195,6 @@
    :applicant-email                                          {:fi "Lähetä sähköposti %d hakijalle"
                                                               :sv "Send %d applicant e-mail"
                                                               :en "Send %d applicant e-mail"}
-   :applicant-email-disclaimer                               {:fi "Joukossa voi olla hakemuksia, joilta puuttuu sähköpostiosoite"
-                                                              :sv "SV Joukossa voi olla hakemuksia, joilta puuttuu sähköpostiosoite"
-                                                              :en "EN Joukossa voi olla hakemuksia, joilta puuttuu sähköpostiosoite"}
    :guardian-email                                           {:fi "Lähetä sähköposti huoltajille"
                                                               :sv "Send guardian e-mail"
                                                               :en "Send guardian e-mail"}

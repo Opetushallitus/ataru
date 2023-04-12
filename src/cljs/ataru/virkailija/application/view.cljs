@@ -164,11 +164,6 @@
    [:p.application-handling__information-request-contains-modification-link
     @(subscribe [:editor/virkailija-translation :edit-link-sent-automatically])]])
 
-(defn- application-information-request-applicant-email-disclaimer []
-  [:div.application-handling__information-request-row
-   [:p.application-handling__information-request-applicant-email-disclaimer
-    @(subscribe [:editor/virkailija-translation :applicant-email-disclaimer])]])
-
 (defn haku-heading
   []
   (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
@@ -181,7 +176,7 @@
      [selected-applications-heading @haku-header @header]
      [:div.editor-form__form-controls-container
       (when (pos? @applications-count)
-        [mass-information-request-view/mass-information-request-link application-information-request-contains-modification-link application-information-request-applicant-email-disclaimer])
+        [mass-information-request-view/mass-information-request-link application-information-request-contains-modification-link])
       (when @show-mass-update-link?
         [mass-review/mass-update-applications-link])
       (when @show-excel-link?
