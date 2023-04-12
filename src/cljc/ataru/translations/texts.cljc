@@ -2210,6 +2210,9 @@
    :lisapistekoulutus-opistovuosi                            {:fi "Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :sv "SV: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"
                                                               :en "EN: Oppivelvollisille suunnattu vapaan sivistystyön koulutus"}
+   :lisapistekoulutus-tuva                                   {:fi "Tutkintokoulutukseen valmentava koulutus"
+                                                              :sv "Utbildning som handleder för examensutbildning"
+                                                              :en "EN: Tutkintokoulutukseen valmentava koulutus"}
    :error-loading-harkinnanvaraisuus                         {:fi "Virhe harkinnanvaraisuustietojen hakemisessa"
                                                               :sv "Fel i sökning av uppgifter om individualiseringar"
                                                               :en "EN: Virhe harkinnanvaraisuustietojen hakemisessa"}
