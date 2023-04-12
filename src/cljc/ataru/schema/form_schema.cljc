@@ -540,6 +540,7 @@
   {:oid                         s/Str
    :personOid                   s/Str
    :createdTime                 s/Str
+   :hakemusFirstSubmittedTime   s/Str
    :applicationSystemId         s/Str
    :kieli                       s/Str
    :hakukohteet                 [s/Str]
@@ -554,6 +555,7 @@
    :attachments                 {s/Str s/Str}
    :eligibilities               {s/Str s/Str}
    :kkPohjakoulutus             [s/Str]
+   :kkPohjakoulutusLomake       [s/Str]
    :sahkoisenAsioinninLupa      s/Bool
    :valintatuloksenJulkaisulupa s/Bool
    :koulutusmarkkinointilupa    s/Bool
