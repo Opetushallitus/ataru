@@ -75,17 +75,17 @@
   [form-fields new-answers followup followup-answer]
   (let [parent (form-fields (:followup-of followup))
         option-value (:option-value followup)
-        answer (->> new-answers
-                    (filter #(seq (:original-question %)))
-                    (filter #(= (:original-question %) (:id parent)))
-                    (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup-answer)))
-                    first)]
+        parent-answer (->> new-answers
+                        (filter #(seq (:original-question %)))
+                        (filter #(= (:original-question %) (:id parent)))
+                        (filter #(= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup-answer)))
+                        first)]
     (or (and
-          (or (nil? answer)
-              (and (nil? (:value answer))
-                   (some #(= "required" %) (:validators parent))))
+          (seq parent-answer)
+          (nil? (:value parent-answer))
+          (some #(= "required" %) (:validators parent))
           (:cannot-view parent))
-        (= option-value (:value answer)))))
+        (= option-value (:value parent-answer)))))
 
 (defn merge-unviewable-answers-from-previous
   [new-application
@@ -101,7 +101,11 @@
                                                     (nil? (get new-answers-by-key (:key %)))
                                                     (contains? hakukohde-oids-in-new-application (:duplikoitu-followup-hakukohde-oid %))
                                                     (:cannot-view (fields-by-key (:original-followup %)))
-                                                    (is-parent-of-per-hakukohde-old-followup-in-new-answers? fields-by-key (:answers new-application) (fields-by-key (:original-followup %)) %))
+                                                    (is-parent-of-per-hakukohde-old-followup-in-new-answers?
+                                                      fields-by-key
+                                                      (:answers new-application)
+                                                      (fields-by-key (:original-followup %))
+                                                      %))
                                               (:answers old-application))
         if-cannot-view-use-old (fn [answer]
                                  (let [original-question-field (fields-by-key (:original-question answer))
