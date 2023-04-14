@@ -1495,8 +1495,8 @@
   :editor/update-selected-organization-rights
   (fn [{db :db} [_ right selected?]]
     (let [db (if selected?
-               (update-in db [:editor :user-info :selected-organization :rights] conj right)
-               (update-in db [:editor :user-info :selected-organization :rights] (partial remove #{right})))
+               (update-in db [:editor :user-info :selected-organization :rights] conj (name right))
+               (update-in db [:editor :user-info :selected-organization :rights] (partial remove #{(name right)})))
           rights (->> db :editor :user-info :selected-organization :rights
                       not-empty)]
       {:db   db
