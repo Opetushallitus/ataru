@@ -135,13 +135,13 @@ make start-docker test-clojure
 #### Single backend unit test
 
 ```
-lein spec <PATH_TO_TEST_FILE>
+lein with-profile test spec <PATH_TO_TEST_FILE>
 ```
 
 e.g.
 
 ```
-lein spec spec/ataru/applications/suoritus_filter_spec.clj
+lein with-profile test spec spec/ataru/applications/suoritus_filter_spec.clj
 ```
 
 ### ClojureScript unit tests
