@@ -516,7 +516,7 @@
                                                           organization-service
                                                           ohjausparametrit-service))]
           xls
-          (throw new RuntimeException "Excelin muodostaminen ei onnistunut")))))
+          (throw (new RuntimeException "Excelin muodostaminen ei onnistunut"))))))
 
   (save-application-review
     [_ session review]

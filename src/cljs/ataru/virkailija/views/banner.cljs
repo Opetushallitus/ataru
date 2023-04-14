@@ -146,14 +146,20 @@
                         [:li.profile__organization-select-result
                          {:key (str "organization-match-" oid)}
                          [:a
-                          {:on-click #(dispatch [:editor/select-organization oid])}
+                          {:on-click #(dispatch [:editor/select-organization oid])
+                           :title oid}
                           (if hakukohderyhma?
                             [:i.zmdi.zmdi-hc-li.zmdi-collection-text]
                             [:i.zmdi.zmdi-hc-li.zmdi-accounts])
                           (let [label (get-label name)]
                             (if (clojure.string/blank? label)
                               "—"
-                              label))]])
+                              label))]
+                         [:a
+                          {:href (str "/organisaatio-service/lomake/" oid)
+                           :style {:margin-left "4px"}
+                           :target "blank"}
+                          [:i.zmdi.zmdi-open-in-new]]])
                       (take num-results-to-show @search-results))])
                  (when (= (inc num-results-to-show) (count @search-results))
                    [:a.profile__organization-more-results
