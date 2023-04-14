@@ -501,7 +501,7 @@
                                                (<= 4500 (count applications)))
             lang                             (keyword (or (-> session :identity :lang) :fi))]
         (when skip-answers-to-preserve-memory? (log/warn "Answers will be skipped to preserve memory"))
-        (ByteArrayInputStream. (excel/export-applications liiteri-cas-client
+        (if-let [xls (ByteArrayInputStream. (excel/export-applications liiteri-cas-client
                                                           applications-with-persons
                                                           application-reviews
                                                           application-review-notes
@@ -514,7 +514,9 @@
                                                           tarjonta-service
                                                           koodisto-cache
                                                           organization-service
-                                                          ohjausparametrit-service)))))
+                                                          ohjausparametrit-service))]
+          xls
+          (throw new RuntimeException "Excelin muodostaminen ei onnistunut")))))
 
   (save-application-review
     [_ session review]
