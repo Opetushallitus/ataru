@@ -46,7 +46,6 @@
     (fn [org]
       (str (get-label (:name org))
            (when (not-empty (:rights org))
-             (prn (:rights org))
              (str " ("
                   (string/join ", " (map (fn [r] @(subscribe [:editor/virkailija-translation ((keyword r) right-labels)]))
                                          (:rights org)))
