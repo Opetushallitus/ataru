@@ -141,7 +141,7 @@ lein with-profile test spec <PATH_TO_TEST_FILE>
 e.g.
 
 ```
-lein with-profile test spec spec/ataru/applications/suoritus_filter_spec.clj
+lein with-profile test spec spec/ataru/applications/answer_util_spec.clj
 ```
 
 ### ClojureScript unit tests

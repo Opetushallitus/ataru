@@ -411,7 +411,7 @@
                                                                                                                             {:osoite     {:fi "Hammasportti 500", :sv "Hammasportti 500 (SV)"},
                                                                                                                              :postinumero
                                                                                                                                          {:koodiUri "posti_01600#2", :nimi {:sv "VANDA", :fi "VANTAA"}},
-                                                                                                                             :verkkosivu "https://hampaat-liitteena.fi"}}],
+                                                                                                                             :verkkosivu "https://kauniit_puhtaat_hampaat-liitteena.fi"}}],
                                        :liitteiden-toimitusosoite                                   nil,
                                        :liitteiden-toimitusaika                                     nil,
                                        :tarjoaja-name
