@@ -395,6 +395,7 @@
             message (->application-information-request-sent application information-request ts)]
         (log/info "Sending application information request sent message to ASHA for application"
                   (:id application))
+        (log/info "Information request sent message:" message) ; FIXME logging test message
         (transfer ftp
                   (str (:key application) "_" (:id application) "_taydennyspyynto_" ts ".xml")
                   message)
