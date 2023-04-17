@@ -100,6 +100,9 @@
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})
+    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
+      job-runner
+      information-request)
     information-request))
 
 (defn store [session information-request job-runner]
@@ -108,10 +111,7 @@
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
   (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-    (store-in-tx session information-request job-runner connection)
-    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
-      job-runner
-      information-request)))
+    (store-in-tx session information-request job-runner connection)))
 
 (defn mass-information-request-job-step
   [state job-runner]
