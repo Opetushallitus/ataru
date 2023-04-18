@@ -45,7 +45,7 @@
   [db
    application-key
    hakukohde-oids]
-  (let [all-states-count  (-> review-states/kevyt-valinta-vastaanoton-tila-selection-states
+  (let [all-states-count  (-> (review-states/kevyt-valinta-vastaanoton-tila-selection-states true)
                               vals
                               count)
         states-to-include (-> db :application :kevyt-valinta-vastaanotto-state-filter set)
