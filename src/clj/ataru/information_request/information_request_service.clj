@@ -8,6 +8,7 @@
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
+            [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
             [ataru.applications.application-store :as app-store]
             [clojure.java.jdbc :as jdbc]
             [selmer.parser :as selmer]
@@ -99,6 +100,9 @@
                     :operation audit-log/operation-new
                     :session   session
                     :id        {:applicationOid (:application-key information-request)}})
+    (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-information-request-sent-job
+      job-runner
+      information-request)
     information-request))
 
 (defn store [session information-request job-runner]
