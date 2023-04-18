@@ -86,15 +86,23 @@
                                                                             application-key
                                                                             hakukohde-oid]))
         korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
-    [:span.application-handling__hakukohde-selection-cell
+    [:span.application-handling__hakukohde-vastaanotto-cell
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
       (when kevyt-valinta-enabled-for-application-and-hakukohde?
-        (let [translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
+        (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
+              translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
                                              :kevyt-valinta/vastaanotto-tila
                                              kevyt-valinta-property-value
                                              korkeakouluhaku?)]
           [:<>
-           @(subscribe [:editor/virkailija-translation translation-key])]))]]))
+           @(subscribe [:editor/virkailija-translation translation-key])
+           [:i.zmdi.zmdi-info.application-handling__vastaanoton-tila-info-ikoni
+            {:class (if kevyt-valinta-property-exists?
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista"
+                      "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
+             :title (if kevyt-valinta-property-exists?
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]]))]]))
 
 (defn- hakemuksen-valinnan-tila-sarake [{:keys [application-key
                                                 application-hakukohde-reviews
@@ -207,7 +215,7 @@
                                                  :hakukohde-oid                 hakukohde-oid
                                                  :application-hakukohde-reviews application-hakukohde-reviews
                                                  :lang                          @lang}])
-             (when (:selection-state review-settings true) ;fixme, vastaanoton tila? Vai näytetäänkö aina kun muutakin valintatietoa.
+             (when (:vastaanotto-state review-settings true)
                [hakemuksen-vastaanoton-tila-sarake {:application-key               (:key application)
                                                     :hakukohde-oid                 hakukohde-oid}])]))
         application-hakukohde-oids))))
@@ -244,6 +252,8 @@
         [attachment-state-counts form-attachment-states])
       [:span.application-handling__list-row--state]
       (when (:selection-state @review-settings true)
+        [:span.application-handling__hakukohde-selection-cell])
+      (when (:vastaanotto-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
      [applications-hakukohde-rows @review-settings application @filtered-hakukohde attachment-states select-application]]))
 
@@ -809,7 +819,8 @@
 (defn application-list-header [_]
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])
         form-key        @(subscribe [:application/selected-form-key])
-        tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])]
+        tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])
+        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
@@ -861,7 +872,7 @@
            :kevyt-valinta-selection-state-filter
            @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])
      (when (:selection-state @review-settings true)
-       [:div.application-handling__list-row--selection
+       [:div.application-handling__list-row--vastaanotto
         [hakukohde-state-filter-controls
          {:title
           @(subscribe [:editor/virkailija-translation :vastaanotto])
@@ -870,7 +881,7 @@
            :vastaanotto}
           :states
           {:kevyt-valinta-vastaanotto-state-filter
-           review-states/kevyt-valinta-vastaanoton-tila-selection-states}
+           (review-states/kevyt-valinta-vastaanoton-tila-selection-states korkeakouluhaku?)}
           :state-counts-subs
           {:kevyt-valinta-vastaanotto-state-filter
            @(subscribe [:state-query [:application :kevyt-valinta-vastaanotto-state-counts]])}}]])]))
