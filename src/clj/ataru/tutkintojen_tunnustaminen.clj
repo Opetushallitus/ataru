@@ -37,7 +37,6 @@
   [application]
   (when (or (not (string? (:country application)))
             (string/blank? (:country application)))
-    (println "################" application)
     (throw (new RuntimeException
                 (str "Application " (:id application)
                      " has invalid country: " (:country application)))))
