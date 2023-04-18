@@ -155,9 +155,8 @@
                             (if (clojure.string/blank? label)
                               "—"
                               label))]
-                         [:a
+                         [:a.profile__organization-select-results__link
                           {:href (str "/organisaatio-service/lomake/" oid)
-                           :style {:margin-left "4px"}
                            :target "blank"}
                           [:i.zmdi.zmdi-open-in-new]]])
                       (take num-results-to-show @search-results))])
