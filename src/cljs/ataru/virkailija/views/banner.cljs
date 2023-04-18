@@ -14,7 +14,9 @@
                    :view-applications :view-applications-rights-panel
                    :edit-applications :edit-applications-rights-panel
                    :view-valinta      :view-valinta-rights-panel
-                   :edit-valinta      :edit-valinta-rights-panel})
+                   :edit-valinta      :edit-valinta-rights-panel
+                   :opinto-ohjaaja    :opinto-ohjaaja
+                   :valinnat-valilehti :valinnat-valilehti })
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
