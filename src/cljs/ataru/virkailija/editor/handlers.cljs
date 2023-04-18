@@ -1462,13 +1462,16 @@
 (reg-event-fx
   :editor/select-organization
   (fn [{db :db} [_ oid]]
-    {:http {:method              :post
-            :path                (str "/lomake-editori/api/organization/user-organization/"
-                                      oid
-                                      "?rights="
-                                      (string/join "&rights=" (map name user-rights/right-names)))
-            :handler-or-dispatch :editor/update-selected-organization}
-     :db   (assoc-in db [:editor :user-info :selected-organization :rights] user-rights/right-names)}))
+    (let [rights-sans-opinto-ohjaaja (->> user-rights/right-names
+                                          (remove #(= :opinto-ohjaaja %)))]
+      {:http {:method              :post
+              :path                (str "/lomake-editori/api/organization/user-organization/"
+                                        oid
+                                        "?rights="
+                                        (string/join "&rights=" (map name rights-sans-opinto-ohjaaja)))
+              :handler-or-dispatch :editor/update-selected-organization}
+       :db   (assoc-in db [:editor :user-info :selected-organization :rights] rights-sans-opinto-ohjaaja)}
+      )))
 
 (reg-event-fx
   :editor/increase-organization-result-page
