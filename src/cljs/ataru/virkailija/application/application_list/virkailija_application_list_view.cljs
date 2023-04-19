@@ -300,7 +300,8 @@
   (let [filter-opened        (r/atom false)
         toggle-filter-opened #(swap! filter-opened not)
         get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
-    (fn [{:keys [title
+    (fn [{:keys [kk?
+                 title
                  states
                  state-counts-subs
                  filter-titles]}]
@@ -310,7 +311,10 @@
                                        (map (fn [filter-kw]
                                               [filter-kw @(subscribe [:state-query [:application filter-kw]])]))
                                        (every? (fn [[filter-kw filter-sub]]
-                                                 (= (count filter-sub)
+                                                 (= (if (and (not kk?)
+                                                             (= :kevyt-valinta-vastaanotto-state-filter filter-kw)) ;one less vastaanotto state for non-kk
+                                                      (count (keep #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
+                                                      (count filter-sub))
                                                     (-> states filter-kw count)))))
             all-counts-zero?      (->> (keys states)
                                        (every? (fn [filter-kw]
@@ -336,7 +340,10 @@
                                        (filter-kw states))))))
                  (map (fn [filter-kw]
                         (let [filter-sub                     @(subscribe [:state-query [:application filter-kw]])
-                              all-filters-of-state-selected? (= (count filter-sub)
+                              all-filters-of-state-selected? (= (if (and (not kk?)
+                                                                         (= :kevyt-valinta-vastaanotto-state-filter filter-kw)) ;one less vastaanotto state for non-kk
+                                                                  (count (keep #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
+                                                                  (count filter-sub))
                                                                 (-> states filter-kw count))
                               state-counts-sub               (some-> state-counts-subs filter-kw)]
                           (into ^{:key (str "filter-state-column-" filter-kw)}
@@ -874,7 +881,8 @@
      (when (:selection-state @review-settings true)
        [:div.application-handling__list-row--vastaanotto
         [hakukohde-state-filter-controls
-         {:title
+         {:kk? korkeakouluhaku?
+          :title
           @(subscribe [:editor/virkailija-translation :vastaanotto])
           :filter-titles
           {:kevyt-valinta-vastaanotto-state-filter
