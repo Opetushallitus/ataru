@@ -405,7 +405,9 @@
     (when-let [duplicated-answers (seq (filter #(= (:original-question %) (:id question)) (vals (:answers application))))]
       [:div.readonly__per-question-wrapper
        [:div.application__form-field-label.application__form-field__original-question
-        [:span (util/from-multi-lang (:label question) lang)]]
+        [:span 
+         (util/from-multi-lang (:label question) lang)
+         [copy-link (:id question) :shared-use-warning? false :include? exclude-always-included]]]
        (for [duplicate-field (sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet)
                                (map #(-> question
                                        (dissoc :per-hakukohde)
