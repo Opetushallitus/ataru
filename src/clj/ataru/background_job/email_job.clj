@@ -1,7 +1,6 @@
 (ns ataru.background-job.email-job
   "You can send any email with this, it's not tied to any particular email-type"
-  (:require [ataru.config.core :refer [config]]
-            [ataru.config.url-helper :refer [resolve-url]]
+  (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
             [taoensso.timbre :as log]))
