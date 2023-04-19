@@ -142,7 +142,7 @@
                  (into
                    [:ul.profile__organization-select-results.zmdi-hc-ul
                     (map
-                      (fn [{:keys [oid name hakukohderyhma?]}]
+                      (fn [{:keys [oid name hakukohderyhma? active?]}]
                         [:li.profile__organization-select-result
                          {:key (str "organization-match-" oid)}
                          [:a
@@ -158,7 +158,10 @@
                          [:a.profile__organization-select-results__link
                           {:href (str "/organisaatio-service/lomake/" oid)
                            :target "blank"}
-                          [:i.zmdi.zmdi-open-in-new]]])
+                          [:i.zmdi.zmdi-open-in-new]]
+                         (when (and (not active?) (not (nil? active?)))
+                           [:i.material-icons-outlined.arkistoitu
+                             "archive"])])
                       (take num-results-to-show @search-results))])
                  (when (= (inc num-results-to-show) (count @search-results))
                    [:a.profile__organization-more-results
