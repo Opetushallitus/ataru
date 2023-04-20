@@ -300,20 +300,20 @@
   (let [filter-opened        (r/atom false)
         toggle-filter-opened #(swap! filter-opened not)
         get-state-count      (fn [counts state-id] (or (get counts state-id) 0))]
-    (fn [{:keys [kk?
-                 title
+    (fn [{:keys [title
                  states
                  state-counts-subs
                  filter-titles]}]
       (let [lang                  @(subscribe [:editor/virkailija-lang])
             has-more?             @(subscribe [:application/has-more-applications?])
+            kk? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])
             all-filters-selected? (->> (keys states)
                                        (map (fn [filter-kw]
                                               [filter-kw @(subscribe [:state-query [:application filter-kw]])]))
                                        (every? (fn [[filter-kw filter-sub]]
                                                  (= (if (and (not kk?)
                                                              (= :kevyt-valinta-vastaanotto-state-filter filter-kw)) ;one less vastaanotto state for non-kk
-                                                      (count (keep #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
+                                                      (count (filter #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
                                                       (count filter-sub))
                                                     (-> states filter-kw count)))))
             all-counts-zero?      (->> (keys states)
@@ -342,7 +342,7 @@
                         (let [filter-sub                     @(subscribe [:state-query [:application filter-kw]])
                               all-filters-of-state-selected? (= (if (and (not kk?)
                                                                          (= :kevyt-valinta-vastaanotto-state-filter filter-kw)) ;one less vastaanotto state for non-kk
-                                                                  (count (keep #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
+                                                                  (count (filter #(not= "EHDOLLISESTI_VASTAANOTTANUT" %) filter-sub))
                                                                   (count filter-sub))
                                                                 (-> states filter-kw count))
                               state-counts-sub               (some-> state-counts-subs filter-kw)]
@@ -827,7 +827,7 @@
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])
         form-key        @(subscribe [:application/selected-form-key])
         tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])
-        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
+        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
