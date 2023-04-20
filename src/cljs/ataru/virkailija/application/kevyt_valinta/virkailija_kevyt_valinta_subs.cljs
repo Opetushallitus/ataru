@@ -160,6 +160,14 @@
         :tilaHistoria)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta-filter/selected-haku
+  (fn []
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:state-query [:haut]])])
+  (fn [[haku-oid haut]]
+    (get haut haku-oid)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/haku
   (fn []
     [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :haku]])
@@ -171,6 +179,15 @@
   :virkailija-kevyt-valinta/korkeakouluhaku?
   (fn []
     [(re-frame/subscribe [:virkailija-kevyt-valinta/haku])])
+  (fn [[haku]]
+    (true? (some-> haku
+                   :kohdejoukko-uri
+                   (string/starts-with? "haunkohdejoukko_12#")))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta-filter/korkeakouluhaku?
+  (fn []
+    [(re-frame/subscribe [:virkailija-kevyt-valinta-filter/selected-haku])])
   (fn [[haku]]
     (true? (some-> haku
                    :kohdejoukko-uri
