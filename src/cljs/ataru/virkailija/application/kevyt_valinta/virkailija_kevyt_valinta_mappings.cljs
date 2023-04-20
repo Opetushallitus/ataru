@@ -12,12 +12,3 @@
            (= kevyt-valinta-property-value "VASTAANOTTANUT"))
     "VASTAANOTTANUT_SITOVASTI"
     kevyt-valinta-property-value))
-
-(defn valinta-tulos-service-value->kevyt-valinta-property-value [valinta-tulos-service-value
-                                                                 kevyt-valinta-property
-                                                                 korkeakouluhaku?]
-  (if (and (not korkeakouluhaku?)
-           (= kevyt-valinta-property :kevyt-valinta/vastaanotto-tila)
-           (= valinta-tulos-service-value "VASTAANOTTANUT_SITOVASTI"))
-    "VASTAANOTTANUT"
-    valinta-tulos-service-value))

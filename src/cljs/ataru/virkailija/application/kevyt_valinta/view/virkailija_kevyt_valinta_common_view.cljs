@@ -76,11 +76,13 @@
         kevyt-valinta-property-values          @(re-frame/subscribe [:virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
                                                                      kevyt-valinta-property
                                                                      application-key])
+        korkeakouluhaku?                       @(re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])
         kevyt-valinta-dropdown-values          (map (fn [kevyt-valinta-property-value]
                                                       {:value kevyt-valinta-property-value
                                                        :label (let [translation-key (i18n-mapping/kevyt-valinta-value-translation-key
                                                                                       kevyt-valinta-property
-                                                                                      kevyt-valinta-property-value)]
+                                                                                      kevyt-valinta-property-value
+                                                                                      korkeakouluhaku?)]
                                                                 @(re-frame/subscribe [:editor/virkailija-translation translation-key]))})
                                                     kevyt-valinta-property-values)
         ;; kevytvalinta näytetään ainoastaan, kun yksi hakukohde valittuna, ks. :virkailija-kevyt-valinta/show-kevyt-valinta?

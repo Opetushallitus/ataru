@@ -416,6 +416,7 @@
                                (assoc-in [:application :review-state-counts] (get-in initial-db/default-db [:application :review-state-counts]))
                                (assoc-in [:application :selection-state-counts] (get-in initial-db/default-db [:application :selection-state-counts]))
                                (assoc-in [:application :kevyt-valinta-selection-state-counts] (get-in initial-db/default-db [:application :kevyt-valinta-selection-state-counts]))
+                               (assoc-in [:application :kevyt-valinta-vastaanotto-state-counts] (get-in initial-db/default-db [:application :kevyt-valinta-vastaanotto-state-counts]))
                                (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                                (update-in [:application :sort] dissoc :offset)
                                (assoc-in [:application :fetching-applications?] true)
