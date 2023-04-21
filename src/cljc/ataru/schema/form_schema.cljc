@@ -670,6 +670,7 @@
                                  :kieliTyyppi s/Str}}
    :hakuOid     (s/maybe s/Str)
    :hakutoiveet [s/Str]
+   :attachments {s/Str Value}
    :keyValues   {s/Str Value}})
 
 (def event-types (s/enum "updated-by-applicant"

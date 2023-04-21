@@ -1495,15 +1495,23 @@
            (mapcat fetch)))))
 
 (defn- unwrap-siirto-application [application]
-  (let [keyword-values (->> application
+  (let [attachments (->> application
+                         :content
+                         :answers
+                         ;(filter #(not= "hakukohteet" (:key %)))
+                         (filter #(="attachment" (:fieldType %)))
+                         ;fieldType: "attachment"
+                         flatten-application-answers)
+        keyword-values (->> application
                             :content
                             :answers
                             (filter #(not= "hakukohteet" (:key %)))
                             flatten-application-answers)]
-    (-> application
-        (dissoc :content)
-        (assoc :keyValues keyword-values)
-        (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
+  (-> application
+      (dissoc :content)
+      (assoc :attachments attachments)
+      (assoc :keyValues keyword-values)
+      (clojure.set/rename-keys {:key :hakemusOid :person-oid :personOid :haku :hakuOid}))))
 
 (defn siirto-applications [hakukohde-oid application-keys]
   (->> (exec-db :db queries/yesql-siirto-applications {:hakukohde_oid    hakukohde-oid
