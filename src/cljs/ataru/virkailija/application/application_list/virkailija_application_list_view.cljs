@@ -85,7 +85,7 @@
                                                                             :kevyt-valinta/vastaanotto-tila
                                                                             application-key
                                                                             hakukohde-oid]))
-        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])]
+        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
     [:span.application-handling__hakukohde-vastaanotto-cell
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
       (when kevyt-valinta-enabled-for-application-and-hakukohde?
