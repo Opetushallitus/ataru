@@ -88,7 +88,7 @@
         korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
     [:span.application-handling__hakukohde-vastaanotto-cell
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
-      (when kevyt-valinta-enabled-for-application-and-hakukohde?
+      (if kevyt-valinta-enabled-for-application-and-hakukohde?
         (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
               translation-key              (kevyt-valinta-i18n/kevyt-valinta-value-translation-key
                                              :kevyt-valinta/vastaanotto-tila
@@ -102,7 +102,8 @@
                       "application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista-lataamatta")
              :title (if kevyt-valinta-property-exists?
                       @(subscribe [:editor/virkailija-translation :valinnan-tila-ladattu-valinnoista])
-                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]]))]]))
+                      @(subscribe [:editor/virkailija-translation :valinnan-tila-ladataan-valinnoista]))}]])
+        @(subscribe [:editor/virkailija-translation :incomplete]))]]))
 
 (defn- hakemuksen-valinnan-tila-sarake [{:keys [application-key
                                                 application-hakukohde-reviews
