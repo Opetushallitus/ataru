@@ -1498,9 +1498,7 @@
   (let [attachments (->> application
                          :content
                          :answers
-                         ;(filter #(not= "hakukohteet" (:key %)))
                          (filter #(="attachment" (:fieldType %)))
-                         ;fieldType: "attachment"
                          flatten-application-answers)
         keyword-values (->> application
                             :content
