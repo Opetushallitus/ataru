@@ -79,7 +79,7 @@
    :retry-count     retry-count
    :next-activation nil
    :transition      :fail
-   :caused-by-error msg})
+   :caused-by-error msg}))
 
 (defn- retry-error-iteration [step state retry-count msg]
   {:step            step
