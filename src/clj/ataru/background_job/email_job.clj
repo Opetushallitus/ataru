@@ -8,7 +8,7 @@
 (defn- viestintapalvelu-address []
   (resolve-url :ryhmasahkoposti-service))
 
-(defn- send-email [from recipients subject body]
+(defn send-email [from recipients subject body]
   (let [url                (viestintapalvelu-address)
         wrapped-recipients (mapv (fn [rcp] {:email rcp}) recipients)
         response           (http-util/do-post url {:headers      {"content-type" "application/json"}
@@ -22,6 +22,9 @@
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-step [{:keys [from recipients subject body]} _]
+  (log/info "mailiparametrit" from recipients subject body)
+  (throw (new RuntimeException
+           "Tilapäinen virhe testausta varten"))
   {:pre [(every? #(identity %) [from recipients subject body])]}
   (log/info "Trying to send email" subject "to" recipients "via viestintäpalvelu at address" (viestintapalvelu-address))
   (send-email from recipients subject body)
