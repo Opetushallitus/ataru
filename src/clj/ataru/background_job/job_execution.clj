@@ -4,12 +4,14 @@
    [schema.core :as s]
    [clj-time.core :as time]
    [clojure.core.match :refer [match]]
+   [selmer.parser :as selmer]
    [ataru.background-job.job-store :as job-store]
+   [ataru.background-job.email-job :as email-job]
    [ataru.config.core :refer [config]])
   (:import
    (java.util.concurrent Executors TimeUnit)))
 
-(def max-retries 100)
+(def max-retries 1)
 
 ;; Iterations resulting in running or attempting to run steps
 ;; are so central, that we've specified them with schema
@@ -64,6 +66,13 @@
         (time/now))))
 
 (defn- final-error-iteration [step state retry-count msg]
+  (log/info "Background job failed after maximum retries, sending email to administrators")
+;  (let [from        "no-reply@opintopolku.fi"
+;        recipients  ["marja.testaa@example.org"]
+;        subject     "Jobi meni pieleen"
+;        body        (selmer/render-file "templates/email_background_job_failed.html")]
+;    (ataru.background-job.email-job/send-email from recipients subject body)
+  (ataru.background-job.email-job/send-email "no-reply@opintopolku.fi" ["marja.testaa@example.org"] "Jobi meni pieleen" "")
   {:step            step
    :state           state
    :final           true
