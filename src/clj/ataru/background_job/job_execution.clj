@@ -70,7 +70,7 @@
   (let [from        "no-reply@opintopolku.fi"
         recipients  ["marja.testaa@example.org"]
         subject     "Jobi meni pieleen"
-        body        (selmer/render-file "templates/email_background_job_failed.html")]
+        body        (selmer/render-file "templates/email_background_job_failed.html" {})]
     (ataru.background-job.email-job/send-email from recipients subject body)
 ;  (ataru.background-job.email-job/send-email "no-reply@opintopolku.fi" ["marja.testaa@example.org"] "Jobi meni pieleen" "")
   {:step            step
