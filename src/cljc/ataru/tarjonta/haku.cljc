@@ -12,3 +12,8 @@
     (boolean
       (and yhteishaku?
         (= kohdejoukko "haunkohdejoukko_11")))))
+
+(defn jatkuva-haku?
+  [haku]
+  (if-let [hakutapa (:hakutapa-uri haku)]
+    (boolean (string/starts-with? hakutapa "hakutapa_03"))))
