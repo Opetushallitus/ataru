@@ -157,7 +157,7 @@
          (populate-applications-hakukohteet tarjonta-service)
          (every? (some-fn (partial authorized-by-form? %)
                           (partial authorized-by-tarjoajat? %)
-                          (partial authorized-by-custom?))))
+                          authorized-by-custom?)))
    (constantly true))))
 
 (defn- authenticate-by-opinto-ohjaaja-fn

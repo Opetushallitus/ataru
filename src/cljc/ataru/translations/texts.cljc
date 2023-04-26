@@ -1961,7 +1961,7 @@
                                                               :sv "Studiehandledare"
                                                               :en "Study advisor"}
    :valinnat-valilehti                                       {:fi "Valinnat-välilehti"
-                                                              :sv "SV: Valinnat-välilehti"
+                                                              :sv "Antagningar-fliken"
                                                               :en "EN: Valinnat-välilehti"}
    :virus-found                                              {:fi "Virus löytyi"
                                                               :sv "Ett virus hittades"
