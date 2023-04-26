@@ -1,16 +1,16 @@
 (ns ataru.background-job.job-execution
   (:require
-   [taoensso.timbre :as log]
-   [schema.core :as s]
-   [clj-time.core :as time]
-   [clojure.core.match :refer [match]]
-   [clojure.string :as str]
-   [selmer.parser :as selmer]
-   [ataru.background-job.job-store :as job-store]
-   [ataru.background-job.email-job :as email-job]
-   [ataru.config.core :refer [config]])
+    [taoensso.timbre :as log]
+    [schema.core :as s]
+    [clj-time.core :as time]
+    [clojure.core.match :refer [match]]
+    [clojure.string :as str]
+    [selmer.parser :as selmer]
+    [ataru.background-job.job-store :as job-store]
+    [ataru.background-job.email-job :as email-job]
+    [ataru.config.core :refer [config]])
   (:import
-   (java.util.concurrent Executors TimeUnit)))
+    (java.util.concurrent Executors TimeUnit)))
 
 (def max-retries 1)
 
@@ -33,22 +33,24 @@
    :retry-count s/Int
    s/Any        s/Any})
 
-(s/defschema Runner {:job-definitions {s/Str {:steps {s/Keyword s/Any}
-                                              :type  s/Str}}
-                     s/Any            s/Any})
+(s/defschema Runner
+  {:job-definitions {s/Str {:steps {s/Keyword s/Any}
+                            :type  s/Str}}
+   s/Any            s/Any})
 
-(s/defschema JobWithStoredIteration {:job-type s/Str :iteration StoredIteration :job-id s/Int})
+(s/defschema JobWithStoredIteration
+  {:job-type s/Str :iteration StoredIteration :job-id s/Int})
 
 (defn- determine-next-step [transition current-step]
   (match transition
-    {:id :to-next :step next-step}
-    next-step
+         {:id :to-next :step next-step}
+         next-step
 
-    {:id (:or :retry :error-retry)}
-    current-step
+         {:id (:or :retry :error-retry)}
+         current-step
 
-    {:id (:or :final :fail)}
-    nil))
+         {:id (:or :final :fail)}
+         nil))
 
 (defn- next-activation-for-retry [retry-count]
   (time/plus (time/now) (time/minutes retry-count)))
@@ -67,21 +69,22 @@
         (time/now))))
 
 (defn- final-error-iteration [step state retry-count msg]
-  (log/info "Background job failed after maximum retries, sending email to administrators")
-  (log/info (-> config :public-config :job-failure-alert-recipients))
-  (log/info (str/split (-> config :public-config :job-failure-alert-recipients) #";"))
+  (log/error "Background job failed after maximum retries, sending email to administrators")
+  (log/error msg)
   (let [from        "no-reply@opintopolku.fi"
-        recipients  ["toinen.osoite@example.org" "marja.testaa@example.org"]
+        recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
         subject     "Tausta-ajo päättyi virheeseen"
-        body        (selmer/render-file "templates/email_background_job_failed.html" {{:job "information-request-job"},{:error msg}})]
+        body        (selmer/render-file "templates/email_background_job_failed.html"
+                                        {:job "information-request-job"
+                                         :error msg})]
     (ataru.background-job.email-job/send-email from recipients subject body)
-  {:step            step
-   :state           state
-   :final           true
-   :retry-count     retry-count
-   :next-activation nil
-   :transition      :fail
-   :caused-by-error msg}))
+    {:step            step
+     :state           state
+     :final           true
+     :retry-count     retry-count
+     :next-activation nil
+     :transition      :fail
+     :caused-by-error msg}))
 
 (defn- retry-error-iteration [step state retry-count msg]
   {:step            step
@@ -112,7 +115,8 @@
           next-is-retry        (= :retry result-transition-id)
           next-is-final        (contains? #{:final :fail} result-transition-id)]
       (log/debug "result:" step-result)
-      {:step            (or next-step step) ;; current step if final iteration
+      {:step            (or next-step step)
+       ;; current step if final iteration
        :transition      result-transition-id
        :final           next-is-final
        :retry-count     (if next-is-retry (inc retry-count) 0)
@@ -159,9 +163,11 @@
 
 (s/defn ^:always-validate exec-job-step :- ResultIteration
   [runner :- Runner
-   job :- JobWithStoredIteration]
+   job
+   :-
+   JobWithStoredIteration]
   (let [job-definitions (:job-definitions runner)
-        job-definition (get job-definitions (:job-type job))]
+        job-definition  (get job-definitions (:job-type job))]
     (log/info "Executing job" (:job-id job) (:job-type job))
     (if job-definition
       (maybe-exec-step runner (:iteration job) job-definition)
@@ -171,9 +177,9 @@
 
 (defn- get-job-step-and-exec [runner]
   (job-store/with-due-job
-    (fn [due-job]
-      (exec-job-step runner due-job))
-    (keys (:job-definitions runner))))
+   (fn [due-job]
+     (exec-job-step runner due-job))
+   (keys (:job-definitions runner))))
 
 (defn- exec-job-steps-while-due
   "Exec job step while there are due jobs which should be run immediately.
@@ -191,7 +197,8 @@
 
 (defn- job-exec-interval-seconds
   "Function instead of def so we can override this in tests"
-  [] (or (-> config :background-job :exec-interval-seconds) 15))
+  []
+  (or (-> config :background-job :exec-interval-seconds) 15))
 
 (defn start [runner]
   (let [scheduled-executor (Executors/newSingleThreadScheduledExecutor)]
