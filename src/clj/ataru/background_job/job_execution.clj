@@ -71,7 +71,7 @@
   (log/info (-> config :public-config :job-failure-alert-recipients))
   (log/info (str/split (-> config :public-config :job-failure-alert-recipients) #";"))
   (let [from        "no-reply@opintopolku.fi"
-        recipients  ["marja.testaa@example.org" "toinen.osoite@example.org"]
+        recipients  ["toinen.osoite@example.org" "marja.testaa@example.org"]
         subject     "Tausta-ajo päättyi virheeseen"
         body        (selmer/render-file "templates/email_background_job_failed.html" {{:job "information-request-job"},{:error msg}})]
     (ataru.background-job.email-job/send-email from recipients subject body)
