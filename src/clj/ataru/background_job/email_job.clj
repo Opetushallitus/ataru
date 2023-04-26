@@ -23,8 +23,6 @@
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-step [{:keys [from recipients subject body]} _]
-  (log/info "mailiparametrit" from recipients subject body)
-  (log/info (str/split (-> config :public-config :job-failure-alert-recipients) #";"))
   (throw (new RuntimeException
            "Tilapäinen virhe testausta varten"))
   {:pre [(every? #(identity %) [from recipients subject body])]}
