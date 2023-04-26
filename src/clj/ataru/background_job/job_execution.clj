@@ -4,6 +4,7 @@
    [schema.core :as s]
    [clj-time.core :as time]
    [clojure.core.match :refer [match]]
+   [clojure.string :as str]
    [selmer.parser :as selmer]
    [ataru.background-job.job-store :as job-store]
    [ataru.background-job.email-job :as email-job]
@@ -67,12 +68,13 @@
 
 (defn- final-error-iteration [step state retry-count msg]
   (log/info "Background job failed after maximum retries, sending email to administrators")
+  (log/info (-> config :public-config :job-failure-alert-recipients))
+  (log/info (str/split (-> config :public-config :job-failure-alert-recipients) #";"))
   (let [from        "no-reply@opintopolku.fi"
-        recipients  ["marja.testaa@example.org"]
-        subject     "Jobi meni pieleen"
-        body        (selmer/render-file "templates/email_background_job_failed.html" {})]
+        recipients  ["marja.testaa@example.org" "toinen.osoite@example.org"]
+        subject     "Tausta-ajo päättyi virheeseen"
+        body        (selmer/render-file "templates/email_background_job_failed.html" {{:job "information-request-job"},{:error msg}})]
     (ataru.background-job.email-job/send-email from recipients subject body)
-;  (ataru.background-job.email-job/send-email "no-reply@opintopolku.fi" ["marja.testaa@example.org"] "Jobi meni pieleen" "")
   {:step            step
    :state           state
    :final           true

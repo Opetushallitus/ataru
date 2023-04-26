@@ -4,7 +4,8 @@
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str]))
 
 (defn- viestintapalvelu-address []
   (resolve-url :ryhmasahkoposti-service))
@@ -24,6 +25,7 @@
 
 (defn send-email-step [{:keys [from recipients subject body]} _]
   (log/info "mailiparametrit" from recipients subject body)
+  (log/info (str/split (-> config :public-config :job-failure-alert-recipients) #";"))
   (throw (new RuntimeException
            "Tilapäinen virhe testausta varten"))
   {:pre [(every? #(identity %) [from recipients subject body])]}
