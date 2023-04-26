@@ -68,9 +68,10 @@
     (or next-activation
         (time/now))))
 
-(defn- final-error-iteration [step state retry-count msg]
+(defn- final-error-iteration [step state retry-count msg & job]
   (log/error "Background job failed after maximum retries, sending email to administrators")
-  (log/error msg)
+  (log/info "job:")
+  (log/info job)
   (let [from        "no-reply@opintopolku.fi"
         recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
         subject     "Tausta-ajo päättyi virheeseen"
@@ -134,6 +135,8 @@
    if we haven't exceeded retry-limit"
   [runner iteration job-definition]
   (let [step-fn (get (:steps job-definition) (:step iteration))]
+    (log/info "job definition:")
+    (log/info job-definition)
     (cond
       (nil? step-fn)
       (final-error-iteration (:step iteration)
@@ -150,13 +153,15 @@
                              (str "Retry limit exceeded for step "
                                   (:step iteration)
                                   " in job "
-                                  (:type job-definition)))
+                                  (:type job-definition))
+                             (:type job-definition))
 
       (:stop? iteration)
       (final-error-iteration (:step iteration)
                              (:state iteration)
                              0
-                             (str "Job stopped"))
+                             (str "Job stopped")
+                             )
 
       :else
       (exec-step iteration step-fn runner))))
@@ -173,7 +178,7 @@
       (maybe-exec-step runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
         (log/error msg)
-        (final-error-iteration (-> job :iteration :step) {} 0 msg)))))
+        (final-error-iteration (-> job :iteration :step) {} 0 msg (:job-type job))))))
 
 (defn- get-job-step-and-exec [runner]
   (job-store/with-due-job
