@@ -205,6 +205,20 @@
          [:span.editor-form__id-fixed
           @(re-frame/subscribe [:editor/virkailija-translation :id-in-shared-use])])])))
 
+(defn copy-link-selectable [id & {:keys [shared-use-warning? answer?]}]
+  (let [id (cond-> id
+             keyword?
+             (name))]
+      [:div.editor-form__id-container
+       [:a.editor-form__copy-question-id
+        {:data-tooltip  (s/format @(re-frame/subscribe [:editor/virkailija-translation (if answer? :copy-answer-id :copy-question-id)])
+                                  id)
+         :on-mouse-down #(copy id)}
+        "id"]
+       (when (and (not (false? shared-use-warning?)) (not (valid-uuid? id)))
+         [:span.editor-form__id-fixed
+          @(re-frame/subscribe [:editor/virkailija-translation :id-in-shared-use])])]))
+
 (defn form-field-id
   [field-descriptor idx]
   (str (when idx (str idx "-")) (:id field-descriptor)))

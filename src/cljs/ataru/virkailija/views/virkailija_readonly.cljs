@@ -12,7 +12,8 @@
                                                                        render-paragraphs
                                                                        replace-with-option-label
                                                                        scroll-to-anchor
-                                                                       copy-link]]
+                                                                       copy-link
+                                                                       copy-link-selectable]]
             [ataru.application.option-visibility :as option-visibility]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.util :as util]
@@ -229,7 +230,11 @@
     [:div.application__form-field-label
      [:span
       (util/from-multi-lang (:label content) lang) (virkailija-required-hint content)
-      [copy-link (:id content) :shared-use-warning? false :include? exclude-always-included]]]
+      [copy-link-selectable (->> [(:original-question content)
+                                  (:original-followup content)
+                                  (:id content)]
+                                 (filter seq) (first))
+       :shared-use-warning? false]]]
     (let [values           (-> (cond-> (get-in application [:answers (keyword (:id content)) :value])
                                        (some? question-group-idx)
                                        (nth question-group-idx nil))
