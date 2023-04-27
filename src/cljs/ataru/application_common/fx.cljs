@@ -1,7 +1,6 @@
 (ns ataru.application-common.fx
   (:require [ajax.core :as ajax]
             [re-frame.core :as re-frame]
-            [reagent.core :as reagent]
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
@@ -36,7 +35,9 @@
                                       (->> (or response {:status 204})
                                            (conj handler)
                                            re-frame/dispatch))
-                   :error-handler   (fn [response] (re-frame/dispatch (conj error-handler (:response response))))}
+                   :error-handler   (fn [response]
+                                      (re-frame/dispatch [:toast-message (str "Default error: " (:status response) " " response)])
+                                      (re-frame/dispatch (conj error-handler (:response response))))}
                   (when (some? progress-handler)
                     {:progress-handler (fn [event] (re-frame/dispatch (conj progress-handler event)))})
                   (when (some? post-data))

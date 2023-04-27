@@ -58,16 +58,20 @@
   (fn [db [_ message]]
     (assoc db :snackbar-message message)))
 
-;todo, tallennetaan ehkä joku id, jonka pohjalta voidaan poistaa
 (reg-event-db
   :toast-message
   (fn [db [_ message]]
-    (assoc db :toast-message message)))
+    (update db :toast-message (fn [current-messages]
+                                (if (empty? current-messages)
+                                  [{:message message
+                                    :id 1}]
+                                  (let [highest-toast-id (apply max (map :id current-messages))]
+                                    (conj current-messages {:message message
+                                                            :id (inc highest-toast-id)})))))))
 
-;todo use id
 (reg-event-db
   :delete-toast-message
   (fn [db [_ id]]
     (if (= (count (:toast-message db)) 1)
       (dissoc db :toast-message)
-      (update db :toast-message (fn [toast-messages] (filter #(= (:id %) id) toast-messages))))))
+      (update db :toast-message (fn [toast-messages] (filter #(not= (:id %) id) toast-messages))))))

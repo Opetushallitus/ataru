@@ -21,9 +21,8 @@
                                        :post "tallennettaessa."
                                        :put "tallennettaessa."
                                        :patch "tallennettaessa."
-                                       :delete "poistettaessa.")))]
-    (dispatch [:toast-message
-               [message]])
+                                       :delete "poistettaessa.") "-" (:status response)))]
+    (dispatch [:toast-message message])
     response))
 
 
@@ -68,7 +67,6 @@
         error-handler (fn [response]
                         (when (not= (:failure response) :aborted)
                           (dispatch [:remove-request-handle id])
-                          ;(dispatch-flasher-error-msg method response)
                           (dispatch-toast-error-msg method response)
                           (when-let [error-handler (:error-handler override-args)]
                             (error-handler response))))
