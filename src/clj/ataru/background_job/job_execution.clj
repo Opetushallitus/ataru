@@ -135,10 +135,12 @@
    if we haven't exceeded retry-limit"
   [runner iteration job-definition]
   (let [step-fn (get (:steps job-definition) (:step iteration))]
-    (log/info "job definition:")
-    (log/info job-definition)
     (log/info "job type:")
     (log/info (:type job-definition))
+    (log/info "iteration")
+    (log/info iteration)
+    (log/info "caused by error")
+    (log/info (:caused-by-error iteration))
     (cond
       (nil? step-fn)
       (final-error-iteration (:step iteration)
