@@ -76,7 +76,7 @@
         recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
         subject     "Tausta-ajo päättyi virheeseen"
         body        (selmer/render-file "templates/email_background_job_failed.html"
-                                        {:job "information-request-job"
+                                        {:job job
                                          :error msg})]
     (ataru.background-job.email-job/send-email from recipients subject body)
     {:step            step
@@ -137,6 +137,8 @@
   (let [step-fn (get (:steps job-definition) (:step iteration))]
     (log/info "job definition:")
     (log/info job-definition)
+    (log/info "job type:")
+    (log/info (:job-type job-definition))
     (cond
       (nil? step-fn)
       (final-error-iteration (:step iteration)
@@ -154,7 +156,7 @@
                                   (:step iteration)
                                   " in job "
                                   (:type job-definition))
-                             (:type job-definition))
+                             (:job-type job-definition))
 
       (:stop? iteration)
       (final-error-iteration (:step iteration)
