@@ -138,7 +138,7 @@
     (log/info "job definition:")
     (log/info job-definition)
     (log/info "job type:")
-    (log/info (:job-type job-definition))
+    (log/info (:type job-definition))
     (cond
       (nil? step-fn)
       (final-error-iteration (:step iteration)
@@ -147,7 +147,8 @@
                              (str "Could not find step "
                                   (:step iteration)
                                   " from job definition for "
-                                  (:job-type job-definition)))
+                                  (:type job-definition))
+                             (:type job-definition))
       (>= (:retry-count iteration) max-retries)
       (final-error-iteration (:step iteration)
                              (:state iteration)
@@ -156,7 +157,7 @@
                                   (:step iteration)
                                   " in job "
                                   (:type job-definition))
-                             (:job-type job-definition))
+                             (:type job-definition))
 
       (:stop? iteration)
       (final-error-iteration (:step iteration)
@@ -180,7 +181,7 @@
       (maybe-exec-step runner (:iteration job) job-definition)
       (let [msg (str "Could not find job definition for " (:job-type job))]
         (log/error msg)
-        (final-error-iteration (-> job :iteration :step) {} 0 msg (:job-type job))))))
+        (final-error-iteration (-> job :iteration :step) {} 0 msg (:type job))))))
 
 (defn- get-job-step-and-exec [runner]
   (job-store/with-due-job
