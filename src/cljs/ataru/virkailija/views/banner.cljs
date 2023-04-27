@@ -215,6 +215,19 @@
          [:div.snackbar__content-status status]
          [:div.snackbar__content-paragraph message]])]))
 
+(defn toaster []
+  (if-let [toast-messages (not-empty @(subscribe [:toast-message]))]
+    [:div.toaster
+     (let [status (first toast-messages)
+           message (second toast-messages)]
+       [:span.toaster__content
+        [:div.toaster__close
+         {:on-click #(dispatch [:delete-toast-message 1])}
+          "X"
+         ]
+        [:div.toaster__content-status status]
+        [:div.toaster__content-paragraph message]])]))
+
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
     [:div

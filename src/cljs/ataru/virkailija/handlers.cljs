@@ -44,11 +44,11 @@
   :flasher
   (fn [{:keys [db]} [_ flash]]
     (let [template-editor-visible? (get-in db [:editor :ui :template-editor-visible?])]
-      (if (not template-editor-visible?)
+      (when (not template-editor-visible?)
         (-> {:db db}
             (assoc :delayed-dispatch
                    {:dispatch-vec [:state-update (fn [db]
-                                                   (if (= flash (dissoc (:flash db) :expired?))
+                                                   (when (= flash (dissoc (:flash db) :expired?))
                                                      (update db :flash assoc :expired? true)))]
                     :timeout      16})
             (assoc-in [:db :flash] (assoc flash :expired? false)))))))
@@ -57,3 +57,17 @@
   :snackbar-message
   (fn [db [_ message]]
     (assoc db :snackbar-message message)))
+
+;todo, tallennetaan ehkä joku id, jonka pohjalta voidaan poistaa
+(reg-event-db
+  :toast-message
+  (fn [db [_ message]]
+    (assoc db :toast-message message)))
+
+;todo use id
+(reg-event-db
+  :delete-toast-message
+  (fn [db [_ id]]
+    (if (= (count (:toast-message db)) 1)
+      (dissoc db :toast-message)
+      (update db :toast-message (fn [toast-messages] (filter #(= (:id %) id) toast-messages))))))
