@@ -3,7 +3,8 @@
             [ataru.collections :as coll]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-rights :as kvr]
-            [re-frame.core :as re-frame])
+            [re-frame.core :as re-frame]
+            [clojure.string :as string])
   (:require-macros [cljs.core.match :refer [match]]))
 
 (re-frame/reg-sub
@@ -127,8 +128,9 @@
          (not selection-state-used?))))
 
 (defn- default-kevyt-valinta-property-value [kevyt-valinta-property]
-  (when (= kevyt-valinta-property :kevyt-valinta/valinnan-tila)
-    "KESKEN"))
+  (cond
+    (= kevyt-valinta-property :kevyt-valinta/valinnan-tila) "KESKEN"
+    (= kevyt-valinta-property :kevyt-valinta/vastaanotto-tila) "KESKEN")) ;fixme, oletusarvo vastaanoton tilalle?
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/hakukohde-oid
@@ -158,6 +160,14 @@
         :tilaHistoria)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta-filter/selected-haku
+  (fn []
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:state-query [:haut]])])
+  (fn [[haku-oid haut]]
+    (get haut haku-oid)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/haku
   (fn []
     [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :haku]])
@@ -172,20 +182,25 @@
   (fn [[haku]]
     (true? (some-> haku
                    :kohdejoukko-uri
-                   (clojure.string/starts-with? "haunkohdejoukko_12#")))))
+                   (string/starts-with? "haunkohdejoukko_12#")))))
+
+(re-frame/reg-sub
+  :virkailija-kevyt-valinta-filter/korkeakouluhaku?
+  (fn []
+    [(re-frame/subscribe [:virkailija-kevyt-valinta-filter/selected-haku])])
+  (fn [[haku]]
+    (true? (some-> haku
+                   :kohdejoukko-uri
+                   (string/starts-with? "haunkohdejoukko_12#")))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-property-value
   (fn [[_ _ application-key hakukohde-oid]]
-    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
-  (fn [[valinnan-tulos-for-application korkeakouluhaku?] [_ kevyt-valinta-property]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid])])
+  (fn [[valinnan-tulos-for-application] [_ kevyt-valinta-property]]
     (let [valinta-tulos-service-property (mappings/kevyt-valinta-property->valinta-tulos-service-property kevyt-valinta-property)
           kevyt-valinta-property-value   (some-> valinnan-tulos-for-application
-                                                 (valinta-tulos-service-property)
-                                                 (mappings/valinta-tulos-service-value->kevyt-valinta-property-value
-                                                   kevyt-valinta-property
-                                                   korkeakouluhaku?))]
+                                                 (valinta-tulos-service-property))]
       (if (nil? kevyt-valinta-property-value)
         (default-kevyt-valinta-property-value kevyt-valinta-property)
         kevyt-valinta-property-value))))
@@ -281,8 +296,6 @@
                                        :kevyt-valinta/vastaanotto-tila      :checked
                                        :kevyt-valinta/ilmoittautumisen-tila :unchecked})]
       (kevyt-valinta-states kevyt-valinta-property))))
-
-(def ^:private not-nil? (comp not nil?))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-checkmark-state
@@ -401,7 +414,7 @@
    "EI_VASTAANOTETTU_MAARA_AIKANA"
    "PERUNUT"
    "PERUUTETTU"
-   "VASTAANOTTANUT"])
+   "VASTAANOTTANUT_SITOVASTI"])
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/allowed-kevyt-valinta-property-values
