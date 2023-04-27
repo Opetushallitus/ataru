@@ -12,7 +12,7 @@
   (:import
     (java.util.concurrent Executors TimeUnit)))
 
-(def max-retries 1)
+(def max-retries 100)
 
 ;; Iterations resulting in running or attempting to run steps
 ;; are so central, that we've specified them with schema
@@ -70,15 +70,13 @@
 
 (defn- final-error-iteration [step state retry-count msg & job]
   (log/error "Background job failed after maximum retries, sending email to administrators")
-  (log/info "job:")
-  (log/info job)
   (let [from        "no-reply@opintopolku.fi"
         recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
         subject     "Tausta-ajo päättyi virheeseen"
         body        (selmer/render-file "templates/email_background_job_failed.html"
                                         {:job job
                                          :error msg})]
-    (ataru.background-job.email-job/send-email from recipients subject body)
+    (email-job/send-email from recipients subject body)
     {:step            step
      :state           state
      :final           true
@@ -135,12 +133,6 @@
    if we haven't exceeded retry-limit"
   [runner iteration job-definition]
   (let [step-fn (get (:steps job-definition) (:step iteration))]
-    (log/info "job type:")
-    (log/info (:type job-definition))
-    (log/info "iteration")
-    (log/info iteration)
-    (log/info "caused by error")
-    (log/info (:caused-by-error iteration))
     (cond
       (nil? step-fn)
       (final-error-iteration (:step iteration)

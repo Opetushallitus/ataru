@@ -24,8 +24,6 @@
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
 (defn send-email-step [{:keys [from recipients subject body]} _]
-  (throw (new RuntimeException
-           "Tilapäinen virhe testausta varten"))
   {:pre [(every? #(identity %) [from recipients subject body])]}
   (log/info "Trying to send email" subject "to" recipients "via viestintäpalvelu at address" (viestintapalvelu-address))
   (send-email from recipients subject body)
