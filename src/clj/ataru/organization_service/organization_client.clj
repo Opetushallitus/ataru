@@ -16,7 +16,8 @@
   (merge
     {:name (:nimi org-node)
      :oid  (:oid org-node)
-     :type :organization}
+     :type :organization
+     :active? (= "AKTIIVINEN" (:status org-node))}
     (when-let [organisaatiotyypit (:organisaatiotyypit org-node)]
       {:organisaatiotyypit organisaatiotyypit})
     (when-let [oppilaitostyyppi (:oppilaitostyyppi org-node)]
