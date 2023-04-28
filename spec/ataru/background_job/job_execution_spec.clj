@@ -16,7 +16,7 @@
 
 (defn send-email-assert-max-retry [_ recipients _ body]
   (should= recipients ["testi@example.org"])
-  (should (clojure.string/includes? body "Retry limit exceeded")))
+  (should (str/includes? body "Retry limit exceeded")))
 
 (def
   job1
