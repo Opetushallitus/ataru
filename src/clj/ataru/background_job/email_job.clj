@@ -3,8 +3,7 @@
   (:require [ataru.config.url-helper :refer [resolve-url]]
             [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
-            [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [taoensso.timbre :as log]))
 
 (defn- viestintapalvelu-address []
   (resolve-url :ryhmasahkoposti-service))
