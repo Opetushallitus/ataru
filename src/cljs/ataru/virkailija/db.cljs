@@ -80,6 +80,7 @@
                                 :selected-time-column              "created-time"
                                 :application-list-expanded?        true
                                 :mass-information-request          {:form-status :disabled}
+                                :single-information-request        {:form-status :disabled}
                                 :filters                           default-filters
                                 :filters-checkboxes                default-filters
                                 :ensisijaisesti?                   false

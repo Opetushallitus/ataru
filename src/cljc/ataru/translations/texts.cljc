@@ -1558,6 +1558,15 @@
    :mass-information-request-subject                         {:fi "Aihe:"
                                                               :sv "Ämne:"
                                                               :en "Subject:"}
+   :single-information-request                               {:fi "Viesti"
+                                                              :sv "Meddelande"
+                                                              :en "Message"}
+   :single-information-request-subject                       {:fi "Aihe:"
+                                                              :sv "Ämne:"
+                                                              :en "Subject:"}
+   :single-information-request-email-applicant               {:fi "Olet lähettämässä sähköpostia 1 hakijalle: %s"
+                                                              :sv "Skicka e-post till 1 sökande: "
+                                                              :en "Send email to applicants:"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}
@@ -1810,6 +1819,9 @@
    :selection                                                {:fi "Valinta"
                                                               :sv "Antagning"
                                                               :en "Selection"}
+   :send-email-to-applicant                                  {:fi "Lähetä viesti hakijalle"
+                                                              :sv "Skicka e-post till sökanden"
+                                                              :en "Send email"}
    :send-confirmation-email-to-applicant                     {:fi "Lähetä vahvistussähköposti hakijalle"
                                                               :sv "Skicka e-post med bekräftelse till sökanden"
                                                               :en "Send confirmation email again"}

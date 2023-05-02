@@ -340,11 +340,24 @@
     (if-let [haku (get-in haut [haku-oid])]
       (string/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_11")
       false)))
+(re-frame/reg-sub
+  :application/single-information-request-only-guardian-enabled?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[haku-oid haut] _]
+    (if-let [haku (get-in haut [haku-oid])]
+      (string/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_11")
+      false)))
 
 (re-frame/reg-sub
   :application/mass-information-request-popup-visible?
   (fn [db]
     (get-in db [:application :mass-information-request :visible?])))
+(re-frame/reg-sub
+  :application/single-information-request-popup-visible?
+  (fn [db]
+    (get-in db [:application :single-information-request :visible?])))
 
 (defn- haku-completely-processed?
   [haku]
