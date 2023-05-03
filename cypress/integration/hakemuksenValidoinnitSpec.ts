@@ -77,3 +77,59 @@ describe('Hakulomakkeen validoinnit', () => {
     })
   })
 })
+// describe('Hakulomakkeen tekstikentät trimmataan', () => {
+//   kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
+//     lomakkeenLuonti((lomakkeenTunnisteet) => {
+//       it('Lisää huoltajan yhteystietomoduulin', () => {
+//         lomakkeenMuokkaus.henkilotiedot.valitseHenkilotietolomakkeenKentat(
+//           'Opiskelijavalinta, perusopetuksen jälkeinen yhteishaku',
+//           lomakkeenTunnisteet().lomakkeenId
+//         )
+//         lomakkeenMuokkaus.komponentinLisays.lisaaElementti(
+//           lomakkeenTunnisteet().lomakkeenId,
+//           'Huoltajan yhteystiedot'
+//         )
+//         tekstikentanLisakysymyksenLisays(lomakkeenTunnisteet, () => {})
+//       })
+//       hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
+//         it('Trimmaa henkilötietokentät', () => {
+//           hakijanNakyma.henkilotiedot.henkilotunnus().should('exist')
+//           tekstinSyotto.syotaTeksti(
+//             hakijanNakyma.henkilotiedot.henkilotunnus(),
+//             '010123A968L   '
+//           )
+//           hakijanNakyma.henkilotiedot
+//             .henkilotunnus()
+//             .should('have.value', '010123A968L   ')
+//           tekstinSyotto.syotaTeksti(
+//             hakijanNakyma.henkilotiedot.sahkoposti(),
+//             '  testi@example.org  '
+//           )
+//           hakijanNakyma.henkilotiedot
+//             .sahkoposti()
+//             .should('have.value', 'testi@example.org')
+//           tekstinSyotto.syotaTeksti(
+//             hakijanNakyma.henkilotiedot.sahkopostitoisto(),
+//             '  testi@example.org  '
+//           )
+//           hakijanNakyma.henkilotiedot
+//             .sahkopostitoisto()
+//             .should('have.value', 'testi@example.org')
+//         })
+//         it('Trimmaa lisäkysymysten vastaukset', () => {
+//           lisakysymys
+//             .syötäTekstikenttäänVastaus('  Vastaus  ')
+//             .then(() =>
+//               lisakysymys.syötäLisäkysymykseenVastaus(
+//                 ' Vastaus lisäkysymykseen '
+//               )
+//             )
+//           lisakysymys.kysymysKenttä().should('have.value', '  Vastaus  ')
+//           lisakysymys
+//             .haeLisäkysymyksenVastaus()
+//             .should('have.value', ' Vastaus lisäkysymykseen ')
+//         })
+//       })
+//     })
+//   })
+// })

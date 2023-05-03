@@ -14,14 +14,14 @@
 
 (defn- delete-form [id]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (jdbc/delete! conn :forms ["id = ?" id])))
+                            (jdbc/delete! conn :forms ["id = ?" id])))
 
 (defn- delete-application! [id]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
-    (jdbc/delete! conn :application_hakukohde_attachment_reviews
-                  ["application_key = (select key from applications where id = ?)" id])
-    (jdbc/delete! conn :applications
-                  ["id = ?" id])))
+                            (jdbc/delete! conn :application_hakukohde_attachment_reviews
+                                          ["application_key = (select key from applications where id = ?)" id])
+                            (jdbc/delete! conn :applications
+                                          ["id = ?" id])))
 
 (defn- reset-database! []
   (println "Tyhjennetään hakemuksia tietokannasta.")
@@ -60,62 +60,83 @@
     application-id))
 
 (defn- create-answer [with-properties]
-  (merge {:key       (util/component-id)
-          :value     ""
-          :fieldType "textField"
-          :original-question nil
-          :duplikoitu-kysymys-hakukohde-oid nil
-          :original-followup nil
-          :duplikoitu-followup-hakukohde-oid nil}
-         with-properties))
+  (merge
+    {:key                               (util/component-id)
+     :value                             ""
+     :fieldType                         "textField"
+     :original-question                 nil
+     :duplikoitu-kysymys-hakukohde-oid  nil
+     :original-followup                 nil
+     :duplikoitu-followup-hakukohde-oid nil}
+    with-properties))
 
 (describe "get application answers:"
-  (tags :unit :database)
+          (tags :unit :database)
 
-  (after
-   (reset-database!))
+          (after
+           (reset-database!))
 
-  (describe "basic fields:"
-    (it "should get answers containing a string"
-      (let [answers           [(create-answer {:value "vastaus"})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application))))
+          (describe "basic fields:"
+                    (it "should get answers containing a string"
+                        (let [answers           [(create-answer {:value "vastaus"})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
 
-    (it "should get answers containing a null value"
-      (let [answers           [(create-answer {:value nil})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application)))))
+                    (it "should get answers containing a null value"
+                        (let [answers           [(create-answer {:value nil})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
 
-  (describe "question group:"
-    (it "should get answers containing values"
-      (let [answers           [(create-answer {:value [["liite-id-0-0" "liite-id-0-1"] ["liite-id-1-0"]]})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application))))
+                    (it "should trim leading and trailing spaces from answers"
+                        (let [answers           [(create-answer {:value "  vastaus  "})]
+                              expected-answer-value  (list "vastaus")
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= expected-answer-value (map :value (:answers found-application))))))
 
-    (it "should get answers containing a null value"
-      (let [answers           [(create-answer {:value [["liite-id"] nil]})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application))))
+          (describe "question group:"
+                    (it "should get answers containing values"
+                        (let [answers           [(create-answer {:value [["liite-id-0-0" "liite-id-0-1"] ["liite-id-1-0"]]})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
 
-    (it "should get answers containing an empty value"
-      (let [answers           [(create-answer {:value [[] ["liite-id"]]})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application)))))
+                    (it "should get answers containing a null value"
+                        (let [answers           [(create-answer {:value [["liite-id"] nil]})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
 
-  (describe "repeatable fields:"
-    (it "should get an non empty answer value"
-      (let [answers           [(create-answer {:value ["vastaus 1" "vastaus 2"]})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application))))
+                    (it "should get answers containing an empty value"
+                        (let [answers           [(create-answer {:value [[] ["liite-id"]]})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
+                    (it "should trim leading and trailing spaces from answers containing values"
+                        (let [answers           [(create-answer {:value [[" liite-id-0-0 " "\nliite-id-0-1"] ["  liite-id-1-0"]]})]
+                              expected-answer-value (list [["liite-id-0-0" "liite-id-0-1"] ["liite-id-1-0"]])
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= expected-answer-value (map :value (:answers found-application))))))
 
-    (it "should get an empty answer value"
-      (let [answers           [(create-answer {:value []})]
-            application-id    (add-application-with-answers answers)
-            found-application (store/get-application application-id)]
-        (should= answers (:answers found-application))))))
+          (describe "repeatable fields:"
+                    (it "should get an non empty answer value"
+                        (let [answers           [(create-answer {:value ["vastaus 1" "vastaus 2"]})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
+
+                    (it "should get an empty answer value"
+                        (let [answers           [(create-answer {:value []})]
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= answers (:answers found-application))))
+
+                    (it "should trim leading and trailing spaces"
+                        (let [answers           [(create-answer {:value ["  vastaus 1" " vastaus 2 \t"]})]
+                              expected-answer-value  (list ["vastaus 1" "vastaus 2"])
+                              application-id    (add-application-with-answers answers)
+                              found-application (store/get-application application-id)]
+                          (should= expected-answer-value (map :value (:answers found-application)))))))

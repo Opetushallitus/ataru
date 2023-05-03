@@ -309,7 +309,7 @@
 (defn- remove-null-bytes-from-value
   [value]
   (cond (string? value)
-        (clojure.string/replace value "\u0000" "")
+        (clojure.string/replace (clojure.string/trim value) "\u0000" "")
         (sequential? value)
         (mapv remove-null-bytes-from-value value)
         :else
