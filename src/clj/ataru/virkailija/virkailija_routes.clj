@@ -772,7 +772,7 @@
                  :headers {"Content-Type"        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                            "Content-Disposition" (str "attachment; filename=" (excel/create-filename filename))}
                  :body    xls}
-                (response/bad-request))))))
+                (response/unauthorized))))))
 
       (api/GET "/:application-key/changes" {session :session}
         :summary "Get changes made to an application in version x"

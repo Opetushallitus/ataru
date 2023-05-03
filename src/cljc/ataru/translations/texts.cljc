@@ -1957,6 +1957,12 @@
    :view-valinta-rights-panel                                {:fi "Valinnan tuloksen katselu"
                                                               :sv "Granskning av antagningsresultat"
                                                               :en "EN: Valinnan tuloksen katselu"}
+   :opinto-ohjaaja                                           {:fi "Opinto-ohjaaja"
+                                                              :sv "Studiehandledare"
+                                                              :en "Study advisor"}
+   :valinnat-valilehti                                       {:fi "Valinnat-välilehti"
+                                                              :sv "Antagningar-fliken"
+                                                              :en "EN: Valinnat-välilehti"}
    :virus-found                                              {:fi "Virus löytyi"
                                                               :sv "Ett virus hittades"
                                                               :en "Virus found"}
