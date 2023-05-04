@@ -86,7 +86,8 @@
 
 (defn ->safe-html
   [content]
-  (.sanitize html-policy (markdown->html content)))
+  (when content
+    (.sanitize html-policy (markdown->html content))))
 
 (defn- hakukohde-names [tarjonta-info lang application]
   (when (:haku application)
