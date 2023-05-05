@@ -2635,7 +2635,7 @@
 (def person-info-module-validation-error-texts
   {:ssn                   {:fi "Henkilötunnus on oltava muodossa PPKKVVzNNNT, jossa z on \"-\" tai \"A\"."
                            :sv "Personbeteckningen ska vara i formen DDMMÅÅzNNNT, där z är \"-\" eller \"A\"."
-                           :en "Your identification number has to be in format DDMMYYzNNNT, where the character z is \"-\" or \"A\"."}
+                           :en "Your personal identification code has to be in the format DDMMYYzNNNT, where the character z is \"-\" or \"A\"."}
    :phone                 {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
                            :sv "Din mobiltelefonnummer är fel. Numret ska anges i formen 050123456 eller +35850123456."
                            :en "The mobile phone number is in incorrect format. The number has to be in format 050123456 or +35850123456."}
