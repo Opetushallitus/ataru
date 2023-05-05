@@ -119,4 +119,4 @@
        oppilaitostyyppi-kansanopistot
        oppilaitostyyppi-kansalaisopistot}
      (:oppilaitostyyppi organization))
-    (some #(= "oppilaitostyyppi_02" %) (:organisaatiotyypit organization))))
+    (some #(= "organisaatiotyyppi_02" %) (:organisaatiotyypit organization))))
