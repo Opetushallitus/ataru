@@ -14,7 +14,9 @@
                    :view-applications :view-applications-rights-panel
                    :edit-applications :edit-applications-rights-panel
                    :view-valinta      :view-valinta-rights-panel
-                   :edit-valinta      :edit-valinta-rights-panel})
+                   :edit-valinta      :edit-valinta-rights-panel
+                   :opinto-ohjaaja    :opinto-ohjaaja
+                   :valinnat-valilehti :valinnat-valilehti })
 
 (def active-section-arrow [:i.active-section-arrow.zmdi.zmdi-chevron-down.zmdi-hc-lg])
 
@@ -140,18 +142,26 @@
                  (into
                    [:ul.profile__organization-select-results.zmdi-hc-ul
                     (map
-                      (fn [{:keys [oid name hakukohderyhma?]}]
+                      (fn [{:keys [oid name hakukohderyhma? active?]}]
                         [:li.profile__organization-select-result
                          {:key (str "organization-match-" oid)}
                          [:a
-                          {:on-click #(dispatch [:editor/select-organization oid])}
+                          {:on-click #(dispatch [:editor/select-organization oid])
+                           :title oid}
                           (if hakukohderyhma?
                             [:i.zmdi.zmdi-hc-li.zmdi-collection-text]
                             [:i.zmdi.zmdi-hc-li.zmdi-accounts])
                           (let [label (get-label name)]
                             (if (clojure.string/blank? label)
                               "—"
-                              label))]])
+                              label))]
+                         [:a.profile__organization-select-results__link
+                          {:href (str "/organisaatio-service/lomake/" oid)
+                           :target "blank"}
+                          [:i.zmdi.zmdi-open-in-new]]
+                         (when (and (not active?) (not (nil? active?)))
+                           [:i.material-icons-outlined.arkistoitu
+                             "archive"])])
                       (take num-results-to-show @search-results))])
                  (when (= (inc num-results-to-show) (count @search-results))
                    [:a.profile__organization-more-results
