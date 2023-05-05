@@ -273,6 +273,7 @@
                   :on-blur      (fn [evt]
                                   (swap! local-state assoc
                                          :focused? false)
+                                  (on-change (clojure.string/trim (or value "")))
                                   (on-blur evt))
                   :on-change    (event->value (fn [value]
                                                 (swap! local-state assoc
@@ -324,11 +325,16 @@
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
                                                     :focused? false)
-                                             (when (and (empty? value) (not last?))
+                                             (if (and (empty? value) (not last?))
                                                (dispatch [:application/remove-repeatable-application-field-value
                                                           field-descriptor
                                                           question-group-idx
-                                                          repeatable-idx]))))
+                                                          repeatable-idx])
+                                               (dispatch [:application/set-repeatable-application-field
+                                                          field-descriptor
+                                                          question-group-idx
+                                                          repeatable-idx
+                                                          (clojure.string/trim (or value ""))]))))
             on-change                    (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
@@ -437,7 +443,8 @@
                                       :else value)
                   :on-blur      (fn [_]
                                   (swap! local-state assoc
-                                         :focused? false))
+                                         :focused? false)
+                                  (on-change (clojure.string/trim (or value ""))))
                   :on-change    (event->value (fn [value]
                                                 (swap! local-state assoc
                                                        :focused? true
@@ -714,7 +721,12 @@
             show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
             on-blur         (fn [_]
                               (swap! local-state assoc
-                                     :focused? false))
+                                     :focused? false)
+                              (dispatch [:application/set-repeatable-application-field
+                                         field-descriptor
+                                         question-group-idx
+                                         row-idx
+                                         (clojure.string/trim (or value ""))]))
             on-change       (fn [evt]
                               (let [value (-> evt .-target .-value)]
                                 (swap! local-state assoc
