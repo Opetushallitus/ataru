@@ -1,7 +1,6 @@
 (ns ataru.applications.application-access-control
   (:require
     [ataru.log.audit-log :as audit-log]
-    [taoensso.timbre :as log]
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.user-rights :as user-rights]
     [ataru.applications.application-store :as application-store]
@@ -146,7 +145,9 @@
            (distinct-by :key)))))
 
 (defn applications-access-authorized?
-  [organization-service tarjonta-service session application-keys rights]
+  ([organization-service tarjonta-service session application-keys rights]
+   (applications-access-authorized? organization-service tarjonta-service session application-keys rights (constantly false)))
+  ([organization-service tarjonta-service session application-keys rights authorized-by-custom?]
   (session-orgs/run-org-authorized
    session
    organization-service
@@ -155,8 +156,18 @@
    #(->> (application-store/applications-authorization-data application-keys)
          (populate-applications-hakukohteet tarjonta-service)
          (every? (some-fn (partial authorized-by-form? %)
-                          (partial authorized-by-tarjoajat? %))))
-   (constantly true)))
+                          (partial authorized-by-tarjoajat? %)
+                          authorized-by-custom?)))
+   (constantly true))))
+
+(defn- authenticate-by-opinto-ohjaaja-fn
+  [organization-service suoritus-service person-service session]
+  (fn [application-authorization-data]
+    (application-authorized-by-lahtokoulu? organization-service
+                                           suoritus-service
+                                           person-service
+                                           session
+                                           application-authorization-data)))
 
 (defn- opinto-ohjaaja-access-authorized?
   [organization-service suoritus-service person-service session application-key]
@@ -171,21 +182,32 @@
 
 (defn application-edit-authorized?
   [organization-service tarjonta-service suoritus-service person-service session application-key]
-  (or
-    (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications])
-    (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))
+  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
+                                                             suoritus-service
+                                                             person-service
+                                                             session)]
+    (or
+      (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications] opinto-ohjaaja-fn)
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
 
 (defn application-view-authorized?
   [organization-service tarjonta-service suoritus-service person-service session application-key]
-  (or
-    (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications])
-    (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))
+  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
+                                                             suoritus-service
+                                                             person-service
+                                                             session)]
+    (or
+      (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications] opinto-ohjaaja-fn)
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
 
 (defn applications-access-authorized-including-opinto-ohjaaja?
   [organization-service tarjonta-service suoritus-service person-service session application-keys rights]
-  (or
-    (applications-access-authorized? organization-service tarjonta-service session application-keys rights)
-    (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys)))
+  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
+                                                                             suoritus-service
+                                                                             person-service
+                                                                             session)]
+    (or (applications-access-authorized? organization-service tarjonta-service session application-keys rights opinto-ohjaaja-fn)
+        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys))))
 
 (defn- rights-by-hakukohde
   [organization-service session application]

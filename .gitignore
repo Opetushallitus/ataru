@@ -34,3 +34,4 @@ npm-debug.log*
 .clj-kondo/.cache
 .java
 .java-version
+.lsp/
