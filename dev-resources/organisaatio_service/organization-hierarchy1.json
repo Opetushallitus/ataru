@@ -6,7 +6,7 @@
       "nimi": {
         "fi": "Telajärven seudun koulutuskuntayhtymä"
       },
-      "organisaatiotyypit": ["KOULUTUSTOIMIJA"],
+      "organisaatiotyypit": ["organisaatiotyyppi_01"],
       "children": [
         {
           "oid": "1.2.246.562.10.1234334543",
@@ -14,7 +14,7 @@
             "fi": "Telajärven aikuislukio"
           },
           "children": [],
-          "organisaatiotyypit": ["OPPILAITOS"],
+          "organisaatiotyypit": ["organisaatiotyyppi_02"],
           "oppilaitostyyppi": "oppilaitostyyppi_15#1"
         },
         {
@@ -22,7 +22,7 @@
           "nimi": {
             "fi": "Telajärven aikuisopisto"
           },
-          "organisaatiotyypit": ["OPPILAITOS"],
+          "organisaatiotyypit": ["organisaatiotyyppi_02"],
           "oppilaitostyyppi": "oppilaitostyyppi_64#1",
           "children": [
             {
@@ -31,7 +31,7 @@
                 "fi": "Telajärven aikuisopisto, Äyhtävä"
               },
               "children": [],
-              "organisaatiotyypit": ["TOIMIPISTE"]
+              "organisaatiotyypit": ["organisaatiotyyppi_03"]
             },
             {
               "oid": "1.2.246.562.10.938234",
@@ -39,7 +39,7 @@
                 "fi": "Telajärven aikuisopisto, Prunkila"
               },
               "children": [],
-              "organisaatiotyypit": ["TOIMIPISTE"]
+              "organisaatiotyypit": ["organisaatiotyyppi_03"]
             }
           ]
         },
@@ -48,7 +48,7 @@
           "nimi": {
             "fi": "Telajärven työväenopisto"
           },
-          "organisaatiotyypit": ["OPPILAITOS"],
+          "organisaatiotyypit": ["organisaatiotyyppi_02"],
           "oppilaitostyyppi": "oppilaitostyyppi_64#1",
           "children": [
             {
@@ -57,7 +57,7 @@
                 "sv": "Telajärven hierontaopisto"
               },
               "children": [],
-              "organisaatiotyypit": ["TOIMIPISTE"]
+              "organisaatiotyypit": ["organisaatiotyyppi_03"]
             },
             {
               "oid": "1.2.246.562.10.323412",
@@ -65,7 +65,7 @@
                 "fi": "Telajärven kaupungin työväenopisto"
               },
               "children": [],
-              "organisaatiotyypit": ["TOIMIPISTE"]
+              "organisaatiotyypit": ["organisaatiotyyppi_03"]
             }
           ]
         }
