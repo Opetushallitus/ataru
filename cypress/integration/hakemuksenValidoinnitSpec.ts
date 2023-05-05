@@ -34,18 +34,24 @@ describe('Hakulomakkeen validoinnit', () => {
             .henkilotunnus()
             .invoke('attr', 'aria-invalid')
             .should('eq', 'true')
-          cy.contains('Henkilötunnus on oltava muodossa PPKKVVXNNNT.', {
-            matchCase: true,
-          }).should('exist')
+          cy.contains(
+            'Henkilötunnus on oltava muodossa PPKKVVzNNNT, jossa z on "-" tai "A".',
+            {
+              matchCase: true,
+            }
+          ).should('exist')
         })
         it('Näyttää huoltajan yhteystietokentät kun täyttää alaikäisen hetun', () => {
           tekstinSyotto.syotaTeksti(
             hakijanNakyma.henkilotiedot.henkilotunnus(),
             '010123A968L' // tämä testihetu pysyy alaikäisenä hyvän aikaa!
           )
-          cy.contains('Henkilötunnus on oltava muodossa PPKKVVXNNNT.', {
-            matchCase: true,
-          }).should('not.exist') // virheilmoitus poistuu
+          cy.contains(
+            'Henkilötunnus on oltava muodossa PPKKVVzNNNT, jossa z on "-" tai "A".',
+            {
+              matchCase: true,
+            }
+          ).should('not.exist') // virheilmoitus poistuu
           cy.contains('Huoltajan tiedot (jos olet alle 18v)', {
             matchCase: true,
           }).should('exist')
