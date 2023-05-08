@@ -6,8 +6,6 @@ import * as hakijanNakyma from '../hakijanNakyma'
 import * as tekstinSyotto from '../tekstinSyotto'
 import tekstikentanLisakysymyksenLisays from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstikentanLisakysymyksenLisays'
 import { lisakysymys } from '../testit/lomake-elementit/tekstikentta/hakija/hakemus/lisakysymys'
-import { tekstikentta } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstikentta'
-import { tekstialue } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstialue'
 import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTayttaminen'
 
 describe('Hakulomakkeen validoinnit', () => {
