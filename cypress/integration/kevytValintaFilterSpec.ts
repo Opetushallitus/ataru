@@ -55,8 +55,56 @@ describe('Hakemusten filtteröinti kevyt-valinnan tiedoilla', () => {
         cy.get('.application__search-control-haku').first().click()
       }
 
+      describe('Kevyt-valinta-valinnantila-filtteri', () => {
+        before(() => {
+          cy.reload()
+          goToApplicationHandling()
+        })
+
+        it('Hakemuksia voi filtteröidä valinnan tilalla', () => {
+          clickFirstHaku()
+          cy.get('[data-test-id=show-results]').click()
+          cy.get('.application-handling__list--expanded')
+            .find('.application-handling__list-row')
+            .should('have.length', 2)
+          cy.get('.application-handling__list-row--selection').click()
+          cy.get(
+            '.application-handling__filter-state-selection-column > .application-handling__filter-state-selection-row--all > label > input'
+          ).click()
+          cy.get('.application-handling__list--expanded')
+            .find('.application-handling__list-row')
+            .should('have.length', 0)
+
+          cy.get('.application-handling__filter-state-selection')
+            .find('span')
+            .filter(':contains("Hyväksytty (1)")')
+            .should('have.length', 1)
+          cy.get('.application-handling__filter-state-selection')
+            .find('span')
+            .filter(':contains("Kesken (1)")')
+            .should('have.length', 1)
+          cy.get('.application-handling__filter-state-selection')
+            .find('span')
+            .filter(':contains("Hyväksytty (1)")')
+            .first()
+            .click()
+          cy.get('.application-handling__list--expanded')
+            .find('.application-handling__list-row')
+            .should('have.length', 1)
+          cy.get('.application-handling__filter-state-selection')
+            .find('span')
+            .filter(':contains("Kesken (1)")')
+            .first()
+            .click()
+          cy.get('.application-handling__list--expanded')
+            .find('.application-handling__list-row')
+            .should('have.length', 2)
+        })
+      })
+
       describe('Kevyt-valinta-vastaanotto-filtteri', () => {
         before(() => {
+          cy.reload()
           goToApplicationHandling()
         })
 
