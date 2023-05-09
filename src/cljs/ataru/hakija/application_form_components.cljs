@@ -356,6 +356,7 @@
                                    " application__form-text-input--normal")
                                  (when last?
                                    " application__form-text-input--disabled"))
+           :data-test-id    (str "repeatable-text-field-" repeatable-idx)
            :value           (cond last?
                                   nil
                                   (:focused? @local-state)

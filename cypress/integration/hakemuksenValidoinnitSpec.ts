@@ -6,7 +6,8 @@ import * as hakijanNakyma from '../hakijanNakyma'
 import * as tekstinSyotto from '../tekstinSyotto'
 import tekstikentanLisakysymyksenLisays from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstikentanLisakysymyksenLisays'
 import { lisakysymys } from '../testit/lomake-elementit/tekstikentta/hakija/hakemus/lisakysymys'
-import henkilotietoModuulinTayttaminen from '../testit/henkilotietoModuulinTayttaminen'
+import { tekstikentta } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstikentta'
+import { tekstialue } from '../testit/lomake-elementit/tekstikentta/virkailija/lomakkeet/tekstialue'
 
 describe('Hakulomakkeen validoinnit', () => {
   kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
@@ -133,22 +134,20 @@ describe('Lisäkysymyksen tekstikenttä trimmataan', () => {
     lomakkeenLuonti((lomakkeenTunnisteet) => {
       tekstikentanLisakysymyksenLisays(lomakkeenTunnisteet, () => {
         hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-          henkilotietoModuulinTayttaminen(() => {
-            it('Trimmaa lisäkysymysten vastaukset', () => {
-              lisakysymys
-                .syötäTekstikenttäänVastaus('  Vastaus  ')
-                .then(() =>
-                  lisakysymys.syötäLisäkysymykseenVastaus(
-                    ' Vastaus lisäkysymykseen '
-                  )
+          it('Trimmaa lisäkysymysten vastaukset', () => {
+            lisakysymys
+              .syötäTekstikenttäänVastaus('  Vastaus  ')
+              .then(() =>
+                lisakysymys.syötäLisäkysymykseenVastaus(
+                  ' Vastaus lisäkysymykseen '
                 )
-              // trimmaus tapahtuu on-blur-eventillä joten fokusoidaan toiseen kenttään
-              hakijanNakyma.henkilotiedot.matkapuhelin().click()
-              lisakysymys.kysymysKenttä().should('have.value', 'Vastaus')
-              lisakysymys
-                .haeLisäkysymyksenVastaus()
-                .should('have.value', 'Vastaus lisäkysymykseen')
-            })
+              )
+            // trimmaus tapahtuu on-blur-eventillä joten fokusoidaan toiseen kenttään
+            hakijanNakyma.henkilotiedot.matkapuhelin().click()
+            lisakysymys.kysymysKenttä().should('have.value', 'Vastaus')
+            lisakysymys
+              .haeLisäkysymyksenVastaus()
+              .should('have.value', 'Vastaus lisäkysymykseen')
           })
         })
       })
@@ -158,37 +157,66 @@ describe('Lisäkysymyksen tekstikenttä trimmataan', () => {
 
 // pakko tehdä erillinen testi erityyppisille teksti-inputeille,
 // koska lomake-editorissa ei saa yksilöityä eri tekstikenttiä
-// describe('Tekstialue trimmataan', () => {
-//   kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
-//     lomakkeenLuonti((lomakkeenTunnisteet) => {
-//       it('Lisää tekstialue', () => {
-//         tekstialue
-//           .lisaaTekstialue(lomakkeenTunnisteet().lomakkeenId)
-//           .then(() => tekstialue.asetaKysymys('Tekstialuekysymys'))
-//           .then(() => tekstialue.asetaMaxMerkkimaara('50'))
-//       })
-//       hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-//         it('Trimmaa tekstialueen', () => {
-//           cy.get('textarea').should('exist')
-//         })
-//       })
-//     })
-//   })
-// })
-// describe('Hakulomakkeen toistuvat tekstikentät trimmataan', () => {
-//   kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
-//     lomakkeenLuonti((lomakkeenTunnisteet) => {
-//       tekstikentta
-//         .lisaaTekstikentta(lomakkeenTunnisteet().lomakkeenId)
-//         .then(() =>
-//           tekstikentta.asetaKysymys('Toistettavan tekstikentän kysymys')
-//         )
-//         .then(() => tekstikentta.voiLisätäUseitaValinta().click())
-//       hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-//         it('Trimmaa toistettavan tekstikentän', () => {
-//           tekstikentta.kysymysKenttä().should('exist')
-//         })
-//       })
-//     })
-//   })
-// })
+describe('Tekstialue trimmataan', () => {
+  kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
+    lomakkeenLuonti((lomakkeenTunnisteet) => {
+      it('Lisää tekstialue', () => {
+        tekstialue
+          .lisaaTekstialue(lomakkeenTunnisteet().lomakkeenId)
+          .then(() => tekstialue.asetaKysymys('Tekstialuekysymys'))
+          .then(() => tekstialue.asetaMaxMerkkimaara('50'))
+      })
+      hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
+        it('Trimmaa tekstialueen', () => {
+          tekstialue.syötäTekstialueenVastaus(
+            '  Tekstiä\nja toinen rivi\nja kolmas rivi  \n\n'
+          )
+          // trimmaus tapahtuu on-blur-eventillä joten fokusoidaan toiseen kenttään
+          hakijanNakyma.henkilotiedot.matkapuhelin().click()
+          tekstialue
+            .haeTekstialue()
+            .should('have.value', 'Tekstiä\nja toinen rivi\nja kolmas rivi')
+        })
+      })
+    })
+  })
+})
+describe('Hakulomakkeen toistuvat tekstikentät trimmataan', () => {
+  kirjautuminenVirkailijanNakymaan('lomakkeen luomista varten', () => {
+    lomakkeenLuonti((lomakkeenTunnisteet) => {
+      it('Lisää toistuva tekstikenttä', () => {
+        lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(
+          lomakkeenTunnisteet().lomakkeenId,
+          () =>
+            tekstikentta
+              .lisaaTekstikentta(lomakkeenTunnisteet().lomakkeenId)
+              .then(() =>
+                tekstikentta.asetaKysymys('Toistettavan tekstikentän kysymys')
+              )
+              .then(() => tekstikentta.voiLisätäUseitaValinta().click())
+        )
+      })
+      hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
+        it('Trimmaa toistettavan tekstikentän', () => {
+          tekstinSyotto.syotaTekstiTarkistamatta(
+            cy.get('[data-test-id=repeatable-text-field-0]'),
+            '  ensimmäinen teksti  '
+          )
+          tekstinSyotto.syotaTekstiTarkistamatta(
+            cy.get('[data-test-id=repeatable-text-field-1]'),
+            '  toinen teksti  '
+          )
+          hakijanNakyma.henkilotiedot.matkapuhelin().click()
+          cy.get('[data-test-id=repeatable-text-field-0]').should(
+            'have.value',
+            'ensimmäinen teksti'
+          )
+          cy.get('[data-test-id=repeatable-text-field-1]').should(
+            'have.value',
+            'toinen teksti'
+          )
+        })
+      })
+    })
+  })
+})
