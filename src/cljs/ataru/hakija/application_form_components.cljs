@@ -175,7 +175,7 @@
                                              (swap! local-state assoc
                                                     :focused-verify? false)
                                              (email-verify-field-change field-descriptor (:value answer)
-                                                                          (trimmed-or-empty-value get-verify-value)))
+                                                                          (trimmed-or-empty-value (get-verify-value))))
 
                              :on-paste     (fn [event]
                                                (.preventDefault event))

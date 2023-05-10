@@ -95,7 +95,7 @@ describe('Hakulomakkeen henkilötietojen tekstikentät trimmataan', () => {
         )
       })
       hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
-        it('Trimmaa henkilötiedoista vain sähköpostikentät', () => {
+        it('Trimmaa henkilötiedoista async-validoitavat kentät', () => {
           hakijanNakyma.henkilotiedot.henkilotunnus().should('exist')
           tekstinSyotto.syotaTeksti(
             hakijanNakyma.henkilotiedot.henkilotunnus(),
@@ -124,6 +124,23 @@ describe('Hakulomakkeen henkilötietojen tekstikentät trimmataan', () => {
           hakijanNakyma.henkilotiedot
             .sahkopostitoisto()
             .should('have.value', 'testi@example.org')
+        })
+        it('Trimmaa henkilötiedoista validoitavat tekstikentät', () => {
+          tekstinSyotto.syotaTeksti(
+            hakijanNakyma.henkilotiedot.matkapuhelin(),
+            ' 0401234567   '
+          )
+          // kentän trimmaus tapahtuu on-blur-eventillä joten fokusoidaan toiseen kenttään
+          hakijanNakyma.henkilotiedot.etunimi().click()
+          hakijanNakyma.henkilotiedot
+            .matkapuhelin()
+            .should('have.value', '0401234567')
+          tekstinSyotto.syotaTeksti(
+            hakijanNakyma.henkilotiedot.etunimi(),
+            ' Testi   '
+          )
+          hakijanNakyma.henkilotiedot.sukunimi().click()
+          hakijanNakyma.henkilotiedot.etunimi().should('have.value', 'Testi')
         })
       })
     })
