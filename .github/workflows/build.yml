@@ -31,9 +31,11 @@ jobs:
         with:
           timezoneLinux: "Europe/Helsinki"
 
-      - uses: dcodeIO/setup-node-nvm@master
+      - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Prepare tests
         env:
@@ -80,9 +82,11 @@ jobs:
         with:
           timezoneLinux: "Europe/Helsinki"
 
-      - uses: dcodeIO/setup-node-nvm@master
+      - uses: actions/setup-node@v3
         with:
-          node-version: lts/*
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
 
       - name: Prepare tests
         env:
