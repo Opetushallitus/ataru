@@ -306,18 +306,18 @@
        first
        :virkailija_oid))
 
-(defn- remove-null-bytes-from-value
+(defn- trim-and-remove-null-bytes-from-value
   [value]
   (cond (string? value)
         (clojure.string/replace (clojure.string/trim value) "\u0000" "")
         (sequential? value)
-        (mapv remove-null-bytes-from-value value)
+        (mapv trim-and-remove-null-bytes-from-value value)
         :else
         value))
 
 (defn- remove-null-bytes-from-answer
   [answer]
-  (update answer :value remove-null-bytes-from-value))
+  (update answer :value trim-and-remove-null-bytes-from-value))
 
 (defn add-application [new-application applied-hakukohteet form session audit-logger]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
