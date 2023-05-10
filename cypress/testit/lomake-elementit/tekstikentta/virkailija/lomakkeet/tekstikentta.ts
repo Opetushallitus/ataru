@@ -9,6 +9,9 @@ export const tekstikentta = {
   kenttäänVainNumeroitaValinta: () =>
     cy.get('[data-test-id=tekstikenttä-valinta-kenttään-vain-numeroita]'),
 
+  voiLisätäUseitaValinta: () =>
+    cy.get('[data-test-id=tekstikenttä-valinta-voi-lisätä-useita]'),
+
   lisaaTekstikentta: (formId: number) =>
     lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(formId, () => {
       lomakkeenMuokkaus.komponentinLisays.avaaValikko()

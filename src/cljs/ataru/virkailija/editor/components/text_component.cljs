@@ -487,7 +487,8 @@
               [:input.editor-form__text-field.editor-form__text-field-auto-width
                {:value     @max-length
                 :disabled  @component-locked?
-                :on-change #(max-length-change (get-val %))}]])]
+                :on-change #(max-length-change (get-val %))
+                :data-test-id "tekstialue-max-merkkimaara"}]])]
           [:div.editor-form__checkbox-wrapper
            [validator-checkbox-component/validator-checkbox path initial-content :required (required-disabled initial-content)]
            (when (and text-area? (or @toisen-asteen-yhteishaku?

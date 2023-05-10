@@ -55,6 +55,9 @@
 (defn- multi-value-field-change [field-descriptor question-group-idx value]
   (dispatch [:application/set-repeatable-application-field field-descriptor question-group-idx nil value]))
 
+(defn- trimmed-or-empty-value [value]
+  (clojure.string/trim (or value "")))
+
 (defn- validation-error
   [errors]
   (let [languages @(subscribe [:application/default-languages])]
@@ -124,8 +127,9 @@
                                                       " application__form-text-input--normal"))
                               :on-blur       (event->value (fn [value]
                                                                (swap! local-state assoc
-                                                                      :focused? false)
-                                                               (on-change (clojure.string/trim (or value "")))
+                                                                      :focused? false
+                                                                      :value (trimmed-or-empty-value value))
+                                                               (on-change (trimmed-or-empty-value value))
                                                                (textual-field-blur field-descriptor)))
                               :on-change    (event->value (fn [value]
                                                               (swap! local-state assoc
@@ -171,7 +175,7 @@
                                              (swap! local-state assoc
                                                     :focused-verify? false)
                                              (email-verify-field-change field-descriptor (:value answer)
-                                                                          (clojure.string/trim (or (get-verify-value) ""))))
+                                                                          (trimmed-or-empty-value (get-verify-value))))
 
                              :on-paste     (fn [event]
                                                (.preventDefault event))
@@ -272,7 +276,9 @@
                                        " application__form-text-input--normal"))
                   :on-blur      (fn [evt]
                                   (swap! local-state assoc
-                                         :focused? false)
+                                         :focused? false
+                                         :value (trimmed-or-empty-value value))
+                                  (on-change (trimmed-or-empty-value value))
                                   (on-blur evt))
                   :on-change    (event->value (fn [value]
                                                 (swap! local-state assoc
@@ -323,12 +329,18 @@
             on-blur                      (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
-                                                    :focused? false)
-                                             (when (and (empty? value) (not last?))
+                                                    :focused? false
+                                                    :value (trimmed-or-empty-value value))
+                                             (if (and (empty? value) (not last?))
                                                (dispatch [:application/remove-repeatable-application-field-value
                                                           field-descriptor
                                                           question-group-idx
-                                                          repeatable-idx]))))
+                                                          repeatable-idx])
+                                               (dispatch [:application/set-repeatable-application-field
+                                                          field-descriptor
+                                                          question-group-idx
+                                                          repeatable-idx
+                                                          (trimmed-or-empty-value value)]))))
             on-change                    (fn [evt]
                                            (let [value (-> evt .-target .-value)]
                                              (swap! local-state assoc
@@ -350,6 +362,7 @@
                                    " application__form-text-input--normal")
                                  (when last?
                                    " application__form-text-input--disabled"))
+           :data-test-id    (str "repeatable-text-field-" repeatable-idx)
            :value           (cond last?
                                   nil
                                   (:focused? @local-state)
@@ -437,7 +450,9 @@
                                       :else value)
                   :on-blur      (fn [_]
                                   (swap! local-state assoc
-                                         :focused? false))
+                                         :focused? false
+                                         :value (trimmed-or-empty-value value))
+                                  (on-change (trimmed-or-empty-value value)))
                   :on-change    (event->value (fn [value]
                                                 (swap! local-state assoc
                                                        :focused? true
@@ -714,7 +729,13 @@
             show-error?     @(subscribe [:application/show-validation-error-class? id question-group-idx row-idx nil])
             on-blur         (fn [_]
                               (swap! local-state assoc
-                                     :focused? false))
+                                     :focused? false
+                                     :value (trimmed-or-empty-value value))
+                              (dispatch [:application/set-repeatable-application-field
+                                         field-descriptor
+                                         question-group-idx
+                                         row-idx
+                                         (trimmed-or-empty-value value)]))
             on-change       (fn [evt]
                               (let [value (-> evt .-target .-value)]
                                 (swap! local-state assoc
