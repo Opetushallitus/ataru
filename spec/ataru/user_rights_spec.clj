@@ -32,7 +32,7 @@
                                                                        :type               "organization",
                                                                        :rights             ["opinto-ohjaaja"]
                                                                        :oppilaitostyyppi   "oppilaitostyyppi_11#1"
-                                                                       :organisaatiotyypit ["OPPILAITOS"]}}
+                                                                       :organisaatiotyypit ["organisaatiotyyppi_02"]}}
                :lang                     "fi"
                :oid                      "1.2.246.562.24.99546464580"
                :ticket                   "ST-190762-0k4oDtYsCs6TECBNFeYlQrIJDRQ-ip-10-20-73-157"
