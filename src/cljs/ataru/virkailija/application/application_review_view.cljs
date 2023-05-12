@@ -48,14 +48,15 @@
         message            (subscribe [:state-query [:application :single-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
         applications-count (subscribe [:application/loaded-applications-count])
-        button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
-    (fn [application-information-request-contains-modification-link]
-      ;application-handling__button:not(:last-child)
+        ]
+
+    ;(println (str "guardian-enabled = "  @guardian-enabled?))
+    (fn []
       [:span.application-handling__single-information-request-container
        [:a.application-handling__link-button.application-handling__button
         ;:a.application-handling__send-information-request-button.application-handling__button
         ;.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-information-request-popup-visibility true])}
+        {:on-click #(dispatch [:application/set-single-information-request-popup-visibility true])}
         @(subscribe [:editor/virkailija-translation :send-email-to-applicant])]
        (when @visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup
@@ -67,65 +68,72 @@
             [:i.zmdi.zmdi-close]]]
           (
             when-not @guardian-enabled?
-            ;[:p @(subscribe [:editor/virkailija-translation :single-information-request-email-applicant @applicant-name])]
-
             [:p @(subscribe [:editor/virkailija-translation :single-information-request-email-applicant (str last-name ", " first-name)])]
             )
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :single-information-request-subject])]
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
-             {:value     @subject
+             {
+              :value @subject
               :maxLength 200
-              ;:on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])
+              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])
               }]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {:value     @message
-             ;:on-change #(dispatch [:application/set-single-information-request-message (-> % .-target .-value)])
+            {
+             :value     @message
+             :on-change #(dispatch [:application/set-single-information-request-message (-> % .-target .-value)])
              }]
 
            ]
-          [application-information-request-contains-modification-link]
-          (when @guardian-enabled?
-            [:div.application-handling__information-request-row
-             [:div.application-handling__information-request-row
-              [:label
-               [:input
-                {:type      "checkbox"
-                 :checked   @applicant?
-                 :on-change #(swap! applicant? not)}]
-               [:span @(subscribe [:editor/virkailija-translation :applicant-email @applications-count])]]
-              [:div.application-handling__information-request-row
-               [:label
-                [:input
-                 {:type      "checkbox"
-                  :checked   @guardian?
-                  :on-change #(swap! guardian? not)}]
-                [:span @(subscribe [:editor/virkailija-translation :guardian-email])]]]]])
+          ;;;(let [send-update-link? @(subscribe [:application/send-update-link?])])
+          ;(def checked (atom false))
+          ;(let [])
+         [:div.application-handling__information-request-row
+           [:div.application-handling__information-request-row
+            [:label
+             [:input
+              {:type      "checkbox"
+               ;:on-change #(dispatch [:application/set-send-update-link ()])
+               :on-change (fn [event](let [checkedNewValue (boolean (-> event .-target .-checked))]
+                                      (println "checkedNewValue = " checkedNewValue)
+                                      (dispatch [:application/set-send-update-link checkedNewValue])
+                              ))
+
+
+
+               }]
+             [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]
+            ]]
+
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
              [:button.application-handling__send-information-request-button
-              (let [enabled? (or (and (not @guardian-enabled?)
-                                      @button-enabled?)
-                                 (and @button-enabled? (or @guardian? @applicant?)))]
-                {:disabled (not enabled?)
+              (
+                let [enabled? true
+                     ]
+
+                {                                           ;:disabled (not enabled?)
                  :class    (if enabled?
                              "application-handling__send-information-request-button--enabled"
                              "application-handling__send-information-request-button--disabled")
-                 :on-click #(dispatch [:application/confirm-mass-information-request])})
-              @(subscribe [:editor/virkailija-translation :mass-information-request-send])]
+                 ;:on-click #(dispatch [:application/confirm-single-information-request])
+                 :on-click #(dispatch [:application/submit-single-information-request])
+
+                 })
+              @(subscribe [:editor/virkailija-translation :single-information-request-send])]
 
              :loading-applications
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--disabled
               {:disabled true}
-              [:span (str @(subscribe [:editor/virkailija-translation :mass-information-request-send]) " ")
+              [:span (str @(subscribe [:editor/virkailija-translation :single-information-request-send123]) " ")
                [:i.zmdi.zmdi-spinner.spin]]]
 
              :confirm
              [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-mass-information-request
+              {:on-click #(dispatch [:application/submit-single-information-request
                                      (cond
                                        (or (not @guardian-enabled?)
                                            (and @applicant? (not @guardian?)))
@@ -136,7 +144,7 @@
 
                                        @guardian?
                                        "huoltajat")])}
-              @(subscribe [:editor/virkailija-translation :mass-information-request-confirm-n-messages
+              @(subscribe [:editor/virkailija-translation :single-information-request-confirm-n-messages  ;:mass-information-request-confirm-n-messages
                            (if (or (not @guardian-enabled?) (and @applicant? (not @guardian?)))
                              @applications-count
                              (str (if @applicant? @applications-count 0) "-"

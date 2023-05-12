@@ -15,6 +15,7 @@
 (reg-event-fx
   :application/confirm-mass-information-request
   (fn [_ _]
+    (println "suoritan 'confirm-mass-information-request'")
     {:dispatch       [:application/set-mass-information-request-form-state :confirm]
      :dispatch-later [{:dispatch [:application/cancel-mass-information-request]
                        :ms       3000}]}))

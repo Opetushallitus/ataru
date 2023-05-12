@@ -81,6 +81,8 @@
                                 :application-list-expanded?        true
                                 :mass-information-request          {:form-status :disabled}
                                 :single-information-request        {:form-status :disabled}
+                                :send-update-link?                 false
+                                :send-update-link?-checkbox        false
                                 :filters                           default-filters
                                 :filters-checkboxes                default-filters
                                 :ensisijaisesti?                   false
