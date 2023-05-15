@@ -70,9 +70,24 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
+(defn- escape-full-urls
+  [content]
+  (let [full-urls (re-seq #"\w+:\/\/\S*" content)]
+    (reduce
+      #(string/replace-first %1 %2 (string/escape %2 {\_ "\\_"}))
+      content
+      full-urls)))
+
+(defn- markdown->html
+  [content]
+  (-> content
+      (escape-full-urls)
+      (md/md-to-html-string)))
+
 (defn ->safe-html
   [content]
-  (.sanitize html-policy (md/md-to-html-string content)))
+  (when content
+    (.sanitize html-policy (markdown->html content))))
 
 (defn- hakukohde-names [tarjonta-info lang application]
   (when (:haku application)
@@ -148,7 +163,7 @@
         attachment-type      (get-in field [:params :attachment-type])
         attachment-type-text (util/from-multi-lang (get-attachment-type attachment-type) lang)
         attachment           (liitteet/attachment-for-hakukohde attachment-type hakukohde)
-        address              (md/md-to-html-string (liitteet/attachment-address-with-hakukohde lang attachment hakukohde))
+        address              (->safe-html (liitteet/attachment-address-with-hakukohde lang attachment hakukohde))
         default-deadline     (-> field :params :deadline-label (get lang))
         deadline             (or (liitteet/attachment-deadline lang attachment hakukohde) default-deadline)
         info-text            (-> field :params :info-text :value (get lang))]

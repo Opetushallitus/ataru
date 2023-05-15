@@ -1,11 +1,22 @@
 (ns ataru.background-job.job-execution-spec
   (:require
    [clj-time.core :as time]
-   [speclj.core :refer [tags describe it should=]]
+   [clojure.string :as str]
+   [speclj.core :refer [tags describe it should= should]]
+   [ataru.background-job.email-job :as email-job]
    [ataru.background-job.job-execution :as job-exec]))
 
 ;; mocked time for test execution
 (defn fixed-now [] (time/date-time 2016 10 10))
+
+;; mocked email sending with parameter check
+(defn send-email-assert-error [_ recipients _ body]
+  (should= recipients ["testi@example.org"])
+  (should (str/includes? body "INSTANT FATAL ISSUE")))
+
+(defn send-email-assert-max-retry [_ recipients _ body]
+  (should= recipients ["testi@example.org"])
+  (should (str/includes? body "Retry limit exceeded")))
 
 (def
   job1
@@ -93,6 +104,7 @@
 (describe
  "job execution"
  (tags :unit)
+
  (it "exec-job-step runs steps from job with manual retry and produces correct steps up until final iteration"
      (with-redefs [time/now fixed-now]
        (let [runner            {:job-definitions job-definitions
@@ -106,6 +118,7 @@
          (should= expected-job1-iterations
                   result-iterations))))
  (it "exec-job-step immediately produces final transition with error description"
+     (with-redefs [email-job/send-email send-email-assert-error]
      (let [runner           {:job-definitions job-definitions}
            job              {:job-type "fatally-failing-job"
                              :job-id 2
@@ -118,8 +131,9 @@
                   :next-activation nil,
                   :transition :fail,
                   :caused-by-error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
-                result-iterations)))
+                result-iterations))))
  (it "exec-job-step retries the maximum amount when an ordinary exception is thrown from the same step"
+     (with-redefs [email-job/send-email send-email-assert-max-retry]
      (let [runner          {:job-definitions job-definitions}
            job             {:job-type "always-exception-throwing-job"
                             :job-id 3
@@ -133,4 +147,4 @@
                  :next-activation nil,
                  :transition :fail,
                  :caused-by-error "Retry limit exceeded for step :throwing in job always-exception-throwing-job"}
-                (select-keys last-iteration [:final :retry-count :next-activation :transition :caused-by-error])))))
+                (select-keys last-iteration [:final :retry-count :next-activation :transition :caused-by-error]))))))

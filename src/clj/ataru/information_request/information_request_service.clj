@@ -41,7 +41,7 @@
                                (filter some?
                                        [(extract-answer-value "guardian-email" application)
                                         (extract-answer-value "guardian-email-secondary" application)])))
-                           [(extract-answer-value "email" application)])
+                           (remove string/blank? [(extract-answer-value "email" application)]))
         translations     (translations/get-translations lang)
         service-url      (get-in config [:public-config :applicant :service_url])
         application-url  (str service-url "/hakemus?modify=" secret)
