@@ -58,14 +58,14 @@
              [:submitted (_ :guard #(nil? %))]
              (if @demo?
                [:div.application__sent-indicator.animated.fadeIn
-                {:role "alert"}
+                {:role "text"}
                 (translations/get-hakija-translation :application-confirmation-demo @lang)]
                (when (-> @answers
                          (get-in [:email :value])
                          (string/blank?)
                          not)
                  [:div.application__sent-indicator.animated.fadeIn
-                  {:role "alert"}
+                  {:role "text"}
                   (translations/get-hakija-translation :application-confirmation @lang)]))
 
              :else nil))))

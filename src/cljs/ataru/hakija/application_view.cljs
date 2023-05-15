@@ -11,7 +11,8 @@
             [goog.string :as gstring]
             [reagent.ratom :refer [reaction]]
             [reagent.core :as r]
-            [ataru.util :as util]))
+            [ataru.util :as util]
+            [clojure.string :as string]))
 
 (def ^:private language-names
   {:fi "Suomeksi"
@@ -137,19 +138,32 @@
 (defn- submit-notification
   [hidden? demo?]
   (fn []
-    (let [lang @(subscribe [:application/form-language])]
+    (let [lang @(subscribe [:application/form-language])
+          answers @(subscribe [:state-query [:application :answers]])]
       [:div.application__submitted-submit-notification
        {:role "alertdialog"
-        :aria-modal "true"}
+        :aria-modal "true"
+        :aria-labelledby "submitted-submit-notification-heading submitted-submit-notification-confirmation"}
        [:div.application__submitted-submit-notification-inner
         [:h1.application__submitted-submit-notification-heading
+         {:id "submitted-submit-notification-heading"}
          (translations/get-hakija-translation
-           (if @demo? :application-submitted-demo :application-submitted)
-           lang)]]
+          (if @demo? :application-submitted-demo :application-submitted)
+          lang)]]
+       (when (-> answers
+                 (get-in [:email :value])
+                 (string/blank?)
+                 not)
+         [:div.application__submitted-submit-notification-heading
+          {:id "submitted-submit-notification-confirmation"
+           :role "text"}
+          (translations/get-hakija-translation :application-confirmation lang)])
        [:div.application__submitted-submit-notification-inner
         [:button.application__overlay-button.application__overlay-button--enabled
-         {:on-click     #(reset! hidden? true)
-          :data-test-id "send-feedback-button"}
+         {:tab-index    "1"
+          :on-click     #(reset! hidden? true)
+          :data-test-id "send-feedback-button"
+          :autofocus ""}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
 (defn- submit-notification-payment
@@ -158,7 +172,7 @@
     (let [lang @(subscribe [:application/form-language])]
       [:div.application__submitted-submit-payment
        [:div.application__submitted-submit-payment-inner
-        {:role "alertdialog"
+        {:role "dialog"
          :aria-modal "true"}
         [:div.application__submitted-submit-payment-icon
           [icons/icon-check]]
@@ -192,17 +206,21 @@
             submitted? (= :feedback-submitted @rating-status)]
         (when (and @show-feedback? (nil? @virkailija-secret))
           [:div.application-feedback-form
-           {:role "alertdialog"
-            :aria-modal "true"}
+           {:role "dialog"
+            :aria-modal "true"
+            :aria-labelledby "application-feedback-form__header"}
            [:button.a-button.application-feedback-form__close-button
             {:on-click     #(dispatch [:application/rating-form-toggle])
              :data-test-id "close-feedback-form-button"
-             :tab-index    "0"
              :aria-label   (get (:close general-texts) @lang)}
             [:i.zmdi.zmdi-close.close-details-button-mark]]
            [:div.application-feedback-form-container
             (when (not submitted?)
-              [:h2.application-feedback-form__header (translations/get-hakija-translation :feedback-header @lang)])
+              {:aria-live "polite"})
+            (when (not submitted?)
+              [:h2.application-feedback-form__header
+               {:id "application-feedback-form__header"}
+               (translations/get-hakija-translation :feedback-header @lang)])
             (when (not submitted?)
               [:div.application-feedback-form__rating-container.animated.zoomIn
                {:on-click      #(dispatch [:application/rating-submit (star-number-from-event %)])
@@ -273,7 +291,6 @@
         demo?                       (subscribe [:application/demo?])]
     (fn []
       [:div.application__submitted-overlay-wrapper
-       {:aria-live "assertive"}
        (when (and (= :submitted @submit-status)
                   (or (not @feedback-hidden?)
                       (not @submit-notification-hidden?)))
