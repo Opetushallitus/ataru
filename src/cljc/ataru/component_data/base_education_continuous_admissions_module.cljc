@@ -1,10 +1,8 @@
 (ns ataru.component-data.base-education-continuous-admissions-module
   (:require [ataru.translations.texts :refer [base-education-cotinuous-admissions-module-texts]]
-            [ataru.component-data.component :as component]))
+            [ataru.component-data.component :as component]
+            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key]]))
 
-
-
-(def base-education-choice-key "base-education-continuos-admissions")
 
 (def base-education-continuous-admissions-wrapper-key "pohjakoulutus-continuous-admissions-wrapper")
 
