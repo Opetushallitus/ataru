@@ -38,7 +38,6 @@
 (reg-event-fx
   :application/submit-mass-information-request123
   (fn [{:keys [db]} [_ recipient-target]]
-    (println "recipient-target = " recipient-target)
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
           application-keys    (map :key (get-in db [:application :applications]))]
@@ -47,7 +46,6 @@
                   :path                "/lomake-editori/api/applications/mass-information-request"
                   :params              {:application-keys    application-keys
                                         :recipient-target    recipient-target
-                                        ;:recipient-target    "janne.lindberg@gofore.com"
                                         :message-and-subject message-and-subject}
                   :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 (reg-event-db
@@ -60,21 +58,25 @@
 (reg-event-fx
   :application/submit-single-information-request
   (fn [{:keys [db]}]
+
     (let [application-key (-> db :application :selected-application-and-form :application :key)
+
           ;  message-and-subject
           ;          (-> db :application :single-information-request :message :subject
           ;    (select-keys [:message :subject]))
           message (-> db :application :single-information-request :message)
           subject (-> db :application :single-information-request :subject)
           ;      application-keys (map :key (get-in db [:application :applications]))
+          add-update-link (get-in db [:application :send-update-link?-checkbox])
           ]
       (println "message = " message)
 
-      (if (get-in db [:application :send-update-link?-checkbox])
+      ;      (if (get-in db [:application :send-update-link?-checkbox])
+      (if add-update-link
         (println "Lisätään muokkauslinkki")
         (println "Ei lisätä muokkauslinkkiä")
 
-         )
+        )
       ;      (println "subject = " + :subject)
       {;:db   (assoc-in db [:application :information-request :state] :submitting)
        :http {:method              :post
@@ -84,10 +86,10 @@
                                        (assoc :recipient-target "hakija")
                                        (assoc :application-key application-key)
                                        (assoc :subject subject)
-                                       ;(assoc :subject "testiotsikko")
                                        (assoc :message message)
-                                       ;  (assoc :message "viestin sisältä")
-                                       (dissoc :state)
+                                       ;(dissoc :state)
+                                       (assoc :add-update-link add-update-link)
+                                       ; (assoc :state add-update-link)
                                        (dissoc :visible?)
                                        )
               :handler-or-dispatch :application/handle-submit-information-request-response}})))
