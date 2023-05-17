@@ -1,9 +1,15 @@
 (ns ataru.applications.question-util
-  (:require [ataru.translations.texts :refer [base-education-2nd-module-texts]]
+  (:require [ataru.util :as util]
             [clojure.walk :refer [keywordize-keys]]
-            [ataru.component-data.base-education-module-2nd :refer [base-education-choice-key base-education-wrapper-key base-education-2nd-language-value-to-lang]]))
+            [ataru.component-data.base-education-module-2nd :refer [base-education-2nd-language-value-to-lang
+                                                                    tutkintokieli-keys
+                                                                    suoritusvuosi-keys]]))
 
-(def sora-question-wrapper-label {:fi "Terveydelliset tekijät " :sv "Hälsoskäl"})
+(def sora-terveys-keys #{"sora-terveys"
+                        "6a5e1a0f-f47e-479e-884a-765b85bd438c"})
+
+(def sora-aiempi-keys #{"sora-aiempi"
+                       "66a6855f-d807-4331-98ea-f14098281fc1"})
 
 
 (def urheilijan-lisakysymykset-lukiokohteisiin-wrapper-key "8466feca-1993-4af3-b82c-59003ca2fd63")
@@ -12,14 +18,13 @@
 (def urheilija-muu-laji-label {:fi "Muu, mikä?", :sv "Annan, vad?"})
 (def urheilija-paalaji-folloup-label {:fi "Päälaji", :sv "Huvudgren"})
 
-(def lukio-kaksoistutkinto-wrapper-label {:fi "Ammatilliset opinnot lukiokoulutuksen ohella",
-                                          :sv "Yrkesinriktade studier vid sidan av gymnasieutbildningen"})
+(def kaksoistutkinto-keys ["kaksoistutkinto-lukio"
+                           "kaksoistutkinto-amm"
+                           "4fe08958-c0b7-4847-8826-e42503caa662"
+                           "32b8440f-d6f0-4a8b-8f67-873344cc3488"])
 
-(def amm-kaksoistutkinto-wrapper-label {:fi "Lukio-opinnot ammatillisen koulutuksen ohella",
-                                        :sv "Gymnasiestudier vid sidan av den yrkesinriktade utbildningen"})
-
-(def kiinnostunut-oppisopimuskoulutuksesta-wrapper-label {:fi "Oppisopimuskoulutus ",
-                                                          :sv "Läroavtalsutbildning"})
+(def kiinnostunut-oppisopimuskoulutuksesta-keys #{"kiinnostunut-oppisopimuskoulutuksesta"
+                                                  "74fb6885-879d-4748-a2bc-aaeb32616ba1"})
 
 (defn- urheilijan-lisakysymys-keys [haku-oid]
   (case haku-oid
@@ -148,36 +153,22 @@
   ([form] (get-hakurekisteri-toinenaste-specific-questions form "unknown haku"))
   ([form haku-oid]
    (let [content (:content (keywordize-keys form))
-         base-education-options-followups (->> content
-                                               (filter #(= base-education-wrapper-key (:id %)))
-                                               first
-                                               :children
-                                               (filter #(= base-education-choice-key (:id %)))
-                                               first
-                                               :options
-                                               (mapcat :followups))
-         tutkintovuosi-keys (->> base-education-options-followups
-                                 (filter #(= (:year-of-graduation-question base-education-2nd-module-texts) (:label %)))
-                                 (map #(keyword (:id %))))
-         tutkintokieli-keys (->> base-education-options-followups
-                                 (filter #(= (:study-language base-education-2nd-module-texts) (:label %)))
-                                 (map #(keyword (:id %))))
-         sora-wrapper-children (->> content
-                                    (filter #(= sora-question-wrapper-label (:label %)))
+         flat-content (util/flatten-form-fields content)
+         sora-terveys-question (->> flat-content
+                                    (filter #(some #{(:id %)} sora-terveys-keys))
                                     first
-                                    :children)
-         sora-terveys-question (get-in sora-wrapper-children [0 :id])
-         sora-aiempi-question (get-in sora-wrapper-children [1 :id])
-         kaksoistutkinto-questions (->> content
-                                        (filter #(or (= lukio-kaksoistutkinto-wrapper-label (:label %))
-                                                     (= amm-kaksoistutkinto-wrapper-label (:label %))))
-                                        (map #(get-in % [:children 0 :id])))
-         oppisopimuskoulutus-key (->> content
-                                      (filter #(= kiinnostunut-oppisopimuskoulutuksesta-wrapper-label (:label %)))
+                                    :id
+                                    (get sora-terveys-keys))
+         sora-aiempi-question  (->> flat-content
+                                    (filter #(some #{(:id %)} sora-aiempi-keys))
+                                    first
+                                    :id
+                                    (get sora-aiempi-keys))
+         oppisopimuskoulutus-key (->> flat-content
+                                      (filter #(some #{(:id %)} kiinnostunut-oppisopimuskoulutuksesta-keys))
                                       first
-                                      :children
-                                      first
-                                      :id)
+                                      :id
+                                      (get kiinnostunut-oppisopimuskoulutuksesta-keys))
          urheilijan-ammatilliset-lisakysymykset-question (->> content
                                                               (filter #(= urheilijan-lisakysymykset-ammatillisiinkohteisiin-wrapper-key (:id %)))
                                                               first
@@ -185,11 +176,11 @@
                                                               first)
          urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
          urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)]
-     {:tutkintovuosi-keys                          tutkintovuosi-keys
+     {:tutkintovuosi-keys                          suoritusvuosi-keys
       :tutkintokieli-keys                          tutkintokieli-keys
       :sora-terveys-key                            sora-terveys-question
       :sora-aiempi-key                             sora-aiempi-question
-      :kaksoistutkinto-keys                        kaksoistutkinto-questions
+      :kaksoistutkinto-keys                        kaksoistutkinto-keys
       :oppisopimuskoulutus-key                     (keyword oppisopimuskoulutus-key)
       :urheilijan-amm-lisakysymys-key              (keyword (:id urheilijan-ammatilliset-lisakysymykset-question))
       :urheilijan-amm-groups                       (set (:belongs-to-hakukohderyhma urheilijan-ammatilliset-lisakysymykset-question))

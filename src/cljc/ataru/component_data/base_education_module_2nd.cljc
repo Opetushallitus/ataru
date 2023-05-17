@@ -20,6 +20,35 @@
 
 (def base-education-wrapper-key "pohjakoulutus-2nd-wrapper")
 
+(def tutkintokieli-perusopetus-key "tutkintokieli-perusopetus")
+(def suoritusvuosi-perusopetus-key "suoritusvuosi-perusopetus")
+
+(def tutkintokieli-osittain-yks-key "tutkintokieli-osittain-yks")
+(def suoritusvuosi-osittain-yks-key "suoritusvuosi-osittain-yks")
+(def tutkintokieli-yks-key "tutkintokieli-yks")
+(def suoritusvuosi-yks-key "suoritusvuosi-yks")
+
+(def tutkintokieli-toiminta-alueittain "tutkintokieli-toiminta-alueittain")
+(def suoritusvuosi-toiminta-alueittain-key "suoritusvuosi-toiminta-alueittain")
+
+(def tutkintokieli-keys [tutkintokieli-perusopetus-key
+                          tutkintokieli-osittain-yks-key
+                          tutkintokieli-yks-key
+                          tutkintokieli-toiminta-alueittain
+                         "56e05f17-f289-495b-9f83-5dff310cb35b"
+                         "daf29a8e-19b2-4922-b8cb-ac80ea10593b"
+                         "c1d72123-173f-492e-9edc-f0141714c609"
+                         "b4f96c06-7872-4c9b-b871-315dc1cc0395"])
+
+(def suoritusvuosi-keys [suoritusvuosi-perusopetus-key
+                         suoritusvuosi-osittain-yks-key
+                         suoritusvuosi-yks-key
+                         suoritusvuosi-toiminta-alueittain-key
+                         "b5a683d9-21aa-419f-a6d9-a65c42ff1b29"
+                         "ebb7fd12-e762-40e3-ad40-a1f9136728d5"
+                         "bc159ab3-2f23-41ca-8b05-4b8573d408e7"
+                         "42725ecd-95c4-4ec8-bdd0-a7ad881ee5f1"])
+
 (defn base-education-2nd-language-value-to-lang
   [value]
   (match [value]
@@ -31,11 +60,12 @@
          :else nil))
 
 (defn- base-education-language-question
-  [metadata]
+  [metadata id]
   (merge (component/dropdown metadata)
     {:label (:study-language base-education-2nd-module-texts)
      :validators ["required"]
      :options
+     :id id
      [{:label (:language-finnish base-education-2nd-module-texts) :value "0"}
       {:label (:language-swedish base-education-2nd-module-texts) :value "1"}
       {:label (:language-saame base-education-2nd-module-texts) :value "2"}
@@ -119,10 +149,11 @@
        :fieldType "textField"}]}]}))
 
 (defn- suoritusvuosi-question
-  [metadata]
+  [metadata id]
   (merge (component/text-field metadata)
   {:validators ["numeric" "required"]
    :label (:year-of-graduation-question base-education-2nd-module-texts)
+   :id id
    :params {:size "S"
             :max-value "2022"
             :numeric true
@@ -194,16 +225,16 @@
   {:label (:base-education base-education-2nd-module-texts)
    :value "1"
    :followups
-   [(base-education-language-question metadata)
-    (suoritusvuosi-question metadata)]})
+   [(base-education-language-question metadata tutkintokieli-perusopetus-key)
+    (suoritusvuosi-question metadata suoritusvuosi-perusopetus-key)]})
 
 (defn- perusopetuksen-osittain-yksilollistetty-option
   [metadata]
   {:label (:base-education-partially-individualized base-education-2nd-module-texts)
    :value "2"
    :followups
-   [(base-education-language-question metadata)
-    (suoritusvuosi-question metadata)
+   [(base-education-language-question metadata tutkintokieli-osittain-yks-key)
+    (suoritusvuosi-question metadata suoritusvuosi-osittain-yks-key)
     (yksilollistetty-question metadata "matematiikka-ja-aidinkieli-yksilollistetty_1")]})
 
 (defn- perusopetuksen-yksilollistetty-option
@@ -211,8 +242,8 @@
   {:label (:base-education-individualized base-education-2nd-module-texts)
    :value "6"
    :followups
-   [(base-education-language-question metadata)
-    (suoritusvuosi-question metadata)
+   [(base-education-language-question metadata tutkintokieli-yks-key)
+    (suoritusvuosi-question metadata suoritusvuosi-yks-key)
     (yksilollistetty-question metadata "matematiikka-ja-aidinkieli-yksilollistetty_2")]})
 
 (defn- opetus-jarjestetty-toiminta-alueittan-option
@@ -220,8 +251,8 @@
   {:label (:base-education-organized-regionly base-education-2nd-module-texts)
    :value "3"
    :followups
-   [(base-education-language-question metadata)
-    (suoritusvuosi-question metadata)]})
+   [(base-education-language-question metadata tutkintokieli-toiminta-alueittain)
+    (suoritusvuosi-question metadata suoritusvuosi-toiminta-alueittain-key)]})
 
 (defn- ulkomailla-suoritettu-option
   [metadata]
