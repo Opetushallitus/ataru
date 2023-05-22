@@ -6,7 +6,8 @@
     [clojure.core.match :refer [match]]
     [ataru.config.core :refer [config]]
     [clojure.string :as string]
-    [clojure.set :as set]))
+    [clojure.set :as set]
+    [ataru.constants :refer [hakutapa-jatkuva-haku hakutapa-joustava-haku]]))
 
 (def ^:private time-formatter (f/formatter "d.M.yyyy HH:mm" (t/time-zone-for-id "Europe/Helsinki")))
 (def ^:private basic-date-time-formatter (f/formatter (:date-hour-minute-second f/formatters) (t/time-zone-for-id "Europe/Helsinki")))
@@ -42,10 +43,10 @@
   (f/parse basic-date-time-formatter str))
 
 (defn- jatkuva-haku? [haku]
-  (string/starts-with? (:hakutapa-uri haku) "hakutapa_03"))
+  (string/starts-with? (:hakutapa-uri haku) hakutapa-jatkuva-haku))
 
 (defn- joustava-haku? [haku]
-  (string/starts-with? (:hakutapa-uri haku) "hakutapa_04"))
+  (string/starts-with? (:hakutapa-uri haku) hakutapa-joustava-haku))
 
 (defn- jatkuva-or-joustava-haku? [haku]
   (or

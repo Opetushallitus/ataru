@@ -1,5 +1,6 @@
 (ns ataru.tarjonta.haku
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as string]
+            [ataru.constants :refer [hakutapa-jatkuva-haku]]))
 
 (defn toisen-asteen-yhteishaku?
   [haku]
@@ -16,4 +17,4 @@
 (defn jatkuva-haku?
   [haku]
   (if-let [hakutapa (:hakutapa-uri haku)]
-    (boolean (string/starts-with? hakutapa "hakutapa_03"))))
+    (boolean (string/starts-with? hakutapa hakutapa-jatkuva-haku))))
