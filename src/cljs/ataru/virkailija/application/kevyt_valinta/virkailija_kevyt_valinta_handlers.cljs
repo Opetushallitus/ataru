@@ -66,7 +66,20 @@
           selection-state-filter
           (-> db :application :selection-state-filter set)
           applications
-          (-> db :application :applications)]
+          (-> db :application :applications)
+          update-counts-fn (fn [db] (-> db
+                                        (update-in
+                                          [:application :kevyt-valinta-selection-state-counts]
+                                          application-filtering/add-kevyt-valinta-selection-state-counts
+                                          db
+                                          applications
+                                          kevyt-valinta-hakukohde-oids)
+                                        (update-in
+                                          [:application :kevyt-valinta-vastaanotto-state-counts]
+                                          application-filtering/add-kevyt-valinta-vastaanotto-state-counts
+                                          db
+                                          applications
+                                          kevyt-valinta-hakukohde-oids)))]
       (as-> db db'
             (update-in
               db'
@@ -90,10 +103,14 @@
                                           ["form"]
                                           hakukohde-oids))]
                             (and (or (empty? kevyt-valinta-hakukohde-oids')
-                                     (application-filtering/filter-by-kevyt-valinta-selection-state
-                                       db
-                                       application-key
-                                       kevyt-valinta-hakukohde-oids'))
+                                     (and (application-filtering/filter-by-kevyt-valinta-selection-state
+                                            db
+                                            application-key
+                                            kevyt-valinta-hakukohde-oids')
+                                          (application-filtering/filter-by-kevyt-valinta-vastaanotto-state
+                                            db
+                                            application-key
+                                            kevyt-valinta-hakukohde-oids')))
                                  (or (empty? valintakasittelymerkinta-hakukohde-oids')
                                      (application-filtering/filter-by-hakukohde-review
                                        application
@@ -110,12 +127,7 @@
                       valintakasittelymerkinta-hakukohde-oids
                       "selection-state")
                     (not-empty kevyt-valinta-hakukohde-oids)
-                    (update-in
-                      [:application :kevyt-valinta-selection-state-counts]
-                      application-filtering/add-kevyt-valinta-selection-state-counts
-                      db
-                      applications
-                      kevyt-valinta-hakukohde-oids))))))
+                    (update-counts-fn))))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valintalaskentakoostepalvelu-valintalaskenta-in-use?

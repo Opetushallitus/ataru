@@ -67,6 +67,8 @@
                                 :selection-state-counts            (into {} (map #(vector (first %) 0) review-states/application-hakukohde-selection-states))
                                 :kevyt-valinta-selection-state-counts
                                                                    (into {} (map #(vector (first %) 0) review-states/kevyt-valinta-valinnan-tila-selection-states))
+                                :kevyt-valinta-vastaanotto-state-counts
+                                                                   (into {} (map #(vector (first %) 0) (review-states/kevyt-valinta-vastaanoton-tila-selection-states true)))
                                 :attachment-state-counts           (into {} (map #(vector (first %) 0) review-states/attachment-hakukohde-review-types-with-no-requirements))
                                 :review                            {}
                                 :attachment-state-filter           (set (mapv first review-states/attachment-hakukohde-review-types-with-no-requirements))
@@ -74,6 +76,8 @@
                                 :selection-state-filter            (set (mapv first review-states/application-hakukohde-selection-states))
                                 :kevyt-valinta-selection-state-filter
                                                                    (set (mapv first review-states/kevyt-valinta-valinnan-tila-selection-states))
+                                :kevyt-valinta-vastaanotto-state-filter
+                                                                   (set (mapv first (review-states/kevyt-valinta-vastaanoton-tila-selection-states true)))
                                 :fetching-applications?            false
                                 :sort                              {:order-by "applicant-name"
                                                                     :order    "asc"}

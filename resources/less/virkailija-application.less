@@ -457,13 +457,12 @@ and (max-width: 1000px) {
   flex: 0 0 146px;
 }
 
-.application-handling__list-row--selection {
+.application-handling__list-row--selection, .application-handling__list-row--vastaanotto {
   display: inline-block;
   flex: 0 0 105px;
 }
 
 /* List row */
-
 .application-handling__list-row-person-info {
   display: flex;
 }
@@ -3010,6 +3009,11 @@ th.application__readonly-adjacent--header {
   position: relative;
 }
 
+.application-handling__hakukohde-vastaanotto-cell {
+  flex: 0 0 115px;
+  position: relative;
+}
+
 .application-handling__count-tag {
   font-size: 11px;
   line-height: 13px;
@@ -3032,6 +3036,7 @@ th.application__readonly-adjacent--header {
   color: @text-color;
   font-weight: normal;
   position: relative;
+  display: inline-block;
 }
 
 .application-handling__count-tag--haku-list {
@@ -3072,6 +3077,12 @@ th.application__readonly-adjacent--header {
   left: 93px;
 }
 
+.application-handling__vastaanoton-tila-info-ikoni {
+  font-size: 16px;
+  position: absolute;
+  top: -6px;
+  left: 108px;
+}
 .application-handling__valinnan-tila-info-ikoni--tiedot-valinnoista {
   color: @kevyt-valinta-unchecked-color;
 }
