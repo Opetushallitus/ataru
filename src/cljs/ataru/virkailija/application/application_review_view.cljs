@@ -34,10 +34,11 @@
             [ataru.virkailija.application.tutu-payment.tutu-payment-view :refer [application-tutu-payment-status]]
             ))
 
+
+
 (defn application-send-single-email-to-applicant
-  [_]
+  []
   (let [guardian?          (r/atom false)
-        ;application         @(subscribe [:state-query [:application :selected-application-and-form :application]])
         application        @(subscribe [:application/selected-application])
         first-name           (-> application :person :preferred-name)
         last-name           (-> application :person :last-name)
@@ -46,20 +47,19 @@
         guardian-enabled?  (subscribe [:application/single-information-request-only-guardian-enabled?])
         subject            (subscribe [:state-query [:application :single-information-request :subject]])
         message            (subscribe [:state-query [:application :single-information-request :message]])
-        form-status        (subscribe [:application/mass-information-request-form-status])
-        applications-count (subscribe [:application/loaded-applications-count])
-        ]
+        form-status        (subscribe [:application/mass-information-request-form-status])]
 
-    ;(println (str "guardian-enabled = "  @guardian-enabled?))
     (fn []
       [:span.application-handling__single-information-request-container
-       [:a.application-handling__link-button.application-handling__button
+       ;       [:a.application-handling__link-button.application-handling__button
+       [:a.application-handling__send-message-button.application-handling__button
+
         ;:a.application-handling__send-information-request-button.application-handling__button
         ;.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
         {:on-click #(dispatch [:application/set-single-information-request-popup-visibility true])}
         @(subscribe [:editor/virkailija-translation :send-email-to-applicant])]
        (when @visible?
-         [:div.application-handling__popup.application-handling__mass-information-request-popup
+         [:div.application-handling__popup.application-handling__-information-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
             @(subscribe [:editor/virkailija-translation :single-information-request])]
@@ -75,7 +75,7 @@
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {
-              :value @subject
+              :value     @subject
               :maxLength 200
               :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])
               }]]]
@@ -87,22 +87,16 @@
              }]
 
            ]
-          ;;;(let [send-update-link? @(subscribe [:application/send-update-link?])])
-          ;(def checked (atom false))
-          ;(let [])
-         [:div.application-handling__information-request-row
+          [:div.application-handling__information-request-row
            [:div.application-handling__information-request-row
             [:label
              [:input
               {:type      "checkbox"
                ;:on-change #(dispatch [:application/set-send-update-link ()])
-               :on-change (fn [event](let [checkedNewValue (boolean (-> event .-target .-checked))]
-                                      (println "checkedNewValue = " checkedNewValue)
-                                      (dispatch [:application/set-send-update-link checkedNewValue])
-                              ))
-
-
-
+               :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
+                                        (println "checkedNewValue = " checkedNewValue)
+                                        (dispatch [:application/set-send-update-link checkedNewValue])
+                                        ))
                }]
              [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]
             ]]
@@ -115,7 +109,7 @@
                 let [enabled? true
                      ]
 
-                {                                           ;:disabled (not enabled?)
+                {;:disabled (not enabled?)
                  :class    (if enabled?
                              "application-handling__send-information-request-button--enabled"
                              "application-handling__send-information-request-button--disabled")
@@ -144,11 +138,7 @@
 
                                        @guardian?
                                        "huoltajat")])}
-              @(subscribe [:editor/virkailija-translation :single-information-request-confirm-n-messages  ;:mass-information-request-confirm-n-messages
-                           (if (or (not @guardian-enabled?) (and @applicant? (not @guardian?)))
-                             @applications-count
-                             (str (if @applicant? @applications-count 0) "-"
-                                  (* @applications-count (if @applicant? 3 2))))])]
+              ]
 
              :submitting
              [:div.application-handling__information-request-status
@@ -161,6 +151,7 @@
               @(subscribe [:editor/virkailija-translation :mass-information-request-messages-sent])])]])
        ]
       )))
+
 (defn- application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
 
@@ -1165,13 +1156,13 @@
 
               [application-review-inputs]
               [application-review-notes]
+
               [application-modify-link false]
               (when @superuser?
                 [application-modify-link true])
 
               ;[application-send-single-email-to-applicant]
-              [application-send-single-email-to-applicant application-information-request-contains-modification-link]
-
+              [application-send-single-email-to-applicant]
               [application-resend-modify-link]
               [application-resend-modify-link-confirmation]
               [application-deactivate-toggle]

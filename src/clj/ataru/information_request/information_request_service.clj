@@ -26,10 +26,9 @@
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
-
 (defn- initial-state [connection information-request guardian?]
   (let [
-        ;add-update-link? (:add-update-link information-request)
+        add-update-link? (:add-update-link information-request)
         secret           (app-store/add-new-secret-to-application-in-tx
                           connection
                           (:application-key information-request))
@@ -47,10 +46,9 @@
         translations     (translations/get-translations lang)
         service-url      (get-in config [:public-config :applicant :service_url])
         application-url  (str service-url "/hakemus?modify=" secret)
-        ;  show-link             (if (and add-update-link? guardian?){} {})
         body             (selmer/render-file "templates/information-request-template.html"
-                                             (merge {:message         (->safe-html (:message information-request))}
-                                                    (if guardian?
+                                             (merge {:message (->safe-html (:message information-request))}
+                                                    (if (or guardian? (not add-update-link?))
                                                       {}
                                                       {:application-url application-url})
                                                     translations))
