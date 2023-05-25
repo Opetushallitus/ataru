@@ -18,6 +18,8 @@
                :perusopetuksen_kieli "fi"
                :PK_SUORITUSVUOSI "2022"})
 
+(def suoritus-without-kieli (dissoc suoritus :perusopetuksen_kieli))
+
 (describe "pohjakoulutus-toinen-aste"
           (tags :unit)
           (describe "pohjakoulutus-for-application"
@@ -46,6 +48,20 @@
                               result (pohjakoulutus-for-application dummy-get-koodi (merge suoritus grades))
                               arvosanat (vec (:arvosanat result))
                               valinnaiset (get-in arvosanat [0 :valinnaiset])]
+                          (should= 1 (count arvosanat))
+                          (should= 9 (get-in arvosanat [0 :value]))
+                          (should= 3 (count valinnaiset))
+                          (should= 8 (first valinnaiset))
+                          (should= 10 (second valinnaiset))
+                          (should= 7 (last valinnaiset))))
+
+                    (it "returns arvosanat even without kieli"
+                        (let [grades {:PK_FY 9 :PK_FY_VAL1 8 :PK_FY_VAL2 10 :PK_FY_VAL3 7}
+                              result (pohjakoulutus-for-application dummy-get-koodi (merge suoritus-without-kieli grades))
+                              arvosanat (vec (:arvosanat result))
+                              valinnaiset (get-in arvosanat [0 :valinnaiset])
+                              kieli (get-in result [:opetuskieli :value])]
+                          (should= nil kieli)
                           (should= 1 (count arvosanat))
                           (should= 9 (get-in arvosanat [0 :value]))
                           (should= 3 (count valinnaiset))
