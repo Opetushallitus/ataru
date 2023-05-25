@@ -33,63 +33,26 @@
     (cond-> (assoc-in db [:application :single-information-request :message] message)
             (not= :enabled (-> db :application :single-information-request :form-status))
             (assoc-in [:application :single-information-request :form-status] :enabled))))
-
-
-(reg-event-fx
-  :application/submit-mass-information-request123
-  (fn [{:keys [db]} [_ recipient-target]]
-    (let [message-and-subject (-> db :application :mass-information-request
-                                  (select-keys [:message :subject]))
-          application-keys    (map :key (get-in db [:application :applications]))]
-      {:dispatch [:application/set-mass-information-request-form-state :submitting]
-       :http     {:method              :post
-                  :path                "/lomake-editori/api/applications/mass-information-request"
-                  :params              {:application-keys    application-keys
-                                        :recipient-target    recipient-target
-                                        :message-and-subject message-and-subject}
-                  :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 (reg-event-db
   :application/set-send-update-link
-  ; (fn [[db] checkedNewValue]
   (fn [db [_ checkedNewValue] ]
-    (println "saatiin checked arvo " checkedNewValue)
-    (assoc-in db [:application :send-update-link?-checkbox] checkedNewValue)
-    ))
+    (assoc-in db [:application :send-update-link?-checkbox] checkedNewValue)))
 (reg-event-fx
   :application/submit-single-information-request
   (fn [{:keys [db]}]
 
     (let [application-key (-> db :application :selected-application-and-form :application :key)
-
-          ;  message-and-subject
-          ;          (-> db :application :single-information-request :message :subject
-          ;    (select-keys [:message :subject]))
           message (-> db :application :single-information-request :message)
           subject (-> db :application :single-information-request :subject)
-          ;      application-keys (map :key (get-in db [:application :applications]))
-          add-update-link (get-in db [:application :send-update-link?-checkbox])
-          ]
-      (println "message = " message)
-
-      ;      (if (get-in db [:application :send-update-link?-checkbox])
-      (if add-update-link
-        (println "Lisätään muokkauslinkki")
-        (println "Ei lisätä muokkauslinkkiä")
-
-        )
-      ;      (println "subject = " + :subject)
-      {;:db   (assoc-in db [:application :information-request :state] :submitting)
-       :http {:method              :post
+          add-update-link (get-in db [:application :send-update-link?-checkbox])]
+      {:http {:method              :post
               :path                "/lomake-editori/api/applications/information-request"
               :params              (-> db :application :information-request
-                                       ;                    (select-keys [:message :subject])
                                        (assoc :recipient-target "hakija")
                                        (assoc :application-key application-key)
                                        (assoc :subject subject)
                                        (assoc :message message)
-                                       ;(dissoc :state)
                                        (assoc :add-update-link add-update-link)
-                                       ; (assoc :state add-update-link)
                                        (dissoc :visible?)
                                        )
               :handler-or-dispatch :application/handle-submit-information-request-response}})))

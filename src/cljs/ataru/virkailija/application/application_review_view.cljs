@@ -19,7 +19,7 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-handlers]
             [ataru.virkailija.application.information-request.virkailija-information-request-handlers]
-    ;  [ataru.virkailija.application.information-request.virkailija-information-request-view :as information-request-view]
+            [ataru.virkailija.application.information-request.virkailija-information-request-view :as single-information-request-view]
             [ataru.virkailija.application.view.virkailija-application-icons :as icons]
             [ataru.virkailija.application.view.virkailija-application-names :as names]
             [ataru.virkailija.temporal :as temporal]
@@ -36,121 +36,7 @@
 
 
 
-(defn application-send-single-email-to-applicant
-  []
-  (let [guardian?          (r/atom false)
-        application        @(subscribe [:application/selected-application])
-        first-name           (-> application :person :preferred-name)
-        last-name           (-> application :person :last-name)
-        applicant?         (r/atom true)
-        visible?           (subscribe [:application/single-information-request-popup-visible?])
-        guardian-enabled?  (subscribe [:application/single-information-request-only-guardian-enabled?])
-        subject            (subscribe [:state-query [:application :single-information-request :subject]])
-        message            (subscribe [:state-query [:application :single-information-request :message]])
-        form-status        (subscribe [:application/mass-information-request-form-status])]
 
-    (fn []
-      [:span.application-handling__single-information-request-container
-       ;       [:a.application-handling__link-button.application-handling__button
-       [:a.application-handling__send-message-button.application-handling__button
-
-        ;:a.application-handling__send-information-request-button.application-handling__button
-        ;.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-single-information-request-popup-visibility true])}
-        @(subscribe [:editor/virkailija-translation :send-email-to-applicant])]
-       (when @visible?
-         [:div.application-handling__popup.application-handling__-information-request-popup
-          [:div.application-handling__mass-edit-review-states-title-container
-           [:h4.application-handling__mass-edit-review-states-title
-            @(subscribe [:editor/virkailija-translation :single-information-request])]
-           [:button.virkailija-close-button
-            {:on-click #(dispatch [:application/set-single-information-request-popup-visibility false])}
-            [:i.zmdi.zmdi-close]]]
-          (
-            when-not @guardian-enabled?
-            [:p @(subscribe [:editor/virkailija-translation :single-information-request-email-applicant (str last-name ", " first-name)])]
-            )
-          [:div.application-handling__information-request-row
-           [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :single-information-request-subject])]
-           [:div.application-handling__information-request-text-input-container
-            [:input.application-handling__information-request-text-input
-             {
-              :value     @subject
-              :maxLength 200
-              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])
-              }]]]
-          [:div.application-handling__information-request-row
-           [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {
-             :value     @message
-             :on-change #(dispatch [:application/set-single-information-request-message (-> % .-target .-value)])
-             }]
-
-           ]
-          [:div.application-handling__information-request-row
-           [:div.application-handling__information-request-row
-            [:label
-             [:input
-              {:type      "checkbox"
-               ;:on-change #(dispatch [:application/set-send-update-link ()])
-               :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
-                                        (println "checkedNewValue = " checkedNewValue)
-                                        (dispatch [:application/set-send-update-link checkedNewValue])
-                                        ))
-               }]
-             [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]
-            ]]
-
-          [:div.application-handling__information-request-row
-           (case @form-status
-             (:disabled :enabled nil)
-             [:button.application-handling__send-information-request-button
-              (
-                let [enabled? true
-                     ]
-
-                {;:disabled (not enabled?)
-                 :class    (if enabled?
-                             "application-handling__send-information-request-button--enabled"
-                             "application-handling__send-information-request-button--disabled")
-                 ;:on-click #(dispatch [:application/confirm-single-information-request])
-                 :on-click #(dispatch [:application/submit-single-information-request])
-
-                 })
-              @(subscribe [:editor/virkailija-translation :single-information-request-send])]
-
-             :loading-applications
-             [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--disabled
-              {:disabled true}
-              [:span (str @(subscribe [:editor/virkailija-translation :single-information-request-send123]) " ")
-               [:i.zmdi.zmdi-spinner.spin]]]
-
-             :confirm
-             [:button.application-handling__send-information-request-button.application-handling__send-information-request-button--confirm
-              {:on-click #(dispatch [:application/submit-single-information-request
-                                     (cond
-                                       (or (not @guardian-enabled?)
-                                           (and @applicant? (not @guardian?)))
-                                       "hakija"
-
-                                       (and @applicant? @guardian?)
-                                       "hakija_ja_huoltajat"
-
-                                       @guardian?
-                                       "huoltajat")])}
-              ]
-
-             :submitting
-             [:div.application-handling__information-request-status
-              [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon]
-              @(subscribe [:editor/virkailija-translation :mass-information-request-sending-messages])]
-
-             :submitted
-             [:div.application-handling__information-request-status
-              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent]
-              @(subscribe [:editor/virkailija-translation :mass-information-request-messages-sent])])]])
-       ]
-      )))
 
 (defn- application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
@@ -1160,9 +1046,7 @@
               [application-modify-link false]
               (when @superuser?
                 [application-modify-link true])
-
-              ;[application-send-single-email-to-applicant]
-              [application-send-single-email-to-applicant]
+              [single-information-request-view/application-send-single-email-to-applicant]
               [application-resend-modify-link]
               [application-resend-modify-link-confirmation]
               [application-deactivate-toggle]

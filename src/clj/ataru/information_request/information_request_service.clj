@@ -61,10 +61,8 @@
           (assoc :subject subject-with-application-key)))))
 
 (defn- start-email-job [job-runner connection information-request]
-  (println "information-request-service.start-email-job: information-request = " information-request)
   (let [job-type (:type information-request-job/job-definition)
         target (:recipient-target information-request)
-        ;add-update-link (:add-update-link information-request)
         ]
     (when (or (= "hakija" target)
               (= "hakija_ja_huoltajat" target))
