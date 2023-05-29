@@ -14,6 +14,7 @@
                                     :id        id
                                     :checked   checked?
                                     :disabled  disabled?
+                                    :data-test-id "tekstikenttä-valinta-voi-lisätä-useita"
                                     :on-change (fn [event]
                                                  (when (not disabled?)
                                                    (dispatch [:editor/set-component-value (-> event .-target .-checked) path :params :repeatable])))}]

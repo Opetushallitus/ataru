@@ -25,7 +25,7 @@
                                        :koodisto-source {:uri "" :title "" :version 1}
                                        :options []))]
    [:text-field component/text-field {:data-test-id "component-toolbar-tekstikenttä"}]
-   [:text-area component/text-area]
+   [:text-area component/text-area {:data-test-id "component-toolbar-tekstialue"}]
    [:adjacent-fieldset component/adjacent-fieldset]
    [:attachment component/attachment]
    [:question-group component/question-group]
