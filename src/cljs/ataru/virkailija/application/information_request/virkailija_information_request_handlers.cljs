@@ -15,7 +15,6 @@
 (reg-event-fx
   :application/confirm-single-information-request
   (fn [_ _]
-    (println "suoritan 'confirm-single-information-request'")
     {:dispatch       [:application/set-single-information-request-form-state :confirm]
      :dispatch-later [{:dispatch [:application/cancel-single-information-request]
                        :ms       3000}]}))
@@ -64,7 +63,6 @@
       (let [message-and-subject (-> db :application :single-information-request
                                     (select-keys [:message :subject]))
           application-keys    (map :key (get-in db [:application :applications]))]
-      (println "Suoritan application/submit-single-information-request")
       {:dispatch [:application/set-single-information-request-form-state :submitting]
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
