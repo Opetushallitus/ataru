@@ -245,11 +245,17 @@
   (when (not (contains? #{"fi" "sv" "en"} (:lang application)))
     {:lang (:lang application)}))
 
-(defn- validate-per-hakukohde-fields [application form]
-  (let [per-hakukohde-answers (filter #(:duplikoitu-kysymys-hakukohde-oid %) (:answers application))
+(defn- validate-per-hakukohde-fields [answers-by-key application form]
+  (let [hakukohteet (->> (:hakukohteet answers-by-key)
+                         :value
+                         set)
+        per-hakukohde-answers (filter #(:duplikoitu-kysymys-hakukohde-oid %) (:answers application))
         get-matching-question (fn [answer] (first (filter #(= (:id %) (:original-question answer)) (:content form))))
         required-answers (filter #(some (fn [validator] (= validator "required")) (:validators (get-matching-question %))) per-hakukohde-answers)
-        invalid-answers (filter #(or (nil? (:value %)) (empty? (:value %))) required-answers)]
+        missing-parents (filter #(not (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %))) per-hakukohde-answers)
+        invalid-answers (->> required-answers
+                             (filter #(or (nil? (:value %)) (empty? (:value %))))
+                             (concat missing-parents))]
     (if (empty? invalid-answers)
       invalid-answers
       (apply disj invalid-answers))))
@@ -272,7 +278,7 @@
                                     (keys answers-no-duplicates))
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
-        failed-per-hakukohde-fields (validate-per-hakukohde-fields application form)
+        failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application form)
         failed-haku-oid           (:haku application)
         failed-hakukohteet        (:hakukohde application)
         failed-person-oid         (:person-oid application)

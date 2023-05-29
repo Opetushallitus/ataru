@@ -454,6 +454,11 @@
                                                       #{}
                                                       true "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
+  (it "fails validation when validating required per-hakukohde answers without hakukohde"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :duplikoitu-kysymys-hakukohde-oid "MISSING_HAKUKOHDE"))
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
   (it "fails validation when validating required per-hakukohde answers with missing value"
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                       (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :value nil))
