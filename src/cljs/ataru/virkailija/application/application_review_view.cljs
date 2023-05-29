@@ -1037,9 +1037,6 @@
                 [application-tutu-payment-status @payments])
               (when @(subscribe [:application/show-info-request-ui?])
                 [application-information-request])
-              ;[information-request-view/information-request-link application-information-request-contains-modification-link]
-
-
               [application-review-inputs]
               [application-review-notes]
 
