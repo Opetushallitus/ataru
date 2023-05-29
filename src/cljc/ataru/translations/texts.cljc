@@ -946,9 +946,9 @@
    :valinnan-tila-ladattu-valinnoista                        {:fi "Valintatieto tuotu valintarekisteristä"
                                                               :sv "Antagningsuppgiften hämtad från antagningsregistret"
                                                               :en "Valintatieto tuotu valintarekisteristä"}
-   :valinnan-tila-ladataan-valinnoista                       {:fi "Valintatieto tuotu valintarekisteristä"
+   :valinnan-tila-ladataan-valinnoista                       {:fi "Valintatieto lataamatta valintarekisteristä"
                                                               :sv "Antagningsuppgiften inhämtad från antagningsregistret"
-                                                              :en "Valintatieto tuotu valintarekisteristä"}
+                                                              :en "Valintatieto lataamatta valintarekisteristä"}
    :arvosanat-peruskoulu                                     {:fi "Arvosanat (peruskoulu)"
                                                               :sv "Vitsord (grundskola)"
                                                               :en "Arvosanat (peruskoulu)"}

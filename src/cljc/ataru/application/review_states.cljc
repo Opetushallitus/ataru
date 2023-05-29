@@ -50,6 +50,35 @@
    ["selected" (:selected state-translations)]
    ["rejected" (:rejected state-translations)]])
 
+(def kk-vastaanotto-mapping
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :perunut
+   "PERUUTETTU"                    :peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
+   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
+   "KESKEN"                        :kesken})
+
+(def non-kk-vastaanotto-mapping
+  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
+   "PERUNUT"                       :perunut
+   "PERUUTETTU"                    :peruutettu
+   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
+   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut
+   "KESKEN"                        :kesken})
+
+
+(defn get-vastaanotto-tila-translation-key-mapping [kk-haku?]
+  (if kk-haku?
+    kk-vastaanotto-mapping
+    non-kk-vastaanotto-mapping))
+
+(defn kevyt-valinta-vastaanoton-tila-selection-states [kk-haku?]
+   (map (fn [[value key]]
+          [value
+           (key virkailija-texts)])
+        (get-vastaanotto-tila-translation-key-mapping kk-haku?)))
+
 (def valinnan-tila-translation-key-mapping
   {"HYLATTY"                :hylatty
    "VARALLA"                :varalla
@@ -69,16 +98,6 @@
 (def julkaisun-tila-translation-key-mapping
   {true  :julkaistu
    false :ei-julkaistu})
-
-(def vastaanotto-tila-translation-key-mapping
-  {"EI_VASTAANOTETTU_MAARA_AIKANA" :ei-vastaanotettu-maaraaikana
-   "PERUNUT"                       :perunut
-   "PERUUTETTU"                    :peruutettu
-   "OTTANUT_VASTAAN_TOISEN_PAIKAN" :ottanut-vastaan-toisen-paikan
-   "EHDOLLISESTI_VASTAANOTTANUT"   :ehdollisesti-vastaanottanut
-   "VASTAANOTTANUT_SITOVASTI"      :vastaanottanut-sitovasti
-   "KESKEN"                        :kesken
-   "VASTAANOTTANUT"                :vastaanottanut})
 
 (def ilmoittautumisen-tila-translation-key-mapping
   {"EI_TEHTY"              :ei-tehty
