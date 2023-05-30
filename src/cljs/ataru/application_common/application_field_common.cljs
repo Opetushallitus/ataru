@@ -135,7 +135,7 @@
   [content]
   (let [urls (re-seq #"https?://\S+" content)]
     (reduce
-     #(string/replace-first %1 %2 (str "<a href=\"" %2 "\">" %2 "</a>"))
+     #(string/replace-first %1 %2 (str "<a href=\"" %2 "\" target=_blank rel=\"noopener noreferrer\">" %2 "</a>"))
      content
      urls)))
 
