@@ -258,18 +258,18 @@
         required-answers (filter #(some (fn [validator] (= validator "required")) (:validators (get-matching-question %))) per-hakukohde-answers)
         missing-hakukohteet (filter #(not (or (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %))
                                               (contains? hakukohteet (:duplikoitu-followup-hakukohde-oid %)))) per-hakukohde-answers)
-        get-matching-parent-field (fn [followup]
-                                    (first (filter #(= (:id %) (:followup-of followup)) flattened-form-fields)))
-        get-matching-parent-answer (fn [parent-field followup]
+        get-matching-parent-field (fn [followup-field]
+                                    (first (filter #(= (:id %) (:followup-of followup-field)) flattened-form-fields)))
+        get-matching-parent-answer (fn [parent-field followup followup-field]
                                      (first (filter #(and
                                                  (= (:original-question %) (:id parent-field))
-                                                 (= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup)))
+                                                 (= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup))
+                                                 (= (:value %) (:option-value followup-field)))
                                                     (:answers application))))
         get-matching-parent (fn [followup]
-                              (-> followup
-                                   get-matching-question
-                                   get-matching-parent-field
-                                   (get-matching-parent-answer followup)))
+                              (let [followup-field (get-matching-question followup)
+                                    parent-field (get-matching-parent-field followup-field)]
+                                   (get-matching-parent-answer parent-field followup followup-field)))
         missing-parents (->> per-hakukohde-answers
                             (filter #(:duplikoitu-followup-hakukohde-oid %))
                             (filter #(not (get-matching-parent %))))
