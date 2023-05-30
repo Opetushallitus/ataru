@@ -633,9 +633,11 @@
         (assoc-in [:application :selected-application-and-form :application :person :oppilaitos-name] applicant-oppilaitos-name)
         (assoc-in [:application :selected-application-and-form :application :person :luokka] applicant-luokka)))))
 
-(defn create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku
+(defn create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku-or-jatkuva-haku
   [application]
-  (when (haku/toisen-asteen-yhteishaku? (:tarjonta application))
+  (when (or
+          (haku/toisen-asteen-yhteishaku? (:tarjonta application))
+          (haku/jatkuva-haku? (:tarjonta application)))
     [:application/fetch-applicant-school (:haku application) (-> application :person :oid)]))
 
 (reg-event-fx
@@ -662,7 +664,7 @@
                                        [[:virkailija-kevyt-valinta/fetch-valinnan-tulos
                                          {:application-key application-key
                                           :memoize         true}]]
-                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku (:application response))]
+                                       [(create-fetch-applicant-school-event-if-toisen-asteen-yhteishaku-or-jatkuva-haku (:application response))]
                                        (pohjakoulutus-toinen-aste-handlers/create-fetch-applicant-pohjakoulutus-event-if-toisen-asteen-yhteishaku (:application response))))]
       {:db         db
        :dispatch-debounced {:timeout 500
