@@ -245,19 +245,39 @@
   (when (not (contains? #{"fi" "sv" "en"} (:lang application)))
     {:lang (:lang application)}))
 
-(defn- validate-per-hakukohde-fields [answers-by-key application form]
+(defn- validate-per-hakukohde-fields [answers-by-key application flattened-form-fields]
   (let [hakukohteet (->> (:hakukohteet answers-by-key)
                          :value
                          set)
-        per-hakukohde-answers (filter #(:duplikoitu-kysymys-hakukohde-oid %) (:answers application))
-        get-matching-question (fn [answer] (first (filter #(= (:id %) (:original-question answer)) (:content form))))
+        per-hakukohde-answers (filter #(or (:duplikoitu-kysymys-hakukohde-oid %)
+                                           (:duplikoitu-followup-hakukohde-oid %)) (:answers application))
+        get-matching-question (fn [answer] (->> flattened-form-fields
+                                                (filter #(or (= (:id %) (:original-question answer))
+                                                             (= (:id %) (:original-followup answer))))
+                                                first))
         required-answers (filter #(some (fn [validator] (= validator "required")) (:validators (get-matching-question %))) per-hakukohde-answers)
-        missing-parents (filter #(not (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %))) per-hakukohde-answers)
+        missing-hakukohteet (filter #(not (or (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %))
+                                              (contains? hakukohteet (:duplikoitu-followup-hakukohde-oid %)))) per-hakukohde-answers)
+        get-matching-parent-field (fn [followup]
+                                    (first (filter #(= (:id %) (:followup-of followup)) flattened-form-fields)))
+        get-matching-parent-answer (fn [parent-field followup]
+                                     (first (filter #(and
+                                                 (= (:original-question %) (:id parent-field))
+                                                 (= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup)))
+                                                    (:answers application))))
+        get-matching-parent (fn [followup]
+                              (-> followup
+                                   get-matching-question
+                                   get-matching-parent-field
+                                   (get-matching-parent-answer followup)))
+        missing-parents (->> per-hakukohde-answers
+                            (filter #(:duplikoitu-followup-hakukohde-oid %))
+                            (filter #(not (get-matching-parent %))))
         invalid-answers (->> required-answers
                              (filter #(or (nil? (:value %)) (empty? (:value %))))
-                             (concat missing-parents))]
-    (if (empty? invalid-answers)
-      invalid-answers
+                             (concat missing-hakukohteet missing-parents)
+                             set)]
+    (when (seq invalid-answers)
       (apply disj invalid-answers))))
 
 (defn- non-duplicated-answer?
@@ -271,14 +291,15 @@
    against their associated validators."
   [koodisto-cache has-applied application form applied-hakukohderyhmat virkailija? application-id application-key]
   {:pre [(not-empty form)]}
-  (let [answers-by-key            (util/answers-by-key (:answers application))
+  (let [flattened-form-fields     (util/flatten-form-fields (:content form))
+        answers-by-key            (util/answers-by-key (:answers application))
         answers-no-duplicates     (util/answers-by-key (filter non-duplicated-answer? (:answers application)))
         extra-answers             (extra-answers-not-in-original-form
-                                    (map (comp keyword :id) (util/flatten-form-fields (:content form)))
+                                    (map (comp keyword :id) flattened-form-fields)
                                     (keys answers-no-duplicates))
         failed-results            (build-results koodisto-cache has-applied answers-by-key form (:content form) applied-hakukohderyhmat virkailija?)
         failed-meta-fields        (validate-meta-fields application)
-        failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application form)
+        failed-per-hakukohde-fields (validate-per-hakukohde-fields answers-by-key application flattened-form-fields)
         failed-haku-oid           (:haku application)
         failed-hakukohteet        (:hakukohde application)
         failed-person-oid         (:person-oid application)
