@@ -131,14 +131,24 @@
                              " ")
                   [:i.zmdi.zmdi-hc-lg.zmdi-chevron-up]])])]))}))))
 
+ (defn- urls-to-links
+  [content]
+  (let [urls (re-seq #"https?://\S+" content)]
+    (reduce
+     #(string/replace-first %1 %2 (str "<a href=\"" %2 "\">" %2 "</a>"))
+     content
+     urls)))
+
 (defn render-paragraphs [s]
   (->> (clojure.string/split s "\n")
+       (map urls-to-links)
        (map-indexed (fn [i p]
                       ^{:key (str "paragraph-" i)}
                       [:div
                        (if (clojure.string/blank? p)
                          [:br]
-                         [:p.application__text-field-paragraph p])]))))
+                         [:p.application__text-field-paragraph
+                          {:dangerouslySetInnerHTML {:__html p}}])]))))
 
 (defn is-required-field?
   [field-descriptor]
