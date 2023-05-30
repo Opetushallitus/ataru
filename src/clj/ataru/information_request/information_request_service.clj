@@ -27,8 +27,7 @@
        (map :value)
        (first)))
 (defn- initial-state [connection information-request guardian?]
-  (let [
-        add-update-link? (:add-update-link information-request)
+  (let [add-update-link? (:add-update-link information-request)
         secret           (app-store/add-new-secret-to-application-in-tx
                           connection
                           (:application-key information-request))
@@ -62,8 +61,7 @@
 
 (defn- start-email-job [job-runner connection information-request]
   (let [job-type (:type information-request-job/job-definition)
-        target (:recipient-target information-request)
-        ]
+        target (:recipient-target information-request)]
     (when (or (= "hakija" target)
               (= "hakija_ja_huoltajat" target))
       (let [job-id (job/start-job job-runner
@@ -91,14 +89,12 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
-    (let [
-        add-update-link (:add-update-link information-request)
-        information-request (information-request-store/add-information-request
+    (let [add-update-link (:add-update-link information-request)
+          information-request (information-request-store/add-information-request
                              information-request
                              (-> session :identity :oid)
                              connection)
-        information-request-with-add-update-link (assoc information-request :add-update-link add-update-link)
-        ]
+          information-request-with-add-update-link (assoc information-request :add-update-link add-update-link)]
     (start-email-job job-runner connection information-request-with-add-update-link)
     (audit-log/log (:audit-logger job-runner)
                    {:new       information-request

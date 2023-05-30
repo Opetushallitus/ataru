@@ -1195,7 +1195,7 @@
    :applicant-email                                          {:fi "Lähetä sähköposti %d hakijalle"
                                                               :sv "Send %d applicant e-mail"
                                                               :en "Send %d applicant e-mail"}
-   :single-applicant-email                                          {:fi "Viestin mukana lähetetään hakemuksen muokkauslinkki"
+   :single-applicant-email                                   {:fi "Viestin mukana lähetetään hakemuksen muokkauslinkki"
                                                               :sv "Viestin mukana lähetetään hakemuksen muokkauslinkki"
                                                               :en "Viestin mukana lähetetään hakemuksen muokkauslinkki"}
 
@@ -1571,7 +1571,7 @@
    :single-information-request-email-applicant               {:fi "Olet lähettämässä sähköpostia 1 hakijalle: %s"
                                                               :sv "Skicka e-post till 1 sökande: "
                                                               :en "Send email to applicants:"}
-   :single-information-request-send                            {:fi "Lähetä"
+   :single-information-request-send                          {:fi "Lähetä"
                                                               :sv "Skicka:"
                                                               :en "Send:"}
    :max-characters                                           {:fi "Max. merkkimäärä"

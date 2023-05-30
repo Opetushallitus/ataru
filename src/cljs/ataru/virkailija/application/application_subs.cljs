@@ -257,6 +257,7 @@
   :application/ensisijaisesti?
   (fn [db]
     (get-in db [:application :ensisijaisesti?-checkbox] false)))
+
 (re-frame/reg-sub
   :application/send-update-link?
   (fn [db]

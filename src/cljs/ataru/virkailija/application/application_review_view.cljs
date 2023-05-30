@@ -31,8 +31,7 @@
             [reagent.core :as r]
             [reagent.ratom :refer-macros [reaction]]
             [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.tutu-payment.tutu-payment-view :refer [application-tutu-payment-status]]
-            ))
+            [ataru.virkailija.application.tutu-payment.tutu-payment-view :refer [application-tutu-payment-status]]))
 
 
 

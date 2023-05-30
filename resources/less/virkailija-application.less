@@ -169,10 +169,6 @@
   display: flex;
   margin-bottom: 10px;
 }
-.application-handling__single-edit-review-states-title-container {
-  display: flex;
-  margin-bottom: 10px;
-}
 
 .application-handling__popup-close-button {
   font-size: 18px;
@@ -188,12 +184,6 @@
 }
 
 .application-handling__mass-edit-review-states-title {
-  flex-grow: 2;
-  text-transform: uppercase;
-  margin: 0px;
-  color: @text-color;
-}
-.application-handling__single-edit-review-states-title {
   flex-grow: 2;
   text-transform: uppercase;
   margin: 0px;
@@ -1146,20 +1136,9 @@ i.arkistoitu {
   }
 }
 .application-handling__send-message-button {
-  background-color: @link-color;
-  border-radius: 3px;
-  color: @white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 41px;
   margin-bottom: 10px;
-
-  &:hover {
-    background-color: @editor-control-button-hover-blue;
-  }
 }
-.application-handling__link-button {
+.application-handling__link-button, .application-handling__send-message-button {
   background-color: @link-color;
   border-radius: 3px;
   color: @white;

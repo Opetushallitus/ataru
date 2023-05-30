@@ -6,19 +6,6 @@
   (fn [db [_ state]]
     (assoc-in db [:application :single-information-request :form-status] state)))
 
-(reg-event-fx
-  :application/cancel-single-information-request
-  (fn [{:keys [db]} _]
-    (when (= :confirm (get-in db [:application :single-information-request :form-status]))
-      {:dispatch [:application/set-single-information-request-form-state :enabled]})))
-
-(reg-event-fx
-  :application/confirm-single-information-request
-  (fn [_ _]
-    {:dispatch       [:application/set-single-information-request-form-state :confirm]
-     :dispatch-later [{:dispatch [:application/cancel-single-information-request]
-                       :ms       3000}]}))
-
 (reg-event-db
   :application/set-single-information-request-subject
   (fn [db [_ subject]]
@@ -29,13 +16,17 @@
 (reg-event-db
   :application/set-single-information-request-message
   (fn [db [_ message]]
+    (assoc-in db [:application :single-information-request :form-status] :enabled)
+
     (cond-> (assoc-in db [:application :single-information-request :message] message)
             (not= :enabled (-> db :application :single-information-request :form-status))
             (assoc-in [:application :single-information-request :form-status] :enabled))))
+
 (reg-event-db
   :application/set-send-update-link
   (fn [db [_ checkedNewValue] ]
     (assoc-in db [:application :send-update-link?-checkbox] checkedNewValue)))
+
 (reg-event-fx
   :application/submit-single-information-request
   (fn [{:keys [db]}]
@@ -52,25 +43,8 @@
                                        (assoc :subject subject)
                                        (assoc :message message)
                                        (assoc :add-update-link add-update-link)
-                                       (dissoc :visible?)
-                                       )
+                                       (dissoc :visible?))
               :handler-or-dispatch :application/handle-submit-information-request-response}})))
-
-(comment
-  (reg-event-fx
-    :application/submit-single-information-request
-    (fn [{:keys [db]} [_ recipient-target]]
-      (let [message-and-subject (-> db :application :single-information-request
-                                    (select-keys [:message :subject]))
-          application-keys    (map :key (get-in db [:application :applications]))]
-      {:dispatch [:application/set-single-information-request-form-state :submitting]
-       :http     {:method              :post
-                  :path                "/lomake-editori/api/applications/mass-information-request"
-                  :params              {:application-keys    application-keys
-                                        :recipient-target    recipient-target
-                                        ;:recipient-target    "janne.lindberg@gofore.com"
-                                        :message-and-subject message-and-subject}
-                  :handler-or-dispatch :application/handle-submit-single-information-request-response}}))))
 
 (reg-event-fx
   :application/handle-submit-single-information-request-response

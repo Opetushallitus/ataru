@@ -3,8 +3,7 @@
 
 (defn application-send-single-email-to-applicant
   []
-  (let [
-        application        @(subscribe [:application/selected-application])
+  (let [application        @(subscribe [:application/selected-application])
         first-name           (-> application :person :preferred-name)
         last-name           (-> application :person :last-name)
         visible?           (subscribe [:application/single-information-request-popup-visible?])
@@ -18,12 +17,12 @@
         @(subscribe [:editor/virkailija-translation :send-email-to-applicant])]
        (when @visible?
          [:div.application-handling__popup.application-handling__-information-request-popup
-          [:div.application-handling__single-edit-review-states-title-container
-           [:h4.application-handling__single-edit-review-states-title
+          [:div.application-handling__mass-edit-review-states-title-container
+           [:h4.application-handling__mass-edit-review-states-title
             @(subscribe [:editor/virkailija-translation :single-information-request])]
-           [:button.virkailija-close-button
-            {:on-click #(dispatch [:application/set-single-information-request-popup-visibility false])}
-            [:i.zmdi.zmdi-close]]]
+            [:button.virkailija-close-button
+             {:on-click #(dispatch [:application/set-single-information-request-popup-visibility false])}
+             [:i.zmdi.zmdi-close]]]
             [:p @(subscribe [:editor/virkailija-translation :single-information-request-email-applicant (str last-name ", " first-name)])]
 
           [:div.application-handling__information-request-row
