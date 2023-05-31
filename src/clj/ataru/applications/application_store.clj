@@ -1076,13 +1076,15 @@
              base-education-key (keyword base-education-choice-key)
              oppisopimuskoulutus-key (:oppisopimuskoulutus-key questions)
              tutkinto-vuosi-key (->> (:tutkintovuosi-keys questions)
-                                     (filter #(not (nil? (% answers))))
-                                     first)
+                                     (filter #(not (nil? ((keyword %) answers))))
+                                     first
+                                     keyword)
              tutkinto-vuosi (when tutkinto-vuosi-key
                               (-> answers tutkinto-vuosi-key :value))
              tutkinto-kieli-key (->> (:tutkintokieli-keys questions)
-                                     (filter #(not (nil? (% answers))))
-                                     first)
+                                     (filter #(not (nil? ((keyword %) answers))))
+                                     first
+                                     keyword)
              tutkinto-kieli (when tutkinto-kieli-key
                               (-> answers tutkinto-kieli-key :value (base-education-2nd-language-value-to-lang)))
              urheilija-laji (get-urheilija-laji answers lang (:urheilijan-lisakysymys-laji-key-and-mapping questions))
