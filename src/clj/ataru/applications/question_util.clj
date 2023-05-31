@@ -176,8 +176,8 @@
                                                               first)
          urheilija-keys (urheilijan-lisakysymys-keys haku-oid)
          urheilija-amm-keys (urheilijan-ammatilliset-lisakysymys-keys haku-oid)]
-     {:tutkintovuosi-keys                          suoritusvuosi-keys
-      :tutkintokieli-keys                          tutkintokieli-keys
+     {:tutkintovuosi-keys                          (map keyword suoritusvuosi-keys)
+      :tutkintokieli-keys                          (map keyword tutkintokieli-keys)
       :sora-terveys-key                            sora-terveys-question
       :sora-aiempi-key                             sora-aiempi-question
       :kaksoistutkinto-keys                        kaksoistutkinto-keys
