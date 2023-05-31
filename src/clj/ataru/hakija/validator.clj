@@ -5,7 +5,8 @@
             [taoensso.timbre :as log]
             [ataru.koodisto.koodisto :as koodisto]
             [clojure.string :as str]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [ataru.application.application-answer-search-tools :as answer-tools]))
 
 (defn- nationalities-value-contains-finland?
   [value]
@@ -249,27 +250,15 @@
   (let [hakukohteet (->> (:hakukohteet answers-by-key)
                          :value
                          set)
+        get-matching-parent (fn [followup]
+                              (let [followup-field (answer-tools/get-matching-per-hakukohde-question flattened-form-fields followup)
+                                    parent-field (answer-tools/get-matching-parent-field flattened-form-fields followup-field)]
+                                (answer-tools/get-matching-per-hakukohde-parent-answer application parent-field followup followup-field)))
         per-hakukohde-answers (filter #(or (:duplikoitu-kysymys-hakukohde-oid %)
                                            (:duplikoitu-followup-hakukohde-oid %)) (:answers application))
-        get-matching-question (fn [answer] (->> flattened-form-fields
-                                                (filter #(or (= (:id %) (:original-question answer))
-                                                             (= (:id %) (:original-followup answer))))
-                                                first))
-        required-answers (filter #(some (fn [validator] (= validator "required")) (:validators (get-matching-question %))) per-hakukohde-answers)
         missing-hakukohteet (filter #(not (or (contains? hakukohteet (:duplikoitu-kysymys-hakukohde-oid %))
                                               (contains? hakukohteet (:duplikoitu-followup-hakukohde-oid %)))) per-hakukohde-answers)
-        get-matching-parent-field (fn [followup-field]
-                                    (first (filter #(= (:id %) (:followup-of followup-field)) flattened-form-fields)))
-        get-matching-parent-answer (fn [parent-field followup followup-field]
-                                     (first (filter #(and
-                                                 (= (:original-question %) (:id parent-field))
-                                                 (= (:duplikoitu-kysymys-hakukohde-oid %) (:duplikoitu-followup-hakukohde-oid followup))
-                                                 (= (:value %) (:option-value followup-field)))
-                                                    (:answers application))))
-        get-matching-parent (fn [followup]
-                              (let [followup-field (get-matching-question followup)
-                                    parent-field (get-matching-parent-field followup-field)]
-                                   (get-matching-parent-answer parent-field followup followup-field)))
+        required-answers (answer-tools/filter-required-per-hakukohde-answers flattened-form-fields per-hakukohde-answers)
         missing-parents (->> per-hakukohde-answers
                             (filter #(:duplikoitu-followup-hakukohde-oid %))
                             (filter #(not (get-matching-parent %))))
