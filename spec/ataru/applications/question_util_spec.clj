@@ -52,10 +52,12 @@
                         (should= kaksoistutkinto-keys (:kaksoistutkinto-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
 
                     (it "returns tutkintovuosi keys"
-                        (should= suoritusvuosi-keys (:tutkintovuosi-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
+                        (should= (map keyword suoritusvuosi-keys)
+                                 (:tutkintovuosi-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
 
                     (it "returns tutkintokieli keys"
-                        (should= tutkintokieli-keys (:tutkintokieli-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
+                        (should= (map keyword tutkintokieli-keys)
+                                 (:tutkintokieli-keys (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste))))
 
                     (it "returns urheilijan-amm-lisakysymys-key and groups"
                         (let [result (qu/get-hakurekisteri-toinenaste-specific-questions form-2nd-aste)]
