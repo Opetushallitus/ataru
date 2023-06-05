@@ -877,12 +877,12 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
                    GROUP BY application_key) AS eligibilities
   ON true
 WHERE a.person_oid IS NOT NULL AND
-      (a.created_time > :date::DATE OR
-       application_reviews.modified_time > :date::DATE OR
+      (a.created_time >= :date::DATE OR
+       application_reviews.modified_time >= :date::DATE OR
        EXISTS (SELECT 1
                FROM application_hakukohde_reviews
                WHERE application_key = a.key AND
-                     modified_time > :date::DATE))
+                     modified_time >= :date::DATE))
 ORDER BY a.created_time DESC
 LIMIT :limit
 OFFSET :offset;
@@ -915,13 +915,13 @@ FROM latest_applications AS a
                             GROUP BY application_key) AS eligibilities
                    ON true
 WHERE a.person_oid IS NOT NULL AND
-    ((a.created_time > :start::DATE AND a.created_time < :end::DATE) OR
-       (application_reviews.modified_time > :start::DATE AND application_reviews.modified_time < :end::DATE) OR
+    ((a.created_time >= :start::DATE AND a.created_time <= :end::DATE) OR
+       (application_reviews.modified_time >= :start::DATE AND application_reviews.modified_time <= :end::DATE) OR
        EXISTS (SELECT 1
                FROM application_hakukohde_reviews
                WHERE application_key = a.key AND
-                     modified_time > :start::DATE AND
-                     modified_time < :end::DATE))
+                     modified_time >= :start::DATE AND
+                     modified_time <= :end::DATE))
 ORDER BY a.created_time DESC
     LIMIT :limit
 OFFSET :offset;
