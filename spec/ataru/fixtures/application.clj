@@ -195,7 +195,19 @@
                    [{:key       "att__1"
                      :label     {:fi "Liite"}
                      :value     ["liite-id"]
-                     :fieldType "attachment"}]}}])
+                     :fieldType "attachment"}]}}
+   {:key          "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81_1"
+    :lang         "fi"
+    :created-time (c/date-time 2023 6 2 10 30 55)
+    :state        "unprocessed"
+    :form_id      703
+    :id           1
+    :hakukohde    ["1.2.246.562.29.123454321"]
+    :application_key "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81_1"
+    :content      {:answers
+                   [{:key "Q__1" :label {:fi "Eka kysymys"} :value "1" :fieldType "textField"}
+                    {:key "A__1" :value "attachment1" :fieldType "attachment"}
+                    {:key "A__2" :value "attachment2" :fieldType "attachment"}]}}])
 
 (def application-review
   {:id              1,
