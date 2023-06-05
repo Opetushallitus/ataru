@@ -915,13 +915,13 @@ FROM latest_applications AS a
                             GROUP BY application_key) AS eligibilities
                    ON true
 WHERE a.person_oid IS NOT NULL AND
-    ((a.created_time >= :start::DATE AND a.created_time <= :end::DATE) OR
-       (application_reviews.modified_time >= :start::DATE AND application_reviews.modified_time <= :end::DATE) OR
+    ((a.created_time::DATE >= :start::DATE AND a.created_time::DATE <= :end::DATE) OR
+       (application_reviews.modified_time::DATE >= :start::DATE AND application_reviews.modified_time::DATE <= :end::DATE) OR
        EXISTS (SELECT 1
                FROM application_hakukohde_reviews
                WHERE application_key = a.key AND
-                     modified_time >= :start::DATE AND
-                     modified_time <= :end::DATE))
+                     modified_time::DATE >= :start::DATE AND
+                     modified_time::DATE <= :end::DATE))
 ORDER BY a.created_time DESC
     LIMIT :limit
 OFFSET :offset;
