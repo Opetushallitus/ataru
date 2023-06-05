@@ -630,6 +630,9 @@
 (defn get-latest-application-by-key-for-odw [application-key]
   (exec-db :db queries/yesql-get-single-odw-application-by-key {:key application-key}))
 
+(defn get-latest-applications-by-haku [haku-oid limit offset]
+  (exec-db :db queries/yesql-get-applications-by-haku {:haku haku-oid :limit limit :offset (or offset 0)}))
+
 (defn post-process-application-attachments [koodisto-cache
                                             tarjonta-service
                                             organization-service
@@ -1390,6 +1393,9 @@
 
 (defn get-applications-newer-than [date limit offset]
   (exec-db :db queries/yesql-get-applications-by-created-time {:date date :limit limit :offset (or offset 0)}))
+
+(defn get-applications-between-start-and-end [start end limit offset]
+  (exec-db :db queries/yesql-get-applications-by-created-time-between-start-and-end {:start start :end end :limit limit :offset (or offset 0)}))
 
 (defn add-review-note [note session]
   {:pre [(-> note :application-key clojure.string/blank? not)
