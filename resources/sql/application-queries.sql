@@ -877,14 +877,86 @@ LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
                    GROUP BY application_key) AS eligibilities
   ON true
 WHERE a.person_oid IS NOT NULL AND
-      (a.created_time > :date::DATE OR
-       application_reviews.modified_time > :date::DATE OR
+      (a.created_time >= :date::DATE OR
+       application_reviews.modified_time >= :date::DATE OR
        EXISTS (SELECT 1
                FROM application_hakukohde_reviews
                WHERE application_key = a.key AND
-                     modified_time > :date::DATE))
+                     modified_time >= :date::DATE))
 ORDER BY a.created_time DESC
 LIMIT :limit
+OFFSET :offset;
+
+--name: yesql-get-applications-by-created-time-between-start-and-end
+SELECT
+    a.key,
+    a.haku,
+    a.hakukohde,
+    a.person_oid AS "person-oid",
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    application_reviews.state,
+    payment_obligations.states AS "payment-obligations",
+    eligibilities.states AS eligibilities
+FROM latest_applications AS a
+         JOIN application_reviews
+              ON application_reviews.application_key = a.key
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'payment-obligation' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS payment_obligations
+                   ON true
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'eligibility-state' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS eligibilities
+                   ON true
+WHERE a.person_oid IS NOT NULL AND
+    ((a.created_time::DATE >= :start::DATE AND a.created_time::DATE <= :end::DATE) OR
+       (application_reviews.modified_time::DATE >= :start::DATE AND application_reviews.modified_time::DATE <= :end::DATE) OR
+       EXISTS (SELECT 1
+               FROM application_hakukohde_reviews
+               WHERE application_key = a.key AND
+                     modified_time::DATE >= :start::DATE AND
+                     modified_time::DATE <= :end::DATE))
+ORDER BY a.created_time DESC
+    LIMIT :limit
+OFFSET :offset;
+
+--name: yesql-get-applications-by-haku
+SELECT
+    a.key,
+    a.haku,
+    a.hakukohde,
+    a.person_oid AS "person-oid",
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    application_reviews.state,
+    payment_obligations.states AS "payment-obligations",
+    eligibilities.states AS eligibilities
+FROM latest_applications AS a
+         JOIN application_reviews
+              ON application_reviews.application_key = a.key
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'payment-obligation' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS payment_obligations
+                   ON true
+         LEFT JOIN LATERAL (SELECT jsonb_object_agg(hakukohde, state) AS states
+                            FROM application_hakukohde_reviews AS payment_obligations
+                            WHERE payment_obligations.requirement = 'eligibility-state' AND
+                                    application_key = a.key
+                            GROUP BY application_key) AS eligibilities
+                   ON true
+WHERE a.person_oid IS NOT NULL AND
+    a.haku = :haku
+ORDER BY a.created_time DESC
+    LIMIT :limit
 OFFSET :offset;
 
 --name: yesql-get-single-odw-application-by-key

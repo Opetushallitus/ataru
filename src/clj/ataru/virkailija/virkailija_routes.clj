@@ -1472,9 +1472,11 @@
           (response/unauthorized {:error "Unauthorized"})))
       (api/GET "/odw" {session :session}
         :summary "Get odw report"
-        :query-params [fromDate :- s/Str
+        :query-params [{fromDate :- s/Str nil}
                        {offset :- s/Int nil}
-                       {limit :- s/Int nil}]
+                       {limit :- s/Int nil}
+                       {toDate :- s/Str nil}
+                       {hakuOid :- s/Str nil}]
         :return [{s/Keyword s/Any}]
         (if-let [applications (access-controlled-application/get-applications-for-odw
                                 organization-service
@@ -1486,6 +1488,8 @@
                                 fromDate
                                 limit
                                 offset
+                                toDate
+                                hakuOid
                                 nil)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
@@ -1500,6 +1504,8 @@
                                 tarjonta-service
                                 valintalaskentakoostepalvelu-service
                                 suoritus-service
+                                nil
+                                nil
                                 nil
                                 nil
                                 nil

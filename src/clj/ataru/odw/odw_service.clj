@@ -38,10 +38,22 @@
       (log/info (str "ODW Ei haeta koosteDataa yksilöimättömille tai äidinkielettömille hakijoille: " dropped-oids)))
     wanted-applications))
 
-(defn get-applications-for-odw [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service date limit offset application-key]
-  (let [applications (if application-key
+(defn get-applications-for-odw [person-service tarjonta-service valintalaskentakoostepalvelu-service suoritus-service date limit offset to-date haku-oid application-key]
+  (let [applications (cond
+                       application-key
                        (application-store/get-latest-application-by-key-for-odw application-key)
-                       (application-store/get-applications-newer-than date limit offset))
+
+                       haku-oid
+                       (application-store/get-latest-applications-by-haku haku-oid limit offset)
+
+                       (and date to-date)
+                       (application-store/get-applications-between-start-and-end date to-date limit offset)
+
+                       date
+                       (application-store/get-applications-newer-than date limit offset)
+
+                       :else
+                       [])
         active-applications (filter #(not= (:state %) "inactivated") applications)
         haut (->> (keep :haku applications)
                   distinct
