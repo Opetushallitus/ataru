@@ -65,12 +65,16 @@
         target (:recipient-target information-request)]
     (when (or (= "hakija" target)
               (= "hakija_ja_huoltajat" target))
-      (let [job-id (job/start-job job-runner
-                                  connection
-                                  job-type
-                                  (initial-state connection information-request false))]
-        (log/info (str "Started information request email job with job id " job-id
-                       " for application " (:application-key information-request)))))
+      (if-let [job-state (initial-state connection information-request false)]
+        (let [job-id (job/start-job job-runner
+                                    connection
+                                    job-type
+                                    job-state)]
+          (log/info (str "Started information request email job with job id " job-id
+                         " for application " (:application-key information-request))))
+        (log/info (str "Skipped information request email job for application "
+                       (:application-key information-request)
+                       " because application doesn't contain email"))))
     (when (or (= "huoltajat" target)
               (= "hakija_ja_huoltajat" target))
       (if-let [job-state (initial-state connection information-request true)]
