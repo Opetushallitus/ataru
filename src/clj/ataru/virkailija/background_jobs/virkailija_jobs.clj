@@ -24,6 +24,8 @@
                                                           :type  "mass-information-request-job"}
    "tutkintojen-tunnustaminen-review-state-changed-job"  {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-review-state-changed-job-step}
                                                           :type  "tutkintojen-tunnustaminen-review-state-changed-job"}
+   "tutkintojen-tunnustaminen-information-request-sent-job" {:steps {:initial tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-information-request-sent-job-step}
+                                                             :type "tutkintojen-tunnustaminen-information-request-sent-job"}
    "update-person-info-job"                              {:steps {:initial person-integration/update-person-info-job-step}
                                                           :type  "update-person-info-job"}
    "clean-old-forms-job"                                 {:steps {:initial clean-old-forms/clean-old-forms-job-step}

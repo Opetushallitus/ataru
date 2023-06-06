@@ -9,7 +9,8 @@
             [ataru.db.db :as db]
             [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-step
                                                      tutkintojen-tunnustaminen-submit-job-step
-                                                     tutkintojen-tunnustaminen-review-state-changed-job-step]]
+                                                     tutkintojen-tunnustaminen-review-state-changed-job-step
+                                                     tutkintojen-tunnustaminen-information-request-sent-job-step]]
             [ataru.forms.form-store :as form-store]
             [clojure.string :as string]
             [ataru.log.audit-log :as audit-log]
@@ -17,7 +18,8 @@
             [clojure.java.jdbc :as jdbc]
             [speclj.core :refer [around should-contain should-be should= it describe tags]]
             [yesql.core :refer [defqueries]])
-  (:import java.io.ByteArrayInputStream))
+  (:import java.io.ByteArrayInputStream
+           java.util.Base64))
 
 (defqueries "sql/form-queries.sql")
 (defqueries "sql/application-queries.sql")
@@ -160,6 +162,7 @@
 (def ^:dynamic *application-id*)
 (def ^:dynamic *edited-application-id*)
 (def ^:dynamic *in-wrong-form-application-id*)
+(def ^:dynamic *in-wrong-form-application-key*)
 (def ^:dynamic *event-id*)
 (def ^:dynamic *application-key*)
 (def ^:dynamic *application-submitted*)
@@ -296,21 +299,50 @@
                            form
                            {}
                            audit-logger)))
-          in-wrong-form (:id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
-                          (application-store/update-application
-                           (-> edited
-                               application-store/get-application
-                               (assoc :form wrong-form-id))
-                           []
-                           wrong-form
-                           {}
-                           audit-logger)))]
+          wrong-form-application
+          (application-store/get-application
+            (:id (application-store/add-application
+                  {:form      wrong-form-id
+                   :answers   [{:key       (get-in config [:tutkintojen-tunnustaminen :country-question-id])
+                                :value     "024"
+                                :fieldType "dropdown"}
+                               {:key       "liite-1"
+                                :value     ["liite-1-id"]
+                                :fieldType "attachment"}
+                               {:key       "liite-2"
+                                :value     ["liite-2-1-id" "liite-2-2-id"]
+                                :fieldType "attachment"}
+                               {:key       "liite-3"
+                                :value     [["liite-3-1-1-id"]
+                                            []
+                                            ["liite-3-2-1-id" "liite-3-2-2-id"]]
+                                :fieldType "attachment"}
+                               {:key       "first-name"
+                                :value     "Etunimi Toinenetunimi"
+                                :fieldType "textField"}
+                               {:key       "last-name"
+                                :value     "Sukunimi"
+                                :fieldType "textField"}
+                               {:key       "birth-date"
+                                :fieldType "textField"
+                                :value     "24.09.1989"}
+                               {:key       "email"
+                                :fieldType "textField"
+                                :value     "test@example.com"}]
+                    :lang      "fi"
+                    :hakukohde []
+                    :haku      nil}
+                  []
+                  form
+                  {}
+                  audit-logger)))]
       (binding [*form-id*                      form-id
                 *wrong-form-id*                wrong-form-id
                 *application-id*               (:id application)
                 *event-id*                     event-id
                 *edited-application-id*        edited
-                *in-wrong-form-application-id* in-wrong-form
+                *in-wrong-form-application-id* (:id wrong-form-application)
+                *in-wrong-form-application-key* (:key wrong-form-application)
                 *application-key*              (:key application)
                 *application-submitted*        (f/unparse (f/formatter :date-time-no-ms (t/time-zone-for-id "Europe/Helsinki"))
                                                           (:submitted application))]
@@ -332,12 +364,57 @@
                                WHERE id IN (?, ?, ?)"
                               (:id application)
                               edited
-                              in-wrong-form])
+                              *in-wrong-form-application-id*])
               (jdbc/execute! connection
                              ["DELETE FROM forms
                                WHERE id IN (?, ?)"
                               form-id
                               wrong-form-id])))))))
+  (it "should send information request sent message to ASHA SFTP server"
+    (with-redefs [ataru.tutkintojen-tunnustaminen/timestamp (fn [] 1)]
+      (let [r (tutkintojen-tunnustaminen-information-request-sent-job-step
+                {:information-request {:application-key *application-key*
+                                       :subject "Täydennyspyyntö otsikko"
+                                       :message "Hello world!"
+                                       :message-type "information-request"}}
+                {})
+            message (xml/parse-str
+                      (get-file (str *application-key* "_" *edited-application-id* "_taydennyspyynto_1.xml")))]
+        (should= {:transition {:id :final}} r)
+        (should= :message (:tag message))
+        (let [case (create-folder-by-type "ams_case" message)]
+          (should= *application-key* (property-value "ams_studypathid" case))
+          (should= "Sukunimi Etunimi Toinenetunimi" (property-value "ams_orignator" case))
+          (should= "028" (property-value "ams_applicantcountry" case))
+          (should= *application-submitted* (property-value "ams_registrationdate" case))
+          (should= "Hakemus" (property-value "ams_title" case)))
+        (let [action (create-folder-by-type "ams_action" message)]
+          (should= "Täydennyspyyntö" (property-value "ams_title" action))
+          (should= "02.02" (property-value "ams_processtaskid" action)))
+        (let [documents (by-tag :createDocument (:content message))]
+          (should= 1 (count documents))
+          (let [doc (first documents)
+                decoder (Base64/getDecoder)]
+            (should= "fi" (property-value "ams_language" doc))
+            (should= "Täydennyspyyntö" (property-value "ams_documenttype" doc))
+            (should= "taydennyspyynto_1.html" (->> (:content doc)
+                                                   (by-tag :contentStream)
+                                                   first
+                                                   :content
+                                                   (by-tag :filename)
+                                                   first
+                                                   :content
+                                                   first))
+            (should-contain "<p>Hello world!</p>" (->> (:content doc)
+                                                       (by-tag :contentStream)
+                                                       first
+                                                       :content
+                                                       (by-tag :stream)
+                                                       first
+                                                       :content
+                                                       first
+                                                       (.decode decoder)
+                                                       (String.))))))))
 
   (it "should send submit message to ASHA SFTP server"
     (let [r       (tutkintojen-tunnustaminen-submit-job-step
@@ -429,4 +506,4 @@
               {:form-by-id-cache form-by-id-cache-mock
                :koodisto-cache koodisto-cache-mock}))
     (should= nil
-             (get-file (str *application-key* "_" *in-wrong-form-application-id* ".xml")))))
+             (get-file (str *in-wrong-form-application-key* "_" *in-wrong-form-application-id* ".xml")))))
