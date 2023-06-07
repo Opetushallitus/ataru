@@ -35,6 +35,7 @@
     [ataru.applications.question-util :as question-util]
     [cheshire.core :as json]
     [clojure.set :as set]
+    [clojure.string :as str]
     [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
   (:import
     java.io.ByteArrayInputStream
@@ -42,6 +43,21 @@
     java.util.Base64
     [javax.crypto Cipher]
     [javax.crypto.spec GCMParameterSpec SecretKeySpec]))
+
+(defn- add-possible-corrected-code [[key value]]
+  (let [code-mappings {"TT" "TE",
+                       "TY" "KT",
+                       "KA" "KS"}
+        existing-code (second (re-matches #"arvosana-(.*)_group." key))]
+    (if-let [corrected-code (get code-mappings existing-code)]
+      {key value,
+       (str/replace key existing-code corrected-code) (str/replace value existing-code corrected-code)}
+      {key value})))
+
+; Some current Ataru arvosana mappings do not conform to correct Opintopolku code values.
+; Let's add duplicate key-value items with correct codes to the response for now.
+(defn- add-correct-valintalaskenta-arvosana-codes [application]
+  (update application :keyValues #(apply merge (map add-possible-corrected-code %))))
 
 (defn- extract-koodisto-fields [field-descriptor-list]
   (reduce
@@ -657,10 +673,11 @@
                                  distinct
                                  seq)
             enriched-applications (as-> applications as
-                                        (map (partial add-asiointikieli henkilot) as)
-                                        (if with-harkinnanvaraisuus-tieto
-                                          (enrich-with-toinen-aste-data tarjonta-service form-by-haku-oid-str-cache as)
-                                          as))]
+                                    (map (partial add-asiointikieli henkilot) as)
+                                    (map add-correct-valintalaskenta-arvosana-codes as)
+                                    (if with-harkinnanvaraisuus-tieto
+                                      (enrich-with-toinen-aste-data tarjonta-service form-by-haku-oid-str-cache as)
+                                      as))]
         {:yksiloimattomat yksiloimattomat
          :applications    enriched-applications})
       {:unauthorized nil}))
