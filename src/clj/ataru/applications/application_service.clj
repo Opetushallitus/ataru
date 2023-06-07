@@ -48,10 +48,10 @@
   (let [code-mappings {"TT" "TE",
                        "TY" "KT",
                        "KA" "KS"}
-        current-code (second (re-matches #"arvosana-(.*)_group." key))]
-    (if-let [correct-code (get code-mappings current-code)]
+        existing-code (second (re-matches #"arvosana-(.*)_group." key))]
+    (if-let [corrected-code (get code-mappings existing-code)]
       {key value,
-       (str/replace key current-code correct-code) (str/replace value current-code correct-code)}
+       (str/replace key existing-code corrected-code) (str/replace value existing-code corrected-code)}
       {key value})))
 
 ; Some current Ataru arvosana mappings do not conform to correct Opintopolku code values.
