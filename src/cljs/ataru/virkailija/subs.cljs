@@ -17,6 +17,6 @@
     (get-in db [:snackbar-message])))
 
 (re-frame/reg-sub
-  :toast-message
+  :toast-messages
   (fn [db]
-    (get-in db [:toast-message])))
+    (get-in db [:toast-messages])))

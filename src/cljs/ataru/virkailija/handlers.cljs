@@ -59,19 +59,17 @@
     (assoc db :snackbar-message message)))
 
 (reg-event-db
-  :toast-message
+  :add-toast-message
   (fn [db [_ message]]
-    (update db :toast-message (fn [current-messages]
-                                (if (empty? current-messages)
-                                  [{:message message
-                                    :id 1}]
-                                  (let [highest-toast-id (apply max (map :id current-messages))]
-                                    (conj current-messages {:message message
-                                                            :id (inc highest-toast-id)})))))))
+    (update db :toast-messages (fn [current-messages]
+                                 (if (empty? current-messages)
+                                   [{:message message
+                                     :id 1}]
+                                   (let [highest-toast-id (apply max (map :id current-messages))]
+                                     (conj current-messages {:message message
+                                                             :id (inc highest-toast-id)})))))))
 
 (reg-event-db
   :delete-toast-message
   (fn [db [_ id]]
-    (if (= (count (:toast-message db)) 1)
-      (dissoc db :toast-message)
-      (update db :toast-message (fn [toast-messages] (filter #(not= (:id %) id) toast-messages))))))
+    (update db :toast-messages (fn [toast-messages] (filter #(not= (:id %) id) toast-messages)))))

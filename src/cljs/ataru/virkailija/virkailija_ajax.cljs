@@ -3,27 +3,13 @@
             [cljs.core.match :refer-macros [match]]
             [ataru.cljs-util :as util]
             [ataru.virkailija.temporal :as temporal]
-            [ajax.core :refer [GET POST PUT DELETE PATCH] :as ajax]))
+            [ajax.core :refer [GET POST PUT DELETE PATCH] :as ajax]
+            [clojure.string :as string]))
 
 
 (defn dispatch-toast-error-msg
-  [method response]
-  (let [response-error-msg (-> response :response :error)
-        error-type (if (and (= 400 (:status response))
-                            (not-empty response-error-msg))
-                     :user-feedback-error
-                     :server-error)
-        message (case error-type
-                  :user-feedback-error response-error-msg
-                  :server-error (str "Virhe "
-                                     (case method
-                                       :get "haettaessa."
-                                       :post "tallennettaessa."
-                                       :put "tallennettaessa."
-                                       :patch "tallennettaessa."
-                                       :delete "poistettaessa.") "-" (:status response)))]
-    (dispatch [:toast-message message])
-    response))
+  [method response path]
+  (dispatch [:add-toast-message (str "Virhe kutsussa " (string/upper-case (name method)) " " path ": " response)]))
 
 
 (defn dispatch-flasher-error-msg
@@ -67,7 +53,7 @@
         error-handler (fn [response]
                         (when (not= (:failure response) :aborted)
                           (dispatch [:remove-request-handle id])
-                          (dispatch-toast-error-msg method response)
+                          (dispatch-toast-error-msg method response path)
                           (when-let [error-handler (:error-handler override-args)]
                             (error-handler response))))
         update-cache  (fn [response]

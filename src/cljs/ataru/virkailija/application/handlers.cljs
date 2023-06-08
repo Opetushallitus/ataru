@@ -19,8 +19,7 @@
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [ataru.virkailija.temporal :as temporal]
             [ataru.tarjonta.haku :as haku]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]
-            [re-frame.core :as re-frame]))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -259,8 +258,8 @@
                          :skip-flasher?       true
                          :handler-or-dispatch :application/handle-fetch-applications-response
                          :override-args {:error-handler (fn [response]
-                                                          (re-frame/dispatch [:toast-message (str "Fetch applications failed: " (:response response))])
-                                                          (re-frame/dispatch [:application/mark-fetch-applications-error]))}
+                                                          (dispatch [:add-toast-message (str "Hakemusten hakeminen epäonnistui, status: " (:status response))])
+                                                          (dispatch [:application/mark-fetch-applications-error]))}
                          :handler-args        {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
                                                fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?}}}
         {:db (assoc-in db [:application :fetching-applications?] false)}))))
@@ -808,10 +807,8 @@
             :skip-parse-times?   true
             :cache-ttl           (* 1000 60 5)
             :override-args       {:error-handler (fn [response]
-                                                   (re-frame/dispatch [:toast-message (str "Refreshing haut/hakukohteet failed: " (:status response))])
-                                                   (re-frame/dispatch [:mark-refresh-haut-and-hakukohteet-error])
-
-                                                   )}}}))
+                                                   (dispatch [:add-toast-message (str "Haun ja hakukohteiden hakeminen epäonnistui, status: " (:status response))])
+                                                   (dispatch [:mark-refresh-haut-and-hakukohteet-error]))}}}))
 
 (reg-event-fx
   :application/navigate

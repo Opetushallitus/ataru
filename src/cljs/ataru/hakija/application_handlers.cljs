@@ -949,7 +949,7 @@
     (remove-repeatable-field-value db field-descriptor question-group-idx data-idx)))
 
 (defn default-error-handler [db [_ response]]
-  (dispatch [:toast-message "failure from default error handler... " (:status response)])
+  (dispatch [:add-toast-message "Taustapalvelukutsu epäonnistui: " response])
   (response->error-message db response))
 
 (reg-event-db

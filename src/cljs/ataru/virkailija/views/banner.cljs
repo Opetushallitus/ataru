@@ -217,12 +217,16 @@
 
 (defn- toast [message id]
   [:div.toaster__content
-   [:div.toaster__close {:on-click #(dispatch [:delete-toast-message id])} "X"]
-   [:div.toaster__content-paragraph message]]
-  )
+   [:i.material-icons-outlined.toaster-notification
+    {:title @(subscribe [:editor/virkailija-translation :archived])}
+    "report"]
+   [:div.toaster__content-paragraph message]
+   [:div.toaster__close {:on-click #(dispatch [:delete-toast-message id])} [:i.material-icons-outlined.toaster-close
+                                                                            {:title @(subscribe [:editor/virkailija-translation :archived])}
+                                                                            "close"]]])
 
 (defn toaster []
-  (let [toast-messages (not-empty @(subscribe [:toast-message]))
+  (let [toast-messages (not-empty @(subscribe [:toast-messages]))
         to-show (take 5 (sort (fn [a b] (> (:id a) (:id b))) toast-messages))]
     (when (not-empty to-show)
       [:div.toaster
