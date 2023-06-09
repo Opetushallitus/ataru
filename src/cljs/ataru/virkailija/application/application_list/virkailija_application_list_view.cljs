@@ -233,7 +233,8 @@
         review-settings         (subscribe [:state-query [:application :review-settings :config]])
         filtered-hakukohde      (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
         attachment-states       (application-attachment-states application)
-        form-attachment-states  (:form attachment-states)]
+        form-attachment-states  (:form attachment-states)
+        haku-name               (subscribe [:application/haku-name (:haku application)])]
     [:div.application-handling__list-row
      {:on-click #(select-application (:key application) @filtered-hakukohde false)
       :class    (string/join " " [(when selected?
@@ -256,6 +257,8 @@
         [:span.application-handling__hakukohde-selection-cell])
       (when (:vastaanotto-state @review-settings true)
         [:span.application-handling__hakukohde-selection-cell])]
+     [:div.application-handling__list-row-haku-info
+      [:span.application-handling__list-row--haku-name @haku-name]]
      [applications-hakukohde-rows @review-settings application @filtered-hakukohde attachment-states select-application]]))
 
 (defn application-list-contents [applications select-application]
