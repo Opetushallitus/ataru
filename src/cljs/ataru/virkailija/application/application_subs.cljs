@@ -91,6 +91,11 @@
     (get db :haut)))
 
 (re-frame/reg-sub
+  :application/fetching-haut-and-hakukohteet-errored?
+  (fn [db _]
+    (get db :fetching-haut-and-hakukohteet-errored false)))
+
+(re-frame/reg-sub
   :application/fetching-haut
   (fn [db _]
     (get db :fetching-haut)))
@@ -781,7 +786,8 @@
 (re-frame/reg-sub
   :application/fetching-applications?
   (fn [db _]
-    (get-in db [:application :fetching-applications?])))
+    (and (get-in db [:application :fetching-applications?])
+         (not (get-in db [:application :fetching-applications-errored?])))))
 
 (re-frame/reg-sub
   :application/user-allowed-fetching?

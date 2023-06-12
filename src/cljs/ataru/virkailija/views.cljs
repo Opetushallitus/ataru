@@ -1,6 +1,6 @@
 (ns ataru.virkailija.views
     (:require [re-frame.core :as re-frame]
-              [ataru.virkailija.views.banner :refer [snackbar top-banner]]
+              [ataru.virkailija.views.banner :refer [snackbar toaster top-banner]]
               [ataru.virkailija.application.view :refer [application]]
               [ataru.virkailija.application.view.virkailija-application-version-history :refer [application-version-changes]]
               [ataru.virkailija.application.attachments.virkailija-attachment-view :as attachments]
@@ -57,6 +57,7 @@
           (when @template-editor-visible?
             [email-template-editor])]
          [top-banner]
+         [toaster]
          (when @load-spinner-running?
            [loading-spinner])
          (if @attachment-skimming-mode?

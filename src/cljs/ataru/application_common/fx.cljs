@@ -1,7 +1,6 @@
 (ns ataru.application-common.fx
   (:require [ajax.core :as ajax]
             [re-frame.core :as re-frame]
-            [reagent.core :as reagent]
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]

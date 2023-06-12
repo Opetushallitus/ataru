@@ -210,7 +210,8 @@
 
 (defn all-haut-list [haut-subscribe-type]
   (let [haut      @(subscribe [haut-subscribe-type])
-        fetching? (pos? @(subscribe [:application/fetching-haut]))]
+        fetching? (and (pos? @(subscribe [:application/fetching-haut]))
+                       (not @(subscribe [:application/fetching-haut-and-hakukohteet-errored?])))]
     (if fetching?
       [loading-indicator]
       [:div

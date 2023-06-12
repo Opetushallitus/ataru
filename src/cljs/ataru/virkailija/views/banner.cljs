@@ -215,6 +215,24 @@
          [:div.snackbar__content-status status]
          [:div.snackbar__content-paragraph message]])]))
 
+(defn- toast [message id]
+  [:div.toaster__content
+   [:i.material-icons-outlined.toaster-notification
+    {:title @(subscribe [:editor/virkailija-translation :archived])}
+    "report"]
+   [:div.toaster__content-paragraph message]
+   [:div.toaster__close {:on-click #(dispatch [:delete-toast-message id])} [:i.material-icons-outlined.toaster-close
+                                                                            {:title @(subscribe [:editor/virkailija-translation :archived])}
+                                                                            "close"]]])
+
+(defn toaster []
+  (let [toast-messages (not-empty @(subscribe [:toast-messages]))
+        to-show (take 5 (sort (fn [a b] (> (:id a) (:id b))) toast-messages))]
+    (when (not-empty to-show)
+      [:div.toaster
+       [:div.toaster__wrapper
+        (map #(toast (:message %) (:id %)) to-show)]])))
+
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]
     [:div
