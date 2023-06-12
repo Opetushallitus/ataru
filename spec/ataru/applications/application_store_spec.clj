@@ -51,6 +51,22 @@
 
 (def hakukohde-oid "1.2.246.562.29.11111111110")
 
+(describe "new attachments -field"
+          (tags :unit)
+
+          (it "should add field :attachments to application"
+              (let [expected (filter #(= "c58df586-fdb9-4ee1-b4c4-030d4cfe9f81_1" (:key %)) fixtures/applications)]
+                (with-redefs [store/exec-db (fn [ds-key query-fn params]
+                                              (should= :db ds-key)
+                                              (should= "yesql-siirto-applications" (-> query-fn .meta :name))
+                                              (should= {:hakukohde_oid "1" :application_keys ["" "2"]} params)
+                                              expected)]
+
+                  (should= {"A__1" "attachment1", "A__2" "attachment2"}
+                           (-> (store/siirto-applications "1" ["2"])
+                               first
+                               :attachments))))))
+
 (describe "setting person oid to application"
           (tags :unit)
 
