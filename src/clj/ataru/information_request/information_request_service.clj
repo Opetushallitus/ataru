@@ -27,9 +27,9 @@
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
-
 (defn- initial-state [connection information-request guardian?]
-  (let [secret           (app-store/add-new-secret-to-application-in-tx
+  (let [add-update-link? (:add-update-link information-request)
+        secret           (app-store/add-new-secret-to-application-in-tx
                           connection
                           (:application-key information-request))
         application      (app-store/get-latest-application-by-key-in-tx
@@ -47,8 +47,8 @@
         service-url      (get-in config [:public-config :applicant :service_url])
         application-url  (str service-url "/hakemus?modify=" secret)
         body             (selmer/render-file "templates/information-request-template.html"
-                                             (merge {:message         (->safe-html (:message information-request))}
-                                                    (if guardian?
+                                             (merge {:message (->safe-html (:message information-request))}
+                                                    (if (or guardian? (not add-update-link?))
                                                       {}
                                                       {:application-url application-url})
                                                     translations))
@@ -94,11 +94,13 @@
          (-> information-request :message u/not-blank?)
          (-> information-request :application-key u/not-blank?)
          (-> information-request :message-type u/not-blank?)]}
-  (let [information-request (information-request-store/add-information-request
+    (let [add-update-link (:add-update-link information-request)
+          information-request (information-request-store/add-information-request
                              information-request
                              (-> session :identity :oid)
-                             connection)]
-    (start-email-job job-runner connection information-request)
+                             connection)
+          information-request-with-add-update-link (assoc information-request :add-update-link add-update-link)]
+    (start-email-job job-runner connection information-request-with-add-update-link)
     (audit-log/log (:audit-logger job-runner)
                    {:new       information-request
                     :operation audit-log/operation-new

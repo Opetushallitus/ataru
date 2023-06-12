@@ -259,6 +259,11 @@
     (get-in db [:application :ensisijaisesti?-checkbox] false)))
 
 (re-frame/reg-sub
+  :application/send-update-link?
+  (fn [db]
+    (get-in db [:application :send-update-link?-checkbox] false)))
+
+(re-frame/reg-sub
   :application/show-rajaa-hakukohteella?
   (fn [db]
     (= :selected-hakukohderyhma (application-list-selected-by db))))
@@ -317,9 +322,22 @@
     (-> db :application :mass-information-request :subject u/not-blank?)
     (-> db :application :mass-information-request :message u/not-blank?)))
 
+(defn- single-information-request-button-enabled?
+  [db]
+  (and
+    (-> db :application :single-information-request :subject u/not-blank?)
+    (-> db :application :single-information-request :message u/not-blank?))
+  )
+
+
 (re-frame/reg-sub
   :application/mass-information-request-button-enabled?
   mass-information-request-button-enabled?)
+
+(re-frame/reg-sub
+  :application/single-information-request-button-enabled?
+  single-information-request-button-enabled?)
+
 
 (re-frame/reg-sub
   :application/mass-information-request-form-status
@@ -332,7 +350,27 @@
           (get-in db [:application :mass-information-request :form-status]))))
 
 (re-frame/reg-sub
+:application/single-information-request-form-status
+(fn [db]
+  (cond (get-in db [:application :fetching-applications?])
+        :loading-applications
+        (not (single-information-request-button-enabled? db))
+        :disabled
+        :else
+        (get-in db [:application :single-information-request :form-status]))))
+
+
+(re-frame/reg-sub
   :application/mass-information-request-only-guardian-enabled?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/selected-haku-oid])
+     (re-frame/subscribe [:application/haut])])
+  (fn [[haku-oid haut] _]
+    (if-let [haku (get-in haut [haku-oid])]
+      (string/starts-with? (:kohdejoukko-uri haku) "haunkohdejoukko_11")
+      false)))
+(re-frame/reg-sub
+  :application/single-information-request-only-guardian-enabled?
   (fn [_ _]
     [(re-frame/subscribe [:application/selected-haku-oid])
      (re-frame/subscribe [:application/haut])])
@@ -345,6 +383,10 @@
   :application/mass-information-request-popup-visible?
   (fn [db]
     (get-in db [:application :mass-information-request :visible?])))
+(re-frame/reg-sub
+  :application/single-information-request-popup-visible?
+  (fn [db]
+    (get-in db [:application :single-information-request :visible?])))
 
 (defn- haku-completely-processed?
   [haku]
