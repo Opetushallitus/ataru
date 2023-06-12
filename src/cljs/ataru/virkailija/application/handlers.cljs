@@ -234,31 +234,34 @@
                                            :use-original-followup (:use-original-followup vals)})
                                         question-answer-filter)]
       (if (some identity [search-term form haku hakukohde hakukohderyhma])
-        {:db   (assoc-in db [:application :fetching-applications?] true)
-         :http {:id                  :applications-list
-                :method              :post
-                :path                "/lomake-editori/api/applications/list"
-                :params              (merge {:sort                     (get-in db [:application :sort] {:order-by "applicant-name"
-                                                                                                        :order    "asc"})
-                                             :attachment-review-states attachment-review-states
-                                             :option-answers           option-answers
-                                             :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
-                                                                        :processing-states-to-include (get-in db [:application :processing-state-filter])
-                                                                        :filters                      (get-in db [:application :filters])
-                                                                        :school-filter                (get-in db [:application :school-filter])
-                                                                        :classes-of-school            (get-in db [:application :classes-of-school])}}
-                                            search-term
-                                            form
-                                            haku
-                                            hakukohde
-                                            hakukohderyhma
-                                            (when (get-in db [:application :ensisijaisesti?])
-                                              {:ensisijaisesti true}))
-                :skip-parse-times?   true
-                :skip-flasher?       true
-                :handler-or-dispatch :application/handle-fetch-applications-response
-                :handler-args        {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
-                                      fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?}}}
+        {:db            (assoc-in db [:application :fetching-applications?] true)
+         :http          {:id                  :applications-list
+                         :method              :post
+                         :path                "/lomake-editori/api/applications/list"
+                         :params              (merge {:sort                     (get-in db [:application :sort] {:order-by "applicant-name"
+                                                                                                                 :order    "asc"})
+                                                      :attachment-review-states attachment-review-states
+                                                      :option-answers           option-answers
+                                                      :states-and-filters       {:attachment-states-to-include (get-in db [:application :attachment-state-filter])
+                                                                                 :processing-states-to-include (get-in db [:application :processing-state-filter])
+                                                                                 :filters                      (get-in db [:application :filters])
+                                                                                 :school-filter                (get-in db [:application :school-filter])
+                                                                                 :classes-of-school            (get-in db [:application :classes-of-school])}}
+                                                     search-term
+                                                     form
+                                                     haku
+                                                     hakukohde
+                                                     hakukohderyhma
+                                                     (when (get-in db [:application :ensisijaisesti?])
+                                                       {:ensisijaisesti true}))
+                         :skip-parse-times?   true
+                         :skip-flasher?       true
+                         :handler-or-dispatch :application/handle-fetch-applications-response
+                         :override-args {:error-handler (fn [response]
+                                                          (dispatch [:add-toast-message (str "Hakemusten hakeminen epäonnistui, status: " (:status response))])
+                                                          (dispatch [:application/mark-fetch-applications-error]))}
+                         :handler-args        {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?
+                                               fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?}}}
         {:db (assoc-in db [:application :fetching-applications?] false)}))))
 
 (reg-event-fx
@@ -420,7 +423,8 @@
                                (assoc-in [:application :attachment-state-counts] (get-in initial-db/default-db [:application :attachment-state-counts]))
                                (update-in [:application :sort] dissoc :offset)
                                (assoc-in [:application :fetching-applications?] true)
-                               (assoc-in [:application :user-allowed-fetching?] true))
+                               (assoc-in [:application :user-allowed-fetching?] true)
+                               (assoc-in [:application :fetching-applications-errored?] false))
                  :dispatch [:application/refresh-haut-and-hakukohteet haku-oid hakukohde-oid fetch-paattyneet-haut? [[:application/fetch-applications
                                                                                                {:fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications? true}]
                                                                                               [:application/fetch-form-contents]]]}
@@ -673,6 +677,14 @@
        :dispatch-n dispatches})))
 
 (reg-event-db
+  :application/mark-fetch-applications-error
+  (fn [db _]
+    (-> db
+        (assoc-in [:application :user-allowed-fetching?] false)
+        (assoc-in [:application :fetching-applications-errored?] true))))
+
+
+(reg-event-db
   :application/handle-fetch-application-error
   (fn [db _]
     (assoc-in db [:application :loading?] false)))
@@ -692,6 +704,11 @@
               :handler-or-dispatch :application/handle-fetch-application
               :override-args       {:error-handler #(dispatch [:application/handle-fetch-application-error])}
               :skip-parse-times?   true}})))
+
+(reg-event-db
+  :mark-refresh-haut-and-hakukohteet-error
+  (fn [db _]
+    (assoc db :fetching-haut-and-hakukohteet-errored true)))
 
 (reg-event-db
   :application/start-autosave
@@ -775,7 +792,8 @@
   (fn [{:keys [db]} [_ haku-oid hakukohde-oid fetch-paattyneet-haut? dispatch-n-after]]
     {:db   (-> db
                (update :fetching-haut inc)
-               (update :fetching-hakukohteet inc))
+               (update :fetching-hakukohteet inc)
+               (assoc :fetching-haut-and-hakukohteet-errored false))
      :http {:method              :get
             :path                (cond (some? haku-oid)
                                        (str "/lomake-editori/api/haku?haku-oid=" haku-oid)
@@ -787,7 +805,10 @@
             :handler-or-dispatch :application/handle-refresh-haut-and-hakukohteet
             :handler-args        {:dispatch-n-after dispatch-n-after}
             :skip-parse-times?   true
-            :cache-ttl           (* 1000 60 5)}}))
+            :cache-ttl           (* 1000 60 5)
+            :override-args       {:error-handler (fn [response]
+                                                   (dispatch [:add-toast-message (str "Haun ja hakukohteiden hakeminen epäonnistui, status: " (:status response))])
+                                                   (dispatch [:mark-refresh-haut-and-hakukohteet-error]))}}}))
 
 (reg-event-fx
   :application/navigate
