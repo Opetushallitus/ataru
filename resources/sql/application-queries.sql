@@ -847,7 +847,7 @@ WHERE a.person_oid IS NOT NULL AND
         ELSE a.key > :offset
       END
 ORDER BY a.key
-LIMIT 1000;
+LIMIT 5000;
 
 --name: yesql-get-applications-by-created-time
 SELECT
