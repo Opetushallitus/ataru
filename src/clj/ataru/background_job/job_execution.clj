@@ -1,16 +1,15 @@
 (ns ataru.background-job.job-execution
   (:require
-    [taoensso.timbre :as log]
-    [schema.core :as s]
+    [ataru.background-job.email-job :as email-job]
+    [ataru.background-job.job-store :as job-store]
+    [ataru.config.core :refer [config]]
     [clj-time.core :as time]
     [clojure.core.match :refer [match]]
     [clojure.string :as str]
+    [schema.core :as s]
     [selmer.parser :as selmer]
-    [ataru.background-job.job-store :as job-store]
-    [ataru.background-job.email-job :as email-job]
-    [ataru.config.core :refer [config]])
-  (:import
-    (java.util.concurrent Executors TimeUnit)))
+    [taoensso.timbre :as log])
+   (:import (java.util.concurrent Executors TimeUnit)))
 
 (def max-retries 100)
 
@@ -70,20 +69,21 @@
 
 (defn- final-error-iteration [step state retry-count msg & job]
   (log/error "Background job failed after maximum retries, sending email to administrators")
-  (let [from        "no-reply@opintopolku.fi"
-        recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
-        subject     "Tausta-ajo päättyi virheeseen"
-        body        (selmer/render-file "templates/email_background_job_failed.html"
-                                        {:job job
-                                         :error msg})]
-    (email-job/send-email from recipients subject body)
-    {:step            step
-     :state           state
-     :final           true
-     :retry-count     retry-count
-     :next-activation nil
-     :transition      :fail
-     :caused-by-error msg}))
+  (when (-> config :public-config :send-job-failure-alert-emails)
+    (let [from        "no-reply@opintopolku.fi"
+          recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
+          subject     "Tausta-ajo päättyi virheeseen"
+          body        (selmer/render-file "templates/email_background_job_failed.html"
+                                          {:job job
+                                           :error msg})]
+      (email-job/send-email from recipients subject body)
+      {:step            step
+       :state           state
+       :final           true
+       :retry-count     retry-count
+       :next-activation nil
+       :transition      :fail
+       :caused-by-error msg})))
 
 (defn- retry-error-iteration [step state retry-count msg]
   {:step            step

@@ -44,6 +44,7 @@
                    :attachment-file-max-size-bytes      10485760
                    :attachment-file-part-max-size-bytes 5242880
                    :job-failure-alert-recipients        "testi@example.org"
+                   :send-job-failure-alert-emails        true
                    :features {:schema-validation true}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
