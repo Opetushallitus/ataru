@@ -9,7 +9,8 @@
 
 (defn dispatch-toast-error-msg
   [method response path]
-  (dispatch [:add-toast-message (str "Virhe kutsussa " (string/upper-case (name method)) " " path ": " response)]))
+  (when (contains? #{302 401 403 500 502} (:status response))
+    (dispatch [:add-toast-message (str "Virhe kutsussa " (string/upper-case (name method)) " " path ": " (:status response) ", " (:response response))])))
 
 
 (defn dispatch-flasher-error-msg
