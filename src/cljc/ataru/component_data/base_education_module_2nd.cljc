@@ -62,10 +62,10 @@
 (defn- base-education-language-question
   [metadata id]
   (merge (component/dropdown metadata)
-    {:label (:study-language base-education-2nd-module-texts)
+    {:id id
+     :label (:study-language base-education-2nd-module-texts)
      :validators ["required"]
      :options
-     :id id
      [{:label (:language-finnish base-education-2nd-module-texts) :value "0"}
       {:label (:language-swedish base-education-2nd-module-texts) :value "1"}
       {:label (:language-saame base-education-2nd-module-texts) :value "2"}
@@ -151,9 +151,9 @@
 (defn- suoritusvuosi-question
   [metadata id]
   (merge (component/text-field metadata)
-  {:validators ["numeric" "required"]
+  {:id id
+   :validators ["numeric" "required"]
    :label (:year-of-graduation-question base-education-2nd-module-texts)
-   :id id
    :params {:size "S"
             :max-value "2022"
             :numeric true
