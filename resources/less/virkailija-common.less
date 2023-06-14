@@ -52,16 +52,13 @@ body {
 .toaster__wrapper {
   position: sticky;
   width: 20%;
+  min-width: 400px;
   float: right;
   margin: 10px 40px 20% 30px;
   z-index: 110;
   cursor: pointer;
   animation-name: snackbar-appear;
   animation-duration: 1s;
-}
-
-.toaster__wrapper {
-  margin: 20px
 }
 
 .toaster__content {
@@ -78,6 +75,7 @@ body {
   font-weight: bold;
   line-height: 1.2em;
   margin: 8px 8px;
+  word-break: break-word;
 }
 
 .toaster__close {
