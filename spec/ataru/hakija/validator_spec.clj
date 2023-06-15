@@ -68,14 +68,17 @@
                                                  :belongs-to-hakukohteet ["1.2.246.562.20.352373851710"]})
 
 (def per-hakukohde-specific-dropdown {:id "ce1864c0-ce3f-4c1d-8405-5c4ydff7ca2c"
-                                      :label {:fi "Mikä on vointisi?"
-                                              :sv ""}
-                                      :options [{:label {:fi "Hyvä"
-                                                         :sv ""}
+                                      :label {:fi "Mikä on vointisi?"}
+                                      :options [{:label {:fi "Hyvä"}
                                                  :value "Hyvä"}
-                                                {:label {:fi "Huono"
-                                                         :sv ""}
-                                                 :value "Huono"}]
+                                                {:label {:fi "Huono"}
+                                                 :value "Huono"
+                                                 :followups [{:id "ce1864c0-ce3f-4c1d-8405-5c4ydff7dff2"
+                                                              :label {:fi "Mikä mättää?"}
+                                                              :fieldType "textField"
+                                                              :fieldClass "formField"
+                                                              :params {}
+                                                              :validators ["required"]}]}]
                                       :fieldType "dropdown"
                                       :validators ["required"]
                                       :fieldClass "formField"
@@ -83,12 +86,17 @@
                                       :belongs-to-hakukohderyhma ["1.2.246.562.20.352373851710"]})
 
 (def per-hakukohde-specific-dropdown-answer {:key "ce1864c0-ce3f-4c1d-8405-5c4ydff7ca2c_1.2.246.562.20.352373851710",
-                      :label {:fi "Mikä on vointisi?"
-                              :sv ""}
-                      :value "Hyvä"
+                      :label {:fi "Mikä on vointisi?"}
+                      :value "Huono"
                       :duplikoitu-kysymys-hakukohde-oid "1.2.246.562.20.352373851710"
                       :original-question "ce1864c0-ce3f-4c1d-8405-5c4ydff7ca2c"
                       :fieldType "dropdown"})
+(def per-hakukohde-specific-followup-answer {:key "ce1864c0-ce3f-4c1d-8405-5c4ydff7dff2_1.2.246.562.20.352373851710",
+                                             :label {:fi "Mikä mättää?"}
+                                             :value "Pikkuvarvas osui lipaston jalkaan"
+                                             :duplikoitu-followup-hakukohde-oid "1.2.246.562.20.352373851710"
+                                             :original-followup "ce1864c0-ce3f-4c1d-8405-5c4ydff7dff2"
+                                             :fieldType "textField"})
 
 (def dropdown-answer {:key "ce1864c0-ce3f-4c1d-8405-5c0adff7ca2b",
                       :label {:fi "Miksi masennuit?"
@@ -454,6 +462,11 @@
                                                       #{}
                                                       true "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
 
+  (it "fails validation when validating required per-hakukohde answers without hakukohde"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :duplikoitu-kysymys-hakukohde-oid "MISSING_HAKUKOHDE"))
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
   (it "fails validation when validating required per-hakukohde answers with missing value"
       (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                       (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :value nil))
@@ -463,4 +476,30 @@
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                           (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer)
                                                           (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "fails validation when validating required per-hakukohde answer followup with missing value"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer (assoc per-hakukohde-specific-followup-answer :value nil))
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "fails validation when validating required per-hakukohde answer followup with missing hakukohde"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer (assoc per-hakukohde-specific-followup-answer :duplikoitu-followup-hakukohde-oid "MISSING_HAKUKOHDE"))
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "fails validation when validating required per-hakukohde answer followup with missing parent"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer per-hakukohde-specific-followup-answer)
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+  (it "fails validation when validating required per-hakukohde answer followup with existing parent but different parent option value"
+      (should-not (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                          (update a :answers conj hakukohde-answer (assoc per-hakukohde-specific-dropdown-answer :value "Hyvä") per-hakukohde-specific-followup-answer)
+                                                          (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
+
+
+  (it "passes validation when validating required per-hakukohde followup"
+      (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
+                                                      (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer per-hakukohde-specific-followup-answer)
+                                                      (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
           )
