@@ -1,8 +1,7 @@
 (ns ataru.background-job.job-execution-spec
   (:require
    [clj-time.core :as time]
-   [clojure.string :as str]
-   [speclj.core :refer [tags describe it should= should]]
+   [speclj.core :refer [tags describe it should= should-contain]]
    [ataru.background-job.email-job :as email-job]
    [ataru.background-job.job-execution :as job-exec]))
 
@@ -12,11 +11,11 @@
 ;; mocked email sending with parameter check
 (defn send-email-assert-error [_ recipients _ body]
   (should= recipients ["testi@example.org"])
-  (should (str/includes? body "INSTANT FATAL ISSUE")))
+  (should-contain "&quot;type&quot;:&quot;java.lang.Error&quot;,&quot;message&quot;:&quot;INSTANT FATAL ISSUE&quot;" body))
 
 (defn send-email-assert-max-retry [_ recipients _ body]
   (should= recipients ["testi@example.org"])
-  (should (str/includes? body "Retry limit exceeded")))
+  (should-contain "Retry limit exceeded for step :throwing in job id 3 type always-exception-throwing-job" body))
 
 (def
   job1
@@ -26,7 +25,7 @@
               true
               false))
 
-          (initial [state context]
+          (initial [state _]
             {:transition {:id    :to-next
                           :step  :fake-remote-call}
              :updated-state (assoc state :initialized true)})
@@ -68,7 +67,7 @@
 
 (def
   fatally-failing-job
-  (letfn [(fatally-flawed-step [state context]
+  (letfn [(fatally-flawed-step [_ _]
             (throw (Error. "INSTANT FATAL ISSUE")))]
 
     {:steps {:initial fatally-flawed-step}
@@ -76,10 +75,10 @@
 
 (def
   always-exception-throwing-job
-  (letfn [(initial [state context]
+  (letfn [(initial [_ _]
             {:transition {:id  :to-next
                           :step  :throwing}})
-            (throwing-step [state context]
+            (throwing-step [_ _]
                            (throw (Exception. "This exception is normal on test-run! This should happen, so don't be alarmed by it when you see it on test-runs.")))]
 
     {:steps {:initial initial
@@ -117,21 +116,27 @@
              result-iterations (exec-all-iterations runner job)]
          (should= expected-job1-iterations
                   result-iterations))))
+
  (it "exec-job-step immediately produces final transition with error description"
      (with-redefs [email-job/send-email send-email-assert-error]
      (let [runner           {:job-definitions job-definitions}
            job              {:job-type "fatally-failing-job"
                              :job-id 2
                              :iteration default-start-iteration}
-           result-iterations (exec-all-iterations runner job)]
-       (should= [{:step :initial,
+           result-iterations (exec-all-iterations runner job)
+           first-iteration (first result-iterations)
+           caused-by-error (:caused-by-error first-iteration)]
+       (should= 1 (count result-iterations))
+       (should= {:step :initial,
                   :state {},
                   :final true,
                   :retry-count 0,
                   :next-activation nil,
-                  :transition :fail,
-                  :caused-by-error "Error occurred while executing step :initial: java.lang.Error: INSTANT FATAL ISSUE"}]
-                result-iterations))))
+                  :transition :fail}
+                (dissoc first-iteration :caused-by-error))
+       (should-contain "\"type\":\"java.lang.Error\",\"message\":\"INSTANT FATAL ISSUE\"" caused-by-error)
+       (should-contain "\"trace\":" caused-by-error))))
+
  (it "exec-job-step retries the maximum amount when an ordinary exception is thrown from the same step"
      (with-redefs [email-job/send-email send-email-assert-max-retry]
      (let [runner          {:job-definitions job-definitions}
@@ -146,5 +151,5 @@
                  :retry-count 101,
                  :next-activation nil,
                  :transition :fail,
-                 :caused-by-error "Retry limit exceeded for step :throwing in job always-exception-throwing-job"}
+                 :caused-by-error "Retry limit exceeded for step :throwing in job id 3 type always-exception-throwing-job"}
                 (select-keys last-iteration [:final :retry-count :next-activation :transition :caused-by-error]))))))
