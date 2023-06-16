@@ -15,8 +15,10 @@
 
 (reg-event-db
   :application/set-single-information-request-message
-  (fn [db [_]]
-    (assoc-in db [:application :single-information-request :form-status] :enabled)))
+  (fn [db [_ message]]
+    (cond-> (assoc-in db [:application :single-information-request :message] message)
+            (not= :enabled (-> db :application :single-information-request :form-status))
+            (assoc-in [:application :single-information-request :form-status] :enabled))))
 
 (reg-event-db
   :application/set-send-update-link
