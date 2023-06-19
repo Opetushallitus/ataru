@@ -1,18 +1,19 @@
 (ns ataru.background-job.job-execution
   (:require
-    [taoensso.timbre :as log]
-    [schema.core :as s]
+    [ataru.background-job.email-job :as email-job]
+    [ataru.background-job.job-store :as job-store]
+    [ataru.config.core :refer [config]]
     [clj-time.core :as time]
     [clojure.core.match :refer [match]]
     [clojure.string :as str]
+    [schema.core :as s]
     [selmer.parser :as selmer]
-    [ataru.background-job.job-store :as job-store]
-    [ataru.background-job.email-job :as email-job]
-    [ataru.config.core :refer [config]])
-  (:import
-    (java.util.concurrent Executors TimeUnit)))
+    [taoensso.timbre :as log]
+    [cheshire.core :as json])
+   (:import (java.util.concurrent Executors TimeUnit)))
 
-(def max-retries 100)
+;; TODO this is just so it's easier to test the failure mails, bump back to 100 before merge
+(def max-retries 1)
 
 ;; Iterations resulting in running or attempting to run steps
 ;; are so central, that we've specified them with schema
@@ -70,20 +71,21 @@
 
 (defn- final-error-iteration [step state retry-count msg & job]
   (log/error "Background job failed after maximum retries, sending email to administrators")
-  (let [from        "no-reply@opintopolku.fi"
-        recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
-        subject     "Tausta-ajo päättyi virheeseen"
-        body        (selmer/render-file "templates/email_background_job_failed.html"
-                                        {:job job
-                                         :error msg})]
-    (email-job/send-email from recipients subject body)
-    {:step            step
-     :state           state
-     :final           true
-     :retry-count     retry-count
-     :next-activation nil
-     :transition      :fail
-     :caused-by-error msg}))
+  (when (-> config :public-config :send-job-failure-alert-emails)
+    (let [from        "no-reply@opintopolku.fi"
+          recipients  (str/split (-> config :public-config :job-failure-alert-recipients) #";")
+          subject     "Tausta-ajo päättyi virheeseen"
+          body        (selmer/render-file "templates/email_background_job_failed.html"
+                                          {:job job
+                                           :error msg})]
+      (email-job/send-email from recipients subject body)
+      {:step            step
+       :state           state
+       :final           true
+       :retry-count     retry-count
+       :next-activation nil
+       :transition      :fail
+       :caused-by-error msg})))
 
 (defn- retry-error-iteration [step state retry-count msg]
   {:step            step
@@ -94,15 +96,16 @@
    :transition      :error-retry
    :caused-by-error msg})
 
-(defn- handle-error [iteration throwable]
-  (let [msg (str "Error occurred while executing step " (:step iteration) ": ")]
-    (log/error msg)
-    (log/error throwable)
+(defn- handle-error [job-id iteration throwable]
+  (let [prefix (str "Error occurred in job id " job-id " while executing step " (:step iteration) ": ")
+        trace-json (json/generate-string (Throwable->map throwable))
+        error-msg (str prefix trace-json)]
+    (log/error error-msg)
     (if (instance? Exception throwable) ;; Exceptions are retried, Errors cause job stop
-      (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) (str msg throwable))
-      (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) (str msg throwable)))))
+      (retry-error-iteration (:step iteration) (:state iteration) (inc (:retry-count iteration)) error-msg)
+      (final-error-iteration (:step iteration) (:state iteration) (:retry-count iteration) error-msg))))
 
-(defn- exec-step [iteration step-fn runner]
+(defn- exec-step [job-id iteration step-fn runner]
   (log/debug "Executing step:" (:step iteration))
   (try
     (let [state                (:state iteration)
@@ -126,12 +129,12 @@
        :state           (or (:updated-state step-result) state)
        :caused-by-error nil})
     (catch Throwable t
-      (handle-error iteration t))))
+      (handle-error job-id iteration t))))
 
 (defn- maybe-exec-step
   "Attempt to exec the next iteration's step if the function exists in job definition and
    if we haven't exceeded retry-limit"
-  [runner iteration job-definition]
+  [job-id runner iteration job-definition]
   (let [step-fn (get (:steps job-definition) (:step iteration))]
     (cond
       (nil? step-fn)
@@ -140,7 +143,9 @@
                              0
                              (str "Could not find step "
                                   (:step iteration)
-                                  " from job definition for "
+                                  " from job definition for job id "
+                                  job-id
+                                  " type "
                                   (:type job-definition))
                              (:type job-definition))
       (>= (:retry-count iteration) max-retries)
@@ -149,7 +154,9 @@
                              (inc (:retry-count iteration))
                              (str "Retry limit exceeded for step "
                                   (:step iteration)
-                                  " in job "
+                                  " in job id "
+                                  job-id
+                                  " type "
                                   (:type job-definition))
                              (:type job-definition))
 
@@ -157,11 +164,11 @@
       (final-error-iteration (:step iteration)
                              (:state iteration)
                              0
-                             (str "Job stopped")
+                             (str "Job " job-id " stopped")
                              )
 
       :else
-      (exec-step iteration step-fn runner))))
+      (exec-step job-id iteration step-fn runner))))
 
 (s/defn ^:always-validate exec-job-step :- ResultIteration
   [runner :- Runner
@@ -169,11 +176,12 @@
    :-
    JobWithStoredIteration]
   (let [job-definitions (:job-definitions runner)
-        job-definition  (get job-definitions (:job-type job))]
-    (log/info "Executing job" (:job-id job) (:job-type job))
+        job-definition  (get job-definitions (:job-type job))
+        job-id (:job-id job)]
+    (log/info "Executing job" job-id (:job-type job))
     (if job-definition
-      (maybe-exec-step runner (:iteration job) job-definition)
-      (let [msg (str "Could not find job definition for " (:job-type job))]
+      (maybe-exec-step job-id runner (:iteration job) job-definition)
+      (let [msg (str "Could not find job definition for job id " job-id " type " (:job-type job))]
         (log/error msg)
         (final-error-iteration (-> job :iteration :step) {} 0 msg (:type job))))))
 
@@ -188,7 +196,7 @@
    When there are no more due jobs, we can take a short break and continue
    when we poll the jobs again."
   [runner]
-  (if (get-job-step-and-exec runner) (recur runner)))
+  (when (get-job-step-and-exec runner) (recur runner)))
 
 (defn- execute-due-job-steps [runner]
   (try
