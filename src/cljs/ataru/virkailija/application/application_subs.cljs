@@ -392,6 +392,10 @@
   :application/single-information-request-popup-visible?
   (fn [db]
     (get-in db [:application :single-information-request :visible?])))
+(re-frame/reg-sub
+  :application/is-single-information-link-checkbox-set?
+  (fn [db]
+    (get-in db [:application :send-update-link?-checkbox])))
 
 (defn- haku-completely-processed?
   [haku]
