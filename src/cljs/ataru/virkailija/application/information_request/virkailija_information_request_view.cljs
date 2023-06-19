@@ -7,6 +7,7 @@
         first-name           (-> application :person :preferred-name)
         last-name           (-> application :person :last-name)
         visible?           (subscribe [:application/single-information-request-popup-visible?])
+        checked?           (subscribe [:application/is-single-information-link-checkbox-set?])
         subject            (subscribe [:state-query [:application :single-information-request :subject]])
         message            (subscribe [:state-query [:application :single-information-request :message]])
         form-status        (subscribe [:application/single-information-request-form-status])]
@@ -46,6 +47,7 @@
             [:label
              [:input
               {:type      "checkbox"
+               :checked   @checked?
                :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
                                         (dispatch [:application/set-send-update-link checkedNewValue])
                                         ))
