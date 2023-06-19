@@ -12,7 +12,8 @@
     [cheshire.core :as json])
    (:import (java.util.concurrent Executors TimeUnit)))
 
-(def max-retries 100)
+;; TODO this is just so it's easier to test the failure mails, bump back to 100 before merge
+(def max-retries 1)
 
 ;; Iterations resulting in running or attempting to run steps
 ;; are so central, that we've specified them with schema
