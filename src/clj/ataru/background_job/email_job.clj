@@ -24,7 +24,9 @@
 (defn send-email-step [{:keys [from recipients subject body]} _]
   {:pre [(every? #(identity %) [from recipients subject body])]}
   (log/info "Trying to send email" subject "to" recipients "via viestintäpalvelu at address" (viestintapalvelu-address))
-  (send-email from recipients subject body)
+  ;; TODO FOR TESTING, REVERT BEFORE MERGE
+  ;; (send-email from recipients subject body)
+  (throw (Exception. (str "TESTING ERROR REPORTING, EXPECTED FAILURE SENDING TO " (apply str recipients))))
   (log/info "Successfully sent email to" recipients)
   {:transition {:id :final}})
 
