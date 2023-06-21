@@ -538,9 +538,11 @@
 
          {:subject _ :message _ :message-type message-type}
          [[:span
-           (if (= message-type "mass-information-request")
-             @(subscribe [:editor/virkailija-translation :mass-information-request-sent])
-             @(subscribe [:editor/virkailija-translation :information-request-sent]))
+           (case message-type
+             "mass-information-request" @(subscribe [:editor/virkailija-translation :mass-information-request-sent])
+             "single-information-request" @(subscribe [:editor/virkailija-translation :single-information-request-sent])
+             "information-request" @(subscribe [:editor/virkailija-translation :information-request-sent])
+             )
            " "
            (virkailija-initials-span event)]
           [:div.application-handling__event-row--message
