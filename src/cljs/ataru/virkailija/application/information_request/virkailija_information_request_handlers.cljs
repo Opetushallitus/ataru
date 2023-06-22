@@ -41,8 +41,28 @@
                                        (assoc :subject subject)
                                        (assoc :message message)
                                        (assoc :add-update-link add-update-link)
+                                       (assoc :single-message true)
                                        (dissoc :visible?))
-              :handler-or-dispatch :application/handle-submit-information-request-response}})))
+              :handler-or-dispatch :application/handle-submit-single-information-request-response}})))
+
+(reg-event-fx
+  :application/handle-submit-single-information-request-response
+  (fn [_ _]
+    {:dispatch [:application/set-single-information-request-form-state :submitted]
+
+     :dispatch-later [{:ms       3000
+                       :dispatch [:application/reset-submit-single-information-request-state]}]}))
+(reg-event-fx
+  :application/reset-submit-single-information-request-state
+  (fn [{:keys [db]} _]
+    {:dispatch-n [[:application/set-single-information-request-message ""]
+                  [:application/set-single-information-request-subject ""]
+                  [:application/set-single-information-request-form-state :enabled]
+                  (when-let [current-application (-> db :application :selected-key)]
+                    [:application/fetch-application current-application])]
+     :db         (update-in db [:application :applications]
+                            (partial map #(assoc % :new-application-modifications 0)))}))
+
 
 (reg-event-db
   :application/set-single-information-request-popup-visibility

@@ -1469,6 +1469,9 @@
    :information-request-sent                                 {:fi "Täydennyspyyntö lähetetty"
                                                               :sv "Begäran om komplettering har skickats"
                                                               :en "Information request email has been sent"}
+   :single-information-request-sent                          {:fi "Viesti lähetetty"
+                                                              :sv "Meddelandet har skickats"
+                                                              :en "Message has been sent"}
    :mass-information-request-sent                            {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
@@ -1574,6 +1577,9 @@
    :single-information-request-send                          {:fi "Lähetä"
                                                               :sv "Skicka:"
                                                               :en "Send:"}
+   :single-information-request-message-sent                   {:fi "Viesti lisätty lähetysjonoon!"
+                                                              :sv "Meddelanden har lagts till i utskickskön!"
+                                                              :en "Message has been sent!"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}

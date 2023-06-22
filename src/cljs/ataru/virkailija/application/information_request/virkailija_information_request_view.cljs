@@ -10,7 +10,8 @@
         checked?           (subscribe [:application/is-single-information-link-checkbox-set?])
         subject            (subscribe [:state-query [:application :single-information-request :subject]])
         message            (subscribe [:state-query [:application :single-information-request :message]])
-        form-status        (subscribe [:application/single-information-request-form-status])]
+        form-status        (subscribe [:application/single-information-request-form-status])
+        button-enabled?    (subscribe [:application/single-information-request-button-enabled?])]
     (fn []
       [:span.application-handling__single-information-request-container
        [:a.application-handling__send-message-button.application-handling__button
@@ -25,20 +26,16 @@
              {:on-click #(dispatch [:application/set-single-information-request-popup-visibility false])}
              [:i.zmdi.zmdi-close]]]
             [:p @(subscribe [:editor/virkailija-translation :single-information-request-email-applicant (str last-name ", " first-name)])]
-
           [:div.application-handling__information-request-row
            [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :single-information-request-subject])]
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
-             {
-              :value     @subject
+             {:value     @subject
               :maxLength 200
-              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])
-              }]]]
+              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {
-             :value     @message
+            {:value     @message
              :on-change #(dispatch [:application/set-single-information-request-message (-> % .-target .-value)])
              }]
            ]
@@ -54,14 +51,22 @@
                }]
              [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]
             ]]
-
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
              [:button.application-handling__send-information-request-button
-              {:class    "application-handling__send-information-request-button--enabled"
+              {:disabled (not @button-enabled?)
+               :class    (if @button-enabled?
+                           "application-handling__send-information-request-button--enabled"
+                           "application-handling__send-information-request-button--disabled")
                :on-click #(dispatch [:application/submit-single-information-request])}
-              @(subscribe [:editor/virkailija-translation :single-information-request-send])])]])
+              @(subscribe [:editor/virkailija-translation :single-information-request-send])]
+
+             :submitted
+             [:div.application-handling__information-request-status
+              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent]
+              @(subscribe [:editor/virkailija-translation :single-information-request-message-sent])]
+             )]])
        ]
       )))
 
