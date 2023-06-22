@@ -57,6 +57,7 @@
   (fn [{:keys [db]} _]
     {:dispatch-n [[:application/set-single-information-request-message ""]
                   [:application/set-single-information-request-subject ""]
+                  [:application/set-single-information-request-popup-visibility false]
                   [:application/set-single-information-request-form-state :enabled]
                   (when-let [current-application (-> db :application :selected-key)]
                     [:application/fetch-application current-application])]
