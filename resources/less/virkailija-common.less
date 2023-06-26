@@ -22,6 +22,7 @@ body {
   animation-name: snackbar-appear;
   animation-duration: 1s;
 }
+
 @keyframes snackbar-appear {
   from {height: 0px;}
   to {height: 50px;}
@@ -46,6 +47,51 @@ body {
   padding-bottom: 5px;
   transform: translate(-50%,-50%);
   -ms-transform: translate(-50%,-50%);
+}
+
+.toaster {
+  position: sticky;
+  top: 40px;
+  min-width: 400px;
+  max-width: 500px;
+  float: right;
+  z-index: 9110;
+}
+
+.toaster__wrapper {
+  cursor: pointer;
+}
+
+.toaster__content {
+  background-color: @sg-color-red;
+  bottom: 0px;
+  display: flex;
+  text-align: center;
+  color: white;
+  margin: 20px 20px 10px 10px;
+  padding: 10px;
+}
+
+.toaster__content-paragraph {
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1.2em;
+  margin: 8px 8px;
+  word-break: break-word;
+}
+
+.toaster__close {
+  display: flex;
+  align-items: center;
+  margin: 6px;
+  float: right;
+}
+
+i.toaster-notification {
+  display: flex;
+  align-items: center;
+  float: left;
+  top: 50%;
 }
 
 .close-details-button {

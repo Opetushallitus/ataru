@@ -949,6 +949,8 @@
     (remove-repeatable-field-value db field-descriptor question-group-idx data-idx)))
 
 (defn default-error-handler [db [_ response]]
+  (when (>= (:status response) 500)
+    (dispatch [:add-toast-message "Taustapalvelukutsu epäonnistui: "  (:status response) " " (:response response)]))
   (response->error-message db response))
 
 (reg-event-db
