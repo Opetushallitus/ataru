@@ -80,6 +80,9 @@
    :application-processed-cant-modify           {:fi "Tämä hakemus on käsitelty eikä ole enää muokattavissa"
                                                  :sv "Denna ansökan har behandlats och kan inte längre bearbetas"
                                                  :en "This application has been processed and can no longer be modified"}
+   :form-closed                                 {:fi "Hakulomake ei ole enää käytössä"
+                                                 :sv "Ansökningsblanketten är inte längre i bruk"
+                                                 :en "Application form is not in use"}
    :application-received-subject                {:fi "Opintopolku - Hakemuksesi on vastaanotettu"
                                                  :sv "Studieinfo - Din ansökan har tagits emot"
                                                  :en "Opintopolku - Your application has been received"}

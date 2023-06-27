@@ -30,6 +30,7 @@
         editing?                           @(subscribe [:application/editing?])
         virkailija?                        @(subscribe [:application/virkailija?])
         lang                               @(subscribe [:application/form-language])
+        closed?                            @(subscribe [:application/form-closed?])
         apply-dates                        (when-let [hakuaika @(subscribe [:application/haku-aika])]
                                              (if (:joustava-haku? hakuaika)
                                                (translations/get-hakija-translation :rolling-period lang)
@@ -65,6 +66,10 @@
                        [:a {:href @(subscribe [:application/language-version-link language])}
                         (get language-names language)]]])
                    languages)))])]
+     (when closed?
+       [:div.application__sub-header-container
+        [:span.application__sub-header-dates
+         (translations/get-hakija-translation :form-closed lang)]])
      (when (not-empty apply-dates)
        [:div.application__sub-header-container
         [:span.application__sub-header-dates apply-dates]])
