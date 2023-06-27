@@ -1123,6 +1123,9 @@
    :only-yhteishaku                                          {:fi "Lomake on sallittu vain yhteishauille"
                                                               :sv "SV: Lomake on sallittu vain yhteishauille"
                                                               :en "EN: Lomake on sallittu vain yhteishauille"}
+   :close-form                                               {:fi "Sulje lomake"
+                                                              :sv "Stänga blanketten"
+                                                              :en "Close form"}
    :submitted-content-search-placeholder                     {:fi "Hae kysymyksellä tai liitepyynnöllä..."
                                                               :sv "Sök enligt fråga eller begäran om bilaga..."
                                                               :en "EN: Hae kysymyksellä tai liitepyynnöllä..."}

@@ -381,6 +381,22 @@
     {:for id}
     @(subscribe [:editor/virkailija-translation :only-yhteishaku])]]))
 
+(defn- close-form-component
+  []
+  (let [id           "toggle-close-form"
+        form-closed? @(subscribe [:editor/form-closed?])
+        disabled?    @(subscribe [:editor/form-locked-or-has-haku?])]
+    [:div.editor-form__checkbox-with-label
+     [:input.editor-form__checkbox
+      {:id id
+       :checked (true? (boolean form-closed?))
+       :type "checkbox"
+       :disabled disabled?
+       :on-change #(dispatch [:editor/toggle-close-form])}]
+     [:label.editor-form__checkbox-label
+      {:for id}
+      @(subscribe [:editor/virkailija-translation :close-form])]]))
+
 (defn- properties []
   [:div.editor-form__component-wrapper
    [:div.editor-form__header-wrapper
@@ -388,7 +404,8 @@
      [:span.editor-form__component-main-header @(subscribe [:editor/virkailija-translation :properties])]]]
    [:div.editor-form__component-content-wrapper
     [:div.editor-form__module-fields
-     [allow-only-yhteishaku-component]]]
+     [allow-only-yhteishaku-component]
+     [close-form-component]]]
    (when @(subscribe [:editor/show-demo-config])
     [:div.editor-form__component-content-wrapper
      [:div.editor-form__module-fields

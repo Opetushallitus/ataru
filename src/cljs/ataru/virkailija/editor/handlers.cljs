@@ -1567,3 +1567,10 @@
     (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])
           value (not (get-in db path))]
     (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-close-form
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:closed])
+          value (not (get-in db path))]
+      (assoc-in db path value))))
