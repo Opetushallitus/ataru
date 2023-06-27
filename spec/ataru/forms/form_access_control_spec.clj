@@ -43,21 +43,21 @@
     (with-redefs [form-store/get-all-forms (fn [_] [basic-form])]
       (let [tarjonta-service     (mts/->MockTarjontaService)
             organization-service (os/->FakeOrganizationService)
-            {[form] :forms} (fac/get-forms-for-editor session tarjonta-service organization-service nil)]
+            {[form] :forms} (fac/get-forms-for-editor session tarjonta-service organization-service nil false)]
         (should= "form-access-control-test-basic-form" (:key form)))))
 
   (it "returns regular form with hakukohde that user has edit rights to"
     (with-redefs [form-store/get-all-forms (fn [_] [form-with-hakukohde])]
       (let [tarjonta-service     (mts/->MockTarjontaService)
             organization-service (os/->FakeOrganizationService)
-            {[form] :forms}      (fac/get-forms-for-editor session tarjonta-service organization-service nil)]
+            {[form] :forms}      (fac/get-forms-for-editor session tarjonta-service organization-service nil false)]
         (should= "form-access-control-test-hakukohde-form" (:key form)))))
 
   (it "does not return toisen asteen yhteishaku form with hakukohde that user has edit rights to"
     (with-redefs [form-store/get-all-forms (fn [_] [yhteishaku-form])]
       (let [tarjonta-service     (mts/->MockTarjontaService)
             organization-service (os/->FakeOrganizationService)
-            {forms :forms}       (fac/get-forms-for-editor session tarjonta-service organization-service nil)]
+            {forms :forms}       (fac/get-forms-for-editor session tarjonta-service organization-service nil false)]
         (should= 0 (count forms)))))
 
   (it "returns toisen asteen yhteishaku form to superuser"
@@ -65,9 +65,16 @@
       (let [tarjonta-service     (mts/->MockTarjontaService)
             organization-service (os/->FakeOrganizationService)
             superuser-session    (update session :identity assoc :superuser true)
-            {forms :forms}       (fac/get-forms-for-editor superuser-session tarjonta-service organization-service nil)]
-        (println superuser-session)
+            {forms :forms}       (fac/get-forms-for-editor superuser-session tarjonta-service organization-service nil false)]
         (should= 1 (count forms)))))
+
+  (it "does not return closed form"
+      (with-redefs [form-store/get-all-forms (fn [_] [(assoc-in yhteishaku-form [:properties :closed] true)])]
+        (let [tarjonta-service     (mts/->MockTarjontaService)
+              organization-service (os/->FakeOrganizationService)
+              superuser-session    (update session :identity assoc :superuser true)
+              {forms :forms}       (fac/get-forms-for-editor superuser-session tarjonta-service organization-service nil false)]
+          (should= true (empty? forms)))))
 
   (it "Should not be able to update existing form field id as a non-superuser"
       (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]

@@ -586,7 +586,7 @@
 (defn refresh-forms-for-editor []
   (http
    :get
-   "/lomake-editori/api/forms"
+   "/lomake-editori/api/forms?include-closed=true"
    (fn [db {:keys [forms]}]
      (let [forms (->> forms
                       (mapv parse-form-created-times)
