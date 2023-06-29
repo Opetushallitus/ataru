@@ -65,7 +65,8 @@
       (let [tarjonta-service     (mts/->MockTarjontaService)
             organization-service (os/->FakeOrganizationService)
             superuser-session    (update session :identity assoc :superuser true)
-            {forms :forms}       (fac/get-forms-for-editor superuser-session tarjonta-service organization-service nil false)]
+            {forms :forms}       (fac/get-forms-for-editor superuser-session
+                                                           tarjonta-service organization-service nil false)]
         (should= 1 (count forms)))))
 
   (it "does not return closed form"
@@ -73,8 +74,18 @@
         (let [tarjonta-service     (mts/->MockTarjontaService)
               organization-service (os/->FakeOrganizationService)
               superuser-session    (update session :identity assoc :superuser true)
-              {forms :forms}       (fac/get-forms-for-editor superuser-session tarjonta-service organization-service nil false)]
+              {forms :forms}       (fac/get-forms-for-editor superuser-session
+                                                             tarjonta-service organization-service nil false)]
           (should= true (empty? forms)))))
+
+  (it "returns also closed form"
+      (with-redefs [form-store/get-all-forms (fn [_] [(assoc-in yhteishaku-form [:properties :closed] true)])]
+        (let [tarjonta-service     (mts/->MockTarjontaService)
+              organization-service (os/->FakeOrganizationService)
+              superuser-session    (update session :identity assoc :superuser true)
+              {forms :forms}       (fac/get-forms-for-editor superuser-session
+                                                             tarjonta-service organization-service nil true)]
+          (should= 1 (count forms)))))
 
   (it "Should not be able to update existing form field id as a non-superuser"
       (with-redefs [form-store/fetch-by-key (fn [_] field-id-test-form)]

@@ -242,7 +242,8 @@
                      {include-closed :- s/Bool false}]
       :return {:forms [form-schema/Form]}
       (ok
-        (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service hakukohderyhma-oid include-closed)))
+        (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service
+                                                     hakukohderyhma-oid include-closed)))
 
     (api/GET "/forms/latest/:key" []
       :path-params [key :- s/Str]
