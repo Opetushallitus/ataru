@@ -19,5 +19,6 @@
                    (s/optional-key :properties)        {(s/optional-key :auto-expand-hakukohteet) s/Bool
                                                         (s/optional-key :allow-only-yhteishaut)   s/Bool
                                                         (s/optional-key :demo-validity-start)     (s/maybe s/Str)
-                                                        (s/optional-key :demo-validity-end)       (s/maybe s/Str)}
+                                                        (s/optional-key :demo-validity-end)       (s/maybe s/Str)
+                                                        (s/optional-key :closed)                  s/Bool}
                    (s/optional-key :demo-allowed)      s/Bool})

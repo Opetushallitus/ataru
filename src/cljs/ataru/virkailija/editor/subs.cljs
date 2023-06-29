@@ -372,10 +372,10 @@
 
 (re-frame/reg-sub
   :editor/form-locked-or-has-haku?
-  (fn [_ _]
-    [(re-frame/subscribe [:editor/form-locked])
+  (fn [_ [_ form-key]]
+    [(re-frame/subscribe [:editor/form-locked?])
      (re-frame/subscribe [:editor/fetching-haut?])
-     (re-frame/subscribe [:editor/form-used-in-hakus])])
+     (re-frame/subscribe [:editor/form-used-in-hakus form-key])])
   (fn form-locked-or-has-haku? [[form-locked? fetching-haut? form-used-in-hakus] _]
     (or form-locked? fetching-haut? form-used-in-hakus)))
 
