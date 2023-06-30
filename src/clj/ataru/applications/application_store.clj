@@ -1542,6 +1542,11 @@
                                                        :application_keys (cons "" application-keys)})
        (map unwrap-siirto-application)))
 
+(defn kouta-application-count-for-hakukohde [hakukohde-oid]
+  (->> (exec-db :db queries/yesql-kouta-application-count-for-hakukohde {:hakukohde_oid    hakukohde-oid})
+       (map #(:application_count %))
+       (first)))
+
 (defn remove-review-note [note-id]
   (when-not (= (exec-db :db queries/yesql-remove-review-note! {:id note-id}) 0)
     note-id))

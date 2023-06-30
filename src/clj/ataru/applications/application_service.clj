@@ -406,6 +406,7 @@
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
   (siirto-applications [this session hakukohde-oid application-keys])
+  (kouta-application-count-for-hakukohde [this session hakukohde-oid])
   (suoritusrekisteri-applications [this haku-oid hakukohde-oids person-oids modified-after offset])
   (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
@@ -703,6 +704,15 @@
                                  seq)]
         {:yksiloimattomat yksiloimattomat
          :applications    (map (partial add-henkilo henkilot) applications)})
+      {:unauthorized nil}))
+
+  (kouta-application-count-for-hakukohde
+    [_ session hakukohde-oid]
+    (if-let [application-count (aac/kouta-application-count-for-hakukohde
+                            organization-service
+                            session
+                            hakukohde-oid)]
+        {:applicationCount application-count}
       {:unauthorized nil}))
 
   (suoritusrekisteri-applications
