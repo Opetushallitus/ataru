@@ -3,8 +3,8 @@
             [ataru.db.db :as db]
             [ataru.log.audit-log :as audit-log]
             [ataru.translations.translation-util :as translations]
-            [ataru.translations.texts :refer [email-default-texts]]
             [ataru.util :as u]
+            [ataru.email.email-util :as email-util]
             [ataru.email.application-email-jobs :refer [->safe-html]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
@@ -15,12 +15,6 @@
             [clojure.string :as string]
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
-
-(defn- enrich-subject-with-application-key [prefix application-key lang]
-  (if application-key
-    (let [postfix (str "(" (get-in email-default-texts [:hakemusnumero (or lang :fi)]) ": " application-key ")")]
-      (string/join " " [prefix postfix]))
-    prefix))
 
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
@@ -52,7 +46,8 @@
                                                       {}
                                                       {:application-url application-url})
                                                     translations))
-        subject-with-application-key (enrich-subject-with-application-key (:subject information-request) (:application-key information-request) lang)]
+        subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
+                                      (:subject information-request) (:application-key information-request) lang)]
     (when (not-empty recipient-emails)
       (-> (select-keys information-request [:application-key :id])
           (merge {:from       "no-reply@opintopolku.fi"
