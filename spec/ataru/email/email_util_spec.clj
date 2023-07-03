@@ -41,4 +41,32 @@
         (should-have-invoked :render {:with [{}]})
         (should= 2 (count emails))
         (should= ["teppo.testaa@testi.fi" "tiina.testaa@testi.fi"] (:recipients (first emails)))
-        (should= ["huoltaja.testaa@testi.fi"] (:recipients (last emails)))))))
+        (should= ["huoltaja.testaa@testi.fi"] (:recipients (last emails))))))
+
+    (describe "subject length limiting"
+      (it "renders subject with full application key and full message when total is less than 255 chars"
+        (let [prefix "Vahvistusviesti: sinut on valittu haluamaasi opiskelupaikkaan, lue ohjeet paikan vastaanottoon"
+              application-key "1.2.246.562.11.00000000000000012345"
+              lang :fi
+              subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
+          (should= "Vahvistusviesti: sinut on valittu haluamaasi opiskelupaikkaan, lue ohjeet paikan vastaanottoon (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)))
+      (it "renders subject with full application key and full message when total is exactly 255 chars"
+        (let [prefix "Vahvistusviesti: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan mennessä..."
+              application-key "1.2.246.562.11.00000000000000012345"
+              lang :fi
+              subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
+          (should= "Vahvistusviesti: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan mennessä... (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)
+          (should= 255 (count subject))))
+      (it "renders subject with full application key and truncated message when total length more than 255 chars"
+        (let [prefix "Vahvistusviesti sinulle: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan mennessä... Tärkeää tietoa!"
+              application-key "1.2.246.562.11.00000000000000012345"
+              lang :fi
+              subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
+          (should= "Vahvistusviesti sinulle: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan mennessä... (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)
+          (should= 255 (count subject))))
+      (it "renders subject with full application key and no message"
+        (let [prefix ""
+              application-key "1.2.246.562.11.00000000000000012345"
+              lang :fi
+              subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
+          (should= " (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)))))
