@@ -31,7 +31,7 @@
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
-              :maxLength 200
+              :maxLength 120
               :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
