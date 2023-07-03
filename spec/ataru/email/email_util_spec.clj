@@ -62,7 +62,7 @@
               application-key "1.2.246.562.11.00000000000000012345"
               lang :fi
               subject (util/enrich-subject-with-application-key-and-limit-length prefix application-key lang)]
-          (should= "Vahvistusviesti sinulle: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan mennessä... (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)
+          (should= "Vahvistusviesti sinulle: onneksi olkoon - sinut on valittu haluamaasi opiskelupaikkaan, ohjeet paikan vastaanottoon sisältyvät viestiin - avaa viesti saadaksesi lisätietoja vastaanotosta määräaikaan men (Hakemusnumero: 1.2.246.562.11.00000000000000012345)" subject)
           (should= 255 (count subject))))
       (it "renders subject with full application key and no message"
         (let [prefix ""

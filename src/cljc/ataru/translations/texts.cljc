@@ -1555,9 +1555,9 @@
    :mass-information-request-sending-messages                {:fi "Käsitellään viestejä..."
                                                               :sv "Meddelanden behandlas..."
                                                               :en "Sending the messages"}
-   :mass-information-request-subject                         {:fi "Aihe:"
-                                                              :sv "Ämne:"
-                                                              :en "Subject:"}
+   :mass-information-request-subject                         {:fi "Aihe (max. 120 merkkiä):"
+                                                              :sv "Ämne (max. 120 tecken):"
+                                                              :en "Subject (max. 120 characters):"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}
