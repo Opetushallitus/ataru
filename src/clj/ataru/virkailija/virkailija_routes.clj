@@ -238,10 +238,12 @@
                              Return forms authorized with editor right (:form-edit).
                              If parameter hakukohderyhma-oid is supplied returns
                              only forms using that hakukohderyhma."
-      :query-params [{hakukohderyhma-oid :- s/Str nil}]
+      :query-params [{hakukohderyhma-oid :- s/Str nil}
+                     {include-closed :- s/Bool false}]
       :return {:forms [form-schema/Form]}
       (ok
-        (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service hakukohderyhma-oid)))
+        (access-controlled-form/get-forms-for-editor session tarjonta-service organization-service
+                                                     hakukohderyhma-oid include-closed)))
 
     (api/GET "/forms/latest/:key" []
       :path-params [key :- s/Str]

@@ -586,7 +586,7 @@
 (defn refresh-forms-for-editor []
   (http
    :get
-   "/lomake-editori/api/forms"
+   "/lomake-editori/api/forms?include-closed=true"
    (fn [db {:keys [forms]}]
      (let [forms (->> forms
                       (mapv parse-form-created-times)
@@ -1567,3 +1567,10 @@
     (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])
           value (not (get-in db path))]
     (assoc-in db path value))))
+
+(reg-event-db
+  :editor/toggle-close-form
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:closed])
+          value (not (get-in db path))]
+      (assoc-in db path value))))

@@ -39,6 +39,12 @@
     (get-in db [:editor :form-used-in-hakus form-key])))
 
 (re-frame/reg-sub
+  :editor/is-selected-form-used-in-hakus
+  (fn is-selected-form-used-in-hakus [db _]
+    (let [form-key (get-in db [:editor :selected-form-key])]
+      (boolean (seq (get-in db [:editor :form-used-in-hakus form-key] []))))))
+
+(re-frame/reg-sub
   :editor/form-keys
   (fn form-keys [db _]
     (get-in db [:editor :sorted-form-keys])))
@@ -371,6 +377,15 @@
     (some? (:locked form))))
 
 (re-frame/reg-sub
+  :editor/form-locked-or-has-haku?
+  (fn [_ _]
+    [(re-frame/subscribe [:editor/form-locked?])
+     (re-frame/subscribe [:editor/fetching-haut?])
+     (re-frame/subscribe [:editor/is-selected-form-used-in-hakus])])
+  (fn form-locked-or-has-haku? [[form-locked? fetching-haut? form-used-in-hakus] _]
+    (or form-locked? fetching-haut? form-used-in-hakus)))
+
+(re-frame/reg-sub
   :editor/form-contains-applications?
   (fn [_ _]
     (re-frame/subscribe [:editor/selected-form]))
@@ -616,3 +631,10 @@
     (re-frame/subscribe [:editor/form-properties]))
   (fn [form-properties]
     (get form-properties :allow-only-yhteishaut false)))
+
+(re-frame/reg-sub
+  :editor/form-closed?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :closed false)))

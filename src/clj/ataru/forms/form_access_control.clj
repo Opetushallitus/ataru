@@ -172,18 +172,28 @@
                 (form-allowed-by-haku? tarjonta-service authorized-organization-oids (:key form))))
           (form-store/get-all-forms hakukohderyhma-oid)))
 
-(defn get-forms-for-editor [session tarjonta-service organization-service hakukohderyhma-oid]
+(defn get-forms-for-editor [session tarjonta-service organization-service hakukohderyhma-oid include-closed?]
   {:forms (session-orgs/run-org-authorized
            session
            organization-service
            [:form-edit]
            (fn [] [])
            (fn [org-oids]
-             (map #(dissoc % :organization-oid)
-                  (get-forms-as-ordinary-user tarjonta-service org-oids hakukohderyhma-oid)))
+             (cond->> (get-forms-as-ordinary-user tarjonta-service org-oids hakukohderyhma-oid)
+
+                      (not include-closed?)
+                      (filter #(not (get-in % [:properties :closed] false)))
+
+                      true
+                      (map #(dissoc % :organization-oid))))
            (fn []
-             (map #(dissoc % :organization-oid)
-                  (form-store/get-all-forms hakukohderyhma-oid))))})
+             (cond->> (form-store/get-all-forms hakukohderyhma-oid)
+
+                      (not include-closed?)
+                      (filter #(not (get-in % [:properties :closed] false)))
+
+                      true
+                      (map #(dissoc % :organization-oid)))))})
 
 (defn update-form-lock [form-id operation session tarjonta-service organization-service audit-logger]
   (let [latest-version  (form-store/fetch-form form-id)

@@ -383,6 +383,12 @@
        :key  (:key latest-application)
        :code :internal-server-error}
 
+      (true? (get-in form [:properties :closed] false))
+      {:passed? false
+       :failures ["Form is closed"]
+       :key (:key latest-application)
+       :code :form-closed}
+
       (not-empty cannot-edit-attachment)
       {:passed?  false
        :failures (into {} (map #(vector % "Deadline passed in attachments")

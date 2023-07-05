@@ -322,12 +322,14 @@
   (fn [_ _]
     [(re-frame/subscribe [:application/tarjonta-hakukohteet])
      (re-frame/subscribe [:application/virkailija?])
-     (re-frame/subscribe [:application/demo?])])
-  (fn [[hakukohteet virkailija? demo?] _]
-    (or (empty? hakukohteet)
-        virkailija?
-        demo?
-        (some #(get-in % [:hakuaika :on]) hakukohteet))))
+     (re-frame/subscribe [:application/demo?])
+     (re-frame/subscribe [:application/form-closed?])])
+  (fn [[hakukohteet virkailija? demo? form-closed?] _]
+    (and (not form-closed?)
+         (or (empty? hakukohteet)
+             virkailija?
+             demo?
+             (some #(get-in % [:hakuaika :on]) hakukohteet)))))
 
 (re-frame/reg-sub
   :application/selected-language
@@ -351,6 +353,13 @@
     ;; When user lands on the page, there isn't any language set until the
     ;; form is loaded
     (or selected-language :fi)))
+
+(re-frame/reg-sub
+  :application/form-closed?
+  (fn [_ _]
+    (re-frame/subscribe [:application/form]))
+  (fn [form _]
+    (get-in form [:properties :closed] false)))
 
 (re-frame/reg-sub
   :application/selected-hakukohteet

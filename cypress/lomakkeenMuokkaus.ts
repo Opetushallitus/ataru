@@ -80,6 +80,7 @@ export const yleisetAsetukset = {
   haeDemoPaattyy: () => cy.get('[data-test-id=demo-validity-end]'),
 
   haeLinkkiDemoon: () => cy.get('[data-test-id=demo-link]'),
+  haeSuljeLomake: () => cy.get('#toggle-close-form'),
 }
 
 export const henkilotiedot = {
