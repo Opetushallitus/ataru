@@ -393,6 +393,7 @@
   (fn [component [_ & path]]
     (and
      (= (:fieldType component) "singleChoice")
+     (> (count (flatten path)) 1)
      (not
        (loop [part (butlast (rest (flatten path)))]
          (if-let [parent (get-in component part)]
