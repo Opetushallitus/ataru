@@ -16,6 +16,23 @@
               :options (map-indexed (fn [i limit]
                                         {:value (str i) :selection-limit limit}) limits)}]}))
 
+
+(def multiple-limited-selection-first-question-id "multiple-limited-selection-first-question-id")
+(def multiple-limited-selection-second-question-id "multiple-limited-selection-second-question-id")
+
+(defn form-with-multiple-limited-selections
+  [& limits]
+  (let [id (str (UUID/randomUUID))]
+    {:id      id
+     :content [{:id      multiple-limited-selection-first-question-id
+                :params  {:selection-group-id id}
+                :options (map-indexed (fn [i limit]
+                                        {:value (str i) :selection-limit limit}) limits)}
+               {:id      multiple-limited-selection-second-question-id
+                :params  {:selection-group-id id}
+                :options (map-indexed (fn [i limit]
+                                        {:value (str i) :selection-limit limit}) limits)}]}))
+
 (describe
  "selection limit"
  (tags :unit :selection-limit)
@@ -106,6 +123,69 @@
             (let [{limit-reached :limit-reached} (selection-limit/query-available-selections (:id form))]
               ; asserts that booked is still booked
               (should= [{:question-id question-id :answer-id "0"}] limit-reached))))))
+ (it "It cleans up a persisted limited selection if the relevant answer has disappeared from application"
+     (let [form (form-with-multiple-limited-selections 1)
+           id   (:id form)]
+       (with-redefs [forms/fetch-by-key (constantly form)]
+         (let [application-key (str (UUID/randomUUID))
+               selection-id (:selection-id (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id))
+               application {:key application-key
+                            :answers [{:key   multiple-limited-selection-first-question-id
+                                       :id    multiple-limited-selection-first-question-id
+                                       :value "1"}
+                                      {:key   "some-nonrelevant-id-that-matches-nothing"
+                                       :id    "some-nonrelevant-id-that-matches-nothing"
+                                       :value "99"}]}
+               edited-application {:key application-key
+                                   :answers [{:key   "some-nonrelevant-id-that-matches-nothing"
+                                              :id    "some-nonrelevant-id-that-matches-nothing"
+                                              :value "99"}]}]
+           (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id)
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 0 (count persisted-selections)))
+           (should-not-throw
+             (selection-limit/permanent-select-on-store-application application-key application selection-id form))
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 1 (count persisted-selections)))
+           (should-not-throw
+             (selection-limit/permanent-select-on-store-application application-key edited-application selection-id form))
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 0 (count persisted-selections)))))))
+ (it "It cleans up a persisted limited selection if the relevant answer has disappeared from application, two different limited selections"
+     (let [form (form-with-multiple-limited-selections 1)
+           id   (:id form)]
+       (with-redefs [forms/fetch-by-key (constantly form)]
+         (let [application-key (str (UUID/randomUUID))
+               selection-id (:selection-id (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id))
+               application {:key application-key
+                            :answers [{:key   multiple-limited-selection-first-question-id
+                                       :id    multiple-limited-selection-first-question-id
+                                       :value "1"}
+                                      {:key   multiple-limited-selection-second-question-id
+                                       :id    multiple-limited-selection-second-question-id
+                                       :value "4"}
+                                      {:key   "some-nonrelevant-id-that-matches-nothing"
+                                       :id    "some-nonrelevant-id-that-matches-nothing"
+                                       :value "99"}]}
+               edited-application {:key application-key
+                                   :answers [{:key   multiple-limited-selection-first-question-id
+                                              :id    multiple-limited-selection-first-question-id
+                                              :value "1"}
+                                             {:key   "some-nonrelevant-id-that-matches-nothing"
+                                              :id    "some-nonrelevant-id-that-matches-nothing"
+                                              :value "99"}]}]
+           ;make another initial selection
+           (selection-limit/new-selection id multiple-limited-selection-second-question-id "4" id)
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 0 (count persisted-selections)))
+           (should-not-throw
+             (selection-limit/permanent-select-on-store-application application-key application selection-id form))
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 2 (count persisted-selections)))
+           (should-not-throw
+             (selection-limit/permanent-select-on-store-application application-key edited-application selection-id form))
+           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (should= 1 (count persisted-selections)))))))
   (it "doesn't allow overbooking"
       (let [form (form-with-fields 1)
             id   (:id form)]
