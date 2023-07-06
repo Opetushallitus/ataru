@@ -17,6 +17,8 @@
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as kvt]
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-handlers]
+            [ataru.virkailija.application.information-request.virkailija-information-request-handlers]
+            [ataru.virkailija.application.information-request.virkailija-information-request-view :as single-information-request-view]
             [ataru.virkailija.application.view.virkailija-application-icons :as icons]
             [ataru.virkailija.application.view.virkailija-application-names :as names]
             [ataru.virkailija.temporal :as temporal]
@@ -29,6 +31,10 @@
             [reagent.ratom :refer-macros [reaction]]
             [re-frame.core :refer [subscribe dispatch]]
             [ataru.virkailija.application.tutu-payment.tutu-payment-view :refer [application-tutu-payment-status]]))
+
+
+
+
 
 (defn- application-contents [{:keys [form application]} hakukohteet]
   [readonly-contents/readonly-fields form application hakukohteet])
@@ -527,9 +533,11 @@
 
          {:subject _ :message _ :message-type message-type}
          [[:span
-           (if (= message-type "mass-information-request")
-             @(subscribe [:editor/virkailija-translation :mass-information-request-sent])
-             @(subscribe [:editor/virkailija-translation :information-request-sent]))
+           (case message-type
+             "mass-information-request" @(subscribe [:editor/virkailija-translation :mass-information-request-sent])
+             "single-information-request" @(subscribe [:editor/virkailija-translation :single-information-request-sent])
+             "information-request" @(subscribe [:editor/virkailija-translation :information-request-sent])
+             )
            " "
            (virkailija-initials-span event)]
           [:div.application-handling__event-row--message
@@ -803,6 +811,7 @@
      [:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
      [:div.application-handling__resend-modify-application-link-email-text @recipient]]))
 
+
 (defn- application-resend-modify-link-confirmation []
   (let [state (subscribe [:state-query [:application :modify-application-link :state]])]
     (when @state
@@ -1026,13 +1035,17 @@
                 [application-information-request])
               [application-review-inputs]
               [application-review-notes]
+
               [application-modify-link false]
               (when @superuser?
                 [application-modify-link true])
+              [single-information-request-view/application-send-single-email-to-applicant]
               [application-resend-modify-link]
               [application-resend-modify-link-confirmation]
               [application-deactivate-toggle]
-              [application-review-events]]]]))})))
+              [application-review-events]
+
+              ]]]))})))
 
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])

@@ -793,7 +793,9 @@
 (s/defschema NewInformationRequest {:subject         (s/constrained s/Str length-at-most-200)
                                     (s/optional-key :recipient-target) s/Str
                                     :message         s/Str
-                                    :application-key s/Str})
+                                    :application-key s/Str
+                                    :add-update-link s/Bool
+                                    (s/optional-key :single-message) s/Bool})
 
 (s/defschema InformationRequest {:subject         s/Str
                                  (s/optional-key :recipient-target) s/Str

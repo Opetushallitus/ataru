@@ -1201,6 +1201,10 @@
    :applicant-email                                          {:fi "Lähetä sähköposti %d hakijalle"
                                                               :sv "Send %d applicant e-mail"
                                                               :en "Send %d applicant e-mail"}
+   :single-applicant-email                                   {:fi "Viestin mukana lähetetään hakemuksen muokkauslinkki"
+                                                              :sv "Viestin mukana lähetetään hakemuksen muokkauslinkki"
+                                                              :en "Viestin mukana lähetetään hakemuksen muokkauslinkki"}
+
    :guardian-email                                           {:fi "Lähetä sähköposti huoltajille"
                                                               :sv "Send guardian e-mail"
                                                               :en "Send guardian e-mail"}
@@ -1471,6 +1475,9 @@
    :information-request-sent                                 {:fi "Täydennyspyyntö lähetetty"
                                                               :sv "Begäran om komplettering har skickats"
                                                               :en "Information request email has been sent"}
+   :single-information-request-sent                          {:fi "Viesti lähetetty"
+                                                              :sv "Meddelandet har skickats"
+                                                              :en "Message has been sent"}
    :mass-information-request-sent                            {:fi "Viesti lähetetty"
                                                               :sv "Meddelandet har skickats"
                                                               :en "Message has been sent"}
@@ -1564,6 +1571,21 @@
    :mass-information-request-subject                         {:fi "Aihe:"
                                                               :sv "Ämne:"
                                                               :en "Subject:"}
+   :single-information-request                               {:fi "Viesti"
+                                                              :sv "Meddelande"
+                                                              :en "Message"}
+   :single-information-request-subject                       {:fi "Aihe:"
+                                                              :sv "Ämne:"
+                                                              :en "Subject:"}
+   :single-information-request-email-applicant               {:fi "Olet lähettämässä sähköpostia 1 hakijalle: %s"
+                                                              :sv "Skicka e-post till 1 sökande: "
+                                                              :en "Send email to applicants:"}
+   :single-information-request-send                          {:fi "Lähetä"
+                                                              :sv "Skicka:"
+                                                              :en "Send:"}
+   :single-information-request-message-sent                   {:fi "Viesti lisätty lähetysjonoon!"
+                                                              :sv "Meddelanden har lagts till i utskickskön!"
+                                                              :en "Message has been sent!"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}
@@ -1816,6 +1838,9 @@
    :selection                                                {:fi "Valinta"
                                                               :sv "Antagning"
                                                               :en "Selection"}
+   :send-email-to-applicant                                  {:fi "Lähetä viesti hakijalle"
+                                                              :sv "Skicka e-post till sökanden"
+                                                              :en "Send email"}
    :send-confirmation-email-to-applicant                     {:fi "Lähetä vahvistussähköposti hakijalle"
                                                               :sv "Skicka e-post med bekräftelse till sökanden"
                                                               :en "Send confirmation email again"}

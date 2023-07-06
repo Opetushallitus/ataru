@@ -713,7 +713,10 @@
               [:edit-applications])
           (-> (information-request/store session
                                          (assoc information-request
-                                           :message-type "information-request")
+                                           :message-type
+                                                      (if (information-request :single-message)
+                                                        (-> "single-information-request")
+                                                        (-> "information-request")))
                                          job-runner)
               (assoc :first-name (get-in session [:identity :first-name])
                      :last-name (get-in session [:identity :last-name]))

@@ -847,7 +847,8 @@
               :params              (-> db :application :information-request
                                        (select-keys [:message :subject])
                                        (assoc :recipient-target "hakija")
-                                       (assoc :application-key application-key))
+                                       (assoc :application-key application-key)
+                                       (assoc :add-update-link true))
               :handler-or-dispatch :application/handle-submit-information-request-response}})))
 
 (reg-event-db
