@@ -3,7 +3,8 @@
 
 (defn year-for-suoritus-filter
   [now]
-  (time/year now))
+  (when now
+    (time/year now)))
 
 (defn luokkatasot-for-suoritus-filter
   []

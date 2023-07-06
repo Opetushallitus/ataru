@@ -477,6 +477,7 @@
         (let [haku       (tarjonta/get-haku tarjonta-service haku-oid)
               hakuvuodet (->> (:hakuajat haku)
                               (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                              (remove nil?)
                               distinct)
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
               linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
