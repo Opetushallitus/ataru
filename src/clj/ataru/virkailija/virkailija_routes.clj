@@ -474,6 +474,7 @@
         :path-params [henkilo-oid :- String]
         :query-params [haku-oid :- String
                        {hakemus-datetime :- s/Str nil}]
+        :summary "Returns opiskelija information from suoritusrekisteri"
         :return ataru-schema/OpiskelijaResponse
         (let [haku       (tarjonta/get-haku tarjonta-service haku-oid)
               hakemus-year (some->> hakemus-datetime
