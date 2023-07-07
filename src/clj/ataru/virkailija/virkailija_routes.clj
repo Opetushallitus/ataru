@@ -85,7 +85,8 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
-            [cuerdas.core :as str])
+            [cuerdas.core :as str]
+            [clj-time.format :as f])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -471,12 +472,16 @@
 
       (api/GET "/opiskelija/:henkilo-oid" {session :session}
         :path-params [henkilo-oid :- String]
-        :query-params [haku-oid :- String]
-        :summary "Returns opiskelija information from suoritusrekisteri"
+        :query-params [haku-oid :- String
+                       {hakemus-datetime :- s/Str nil}]
         :return ataru-schema/OpiskelijaResponse
         (let [haku       (tarjonta/get-haku tarjonta-service haku-oid)
+              hakemus-year (some->> hakemus-datetime
+                                    (f/parse (:date-time f/formatters))
+                                    (suoritus-filter/year-for-suoritus-filter))
               hakuvuodet (->> (:hakuajat haku)
                               (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
+                              (concat [hakemus-year])
                               (remove nil?)
                               distinct)
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
