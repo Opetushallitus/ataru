@@ -1,6 +1,21 @@
-(ns ataru.email.email-util)
+(ns ataru.email.email-util
+   (:require [ataru.translations.texts :refer [email-default-texts]]
+             [clojure.string :as string]))
 
 (def from-address "no-reply@opintopolku.fi")
+
+(def subject-max-length 255)
+
+(defn enrich-subject-with-application-key-and-limit-length [prefix application-key lang]
+  (if application-key
+    (let [label (get-in email-default-texts [:hakemusnumero (or lang :fi)])
+          postfix (str "(" label ": " application-key ")")
+          over-length (max 0
+                           (- (count (string/join " " [prefix postfix])) subject-max-length))
+          trimmed-prefix (subs prefix
+                               0 (- (count prefix) over-length))]
+      (string/join " " [trimmed-prefix postfix]))
+    prefix))
 
 (defn- filter-template-params
   [template-params guardian?]

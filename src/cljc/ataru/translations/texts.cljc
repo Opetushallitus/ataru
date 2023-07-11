@@ -1568,15 +1568,15 @@
    :mass-information-request-sending-messages                {:fi "Käsitellään viestejä..."
                                                               :sv "Meddelanden behandlas..."
                                                               :en "Sending the messages"}
-   :mass-information-request-subject                         {:fi "Aihe:"
-                                                              :sv "Ämne:"
-                                                              :en "Subject:"}
+   :mass-information-request-subject                         {:fi "Aihe (max. 120 merkkiä):"
+                                                              :sv "Ämne (max. 120 tecken):"
+                                                              :en "Subject (max. 120 characters):"}
    :single-information-request                               {:fi "Viesti"
                                                               :sv "Meddelande"
                                                               :en "Message"}
-   :single-information-request-subject                       {:fi "Aihe:"
-                                                              :sv "Ämne:"
-                                                              :en "Subject:"}
+   :single-information-request-subject                       {:fi "Aihe (max. 120 merkkiä):"
+                                                              :sv "Ämne (max. 120 tecken):"
+                                                              :en "Subject (max. 120 characters):"}
    :single-information-request-email-applicant               {:fi "Olet lähettämässä sähköpostia 1 hakijalle: %s"
                                                               :sv "Skicka e-post till 1 sökande: "
                                                               :en "Send email to applicants:"}

@@ -714,11 +714,11 @@
 (defn- application-information-request-subject []
   (let [subject (subscribe [:state-query [:application :information-request :subject]])]
     [:div.application-handling__information-request-row
-     [:div.application-handling__information-request-info-heading "Aihe:"]
+     [:div.application-handling__information-request-info-heading @(subscribe [:editor/virkailija-translation :mass-information-request-subject])]
      [:div.application-handling__information-request-text-input-container
       [:input.application-handling__information-request-text-input
        {:value     @subject
-        :maxLength 200
+        :maxLength 120
         :on-change (fn [event]
                      (let [subject (-> event .-target .-value)]
                        (dispatch [:application/set-information-request-subject subject])))}]]]))
