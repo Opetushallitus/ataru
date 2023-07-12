@@ -1018,7 +1018,7 @@ input.application__form-checkbox {
   border-radius: 0.15em;
   border-width: 1px;
   margin-right: 10px;
-  box-shadow: inset 0 0 0 1px @neutral-grey-600;
+  box-shadow: inset 0 0 0 1px @neutral-grey-700;
 }
 
 input.application__form-checkbox:checked {
@@ -1028,6 +1028,10 @@ input.application__form-checkbox:checked {
   accent-color: @accent-green;
   border-radius: inherit;
   box-shadow: inset 0 0 0 1px @white;
+}
+
+input.application__form-checkbox:disabled {
+  box-shadow: inset 0 0 0 1px @disabled-font-gray;
 }
 
 label.application__form-checkbox {
@@ -1048,8 +1052,9 @@ label.application__form-checkbox.checked {
   color: @white;
 }
 
-label.disabled.application__form-checkbox.checked {
+label.application__form-checkbox.disabled {
   background-color: @neutral-grey-500;
+  color: @disabled-font-gray;
 }
 
 .application__form-radio {
