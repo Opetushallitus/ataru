@@ -124,9 +124,9 @@
              [:div.plus-component [:span "+"]])])))
 
 (defn handle-root-level-components [elements]
-  (let [elements-with-arvosanat (conj elements [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
-                                      [:arvosanat-lukio arvosanat/arvosanat-lukio])]
-    (filterv (fn [x] (not (= (first x) :single-choice-button))) elements-with-arvosanat)))
+  (conj elements
+        [:arvosanat-peruskoulu arvosanat/arvosanat-peruskoulu {:data-test-id "component-toolbar-arvosanat"}]
+        [:arvosanat-lukio arvosanat/arvosanat-lukio]))
 
 (defn add-component [path root-level-add-component?]
   (let [elements (cond-> (toolbar-elements)
