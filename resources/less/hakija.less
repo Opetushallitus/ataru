@@ -1013,25 +1013,25 @@ textarea.application__form-text-area__size-large {
 input.application__form-checkbox {
   appearance: none;
   -webkit-appearance: none;
-  width: 1.15em;
-  height: 1.15em;
-  border-radius: 0.15em;
+  width: 1.10rem;
+  height: 1.10rem;
+  border-radius: 0.10rem;
   border-width: 1px;
   margin-right: 10px;
   box-shadow: inset 0 0 0 1px @neutral-grey-700;
-}
 
-input.application__form-checkbox:checked {
-  background-image: url("../../images/check-white.svg");
-  background-repeat: no-repeat;
-  background-position: center;
-  accent-color: @accent-green;
-  border-radius: inherit;
-  box-shadow: inset 0 0 0 1px @white;
-}
+  &:checked {
+    background-image: url("../../images/check-white.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+    accent-color: @accent-green;
+    border-radius: inherit;
+    box-shadow: inset 0 0 0 1px @white;
+  }
 
-input.application__form-checkbox:disabled {
-  box-shadow: inset 0 0 0 1px @disabled-font-gray;
+  &:disabled {
+    box-shadow: inset 0 0 0 1px @disabled-font-gray;
+  }
 }
 
 label.application__form-checkbox {
@@ -1045,16 +1045,16 @@ label.application__form-checkbox {
   padding: 10px 19px;
   margin-bottom: 1px;
   font-size: 14px;
-}
 
-label.application__form-checkbox.checked {
-  background-color: @primary-green-700;
-  color: @white;
-}
+  &.checked {
+    background-color: @primary-green-700;
+    color: @white;
+  }
 
-label.application__form-checkbox.disabled {
-  background-color: @neutral-grey-500;
-  color: @disabled-font-gray;
+  &.disabled {
+    background-color: @neutral-grey-500;
+    color: @disabled-font-gray;
+  }
 }
 
 .application__form-radio {
