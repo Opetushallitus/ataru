@@ -793,10 +793,17 @@
           @(subscribe [:editor/virkailija-translation :send-information-request-to-applicant])]]))))
 
 (defn- application-resend-modify-link []
-  (let [recipient         (subscribe [:state-query [:application :selected-application-and-form :application :answers :email :value]])
-        enabled?          (subscribe [:application/resend-modify-application-link-enabled?])
-        settings-visible? (subscribe [:state-query [:application :review-settings :visible?]])
-        can-edit?         (subscribe [:state-query [:application :selected-application-and-form :application :can-edit?]])]
+  (let [recipient          (subscribe [:state-query [:application :selected-application-and-form
+                                                     :application :answers :email :value]])
+        first-guardian     (subscribe [:state-query [:application :selected-application-and-form
+                                                     :application :answers :guardian-email :value]])
+        second-guardian    (subscribe [:state-query [:application :selected-application-and-form
+                                                     :application :answers :guardian-email-secondary :value]])
+        recipients         (remove string/blank? (flatten [@recipient @first-guardian @second-guardian]))
+        enabled?           (subscribe [:application/resend-modify-application-link-enabled?])
+        settings-visible?  (subscribe [:state-query [:application :review-settings :visible?]])
+        can-edit?          (subscribe [:state-query [:application :selected-application-and-form
+                                                     :application :can-edit?]])]
     [:button.application-handling__send-information-request-button.application-handling__button
      {:on-click #(dispatch [:application/resend-modify-application-link])
       :disabled (or (not @enabled?)
@@ -808,8 +815,10 @@
                      (if (or @settings-visible? (not @can-edit?))
                        " application-handling__send-information-request-button--cursor-default"
                        " application-handling__send-information-request-button--cursor-pointer"))}
-     [:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])]
-     [:div.application-handling__resend-modify-application-link-email-text @recipient]]))
+     (if (> (count recipients) 1)
+       [:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant-and-guardian])]
+       [:div @(subscribe [:editor/virkailija-translation :send-confirmation-email-to-applicant])])
+     [:div.application-handling__resend-modify-application-link-email-text (string/join ", " recipients)]]))
 
 
 (defn- application-resend-modify-link-confirmation []
