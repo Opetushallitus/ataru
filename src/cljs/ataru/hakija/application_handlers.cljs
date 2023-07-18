@@ -460,7 +460,8 @@
                                       preselected-hakukohde-oids)
         questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet-during-form-load (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
-        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids)]
+        selected-language          (:selected-language form)
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids selected-language)]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form
@@ -771,7 +772,8 @@
   [check-schema-interceptor]
   (fn [db [_ field-descriptor]]
     (let [id             (keyword (:id field-descriptor))
-          initial-answer (get (create-initial-answers [field-descriptor] []) id)
+          lang-kw        (keyword (-> db :form :selected-language))
+          initial-answer (get (create-initial-answers [field-descriptor] [] lang-kw) id)
           answer         (assoc initial-answer :original-value (:value initial-answer))
           limit-reached  (get-in db [:application :answers id :limit-reached])]
       (cond-> (assoc-in db [:application :answers id] answer)

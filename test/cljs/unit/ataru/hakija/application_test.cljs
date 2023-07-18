@@ -183,7 +183,7 @@
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
-  (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil)]
+  (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil nil)]
     (is (= {:G__2  {:value  ""
                     :values {:value ""
                              :valid false}

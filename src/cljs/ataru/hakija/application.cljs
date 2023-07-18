@@ -4,7 +4,10 @@
             [ataru.application-common.application-field-common :refer [required-validators pad sanitize-value]]
             [clojure.core.match :refer [match]]))
 
-(defn- initial-valid-status [flattened-form-fields preselected-hakukohteet]
+(def selected-language-map
+  { :fi "FI" :sv "SV" })
+
+(defn- initial-valid-status [flattened-form-fields preselected-hakukohteet selected-language]
   (->> flattened-form-fields
        (filter util/answerable?)
        (map-indexed
@@ -20,6 +23,7 @@
                              :label  label
                              :value  (mapv :value values)
                              :values values}])
+
             [{:id    "pohjakoulutusristiriita"
               :label label}]
             [:pohjakoulutusristiriita {:valid  true
@@ -27,6 +31,16 @@
                                        :value  nil
                                        :values {:value nil
                                                 :valid true}}]
+
+            ; Override default language based on selected form language
+            [{:id    "language"
+              :label label}]
+            (let [value (or (get selected-language-map selected-language) "")]
+              [:language {:valid  (not (empty? value))
+                          :label  label
+                          :value  value
+                          :values {:value value
+                                   :valid (not (empty? value))}}])
 
             [{:id         id
               :fieldClass "formField"
@@ -93,6 +107,7 @@
                              :value  [[(or value "")]]
                              :values [[{:value (or value "")
                                         :valid (or (some? value) (not required?))}]]}])
+
             [{:id         id
               :fieldClass "formField"
               :fieldType  "dropdown"
@@ -111,6 +126,7 @@
                                       :valid (or (some? value)
                                                     (or (not required?)
                                                     (boolean (:per-hakukohde field))))}}])
+
             [{:id         id
               :fieldClass "formField"
               :fieldType  "singleChoice"
@@ -159,6 +175,7 @@
                       :value  []
                       :values []
                       :label  label}]
+
             [{:id         id
               :fieldClass "formField"
               :fieldType  "attachment"
@@ -183,9 +200,9 @@
 
 (defn create-initial-answers
   "Create initial answer structure based on form structure.
-  Validity, dropdown default value and default hakukohde for now."
-  [flat-form-content preselected-hakukohde-oids]
-  (initial-valid-status flat-form-content preselected-hakukohde-oids))
+  Validity, dropdown default value and default hakukohde + language for now."
+  [flat-form-content preselected-hakukohde-oids selected-language]
+  (initial-valid-status flat-form-content preselected-hakukohde-oids selected-language))
 
 (defn contains-id? [content id]
   (contains? (set (map :id content)) id))
