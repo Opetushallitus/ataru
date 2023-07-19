@@ -1844,6 +1844,9 @@
    :send-confirmation-email-to-applicant                     {:fi "Lähetä vahvistussähköposti hakijalle"
                                                               :sv "Skicka e-post med bekräftelse till sökanden"
                                                               :en "Send confirmation email again"}
+   :send-confirmation-email-to-applicant-and-guardian        {:fi "Lähetä vahvistussähköposti hakijalle ja huoltajalle"
+                                                              :sv "Skicka e-post med bekräftelse till sökanden och vårdnadshavaren"
+                                                              :en "Send confirmation email again"}
    :send-edit-link-to-applicant                              {:fi "Vahvistussähköposti lähetetty uudelleen hakijalle"
                                                               :sv "Bearbetningslänken har skickats till sökande per e-post"
                                                               :en "Confirmation email has been sent"}
