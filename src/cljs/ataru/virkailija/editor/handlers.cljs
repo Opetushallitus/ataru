@@ -821,11 +821,14 @@
         reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
                                            (assoc-in x [:params :selection-group-id] new-form-key)
                                            x))
-        remove-belongs-to (fn [x] (if (map? x)
-                                    (-> x
-                                        (dissoc :belongs-to-hakukohderyhma)
-                                        (dissoc :belongs-to-hakukohteet))
-                                    x))]
+        remove-belongs-to (fn [x] (if (and (map? x)
+                                           (or (boolean (:belongs-to-hakukohderyhma x))
+                                               (boolean (:belongs-to-hakukohteet x))))
+                                        (-> x
+                                            (assoc-in [:params :hidden] true)
+                                            (dissoc :belongs-to-hakukohderyhma)
+                                            (dissoc :belongs-to-hakukohteet))
+                                        x))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
