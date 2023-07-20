@@ -576,22 +576,23 @@
             followups (filterv #(deref (subscribe [:application/visible? (keyword (:id %))]))
                                (:followups option))]
         [:div {:key option-id}
-         [:input.application__form-checkbox
-          (merge {:id        option-id
-                  :type      "checkbox"
-                  :checked   @checked?
-                  :value     value
-                  :on-change on-change
-                  :role      "option"}
-                 (when @cannot-edit? {:disabled true}))]
-         [:label
+         [:label.application__form-checkbox
           (merge {:for option-id}
                  (when @cannot-edit? {:class "disabled"})
+                 (when @checked? {:class "checked"})
                  (when (not @cannot-edit?)
                    {:tab-index 0
                     :role      "option"
                     :on-key-up #(when (a11y/is-enter-or-space? %)
                                   (on-change %))}))
+          [:input.application__form-checkbox
+           (merge {:id        option-id
+                   :type      "checkbox"
+                   :checked   @checked?
+                   :value     value
+                   :on-change on-change
+                   :role      "option"}
+                  (when @cannot-edit? {:disabled true}))]
           label]
          (when (and @checked?
                     (not-empty followups))
