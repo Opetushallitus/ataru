@@ -97,6 +97,23 @@
                    :params {}}],
      :params {}}]})
 
+(defn form-with-language [lang]
+  {:id 37,
+   :name {:fi "uusi lomake"},
+   :created-time "x",
+   :created-by "1.2.246.562.11.11111111111",
+   :selected-language lang,
+   :content [{:id "language",
+                          :label {:fi "kieli", :sv ""},
+                          :params {},
+                          :validators ["required"],
+                          :fieldType "dropdown",
+                          :fieldClass "formField",
+                          :koodisto-source {:uri "kieli",
+                                            :version 1,
+                                            :default-option "suomi"}
+                          :metadata metadata}]})
+
 (deftest flattens-correctly
   (let [expected [{:id         "G__1",
                    :label      {:fi "osio1", :sv "Avsnitt namn"},
@@ -183,7 +200,7 @@
     (is (= expected actual))))
 
 (deftest correct-initial-validity-for-nested-form
-  (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil)]
+  (let [initial-answers (create-initial-answers (util/flatten-form-fields (:content form1)) nil nil)]
     (is (= {:G__2  {:value  ""
                     :values {:value ""
                              :valid false}
@@ -200,6 +217,31 @@
                     :valid  true
                     :label  {:fi "ulkokenttä", :sv ""}}}
            initial-answers))))
+
+(defn check-language-and-validity [initial-answers, lang, valid]
+  (is (= {:language {:value  lang
+                     :values {:value lang :valid valid}
+                     :valid  valid
+                     :label  {:fi "kieli", :sv ""}}}
+         initial-answers)))
+
+(deftest default-language-finnish-for-finnish-form
+  (let [form (form-with-language :fi)
+        flattened-form (util/flatten-form-fields (:content form))
+        initial-answers (create-initial-answers flattened-form nil (:selected-language form))]
+    (check-language-and-validity initial-answers "FI" true)))
+
+(deftest default-language-swedish-for-swedish-form
+  (let [form (form-with-language :sv)
+        flattened-form (util/flatten-form-fields (:content form))
+        initial-answers (create-initial-answers flattened-form nil (:selected-language form))]
+    (check-language-and-validity initial-answers "SV" true)))
+
+(deftest default-language-empty-for-english-form
+  (let [form (form-with-language :en)
+        flattened-form (util/flatten-form-fields (:content form))
+        initial-answers (create-initial-answers flattened-form nil (:selected-language form))]
+    (check-language-and-validity initial-answers "" false)))
 
 (deftest answers->valid-status-gives-false-when-one-answer-is-not-valid
   (is (= {:invalid-fields '({:key :one :label {:fi "invaliidi"}})}
