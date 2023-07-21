@@ -9,12 +9,33 @@ import WaitXHR = Cypress.WaitXHR
 export const haeLomakkeenLisaysNappi = () =>
   cy.get('[data-test-id=add-form-button]:visible')
 
+export const haeLomakkeenKopiointiNappi = () =>
+  cy.get('[data-test-id=copy-form-button]:visible')
+
 export const lisaaLomake = () => {
   cy.server()
   cy.route('POST', reitit.virkailija.haeUudenLomakkeenLahettamisenOsoite()).as(
     'postForms'
   )
   haeLomakkeenLisaysNappi().click()
+  return cy.wait('@postForms').then((response) => ({
+    lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
+      response
+    ),
+    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
+      response
+    ),
+  }))
+}
+
+export const kopioiLomake = () => {
+  cy.server()
+  cy.route('POST', reitit.virkailija.haeUudenLomakkeenLahettamisenOsoite()).as(
+    'postForms'
+  )
+
+  haeLomakkeenKopiointiNappi().click()
+
   return cy.wait('@postForms').then((response) => ({
     lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
       response

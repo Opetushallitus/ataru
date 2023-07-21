@@ -49,7 +49,8 @@
         disabled?   (reaction (nil? @form-key))]
     (fn copy-form []
       [:button.editor-form__control-button
-       {:on-click (fn [event]
+       {:data-test-id "copy-form-button"
+        :on-click (fn [event]
                     (.preventDefault event)
                     (dispatch [:editor/copy-form]))
         :disabled @disabled?
