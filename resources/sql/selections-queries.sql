@@ -42,7 +42,6 @@ WHERE selection_id = :selection_id
 -- Remove existing selection
 DELETE FROM selections
 WHERE application_key = :application_key
-  AND selection_group_id = :selection_group_id
   AND question_id = :question_id;
 
 -- name: yesql-new-initial-selection!
@@ -77,3 +76,8 @@ SELECT count(*) as n
    AND application_key = :application_key
    AND question_id = :question_id
    AND answer_id = :answer_id;
+
+--name: yesql-permanent-selection-question-ids-for-application
+SELECT question_id as question_id
+FROM selections
+WHERE application_key = :application_key;

@@ -1,12 +1,11 @@
 (ns ataru.selection-limit.selection-limit-service
   (:require [ataru.forms.form-store :as forms]
             [ataru.db.db :as db]
-            [camel-snake-kebab.extras :refer [transform-keys]]
-            [camel-snake-kebab.core :refer [->snake_case ->kebab-case-keyword]]
-            [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
-            [ataru.db.db :refer [exec get-datasource]]
+            [clojure.java.jdbc :as jdbc]
             [yesql.core :refer [defqueries]]
-            [ataru.util :as util])
+            [ataru.util :as util]
+            [taoensso.timbre :as log]
+            [clojure.set :as set])
   (:import [java.util UUID]))
 
 (defqueries "sql/selections-queries.sql")
@@ -20,6 +19,9 @@
        :content
        (util/flatten-form-fields)
        (filter #(get-in % [:params :selection-group-id]))))
+
+(defn query-permanent-selections [application-key]
+  (exec-db :db yesql-permanent-selection-question-ids-for-application {:application_key application-key}))
 
 (defn query-available-selections
   ([form-key]
@@ -89,7 +91,15 @@
    (let [selection-group-fields (group-by :id (fields-in-selection-group form))
          try-to-select          (->> answers
                                      (filter #(selection-group-fields (:key %)))
-                                     (seq))]
+                                     (seq))
+         existing-selections (set (map :question_id (yesql-permanent-selection-question-ids-for-application {:application_key application-key} connection)))
+         relevant-question-ids-from-application (set (map :id try-to-select))
+         existing-not-in-answers (set/difference existing-selections relevant-question-ids-from-application)]
+     (when (not-empty existing-not-in-answers)
+         (log/info "Cleaning up existing selections for question id:s" existing-not-in-answers "for application" application-key)
+         (doseq [question-id existing-not-in-answers]
+           (yesql-remove-existing-selection! {:application_key    application-key
+                                              :question_id        question-id} connection)))
      (doseq [{:keys [key value]} try-to-select]
        (let [{:keys [params options]} (first (selection-group-fields key))
              limit              (->> options
@@ -109,7 +119,6 @@
                             first
                             :n))
            (yesql-remove-existing-selection! {:application_key    application-key
-                                              :selection_group_id selection-group-id
                                               :question_id        question-id} connection)
            (yesql-new-selection! {:application_key    application-key
                                   :question_id        question-id

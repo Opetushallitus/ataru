@@ -1,8 +1,8 @@
-(ns ataru.selection-limit.selection-limit-spec
+(ns ataru.selection-limit.selection_limit_service_spec
   (:require
-   [speclj.core :refer [describe it tags should should= should-throw should-not-throw]]
-   [ataru.forms.form-store :as forms]
-   [ataru.selection-limit.selection-limit-service :as selection-limit])
+    [speclj.core :refer [describe it tags should should= should-throw should-not-throw]]
+    [ataru.forms.form-store :as forms]
+    [ataru.selection-limit.selection-limit-service :as sl])
   (:import [java.util UUID]))
 
 (def question-id "question-id")
@@ -39,63 +39,63 @@
   (it "works with empty data (nothing stored)"
       (let [form (form-with-fields 5 0)]
         (with-redefs [forms/fetch-by-key (constantly form)]
-          (let [available (selection-limit/query-available-selections (:id form))]
+          (let [available (sl/query-available-selections (:id form))]
             (should= {:limit-reached [{:question-id question-id :answer-id "1"}]} available)))))
   (it "doesn't allow booking when limit set to zero"
       (let [form (form-with-fields 0)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
           (should-throw clojure.lang.ExceptionInfo
-            (selection-limit/new-selection id question-id "0" id)))))
+                        (sl/new-selection id question-id "0" id)))))
   (it "allows permabooking"
       (let [form (form-with-fields 1)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
           (let [application-key (str (UUID/randomUUID))
                 {selection-id  :selection-id
-                 limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
+                 limit-reached :limit-reached} (sl/new-selection id question-id "0" id)
                 application     {:answers [{:key   question-id
                                             :id    question-id
                                             :value "0"}]}]
             (should-not-throw
-              (selection-limit/permanent-select-on-store-application application-key application selection-id form))))))
+              (sl/permanent-select-on-store-application application-key application selection-id form))))))
   (it "allows permabooking swab between selections"
       (let [form (form-with-fields 1 1)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
           (let [application-key (str (UUID/randomUUID))
                 {selection-id  :selection-id
-                 limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
+                 limit-reached :limit-reached} (sl/new-selection id question-id "0" id)
                 application     {:answers [{:key   question-id
                                             :id    question-id
                                             :value "0"}]}]
             (should-not-throw
-              (selection-limit/permanent-select-on-store-application application-key application selection-id form))
+              (sl/permanent-select-on-store-application application-key application selection-id form))
             (let [{selection-id  :selection-id
-                   limit-reached :limit-reached} (selection-limit/new-selection id question-id "1" id)
+                   limit-reached :limit-reached} (sl/new-selection id question-id "1" id)
                   application     {:answers [{:key   question-id
                                               :id    question-id
                                               :value "1"}]}]
               (should-not-throw
-                (selection-limit/permanent-select-on-store-application application-key application selection-id form)))))))
+                (sl/permanent-select-on-store-application application-key application selection-id form)))))))
   (it "disallows permabooking swab to fully booked selection"
       (let [form (form-with-fields 1 0)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
           (let [application-key (str (UUID/randomUUID))
                 {selection-id  :selection-id
-                 limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
+                 limit-reached :limit-reached} (sl/new-selection id question-id "0" id)
                 application     {:answers [{:key   question-id
                                             :id    question-id
                                             :value "0"}]}]
             (should-not-throw
-              (selection-limit/permanent-select-on-store-application application-key application selection-id form))
+              (sl/permanent-select-on-store-application application-key application selection-id form))
             (let [application     {:answers [{:key   question-id
                                               :id    question-id
                                               :value "1"}]}]
               (should-throw
-                (selection-limit/permanent-select-on-store-application application-key application selection-id form))
-              (let [{limit-reached :limit-reached} (selection-limit/query-available-selections (:id form))]
+                (sl/permanent-select-on-store-application application-key application selection-id form))
+              (let [{limit-reached :limit-reached} (sl/query-available-selections (:id form))]
                 ; asserts that previously booked is still booked
                 (should= [{:question-id question-id :answer-id "0"}
                           {:question-id question-id :answer-id "1"}] limit-reached)))))))
@@ -105,10 +105,10 @@
         (with-redefs [forms/fetch-by-key (constantly form)]
           (let [application-key (str (UUID/randomUUID))
                 {selection-id  :selection-id
-                 limit-reached :limit-reached} (selection-limit/new-selection id question-id "0" id)
-                {limit-reached-outsider :limit-reached} (selection-limit/query-available-selections id)
-                {limit-after-swab :limit-reached} (selection-limit/swap-selection id selection-id question-id "0" id)
-                {limit-reached-outsider-after-swab :limit-reached} (selection-limit/query-available-selections id)
+                 limit-reached :limit-reached} (sl/new-selection id question-id "0" id)
+                {limit-reached-outsider :limit-reached} (sl/query-available-selections id)
+                {limit-after-swab :limit-reached} (sl/swap-selection id selection-id question-id "0" id)
+                {limit-reached-outsider-after-swab :limit-reached} (sl/query-available-selections id)
                 application     {:answers [{:key   question-id
                                             :id    question-id
                                             :value "0"}]}]
@@ -117,10 +117,10 @@
             (should= [{:question-id question-id :answer-id "0"}] limit-reached-outsider-after-swab)
             (should= [] limit-after-swab)
             (should-not-throw
-              (selection-limit/permanent-select-on-store-application application-key application selection-id form))
+              (sl/permanent-select-on-store-application application-key application selection-id form))
             (should-not-throw
-              (selection-limit/permanent-select-on-store-application application-key application selection-id form))
-            (let [{limit-reached :limit-reached} (selection-limit/query-available-selections (:id form))]
+              (sl/permanent-select-on-store-application application-key application selection-id form))
+            (let [{limit-reached :limit-reached} (sl/query-available-selections (:id form))]
               ; asserts that booked is still booked
               (should= [{:question-id question-id :answer-id "0"}] limit-reached))))))
  (it "It cleans up a persisted limited selection if the relevant answer has disappeared from application"
@@ -128,7 +128,7 @@
            id   (:id form)]
        (with-redefs [forms/fetch-by-key (constantly form)]
          (let [application-key (str (UUID/randomUUID))
-               selection-id (:selection-id (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id))
+               selection-id (:selection-id (sl/new-selection id multiple-limited-selection-first-question-id "1" id))
                application {:key application-key
                             :answers [{:key   multiple-limited-selection-first-question-id
                                        :id    multiple-limited-selection-first-question-id
@@ -140,23 +140,23 @@
                                    :answers [{:key   "some-nonrelevant-id-that-matches-nothing"
                                               :id    "some-nonrelevant-id-that-matches-nothing"
                                               :value "99"}]}]
-           (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id)
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+           (sl/new-selection id multiple-limited-selection-first-question-id "1" id)
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 0 (count persisted-selections)))
            (should-not-throw
-             (selection-limit/permanent-select-on-store-application application-key application selection-id form))
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (sl/permanent-select-on-store-application application-key application selection-id form))
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 1 (count persisted-selections)))
            (should-not-throw
-             (selection-limit/permanent-select-on-store-application application-key edited-application selection-id form))
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (sl/permanent-select-on-store-application application-key edited-application selection-id form))
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 0 (count persisted-selections)))))))
  (it "It cleans up a persisted limited selection if the relevant answer has disappeared from application, two different limited selections"
      (let [form (form-with-multiple-limited-selections 1)
            id   (:id form)]
        (with-redefs [forms/fetch-by-key (constantly form)]
          (let [application-key (str (UUID/randomUUID))
-               selection-id (:selection-id (selection-limit/new-selection id multiple-limited-selection-first-question-id "1" id))
+               selection-id (:selection-id (sl/new-selection id multiple-limited-selection-first-question-id "1" id))
                application {:key application-key
                             :answers [{:key   multiple-limited-selection-first-question-id
                                        :id    multiple-limited-selection-first-question-id
@@ -175,33 +175,33 @@
                                               :id    "some-nonrelevant-id-that-matches-nothing"
                                               :value "99"}]}]
            ;make another initial selection
-           (selection-limit/new-selection id multiple-limited-selection-second-question-id "4" id)
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+           (sl/new-selection id multiple-limited-selection-second-question-id "4" id)
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 0 (count persisted-selections)))
            (should-not-throw
-             (selection-limit/permanent-select-on-store-application application-key application selection-id form))
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (sl/permanent-select-on-store-application application-key application selection-id form))
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 2 (count persisted-selections)))
            (should-not-throw
-             (selection-limit/permanent-select-on-store-application application-key edited-application selection-id form))
-           (let [persisted-selections (set (map :question_id (selection-limit/query-permanent-selections application-key)))]
+             (sl/permanent-select-on-store-application application-key edited-application selection-id form))
+           (let [persisted-selections (set (map :question_id (sl/query-permanent-selections application-key)))]
              (should= 1 (count persisted-selections)))))))
   (it "doesn't allow overbooking"
       (let [form (form-with-fields 1)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
-          (let [{limit-reached :limit-reached}  (selection-limit/new-selection id question-id "0" id)
-                {limit-reached-outsider :limit-reached} (selection-limit/query-available-selections id)]
+          (let [{limit-reached :limit-reached}  (sl/new-selection id question-id "0" id)
+                {limit-reached-outsider :limit-reached} (sl/query-available-selections id)]
             (should= [] limit-reached)
             (should= [{:question-id question-id :answer-id "0"}] limit-reached-outsider)
             (should-throw clojure.lang.ExceptionInfo
-              (selection-limit/new-selection id question-id "0" id))))))
+                          (sl/new-selection id question-id "0" id))))))
   (it "unlimited selection when limit set to nil"
       (let [form (form-with-fields nil)
             id   (:id form)]
         (with-redefs [forms/fetch-by-key (constantly form)]
-          (let [limits (mapcat :limit-reached [(selection-limit/query-available-selections id)
-                                               (selection-limit/new-selection id question-id "0" id)
-                                               (selection-limit/new-selection id question-id "0" id)])]
+          (let [limits (mapcat :limit-reached [(sl/query-available-selections id)
+                                               (sl/new-selection id question-id "0" id)
+                                               (sl/new-selection id question-id "0" id)])]
             (should= [] limits))))))
 
