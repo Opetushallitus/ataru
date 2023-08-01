@@ -260,7 +260,10 @@ If everything starts, run `make stop` and now `make start` should work as expect
 
 ## Running locally (Mac OS X)
 
-In order to run locally against qa, hahtuva or untuva another cloned repo is needed: https://github.com/Opetushallitus/ataru-secrets, cloned e.g. in parallel folder with _ataru_
+In order to run locally against qa, hahtuva or untuva, another cloned repo is needed: https://github.com/Opetushallitus/ataru-secrets, cloned e.g. in parallel folder with _ataru_
+
+Before running ataru locally, you need to setup ssh tunneling connection to the corresponding bastion server.
+You can use configurations on the ataru-secrets repo to set up ssh port forwardings, see readme in dev-local-config folder: https://github.com/Opetushallitus/ataru-secrets/tree/master/dev_local_config
 
 then local run whould be launched e.q. as follows:
 
