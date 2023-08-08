@@ -821,11 +821,23 @@
         reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
                                            (assoc-in x [:params :selection-group-id] new-form-key)
                                            x))
-        remove-belongs-to (fn [x] (if (and (map? x)
-                                           (or (boolean (:belongs-to-hakukohderyhma x))
-                                               (boolean (:belongs-to-hakukohteet x))))
+        set-hidden-if-belongs-to (fn [x]
+                                     (cond
+
+                                       (and
+                                         (or (boolean (:belongs-to-hakukohderyhma x))
+                                             (boolean (:belongs-to-hakukohteet x)))
+                                         (boolean (:params x)))
+                                       (assoc-in x [:params :hidden] true)
+
+                                       (or (boolean (:belongs-to-hakukohderyhma x))
+                                           (boolean (:belongs-to-hakukohteet x)))
+                                       (assoc x :hidden true)
+
+                                       :else
+                                       x))
+        remove-belongs-to (fn [x] (if (map? x)
                                         (-> x
-                                            (assoc-in [:params :hidden] true)
                                             (dissoc :belongs-to-hakukohderyhma)
                                             (dissoc :belongs-to-hakukohteet))
                                         x))]
@@ -835,6 +847,7 @@
                                             (map (fn [component] (walk/prewalk
                                                                    #(-> %
                                                                         (reset-selection-group-id)
+                                                                        (set-hidden-if-belongs-to)
                                                                         (remove-belongs-to)) component))
                                                  content)))
                          (assoc :key new-form-key))
