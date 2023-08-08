@@ -89,9 +89,23 @@
   PersonService
 
   (create-or-find-person [_ application]
-    (person-client/create-or-find-person
-     oppijanumerorekisteri-cas-client
-     (orpe/extract-person-from-application application)))
+    (let [person (orpe/extract-person-from-application application)]
+      (if (:eiSuomalaistaHetua person)
+        (let [id (first (:identifications person))
+              match-person (person-client/get-person-by-identification
+                             oppijanumerorekisteri-cas-client id)]
+          (if
+            (and (= (:sukupuoli match-person) (:sukupuoli person))
+                 (= (:syntymaaika match-person) (:syntymaaika person)))
+            match-person
+            (let [new-person (person-client/create-or-find-person
+                               oppijanumerorekisteri-cas-client
+                               person)]
+              (person-client/add-identification-to-person (:oid new-person) id)
+              new-person)))
+        (person-client/create-or-find-person
+          oppijanumerorekisteri-cas-client
+          person))))
 
   (get-persons [_ oids] (cache/get-many-from henkilo-cache oids))
 

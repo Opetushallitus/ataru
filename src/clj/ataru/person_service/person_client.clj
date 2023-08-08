@@ -7,9 +7,7 @@
    [cheshire.core :as json]
    [clojure.core.match :refer [match]]
    [schema.core :as s]
-   [taoensso.timbre :as log])
-  (:import
-   [java.net URLEncoder]))
+   [taoensso.timbre :as log]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))
@@ -76,6 +74,37 @@
                               "status: " (:status result)
                               "response body: "
                               (:body result))))))
+
+
+(defn get-person-by-identification [cas-client identification]
+  (let [result (cas/cas-authenticated-get
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.get-person-by-identification
+                              (:yhteystietoArvo identification)
+                              (:yhteystietoTyyppi identification)))]
+    (match result
+           {:status 200 :body body}
+           (json/parse-string body true)
+
+           :else (throw-error (str "Could not find person by identification " identification ", "
+                                   "status: " (:status result)
+                                   "response body: "
+                                   (:body result))))))
+
+(defn add-identification-to-person [cas-client oid identification]
+  (let [result (cas/cas-authenticated-post
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.person-identification oid)
+                 identification)]
+    (match result
+           {:status 200 :body body}
+           (json/parse-string body true)
+
+           :else (throw-error (str "Could not add identification to person " oid ", "
+                                   "identification: " identification
+                                   "status: " (:status result)
+                                   "response body: "
+                                   (:body result))))))
 
 (defn- parse-duplicate-henkilos
   [data query-oids]
