@@ -101,7 +101,10 @@
             (let [new-person (person-client/create-or-find-person
                                oppijanumerorekisteri-cas-client
                                person)]
-              (person-client/add-identification-to-person (:oid new-person) id)
+              (person-client/add-identification-to-person
+                oppijanumerorekisteri-cas-client
+                (:oid new-person)
+                id)
               new-person)))
         (person-client/create-or-find-person
           oppijanumerorekisteri-cas-client
