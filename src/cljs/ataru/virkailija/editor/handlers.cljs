@@ -827,7 +827,8 @@
                                        (and
                                          (or (boolean (:belongs-to-hakukohderyhma x))
                                              (boolean (:belongs-to-hakukohteet x)))
-                                         (boolean (:params x)))
+                                         (or (boolean (:params x))
+                                             (= "adjacentfieldset" (:fieldType x))))
                                        (assoc-in x [:params :hidden] true)
 
                                        (or (boolean (:belongs-to-hakukohderyhma x))
