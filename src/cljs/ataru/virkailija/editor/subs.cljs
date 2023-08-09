@@ -68,6 +68,11 @@
     (util/non-blank-val (select-keys (:name form) (:languages form)) [lang :fi :sv :en])))
 
 (re-frame/reg-sub
+  :editor/form-loading?
+  (fn form-loading? [db _]
+    (get-in db [:editor :form-loading] false)))
+
+(re-frame/reg-sub
   :editor/form-created-by
   (fn [[_ key] _]
     (re-frame/subscribe [:editor/form key]))

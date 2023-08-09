@@ -1,5 +1,4 @@
 (ns ataru.virkailija.editor.view
-  (:require-macros [reagent.ratom :refer [reaction]])
   (:require [ataru.cljs-util :refer [wrap-scroll-to]]
             [ataru.util :as util]
             [clojure.string :as string]
@@ -45,8 +44,7 @@
    @(subscribe [:editor/virkailija-translation :new-form])])
 
 (defn- copy-form []
-  (let [form-key    (subscribe [:state-query [:editor :selected-form-key]])
-        disabled?   (reaction (nil? @form-key))]
+  (let [disabled? (subscribe [:editor/form-loading?])]
     (fn copy-form []
       [:button.editor-form__control-button
        {:data-test-id "copy-form-button"

@@ -685,7 +685,8 @@
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave] (create-autosave-loop new-form))
-          (update-in [:editor :forms key] set-form-lock-state))))))
+          (update-in [:editor :forms key] set-form-lock-state)
+          (assoc-in [:editor :form-loading] false))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -717,8 +718,12 @@
         {:db (cond-> db
                      (and (some? previous-form-key) (not= previous-form-key (:copy-component-form-key (get-in db [:editor :copy-component]))))
                      (update-in [:editor :forms previous-form-key] assoc :content [])
+
                      true
-                     (assoc-in [:editor :selected-form-key] form-key))}
+                     (assoc-in [:editor :selected-form-key] form-key)
+
+                     (get-in db [:editor :forms form-key :id])
+                     (assoc-in [:editor :form-loading] true))}
         {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
         {:dispatch-debounced {:timeout 500
                               :id :fetch-attachment-types
@@ -830,6 +835,7 @@
                                          (or (boolean (:params x))
                                              (= "adjacentfieldset" (:fieldType x))))
                                        (assoc-in x [:params :hidden] true)
+
 
                                        (or (boolean (:belongs-to-hakukohderyhma x))
                                            (boolean (:belongs-to-hakukohteet x)))
