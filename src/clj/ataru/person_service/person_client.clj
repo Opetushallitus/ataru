@@ -80,13 +80,14 @@
   (let [result (cas/cas-authenticated-get
                  cas-client
                  (resolve-url :oppijanumerorekisteri-service.get-person-by-identification
-                              (:yhteystietoArvo identification)
-                              (:yhteystietoTyyppi identification)))]
+                              (:identifier identification)
+                              (:idpEntityId identification)))]
     (match result
            {:status 200 :body body}
            (json/parse-string body true)
-
-           :else (throw-error (str "Could not find person by identification " identification ", "
+           {:status 404 :body body}
+           nil
+           :else (throw-error (str "Error while searching for person with identification " identification ", "
                                    "status: " (:status result)
                                    "response body: "
                                    (:body result))))))
