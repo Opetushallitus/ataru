@@ -21,7 +21,7 @@
    person     :- person-schema/HenkiloPerustieto]
   (let [result (cas/cas-authenticated-post
                 cas-client
-                (resolve-url :oppijanumerorekisteri-service.person-create) person)]
+                (resolve-url :oppijanumerorekisteri-service.person-create-or-find) person)]
     (match result
       {:status 201 :body body}
       {:status :created :oid (:oidHenkilo (json/parse-string body true))}
@@ -38,6 +38,30 @@
       (throw (new RuntimeException
                   (str "Could not create person, status: " (:status result)
                        "response body: " (:body result)))))))
+
+(s/defschema CreateResponse
+  {:status :created
+   :oid    s/Str})
+
+(s/defn ^:always-validate create-person :- CreateResponse
+  [cas-client :- s/Any
+   person     :- person-schema/HenkiloPerustieto]
+  (let [result (cas/cas-authenticated-post
+                 cas-client
+                 (resolve-url :oppijanumerorekisteri-service.person-create) person)]
+    (match result
+           {:status 201 :body body}
+           {:status :created :oid (:oidHenkilo (json/parse-string body true))}
+           {:status 400 :body body}
+           (throw (new IllegalArgumentException
+                       (str "Could not create person, status: " 400
+                            " response body: " body)))
+
+           :else
+           (throw (new RuntimeException
+                       (str "Could not create person, status: " (:status result)
+                            "response body: " (:body result)))))))
+
 
 (defn get-persons [cas-client oids]
   (log/info "Fetching" (count oids) "persons")
@@ -86,7 +110,7 @@
            {:status 200 :body body}
            (json/parse-string body true)
            {:status 404 :body body}
-           nil
+           {:status :not-found :body nil}
            :else (throw-error (str "Error while searching for person with identification " identification ", "
                                    "status: " (:status result)
                                    "response body: "
@@ -100,7 +124,6 @@
     (match result
            {:status 200 :body body}
            (json/parse-string body true)
-
            :else (throw-error (str "Could not add identification to person " oid ", "
                                    "identification: " identification
                                    "status: " (:status result)

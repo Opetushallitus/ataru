@@ -92,20 +92,23 @@
     (let [person (orpe/extract-person-from-application application)]
       (if (:eiSuomalaistaHetua person)
         (let [id (first (:identifications person))
-              match-person (person-client/get-person-by-identification
-                             oppijanumerorekisteri-cas-client id)]
+              match-response (person-client/get-person-by-identification
+                             oppijanumerorekisteri-cas-client id)
+              match-person (:body match-response)]
           (if
             (and (= (:sukupuoli match-person) (:sukupuoli person))
                  (= (:syntymaaika match-person) (:syntymaaika person)))
-            match-person
-            (let [new-person (person-client/create-or-find-person
+            {:status :found-matching :oid (:oidHenkilo match-person)}
+            (let [new-person (person-client/create-person
                                oppijanumerorekisteri-cas-client
                                person)]
-              (person-client/add-identification-to-person
-                oppijanumerorekisteri-cas-client
-                (:oid new-person)
-                id)
-              new-person)))
+              (if (= :not-found (:status match-response))
+                (do
+                  (person-client/add-identification-to-person
+                  oppijanumerorekisteri-cas-client
+                  (:oid new-person) id)
+                  {:status :created-with-email-id :oid (:oid new-person)})
+                {:status :dob-or-gender-conflict :oid (:oid new-person)}))))
         (person-client/create-or-find-person
           oppijanumerorekisteri-cas-client
           person))))
