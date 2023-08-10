@@ -51,7 +51,7 @@
                  (resolve-url :oppijanumerorekisteri-service.person-create) person)]
     (match result
            {:status 201 :body body}
-           {:status :created :oid (:oidHenkilo (json/parse-string body true))}
+           {:status :created :oid body}
            {:status 400 :body body}
            (throw (new IllegalArgumentException
                        (str "Could not create person, status: " 400
