@@ -685,7 +685,8 @@
           (fold-all)
           (assoc-in [:editor :save-snapshot] new-form)
           (assoc-in [:editor :autosave] (create-autosave-loop new-form))
-          (update-in [:editor :forms key] set-form-lock-state))))))
+          (update-in [:editor :forms key] set-form-lock-state)
+          (assoc-in [:editor :form-loading] false))))))
 
 (defn- fetch-form-content-fx
   [form-id]
@@ -717,8 +718,12 @@
         {:db (cond-> db
                      (and (some? previous-form-key) (not= previous-form-key (:copy-component-form-key (get-in db [:editor :copy-component]))))
                      (update-in [:editor :forms previous-form-key] assoc :content [])
+
                      true
-                     (assoc-in [:editor :selected-form-key] form-key))}
+                     (assoc-in [:editor :selected-form-key] form-key)
+
+                     (get-in db [:editor :forms form-key :id])
+                     (assoc-in [:editor :form-loading] true))}
         {:dispatch [:editor/refresh-form-used-in-hakus form-key]}
         {:dispatch-debounced {:timeout 500
                               :id :fetch-attachment-types
@@ -821,17 +826,35 @@
         reset-selection-group-id (fn [x] (if (get-in x [:params :selection-group-id])
                                            (assoc-in x [:params :selection-group-id] new-form-key)
                                            x))
+        set-hidden-if-belongs-to (fn [x]
+                                     (cond
+
+                                       (and
+                                         (or (boolean (:belongs-to-hakukohderyhma x))
+                                             (boolean (:belongs-to-hakukohteet x)))
+                                         (or (boolean (:params x))
+                                             (= "adjacentfieldset" (:fieldType x))))
+                                       (assoc-in x [:params :hidden] true)
+
+
+                                       (or (boolean (:belongs-to-hakukohderyhma x))
+                                           (boolean (:belongs-to-hakukohteet x)))
+                                       (assoc x :hidden true)
+
+                                       :else
+                                       x))
         remove-belongs-to (fn [x] (if (map? x)
-                                    (-> x
-                                        (dissoc :belongs-to-hakukohderyhma)
-                                        (dissoc :belongs-to-hakukohteet))
-                                    x))]
+                                        (-> x
+                                            (dissoc :belongs-to-hakukohderyhma)
+                                            (dissoc :belongs-to-hakukohteet))
+                                        x))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
                                             (map (fn [component] (walk/prewalk
                                                                    #(-> %
                                                                         (reset-selection-group-id)
+                                                                        (set-hidden-if-belongs-to)
                                                                         (remove-belongs-to)) component))
                                                  content)))
                          (assoc :key new-form-key))

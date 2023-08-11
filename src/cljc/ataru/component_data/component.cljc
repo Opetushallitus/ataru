@@ -112,6 +112,7 @@
    :fieldClass "wrapperElement"
    :label      {:fi ""}
    :fieldType  "adjacentfieldset"
+   :params     {}
    :metadata   metadata
    :children   []})
 

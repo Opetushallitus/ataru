@@ -12,6 +12,15 @@ export const tekstikentta = {
   voiLisätäUseitaValinta: () =>
     cy.get('[data-test-id=tekstikenttä-valinta-voi-lisätä-useita]'),
 
+  nakyvyysLomakkeellaValinta: () =>
+    cy.get(`button.belongs-to-hakukohteet__modal-toggle`),
+
+  nakyvyysLomakkeellaLabel: () =>
+    cy.get(`.belongs-to-hakukohteet__modal-toggle-label`),
+
+  eiNaytetaLomakkeellaValinta: () =>
+    cy.get('.hakukohde-and-hakukohderyhma-visibility-checkbox input'),
+
   lisaaTekstikentta: (formId: number) =>
     lomakkeenMuokkaus.teeJaodotaLomakkeenTallennusta(formId, () => {
       lomakkeenMuokkaus.komponentinLisays.avaaValikko()
@@ -26,5 +35,12 @@ export const tekstikentta = {
 
   valitseKenttäänVainNumeroita: () => {
     return tekstikentta.kenttäänVainNumeroitaValinta().click()
+  },
+
+  naytaTekstiKentta: () => {
+    return tekstikentta
+      .nakyvyysLomakkeellaValinta()
+      .click()
+      .then(() => tekstikentta.eiNaytetaLomakkeellaValinta().click())
   },
 }
