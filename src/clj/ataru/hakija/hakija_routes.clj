@@ -24,6 +24,7 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.cookies :as cook]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -34,7 +35,10 @@
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
-            [string-normalizer.filename-normalizer-middleware :as normalizer])
+            [string-normalizer.filename-normalizer-middleware :as normalizer]
+            [ataru.util.http-util :as http]
+            [clojure.data.xml :as xml]
+            )
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -139,6 +143,34 @@
 
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
+
+(defn hakija-auth-routes [this]
+  (api/context "/auth" []
+    :tags ["hakija-auth-api"]
+    (cook/wrap-cookies
+      (api/GET "/login" []
+        :query-params [{ticket :- s/Str nil}
+                       {target :- s/Str "none"}]
+        (log/info "login with ticket" ticket ". Redirect-to" target)
+        (let [
+              rs (->
+                   (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))
+                   (:body))
+              xml (xml/parse-str rs)
+              attributes (-> xml
+                             :content
+                             (first)
+                             :content
+                             (last)
+                             :content)]
+          (log/info "another" rs ", parsed" (xml/parse-str rs) ", attrivbs" (set (map #(first (:content %)) attributes)))
+          (assoc (response/ok {:success true
+                               :result (into {} (map (fn [element] [(:tag element) (:content element)]) attributes))}) :cookies {:oppija-session "fake-session-12345"})
+          ))
+      )
+
+    )
+  )
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
@@ -409,10 +441,11 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               (when (is-dev-env?) james-routes)
                               (api/routes
-                               (api/context "/hakemus" []
+                                (api/context "/hakemus" []
                                  (api/middleware [session-client/wrap-session-client-headers]
                                   test-routes
-                                  (api-routes this)
+                                   (hakija-auth-routes this)
+                                   (api-routes this)
                                   (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
                                     :path-params [haku-oid :- s/Str]
                                     :query-params [lang :- s/Str]
@@ -436,7 +469,11 @@
                                       (render-application lang))
                                     (api/GET "/" []
                                       :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))))
+                                      (render-application lang))
+                                    ;(api/POST "/login" [] todo, logout here
+                                    ;  :query-params [{lang :- s/Str nil}]
+                                    ;  (render-application lang))
+                                    ))
                                (route/not-found "<h1>Page not found</h1>"))))
                             (clj-access-logging/wrap-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
