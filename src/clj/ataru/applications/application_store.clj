@@ -1036,6 +1036,12 @@
 (defn- get-urheilijan-lisakysymykset [answers-by-key keys]
   (into {} (map (fn [field] {field (-> answers-by-key (get (-> keys field keyword)) :value to-single-value)}) urheilija-fields-with-single-key)))
 
+(defn- get-guardian-name
+  [answers secondary?]
+  (let [firstname-keyword (if secondary? :guardian-firstname-secondary :guardian-firstname)
+        lastname-keyword (if secondary? :guardian-lastname-secondary :guardian-lastname)]
+    (clojure.string/trim (str (-> answers firstname-keyword :value first) " " (-> answers lastname-keyword :value first)))))
+
 (defn- unwrap-hakurekisteri-application-toinenaste
   [questions urheilija-amm-hakukohdes haun-hakukohteet {:keys [key hakukohde created_time submitted person_oid lang email content attachment_reviews]}]
 
@@ -1058,16 +1064,18 @@
                                                                                                (some #(= oid %) urheilija-amm-hakukohdes))
                                                                                       (= "0" interested-in-sports-amm?))})
                               hakukohde)
-             first-huoltaja (when (or (-> answers :guardin-name :value)
+             first-huoltaja (when (or (-> answers :guardian-firstname :value)
+                                      (-> answers :guardian-lastname :value)
                                       (-> answers :guardian-email :value)
                                       (-> answers :guardian-phone :value))
-                              {:nimi         (-> answers :guardian-name :value first)
+                              {:nimi         (get-guardian-name answers false)
                                :matkapuhelin (-> answers :guardian-phone :value first)
                                :email        (-> answers :guardian-email :value first)})
-             second-huoltaja (when (or (-> answers :guardian-name-secondary :value)
+             second-huoltaja (when (or (-> answers :guardian-firstname-secondary :value)
+                                       (-> answers :guardian-lastname-secondary :value)
                                        (-> answers :guardian-email-secondary :value)
                                        (-> answers :guardian-phone-secondary :value))
-                               {:nimi         (-> answers :guardian-name-secondary :value first)
+                               {:nimi         (get-guardian-name answers true)
                                 :matkapuhelin (-> answers :guardian-phone-secondary :value first)
                                 :email        (-> answers :guardian-email-secondary :value first)})
              huoltajat (->> []
