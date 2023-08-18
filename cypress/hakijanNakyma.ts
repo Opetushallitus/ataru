@@ -176,7 +176,8 @@ export const henkilotiedot = {
 }
 
 export const huoltajantiedot = {
-  huoltajanNimi: () => cy.get('[id$=guardian-name-0]'),
+  huoltajanEtunimi: () => cy.get('[id$=guardian-firstname-0]'),
+  huoltajanSukunimi: () => cy.get('[id$=guardian-lastname-0]'),
   huoltajanPuhelin: () => cy.get('[id$=guardian-phone-0]'),
   huoltajanSahkoposti: () => cy.get('[id$=guardian-email-0]'),
 }
