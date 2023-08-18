@@ -275,12 +275,8 @@
                  (huoltajan-sukunimi metadata suffix)])))
 
 (defn huoltajan-yhteystiedot-rivi [metadata secondary]
-  (let [translation-key (if-not secondary
-                          :guardian-contact-minor
-                          :guardian-contact-minor-secondary)
-        suffix (when secondary "-secondary")]
+  (let [suffix (when secondary "-secondary")]
     (assoc (adjacent-fieldset metadata)
-      ;:label (get texts/translation-mapping translation-key)
       :children [(huoltajan-puhelin metadata suffix)
                  (huoltajan-email metadata suffix)])))
 
