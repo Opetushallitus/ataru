@@ -243,13 +243,13 @@
 (defn huoltajan-etunimi [metadata idx]
   (assoc (text-field metadata)
     :id (str "guardian-firstname" idx)
-    :label (:guardian-name texts/translation-mapping)
+    :label (:guardian-firstname texts/translation-mapping)
     :validators []))
 
 (defn huoltajan-sukunimi [metadata idx]
   (assoc (text-field metadata)
     :id (str "guardian-lastname" idx)
-    :label (:guardian-name texts/translation-mapping)
+    :label (:guardian-lastname texts/translation-mapping)
     :validators []))
 
 (defn huoltajan-puhelin [metadata suffix]
