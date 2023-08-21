@@ -572,8 +572,7 @@
    :kiinnostunutUrheilijanAmmatillisestaKoulutuksesta (s/maybe s/Bool)})
 
 (s/defschema GuardianContactInfo
-              {:etunimi(s/maybe s/Str)
-               :sukunimi(s/maybe s/Str)
+              {:nimi(s/maybe s/Str)
                :matkapuhelin (s/maybe s/Str)
                :email (s/maybe s/Str)})
 
