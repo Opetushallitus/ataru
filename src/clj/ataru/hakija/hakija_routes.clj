@@ -38,6 +38,7 @@
             [string-normalizer.filename-normalizer-middleware :as normalizer]
             [ataru.util.http-util :as http]
             [clojure.data.xml :as xml]
+            [ataru.cas-oppija.cas-oppija-session-store :as oss]
             )
   (:import [java.util UUID]))
 
@@ -144,33 +145,49 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
+;todo, only get interesting fields here, and potentially save them to more recognizable keys for UI usage
+(defn parse-oppija-attributes [validation-response]
+  (let [xml (xml/parse-str validation-response)
+        attributes (-> xml
+                       :content
+                       (first)
+                       :content
+                       (last)
+                       :content)]
+    (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))))
+
+(defn generate-new-random-key [] (str (UUID/randomUUID)))
+
 (defn hakija-auth-routes [this]
-  (api/context "/auth" []
-    :tags ["hakija-auth-api"]
-    (cook/wrap-cookies
-      (api/GET "/login" []
+  (cook/wrap-cookies
+    (api/context "/auth" []
+      :tags ["hakija-auth-api"]
+      (api/GET "/login" [:as request]
         :query-params [{ticket :- s/Str nil}
                        {target :- s/Str "none"}]
         (log/info "login with ticket" ticket ". Redirect-to" target)
-        (let [
-              rs (->
-                   (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))
-                   (:body))
-              xml (xml/parse-str rs)
-              attributes (-> xml
-                             :content
-                             (first)
-                             :content
-                             (last)
-                             :content)]
-          (log/info "another" rs ", parsed" (xml/parse-str rs) ", attrivbs" (set (map #(first (:content %)) attributes)))
-          (assoc (response/ok {:success true
-                               :result (into {} (map (fn [element] [(:tag element) (:content element)]) attributes))}) :cookies {:oppija-session "fake-session-12345"})
-          ))
-      )
-
-    )
-  )
+        (if (= nil ticket)
+          (response/found
+            "https://testiopintopolku.fi/cas-oppija/login?locale=fi&valtuudet=false&service=http://localhost:8351/hakemus/auth/login?target=http://localhost:8351/hakemus/haku/1.2.246.562.29.00000000000000032285?lang=fi")
+          (let [;todo verify that serviceValidate actually returns a successful authentication for the provided ticket - the current implementation below is happy path poc only.
+                rs (->
+                     (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))
+                     (:body))
+                parsed-attributes (parse-oppija-attributes rs)
+                new-session-key (generate-new-random-key)]
+            (log/info "Cas-oppija-response" rs ", parsed" (xml/parse-str rs) ", attributes" parsed-attributes)
+            (oss/persist-session! new-session-key ticket parsed-attributes)
+            (assoc (response/ok {:success true
+                                 :result parsed-attributes}) :cookies {:oppija-session new-session-key}))))
+      (api/GET "/session" [:as request]
+        ;(log/info "Getting session, request " request)
+        (let [oppija-session (get-in request [:cookies "oppija-session" :value])
+              session (oss/read-session (or oppija-session
+                                            "12345"))]
+          (log/info "Session for session" oppija-session " from db" session)
+          (if session
+            (response/ok session)
+            (response/not-found "Et taida olla kirjautunut sisään!")))))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
