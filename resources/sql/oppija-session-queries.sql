@@ -2,7 +2,8 @@
 -- Get session data
 SELECT data
 FROM oppija_sessions
-WHERE key = :key;
+WHERE key = :key
+and created_at + interval '3 hours'>= now();
 
 -- name: yesql-add-oppija-session-query!
 -- Add session
