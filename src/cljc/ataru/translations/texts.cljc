@@ -580,7 +580,28 @@
                                                  :en "https://opintopolku.fi/konfo/en/sivu/student-admission-in-the-joint-application-to-upper-secondary-education-and"}
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
-                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}})
+                                                 :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
+   :ht-kirjaudu-sisaan                          {:fi "Kirjaudu sisään"
+                                                 :sv "Kirjaudu sisään sv"
+                                                 :en "Kirjaudu sisään en"}
+   :ht-ilman-kirjautumista                      {:fi "Jatka ilman kirjautumista"
+                                                 :sv "Jatka ilman kirjautumista sv"
+                                                 :en "Jatka ilman kirjautumista en"}
+   :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ensin"
+                                                 :sv "Tunnistaudu ensin sv"
+                                                 :en "Tunnistaudu ensin en"}
+   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
+                                                 :sv "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. sv"
+                                                 :en "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. en"}
+   :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman kirjautumista"
+                                                 :sv "Täytä hakulomake ilman kirjautumista sv"
+                                                 :en "Täytä hakulomake ilman kirjautumista en"}
+   :ht-jatka-tunnistautumatta-text              {:fi "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot."
+                                                 :sv "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. sv"
+                                                 :en "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. en"}
+   :ht-tai                                      {:fi "TAI"
+                                                 :sv "ELLER"
+                                                 :en "OR"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

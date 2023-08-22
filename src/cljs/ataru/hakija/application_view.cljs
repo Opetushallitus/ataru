@@ -94,6 +94,30 @@
         (when form
           [editable-fields form submit-status])))))
 
+(defn- hakeminen-tunnistautuneena-lander []
+  (let [lang                   (subscribe [:application/form-language])]
+    [:div.application__hakeminen-tunnistautuneena-lander-wrapper
+     [:h1 "Valitse kuinka haluat kirjautua lomakkeelle"]
+     [:h3 "todo haun nimi tähän"]
+     [:div.application__hakeminen-tunnistautuneena-tunnistaudu-wrapper
+      [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header @lang)]
+      [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text @lang)]
+      [:button.application__tunnistaudu-button
+       {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
+        :data-test-id "tunnistautuminen-button"}
+       [icons/icon-lock] (translations/get-hakija-translation :ht-kirjaudu-sisaan @lang)]]
+     [:div.application__hakeminen-tunnistautuneena-tai-wrapper
+      [:hr.application__hakeminen-tunnustautuneena-partial-line-left]
+      "TAI"
+      [:hr.application__hakeminen-tunnustautuneena-partial-line-right]]
+     [:div.application__hakeminen-tunnistautuneena-jatka-tunnistautumatta-wrapper
+      [:h2 (translations/get-hakija-translation :ht-jatka-tunnistautumatta-header @lang)]
+      [:p (translations/get-hakija-translation :ht-jatka-tunnistautumatta-text @lang)]
+      [:button.application__tunnistaudu-button
+       {:on-click     #(dispatch [:application/set-tunnistautuminen-declined])
+        :data-test-id "decline-tunnistautuminen-button"}
+       (translations/get-hakija-translation :ht-ilman-kirjautumista @lang)]]]))
+
 (defn application-contents []
   (let [form                   (subscribe [:state-query [:form]])
         load-failure?          (subscribe [:state-query [:error :code]])
@@ -104,7 +128,10 @@
         lang                   (subscribe [:application/form-language])
         secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
         demo?                  (subscribe [:application/demo?])
-        demo-modal-open?       (subscribe [:application/demo-modal-open?])]
+        demo-modal-open?       (subscribe [:application/demo-modal-open?])
+        session-fetched?       (subscribe [:state-query [:oppija-session :logged-in]])
+        tunnistautunut?        (subscribe [:state-query [:oppija-session :data]])
+        tunnistautuminen-declined? (subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
@@ -114,7 +141,8 @@
            {:visibility "hidden"
             :display "none"})
          (when-not (or @load-failure?
-                     @form)
+                       (and @form
+                            (not (nil? @session-fetched?))))
            [:div.application__form-loading-spinner
             [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
          (when @expired
@@ -134,10 +162,11 @@
          ^{:key (:id @form)}
          (when (not @demo-modal-open?)
            [application-header])
-
-         (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
-           ^{:key "form-fields"}
-           [render-fields @form])]))))
+         (if (not (or @tunnistautunut? @tunnistautuminen-declined?))
+           (hakeminen-tunnistautuneena-lander)
+           (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
+             ^{:key "form-fields"}
+             [render-fields @form]))]))))
 
 (defn- star-number-from-event
   [event]
