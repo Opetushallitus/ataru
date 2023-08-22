@@ -87,6 +87,14 @@
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
 
+(defn logged-in-indicator-or-placeholder []
+  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :firstName]])]
+    (if logged-in-name
+      [:div.application__logged-in-banner-wrapper
+       "Logged in as..." logged-in-name]
+      [:div.application__logged-in-banner-wrapper
+       "Not logged in..."])))
+
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
         secret                @(subscribe [:state-query [:application :secret]])
@@ -220,5 +228,6 @@
          [:div.application__preview-control
           [preview-toggle]])
        (when form?
-         [status-controls])]]
+         [status-controls])
+       [logged-in-indicator-or-placeholder]]]
      [demo-notification-banner]]))

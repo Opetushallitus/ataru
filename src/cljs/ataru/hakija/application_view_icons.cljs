@@ -15,3 +15,7 @@
 (defn icon-arrow []
   [:span.application__submitted-icon.zmdi-hc-stack.zmdi-hc-lg
    [:i.zmdi.zmdi-trending-flat]])
+
+(defn icon-lock []
+  [:span.application__submitted-icon.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-lock-open]])

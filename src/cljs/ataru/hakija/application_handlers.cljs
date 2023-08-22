@@ -133,6 +133,17 @@
             :handler [:application/handle-form]}}))
 
 (reg-event-fx
+  :application/get-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
+    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] [hakukohde-oid])
+                   (some? virkailija-secret)
+                   (assoc-in [:application :virkailija-secret] virkailija-secret))
+     :http {:method  :get
+            :url     (str "/hakemus/auth/session")
+            :handler [:application/handle-oppija-session-fetch]}}))
+
+(reg-event-fx
   :application/get-latest-form-by-haku
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ haku-oid hakukohde-oids virkailija-secret]]
@@ -557,7 +568,8 @@
                       [:application/set-page-title]
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
-                      [:application/fetch-koulutustyypit]]}
+                      [:application/fetch-koulutustyypit]
+                      [:application/get-oppija-session]]}
         (when (and selection-limited (not (demo/demo? db)))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
@@ -601,6 +613,12 @@
   (fn [{:keys [db]} [_ response]]
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
+
+(reg-event-fx
+  :application/handle-oppija-session-fetch
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    {:db       (assoc db :oppija-session (get-in response [:body]))}))
 
 (reg-event-db
   :application/network-online
@@ -1385,6 +1403,20 @@
  (fn [{:keys [db]}]
    (when-let [url (get-in db [:application :submit-details :url])]
      (set! (.. js/window -location -href) url))))
+
+(reg-event-fx
+  :application/redirect-to-tunnistautuminen
+  [check-schema-interceptor]
+  (fn [{:keys [db]}]
+    (when-let [url "http://localhost:8351/hakemus/auth/login" ;fixme
+              ]
+      (set! (.. js/window -location -href) url))))
+
+(reg-event-db
+  :application/set-tunnistautuminen-declined
+  [check-schema-interceptor]
+  (fn [db _]
+    (assoc-in db [:oppija-session :tunnistautuminen-declined] true)))
 
 (reg-event-fx
   :application/set-page-title
