@@ -40,7 +40,7 @@
                        "response body: " (:body result)))))))
 
 (s/defschema CreateResponse
-  {:status :created
+  {:status (s/eq :created)
    :oid    s/Str})
 
 (s/defn ^:always-validate create-person :- CreateResponse

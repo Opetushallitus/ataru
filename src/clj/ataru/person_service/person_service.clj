@@ -105,8 +105,8 @@
               (if (= :not-found (:status match-response))
                 (do
                   (person-client/add-identification-to-person
-                  oppijanumerorekisteri-cas-client
-                  (:oid new-person) id)
+                    oppijanumerorekisteri-cas-client
+                    (:oid new-person) id)
                   {:status :created-with-email-id :oid (:oid new-person)})
                 {:status :dob-or-gender-conflict :oid (:oid new-person)}))))
         (person-client/create-or-find-person
