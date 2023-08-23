@@ -260,7 +260,7 @@
    :guardian-lastname                           {:fi "Huoltajan sukunimi"
                                                  :sv "Vårdnadshavarens efternamn"
                                                  :en "Guardian's surname/family name"}
-   :guardian-phone                              {:fi "Huoltajan matkapuhelin"
+   :guardian-phone                              {:fi "Huoltajan matkapuhelinnumero"
                                                  :sv "Vårdnadshavarens mobiltelefonnummer"
                                                  :en "Guardian's mobile phone number"}
    :hakija-new-text                             {:fi "Lähetä hakemus"
