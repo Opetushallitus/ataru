@@ -1,7 +1,7 @@
 (ns ataru.aws.sqs
   (:require [ataru.config.core :refer [config]]
-            [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log])
+            [clojure.string]
+            [com.stuartsierra.component :as component])
   (:import com.amazonaws.services.sqs.AmazonSQSClientBuilder
            [com.amazonaws.services.sqs.model
             ReceiveMessageRequest

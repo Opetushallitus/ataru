@@ -31,7 +31,7 @@
                      (:options content))]
       (when-let [component
                  (match content
-                   {:module module}
+                   {:module _}
                    [ec/module content path]
 
                    {:fieldClass "wrapperElement"

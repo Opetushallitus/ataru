@@ -181,8 +181,7 @@
                 [:div.flasher.concurrent-edit-error.animated.flash
                  [:span message]]
 
-                [false _ {:detail detailed-error
-                        :message message}]
+                [false _ {:message message}]
                 [:div.flasher
                  [:span message]]
 
@@ -207,7 +206,7 @@
    [:a {:href "/lomake-editori/auth/logout"} @(subscribe [:editor/virkailija-translation :logout])]])
 
 (defn snackbar []
-  (if-let [snackbar-messages @(subscribe [:snackbar-message])]
+  (when-let [snackbar-messages @(subscribe [:snackbar-message])]
     [:div.snackbar
       (let [status (first snackbar-messages)
             message (second snackbar-messages)]

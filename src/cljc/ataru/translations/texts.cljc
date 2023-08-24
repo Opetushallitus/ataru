@@ -2701,7 +2701,7 @@
 
 (defn person-info-validation-error [msg-key]
   (when (some? msg-key)
-    (if-let [texts (get person-info-module-validation-error-texts msg-key)]
+    (when-let [texts (get person-info-module-validation-error-texts msg-key)]
       {:fi [:div.application__person-info-validation-error-dialog {:class msg-key}
             [:p (:fi texts)]]
        :sv [:div.application__person-info-validation-error-dialog {:class msg-key}

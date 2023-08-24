@@ -4,6 +4,8 @@
             [yesql.core :as sql]
             [ataru.db.db :as db]))
 
+(declare yesql-add-information-request<!)
+(declare yesql-get-information-requests)
 (sql/defqueries "sql/information-request-queries.sql")
 
 (def ^:private ->kebab-case-kw (partial t/transform-keys c/->kebab-case-keyword))

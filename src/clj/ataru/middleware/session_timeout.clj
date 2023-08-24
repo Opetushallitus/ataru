@@ -1,7 +1,8 @@
 (ns ataru.middleware.session-timeout
   (:require [ataru.virkailija.authentication.auth-utils :as auth-utils]
-            [cheshire.core :as json]
             [ataru.config.core :refer [config]]
+            [cheshire.core :as json]
+            [clojure.string]
             [ring.middleware.session-timeout :as session-timeout]
             [ring.util.http-response :as response]))
 

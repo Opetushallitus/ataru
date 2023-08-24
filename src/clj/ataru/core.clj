@@ -21,7 +21,7 @@
                     "Valid keys: ataru-editori, ataru-hakija"))
       (System/exit 1))))
 
-(defn -main [& args]
+(defn -main [& _]
   (let [app-id         (:app env)
         init-system    (get-init-system app-id)
         audit-logger   (audit-log/new-audit-logger app-id)

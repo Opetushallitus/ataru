@@ -149,14 +149,14 @@
   (start [this] this)
   (stop [this] this)
 
-  (create-or-find-person [this person] fake-person-from-creation)
+  (create-or-find-person [_ _person] fake-person-from-creation)
 
   (get-persons [this oids]
     (reduce #(assoc %1 %2 (.get-person this %2))
             {}
             oids))
 
-  (get-person [this oid]
+  (get-person [_ oid]
     (condp = oid
       "2.2.2" (merge fake-onr-person
                      {:oidHenkilo "2.2.2"
@@ -169,7 +169,7 @@
       (merge fake-onr-person
              {:oidHenkilo oid})))
 
-  (linked-oids [this oids]
+  (linked-oids [_ oids]
     (into {} (map (fn [x] {x {:master-oid x :linked-oids #{x (str x "2")}}}) oids))))
 
 (defn new-person-service []

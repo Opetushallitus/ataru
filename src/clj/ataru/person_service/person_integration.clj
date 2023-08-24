@@ -17,6 +17,8 @@
    [yesql.core :refer [defqueries]])
   (:import [java.util.concurrent Executors TimeUnit]))
 
+(declare yesql-update-person-info-as-in-person!)
+(declare yesql-update-person-info-as-in-application!)
 (defqueries "sql/person-integration-queries.sql")
 
 (defn- start-jobs-for-person [job-runner person-oid]

@@ -116,8 +116,7 @@
        ongoing-request-property])))
 
 (defn kevyt-valinta-slider-toggle-selection [kevyt-valinta-property]
-  (let [lang                                        (re-frame/subscribe [:editor/virkailija-lang])
-        ongoing-request-property                    (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
+  (let [ongoing-request-property                    (re-frame/subscribe [:virkailija-kevyt-valinta/ongoing-request-property])
         application-key                             (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :key]])
         kevyt-valinta-slider-toggle-state           (reaction @(re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-selection-state
                                                                                     kevyt-valinta-property

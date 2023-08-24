@@ -59,26 +59,6 @@
 (defn- add-correct-valintalaskenta-arvosana-codes [application]
   (update application :keyValues #(apply merge (map add-possible-corrected-code %))))
 
-(defn- extract-koodisto-fields [field-descriptor-list]
-  (reduce
-    (fn [result {:keys [children id koodisto-source options followups]}]
-      (cond
-        (some? children)
-        (merge result (extract-koodisto-fields children))
-
-        (some :followups options)
-        (merge result (extract-koodisto-fields options))
-
-        (not-empty followups)
-        (merge result (extract-koodisto-fields followups))
-
-        :else
-        (cond-> result
-          (every? some? [id koodisto-source])
-          (assoc id (select-keys koodisto-source [:uri :version])))))
-    {}
-    field-descriptor-list))
-
 (defn- parse-application-hakukohde-reviews
   [application-key]
   (reduce

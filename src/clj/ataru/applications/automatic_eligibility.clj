@@ -12,9 +12,14 @@
             [clj-time.coerce :as coerce]
             [clj-time.core :as time]
             [clojure.java.jdbc :as jdbc]
+            [clojure.set]
+            [clojure.string]
             [taoensso.timbre :as log]
             [yesql.core :refer [defqueries]]))
 
+(declare yesql-insert-eligibility-state-automatically-changed-event!)
+(declare yesql-from-unreviewed-to-eligible!)
+(declare yesql-from-eligible-to-unreviewed!)
 (defqueries "sql/automatic-eligibility-queries.sql")
 
 (defn- get-application

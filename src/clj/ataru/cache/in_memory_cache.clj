@@ -26,8 +26,8 @@
                      (.refreshAfterWrite (first refresh-after) (second refresh-after))
                      true
                      (.build (reify CacheLoader
-                               (load [this key] (cache/load loader key))
-                               (loadAll [this keys] (cache/load-many loader keys))))))
+                               (load [_ key] (cache/load loader key))
+                               (loadAll [_ keys] (cache/load-many loader keys))))))
       this))
   (stop [this]
     (assoc this :caffeine nil))
@@ -40,11 +40,11 @@
        :hit-rate             (.hitRate caffeine-stats)}))
 
   cache/Cache
-  (get-from [this key]
+  (get-from [_ key]
     (.get caffeine key))
-  (get-many-from [this keys]
+  (get-many-from [_ keys]
     (.getAll caffeine keys))
-  (remove-from [this key]
+  (remove-from [_ key]
     (.invalidate caffeine key))
-  (clear-all [this]
+  (clear-all [_]
     (.invalidateAll caffeine)))

@@ -187,8 +187,7 @@
                             (->> (str date " " time)
                                  (f/parse-local datetime-formatter)
                                  c/to-utc-time-zone)
-                            (catch js/Error e
-                              nil))]
+                            (catch js/Error _ nil))]
         {:liitepyynto-information-request/save-deadline
          {:application-key application-key
           :liitepyynto-key liitepyynto-key

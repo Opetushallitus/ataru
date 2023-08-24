@@ -1,5 +1,5 @@
 (ns ataru.virkailija.handlers
-    (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch]]
+    (:require [re-frame.core :refer [reg-event-db reg-event-fx]]
               [ataru.virkailija.autosave :as autosave]
               [ataru.virkailija.editor.handlers :refer [clear-copy-component]]
               [ataru.virkailija.db :as db]))

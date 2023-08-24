@@ -1,12 +1,9 @@
 (ns ataru.db.db
   (:require [ataru.config.core :refer [config config-name]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as string]
-            [hikari-cp.core :refer :all]
+            [hikari-cp.core :refer [make-datasource]]
             [ataru.db.extensions]
-            [pandect.algo.sha256 :refer :all]
-            [taoensso.timbre :as log])
-  (:import [java.security SecureRandom]))
+            [taoensso.timbre :as log]))
 
 (defn- datasource-spec
   "Merge configuration defaults and db config. Latter overrides the defaults"
@@ -37,7 +34,7 @@
 
 (defn get-next-exception-or-original [original-exception]
   (try (.getNextException original-exception)
-       (catch IllegalArgumentException iae
+       (catch IllegalArgumentException _
          original-exception)))
 
 (defn clear-db! [ds-key schema-name]

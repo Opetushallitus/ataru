@@ -1,4 +1,8 @@
-{:linters {:not-empty?          {:level :off}
+{:config-in-ns {ataru.db.migrations.application-migration-store
+                {:ignore [:unresolved-symbol]}
+                ataru.schema.form-schema
+                {:ignore [:unresolved-symbol]}}
+ :linters {:not-empty?          {:level :off}
            :refer-all           {:exclude [speclj.core]}
            :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
@@ -26,4 +30,6 @@
                                                       source]}}
            :invalid-arity       {:skip-args [clojure.core.match/match
                                              cljs.core.match/match]}}
- :lint-as {speclj.core/with clojure.core/def}}
+ :lint-as {compojure.api.sweet/defroutes clojure.core/def
+           speclj.core/with clojure.core/def}}
+

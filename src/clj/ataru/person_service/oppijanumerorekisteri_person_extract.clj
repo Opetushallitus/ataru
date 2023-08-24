@@ -1,5 +1,6 @@
 (ns ataru.person-service.oppijanumerorekisteri-person-extract
-  (:require [ataru.person-service.birth-date-converter :refer [convert-birth-date]]))
+  (:require [ataru.person-service.birth-date-converter :refer [convert-birth-date]]
+            [clojure.string]))
 
 (defn- extract-field [{:keys [answers]} field]
   (some (fn [{:keys [key value]}]
@@ -9,7 +10,8 @@
 
 (defn- extract-birth-date [application]
   (let [finnish-format-date (extract-field application "birth-date")]
-    (if-not finnish-format-date (throw (Exception. "Expected a birth-date in application")))
+    (when-not finnish-format-date
+      (throw (Exception. "Expected a birth-date in application")))
     (convert-birth-date finnish-format-date)))
 
 (defn- extract-nationalities

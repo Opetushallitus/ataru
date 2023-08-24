@@ -1,4 +1,5 @@
-(ns ataru.util.language-label)
+(ns ataru.util.language-label
+  (:require [clojure.string]))
 
 (defn lang-label [lang label-map]
   (let [label-string (lang label-map)]

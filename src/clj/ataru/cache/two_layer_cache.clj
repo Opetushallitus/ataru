@@ -11,13 +11,13 @@
 (defn- ->redis-loader
   [redis-cache]
   (reify CacheLoader
-    (load [this key]
+    (load [_ key]
       (cache/get-from redis-cache key))
 
-    (loadAll [this keys]
+    (loadAll [_ keys]
       (cache/get-many-from redis-cache keys))
 
-    (reload [this key old-value]
+    (reload [_ key old-value]
       (try
         (cache/get-from redis-cache key)
         (catch Exception e

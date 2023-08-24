@@ -1,5 +1,4 @@
 (ns ataru.virkailija.organization
-  (:require-macros [ataru.async-macros :as asyncm])
   (:require [cljs.core.async :as async]
             [ajax.core :refer [GET]]))
 

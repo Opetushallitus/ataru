@@ -1,13 +1,12 @@
 (ns ataru.person-service.person-client
-  (:require
-   [ataru.cache.cache-service :as cache]
-   [ataru.cas.client :as cas]
-   [ataru.config.url-helper :refer [resolve-url]]
-   [ataru.person-service.person-schema :as person-schema]
-   [cheshire.core :as json]
-   [clojure.core.match :refer [match]]
-   [schema.core :as s]
-   [taoensso.timbre :as log]))
+  (:require [ataru.cache.cache-service :as cache]
+            [ataru.cas.client :as cas]
+            [ataru.config.url-helper :refer [resolve-url]]
+            [ataru.person-service.person-schema :as person-schema]
+            [cheshire.core :as json]
+            [clojure.core.match :refer [match]]
+            [schema.core :as s]
+            [taoensso.timbre :as log]))
 
 (defn throw-error [msg]
   (throw (Exception. msg)))

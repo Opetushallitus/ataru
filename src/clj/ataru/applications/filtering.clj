@@ -1,5 +1,6 @@
 (ns ataru.applications.filtering
   (:require [clojure.core.match :refer [match]]
+            [clojure.set]
             [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]))
 
@@ -60,20 +61,6 @@
                                   (map :state)
                                   (set))]
         (not (empty? (clojure.set/intersection states-to-include relevant-states)))))))
-
-(defn- state-filter
-  [states states-to-include default-state-name hakukohteet]
-  (or
-    (not (empty? (clojure.set/intersection
-                   states-to-include
-                   (set states))))
-    (and
-      (contains? states-to-include default-state-name)
-      (or
-        (empty? states)
-        (< (count states)
-           (count hakukohteet))))))
-
 
 (defn- filter-by-base-education
   [application base-education-filters]

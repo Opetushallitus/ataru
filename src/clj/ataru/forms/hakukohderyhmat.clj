@@ -1,12 +1,19 @@
 (ns ataru.forms.hakukohderyhmat
   (:require [ataru.db.db :as db]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
-            [ataru.util :as util]
             [cheshire.core :as json]
             [clojure.java.jdbc :as jdbc]
             [yesql.core :refer [defqueries]])
   (:import org.postgresql.util.PSQLException))
 
+(declare yesql-rajaavat-hakukohderyhmat)
+(declare yesql-insert-rajaava-hakukohderyhma)
+(declare yesql-update-rajaava-hakukohderyhma)
+(declare yesql-delete-rajaava-hakukohderyhma!)
+(declare yesql-priorisoivat-hakukohderyhmat)
+(declare yesql-insert-priorisoiva-hakukohderyhma)
+(declare yesql-update-priorisoiva-hakukohderyhma)
+(declare yesql-delete-priorisoiva-hakukohderyhma!)
 (defqueries "sql/hakukohderyhmat-queries.sql")
 
 (defn- db-exec [query params]
@@ -51,7 +58,7 @@
                                {:haku_oid           (:haku-oid ryhma)
                                 :hakukohderyhma_oid (:hakukohderyhma-oid ryhma)
                                 :raja               (:raja ryhma)}))
-                     (catch PSQLException e nil))]
+                     (catch PSQLException _ nil))]
     {:ryhma         (dissoc ryhma :last-modified)
      :last-modified (:last-modified ryhma)}))
 
@@ -93,7 +100,7 @@
                                {:haku_oid           (:haku-oid ryhma)
                                 :hakukohderyhma_oid (:hakukohderyhma-oid ryhma)
                                 :prioriteetit       (json/generate-string (:prioriteetit ryhma))}))
-                     (catch PSQLException e nil))]
+                     (catch PSQLException _ nil))]
     {:ryhma         (dissoc ryhma :last-modified)
      :last-modified (:last-modified ryhma)}))
 
