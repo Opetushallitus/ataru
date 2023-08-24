@@ -614,11 +614,32 @@
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
+(defn- lock-answers-based-on-session [db]
+  (if (get-in db [:oppija-session :logged-in])
+    (let [locked-answers (get-in db [:oppija-session :data])]
+      (js/console.log (str "Locking answers... " locked-answers))
+      (reduce (fn [db [key {:keys [locked value]}]]
+                (when (some? value)
+                  (update-in db [:application :answers key] (fn [ans] (-> ans
+                                                                          (assoc :locked locked)
+                                                                          ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
+                                                                          ;ei-validi arvo? Se ois kyllä huono juttu, validaatio tai ei.
+                                                                          ;ehkä cas-oppijalta tulevat arvot vois validoida jo backendissä.
+                                                                          ;ssn erityistapaus, tarkistetaan onko jo hakenut haussa.
+                                                                          (assoc :valid true)
+                                                                          (assoc :cannot-edit true)
+                                                                          (assoc :value value))))))
+              db
+              locked-answers))
+    db))
+
 (reg-event-fx
   :application/handle-oppija-session-fetch
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
-    {:db       (assoc db :oppija-session (get-in response [:body]))}))
+    {:db (-> db
+             (assoc :oppija-session (get-in response [:body]))
+             (lock-answers-based-on-session))}))
 
 (reg-event-db
   :application/network-online
@@ -1408,9 +1429,10 @@
   :application/redirect-to-tunnistautuminen
   [check-schema-interceptor]
   (fn [{:keys [db]}]
-    (when-let [url "http://localhost:8351/hakemus/auth/login" ;fixme
-              ]
-      (set! (.. js/window -location -href) url))))
+    (let [location (.. js/window -location)
+          target (str js/config.applicant.service_url "/hakemus/auth/login?target=" location)]
+      (set! (.. js/window -location -href) target)
+      nil)))
 
 (reg-event-db
   :application/set-tunnistautuminen-declined

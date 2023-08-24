@@ -130,7 +130,6 @@
         demo?                  (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
         session-fetched?       (subscribe [:state-query [:oppija-session :logged-in]])
-        tunnistautunut?        (subscribe [:state-query [:oppija-session :data]])
         tunnistautuminen-declined? (subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])]
     (fn []
       (let [root-element (if @demo?
@@ -159,14 +158,18 @@
                (translations/get-hakija-translation :expired-secret-button @lang))]
             [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
 
-         ^{:key (:id @form)}
-         (when (not @demo-modal-open?)
-           [application-header])
-         (if (not (or @tunnistautunut? @tunnistautuminen-declined?))
-           (hakeminen-tunnistautuneena-lander)
-           (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
-             ^{:key "form-fields"}
-             [render-fields @form]))]))))
+         (when (or @load-failure?
+                   (and @form
+                        (not (nil? @session-fetched?))))
+           (if (not (or @session-fetched? @tunnistautuminen-declined?))
+             (hakeminen-tunnistautuneena-lander)
+             [:div.application__lomake-wrapper
+              ^{:key (:id @form)}
+              (when (not @demo-modal-open?)
+                [application-header])
+              (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
+                ^{:key "form-fields"}
+                [render-fields @form])]))]))))
 
 (defn- star-number-from-event
   [event]

@@ -145,7 +145,6 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-;todo, only get interesting fields here, and potentially save them to more recognizable keys for UI usage
 (defn parse-oppija-attributes [validation-response]
   (let [xml (xml/parse-str validation-response)
         attributes (-> xml
@@ -153,8 +152,22 @@
                        (first)
                        :content
                        (last)
-                       :content)]
-    (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))))
+                       :content)
+        parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))]
+    ;todo, tähän tulee vielä lisää kenttiä.
+    ;Avaimet täytyy pitää samoina kuin henkilötietomoduulin esitäytettävien vastausten tunnisteet.
+    {:first-name {:value (:firstName parsed-raw-map)
+                  :locked true}
+     :preferred-name {:value (:givenName parsed-raw-map)
+                      :locked true}
+     :last-name  {:value (:sn parsed-raw-map)
+                  :locked true}
+     :ssn        {:value (:nationalIdentificationNumber parsed-raw-map)
+                  :locked true}
+     :address    {:value "placeholder, fixme"
+                  :locked false}
+     :personOid  {:value (:personOid parsed-raw-map)
+                  :locked false}}))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
@@ -164,11 +177,11 @@
       :tags ["hakija-auth-api"]
       (api/GET "/login" [:as request]
         :query-params [{ticket :- s/Str nil}
-                       {target :- s/Str "none"}]
-        (log/info "login with ticket" ticket ". Redirect-to" target)
+                       {target :- s/Str nil}]
+        (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
         (if (= nil ticket)
           (response/found
-            "https://testiopintopolku.fi/cas-oppija/login?locale=fi&valtuudet=false&service=http://localhost:8351/hakemus/auth/login?target=http://localhost:8351/hakemus/haku/1.2.246.562.29.00000000000000032285?lang=fi")
+            (str "https://testiopintopolku.fi/cas-oppija/login?locale=fi&valtuudet=false&service=http://localhost:8351/hakemus/auth/login?target=" target))
           (let [;todo verify that serviceValidate actually returns a successful authentication for the provided ticket - the current implementation below is happy path poc only.
                 rs (->
                      (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))
@@ -177,17 +190,16 @@
                 new-session-key (generate-new-random-key)]
             (log/info "Cas-oppija-response" rs ", parsed" (xml/parse-str rs) ", attributes" parsed-attributes)
             (oss/persist-session! new-session-key ticket parsed-attributes)
-            (assoc (response/ok {:success true
-                                 :result parsed-attributes}) :cookies {:oppija-session new-session-key}))))
+            (-> (response/found target)
+                (update :cookies (fn [c] (assoc c :oppija-session new-session-key)))))))
+      ;todo add logout endpoint / handling
       (api/GET "/session" [:as request]
         ;(log/info "Getting session, request " request)
         (let [oppija-session (get-in request [:cookies "oppija-session" :value])
               session (oss/read-session (or oppija-session
                                             "12345"))]
           (log/info "Session for session" oppija-session " from db" session)
-          (if session
-            (response/ok session)
-            (response/not-found "Et taida olla kirjautunut sisään!")))))))
+          (response/ok (merge session {:logged-in (boolean session)})))))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
@@ -486,11 +498,7 @@
                                       (render-application lang))
                                     (api/GET "/" []
                                       :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))
-                                    ;(api/POST "/login" [] todo, logout here
-                                    ;  :query-params [{lang :- s/Str nil}]
-                                    ;  (render-application lang))
-                                    ))
+                                      (render-application lang))))
                                (route/not-found "<h1>Page not found</h1>"))))
                             (clj-access-logging/wrap-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
