@@ -11,7 +11,7 @@ services:
     networks:
       - ataru-test-network
   ataru-dev-redis:
-    image: "redis:latest"
+    image: "docker.io/library/redis:latest"
     ports:
       - "16379:6379"
     networks:
@@ -38,7 +38,7 @@ services:
     networks:
       - ataru-test-network
   ataru-cypress-http-proxy:
-    image: nginx
+    image: docker.io/library/nginx
     ports:
       - "8354:8354"
     volumes:
@@ -53,13 +53,13 @@ services:
     networks:
       - ataru-test-network
   ataru-test-redis:
-    image: "redis:latest"
+    image: "docker.io/library/redis:latest"
     ports:
       - "16380:6379"
     networks:
       - ataru-test-network
   ataru-cypress-test-redis:
-    image: "redis:latest"
+    image: "docker.io/library/redis:latest"
     ports:
       - "16381:6379"
     networks:
