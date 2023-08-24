@@ -38,9 +38,9 @@
                    :error-handler   (fn [response] (re-frame/dispatch (conj error-handler (:response response))))}
                   (when (some? progress-handler)
                     {:progress-handler (fn [event] (re-frame/dispatch (conj progress-handler event)))})
-                  (when (some? post-data))
-                  {:format :json
-                   :params post-data}))
+                  (when (some? post-data)
+                    {:format :json
+                     :params post-data})))
           (some? started-handler)
           started-handler))
 

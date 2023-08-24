@@ -30,7 +30,7 @@
      (str (tu/get-hakija-translation :deadline-in lang) " " deadline)]))
 
 (defn- attachment-upload [field-descriptor component-id attachment-count question-group-idx]
-  (let [id   (str component-id (when question-group-idx "-" question-group-idx) "-upload-button")
+  (let [id (str component-id (when question-group-idx (str "-" question-group-idx)) "-upload-button")
         lang @(subscribe [:application/form-language])]
     [:div.application__form-upload-attachment-container
      [:input.application__form-upload-input.visually-hidden
