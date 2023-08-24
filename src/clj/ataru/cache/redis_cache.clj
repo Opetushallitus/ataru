@@ -123,7 +123,7 @@
        (partition 1 2)
        (apply concat)))
 
-(defn- update-keys
+(defn- update-keys-in-cache
   [cache keys]
   (let [locks (acquire-locks cache keys)]
     (try
@@ -145,7 +145,7 @@
      (when (try
              (when-let [keys (or (seq (pop-keys cache (->high-priority-queue (:name cache))))
                                  (seq (pop-keys cache (->low-priority-queue (:name cache)))))]
-               (update-keys cache keys)
+               (update-keys-in-cache cache keys)
                true)
              (catch Exception e
                (log/error e "Failed to update" (:name cache) "keys")

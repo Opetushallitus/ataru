@@ -2,8 +2,7 @@
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:require [re-frame.core :refer [subscribe]]
             [ataru.cljs-util :refer [debounce]]
-            [cljs.core.match :refer-macros [match]]
-            [cljs.core.async :as a :refer [chan <! >! close! alts! timeout sliding-buffer]]
+            [cljs.core.async :as a :refer [chan <! >! close! timeout sliding-buffer]]
             [taoensso.timbre :as log]))
 
 (defn stop-autosave! [stop-fn]
@@ -25,39 +24,36 @@
         previous          (atom (or last-autosaved-form @value-to-watch))
         change            (chan (sliding-buffer 1))
         watch             (fn [_ _ old new]
-                            (do
-                              (reset! previous old)
-                              (go (>! change [old new]))))
+                            (reset! previous old)
+                            (go (>! change [old new])))
         stop?             (atom false)
         stop-fn           (fn []
-                            (do
-                              (reset! stop? true)
-                              (close! change))
+                            (reset! stop? true)
+                            (close! change)
                             true)
         bounce            (debounce handler)
         when-changed-save (fn [save-fn current prev]
                             (when (changed-predicate current prev)
                               (save-fn current prev)))]
-    (do
-      (-add-watch value-to-watch :autosave watch)
+    (-add-watch value-to-watch :autosave watch)
 
-      (go-loop []
-        (<! (timeout 500))
-        (if (and @value-to-watch
-                 (not @stop?))
-          (recur)
-          (log/info "Stopping autosave at" subscribe-path)))
+    (go-loop []
+      (<! (timeout 500))
+      (if (and @value-to-watch
+               (not @stop?))
+        (recur)
+        (log/info "Stopping autosave at" subscribe-path)))
 
-      (go-loop []
-        (when-let [[prev current] (<! change)]
-          (when-changed-save bounce current prev)
-          (recur))
+    (go-loop []
+      (when-let [[prev current] (<! change)]
+        (when-changed-save bounce current prev)
+        (recur))
 
-        ; save right before exiting loop
-        (when-let [current @value-to-watch]
-          (when-changed-save handler current @previous)))
+      ; save right before exiting loop
+      (when-let [current @value-to-watch]
+        (when-changed-save handler current @previous)))
 
-      (when (some? last-autosaved-form)
-        (go (>! change [last-autosaved-form @value-to-watch]))))
+    (when (some? last-autosaved-form)
+      (go (>! change [last-autosaved-form @value-to-watch])))
 
     stop-fn))

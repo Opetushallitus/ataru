@@ -646,7 +646,7 @@
   (fn [db [_ id]]
     (let [parent-id (handlers/get-selection-parent-id db id)
           selection-ids (handlers/get-question-ids-by-question-parent-id db parent-id)]
-      (if-let [limited (get db :selection-limited)]
+      (when-let [limited (get db :selection-limited)]
         (and (limited (name id))
              (some #(get-in db [:application :validators-processing (keyword %)]) selection-ids))))))
 
@@ -659,7 +659,7 @@
   :application/limit-reached?
   (fn [db [_ question-id answer-id]]
     (let [original-value (get-in db [:application :answers question-id :original-value])]
-      (if-let [limits (get-in db [:application :answers question-id :limit-reached])]
+      (when-let [limits (get-in db [:application :answers question-id :limit-reached])]
         (and (limits answer-id)
              (not= original-value answer-id))))))
 

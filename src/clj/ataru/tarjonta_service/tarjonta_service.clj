@@ -3,7 +3,7 @@
             [ataru.organization-service.organization-client :refer [oph-organization]]
             [ataru.config.core :refer [config]]
             [ataru.cache.cache-service :as cache]
-            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku get-hakukohde]]
+            [ataru.tarjonta-service.tarjonta-protocol :refer [TarjontaService get-haku]]
             [ataru.tarjonta-service.mock-tarjonta-service :refer [->MockTarjontaService]]))
 
 (defn fetch-or-cached-hakukohde-search
@@ -19,13 +19,13 @@
                                   haku-cache
                                   hakukohde-search-cache]
   TarjontaService
-  (get-hakukohde [this hakukohde-oid]
+  (get-hakukohde [_ hakukohde-oid]
     (cache/get-from hakukohde-cache hakukohde-oid))
 
-  (get-hakukohteet [this hakukohde-oids]
+  (get-hakukohteet [_ hakukohde-oids]
     (vals (cache/get-many-from hakukohde-cache hakukohde-oids)))
 
-  (get-hakukohde-name [this hakukohde-oid]
+  (get-hakukohde-name [_ hakukohde-oid]
     (:name (cache/get-from hakukohde-cache hakukohde-oid)))
 
   (hakukohde-search [this haku-oid organization-oid]
@@ -57,10 +57,10 @@
               (map #(assoc % :user-organization? (contains? filtered-hakukohde-oids (:oid %)))
                    haun-hakukohteet)))))
 
-  (get-haku [this haku-oid]
+  (get-haku [_ haku-oid]
     (cache/get-from haku-cache haku-oid))
 
-  (hakus-by-form-key [this form-key]
+  (hakus-by-form-key [_ form-key]
     (->> (concat
           (some #(when (= form-key (:avain %))
                   (map :oid (:haut %)))
@@ -69,13 +69,13 @@
          (cache/get-many-from haku-cache)
          vals))
 
-  (get-haku-name [this haku-oid]
+  (get-haku-name [_ haku-oid]
     (:name (cache/get-from haku-cache haku-oid)))
 
-  (get-koulutus [this koulutus-oid]
+  (get-koulutus [_ koulutus-oid]
     (cache/get-from koulutus-cache koulutus-oid))
 
-  (get-koulutukset [this koulutus-oids]
+  (get-koulutukset [_ koulutus-oids]
     (cache/get-many-from koulutus-cache koulutus-oids))
 
   (clear-haku-caches [this haku-oid]

@@ -1,13 +1,14 @@
 (ns ataru.virkailija.authentication.virkailija-edit
   (:require [ataru.db.db :as db]
             [yesql.core :as sql]
-            [ataru.config.core :refer [config]]
             [ataru.util :as u]
             [clojure.java.jdbc :as jdbc]
             [camel-snake-kebab.core :as t]
             [camel-snake-kebab.extras :as te])
   (:import (java.util UUID)))
 
+(declare yesql-get-virkailija-for-update)
+(declare yesql-get-virkailija)
 (sql/defqueries "sql/virkailija-queries.sql")
 
 (defn create-virkailija-create-secret

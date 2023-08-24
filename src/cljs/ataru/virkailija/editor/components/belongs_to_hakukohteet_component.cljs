@@ -86,7 +86,7 @@
           (cond hidden?
                 @(subscribe [:editor/virkailija-translation :hidden])
 
-                (and (empty? visible))
+                (empty? visible)
                 @(subscribe [:editor/virkailija-translation :visible-to-all])
 
                 :else
@@ -136,7 +136,7 @@
           (cond @hidden?
                 @(subscribe [:editor/virkailija-translation :hidden])
 
-                (and (empty? visible))
+                (empty? visible)
                 @(subscribe [:editor/virkailija-translation :visible-to-all])
 
                 :else

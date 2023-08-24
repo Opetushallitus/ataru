@@ -96,9 +96,8 @@
     (r/create-class
       {:component-did-update (fn [this]
                                (when (and focus? @new-form-created?)
-                                 (do
-                                   (.focus (r/dom-node this))
-                                   (.select (r/dom-node this)))))
+                                 (.focus (r/dom-node this))
+                                 (.select (r/dom-node this))))
        :reagent-render       (fn [lang _]
                                [:input.editor-form__form-name-input
                                 {:data-test-id "form-name-input"

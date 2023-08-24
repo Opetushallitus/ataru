@@ -248,7 +248,7 @@
     (sanitize-attachment-value-by-state value values)))
 
 (defn- question-group-shared-answers [ans-key answers flat-form-map]
-  (if-let [question-group-id (-> (get flat-form-map ans-key) :params :question-group-id)]
+  (when-let [question-group-id (-> (get flat-form-map ans-key) :params :question-group-id)]
     (->> flat-form-map
          (filter (fn [[_ v]] (= (-> v :params :question-group-id) question-group-id)))
          (keep (fn [[k _]] (get answers k))))))

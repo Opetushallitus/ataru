@@ -1,11 +1,8 @@
 (ns ataru.palaute.palaute-client
   (:require [ataru.config.core :refer [config]]
-            [ataru.util.http-util :as http-util]
             [cheshire.core :as json]
-            [ataru.cas.client :as cas]
             [ataru.aws.sqs :as sqs]
-            [taoensso.timbre :as log])
-  (:import [java.util UUID]))
+            [taoensso.timbre :as log]))
 
 (defn- build-palaute-request
   [feedback]

@@ -334,7 +334,7 @@
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])
         lang       (subscribe [:application/form-language])]
-    (fn [] (if-let [error-code @error-code]
+    (fn [] (when-let [error-code @error-code]
              [:div.application__message-display
               {:class (if (some #(= error-code %) [:inactivated :network-offline])
                         "application__message-display--warning"

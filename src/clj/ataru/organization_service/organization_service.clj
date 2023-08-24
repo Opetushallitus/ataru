@@ -33,12 +33,12 @@
   component/Lifecycle
   OrganizationService
 
-  (get-hakukohde-groups [this]
+  (get-hakukohde-groups [_]
     (->> (cache/get-from all-organization-groups-cache :dummy-key)
          vals
          hakukohderyhmat-from-groups))
 
-  (get-all-organizations [this direct-organizations]
+  (get-all-organizations [_ direct-organizations]
     (let [[groups orgs]       ((juxt filter remove) #(group-oid? (:oid %)) direct-organizations)
           ;; Only fetch hierarchy for actual orgs, not groups:
           flattened-hierarchy (get-organization-hierarchies
@@ -47,7 +47,7 @@
       ;; Include groups as-is in the result:
       (concat groups flattened-hierarchy)))
 
-  (get-organizations-for-oids [this organization-oids]
+  (get-organizations-for-oids [_ organization-oids]
     (let [[group-oids normal-org-oids] ((juxt filter remove) group-oid? organization-oids)
           normal-orgs (map org-client/get-organization-cached normal-org-oids)
           all-groups  (cache/get-from all-organization-groups-cache :dummy-key)
@@ -80,17 +80,17 @@
 (defrecord FakeOrganizationService []
   OrganizationService
 
-  (get-hakukohde-groups [this]
+  (get-hakukohde-groups [_]
     (hakukohderyhmat-from-groups
       [(org-client/fake-hakukohderyhma 1)
        (org-client/fake-hakukohderyhma 2)
        (org-client/fake-hakukohderyhma 3)
        (org-client/fake-hakukohderyhma 4)]))
 
-  (get-all-organizations [this root-orgs]
+  (get-all-organizations [_ root-orgs]
     (fake-orgs-by-root-orgs root-orgs))
 
-  (get-organizations-for-oids [this organization-oids]
+  (get-organizations-for-oids [_ organization-oids]
     (map fake-org-by-oid organization-oids)))
 
 (defn new-organization-service []

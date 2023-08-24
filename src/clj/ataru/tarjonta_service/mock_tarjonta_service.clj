@@ -346,14 +346,14 @@
   (start [this] this)
   (stop [this] this)
 
-  (get-hakukohde [this hakukohde-oid]
+  (get-hakukohde [_ hakukohde-oid]
     (when-let [h ((keyword hakukohde-oid) hakukohde)]
       (tarjonta-client/parse-hakukohde h)))
 
   (get-hakukohteet [this hakukohde-oids]
     (keep #(.get-hakukohde this %) hakukohde-oids))
 
-  (get-hakukohde-name [this hakukohde-oid]
+  (get-hakukohde-name [_ hakukohde-oid]
     (if (contains? #{"hakukohde.oid" "hakukohde-in-ryhma.oid"} hakukohde-oid)
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
       {:fi "Testihakukohde"}))
@@ -372,7 +372,7 @@
                                 :1.2.246.562.20.49028196524
                                 :1.2.246.562.20.49028196525]))))
 
-  (get-haku [this haku-oid]
+  (get-haku [_ haku-oid]
     (when-let [h ((keyword haku-oid) haut)]
       (tarjonta-client/parse-haku h)))
 
@@ -401,14 +401,14 @@
       [(.get-haku this haku-key)]
       []))
 
-  (get-haku-name [this haku-oid]
+  (get-haku-name [_ haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
       {:fi "testing2"}))
 
-  (get-koulutus [this koulutus-id]
+  (get-koulutus [_ koulutus-id]
     ((keyword koulutus-id) koulutus))
 
-  (get-koulutukset [this koulutus-oids]
+  (get-koulutukset [_ koulutus-oids]
     (into {} (keep #(when-let [v (get koulutus (keyword %))]
                       [% v])
                    koulutus-oids))))
@@ -467,14 +467,14 @@
   (start [this] this)
   (stop [this] this)
 
-  (get-hakukohde [this hakukohde-oid]
+  (get-hakukohde [_ hakukohde-oid]
     (when-let [h ((keyword hakukohde-oid) kouta-hakukohdes)]
       (kouta-client/parse-hakukohde h [] [] {})))
 
   (get-hakukohteet [this hakukohde-oids]
     (keep #(.get-hakukohde this %) hakukohde-oids))
 
-  (get-hakukohde-name [this hakukohde-oid]
+  (get-hakukohde-name [_ hakukohde-oid]
     (if (contains? #{"hakukohde.oid" "hakukohde-in-ryhma.oid"} hakukohde-oid)
       {:fi "Ajoneuvonosturinkuljettajan ammattitutkinto"}
       {:fi "Testihakukohde"}))
@@ -493,7 +493,7 @@
                          :1.2.246.562.20.49028196524
                          :1.2.246.562.20.49028196525]))))
 
-  (get-haku [this haku-oid]
+  (get-haku [_ haku-oid]
     (when-let [h ((keyword haku-oid) haut)]
       (kouta-client/parse-haku h [] [])))
 
@@ -522,14 +522,14 @@
       [(.get-haku this haku-key)]
       []))
 
-  (get-haku-name [this haku-oid]
+  (get-haku-name [_ haku-oid]
     (when (= haku-oid "1.2.246.562.29.65950024185")
       {:fi "testing2"}))
 
-  (get-koulutus [this koulutus-id]
+  (get-koulutus [_ koulutus-id]
     ((keyword koulutus-id) koulutus))
 
-  (get-koulutukset [this koulutus-oids]
+  (get-koulutukset [_ koulutus-oids]
     (into {} (keep #(when-let [v (get koulutus (keyword %))]
                       [% v])
                    koulutus-oids))))

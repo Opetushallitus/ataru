@@ -1,9 +1,7 @@
 (ns ataru.scripts.export-locales
   (:require
    [cheshire.core :as json]
-   [environ.core :refer [env]]
-   [ataru.translations.texts :refer [virkailija-texts]]
-   [ataru.config.core :refer [config]]))
+   [ataru.translations.texts :refer [virkailija-texts]]))
 
 (defn locale->entry [key [lang value]]
   {:key key :category "ataru-virkailija" :locale lang :value value})

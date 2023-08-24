@@ -4,8 +4,8 @@
 
 (def controller {:controller
                  (clj->js {:getCustomComponentTypeMapping (fn [] #js [])
-                           :componentDidMount             (fn [field value])
-                           :createCustomComponent         (fn [props])})})
+                           :componentDidMount             (fn [_ _])
+                           :createCustomComponent         (fn [_])})})
 
 (def text-field {:id         "test-text-field"
                  :fieldType  "textField"

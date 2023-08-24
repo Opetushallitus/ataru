@@ -1,5 +1,4 @@
-(ns ataru.virkailija.views.modal
-  (:require [ataru.cljs-util :as cljs-util]))
+(ns ataru.virkailija.views.modal)
 
 (defn modal
   [close-handler content]

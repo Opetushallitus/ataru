@@ -5,9 +5,10 @@
             [clj-time.core :as time]
             [clj-time.coerce :as coerce]))
 
+(declare yesql-clean-up-old-forms!)
 (defqueries "sql/form-cleanup-queries.sql")
 
-(defn clean-old-forms-job-step [state _]
+(defn clean-old-forms-job-step [_ _]
   (let [now (time/now)
         next-activation (time/plus (time/with-time-at-start-of-day now) (time/hours 26))
         result (db/exec :db yesql-clean-up-old-forms! {:limit 1000})]

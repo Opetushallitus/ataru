@@ -8,8 +8,7 @@
             SnsSubscriptionConfirmation
             SnsUnknownMessage
             SnsUnsubscribeConfirmation]
-           [java.io InputStream ByteArrayInputStream]
-           java.time.ZoneId))
+           [java.io InputStream ByteArrayInputStream]))
 
 (defrecord SNSMessageManager [sns-message-manager]
   component/Lifecycle
@@ -21,7 +20,7 @@
   (stop [this]
     (assoc this :sns-message-manager nil)))
 
-(defmulti handle-message (fn [sns-message-manager s] (class s)))
+(defmulti handle-message (fn [_ s] (class s)))
 
 (defmethod handle-message InputStream [sns-message-manager input-stream]
   (->> input-stream

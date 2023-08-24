@@ -1,7 +1,6 @@
 (ns ataru.hakija.components.hakukohde-details-component
   (:require [ataru.util :as util]
-            [re-frame.core :as re-frame]
-            [re-frame.core :as re-frame :refer [subscribe]]))
+            [re-frame.core :as re-frame]))
 
 (defn hakukohde-details-component [_ _]
   (let [lang  @(re-frame/subscribe [:application/form-language])]

@@ -58,8 +58,8 @@
 (defn pohjakoulutus-for-application
   [get-koodi-label suoritus]
   (let [pohjakoulutus        (:POHJAKOULUTUS suoritus)
-        opetuskieli          (if-let [kieli (:perusopetuksen_kieli suoritus)]
-                               (string/upper-case kieli))
+        opetuskieli          (some-> (:perusopetuksen_kieli suoritus)
+                                     (string/upper-case))
         suoritusvuosi        (:PK_SUORITUSVUOSI suoritus)
         lisapistekoulutukset (get-lisapistekoulutukset suoritus)
         arvosanat            (get-arvosanat get-koodi-label suoritus)]

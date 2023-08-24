@@ -1,8 +1,6 @@
 (ns ataru.person-service.person-integration
   (:require
    [cheshire.core :as json]
-   [clj-time.format :as f]
-   [clojure.core.async :as async]
    [clojure.core.match :refer [match]]
    [ataru.component-data.person-info-module :as person-info-module]
    [ataru.forms.form-store :as form-store]
@@ -19,6 +17,8 @@
    [yesql.core :refer [defqueries]])
   (:import [java.util.concurrent Executors TimeUnit]))
 
+(declare yesql-update-person-info-as-in-person!)
+(declare yesql-update-person-info-as-in-application!)
 (defqueries "sql/person-integration-queries.sql")
 
 (defn- start-jobs-for-person [job-runner person-oid]

@@ -1,6 +1,5 @@
 (ns ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-julkaisun-tila-view
-  (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]
-            [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-translations :as translations]))
+  (:require [ataru.virkailija.application.kevyt-valinta.view.virkailija-kevyt-valinta-common-view :as common-view]))
 
 (defn- kevyt-valinta-julkaisun-tila-selection []
   [common-view/kevyt-valinta-slider-toggle-selection :kevyt-valinta/julkaisun-tila])

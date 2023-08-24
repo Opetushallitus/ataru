@@ -385,7 +385,7 @@
             :target "_blank"}
            (util/non-blank-val (:name org) [lang :fi :sv :en])]]))]))
 
-(defn- event-content [event lang & {korkeakouluhaku? :korkeakouluhaku?}]
+(defn- event-content [event lang & _]
   (match event
          {:event-type "review-state-change"}
          (let [label (application-states/get-review-state-label-by-name

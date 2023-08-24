@@ -1,4 +1,5 @@
-(ns ataru.virkailija.editor.form-utils)
+(ns ataru.virkailija.editor.form-utils
+  (:require [clojure.set]))
 
 (defn- belongs-to-hakukohde? [field hakutoiveet]
   (not-empty (clojure.set/intersection (set (:belongs-to-hakukohteet field))
@@ -18,7 +19,7 @@
   (or (not children-of)
       (visible? (get fields children-of) fields answers hakutoiveet hakukohteet)))
 
-(defn- followup-of-answer [{:keys [id followup-of] :as field} fields answers hakutoiveet hakukohteet]
+(defn- followup-of-answer [{:keys [followup-of] :as field} fields answers hakutoiveet hakukohteet]
   (or (not followup-of)
       (and (= (:value (first (get answers followup-of)))
               (:option-value field))

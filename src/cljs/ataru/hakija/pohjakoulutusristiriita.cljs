@@ -1,6 +1,7 @@
 (ns ataru.hakija.pohjakoulutusristiriita
   (:require [ataru.application-common.application-field-common :as common]
             [ataru.translations.translation-util :as translations]
+            [clojure.set]
             [re-frame.core :as re-frame]))
 
 (defn hakukohteet-wo-applicable-base-education

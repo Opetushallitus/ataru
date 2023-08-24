@@ -8,7 +8,7 @@
   (not (minus? sign)))
 
 (defn ->int [thestr]
-  #?(:clj  (try (Integer/parseInt thestr) (catch Exception e nil))
+  #?(:clj  (try (Integer/parseInt thestr) (catch Exception _ nil))
      :cljs (let [v (js/parseInt thestr 10)]
              (if (js/isNaN v) nil v))))
 

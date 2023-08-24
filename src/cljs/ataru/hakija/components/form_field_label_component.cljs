@@ -2,7 +2,6 @@
   (:require [ataru.application-common.application-field-common :as application-field]
             [ataru.util :as util]
             [re-frame.core :as re-frame]
-            [re-frame.core :as re-frame :refer [subscribe]]
             [ataru.hakija.components.hakukohde-details-component :refer [hakukohde-details-component]]))
 
 (defn form-field-label [_ _]

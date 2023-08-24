@@ -4,6 +4,7 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [ataru.db.db :as db]))
 
+(declare yesql-get-application-stats)
 (defqueries "sql/statistics-queries.sql")
 
 (def ^:private ->kebab-case-kw (partial transform-keys ->kebab-case-keyword))

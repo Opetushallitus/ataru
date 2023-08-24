@@ -62,14 +62,14 @@
                      (->
                       (assoc-in [:application :selected-application-and-form] nil)
                       (assoc-in [:application :latest-form] nil)))}
-        (if-let [dispatches (cond
-                             different-application?
-                             [[:application/stop-autosave]
-                              [:application/fetch-application application-key with-newest-form?]]
+        (when-let [dispatches
+                   (cond different-application?
+                         [[:application/stop-autosave]
+                          [:application/fetch-application application-key with-newest-form?]]
 
-                             with-newest-form?
-                             [[:application/select-review-hakukohde (first selected-hakukohde-oid-set)]
-                              [:application/fetch-application application-key true]])]
+                         with-newest-form?
+                         [[:application/select-review-hakukohde (first selected-hakukohde-oid-set)]
+                          [:application/fetch-application application-key true]])]
           {:dispatch-n dispatches})))))
 
 (defn- close-application [db]
