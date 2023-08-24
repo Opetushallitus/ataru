@@ -1,4 +1,4 @@
-FROM stilliard/pure-ftpd:hardened
+FROM docker.io/stilliard/pure-ftpd:hardened
 ENV FTP_USER_NAME=oph
 ENV FTP_USER_PASS=oph
 ENV FTP_USER_HOME=/home/ftpusers/oph
