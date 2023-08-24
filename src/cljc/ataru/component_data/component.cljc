@@ -265,12 +265,9 @@
     :validators [:email-simple]))
 
 (defn huoltajan-nimet-rivi [metadata secondary]
-  (let [translation-key (if-not secondary
-                          :guardian-contact-minor
-                          :guardian-contact-minor-secondary)
-        suffix (when secondary "-secondary")]
+  (let [suffix (when secondary "-secondary")]
     (assoc (adjacent-fieldset metadata)
-      :label (get texts/translation-mapping translation-key)
+      :label (when secondary (get texts/translation-mapping :guardian-contact-minor-secondary))
       :children [(huoltajan-etunimi metadata suffix)
                  (huoltajan-sukunimi metadata suffix)])))
 
