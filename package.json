@@ -36,7 +36,7 @@
     "@typescript-eslint/parser": "3.7.1",
     "chai": "4.2.0",
     "child-process": "^1.0.2",
-    "clj-kondo": "2020.1.13",
+    "clj-kondo": "^2023.7.13",
     "cypress": "4.11.0",
     "eslint": "7.5.0",
     "eslint-config-airbnb-base": "14.2.0",
