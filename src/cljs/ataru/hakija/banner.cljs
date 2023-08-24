@@ -88,12 +88,12 @@
         (translations/get-hakija-translation :hakija-new-text lang)))
 
 (defn logged-in-indicator-or-placeholder []
-  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :firstName]])]
+  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])]
     (if logged-in-name
       [:div.application__logged-in-banner-wrapper
-       "Logged in as..." logged-in-name]
+       "Logged in as " logged-in-name]
       [:div.application__logged-in-banner-wrapper
-       "Not logged in..."])))
+       "Not logged in."])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])

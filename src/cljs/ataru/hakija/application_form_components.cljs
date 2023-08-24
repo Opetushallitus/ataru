@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-form-components
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [ataru.hakija.application-view-icons :as icons]
+            [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common
              :as application-field
@@ -234,7 +235,8 @@
             disabled?        @disabled?
             {:keys [value
                     valid
-                    errors]} @(subscribe [:application/answer id idx nil])
+                    errors
+                    locked]} @(subscribe [:application/answer id idx nil]);todo fixme, lisätään locked-kentän perusteella lukkoikoni
             options          @(subscribe [:application/visible-options field-descriptor])
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
@@ -265,6 +267,7 @@
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
+         ;(when locked [icons/icon-lock])
          [:input.application__form-text-input
           (merge {:id           form-field-id
                   :type         "text"
@@ -296,7 +299,7 @@
                                       :else
                                       value)
                   :data-test-id data-test-id}
-                 (when (or disabled? cannot-edit?)
+                 (when (or disabled? cannot-edit? locked)
                    {:disabled true}))]
          [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
                                    first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
