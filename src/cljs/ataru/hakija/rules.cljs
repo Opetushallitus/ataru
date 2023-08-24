@@ -226,7 +226,6 @@
   ^{:dependencies [:birth-date]}
   [db]
   (let [fields [:guardian-contact-information
-                :guardian-contact-minor
                 :guardian-contact-minor-secondary
                 :guardian-firstname
                 :guardian-lastname

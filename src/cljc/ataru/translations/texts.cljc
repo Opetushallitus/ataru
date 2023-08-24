@@ -245,12 +245,9 @@
    :guardian-contact-information                {:fi "Huoltajan yhteystiedot"
                                                  :sv "Vårdnadshavarens kontaktuppgifter"
                                                  :en "Guardian's contact information"}
-   :guardian-contact-minor                      {:fi "Huoltajan tiedot (jos olet alle 18v)"
-                                                 :sv "Vårdnadshavarens kontaktuppgifter (om du är minderårig)"
-                                                 :en "Guardian's contact information (if you are minor)"}
-   :guardian-contact-minor-secondary            {:fi "Toisen huoltajan tiedot (jos olet alle 18v)"
-                                                 :sv "Den andara vårdnadshavarens kontaktuppgifter (om du är minderårig)"
-                                                 :en "The other guardian's contact information (if you are minor)"}
+   :guardian-contact-minor-secondary            {:fi "Toisen huoltajan tiedot"
+                                                 :sv "Den andara vårdnadshavarens kontaktuppgifter"
+                                                 :en "The other guardian's contact information"}
    :guardian-email                              {:fi "Huoltajan sähköpostiosoite"
                                                  :sv "Vårdnadshavarens e-postadress"
                                                  :en "Guardian's e-mail address"}
