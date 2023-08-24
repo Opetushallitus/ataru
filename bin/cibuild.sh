@@ -37,7 +37,7 @@ eslint() {
 
 clj_kondo() {
     echo "Running clj-kondo"
-    #npm run lint:clj
+    npm run lint:clj
 }
 
 lint() {
