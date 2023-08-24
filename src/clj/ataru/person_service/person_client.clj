@@ -108,7 +108,7 @@
                               (:idpEntityId identification)))]
     (match result
            {:status 200 :body body}
-           (json/parse-string body true)
+           {:status :found :body (json/parse-string body true)}
            {:status 404 :body body}
            {:status :not-found :body nil}
            :else (throw-error (str "Error while searching for person with identification " identification ", "
