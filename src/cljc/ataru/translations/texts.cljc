@@ -244,22 +244,22 @@
                                                  :en "Finnish"}
    :guardian-contact-information                {:fi "Huoltajan yhteystiedot"
                                                  :sv "Vårdnadshavarens kontaktuppgifter"
-                                                 :en "Guardians contact information"}
-   :guardian-contact-minor                      {:fi "Huoltajan tiedot (jos olet alle 18v)"
-                                                 :sv "Vårnadshavarens kontaktuppgifter (om du är mindreårig)"
-                                                 :en "Guardians contact information (if you are minor)"}
-   :guardian-contact-minor-secondary            {:fi "Toisen huoltajan tiedot (jos olet alle 18v)"
-                                                 :sv "Den andara vårnadshavarens kontaktuppgifter (om du är mindreårig)"
-                                                 :en "The other guardians contact information (if you are minor)"}
+                                                 :en "Guardian's contact information"}
+   :guardian-contact-minor-secondary            {:fi "Toisen huoltajan tiedot"
+                                                 :sv "Den andara vårdnadshavarens kontaktuppgifter"
+                                                 :en "The other guardian's contact information"}
    :guardian-email                              {:fi "Huoltajan sähköpostiosoite"
-                                                 :sv "Vårnadshavarens e-postadress"
-                                                 :en "Guardians e-mail address"}
-   :guardian-name                               {:fi "Huoltajan nimi"
-                                                 :sv "Vårdnadshavarens namn"
-                                                 :en "Guardians name"}
-   :guardian-phone                              {:fi "Huoltajan matkapuhelin"
+                                                 :sv "Vårdnadshavarens e-postadress"
+                                                 :en "Guardian's e-mail address"}
+   :guardian-firstname                          {:fi "Huoltajan etunimi"
+                                                 :sv "Vårdnadshavarens förnamn"
+                                                 :en "Guardian's first/given name"}
+   :guardian-lastname                           {:fi "Huoltajan sukunimi"
+                                                 :sv "Vårdnadshavarens efternamn"
+                                                 :en "Guardian's surname/family name"}
+   :guardian-phone                              {:fi "Huoltajan matkapuhelinnumero"
                                                  :sv "Vårdnadshavarens mobiltelefonnummer"
-                                                 :en "Guardians mobile phone number"}
+                                                 :en "Guardian's mobile phone number"}
    :hakija-new-text                             {:fi "Lähetä hakemus"
                                                  :sv "Skicka ansökan"
                                                  :en "Submit application"}

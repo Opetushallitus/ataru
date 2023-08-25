@@ -24,7 +24,7 @@ describe('Hakulomakkeen validoinnit', () => {
       })
       hakijanNakymaanSiirtyminen(lomakkeenTunnisteet, () => {
         it('Ei näytä huoltajan yhteystietokenttiä, kun lomakkeen avaa ensimmäistä kertaa', () => {
-          cy.contains('Huoltajan tiedot (jos olet alle 18v)', {
+          cy.contains('Toisen huoltajan tiedot', {
             matchCase: true,
           }).should('not.exist')
         })
@@ -56,7 +56,7 @@ describe('Hakulomakkeen validoinnit', () => {
               matchCase: true,
             }
           ).should('not.exist') // virheilmoitus poistuu
-          cy.contains('Huoltajan tiedot (jos olet alle 18v)', {
+          cy.contains('Toisen huoltajan tiedot', {
             matchCase: true,
           }).should('exist')
           hakijanNakyma.huoltajantiedot.huoltajanSahkoposti().should('exist')

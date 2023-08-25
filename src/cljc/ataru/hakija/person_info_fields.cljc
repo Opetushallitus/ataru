@@ -24,10 +24,12 @@
     :language})
 
 (def guardian-contact-info-field-ids
-  #{:guardian-name
+  #{:guardian-firstname
+    :guardian-lastname
     :guardian-phone
     :guardian-email
-    :guardian-name-secondary
+    :guardian-firstname-secondary
+    :guardian-lastname-secondary
     :guardian-phone-secondary
     :guardian-email-secondary})
 

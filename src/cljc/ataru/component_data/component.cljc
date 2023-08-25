@@ -240,10 +240,16 @@
                (valintatuloksen-julkaisulupa metadata)
                (asiointikieli metadata)]))
 
-(defn huoltajan-nimi [metadata idx]
+(defn huoltajan-etunimi [metadata idx]
   (assoc (text-field metadata)
-    :id (str "guardian-name" idx)
-    :label (:guardian-name texts/translation-mapping)
+    :id (str "guardian-firstname" idx)
+    :label (:guardian-firstname texts/translation-mapping)
+    :validators []))
+
+(defn huoltajan-sukunimi [metadata idx]
+  (assoc (text-field metadata)
+    :id (str "guardian-lastname" idx)
+    :label (:guardian-lastname texts/translation-mapping)
     :validators []))
 
 (defn huoltajan-puhelin [metadata suffix]
@@ -258,22 +264,29 @@
     :label (:guardian-email texts/translation-mapping)
     :validators [:email-simple]))
 
+(defn huoltajan-nimet-rivi [metadata secondary]
+  (let [suffix                      (when secondary "-secondary")
+        metadata-with-added-fields  (assoc (adjacent-fieldset metadata)
+                                      :children [(huoltajan-etunimi metadata suffix)
+                                                 (huoltajan-sukunimi metadata suffix)])]
+    (if secondary
+      (assoc metadata-with-added-fields
+        :label (get texts/translation-mapping :guardian-contact-minor-secondary))
+      metadata-with-added-fields)))
+
 (defn huoltajan-yhteystiedot-rivi [metadata secondary]
-  (let [translation-key (if-not secondary
-                          :guardian-contact-minor
-                          :guardian-contact-minor-secondary)
-        suffix (when secondary "-secondary")]
+  (let [suffix (when secondary "-secondary")]
     (assoc (adjacent-fieldset metadata)
-      :label (get texts/translation-mapping translation-key)
-      :children [(huoltajan-nimi metadata suffix)
-                 (huoltajan-puhelin metadata suffix)
+      :children [(huoltajan-puhelin metadata suffix)
                  (huoltajan-email metadata suffix)])))
 
 (defn huoltajan-yhteystiedot [metadata]
   (assoc (form-section metadata)
          :id "guardian-contact-information"
          :label (:guardian-contact-information texts/translation-mapping)
-         :children [(huoltajan-yhteystiedot-rivi metadata false)
+         :children [(huoltajan-nimet-rivi metadata false)
+                    (huoltajan-yhteystiedot-rivi metadata false)
+                    (huoltajan-nimet-rivi metadata true)
                     (huoltajan-yhteystiedot-rivi metadata true)]))
 
 (def lupatiedot-kk-questions

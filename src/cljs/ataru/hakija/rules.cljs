@@ -226,12 +226,13 @@
   ^{:dependencies [:birth-date]}
   [db]
   (let [fields [:guardian-contact-information
-                :guardian-contact-minor
                 :guardian-contact-minor-secondary
-                :guardian-name
+                :guardian-firstname
+                :guardian-lastname
                 :guardian-phone
                 :guardian-email
-                :guardian-name-secondary
+                :guardian-firstname-secondary
+                :guardian-lastname-secondary
                 :guardian-phone-secondary
                 :guardian-email-secondary]
         editing? (get-in db [:application :editing?])
