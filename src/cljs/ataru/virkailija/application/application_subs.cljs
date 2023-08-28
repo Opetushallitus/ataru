@@ -331,7 +331,8 @@
   [db]
   (and
     (-> db :application :single-information-request :subject u/not-blank?)
-    (-> db :application :single-information-request :message u/not-blank?))
+    (-> db :application :single-information-request :message u/not-blank?)
+    (<= (count (-> db :application :single-information-request :subject)) 120))
   )
 
 

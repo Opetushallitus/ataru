@@ -31,7 +31,7 @@
            [:div.application-handling__information-request-text-input-container
             [:input.application-handling__information-request-text-input
              {:value     @subject
-              :maxLength 120
+              :class (when (> (count @subject) 120) "application-handling__information-request-text-input--invalid")
               :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])}]]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
@@ -46,11 +46,8 @@
               {:type      "checkbox"
                :checked   @checked?
                :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
-                                        (dispatch [:application/set-send-update-link checkedNewValue])
-                                        ))
-               }]
-             [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]
-            ]]
+                                        (dispatch [:application/set-send-update-link checkedNewValue])))}]
+             [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]]]
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)
