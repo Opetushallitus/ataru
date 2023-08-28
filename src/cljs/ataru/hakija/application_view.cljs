@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
+            [ataru.feature-config :as fc]
             [ataru.application-common.application-field-common :refer [markdown-paragraph]]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-view-icons :as icons]
@@ -130,7 +131,8 @@
         demo?                  (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
         session-fetched?       (subscribe [:state-query [:oppija-session :logged-in]])
-        tunnistautuminen-declined? (subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])]
+        tunnistautuminen-declined? (subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
+        tunnistautuminen-enabled? (fc/feature-enabled? :hakeminen-tunnistautuneena)]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
@@ -141,7 +143,8 @@
             :display "none"})
          (when-not (or @load-failure?
                        (and @form
-                            (not (nil? @session-fetched?))))
+                            (or (not (nil? @session-fetched?))
+                                (not tunnistautuminen-enabled?))))
            [:div.application__form-loading-spinner
             [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
          (when @expired
@@ -160,8 +163,9 @@
 
          (when (or @load-failure?
                    (and @form
-                        (not (nil? @session-fetched?))))
-           (if (not (or @session-fetched? @tunnistautuminen-declined?))
+                        (or (not (nil? @session-fetched?))
+                            (not tunnistautuminen-enabled?))))
+           (if (and (not (or @session-fetched? @tunnistautuminen-declined?)) tunnistautuminen-enabled?)
              (hakeminen-tunnistautuneena-lander)
              [:div.application__lomake-wrapper
               ^{:key (:id @form)}
