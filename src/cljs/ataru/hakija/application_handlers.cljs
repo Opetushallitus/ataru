@@ -569,7 +569,7 @@
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
                       [:application/fetch-koulutustyypit]
-                      [:application/get-oppija-session]]}
+                      (when (fc/feature-enabled? :hakeminen-tunnistautuneena) [:application/get-oppija-session])]}
         (when (and selection-limited (not (demo/demo? db)))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
@@ -614,7 +614,7 @@
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
 
-(defn- lock-answers-based-on-session [db]
+(defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :data])]
       (js/console.log (str "Locking answers... " locked-answers))
@@ -639,7 +639,7 @@
   (fn [{:keys [db]} [_ response]]
     {:db (-> db
              (assoc :oppija-session (get-in response [:body]))
-             (lock-answers-based-on-session))}))
+             (prefill-and-lock-answers))}))
 
 (reg-event-db
   :application/network-online
