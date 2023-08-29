@@ -171,17 +171,25 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
+(defn- parse-cas-oppija-login-url [locale target]
+  (str
+    (-> config :urls :cas-oppija-url)
+    "/login?locale=" (or locale "fi") "&valtuudet=false&service="
+    (-> config :urls :ataru-hakija-login-url)
+    "?target=" target))
+
 (defn hakija-auth-routes [this]
   (cook/wrap-cookies
     (api/context "/auth" []
       :tags ["hakija-auth-api"]
       (api/GET "/login" [:as request]
         :query-params [{ticket :- s/Str nil}
-                       {target :- s/Str nil}]
+                       {target :- s/Str nil}
+                       {lang :- s/Str nil}]
         (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
         (if (= nil ticket)
           (response/found
-            (str "https://testiopintopolku.fi/cas-oppija/login?locale=fi&valtuudet=false&service=http://localhost:8351/hakemus/auth/login?target=" target))
+            (parse-cas-oppija-login-url (or lang "fi") target))
           (let [;todo verify that serviceValidate actually returns a successful authentication for the provided ticket - the current implementation below is happy path poc only.
                 rs (->
                      (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))

@@ -619,7 +619,7 @@
     (let [locked-answers (get-in db [:oppija-session :data])]
       (js/console.log (str "Locking answers... " locked-answers))
       (reduce (fn [db [key {:keys [locked value]}]]
-                (when (some? value)
+                (if (some? value)
                   (update-in db [:application :answers key] (fn [ans] (-> ans
                                                                           (assoc :locked locked)
                                                                           ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
@@ -628,7 +628,8 @@
                                                                           ;ssn erityistapaus, tarkistetaan onko jo hakenut haussa.
                                                                           (assoc :valid true)
                                                                           (assoc :cannot-edit true)
-                                                                          (assoc :value value))))))
+                                                                          (assoc :value value))))
+                  db))
               db
               locked-answers))
     db))
