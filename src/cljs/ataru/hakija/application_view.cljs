@@ -131,8 +131,8 @@
         demo?                  (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
         session-fetched?       (subscribe [:state-query [:oppija-session :logged-in]])
-        tunnistautuminen-declined? (subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
-        tunnistautuminen-enabled? (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+        tunnistautuminen-enabled? (fc/feature-enabled? :hakeminen-tunnistautuneena)
+        lander-active?            (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
@@ -165,7 +165,7 @@
                    (and @form
                         (or (not (nil? @session-fetched?))
                             (not tunnistautuminen-enabled?))))
-           (if (and (not (or @session-fetched? @tunnistautuminen-declined?)) tunnistautuminen-enabled?)
+           (if @lander-active?
              (hakeminen-tunnistautuneena-lander)
              [:div.application__lomake-wrapper
               ^{:key (:id @form)}

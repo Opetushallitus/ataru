@@ -1,6 +1,7 @@
 (ns ataru.hakija.subs
   (:require [re-frame.core :as re-frame]
             [ataru.config :as config]
+            [ataru.feature-config :as fc]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :as autil]
@@ -316,6 +317,19 @@
   (fn [db]
     (let [demo-requested? (get db :demo-requested)]
       (boolean demo-requested?))))
+
+(re-frame/reg-sub
+  :application/hakeminen-tunnistautuneena-lander-active?
+  (fn [_ _]
+    [(re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
+     (re-frame/subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
+     (re-frame/subscribe [:state-query [:oppija-session :logged-in]])])
+  (fn [[form-allows already-declined logged-in] _]
+    (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+      (and feature-enabled
+           form-allows
+           (not already-declined)
+           (not logged-in)))))
 
 (re-frame/reg-sub
   :application/can-apply?

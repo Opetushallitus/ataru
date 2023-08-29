@@ -89,11 +89,9 @@
 
 (defn logged-in-indicator-or-placeholder []
   (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])]
-    (if logged-in-name
+    (when logged-in-name
       [:div.application__logged-in-banner-wrapper
-       "Logged in as " logged-in-name]
-      [:div.application__logged-in-banner-wrapper
-       "Not logged in."])))
+       "Logged in as " logged-in-name])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
@@ -216,7 +214,9 @@
       [notification-banner (translations/get-hakija-translation :demo lang)])))
 
 (defn banner []
-  (let [form? @(subscribe [:application/form])]
+  (let [form?             @(subscribe [:application/form])
+        ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
+        control-active?   (and form? (not ht-lander-active?))]
     [:div.application__banner-container
      {:aria-live "polite"}
      [virkailija-fill-ribbon]
@@ -224,10 +224,10 @@
       [:div.application-top-banner
        [logo]
        [hakuaika-left]
-       (when form?
+       (when control-active?
          [:div.application__preview-control
           [preview-toggle]])
-       (when form?
+       (when control-active?
          [status-controls])
        [logged-in-indicator-or-placeholder]]]
      [demo-notification-banner]]))
