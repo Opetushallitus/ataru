@@ -19,3 +19,7 @@
 (defn icon-lock []
   [:span.application__submitted-icon.zmdi-hc-stack.zmdi-hc-lg
    [:i.zmdi.zmdi-lock-open]])
+
+(defn icon-account []
+  [:span.application__logged-icon.zmdi-hc-2x
+   [:i.zmdi.zmdi-account-o]])

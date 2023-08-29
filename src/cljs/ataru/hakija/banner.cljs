@@ -2,6 +2,7 @@
   (:require [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
+            [ataru.hakija.application-view-icons :as icons]
             [cljs.core.match :refer-macros [match]]
             [ataru.translations.translation-util :as translations]
             [clojure.string :as string]))
@@ -91,7 +92,9 @@
   (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])]
     (when logged-in-name
       [:div.application__logged-in-banner-wrapper
-       "Logged in as " logged-in-name])))
+       [icons/icon-account]
+       [:div.application__logged-in-name-container
+        logged-in-name]])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
