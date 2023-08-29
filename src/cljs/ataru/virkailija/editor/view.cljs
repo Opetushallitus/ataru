@@ -363,6 +363,23 @@
        {:for "demo-validity-end"}
        @(subscribe [:editor/virkailija-translation :demo-validity-end])]]]))
 
+(defn- allow-hakeminen-tunnistautuneena-component
+  []
+  (let [id                      "toggle-allow-hakeminen-tunnistautuneena"
+        current-value           @(subscribe [:editor/allow-hakeminen-tunnistautuneena?])
+        superuser?              @(subscribe [:editor/superuser?])
+        disabled?               (or @(subscribe [:editor/form-locked?])
+                                    (not superuser?))]
+    [:div.editor-form__checkbox-with-label
+     [:input.editor-form__checkbox
+      {:id        id
+       :checked   (true? (boolean current-value))
+       :type      "checkbox"
+       :disabled  disabled?
+       :on-change #(dispatch [:editor/toggle-allow-hakeminen-tunnistautuneena])}]
+     [:label.editor-form__checkbox-label
+      {:for id}
+      @(subscribe [:editor/virkailija-translation :hakeminen-tunnistautuneena-allowed-on-form])]]))
 (defn- allow-only-yhteishaku-component
   []
   (let [id                      "toggle-allow-only-yhteishaku"
@@ -403,6 +420,7 @@
    [:div.editor-form__component-content-wrapper
     [:div.editor-form__module-fields
      [allow-only-yhteishaku-component]
+     [allow-hakeminen-tunnistautuneena-component]
      [close-form-component]]]
    (when @(subscribe [:editor/show-demo-config])
     [:div.editor-form__component-content-wrapper
