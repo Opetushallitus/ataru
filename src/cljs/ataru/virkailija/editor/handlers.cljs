@@ -1584,6 +1584,12 @@
         updated-db))))
 
 (reg-event-db
+  :editor/toggle-allow-hakeminen-tunnistautuneena
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:allow-hakeminen-tunnistautuneena])
+          value (not (get-in db path))]
+      (assoc-in db path value))))
+(reg-event-db
   :editor/toggle-allow-only-yhteishaut
   (fn [db [_]]
     (let [path (db/current-form-properties-path db [:allow-only-yhteishaut])

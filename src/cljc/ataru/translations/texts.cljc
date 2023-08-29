@@ -1147,6 +1147,9 @@
    :only-yhteishaku                                          {:fi "Lomake on sallittu vain yhteishauille"
                                                               :sv "SV: Lomake on sallittu vain yhteishauille"
                                                               :en "EN: Lomake on sallittu vain yhteishauille"}
+   :hakeminen-tunnistautuneena-allowed-on-form               {:fi "Lomakkeella voi hakea tunnistautuneena"
+                                                              :sv "SV: Lomakkeella voi hakea tunnistautuneena"
+                                                              :en "EN: Lomakkeella voi hakea tunnistautuneena"}
    :close-form                                               {:fi "Sulje lomake"
                                                               :sv "Stänga blanketten"
                                                               :en "Close form"}
