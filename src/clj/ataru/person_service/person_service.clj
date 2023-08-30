@@ -10,7 +10,7 @@
             [ataru.date :as date]))
 
 (defprotocol PersonService
-  (create-or-find-person [this person]
+  (create-or-find-person [this application]
     "Create or find a person in Oppijanumerorekisteri.")
 
   (get-persons [this oids]
@@ -80,6 +80,7 @@
         master-oid (:oppijanumero person-from-onr)]
     (merge person {:master-oid master-oid})))
 
+
 (defrecord IntegratedPersonService [henkilo-cache
                                     oppijanumerorekisteri-cas-client]
   component/Lifecycle
@@ -96,7 +97,8 @@
                              oppijanumerorekisteri-cas-client id)
               match-person (:body match-response)]
           (if
-            (and (= (:sukupuoli match-person) (:sukupuoli person))
+            (and (= :found (:status match-response))
+                 (= (:sukupuoli match-person) (:sukupuoli person))
                  (= (:syntymaaika match-person) (:syntymaaika person)))
             {:status :found-matching :oid (:oidHenkilo match-person)}
             (let [new-person (person-client/create-person

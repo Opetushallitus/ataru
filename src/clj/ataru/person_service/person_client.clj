@@ -109,7 +109,7 @@
     (match result
            {:status 200 :body body}
            {:status :found :body (json/parse-string body true)}
-           {:status 404 :body body}
+           {:status 404 :body _}
            {:status :not-found :body nil}
            :else (throw-error (str "Error while searching for person with identification " identification ", "
                                    "status: " (:status result)
