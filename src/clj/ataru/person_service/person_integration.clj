@@ -48,7 +48,13 @@
              :created
              (log/info "Added person" oid "to oppijanumerorekisteri")
              :exists
-             (log/info "Person" oid "already existed in oppijanumerorekisteri"))
+             (log/info "Person" oid "already existed in oppijanumerorekisteri")
+             :found-matching
+             (log/info "Found person" oid "with matching email, date of birth and gender")
+             :dob-or-gender-conflict
+             (log/info "Found person with matching email, but conflicting date of birth or gender. Created new person" oid)
+             :created-with-email-id
+             (log/info "Added person" oid "with email identification to oppijanumerorekisteri"))
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
