@@ -10,7 +10,7 @@
             [ataru.date :as date]))
 
 (defprotocol PersonService
-  (create-or-find-person [this person]
+  (create-or-find-person [this application]
     "Create or find a person in Oppijanumerorekisteri.")
 
   (get-persons [this oids]
@@ -89,9 +89,30 @@
   PersonService
 
   (create-or-find-person [_ application]
-    (person-client/create-or-find-person
-     oppijanumerorekisteri-cas-client
-     (orpe/extract-person-from-application application)))
+    (let [person (orpe/extract-person-from-application application)]
+      (if (:eiSuomalaistaHetua person)
+        (let [id (first (:identifications person))
+              match-response (person-client/get-person-by-identification
+                             oppijanumerorekisteri-cas-client id)
+              match-person (:body match-response)]
+          (if
+            (and (= :found (:status match-response))
+                 (= (:sukupuoli match-person) (:sukupuoli person))
+                 (= (:syntymaaika match-person) (:syntymaaika person)))
+            {:status :found-matching :oid (:oidHenkilo match-person)}
+            (let [new-person (person-client/create-person
+                               oppijanumerorekisteri-cas-client
+                               person)]
+              (if (= :not-found (:status match-response))
+                (do
+                  (person-client/add-identification-to-person
+                    oppijanumerorekisteri-cas-client
+                    (:oid new-person) id)
+                  {:status :created-with-email-id :oid (:oid new-person)})
+                {:status :dob-or-gender-conflict :oid (:oid new-person)}))))
+        (person-client/create-or-find-person
+          oppijanumerorekisteri-cas-client
+          person))))
 
   (get-persons [_ oids] (cache/get-many-from henkilo-cache oids))
 
