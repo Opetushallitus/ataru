@@ -122,8 +122,8 @@
                  (resolve-url :oppijanumerorekisteri-service.person-identification oid)
                  identification)]
     (match result
-           {:status 200 :body body}
-           (json/parse-string body true)
+           {:status 200 :body _}
+           {:status :ok}
            :else (throw-error (str "Could not add identification to person " oid ", "
                                    "identification: " identification
                                    "status: " (:status result)

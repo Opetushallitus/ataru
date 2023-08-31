@@ -80,7 +80,6 @@
         master-oid (:oppijanumero person-from-onr)]
     (merge person {:master-oid master-oid})))
 
-
 (defrecord IntegratedPersonService [henkilo-cache
                                     oppijanumerorekisteri-cas-client]
   component/Lifecycle
