@@ -680,6 +680,19 @@
           (response/unauthorized {:error (str "Hakemuksen "
                                               (:application-key note)
                                               " käsittely ei ole sallittu")})))
+      (api/POST "/mass-notes" {session :session}
+        :summary "Add new review notes for applications, mass operation"
+        :return [ataru-schema/ReviewNote]
+        :body [body {:notes                       s/Str
+                     :application-keys            [s/Str]
+                     (s/optional-key :hakukohde) s/Str
+                     (s/optional-key :state-name) ataru-schema/HakukohdeReviewTypeNames}]
+        (if-let [notes (application-service/add-review-notes
+                        application-service
+                        session
+                        body)]
+          (response/ok notes)
+          (response/unauthorized {:error "Hakemuksien käsittely ei ole sallittu"})))
 
       (api/DELETE "/notes/:note-id" []
         :summary "Remove note"
