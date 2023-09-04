@@ -32,7 +32,10 @@
             [:input.application-handling__information-request-text-input
              {:value     @subject
               :class (when (> (count @subject) 120) "application-handling__information-request-text-input--invalid")
-              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])}]]]
+              :on-change #(dispatch [:application/set-single-information-request-subject (-> % .-target .-value)])}]
+            (when (> (count @subject) 120) 
+              [:div.application-handling__information-request-text-input--invalid 
+               @(subscribe [:editor/virkailija-translation :single-information-request-vaidation-error-message])])]]
           [:div.application-handling__information-request-row
            [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
             {:value     @message

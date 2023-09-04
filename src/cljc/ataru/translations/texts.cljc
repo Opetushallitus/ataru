@@ -1577,6 +1577,9 @@
    :single-information-request-subject                       {:fi "Aihe (max. 120 merkkiä):"
                                                               :sv "Ämne (max. 120 tecken):"
                                                               :en "Subject (max. 120 characters):"}
+   :single-information-request-vaidation-error-message       {:fi "Aihetekstin maksimipituus on 120 merkkiä, lyhennä aihetta."
+                                                              :sv "Den maximala längden på ämnestexten är 120 tecken, förkorta texten."
+                                                              :en "Maximum length of subject field is 120 characters, please shorten the subject."}
    :single-information-request-email-applicant               {:fi "Olet lähettämässä sähköpostia 1 hakijalle: %s"
                                                               :sv "Skicka e-post till 1 sökande: "
                                                               :en "Send email to applicants:"}
