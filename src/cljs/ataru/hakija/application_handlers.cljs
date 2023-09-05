@@ -619,16 +619,18 @@
     (let [locked-answers (get-in db [:oppija-session :data])]
       (js/console.log (str "Locking answers... " locked-answers))
       (reduce (fn [db [key {:keys [locked value]}]]
-                (if (some? value)
+                (if (not (clojure.string/blank? value))
                   (update-in db [:application :answers key] (fn [ans] (-> ans
-                                                                          (assoc :locked locked)
                                                                           ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
                                                                           ;ei-validi arvo? Se ois kyllä huono juttu, validaatio tai ei.
                                                                           ;ehkä cas-oppijalta tulevat arvot vois validoida jo backendissä.
                                                                           ;ssn erityistapaus, tarkistetaan onko jo hakenut haussa.
-                                                                          (assoc :valid true)
                                                                           (assoc :cannot-edit true)
-                                                                          (assoc :value value))))
+                                                                          (assoc :value value)
+                                                                          (assoc :valid true)
+                                                                          (assoc :locked locked)
+                                                                          (assoc-in [:values :value] value)
+                                                                          (assoc-in [:values :valid] true))))
                   db))
               db
               locked-answers))
@@ -640,7 +642,8 @@
   (fn [{:keys [db]} [_ response]]
     {:db (-> db
              (assoc :oppija-session (get-in response [:body]))
-             (prefill-and-lock-answers))}))
+             (prefill-and-lock-answers))
+     :dispatch [:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil}]}))
 
 (reg-event-db
   :application/network-online
