@@ -89,12 +89,15 @@
         (translations/get-hakija-translation :hakija-new-text lang)))
 
 (defn logged-in-indicator-or-placeholder []
-  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])]
+  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])
+        name-to-show (when logged-in-name (if (<= (count logged-in-name) 15)
+                                            logged-in-name
+                                            (str (subs logged-in-name 0 12) "...")))]
     (when logged-in-name
       [:div.application__logged-in-banner-wrapper
        [icons/icon-account]
        [:div.application__logged-in-name-container
-        logged-in-name]])))
+        name-to-show]])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
