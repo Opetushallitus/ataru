@@ -299,7 +299,7 @@
                                        :label {:fi "ulkokenttä", :sv ""}})})
 
 (deftest application-to-submit-is-correct
-  (let [result (create-application-to-submit application-data-to-submit form1 "fi" true)]
+  (let [result (create-application-to-submit application-data-to-submit form1 "fi" true false)]
     (is (= expected-application result))))
 
 (def form2

@@ -226,7 +226,8 @@
                            audit-logger
                            application
                            is-modify?
-                           session]
+                           session
+                           oppija-session]
   (let [strict-warnings-on-unchanged-edits? (if (nil? (:strict-warnings-on-unchanged-edits? application))
                                               true
                                               (:strict-warnings-on-unchanged-edits? application))
@@ -329,6 +330,7 @@
                                           form
                                           cannot-edit-fields)
                                         final-application)
+        hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application)) oppija-session)
         validation-result             (validator/valid-application?
                                        koodisto-cache
                                        has-applied
@@ -343,6 +345,8 @@
                                           (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
     (when (not-empty cannot-edit-fields)
       (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
+    (when (not-empty hakeminen-tunnistautuneena-validation-errors)
+      (log/error "Error(s) when validating fields from oppija-session: " (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
@@ -493,7 +497,8 @@
    application
    session
    liiteri-cas-client
-   maksut-service]
+   maksut-service
+   oppija-session]
   (log/info "Application submitted:" application)
 
   (let [{:keys [passed? id]
@@ -508,7 +513,8 @@
                             audit-logger
                             application
                             false
-                            session)
+                            session
+                            oppija-session)
         {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application)
         virkailija-secret (:virkailija-secret application)]
 
@@ -563,7 +569,8 @@
                             audit-logger
                             input-application
                             true
-                            session)
+                            session
+                            {});fixme, miten oppija-sessio toimii muokkauksessa? Ei tällä hetkellä mitenkään?
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret

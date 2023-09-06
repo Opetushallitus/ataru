@@ -184,7 +184,8 @@
             :post-data     (create-application-to-submit (:application db)
                                                          (:form db)
                                                          (get-in db [:form :selected-language])
-                                                         (:strict-warnings-on-unchanged-edits? db))
+                                                         (:strict-warnings-on-unchanged-edits? db)
+                                                         (get-in db [:oppija-session :logged-in] false))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
 
