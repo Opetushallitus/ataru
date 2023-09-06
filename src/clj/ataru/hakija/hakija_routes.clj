@@ -172,12 +172,24 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
+
+
 (defn- parse-cas-oppija-login-url [locale target]
   (str
     (-> config :urls :cas-oppija-url)
     "/login?locale=" (or locale "fi") "&valtuudet=false&service="
     (-> config :urls :ataru-hakija-login-url)
     "?target=" target))
+
+(defn- parse-ticket-validation-url [ticket target]
+  (let [url (str
+              (-> config :urls :cas-oppija-url)
+              "/serviceValidate?ticket=" ticket "&service="
+              (-> config :urls :ataru-hakija-login-url)
+              "?target=" target)]
+    (log/info "ticket validation url " url)
+    url)
+  )
 
 (defn hakija-auth-routes []
   (api/context "/auth" []
@@ -187,12 +199,13 @@
                      {target :- s/Str nil}
                      {lang :- s/Str nil}]
       (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
-      (if (= nil ticket)
+      (if (nil? ticket)
         (response/found
           (parse-cas-oppija-login-url (or lang "fi") target))
         (let [;todo verify that serviceValidate actually returns a successful authentication for the provided ticket - the current implementation below is happy path poc only.
-              rs (-> (http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket (str "&service=http://localhost:8351/hakemus/auth/login?target=" target)))
-                     (:body))
+              rs (-> ;(http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket "&service=" (-> config :urls :ataru-hakija-login-url) "?target=" target))
+                   (http/do-get (parse-ticket-validation-url ticket target))
+                   (:body))
               parsed-attributes (parse-oppija-attributes rs)
               new-session-key (generate-new-random-key)]
           (log/info "Cas-oppija-response" rs ", parsed" (xml/parse-str rs) ", attributes" parsed-attributes)
@@ -268,10 +281,11 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (let [session {:session request}
-            oppija-session-from-db (when (fc/feature-enabled? :hakeminen-tunnistautuneena)
+            tunnistautunut? (:tunnistautunut application)
+            oppija-session-from-db (when (and (fc/feature-enabled? :hakeminen-tunnistautuneena) tunnistautunut?)
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
-        (log/info "Submit application, session" oppija-session-from-db)
+        (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
         (match (hakija-application-service/handle-application-submit
                  form-by-id-cache
                  koodisto-cache
@@ -284,7 +298,8 @@
                  application
                  session
                  liiteri-cas-client
-                 maksut-service)
+                 maksut-service
+                 oppija-session-from-db)
                {:passed? false :failures failures :code code}
                (response/bad-request {:failures failures :code code})
 
