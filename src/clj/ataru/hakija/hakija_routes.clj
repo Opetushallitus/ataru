@@ -146,8 +146,13 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn parse-oppija-attributes [validation-response]
+(defn parse-oppija-attributes-if-successful [validation-response]
   (let [xml (xml/parse-str validation-response)
+        success? (= (-> xml
+                  :content
+                  (first)
+                  :tag)
+              :authenticationSuccess)
         attributes (-> xml
                        :content
                        (first)
@@ -157,18 +162,18 @@
         parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))]
     ;todo, tähän tulee vielä lisää kenttiä.
     ;Avaimet täytyy pitää samoina kuin henkilötietomoduulin esitäytettävien vastausten tunnisteet.
-    {:first-name {:value (:firstName parsed-raw-map)
-                  :locked true}
-     :preferred-name {:value (:givenName parsed-raw-map)
-                      :locked true}
-     :last-name  {:value (:sn parsed-raw-map)
-                  :locked true}
-     :ssn        {:value (:nationalIdentificationNumber parsed-raw-map)
-                  :locked true}
-     :address    {:value "placeholder, fixme"
-                  :locked false}
-     :personOid  {:value (:personOid parsed-raw-map)
-                  :locked false}}))
+    (when success?
+      {:person-oid (:personOid parsed-raw-map)
+       :fields {:first-name {:value (:firstName parsed-raw-map)
+                             :locked true}
+                :preferred-name {:value (:givenName parsed-raw-map)
+                                 :locked true}
+                :last-name  {:value (:sn parsed-raw-map)
+                             :locked true}
+                :ssn        {:value (:nationalIdentificationNumber parsed-raw-map)
+                             :locked true}
+                :address    {:value "placeholder, fixme"
+                             :locked false}}})))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
@@ -198,30 +203,32 @@
       :query-params [{ticket :- s/Str nil}
                      {target :- s/Str nil}
                      {lang :- s/Str nil}]
+      ;fixme ehkä, pitäisikö myös tarkistaa onko jo voimassaoleva sessio?
       (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
       (if (nil? ticket)
         (response/found
           (parse-cas-oppija-login-url (or lang "fi") target))
-        (let [;todo verify that serviceValidate actually returns a successful authentication for the provided ticket - the current implementation below is happy path poc only.
-              rs (-> ;(http/do-get (str "https://testiopintopolku.fi/cas-oppija/serviceValidate?ticket=" ticket "&service=" (-> config :urls :ataru-hakija-login-url) "?target=" target))
-                   (http/do-get (parse-ticket-validation-url ticket target))
-                   (:body))
-              parsed-attributes (parse-oppija-attributes rs)
-              new-session-key (generate-new-random-key)]
-          (log/info "Cas-oppija-response" rs ", parsed" (xml/parse-str rs) ", attributes" parsed-attributes)
-          (oss/persist-session! new-session-key ticket parsed-attributes)
-          (-> (response/found target)
-              (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
-                                                                 :path "/hakemus"})))))))
+        (let [rs (-> (http/do-get (parse-ticket-validation-url ticket target))
+                     (:body))
+              parsed-attributes (parse-oppija-attributes-if-successful rs)]
+          (log/info "Cas-oppija-response" rs  ", attributes" parsed-attributes)
+          (if parsed-attributes
+            (let [new-session-key (generate-new-random-key)]
+              (oss/persist-session! new-session-key ticket parsed-attributes)
+              (-> (response/found target)
+                  (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
+                                                                     :path "/hakemus"})))))
+            ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
+            (response/bad-request)))))
     ;todo add logout endpoint / handling
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
-            trimmed-session (-> session
-                                (update :data (fn [data] (select-keys data [:ssn :first-name :preferred-name :last-name :address])))
-                                (merge {:logged-in (boolean session)}))]
-        (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
-        (response/ok trimmed-session)))))
+            enriched-session (-> session
+                                 ;(update :data (fn [data] (select-keys data [:ssn :first-name :preferred-name :last-name :address])))
+                                 (merge {:logged-in (boolean session)}))]
+        (log/info "Session for session" oppija-session " from db" session ", trimmed " enriched-session)
+        (response/ok enriched-session)))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
@@ -281,33 +288,36 @@
       :summary "Submit application"
       :body [application ataru-schema/Application]
       (let [session {:session request}
-            tunnistautunut? (:tunnistautunut application)
-            oppija-session-from-db (when (and (fc/feature-enabled? :hakeminen-tunnistautuneena) tunnistautunut?)
+            tunnistautunut? (and (fc/feature-enabled? :hakeminen-tunnistautuneena)
+                                 (:tunnistautunut application))
+            oppija-session-from-db (when tunnistautunut?
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
         (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
-        (match (hakija-application-service/handle-application-submit
-                 form-by-id-cache
-                 koodisto-cache
-                 tarjonta-service
-                 job-runner
-                 organization-service
-                 ohjausparametrit-service
-                 hakukohderyhma-settings-cache
-                 audit-logger
-                 application
-                 session
-                 liiteri-cas-client
-                 maksut-service
-                 oppija-session-from-db)
-               {:passed? false :failures failures :code code}
-               (response/bad-request {:failures failures :code code})
+        (if (and tunnistautunut? (nil? oppija-session-from-db))
+          (response/bad-request {:passed? false :failures ["Sessio on vanhentunut"] :code :session-not-found})
+          (match (hakija-application-service/handle-application-submit
+                   form-by-id-cache
+                   koodisto-cache
+                   tarjonta-service
+                   job-runner
+                   organization-service
+                   ohjausparametrit-service
+                   hakukohderyhma-settings-cache
+                   audit-logger
+                   application
+                   session
+                   liiteri-cas-client
+                   maksut-service
+                   oppija-session-from-db)
+                 {:passed? false :failures failures :code code}
+                 (response/bad-request {:failures failures :code code})
 
-               {:passed? true :id application-id :payment payment}
-               (response/ok {:id application-id :payment payment})
+                 {:passed? true :id application-id :payment payment}
+                 (response/ok {:id application-id :payment payment})
 
-               {:passed? true :id application-id}
-               (response/ok {:id application-id}))))
+                 {:passed? true :id application-id}
+                 (response/ok {:id application-id})))))
     (api/PUT "/application" {session :session}
       :summary "Edit application"
       :body [application ataru-schema/Application]

@@ -617,7 +617,7 @@
 
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
-    (let [locked-answers (get-in db [:oppija-session :data])]
+    (let [locked-answers (get-in db [:oppija-session :data :fields])]
       (js/console.log (str "Locking answers... " locked-answers))
       (reduce (fn [db [key {:keys [locked value]}]]
                 (if (not (clojure.string/blank? value))

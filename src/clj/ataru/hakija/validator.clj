@@ -277,14 +277,14 @@
 
 (defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session]
   (when oppija-session
-    (let [validation-result (for [[key session-data] (:data oppija-session)]
-                              (do
-                                (let [hakemus-value (:value (get answers-by-key key))
-                                      oppija-session-value (:value session-data)
-                                      locked? (:locked session-data)]
-                                  (when (and locked?
-                                             (not= oppija-session-value hakemus-value))
-                                    (str key ": hakemus-answer " hakemus-value " does not equal " oppija-session-value)))))]
+    (let [validation-result (for [[key session-data] (get-in oppija-session [:data :fields])]
+                              (let [hakemus-value (:value (get answers-by-key key))
+                                    oppija-session-value (:value session-data)
+                                    locked? (:locked session-data)]
+                                (when (and locked?
+                                           (not= oppija-session-value hakemus-value))
+                                  (format "Hakemus-answer '%s' does not equal session-answer '%s' for key %s"
+                                          hakemus-value oppija-session-value key))))]
       (filter #(some? %) validation-result))))
 
 (defn valid-application?
