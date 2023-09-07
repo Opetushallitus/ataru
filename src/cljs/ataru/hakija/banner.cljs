@@ -89,7 +89,7 @@
         (translations/get-hakija-translation :hakija-new-text lang)))
 
 (defn logged-in-indicator-or-placeholder []
-  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :first-name :value]])
+  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :fields :first-name :value]])
         name-to-show (when logged-in-name (if (<= (count logged-in-name) 15)
                                             logged-in-name
                                             (str (subs logged-in-name 0 12) "...")))]
