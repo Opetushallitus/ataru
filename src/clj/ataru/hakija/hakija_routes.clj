@@ -39,8 +39,7 @@
             [ataru.util.http-util :as http]
             [clojure.data.xml :as xml]
             [ataru.cas-oppija.cas-oppija-session-store :as oss]
-            [ataru.feature-config :as fc]
-            )
+            [ataru.feature-config :as fc])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -149,17 +148,17 @@
 (defn parse-oppija-attributes-if-successful [validation-response]
   (let [xml (xml/parse-str validation-response)
         success? (= (-> xml
-                  :content
-                  (first)
-                  :tag)
-              :authenticationSuccess)
+                        :content
+                        (first)
+                        :tag)
+                    :authenticationSuccess)
         attributes (-> xml
                        :content
                        (first)
                        :content
                        (last)
                        :content)
-        parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))]
+        parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))];todo onkohan tämä tarpeeksi robusti, xml-käsittely pitää vielä käydä läpi
     ;todo, tähän tulee vielä lisää kenttiä.
     ;Avaimet täytyy pitää samoina kuin henkilötietomoduulin esitäytettävien vastausten tunnisteet.
     (when success?
@@ -177,8 +176,6 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
-
-
 (defn- parse-cas-oppija-login-url [locale target]
   (str
     (-> config :urls :cas-oppija-url)
@@ -193,8 +190,7 @@
               (-> config :urls :ataru-hakija-login-url)
               "?target=" target)]
     (log/info "ticket validation url " url)
-    url)
-  )
+    url))
 
 (defn hakija-auth-routes []
   (api/context "/auth" []
@@ -225,7 +221,6 @@
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
             enriched-session (-> session
-                                 ;(update :data (fn [data] (select-keys data [:ssn :first-name :preferred-name :last-name :address])))
                                  (merge {:logged-in (boolean session)}))]
         (log/info "Session for session" oppija-session " from db" session ", trimmed " enriched-session)
         (response/ok enriched-session)))))
