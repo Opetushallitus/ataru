@@ -171,8 +171,20 @@
                              :locked true}
                 :ssn        {:value (:nationalIdentificationNumber parsed-raw-map)
                              :locked true}
-                :address    {:value "placeholder, fixme"
-                             :locked false}}})))
+                :email {:value (:mail parsed-raw-map)
+                        :locked false}
+                :country-of-residence {:value (or
+                                                (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
+                                                246)
+                          :locked false}
+                :address    {:value (or
+                                      (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
+                                      (:VakinainenUlkomainenLahiosoite parsed-raw-map))
+                             :locked false}
+                :postal-code {:value (:VakinainenKotimainenLahiosoitePostinumero parsed-raw-map)
+                              :locked false}
+                :home-town {:value (:KotikuntaKuntanumero parsed-raw-map)
+                            :locked false}}})))
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
