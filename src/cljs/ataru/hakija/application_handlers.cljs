@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
-  (:require [clojure.string :as string]
+  (:require [ataru.config :as config]
+            [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
@@ -1440,7 +1441,8 @@
   [check-schema-interceptor]
   (fn [{:keys [db]}]
     (let [location (.. js/window -location)
-          target (str js/config.applicant.service_url "/hakemus/auth/login?target=" location)]
+          service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/hakemus/auth/login?target=" location)]
       (set! (.. js/window -location -href) target)
       nil)))
 
