@@ -120,18 +120,19 @@
        (translations/get-hakija-translation :ht-ilman-kirjautumista @lang)]]]))
 
 (defn application-contents []
-  (let [form                   (subscribe [:state-query [:form]])
-        load-failure?          (subscribe [:state-query [:error :code]])
-        can-apply?             (subscribe [:application/can-apply?])
-        editing?               (subscribe [:state-query [:application :editing?]])
-        expired                (subscribe [:state-query [:application :secret-expired?]])
-        delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
-        lang                   (subscribe [:application/form-language])
-        secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
-        demo?                  (subscribe [:application/demo?])
+  (let [form                      (subscribe [:state-query [:form]])
+        load-failure?             (subscribe [:state-query [:error :code]])
+        can-apply?                (subscribe [:application/can-apply?])
+        editing?                  (subscribe [:state-query [:application :editing?]])
+        expired                   (subscribe [:state-query [:application :secret-expired?]])
+        delivery-status           (subscribe [:state-query [:application :secret-delivery-status]])
+        lang                      (subscribe [:application/form-language])
+        secret-link-valid-days    (config/get-public-config [:secret-link-valid-days])
+        demo?                     (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
-        session-fetched?       (subscribe [:state-query [:oppija-session :logged-in]])
-        tunnistautuminen-enabled? (fc/feature-enabled? :hakeminen-tunnistautuneena)
+        session-fetched?          (subscribe [:state-query [:oppija-session :logged-in]])
+        allow-tunnistautuminen-global (fc/feature-enabled? :hakeminen-tunnistautuneena)
+        allow-tunnistautuminen-form (subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
         lander-active?            (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])]
     (fn []
       (let [root-element (if @demo?
@@ -144,7 +145,8 @@
          (when-not (or @load-failure?
                        (and @form
                             (or (not (nil? @session-fetched?))
-                                (not tunnistautuminen-enabled?))))
+                                (not allow-tunnistautuminen-global)
+                                (not @allow-tunnistautuminen-form))))
            [:div.application__form-loading-spinner
             [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
          (when @expired
@@ -164,7 +166,8 @@
          (when (or @load-failure?
                    (and @form
                         (or (not (nil? @session-fetched?))
-                            (not tunnistautuminen-enabled?))))
+                            (not allow-tunnistautuminen-global)
+                            (not @allow-tunnistautuminen-form))))
            (if @lander-active?
              (hakeminen-tunnistautuneena-lander)
              [:div.application__lomake-wrapper
