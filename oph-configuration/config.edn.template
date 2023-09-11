@@ -44,7 +44,7 @@
                             :attachment-download-allowed {{ataru_attachment_download_allowed | default('false')}}
                             :schema-validation {{ ataru_schema_validation | default('false') }}
                             :arvosanat {{ ataru_arvosanat | default('false') }}
-                            :hakeminen-tunnistautuneena {{ataru_hakeminen_tunnistautuneena_enabled | default('false'}}}
+                            :hakeminen-tunnistautuneena "{{ ataru_hakeminen_tunnistautuneena_enabled | default('false') }}"}
                  :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
                  :tutu-payment-form-keys "{{ataru_tutu_payment_form_key}}"
                  :attachment-modify-grace-period-days 14
@@ -67,5 +67,5 @@
         :ohjausparametrit-service-base-url   "{{ataru_ohjausparametrit_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :valintalaskenta-ui-service-base-url "{{ataru_valintalaskenta_ui_service_base_url | default('https://' + ataru_virkailija_host) }}"
         :cas-oppija-url                      "{{ataru_cas_oppija_url | default('https://' + ataru_hakija_host + '/cas-oppija') }}"
-        :ataru-hakija-login-url              "{{ataru_hakija_login_url | default('https://' + ataru_hakija_host + '/hakemus/auth/login') }}"
+        :ataru-hakija-login-url              "{{ataru_hakija_login_url | default('https://' + ataru_hakija_host + '/hakemus/auth/login') }}"}
  :feedback {:application-feedback-flow-token "{{ataru_application_feedback_flow_token}}"}}
