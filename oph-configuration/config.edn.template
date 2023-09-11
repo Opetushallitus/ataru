@@ -36,7 +36,7 @@
                                 :queue-url     "{{ataru_henkilo_modified_queue_url}}"}}
  :public-config {:virkailija-caller-id "{{ataru_virkailija_frontend_caller_id | default('1.2.246.562.10.00000000001.ataru-editori.frontend')}}"
                  :hakija-caller-id "{{ataru_hakija_frontend_caller_id | default('1.2.246.562.10.00000000001.ataru-hakija.frontend')}}"
-                 :applicant {:service_url "{{ataru_applicant_service_url}}"}
+                 :applicant {:service_url "{{ataru_applicant_service_url | default('https://' + ataru_hakija_host)}}"}
                  :virkailija {:service_url "https://{{host_virkailija}}/lomake-editori/"}
                  :konfo {:service_url "https://{{ataru_hakija_host}}"}
                  :environment-name "{{ataru_environment_name}}"
