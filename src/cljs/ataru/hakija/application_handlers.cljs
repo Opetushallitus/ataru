@@ -135,10 +135,8 @@
 (reg-event-fx
   :application/get-oppija-session
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ hakukohde-oid virkailija-secret]]
-    {:db   (cond-> (assoc-in db [:application :preselected-hakukohde-oids] [hakukohde-oid])
-                   (some? virkailija-secret)
-                   (assoc-in [:application :virkailija-secret] virkailija-secret))
+  (fn [{:keys [db]} [_]]
+    {:db   db
      :http {:method  :get
             :url     (str "/hakemus/auth/session")
             :handler [:application/handle-oppija-session-fetch]}}))
@@ -562,7 +560,8 @@
   :application/post-handle-form-dispatches
   [check-schema-interceptor]
   (fn [{:keys [db]} _]
-    (let [selection-limited (selection-limits db)]
+    (let [selection-limited (selection-limits db)
+          form-allows-hakeminen-tunnistautuneena? (get-in db [:form :properties :allow-hakeminen-tunnistautuneena] false)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
          :dispatch-n [[:application/hakukohde-query-change (atom "")]
@@ -570,7 +569,10 @@
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
                       [:application/fetch-koulutustyypit]
-                      (when (fc/feature-enabled? :hakeminen-tunnistautuneena) [:application/get-oppija-session])]}
+                      (when (and
+                              form-allows-hakeminen-tunnistautuneena?
+                              (fc/feature-enabled? :hakeminen-tunnistautuneena))
+                        [:application/get-oppija-session])]}
         (when (and selection-limited (not (demo/demo? db)))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
