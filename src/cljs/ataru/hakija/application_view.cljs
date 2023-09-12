@@ -95,11 +95,15 @@
         (when form
           [editable-fields form submit-status])))))
 
-(defn- hakeminen-tunnistautuneena-lander []
-  (let [lang                   (subscribe [:application/form-language])]
+;(or (-> form :tarjonta :haku-name selected-lang)
+;                                     (-> form :name selected-lang))
+(defn- hakeminen-tunnistautuneena-lander [form selected-lang]
+  (let [lang                   (subscribe [:application/form-language])
+        header (or (-> form :tarjonta :haku-name selected-lang)
+                   (-> form :name selected-lang))]
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
      [:h1 "Valitse kuinka haluat kirjautua lomakkeelle"]
-     [:h3 "todo haun nimi tähän"]
+     [:div.application__hakeminen-tunnistautuneena-lander-haku-header header]
      [:div.application__hakeminen-tunnistautuneena-tunnistaudu-wrapper
       [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header @lang)]
       [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text @lang)]
@@ -169,7 +173,7 @@
                             (not allow-tunnistautuminen-global)
                             (not @allow-tunnistautuminen-form))))
            (if @lander-active?
-             (hakeminen-tunnistautuneena-lander)
+             (hakeminen-tunnistautuneena-lander @form @lang)
              [:div.application__lomake-wrapper
               ^{:key (:id @form)}
               (when (not @demo-modal-open?)
