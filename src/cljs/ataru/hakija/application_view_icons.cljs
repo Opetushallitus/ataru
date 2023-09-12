@@ -17,8 +17,12 @@
    [:i.zmdi.zmdi-trending-flat]])
 
 (defn icon-lock []
-  [:span.application__submitted-icon.zmdi-hc-stack.zmdi-hc-lg
+  [:span.application__locked-icon.zmdi-hc-stack.zmdi-hc-lg
    [:i.zmdi.zmdi-lock-open]])
+
+(defn icon-lock-closed []
+  [:span.application__locked-icon.zmdi-hc-stack.zmdi-hc-lg
+   [:i.zmdi.zmdi-lock-outline]])
 
 (defn icon-account []
   [:span.application__logged-icon.zmdi-hc-2x
