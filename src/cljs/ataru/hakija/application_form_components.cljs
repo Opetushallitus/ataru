@@ -267,40 +267,45 @@
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
-         ;(when locked [icons/icon-lock])
-         [:input.application__form-text-input
-          (merge {:id           form-field-id
-                  :type         "text"
-                  :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                  (util/non-blank-val input-hint languages))
-                  :class        (str size-class
-                                     (if show-error?
-                                       " application__form-field-error"
-                                       " application__form-text-input--normal"))
-                  :on-blur      (fn [evt]
-                                  (swap! local-state assoc
-                                         :focused? false
-                                         :value (trimmed-or-empty-value value))
-                                  (on-change (trimmed-or-empty-value value))
-                                  (on-blur evt))
-                  :on-change    (event->value (fn [value]
-                                                (swap! local-state assoc
-                                                       :focused? true
-                                                       :value value)
-                                                (on-change value)))
-                  :required     (is-required-field? field-descriptor)
-                  :aria-invalid (not valid)
-                  :tab-index    "0"
-                  :autoComplete autocomplete-off
-                  :value        (cond cannot-view?
-                                      "***********"
-                                      (:focused? @local-state)
-                                      (:value @local-state)
-                                      :else
-                                      value)
-                  :data-test-id data-test-id}
-                 (when (or disabled? cannot-edit? locked)
-                   {:disabled true}))]
+
+         [:div.application__input-container
+          (when locked
+            [:div.application__lock-icon-container
+             [icons/icon-lock-closed]])
+          [:input.application__form-text-input
+           (merge {:id           form-field-id
+                   :type         "text"
+                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (util/non-blank-val input-hint languages))
+                   :class        (str size-class
+                                      (if show-error?
+                                        " application__form-field-error"
+                                        " application__form-text-input--normal"))
+                   :on-blur      (fn [evt]
+                                   (swap! local-state assoc
+                                          :focused? false
+                                          :value (trimmed-or-empty-value value))
+                                   (on-change (trimmed-or-empty-value value))
+                                   (on-blur evt))
+                   :on-change    (event->value (fn [value]
+                                                 (swap! local-state assoc
+                                                        :focused? true
+                                                        :value value)
+                                                 (on-change value)))
+                   :required     (is-required-field? field-descriptor)
+                   :aria-invalid (not valid)
+                   :tab-index    "0"
+                   :autoComplete autocomplete-off
+                   :value        (cond cannot-view?
+                                       "***********"
+                                       (:focused? @local-state)
+                                       (:value @local-state)
+                                       :else
+                                       value)
+                   :data-test-id data-test-id}
+                  (when (or disabled? cannot-edit? locked)
+                    {:disabled true}))]]
+
          [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
                                    first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
                                    vals ;mapin arvot listana (jonka koko 1)
