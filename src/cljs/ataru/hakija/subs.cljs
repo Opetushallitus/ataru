@@ -323,11 +323,13 @@
   (fn [_ _]
     [(re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
-     (re-frame/subscribe [:state-query [:oppija-session :logged-in]])])
-  (fn [[form-allows already-declined logged-in] _]
+     (re-frame/subscribe [:state-query [:oppija-session :logged-in]])
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])])
+  (fn [[form-allows already-declined logged-in virkailija-secret] _]
     (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (and feature-enabled
            form-allows
+           (not (some? virkailija-secret))
            (not already-declined)
            (not logged-in)))))
 
