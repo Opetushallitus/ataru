@@ -33,7 +33,7 @@
                                            :locked false}
                     :country-of-residence {:value  (or
                                                      (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
-                                                     246)
+                                                     "246")
                                            :locked false}
                     :address              {:value  (or
                                                      (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
