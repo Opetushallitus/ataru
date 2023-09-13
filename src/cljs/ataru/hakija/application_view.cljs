@@ -95,8 +95,6 @@
         (when form
           [editable-fields form submit-status])))))
 
-;(or (-> form :tarjonta :haku-name selected-lang)
-;                                     (-> form :name selected-lang))
 (defn- hakeminen-tunnistautuneena-lander [form selected-lang]
   (let [lang                   (subscribe [:application/form-language])
         header (or (-> form :tarjonta :haku-name selected-lang)
@@ -111,10 +109,11 @@
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
         :data-test-id "tunnistautuminen-button"}
        [icons/icon-lock] (translations/get-hakija-translation :ht-kirjaudu-sisaan @lang)]]
-     [:div.application__hakeminen-tunnistautuneena-tai-wrapper
-      [:hr.application__hakeminen-tunnustautuneena-partial-line-left]
-      "TAI"
-      [:hr.application__hakeminen-tunnustautuneena-partial-line-right]]
+     [:div.application__hakeminen-tunnistautuneena-separator-wrapper
+      [:hr.application__hakeminen-tunnistautuneena-partial-line-left]
+      [:div.application__hakeminen-tunnistautuneena-separator-text
+       (translations/get-hakija-translation :ht-tai @lang)]
+      [:hr.application__hakeminen-tunnistautuneena-partial-line-right]]
      [:div.application__hakeminen-tunnistautuneena-jatka-tunnistautumatta-wrapper
       [:h2 (translations/get-hakija-translation :ht-jatka-tunnistautumatta-header @lang)]
       [:p (translations/get-hakija-translation :ht-jatka-tunnistautumatta-text @lang)]
