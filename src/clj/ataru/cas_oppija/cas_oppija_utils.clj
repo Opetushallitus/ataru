@@ -21,6 +21,7 @@
     ;Avaimet täytyy pitää samoina kuin henkilötietomoduulin esitäytettävien vastausten tunnisteet.
     (when success?
       {:person-oid (:personOid parsed-raw-map)
+       :display-name (:displayName parsed-raw-map)
        :fields     {:first-name           {:value  (:firstName parsed-raw-map)
                                            :locked true}
                     :preferred-name       {:value  (:givenName parsed-raw-map)
