@@ -175,7 +175,16 @@
                                                                      :path "/hakemus"})))))
             ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
             (response/bad-request)))))
-    ;todo add logout endpoint / handling
+    (api/POST "/login" [:as request]
+      (let [body (ring.util.request/body-string request)]
+        (log/info "Received request for logout:" body)
+        (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request body)]
+          (let [res (oss/delete-session! ticket)]
+            (log/info ticket ": db result" res)
+            (if (= res 1)
+              (response/ok)
+              (response/not-found)))
+          (log/warn "Something went wong when processing logout request..."))))
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
