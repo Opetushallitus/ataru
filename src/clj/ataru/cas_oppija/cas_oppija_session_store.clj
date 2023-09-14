@@ -9,11 +9,10 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 (defn persist-session! [key ticket data]
-  (let [new-key (generate-new-random-key)]
-    (log/info "Persisting session with key" new-key ", ticket" ticket ", data" data ", type " (type data))
-    (exec :db yesql-add-oppija-session-query! {:key key
-                                               :ticket ticket
-                                               :data data})))
+  (log/info "Persisting session with key" key ", ticket" ticket ", data" data)
+  (exec :db yesql-add-oppija-session-query! {:key key
+                                             :ticket ticket
+                                             :data data}))
 
 (defn read-session [key]
   (log/info "Read session by key" key)
