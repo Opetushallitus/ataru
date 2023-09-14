@@ -46,6 +46,9 @@
          [koulutustyyppi-btn label @is-open on-click-fn]
          (when @is-open
            [:div.application__koulutustyypit-filter-wrapper
+            [btn/button {:label    "X"
+                         :on-click on-click-fn
+                         :id       "koulutustyyppi-close-btn"}]
             (for [{uri :uri :as koulutustyyppi} @koulutustyypit]
               (let [is-selected (boolean (koulutustyypit-filters' uri))
                     on-select #(dispatch [:application/toggle-koulutustyyppi-filter idx uri])
