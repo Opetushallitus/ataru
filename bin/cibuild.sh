@@ -21,7 +21,7 @@ compile-less() {
 
 npm-dependencies() {
     echo "Installing npm dependencies"
-    time npm install
+    time npm ci
     export CHROME_BIN=$(node -e "console.log(require('puppeteer').executablePath());")
 }
 

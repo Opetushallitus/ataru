@@ -58,7 +58,7 @@ generate-nginx-config:
 # Npm installation
 # ----------------
 $(NODE_MODULES): package.json package-lock.json
-	npm install
+	npm ci
 	touch $(NODE_MODULES)
 
 # ----------------
