@@ -123,7 +123,7 @@
 
 (defmacro with-auth-response
   [method resp request-body & body]
-  `(let [~resp (-> (mock/request ~method "/hakemus/auth/login" ~request-body)
+  `(let [~resp (-> (mock/request ~method "/hakemus/auth/cas-oppija" ~request-body)
                    handler
                    parse-body)]
      ~@body))
