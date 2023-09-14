@@ -59,4 +59,4 @@
                    :editor-url                          "http://localhost:8350/lomake-editori"
                    :liiteri-url                         ""
                    :cas-oppija-url                      ""
-                   :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/login"}}
+                   :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/cas-oppija"}}
