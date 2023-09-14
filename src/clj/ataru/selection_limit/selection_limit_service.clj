@@ -8,6 +8,13 @@
             [clojure.set :as set])
   (:import [java.util UUID]))
 
+(declare yesql-permanent-selection-question-ids-for-application)
+(declare yesql-get-selections-query)
+(declare yesql-remove-existing-initial-selection!)
+(declare yesql-get-selections-for-answer-query)
+(declare yesql-remove-existing-selection!)
+(declare yesql-has-permanent-selection)
+(declare yesql-new-selection!)
 (defqueries "sql/selections-queries.sql")
 
 (defn- exec-db
@@ -127,9 +134,9 @@
            (enforce-limits limit application-key nil selection-group-id question-id answer-id connection)))))))
 
 (defn swap-selection [form-key selection-id question-id answer-id selection-group-id]
-  (let [{:keys [params options]} (->> (fields-in-selection-group (forms/fetch-by-key form-key))
-                                      (filter #(= (:id %) question-id))
-                                      first)
+  (let [{:keys [options]} (->> (fields-in-selection-group (forms/fetch-by-key form-key))
+                               (filter #(= (:id %) question-id))
+                               first)
         limit (->> options
                    (filter #(= (:value %) answer-id))
                    first

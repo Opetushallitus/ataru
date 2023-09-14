@@ -8,6 +8,9 @@
    [clojure.java.jdbc :as jdbc]
    [ataru.db.db :as db]))
 
+(declare yesql-add-background-job<!)
+(declare yesql-add-job-iteration<!)
+(declare yesql-update-previous-iteration!)
 (defqueries "sql/background-job-queries.sql")
 
 (defn store-new [connection job-type state]

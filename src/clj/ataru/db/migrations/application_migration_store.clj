@@ -2,6 +2,7 @@
   (:require [camel-snake-kebab.core :as k]
             [camel-snake-kebab.extras :as t]
             [ataru.db.db :as db]
+            [clojure.string]
             [yesql.core :as sql]))
 
 (sql/defqueries "sql/migration-1.25-queries.sql")

@@ -7,7 +7,8 @@
             [ataru.applications.application-store :as application-store]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta]
             [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]))
+            [clojure.java.jdbc :as jdbc]
+            [clojure.string]))
 
 (defn nationality-finland? [person]
   (some #(= codes/finland-country-code (:kansalaisuusKoodi %)) (:kansalaisuus person)))

@@ -2,8 +2,7 @@
   (:require [ataru.config.core :refer [config]]
             [ataru.ohjausparametrit.ohjausparametrit-protocol :refer [OhjausparametritService]]
             [ataru.cache.cache-service :as cache]
-            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]
-            [ataru.ohjausparametrit.ohjausparametrit-client :as client]))
+            [ataru.ohjausparametrit.mock-ohjausparametrit-service :refer [->MockOhjausparametritService]]))
 
 (defrecord CachedOhjausparametritService [ohjausparametrit-cache]
   OhjausparametritService

@@ -16,5 +16,5 @@
 
 (defn jatkuva-haku?
   [haku]
-  (if-let [hakutapa (:hakutapa-uri haku)]
-    (boolean (string/starts-with? hakutapa hakutapa-jatkuva-haku))))
+  (some-> (:hakutapa-uri haku)
+          (string/starts-with? hakutapa-jatkuva-haku)))

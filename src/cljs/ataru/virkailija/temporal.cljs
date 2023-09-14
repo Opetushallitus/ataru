@@ -2,10 +2,7 @@
   (:require [cljs-time.format :as f]
             [cljs-time.core :as c]
             [cljs-time.coerce :as coerce]
-            [clojure.walk :refer [postwalk]]
-            [cljs-time.core :refer [to-default-time-zone now after?]]
-            [cljs-time.format :refer [unparse unparse-local formatter]]
-            [cljs-time.coerce :refer [from-long]]))
+            [clojure.walk :refer [postwalk]]))
 
 (def ^:private time-formatter-leading-zeros (f/formatter "dd.MM.yyyy HH:mm" "Europe/Helsinki"))
 
@@ -53,9 +50,9 @@
 (defn millis->str
   [millis]
   (->> millis
-       (from-long)
-       (to-default-time-zone)
-       (unparse-local time-formatter)))
+       (coerce/from-long)
+       (c/to-default-time-zone)
+       (f/unparse-local time-formatter)))
 
 (defn parse-times [expr]
   (let [f (fn [[k v]]

@@ -15,8 +15,7 @@
                  (fn [_] (async/close! c))))]
     (GET url
          {:handler #(send (:has-applied %))
-          :error-handler (fn [response]
-                           (send false))
+          :error-handler (fn [_] (send false))
           :format :json
           :response-format :json
           :keywords? true

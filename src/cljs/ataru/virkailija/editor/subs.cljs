@@ -416,7 +416,7 @@
      (> (count (flatten path)) 1)
      (not
        (loop [part (butlast (rest (flatten path)))]
-         (if-let [parent (get-in component part)]
+         (when-let [parent (get-in component part)]
            (if (= (:fieldClass parent) "questionGroup")
              true
              (when part

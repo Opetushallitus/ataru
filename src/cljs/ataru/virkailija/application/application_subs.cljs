@@ -612,13 +612,14 @@
       (let [hakukohde-oid (if (keyword? hakukohde-oid)
                             (name hakukohde-oid)
                             hakukohde-oid)]
-        (if-let [idx (->> (-> selected-application :hakukohde)
-                          (map-indexed (fn [index oid]
-                                         (when (= oid hakukohde-oid)
-                                           index)))
-                          (remove nil?)
-                          (first))]
-          (inc idx))))))
+        (-> selected-application
+            :hakukohde
+            (->> (map-indexed (fn [index oid]
+                                (when (= oid hakukohde-oid)
+                                  index)))
+                 (remove nil?)
+                 (first))
+            (some-> inc))))))
 
 (re-frame/reg-sub
   :application/hakukohde-and-tarjoaja-name
@@ -646,7 +647,7 @@
 (re-frame/reg-sub
   :application/tarjoaja-name
   (fn [db [_ hakukohde-oid]]
-    (if-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
+    (when-let [hakukohde (get-in db [:hakukohteet hakukohde-oid])]
       (u/from-multi-lang (:tarjoaja-name hakukohde) :fi))))
 
 (re-frame/reg-sub

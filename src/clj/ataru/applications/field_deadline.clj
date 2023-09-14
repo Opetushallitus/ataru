@@ -8,6 +8,9 @@
             [yesql.core :as yesql])
   (:import org.postgresql.util.PSQLException))
 
+(declare yesql-get-field-deadlines)
+(declare yesql-get-field-deadline)
+(declare yesql-add-application-event<!)
 (yesql/defqueries "sql/field-deadline-queries.sql")
 (yesql/defqueries "sql/application-queries.sql")
 

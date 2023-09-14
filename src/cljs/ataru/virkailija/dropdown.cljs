@@ -44,7 +44,7 @@
                                      :on-key-down (fn [e]
                                                     (when (and @open?
                                                                (= "Escape" (.-key e)))
-                                                      (do (.preventDefault e)
-                                                          (reset! open? false))))}]
+                                                      (.preventDefault e)
+                                                      (reset! open? false)))}]
                                    label]])
                                options)]))]))))

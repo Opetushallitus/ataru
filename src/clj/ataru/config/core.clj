@@ -17,10 +17,9 @@
       "{}")))
 
 (defonce secrets
-         (if-let [config-secrets (env :configsecrets)]
-           (-> config-secrets
-               (slurp-if-found)
-               (clojure.edn/read-string))))
+  (some-> (env :configsecrets)
+          (slurp-if-found)
+          (clojure.edn/read-string)))
 
 (defn- merge-with-defaults [config]
   (merge-with merge defaults config))

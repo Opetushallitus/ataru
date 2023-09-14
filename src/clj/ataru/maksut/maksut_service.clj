@@ -60,21 +60,21 @@
 (defrecord MaksutService [maksut-cas-client]
   MaksutServiceProtocol
 
-  (create-kasittely-lasku [this lasku]
+  (create-kasittely-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
                   (assoc lasku :index 1)))
 
-  (create-paatos-lasku [this lasku]
+  (create-paatos-lasku [_ lasku]
     (create-lasku-post maksut-cas-client
                   (assoc lasku :index 2)))
 
-  (list-laskut-by-application-key [this application-key]
+  (list-laskut-by-application-key [_ application-key]
     (list-get maksut-cas-client application-key))
 
-  (list-lasku-statuses [this keys]
+  (list-lasku-statuses [_ keys]
     (list-statuses maksut-cas-client keys))
 
-  (download-receipt [this order-id]
+  (download-receipt [_ order-id]
     (receipt-get maksut-cas-client order-id)))
 
 (defn new-maksut-service []

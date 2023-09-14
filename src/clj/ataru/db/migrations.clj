@@ -24,6 +24,9 @@
             [camel-snake-kebab.extras :refer [transform-keys]]
             [clojure.core.match :refer [match]]
             [clojure.java.jdbc :as jdbc :refer [with-db-transaction]]
+            [clojure.set]
+            [clojure.string]
+            [clojure.walk]
             [taoensso.timbre :as log]
             [ataru.component-data.component :as component]
             [ataru.translations.texts :refer [email-default-texts]]
@@ -38,7 +41,7 @@
 
 (def audit-logger (atom nil))
 
-(defn- with-query-results-cursor [conn [sql & params :as sql-params] func]
+(defn- with-query-results-cursor [conn [sql & params] func]
   (with-open [stmt (.prepareStatement (jdbc/get-connection conn) sql)]
     (doseq [[index value] (map vector (iterate inc 1) params)]
       (.setObject stmt index value))
@@ -554,7 +557,7 @@
                     new-form (update-person-info-module new-person-info-module form)]]
         (if (= (:content new-form) (:content form))
           (log/info "1.100: Not updating form" (:key form) form-id)
-          (let [{:keys [id key]} (migration-app-store/insert-1.100-form connection new-form)]
+          (let [{:keys [id]} (migration-app-store/insert-1.100-form connection new-form)]
             (log/info "1.100: Updating form" (:key form) form-id)
             (doseq [application (migration-app-store/get-1.100-applications connection form-id)
                     :let [new-application (nationality-answer->question-group application)]]

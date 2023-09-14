@@ -24,7 +24,6 @@
             [ataru.util :as util :refer [assoc?]]
             [taoensso.timbre :as log]
             [ataru.demo-config :as demo]
-            [ataru.tarjonta.haku :as haku]
             [ataru.hakija.toisen-asteen-yhteishaku-logic :as toisen-asteen-yhteishaku-logic]))
 
 (defn- set-can-submit-multiple-applications-and-yhteishaku

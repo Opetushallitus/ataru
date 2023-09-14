@@ -770,10 +770,9 @@
                          (update :content #(walk/postwalk omit-invalid %)))]
         (when (not-empty (:content form))
           (try
-            (if-let [fragments (seq (form-diff/as-operations snapshot form))]
-              (do
-                (asyncm/<? (update-form-with-fragment form fragments))
-                (reset! last-saved-snapshot form)))
+            (when-let [fragments (seq (form-diff/as-operations snapshot form))]
+              (asyncm/<? (update-form-with-fragment form fragments))
+              (reset! last-saved-snapshot form))
             (catch js/Error error
               (prn error)
               (dispatch [:snackbar-message

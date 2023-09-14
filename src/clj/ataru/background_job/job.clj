@@ -28,7 +28,8 @@
   (start [this]
     (let [this-with-jobs (assoc this :job-definitions job-definitions)]
       (log/info "Starting background job runner")
-      (if-not job-definitions (throw (Exception. "No job definintions given for JobRunner")))
+      (when-not job-definitions
+        (throw (Exception. "No job definintions given for JobRunner")))
       (assoc this-with-jobs :executor (execution/start this-with-jobs))))
   (stop [this]
     (log/info "Stopping background job runner")
@@ -37,7 +38,7 @@
 
   JobRunner
   (start-job [_ connection job-type initial-state]
-    (if-let [job-definition (get job-definitions job-type)]
+    (if (get job-definitions job-type)
       (job-store/store-new connection job-type initial-state)
       (throw (new RuntimeException (str "No job definition found for job "
                                         job-type))))))
