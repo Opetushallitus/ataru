@@ -1446,11 +1446,33 @@
       (set! (.. js/window -location -href) target)
       nil)))
 
+(reg-event-fx
+  :application/redirect-to-logout
+  [check-schema-interceptor]
+  (fn [{:keys [db]}]
+    (let [location (.. js/window -location)
+          service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/hakemus/auth/cas-oppija?target=" location)]
+      (set! (.. js/window -location -href) target)
+      nil)))
+
 (reg-event-db
   :application/set-tunnistautuminen-declined
   [check-schema-interceptor]
   (fn [db _]
     (assoc-in db [:oppija-session :tunnistautuminen-declined] true)))
+
+(reg-event-db
+  :application/set-active-modal
+  [check-schema-interceptor]
+  (fn [db [_ params]]
+    (assoc-in db [:application :notification-modal] params)))
+
+(reg-event-db
+  :application/toggle-logout-menu
+  [check-schema-interceptor]
+  (fn [db _]
+    (update-in db [:oppija-session :logout-menu-open] not)))
 
 (reg-event-fx
   :application/set-page-title

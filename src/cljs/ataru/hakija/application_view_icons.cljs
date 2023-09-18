@@ -27,3 +27,16 @@
 (defn icon-account []
   [:span.application__logged-icon.zmdi-hc-2x
    [:i.zmdi.zmdi-account-o]])
+
+(defn icon-logout []
+  [:span.application__logged-icon.zmdi-hc-lg
+   [:i.zmdi.zmdi-arrow-right]])
+
+(defn icon-arrow-drop-down []
+  [:span.application__arrow-drop-down-icon.zmdi-hc
+   [:i.zmdi.zmdi-caret-down.zmdi-hc-2x]])
+
+
+(defn icon-arrow-drop-up []
+  [:span.application__arrow-drop-up-icon.zmdi-hc
+   [:i.zmdi.zmdi-caret-up.zmdi-hc-2x]])
