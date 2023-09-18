@@ -88,13 +88,44 @@
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
 
+(defn logout-dropdown []
+  (fn []
+    (let [menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])]
+      [:div.application__logout-dropdown-wrapper
+       [:div.application__logout-dropdown-content {:class (when @menu-open? :application__logout-dropdown-content-open)}
+        [icons/icon-logout]
+        [:a.application__hakija-logout-button
+         {:key "cas-oppija-logout"
+          :href "https://untuvaopintopolku.fi/cas-oppija/logout?service=https://untuvaopintopolku.fi/konfo/fi/sivu/uloskirjautuminen"
+          :data-test-id "cas-oppija-logout"
+          }
+         "Kirjaudu ulos"]]])))
+
 (defn logged-in-indicator-or-placeholder []
-  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])]
+  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])
+        menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])]
     (when logged-in-name
       [:div.application__logged-in-banner-wrapper
        [icons/icon-account]
        [:div.application__logged-in-name-container
-        logged-in-name]])))
+        {:on-click #(dispatch [:application/toggle-logout-menu])}
+        logged-in-name
+        [:div.application__dropdown-toggle
+         (if @menu-open?
+           [icons/icon-arrow-drop-up]
+           [icons/icon-arrow-drop-down])]]
+       [:div.application__logout-dropdown-wrapper
+        [:div.application__logout-dropdown-content {:class (when @menu-open? :application__logout-dropdown-content-open)}
+         [:i.material-icons-outlined.logout
+          {:title "aa"}]
+         [:button.application__tunnistaudu-button
+          {:on-click     #(dispatch [:application/set-active-modal {:header "Oletko varma, että haluat kirjautua ulos?"
+                                                                    :main-text "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
+                                                                    :button-text "Kirjaudu ulos"
+                                                                    :on-click (fn [_] (js/console.log "click!")
+                                                                                (dispatch [:application/redirect-to-logout]))}])
+           :data-test-id "tunnistautuminen-button"}
+          "Kirjaudu ulos"]]]])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])

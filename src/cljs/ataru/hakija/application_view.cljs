@@ -100,7 +100,7 @@
         header (or (-> form :tarjonta :haku-name selected-lang)
                    (-> form :name selected-lang))]
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
-     [:h1 "Valitse kuinka haluat kirjautua lomakkeelle"]
+     [:h1 (translations/get-hakija-translation :ht-lander-header @lang)]
      [:div.application__hakeminen-tunnistautuneena-lander-haku-header header]
      [:div.application__hakeminen-tunnistautuneena-tunnistaudu-wrapper
       [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header @lang)]
@@ -373,6 +373,28 @@
              {:on-click #(reset! modal-hidden true)}
              button-text]]])))))
 
+(defn- ht-notification-modal []
+  (let [modal-active? true
+        params @(subscribe [:state-query [:application :notification-modal]])
+        mock-params {:header "Oletko varmuli, että haluat kirjautua ulos?"
+                     :main-text "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
+                     :button-text "kirjaudu ulos"
+                     :on-click (fn [] (js/console.log "click!"))}
+        {:keys [header main-text button-text on-click]} params]
+    (when params
+      [:div.application__ht-notification-overlay
+       [:div.application__ht-notification-container
+        [:h1.application__ht-notification-title
+         {:on-click     #(dispatch [:application/set-active-modal nil])
+          :data-test-id "tunnistautuminen-button"}
+         (when (not-empty header)
+           header)]
+        [markdown-paragraph main-text false "fixme-identifier"]
+        [:button.application__ht-notification-button.application__ht-notification-button--enabled
+         {:on-click on-click}
+         button-text]]]))
+  )
+
 (defn- modal-info-element-overlay
   []
   (when-let [field @(subscribe [:application/first-visible-modal-info-element])]
@@ -439,4 +461,5 @@
    [application-contents]
    [submitted-overlay]
    [demo-overlay]
+   [ht-notification-modal]
    [modal-info-element-overlay]])
