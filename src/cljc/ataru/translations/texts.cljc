@@ -604,7 +604,17 @@
                                                  :en "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. en"}
    :ht-tai                                      {:fi "TAI"
                                                  :sv "ELLER"
-                                                 :en "OR"}})
+                                                 :en "OR"}
+   :ht-logout-confirmation-header               {:fi "Oletko varma, että haluat kirjautua ulos?"
+                                                 :sv "Oletko varma, että haluat kirjautua ulos? sv"
+                                                 :en "Oletko varma, että haluat kirjautua ulos? en"}
+   :ht-logout-confirmation-text                 {:fi "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
+                                                 :sv "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
+                                                 :en "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
+   :ht-kirjaudu-ulos                            {:fi "Kirjaudu ulos"
+                                                 :sv "Kirjaudu ulos sv"
+                                                 :en "Kirjaudu ulos en"}
+   })
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
