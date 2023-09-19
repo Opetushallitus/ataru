@@ -9,6 +9,7 @@
             [ataru.virkailija.temporal :as temporal]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
+            [reagent.dom :as r-dom]
             [ataru.virkailija.date-time-picker :as date-time-picker]))
 
 (defn form-row [key selected?]
@@ -96,8 +97,8 @@
     (r/create-class
       {:component-did-update (fn [this]
                                (when (and focus? @new-form-created?)
-                                 (.focus (r/dom-node this))
-                                 (.select (r/dom-node this))))
+                                 (.focus (r-dom/dom-node this))
+                                 (.select (r-dom/dom-node this))))
        :reagent-render       (fn [lang _]
                                [:input.editor-form__form-name-input
                                 {:data-test-id "form-name-input"
