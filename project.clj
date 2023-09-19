@@ -39,6 +39,8 @@
                  [re-frisk "0.5.4.1"]
                  [venantius/accountant "0.2.5"]
                  [com.cemerick/url "0.1.1"]
+                 [cljsjs/react "17.0.2-0"]
+                 [cljsjs/react-dom "17.0.2-0"]
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.1.12"]
