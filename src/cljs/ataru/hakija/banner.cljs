@@ -102,7 +102,8 @@
          "Kirjaudu ulos"]]])))
 
 (defn logged-in-indicator-or-placeholder []
-  (let [logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])
+  (let [lang (subscribe [:application/form-language])
+        logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])
         menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])]
     (when logged-in-name
       [:div.application__logged-in-banner-wrapper
@@ -119,13 +120,12 @@
          [:i.material-icons-outlined.logout
           {:title "aa"}]
          [:button.application__tunnistaudu-button
-          {:on-click     #(dispatch [:application/set-active-modal {:header "Oletko varma, että haluat kirjautua ulos?"
-                                                                    :main-text "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
-                                                                    :button-text "Kirjaudu ulos"
-                                                                    :on-click (fn [_] (js/console.log "click!")
-                                                                                (dispatch [:application/redirect-to-logout]))}])
+          {:on-click     #(dispatch [:application/set-active-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
+                                                                    :main-text (translations/get-hakija-translation :ht-logout-confirmation-text @lang)
+                                                                    :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
+                                                                    :on-click (fn [_] (dispatch [:application/redirect-to-logout]))}])
            :data-test-id "tunnistautuminen-button"}
-          "Kirjaudu ulos"]]]])))
+          (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
