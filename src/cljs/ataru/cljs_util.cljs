@@ -6,7 +6,8 @@
             [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch] :as re-frame]
-            [reagent.core :as r]
+            [re-frame.core :refer [dispatch]]
+            [reagent.dom :as r-dom]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
@@ -25,7 +26,7 @@
       warning-label)))
 
 (def wrap-scroll-to
-  (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
+  (with-meta identity {:component-did-mount #(let [node (r-dom/dom-node %)]
                                               (if (.-scrollIntoViewIfNeeded node)
                                                 (.scrollIntoViewIfNeeded node)
                                                 (.scrollIntoView node)))}))

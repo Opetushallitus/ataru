@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.hyvaksynnan-ehto.view
   (:require [re-frame.core :as re-frame]
             [reagent.core :as r]
+            [reagent.dom :as r-dom]
             [ataru.util :as util]
             ataru.virkailija.application.hyvaksynnan-ehto.subs
             clojure.string))
@@ -96,7 +97,7 @@
      {:component-did-update
       (fn [component]
         (when @focus?
-          (.focus (r/dom-node component))))
+          (.focus (r-dom/dom-node component))))
       :reagent-render
       (fn [application-key lang selected? lang-to lang-left lang-right]
         (reset! focus? selected?)
@@ -130,11 +131,11 @@
      {:component-did-update
       (fn [component]
         (let [current-state [@enabled?
-                             (= (r/dom-node component)
+                             (= (r-dom/dom-node component)
                                 (.-activeElement js/document))]]
           (if (and (= [[false false] [true true]] @previous-states)
                    (= [true false] current-state))
-            (do (.focus (r/dom-node component))
+            (do (.focus (r-dom/dom-node component))
                 (reset! previous-states [[true true] (first @previous-states)]))
             (reset! previous-states [current-state (first @previous-states)]))))
       :reagent-render
