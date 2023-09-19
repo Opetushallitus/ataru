@@ -25,12 +25,12 @@
                          [org.mozilla/rhino "1.7.7.1"]
                          [org.scala-lang/scala-library "2.12.4"]
                          [org.scala-lang.modules/scala-xml_2.12 "1.0.6"]]
-  :dependencies [[org.clojure/clojure "1.10.1"]
+  :dependencies [[org.clojure/clojure "1.10.3"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.10.597"]
-                 [reagent "0.8.1"]
-                 [re-frame "0.10.9"]
+                 [org.clojure/clojurescript "1.10.764"]
+                 [reagent "1.0.0"]
+                 [re-frame "1.3.0"]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
@@ -66,7 +66,6 @@
                  [ring "1.8.0"]
                  [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT"]
                  [clj-http "3.10.0"]
-                 [ring "1.7.1"]
                  [ring/ring-defaults "0.3.2"]
                  [ring/ring-json "0.5.0"]
                  [ring-ratelimit "0.2.2"]
@@ -108,7 +107,7 @@
                  [com.fzakaria/slf4j-timbre "0.3.19"]
                  [org.slf4j/log4j-over-slf4j "1.7.30"]
                  [com.jcraft/jsch "0.1.55"]
-                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT"]]
+                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.clojure/data.json org.jboss.logging/jboss-logging]]]
 
   :min-lein-version "2.5.3"
 
