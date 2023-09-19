@@ -1,5 +1,5 @@
 (ns ataru.virkailija.core
-  (:require [reagent.core :as reagent]
+  (:require [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
             [re-frisk.core :as re-frisk]
             ataru.virkailija.application.hyvaksynnan-ehto.handlers
@@ -22,7 +22,7 @@
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
   (re-frame/dispatch [:application/get-virkailija-texts-from-server])
-  (reagent/render [views/main-panel]
+  (reagent-dom/render [views/main-panel]
                   (.getElementById js/document "app")))
 
 (defn init-scroll-listeners []

@@ -29,8 +29,8 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.10.764"]
-                 [reagent "0.8.1"]
-                 [re-frame "1.3.0" :exclusions [reagent]]
+                 [reagent "1.0.0"]
+                 [re-frame "1.3.0"]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
