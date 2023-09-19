@@ -4,8 +4,7 @@
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
-            [ataru.cljs-util :as util]
-            [ataru.translations.translation-util :as tu]))
+            [ataru.cljs-util :as util]))
 
 (defn http [caller-id
             {:keys [method
@@ -112,22 +111,13 @@
           #(async-validate-value params)
           validation-debounce-ms)))))
 
-(defn- confirm-window-close!
-  [event]
-  (let [lang          @(re-frame/subscribe [:application/form-language])
-        warning-label (tu/get-hakija-translation :window-close-warning lang)
-        edits?        @(re-frame/subscribe [:application/edits?])
-        submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
-    (when (and edits?
-               (nil? submit-status))
-      (set! (.-returnValue event) warning-label)
-      warning-label)))
+
 
 (re-frame/reg-fx
   :set-window-close-callback
   (fn []
-    (.removeEventListener js/window "beforeunload" confirm-window-close!)
-    (.addEventListener js/window "beforeunload" confirm-window-close!)))
+    (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+    (.addEventListener js/window "beforeunload" util/confirm-window-close!)))
 
 (re-frame/reg-fx
   :update-url-query-params

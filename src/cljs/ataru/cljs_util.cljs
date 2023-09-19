@@ -1,16 +1,28 @@
 (ns ataru.cljs-util
-  (:require [clojure.set :as set]
+  (:require [ataru.translations.translation-util :as tu]
+            [clojure.set :as set]
             [clojure.walk :as walk]
             [cljs.core.match :refer-macros [match]]
             [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
-            [re-frame.core :refer [dispatch]]
+            [re-frame.core :refer [dispatch] :as re-frame]
             [reagent.core :as r]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
             [camel-snake-kebab.extras :refer [transform-keys]]
             [goog.string.format])
   (:import [goog.net Cookies]))
+
+(defn confirm-window-close!
+  [event]
+  (let [lang          @(re-frame/subscribe [:application/form-language])
+        warning-label (tu/get-hakija-translation :window-close-warning lang)
+        edits?        @(re-frame/subscribe [:application/edits?])
+        submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
+    (when (and edits?
+               (nil? submit-status))
+      (set! (.-returnValue event) warning-label)
+      warning-label)))
 
 (def wrap-scroll-to
   (with-meta identity {:component-did-mount #(let [node (r/dom-node %)]
