@@ -29,14 +29,14 @@
 
                  ; clojurescript
                  [org.clojure/clojurescript "1.10.764"]
-                 [reagent "1.1.1"]
+                 [reagent "1.2.0"]
                  [re-frame "1.3.0"]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.8.0"]
                  [binaryage/devtools "1.0.0"]
-                 [re-frisk "0.5.4.1"]
+                 [re-frisk "1.6.0"]
                  [venantius/accountant "0.2.5"]
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "17.0.2-0"]
