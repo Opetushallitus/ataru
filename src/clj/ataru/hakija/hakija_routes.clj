@@ -154,7 +154,7 @@
 (defn hakija-auth-routes []
   (api/context "/auth" []
     :tags ["hakija-auth-api"]
-    (api/GET "/cas-oppija" [:as request]
+    (api/GET "/oppija" [:as request]
       :query-params [{ticket :- s/Str nil}
                      {target :- s/Str nil}
                      {lang :- s/Str nil}]
@@ -175,7 +175,7 @@
                                                                      :path "/hakemus"})))))
             ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
             (response/bad-request)))))
-    (api/POST "/cas-oppija" [:as request]
+    (api/POST "/oppija" [:as request]
       (let [body (ring.util.request/body-string request)]
         (log/info "Received request for logout:" body)
         (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request body)]

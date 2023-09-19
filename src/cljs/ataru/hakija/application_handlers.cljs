@@ -1442,7 +1442,7 @@
   (fn [_]
     (let [location (.. js/window -location)
           service-url (config/get-public-config [:applicant :service_url])
-          target (str service-url "/hakemus/auth/cas-oppija?target=" location)]
+          target (str service-url "/hakemus/auth/oppija?target=" location)]
       (set! (.. js/window -location -href) target)
       nil)))
 
