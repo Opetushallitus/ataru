@@ -4,6 +4,7 @@
             [ataru.application-common.components.button-component :as btn]
             [ataru.util :as u]
             [ataru.translations.translation-util :as translations]
+            [ataru.translations.texts :refer [general-texts]]
             [ataru.application-common.accessibility-util :as a11y]))
 
 
@@ -46,9 +47,11 @@
          [koulutustyyppi-btn label @is-open on-click-fn]
          (when @is-open
            [:div.application__koulutustyypit-filter-wrapper
-            [btn/button {:label    "X"
-                         :on-click on-click-fn
-                         :id       "koulutustyyppi-close-btn"}]
+            [:btn/button.a-button
+             {:on-click   on-click-fn
+              :id         "koulutustyyppi-close-btn"
+              :aria-label (get (:close general-texts) @lang)}
+              ^{:key :i.zmdi.zmdi-close} [:i.zmdi.zmdi-close]]
             (for [{uri :uri :as koulutustyyppi} @koulutustyypit]
               (let [is-selected (boolean (koulutustyypit-filters' uri))
                     on-select #(dispatch [:application/toggle-koulutustyyppi-filter idx uri])
