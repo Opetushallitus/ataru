@@ -1439,7 +1439,7 @@
 (reg-event-fx
   :application/redirect-to-tunnistautuminen
   [check-schema-interceptor]
-  (fn [{:keys [db]}]
+  (fn [_]
     (let [location (.. js/window -location)
           service-url (config/get-public-config [:applicant :service_url])
           target (str service-url "/hakemus/auth/cas-oppija?target=" location)]
@@ -1449,10 +1449,10 @@
 (reg-event-fx
   :application/redirect-to-logout
   [check-schema-interceptor]
-  (fn [{:keys [db]}]
-    (let [location (.. js/window -location)
-          service-url (config/get-public-config [:applicant :service_url])
-          target (str service-url "/hakemus/auth/cas-oppija?target=" location)]
+  (fn [_]
+    (let [service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/cas-oppija/logout?service=https://untuvaopintopolku.fi/konfo/fi/sivu/uloskirjautuminen")]
+      (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
       (set! (.. js/window -location -href) target)
       nil)))
 
