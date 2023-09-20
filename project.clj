@@ -44,7 +44,7 @@
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]
-                 [com.taoensso/timbre "6.2.2" :exclusions [io.aviso/pretty]]
+                 [com.taoensso/timbre "6.2.2"]
                  [timbre-ns-pattern-level "0.1.2"]
                  [org.clojure/core.match "1.0.1"]
                  [metosin/schema-tools "0.13.1"]
@@ -90,7 +90,7 @@
                  [org.apache.poi/poi-ooxml "5.2.3"]
                  [org.clojure/core.cache "1.0.225"]
                  [nrepl "1.0.0"]
-                 [com.taoensso/carmine "3.2.0"]
+                 [com.taoensso/carmine "3.2.0" :exclusions [io.aviso/pretty]]
                  [pandect "1.0.2"]
                  [hikari-cp "3.0.1"]
                  [ring/ring-mock "0.4.0"]
@@ -104,7 +104,7 @@
                  [org.clojure/data.xml "0.0.8"]
                  [com.jcraft/jsch "0.1.55"]
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
-                 [com.fzakaria/slf4j-timbre "0.4.0"]
+                 [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
                  [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.clojure/data.json org.jboss.logging/jboss-logging com.google.guava/guava]]
                  [com.google.guava/guava "31.1-jre"]]
