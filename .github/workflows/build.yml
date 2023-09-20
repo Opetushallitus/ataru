@@ -181,7 +181,7 @@ jobs:
         run: |
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
+          export BASE_IMAGE="baseimage-fatjar-openjdk17:master"
           ./ci-tools/common/pull-image.sh
           cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-editori.jar
           cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/
