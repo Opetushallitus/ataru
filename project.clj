@@ -28,9 +28,9 @@
   :dependencies [[org.clojure/clojure "1.11.1"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.11.121"]
+                 [org.clojure/clojurescript "1.11.121" :exclusions [com.cognitect/transit-java]]
                  [reagent "1.2.0"]
-                 [re-frame "1.3.0"]
+                 [re-frame "1.3.0" :exclusions [org.clojure/tools.logging]]
                  [clj-commons/secretary "1.2.4"]
                  [com.andrewmcveigh/cljs-time "0.5.2"]
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
@@ -44,7 +44,7 @@
 
                  ;clojure/clojurescript
                  [prismatic/schema "1.4.1"]
-                 [com.taoensso/timbre "6.2.2"]
+                 [com.taoensso/timbre "6.2.2" :exclusions [io.aviso/pretty]]
                  [timbre-ns-pattern-level "0.1.2"]
                  [org.clojure/core.match "1.0.1"]
                  [metosin/schema-tools "0.13.1"]
@@ -58,13 +58,13 @@
                  [com.stuartsierra/component "1.1.0"]
                  [metosin/compojure-api "1.1.13"]
                  [aleph "0.6.3"]
-                 [oph/clj-access-logging "1.0.0-SNAPSHOT"]
-                 [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT"]
-                 [oph/clj-timbre-access-logging "1.0.0-SNAPSHOT"]
-                 [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT"]
+                 [oph/clj-access-logging "1.0.0-SNAPSHOT" :exclusions [javax.xml.bind/jaxb-api]]
+                 [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
+                 [oph/clj-timbre-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
+                 [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
                  [fi.vm.sade/auditlogger "9.0.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
-                 [clj-http "3.12.3"]
+                 [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.10.0"]
                  [oph/clj-ring-db-cas-session "0.3.0-SNAPSHOT"]
                  [ring/ring-defaults "0.4.0"]
@@ -80,7 +80,7 @@
                  [environ "1.2.0"]
                  [org.clojure/core.async "1.6.681"]
                  [org.clojure/java.jdbc "0.7.12"]
-                 [org.postgresql/postgresql "42.6.0"]
+                 [org.postgresql/postgresql "42.6.0" :exclusions [org.checkerframework/checker-qual]]
                  [clj-time "0.15.2"]
                  [cheshire/cheshire "5.12.0"]
                  [selmer "1.12.59"]
@@ -106,7 +106,8 @@
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0"]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
-                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.clojure/data.json org.jboss.logging/jboss-logging]]]
+                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.clojure/data.json org.jboss.logging/jboss-logging com.google.guava/guava]]
+                 [com.google.guava/guava "31.1-jre"]]
 
   :min-lein-version "2.5.3"
 
