@@ -119,11 +119,14 @@
         [:div.application__logout-dropdown-content {:class (when @menu-open? :application__logout-dropdown-content-open)}
          [:i.material-icons-outlined.logout
           {:title "aa"}]
+         [:i.material-icons-outlined.check
+          {:title "title"}
+          "close"]
          [:button.application__tunnistaudu-button
-          {:on-click     #(dispatch [:application/set-active-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
-                                                                    :main-text (translations/get-hakija-translation :ht-logout-confirmation-text @lang)
-                                                                    :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
-                                                                    :on-click (fn [_] (dispatch [:application/redirect-to-logout]))}])
+          {:on-click     #(dispatch [:application/set-active-notification-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
+                                                                                 :main-text (translations/get-hakija-translation :ht-logout-confirmation-text @lang)
+                                                                                 :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
+                                                                                 :on-click (fn [_] (dispatch [:application/redirect-to-logout]))}])
            :data-test-id "tunnistautuminen-button"}
           (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
