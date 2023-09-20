@@ -1463,7 +1463,7 @@
     (assoc-in db [:oppija-session :tunnistautuminen-declined] true)))
 
 (reg-event-db
-  :application/set-active-modal
+  :application/set-active-notification-modal
   [check-schema-interceptor]
   (fn [db [_ params]]
     (assoc-in db [:application :notification-modal] params)))

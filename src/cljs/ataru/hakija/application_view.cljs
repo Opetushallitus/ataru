@@ -374,19 +374,18 @@
              button-text]]])))))
 
 (defn- ht-notification-modal []
-  (let [modal-active? true
-        params @(subscribe [:state-query [:application :notification-modal]])
-        mock-params {:header "Oletko varmuli, että haluat kirjautua ulos?"
-                     :main-text "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
-                     :button-text "kirjaudu ulos"
-                     :on-click (fn [] (js/console.log "click!"))}
+  (let [params @(subscribe [:state-query [:application :notification-modal]])
         {:keys [header main-text button-text on-click]} params]
     (when params
       [:div.application__ht-notification-overlay
        [:div.application__ht-notification-container
+        [:div.application__ht-notification-close
+         [:i.material-icons-outlined.toaster-close
+          {:on-click     #(dispatch [:application/set-active-notification-modal nil])
+           :title "title"}
+          "close"]
+         ]
         [:h1.application__ht-notification-title
-         {:on-click     #(dispatch [:application/set-active-modal nil])
-          :data-test-id "tunnistautuminen-button"}
          (when (not-empty header)
            header)]
         [markdown-paragraph main-text false "fixme-identifier"]

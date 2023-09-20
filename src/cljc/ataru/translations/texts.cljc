@@ -605,9 +605,9 @@
    :ht-tai                                      {:fi "TAI"
                                                  :sv "ELLER"
                                                  :en "OR"}
-   :ht-logout-confirmation-header               {:fi "Oletko varma, että haluat kirjautua ulos?"
-                                                 :sv "Oletko varma, että haluat kirjautua ulos? sv"
-                                                 :en "Oletko varma, että haluat kirjautua ulos? en"}
+   :ht-logout-confirmation-header               {:fi "Haluatko kirjautua ulos?"
+                                                 :sv "Haluatko kirjautua ulos? sv"
+                                                 :en "Haluatko kirjautua ulos? en"}
    :ht-logout-confirmation-text                 {:fi "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
                                                  :sv "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
                                                  :en "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
