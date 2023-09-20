@@ -7,7 +7,7 @@
                          [com.github.fge/jackson-coreutils "1.8"]
                          [ring-middleware-format "0.7.5"]
                          [org.clojure/core.memoize "1.0.257"]
-                         [org.clojure/clojurescript "1.10.764"]
+                         [org.clojure/clojurescript "1.11.121"]
                          [org.clojure/tools.reader "1.3.6"]
                          [com.cognitect/transit-clj "1.0.333"]
                          [org.apache.httpcomponents/httpcore "4.4.16"]
@@ -25,10 +25,10 @@
                          [org.mozilla/rhino "1.7.14"]
                          [org.scala-lang/scala-library "2.13.12"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]]
-  :dependencies [[org.clojure/clojure "1.4.0"]
+  :dependencies [[org.clojure/clojure "1.11.1"]
 
                  ; clojurescript
-                 [org.clojure/clojurescript "1.10.764"]
+                 [org.clojure/clojurescript "1.11.121"]
                  [reagent "1.2.0"]
                  [re-frame "1.3.0"]
                  [clj-commons/secretary "1.2.4"]
