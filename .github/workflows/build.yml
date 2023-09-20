@@ -21,7 +21,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-  
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
           java-version: '17'
@@ -83,10 +83,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-  
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
 
       - uses: szenius/set-timezone@v1.0
@@ -136,10 +136,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-  
 
-      - name: Set up JDK 11
+      - name: Set up JDK 17
         uses: actions/setup-java@v2
         with:
-          java-version: '11'
+          java-version: '17'
           distribution: 'temurin'
 
       - uses: szenius/set-timezone@v1.0
