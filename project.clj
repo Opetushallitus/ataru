@@ -107,7 +107,8 @@
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
                  [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava]]
-                 [com.google.guava/guava "31.1-jre"]]
+                 [com.google.guava/guava "31.1-jre"]
+                 [cuerdas "0.3.2"]]
 
   :min-lein-version "2.5.3"
 
