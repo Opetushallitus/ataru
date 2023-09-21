@@ -23,7 +23,7 @@
                          [riddley "0.2.0"]
                          [instaparse "1.4.12"]
                          [org.mozilla/rhino "1.7.14"]
-                         [org.scala-lang/scala-library "2.13.12"]
+                         [org.scala-lang/scala-library "2.12.18"]
                          [org.scala-lang.modules/scala-xml_2.12 "2.2.0"]]
   :dependencies [[org.clojure/clojure "1.11.1"]
 
