@@ -4,7 +4,7 @@
             [clojure.set]
             [taoensso.timbre :as timbre]
             [environ.core :refer [env]]
-            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]])
+            [taoensso.timbre.appenders.community.rolling :refer [rolling-appender]])
   (:import [fi.vm.sade.auditlog
             Operation
             Changes$Builder
@@ -36,7 +36,7 @@
         application-type (case service-name
                            "ataru-editori" ApplicationType/VIRKAILIJA
                            "ataru-hakija"  ApplicationType/OPPIJA)
-        audit-log-config (assoc timbre/example-config
+        audit-log-config (assoc timbre/default-config
                            :appenders {:standard-out     {:enabled? false}
                                        :file-appender   (-> (rolling-appender
                                                               {:path    (str base-path
