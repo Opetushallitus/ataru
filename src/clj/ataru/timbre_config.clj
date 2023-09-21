@@ -1,6 +1,6 @@
 (ns ataru.timbre-config
   (:require [taoensso.timbre :as timbre]
-            [taoensso.timbre.appenders.3rd-party.rolling :refer [rolling-appender]]
+            [taoensso.timbre.appenders.community.rolling :refer [rolling-appender]]
             [timbre-ns-pattern-level]
             [ataru.config.core :refer [config]])
   (:import [java.util TimeZone]))
