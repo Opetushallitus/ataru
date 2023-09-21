@@ -596,9 +596,9 @@
    :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
                                                  :sv "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. sv"
                                                  :en "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. en"}
-   :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman kirjautumista"
-                                                 :sv "Täytä hakulomake ilman kirjautumista sv"
-                                                 :en "Täytä hakulomake ilman kirjautumista en"}
+   :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman tunnistautumista"
+                                                 :sv "Täytä hakulomake ilman tunnistautumista sv"
+                                                 :en "Täytä hakulomake ilman tunnistautumista en"}
    :ht-jatka-tunnistautumatta-text              {:fi "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot."
                                                  :sv "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. sv"
                                                  :en "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. en"}
