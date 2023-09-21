@@ -106,7 +106,7 @@
                  ; these two deps are for routing all other logging frameworks' output to timbre by first piping them to SLF4J and then timbre
                  [com.fzakaria/slf4j-timbre "0.4.0" :exclusions [io.aviso/pretty]]
                  [org.slf4j/log4j-over-slf4j "2.0.9"]
-                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.clojure/data.json org.jboss.logging/jboss-logging com.google.guava/guava]]
+                 [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava]]
                  [com.google.guava/guava "31.1-jre"]]
 
   :min-lein-version "2.5.3"
