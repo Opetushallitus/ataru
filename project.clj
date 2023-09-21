@@ -60,9 +60,9 @@
                  [aleph "0.6.3"]
                  [oph/clj-access-logging "1.0.0-SNAPSHOT" :exclusions [javax.xml.bind/jaxb-api]]
                  [oph/clj-stdout-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
-                 [oph/clj-timbre-access-logging "1.0.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
-                 [oph/clj-timbre-auditlog "0.1.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
-                 [fi.vm.sade/auditlogger "9.0.0-SNAPSHOT"]
+                 [oph/clj-timbre-access-logging "1.1.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
+                 [oph/clj-timbre-auditlog "0.2.0-SNAPSHOT" :exclusions [com.google.guava/guava]]
+                 [fi.vm.sade/auditlogger "9.2.0-SNAPSHOT"]
                  [fi.vm.sade.java-utils/java-properties "0.1.0-SNAPSHOT"]
                  [clj-http "3.12.3" :exclusions [commons-io]]
                  [ring "1.10.0"]
@@ -123,7 +123,7 @@
   :test-paths ["spec"]
   :resource-paths ["src/sql" "resources"]
   :uberjar-name "ataru.jar"
-  :jvm-opts ^:replace ["-Xmx2g" "-Djavafx.allowjs=true"]
+  :jvm-opts ^:replace ["-Xmx2g"]
 
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11"]
