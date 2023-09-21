@@ -1372,7 +1372,7 @@
                       {offset :- s/Str nil}]
         :return {:applications [ataru-schema/HakurekisteriApplicationToinenAste]
                  (s/optional-key :offset) s/Str}
-        (cond (str/empty-or-nil? haku-oid)
+        (cond (str/empty? haku-oid)
               (response/bad-request {:error "No haku-oid path parameter given"})
               (session-orgs/run-org-authorized
                 session
