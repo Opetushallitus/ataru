@@ -1540,6 +1540,21 @@
    :mass-edit                                                {:fi "Massamuutos"
                                                               :sv "Massändring"
                                                               :en "Mass editing"}
+   :mass-review-notes                                        {:fi "Massamuistiinpano"
+                                                              :sv "Massanteckningar"
+                                                              :en "Mass notes"}
+   :mass-review-notes-n-applications                         {:fi "Olet lisäämässä muistiinpanoa %d hakijalle"
+                                                              :sv "Olet lisäämässä muistiinpanoa %d hakijalle"
+                                                              :en "Olet lisäämässä muistiinpanoa %d hakijalle"}
+   :mass-review-notes-content                                {:fi "Sisältö"
+                                                              :sv "Sisältö"
+                                                              :en "Sisältö"}
+   :mass-review-notes-confirm-n-applications                 {:fi "Vahvista %s muistiinpanon tallennus"
+                                                              :sv "Vahvista %s muistiinpanon tallennus"
+                                                              :en "Vahvista %s muistiinpanon tallennus"}
+   :mass-review-notes-saving                                 {:fi "Tallennetaan muistiinpanoja..."
+                                                              :sv "Tallennetaan muistiinpanoja..."
+                                                              :en "Tallennetaan muistiinpanoja..."}
    :excel-request                                            {:fi "Excel"
                                                               :sv "Excel"
                                                               :en "Excel"}

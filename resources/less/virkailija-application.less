@@ -39,7 +39,7 @@
 }
 
 .application-handling__header {
-  display: flex;
+  display: block;
   min-height: 55px;
   justify-content: space-between;
   padding-top: 0;
@@ -47,6 +47,13 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+.application-handling__form-controls-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0px;
+  font-size: 14px;
 }
 
 .application-handling__ensisijaisesti-hakukohteeseen {
@@ -116,6 +123,15 @@
   white-space: nowrap;
 }
 
+.application-handling__mass-edit-review-notes-container {
+  position: relative;
+}
+
+.application-handling__mass-edit-review-notes-link {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
 .application-handling__popup {
   .arrow(top, white);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
@@ -149,6 +165,10 @@
   padding: 15px;
   font-size: 13px;
   line-height: 21px;
+}
+
+.application-handling__mass-review-notes-popup {
+  min-width: 500px;
 }
 
 .application-handling__mass-information-request-popup {
