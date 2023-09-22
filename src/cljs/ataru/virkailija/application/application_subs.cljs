@@ -316,6 +316,12 @@
            (some? list-selected-by)))))
 
 (re-frame/reg-sub
+ :application/show-mass-review-notes-link? ;; TODO tänne tarkemmat ehdot
+ (fn [db]
+   (and (not-empty (-> db :application :applications))
+        (some? (application-list-selected-by db)))))
+
+(re-frame/reg-sub
   :application/show-excel-link?
   (fn [db]
     (and (not-empty (-> db :application :applications))
@@ -335,6 +341,15 @@
     (<= (count (-> db :application :single-information-request :subject)) 120))
   )
 
+(defn- mass-review-notes-button-enabled?
+  [db]
+  (js/console.log "mass-review-notes-button-enabled?")
+  (js/console.log (-> db :application :mass-review-notes :review-notes u/not-blank?))
+  (-> db :application :mass-review-notes :review-notes u/not-blank?))
+
+(re-frame/reg-sub
+ :application/mass-review-notes-button-enabled?
+ mass-review-notes-button-enabled?)
 
 (re-frame/reg-sub
   :application/mass-information-request-button-enabled?
@@ -365,6 +380,16 @@
         :else
         (get-in db [:application :single-information-request :form-status]))))
 
+(re-frame/reg-sub
+ :application/mass-review-notes-form-status
+ (fn [db]
+   (js/console.log "mass-review-notes-form-status")
+   (cond (get-in db [:application :fetching-applications?])
+     :loading-applications
+     (not (mass-review-notes-button-enabled? db))
+     :disabled
+     :else
+     (get-in db [:application :mass-review-notes :form-status]))))
 
 (re-frame/reg-sub
   :application/mass-information-request-only-guardian-enabled?

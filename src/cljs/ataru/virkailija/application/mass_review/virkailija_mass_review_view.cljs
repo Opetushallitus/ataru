@@ -148,3 +148,65 @@
                               (reset! from-list-open? false)
                               (reset! to-list-open? false)))}
                @(subscribe [:editor/virkailija-translation :confirm-change])])])]))))
+
+(defn mass-review-notes-applications-link
+  []
+  (let [visible?            (subscribe [:state-query [:application :mass-review-notes :visible?]])
+        mass-review-note    (subscribe [:state-query [:application :mass-review-notes :review-notes]])
+        applications-count  (subscribe [:application/loaded-applications-count])
+        form-status        (subscribe [:application/mass-review-notes-form-status])
+        button-enabled?    (subscribe [:application/mass-review-notes-button-enabled?])]
+    (fn []
+      [:span.application-handling__mass-edit-review-notes-container
+       [:a.application-handling__mass-edit-review-notes-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
+        {:on-click #(dispatch [:application/set-mass-review-notes-popup-visibility true])}
+        @(subscribe [:editor/virkailija-translation :mass-review-notes])]
+       (when @visible?
+         [:div.application-handling__popup.application-handling__mass-review-notes-popup
+          [:div.application-handling__mass-edit-review-states-title-container
+           [:h4.application-handling__mass-edit-review-states-title
+            @(subscribe [:editor/virkailija-translation :mass-review-notes])]
+           [:button.virkailija-close-button
+            {:on-click #(dispatch [:application/set-mass-review-notes-popup-visibility false])}
+            [:i.zmdi.zmdi-close]]]
+          [:p @(subscribe [:editor/virkailija-translation :mass-review-notes-n-applications @applications-count])]
+          [:div.application-handling__mass-review-notes-row
+           [:div.application-handling__mass-review-notes-heading @(subscribe [:editor/virkailija-translation :mass-review-notes-content])]]
+          [:div.application-handling__mass-review-notes-row
+           [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
+            {:value     (or @mass-review-note "")
+             :on-change #(dispatch [:application/set-mass-review-notes (-> % .-target .-value)])}]]
+
+          (case @form-status
+            (:disabled :enabled nil)
+            [:button.application-handling__mass-review-notes-button
+             (let [enabled? @button-enabled?]
+               {:disabled (not enabled?)
+                :class    (if enabled?
+                            "application-handling__send-information-request-button--enabled"
+                            "application-handling__send-information-request-button--disabled")
+                :on-click #(dispatch [:application/confirm-mass-review-notes])})
+             @(subscribe [:editor/virkailija-translation :submit])]
+
+            :loading-applications
+            [:button.application-handling__mass-review-notes-button.application-handling__send-information-request-button--disabled
+             {:disabled true}
+             [:span (str @(subscribe [:editor/virkailija-translation :mass-information-request-send]) " ")
+              [:i.zmdi.zmdi-spinner.spin]]]
+
+            :confirm
+            [:button.application-handling__mass-review-notes-button.application-handling__send-information-request-button--confirm
+             {:on-click #(dispatch [:application/mass-update-application-review-notes @mass-review-note])}
+             @(subscribe [:editor/virkailija-translation :mass-review-notes-confirm-n-applications
+                            @applications-count])]
+
+            :submitting
+            [:div.application-handling__information-request-status
+             [:i.zmdi.zmdi-hc-lg.zmdi-spinner.spin.application-handling__information-request-status-icon]
+             @(subscribe [:editor/virkailija-translation :mass-review-notes-saving])]
+
+            :submitted
+            [:div.application-handling__information-request-status
+             [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__information-request-status-icon.application-handling__information-request-status-icon--sent]
+             @(subscribe [:editor/virkailija-translation :mass-information-request-messages-sent])])])
+])))
