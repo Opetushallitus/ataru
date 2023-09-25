@@ -614,7 +614,21 @@
    :ht-kirjaudu-ulos                            {:fi "Kirjaudu ulos"
                                                  :sv "Kirjaudu ulos sv"
                                                  :en "Kirjaudu ulos en"}
-   })
+   :ht-has-applied-lander-header                {:fi "Olet jo lähettänyt hakemuksen hakuun:"
+                                                 :sv "Olet jo lähettänyt hakemuksen hakuun: sv"
+                                                 :en "Olet jo lähettänyt hakemuksen hakuun: en"}
+   :ht-has-applied-lander-paragraph1            {:fi "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta."
+                                                 :sv "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. sv"
+                                                 :en "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. en"}
+   :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen."
+                                                 :sv "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen. sv"
+                                                 :en "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen. en"}
+   :ht-has-applied-lander-paragraph3            {:fi "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."
+                                                 :sv "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. sv"
+                                                 :en "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. en"}
+   :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolussa"
+                                                 :sv "Katso hakemustasi Oma Opintopolussa sv"
+                                                 :en "Katso hakemustasi Oma Opintopolussa en"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

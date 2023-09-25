@@ -2617,7 +2617,6 @@ i.arkistoitu {
   }
 }
 
-
 .application__input-container {
   display: flex;
   flex-direction: row;
@@ -2731,3 +2730,22 @@ i.arkistoitu {
   }
 }
 
+.application__hakeminen-tunnistautuneena-has-applied-lander-wrapper {
+  @media only screen and (max-width: @desktop-content-width) {
+    margin: 0 5% 0 10%;
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-has-applied-haku-header {
+    font-size: 20px;
+  }
+
+  button {
+    .primary-button;
+    background: @primary-green-700;
+    height: 40px;
+    color: white;
+    text-align: center;
+    width: 300px;
+    margin-top: 20px;
+  }
+}

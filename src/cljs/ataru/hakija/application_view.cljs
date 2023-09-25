@@ -95,32 +95,46 @@
         (when form
           [editable-fields form submit-status])))))
 
-(defn- hakeminen-tunnistautuneena-lander [form selected-lang]
+(defn- has-applied-lander [form selected-lang]
   (let [lang                   (subscribe [:application/form-language])
         header (or (-> form :tarjonta :haku-name selected-lang)
                    (-> form :name selected-lang))]
+    [:div.application__hakeminen-tunnistautuneena-has-applied-lander-wrapper
+     [:h1 (translations/get-hakija-translation :ht-has-applied-lander-header @lang)]
+     [:div.application__hakeminen-tunnistautuneena-has-applied-lander-haku-header header]
+     [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph1 @lang)]
+     [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph2 @lang)]
+     [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph3 @lang)]
+     [:button.application__oma-opintopolku-button
+      ;{:on-click     #(dispatch [:application/set-tunnistautuminen-declined])
+      ; :data-test-id "decline-tunnistautuminen-button"}
+      (translations/get-hakija-translation :ht-siirry-oma-opintopolkuun @lang)]]))
+
+(defn- hakeminen-tunnistautuneena-lander [form lang]
+  (let [header (or (-> form :tarjonta :haku-name lang)
+                   (-> form :name lang))]
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
-     [:h1 (translations/get-hakija-translation :ht-lander-header @lang)]
+     [:h1 (translations/get-hakija-translation :ht-lander-header lang)]
      [:div.application__hakeminen-tunnistautuneena-lander-haku-header header]
      [:div.application__hakeminen-tunnistautuneena-tunnistaudu-wrapper
-      [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header @lang)]
-      [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text @lang)]
+      [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]
+      [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
         :data-test-id "tunnistautuminen-button"}
-       [icons/icon-lock] (translations/get-hakija-translation :ht-kirjaudu-sisaan @lang)]]
+       [icons/icon-lock] (translations/get-hakija-translation :ht-kirjaudu-sisaan lang)]]
      [:div.application__hakeminen-tunnistautuneena-separator-wrapper
       [:hr.application__hakeminen-tunnistautuneena-partial-line-left]
       [:div.application__hakeminen-tunnistautuneena-separator-text
-       (translations/get-hakija-translation :ht-tai @lang)]
+       (translations/get-hakija-translation :ht-tai lang)]
       [:hr.application__hakeminen-tunnistautuneena-partial-line-right]]
      [:div.application__hakeminen-tunnistautuneena-jatka-tunnistautumatta-wrapper
-      [:h2 (translations/get-hakija-translation :ht-jatka-tunnistautumatta-header @lang)]
-      [:p (translations/get-hakija-translation :ht-jatka-tunnistautumatta-text @lang)]
+      [:h2 (translations/get-hakija-translation :ht-jatka-tunnistautumatta-header lang)]
+      [:p (translations/get-hakija-translation :ht-jatka-tunnistautumatta-text lang)]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/set-tunnistautuminen-declined])
         :data-test-id "decline-tunnistautuminen-button"}
-       (translations/get-hakija-translation :ht-ilman-kirjautumista @lang)]]]))
+       (translations/get-hakija-translation :ht-ilman-kirjautumista lang)]]]))
 
 (defn application-contents []
   (let [form                      (subscribe [:state-query [:form]])
@@ -134,6 +148,7 @@
         demo?                     (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
         session-fetched?          (subscribe [:state-query [:oppija-session :logged-in]])
+        has-applied-to-haku?      (subscribe [:state-query [:application :has-applied]])
         allow-tunnistautuminen-global (fc/feature-enabled? :hakeminen-tunnistautuneena)
         allow-tunnistautuminen-form (subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
         lander-active?            (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])]
@@ -173,13 +188,15 @@
                             (not @allow-tunnistautuminen-form))))
            (if @lander-active?
              (hakeminen-tunnistautuneena-lander @form @lang)
-             [:div.application__lomake-wrapper
-              ^{:key (:id @form)}
-              (when (not @demo-modal-open?)
-                [application-header])
-              (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
-                ^{:key "form-fields"}
-                [render-fields @form])]))]))))
+             (if @has-applied-to-haku?
+               (has-applied-lander @form @lang)
+               [:div.application__lomake-wrapper
+                ^{:key (:id @form)}
+                (when (not @demo-modal-open?)
+                  [application-header])
+                (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
+                  ^{:key "form-fields"}
+                  [render-fields @form])])))]))))
 
 (defn- star-number-from-event
   [event]

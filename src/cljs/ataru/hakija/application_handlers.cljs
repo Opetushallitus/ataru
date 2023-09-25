@@ -646,11 +646,40 @@
   :application/handle-oppija-session-fetch
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
-    {:db (-> db
-             (assoc :oppija-session (get-in response [:body]))
-             (prefill-and-lock-answers))
-     :dispatch [:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
-                                        :change-country-of-residence nil}]}))
+    (let [session-data (get-in response [:body])]
+      {:db (-> db
+               (assoc :oppija-session session-data)
+               (prefill-and-lock-answers))
+       :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
+                                          :change-country-of-residence nil}]
+                    (when session-data [:application/fetch-has-applied-for-oppija-session session-data])]})))
+
+(reg-event-fx
+  :application/fetch-has-applied-for-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ session-data]]
+    (let [haku-oid @(subscribe [:state-query [:form :tarjonta :haku-oid]])
+          ssn (get-in session-data [:data :fields :ssn :value])
+          email (get-in session-data [:email :value])
+          yksiloiva-param (if ssn
+                            (str "&ssn=" ssn)
+                            (str "&email=" email))]
+      (if (and haku-oid
+               (or ssn email))
+        {:db   db
+         :http {:method  :get
+                :url     (str "/hakemus/api/has-applied?hakuOid=" haku-oid yksiloiva-param)
+                :handler [:application/handle-fetch-has-applied-for-oppija-session]}}
+        {:db db}))))
+
+(reg-event-fx
+  :application/handle-fetch-has-applied-for-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (let [has-applied? (get-in response [:body :has-applied])]
+      (js/console.log (str "has-applied result: " (get response :body) "," has-applied?))
+      {:db (-> db
+               (assoc-in [:application :has-applied] has-applied?))})))
 
 (reg-event-db
   :application/network-online
