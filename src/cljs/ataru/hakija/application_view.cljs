@@ -400,16 +400,14 @@
          [:i.material-icons-outlined.toaster-close
           {:on-click     #(dispatch [:application/set-active-notification-modal nil])
            :title "title"}
-          "close"]
-         ]
+          "close"]]
         [:h1.application__ht-notification-title
          (when (not-empty header)
            header)]
-        [markdown-paragraph main-text false "fixme-identifier"]
+        [:p.application__ht-notification-main-text main-text]
         [:button.application__ht-notification-button.application__ht-notification-button--enabled
          {:on-click on-click}
-         button-text]]]))
-  )
+         button-text]]])))
 
 (defn- modal-info-element-overlay
   []

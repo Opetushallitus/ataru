@@ -104,7 +104,8 @@
 (defn logged-in-indicator-or-placeholder []
   (let [lang (subscribe [:application/form-language])
         logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])
-        menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])]
+        menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])
+        submit-status (subscribe [:state-query [:application :submit-status]])]
     (when logged-in-name
       [:div.application__logged-in-banner-wrapper
        [icons/icon-account]
@@ -121,7 +122,9 @@
           {:title (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)} "logout"]
          [:div.application__banner-logout-link
           {:on-click     #(dispatch [:application/set-active-notification-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
-                                                                                 :main-text (translations/get-hakija-translation :ht-logout-confirmation-text @lang)
+                                                                                 :main-text (if (= @submit-status :submitted)
+                                                                                              (translations/get-hakija-translation :ht-logout-confirmation-text-submitted @lang)
+                                                                                              (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
                                                                                  :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
                                                                                  :on-click (fn [_] (dispatch [:application/redirect-to-logout]))}])
            :data-test-id "tunnistautuminen-button"}
@@ -250,7 +253,8 @@
 (defn banner []
   (let [form?             @(subscribe [:application/form])
         ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
-        control-active?   (and form? (not ht-lander-active?))]
+        ht-error? @(subscribe [:state-query [:application :has-applied]]);todo add other potential errors here
+        control-active?   (and form? (not (or ht-lander-active? ht-error?)))]
     [:div.application__banner-container
      {:aria-live "polite"}
      [virkailija-fill-ribbon]
