@@ -611,6 +611,9 @@
    :ht-logout-confirmation-text                 {:fi "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
                                                  :sv "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
                                                  :en "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
+   :ht-logout-confirmation-text-submitted       {:fi "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :)"
+                                                 :sv "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :) sv"
+                                                 :en "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :) en"}
    :ht-kirjaudu-ulos                            {:fi "Kirjaudu ulos"
                                                  :sv "Kirjaudu ulos sv"
                                                  :en "Kirjaudu ulos en"}
