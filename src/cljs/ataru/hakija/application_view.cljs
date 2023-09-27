@@ -106,8 +106,7 @@
      [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph2 @lang)]
      [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph3 @lang)]
      [:button.application__oma-opintopolku-button
-      ;{:on-click     #(dispatch [:application/set-tunnistautuminen-declined])
-      ; :data-test-id "decline-tunnistautuminen-button"}
+      {:on-click #(dispatch [:application/redirect-to-oma-opintopolku])}
       (translations/get-hakija-translation :ht-siirry-oma-opintopolkuun @lang)]]))
 
 (defn- hakeminen-tunnistautuneena-lander [form lang]
