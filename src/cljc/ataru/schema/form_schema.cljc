@@ -917,3 +917,35 @@
    (s/optional-key :suoritusvuosi)        s/Str
    (s/optional-key :lisapistekoulutukset) [s/Keyword]
    (s/optional-key :arvosanat)            [Arvosana]})
+
+(s/defschema SyntheticApplication
+  {(s/optional-key :personOid)      s/Str
+   (s/optional-key :applicationOid) s/Str
+   :hakuOid          s/Str
+   :hakukohdeOid     s/Str
+   :sukunimi         s/Str
+   :etunimet         s/Str
+   :kutsumanimi      s/Str
+   :kansalaisuus     [s/Str]
+   :syntymaaika      (s/maybe s/Str)
+   :syntymaPaikka    (s/maybe s/Str)
+   :hetu             (s/maybe s/Str)
+   :sukupuoli        (s/maybe s/Str)
+   :passinNumero     (s/maybe s/Str)
+   :idTunnus         (s/maybe s/Str)
+   :email            s/Str
+   :matkapuhelin     s/Str
+   :asuinmaa         s/Str
+   :lahiosoite       s/Str
+   :postinumero      s/Str
+   :postitoimipaikka (s/maybe s/Str)
+   :kotikunta        (s/maybe s/Str)
+   :aidinkieli       s/Str
+   :asiointikieli    s/Str
+
+   :toisenAsteenKoulutus    s/Str
+   :toisenAsteenKoulutusMaa (s/maybe s/Str)
+
+   ; TODO: kaupunki ja maa?
+   ; TODO: valinnan tilaa muuttavat
+   })

@@ -356,6 +356,12 @@
                                      roles
                                      use-toisen-asteen-yhteishaku-restrictions?))))
 
+(defn latest-form-id-by-haku-oid
+  [haku-oid tarjonta-service]
+  (some-> (tarjonta/get-haku tarjonta-service haku-oid)
+          :ataru-form-key
+          form-store/latest-id-by-key))
+
 (defn- form-by-haku-oid-cache-key
   [haku-oid roles]
   (apply str

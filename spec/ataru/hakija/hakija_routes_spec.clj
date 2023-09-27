@@ -28,7 +28,8 @@
             [speclj.core :refer [around before-all should-not before should= should it describe tags]]
             [yesql.core :as sql]
             [ataru.fixtures.form :as form-fixtures]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
+            [ataru.fixtures.synthetic-application :as synthetic-application-fixtures])
   (:import org.joda.time.DateTime))
 
 (declare resp)
@@ -141,6 +142,14 @@
                    parse-body)]
      ~@body))
 
+(defmacro with-synthetic-response
+  [method resp application & body]
+  `(let [~resp (-> (mock/request ~method "/hakemus/api/synthetic-application" (json/generate-string ~application))
+                   (mock/content-type "application/json")
+                   handler
+                   parse-body)]
+     ~@body))
+
 (defn- have-any-application-in-db
   []
   (let [app-count
@@ -173,6 +182,11 @@
   [application-id]
   (when-let [actual (get-application-by-id application-id)]
     (= (:form application-fixtures/person-info-form-application-for-hakukohde) (:form actual))))
+
+(defn- have-synthetic-application-for-hakukohde-in-db
+  [application-id]
+  (when-let [actual (get-application-by-id application-id)]
+    (= (:id form-fixtures/synthetic-application-test-form) (:form actual))))
 
 (defn- cannot-edit? [field] (true? (:cannot-edit field)))
 
@@ -764,3 +778,32 @@
                                                           :value     [[""] nil]
                                                           :fieldType "textField"}])
         (should= 200 (:status resp))))))
+
+(describe "/synthetic-application"
+          (tags :unit :hakija-routes)
+
+          (describe "POST synthetic application"
+                    (around [spec]
+                            (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                                          hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
+                                          koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                                                  (case uri
+                                                                                                    "maatjavaltiot2"
+                                                                                                    #{"246"}
+                                                                                                    "kunta"
+                                                                                                    #{"273"}
+                                                                                                    "sukupuoli"
+                                                                                                    #{"1" "2"}
+                                                                                                    "kieli"
+                                                                                                    #{"FI" "SV" "EN"}))]
+                              (spec)))
+                    (before-all
+                     (reset! form (db/init-db-fixture form-fixtures/synthetic-application-test-form)))
+
+                    (it "should validate synthetic application for hakukohde"
+                        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+                          (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
+                            (should= 200 (:status resp))
+                            (print resp)
+                            (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id]))))))))
+
