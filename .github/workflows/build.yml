@@ -37,6 +37,17 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'package-lock.json'
 
+      # Remove following in the future (and update script in package.json), it installs chrome version 116 as the current 117 has bug
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: 1160321
+        id: setup-chrome
+      - run: |
+          echo Installed chromium version: ${{ steps.setup-chrome.outputs.chrome-version }}
+          echo Installed chromium path: ${{ steps.setup-chrome.outputs.chrome-path }}
+          which chromium
+          chromium --version
+
       - name: Prepare tests
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
