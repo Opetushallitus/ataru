@@ -34,7 +34,7 @@ npm-debug.log*
 .clj-kondo/.cache
 .java
 .lsp
-.calva
+.calva/
 /test-results/
 /playwright-report/
 /blob-report/

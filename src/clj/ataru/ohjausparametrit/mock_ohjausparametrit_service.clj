@@ -4,7 +4,7 @@
 (defrecord MockOhjausparametritService []
   OhjausparametritService
 
-  (get-parametri [_ _]
+  (get-parametri [_ haku-oid]
     {:PH_SS          {:dateStart 1506920400000, :dateEnd nil},
      :PH_OPVP        {:date nil},
      :PH_HKMT        {:date nil},
@@ -20,5 +20,7 @@
      :target         "1.2.246.562.29.75477542726",
      :PH_VTJH        {:dateStart nil, :dateEnd nil},
      :PH_IP          {:date nil},
+     :synteettisetHakemukset (not (= haku-oid "1.2.246.562.29.12345678910")),
+     :synteettisetLomakeavain (if (= haku-oid "1.2.246.562.29.12345678910") "" "synthetic-application-test-form"),
      :__modifiedBy__ "1.2.246.562.24.64667668834",
      :__modified__   1508400869203}))

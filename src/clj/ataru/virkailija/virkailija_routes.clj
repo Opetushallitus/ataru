@@ -87,7 +87,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [cuerdas.core :as str]
-            [clj-time.format :as f])
+            [clj-time.format :as f]
+            [ataru.virkailija.virkailija-application-service :as virkailija-application-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -222,10 +223,31 @@
                           application-service
                           suoritus-service
                           valinta-laskenta-service
-                          valinta-tulos-service]
+                          valinta-tulos-service
+                          form-by-id-cache]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
+
+    (api/POST "/synthetic-applications" {session :session}
+      :summary "Store one or more synthetic applications"
+      :body [applications [ataru-schema/SyntheticApplication]]
+      (if (get-in session [:identity :superuser])
+        (let [submit-results (virkailija-application-service/batch-submit-synthetic-applications
+                              applications
+                                {:form-by-id-cache form-by-id-cache
+                                 :koodisto-cache koodisto-cache
+                                 :tarjonta-service tarjonta-service
+                                 :organization-service organization-service
+                                 :ohjausparametrit-service ohjausparametrit-service
+                                 :person-service person-service
+                                 :audit-logger audit-logger
+                                 :job-runner job-runner
+                                 :session session})]
+        (if (:success submit-results)
+          (ok (:applications submit-results))
+          (response/bad-request (:applications submit-results))))
+         (response/unauthorized {})))
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)

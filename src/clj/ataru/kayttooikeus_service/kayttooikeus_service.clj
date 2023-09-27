@@ -70,7 +70,14 @@
                                        {:palvelu "ATARU_HAKEMUS"
                                         :oikeus  "CRUD"}
                                        {:palvelu "ATARU_HAKEMUS"
-                                        :oikeus  "opinto-ohjaaja"}]}]}})
+                                        :oikeus  "opinto-ohjaaja"}]}]}
+   "1.2.246.562.11.44444444444"
+   {:oidHenkilo    "1.2.246.562.11.11111111014"
+    :organisaatiot [{:organisaatioOid "1.2.246.562.10.00000000001"
+                     :kayttooikeudet  [{:palvelu "ATARU_EDITORI"
+                                        :oikeus  "CRUD"}
+                                       {:palvelu "ATARU_HAKEMUS"
+                                        :oikeus  "CRUD"}]}]}})
 
 (defrecord FakeKayttooikeusService []
   KayttooikeusService

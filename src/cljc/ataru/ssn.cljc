@@ -83,6 +83,17 @@
                        (= century-sign "+") 18)]
     (str day "." month "." century year)))
 
+;; based on koodisto-values
+(defn- parse-gender-from-ssn
+  [ssn]
+  (if (zero? (mod (->int (subs ssn 9 10)) 2))
+    "2"
+    "1"))
+
 (defn ssn->birth-date [ssn]
   (when-not (string/blank? ssn)
     (parse-birth-date-from-ssn ssn)))
+
+(defn ssn->gender [ssn]
+  (when-not (string/blank? ssn)
+    (parse-gender-from-ssn ssn)))
