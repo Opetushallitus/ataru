@@ -1,11 +1,15 @@
 (ns ataru.cas-oppija.cas-oppija-session-store
   (:require
-    [ataru.db.db :refer [exec get-datasource]]
+    [ataru.db.db :refer [exec]]
     [taoensso.timbre :as log]
     [yesql.core :refer [defqueries]])
   (:import (java.util UUID)))
 
 (defqueries "sql/oppija-session-queries.sql")
+
+(declare yesql-add-oppija-session-query!)
+(declare yesql-read-oppija-session-query)
+(declare yesql-delete-oppija-session-by-ticket-query!)
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 (defn persist-session! [key ticket data]
