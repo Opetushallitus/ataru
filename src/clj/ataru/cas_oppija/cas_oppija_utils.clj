@@ -1,7 +1,8 @@
 (ns ataru.cas-oppija.cas-oppija-utils
   (:require [clojure.data.xml :as xml]
             [ataru.config.core :refer [config]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [clojure.string :as str]))
 
 (defn parse-oppija-attributes-if-successful [validation-response]
   (let [xml (xml/parse-str validation-response)
@@ -67,4 +68,5 @@
   (if-let [ticket (some #(when (= (:tag %) :SessionIndex)
                            (first (:content %)))
                         (:content (xml/parse-str logout-request)))]
-    (clojure.string/trim ticket)))
+    (str/trim ticket)
+    nil))
