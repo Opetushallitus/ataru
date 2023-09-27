@@ -1478,9 +1478,9 @@
 (reg-event-fx
   :application/redirect-to-logout
   [check-schema-interceptor]
-  (fn [_]
+  (fn [_ [_ lang]]
     (let [service-url (config/get-public-config [:applicant :service_url])
-          target (str service-url "/cas-oppija/logout?service=https://untuvaopintopolku.fi/konfo/fi/sivu/uloskirjautuminen")]
+          target (str service-url "/hakemus/auth/oppija/logout?lang=" lang)]
       (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
       (set! (.. js/window -location -href) target)
       nil)))

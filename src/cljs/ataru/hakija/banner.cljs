@@ -126,7 +126,7 @@
                                                                                               (translations/get-hakija-translation :ht-logout-confirmation-text-submitted @lang)
                                                                                               (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
                                                                                  :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
-                                                                                 :on-click (fn [_] (dispatch [:application/redirect-to-logout]))}])
+                                                                                 :on-click (fn [_] (dispatch [:application/redirect-to-logout (name @lang)]))}])
            :data-test-id "tunnistautuminen-button"}
           (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
