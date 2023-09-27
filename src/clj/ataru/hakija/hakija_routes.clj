@@ -179,12 +179,19 @@
       (let [body (ring.util.request/body-string request)]
         (log/info "Received request for logout:" body)
         (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request body)]
-          (let [res (oss/delete-session! ticket)]
+          (let [res (oss/delete-session-by-ticket! ticket)]
             (log/info ticket ": db result" res)
             (if (= res 1)
               (response/ok)
               (response/not-found)))
           (log/warn "Something went wong when processing logout request..."))))
+    (api/GET "/oppija/logout" [:as request]
+      :query-params [{lang :- s/Str nil}]
+      (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
+            result (oss/delete-session-by-key! oppija-session-key)
+            destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
+        (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
+        (response/found destination)))
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)

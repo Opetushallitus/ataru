@@ -16,6 +16,11 @@ SET data = :data
 WHERE key = :key;
 
 -- name: yesql-delete-oppija-session-by-ticket-query!
--- Deletes session
+-- Deletes session by ticket
 DELETE FROM oppija_sessions
 WHERE ticket = :ticket;
+
+-- name: yesql-delete-oppija-session-query!
+-- Deletes session
+DELETE FROM oppija_sessions
+WHERE key = :key;

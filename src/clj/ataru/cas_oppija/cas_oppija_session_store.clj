@@ -10,6 +10,7 @@
 (declare yesql-add-oppija-session-query!)
 (declare yesql-read-oppija-session-query)
 (declare yesql-delete-oppija-session-by-ticket-query!)
+(declare yesql-delete-oppija-session-query!)
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 (defn persist-session! [key ticket data]
@@ -23,6 +24,10 @@
   (when key
     (first (exec :db yesql-read-oppija-session-query {:key key}))))
 
-(defn delete-session! [ticket]
+(defn delete-session-by-ticket! [ticket]
   (log/warn "Deleting session with ticket " ticket)
   (exec :db yesql-delete-oppija-session-by-ticket-query! {:ticket ticket}))
+
+(defn delete-session-by-key! [key]
+  (log/warn "Deleting session by key " key)
+  (exec :db yesql-delete-oppija-session-query! {:key key}))

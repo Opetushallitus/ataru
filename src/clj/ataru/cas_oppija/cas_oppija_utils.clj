@@ -64,6 +64,19 @@
     (log/info "cas-oppija-ticket validation url" url)
     url))
 
+(def logout-pages {:fi "/konfo/fi/sivu/uloskirjautuminen"
+                   :sv "/konfo/sv/sivu/utloggningen"
+                   :en "/konfo/en/sivu/logout"})
+
+(defn parse-cas-oppija-logout-url [lang]
+  (let [url (str
+              (-> config :urls :cas-oppija-url)
+              "/logout?service=https://"
+              (-> config :urls :hakija-host)
+              (lang logout-pages))]
+    (log/info "cas-oppija logout url" url)
+    url))
+
 (defn parse-ticket-from-lockout-request [logout-request]
   (if-let [ticket (some #(when (= (:tag %) :SessionIndex)
                            (first (:content %)))
