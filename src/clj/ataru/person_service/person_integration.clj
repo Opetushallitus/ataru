@@ -66,10 +66,23 @@
       (application-store/add-person-oid application-id oid)
       (log/info "Added person" oid "to application" application-id)
       (start-jobs-for-person job-runner oid)
-      (log/info "Started person info update job for application" application-id))
+      (log/info "Started person info update job for application" application-id)
+      oid)
     (catch IllegalArgumentException e
       (log/error e "Failed to create-or-find person for application"
         application-id))))
+
+(defn upsert-person-synchronized
+  [job-runner person-service application-id]
+  {:pre [(not (nil? application-id))
+         (not (nil? person-service))
+         (not (nil? job-runner))]}
+    (let [application (application-store/get-application application-id)]
+    (if (muu-person-info-module? application)
+      (log/info "Not adding applicant from application"
+                application-id
+                "to oppijanumerorekisteri")
+      (upsert-and-log-person job-runner person-service application-id application))))
 
 (defn upsert-person
   [{:keys [application-id]}

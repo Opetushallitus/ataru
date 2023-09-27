@@ -1,32 +1,85 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.background-job.job :as job]
+            [ataru.cache.cache-service :as cache-service]
+            [ataru.config.core :refer [config]]
             [ataru.db.db :as ataru-db]
+            [ataru.email.application-email-jobs :as application-email]
+            [ataru.fixtures.application :as application-fixtures]
             [ataru.fixtures.db.unit-test-db :as db]
             [ataru.fixtures.form :as fixtures]
-            [ataru.fixtures.application :as application-fixtures]
+            [ataru.fixtures.synthetic-application :as synthetic-application-fixtures]
+            [ataru.forms.form-store :as form-store]
             [ataru.kayttooikeus-service.kayttooikeus-service :as kayttooikeus-service]
+            [ataru.koodisto.koodisto :as koodisto]
             [ataru.log.audit-log :as audit-log]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
             [ataru.organization-service.organization-service :as org-service]
             [ataru.person-service.person-service :as person-service]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [login should-have-header]]
+            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
             [cheshire.core :as json]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
+            [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
-            [speclj.core :refer [before describe it run-specs should should-not-be-nil should= tags with]]
-            [com.stuartsierra.component :as component]))
+            [speclj.core :refer [after-all around before before-all describe
+                                 it run-specs should should-be-nil should-not-be-nil should=
+                                 tags with]]
+            [yesql.core :as sql]))
+
+(declare yesql-get-latest-application-by-key)
+(sql/defqueries "sql/application-queries.sql")
+
+(defn- parse-body
+  [resp]
+  (if-not (nil? (:body resp))
+    (assoc resp :body (cond-> (:body resp)
+                        (not (string? (:body resp)))
+                        slurp
+                        true
+                        (json/parse-string true)))
+    resp))
+
+(defn- get-latest-application-by-key [key]
+  (first (ataru-db/exec :db yesql-get-latest-application-by-key {:application_key key})))
+
+(defn- hakuaika-ongoing
+  [_ _ _ _]
+  (hakuaika/hakuaika-with-label {:on                                  true
+                                 :start                               (- (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :end                                 (+ (System/currentTimeMillis) (* 2 24 3600 1000))
+                                 :hakukierros-end                     nil
+                                 :jatkuva-haku?                       false
+                                 :joustava-haku?                      false
+                                 :jatkuva-or-joustava-haku?           false
+                                 :attachment-modify-grace-period-days (-> config :public-config :attachment-modify-grace-period-days)}))
 
 (def virkailija-routes
   (delay
     (-> (component/system-map
+          :form-by-id-cache (reify cache-service/Cache
+                             (get-from [_ key]
+                               (form-store/fetch-by-id (Integer/valueOf key)))
+                             (get-many-from [_ _])
+                             (remove-from [_ _])
+                             (clear-all [_]))
+          :koodisto-cache     (reify cache-service/Cache
+                               (get-from [_ _])
+                               (get-many-from [_ _])
+                               (remove-from [_ _])
+                               (clear-all [_]))
           :organization-service (org-service/->FakeOrganizationService)
+          :ohjausparametrit-service (ohjausparametrit-service/new-ohjausparametrit-service)
           :tarjonta-service (tarjonta-service/->MockTarjontaService)
           :session-store (create-session-store (ataru-db/get-datasource :db))
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
+          :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -41,10 +94,30 @@
                                 :kayttooikeus-service
                                 :person-service
                                 :application-service
-                                :audit-logger]))
+                                :audit-logger
+                                :ohjausparametrit-service
+                                :form-by-id-cache
+                                :koodisto-cache
+                                :job-runner]))
       component/start
       :virkailija-routes
       :routes)))
+
+(defn- check-for-db-application-with-haku-and-person
+  [application-id person-oid]
+  (let [application (get-latest-application-by-key application-id)]
+    (should-not-be-nil application)
+    (should= (:id fixtures/synthetic-application-test-form) (:form application))
+    (should= person-oid (:person_oid application))))
+
+(defmacro with-synthetic-response
+  [method resp applications & body]
+  `(let [~resp (-> (mock/request ~method "/lomake-editori/api/synthetic-applications" (json/generate-string ~applications))
+                   (mock/content-type "application/json")
+                   (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
+                   ((deref virkailija-routes))
+                   parse-body)]
+     ~@body))
 
 (defmacro with-static-resource
   [name path]
@@ -364,5 +437,77 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(describe "/synthetic-application"
+          (tags :unit :api-applications)
+
+          (defn check-synthetic-applications [resp expected-count expected-failing-indices]
+            (let [applications (:body resp)
+                  failures-exist (not-empty expected-failing-indices)]
+              (if failures-exist
+                (should= 400 (:status resp))
+                (should= 200 (:status resp)))
+              (should= expected-count (count applications))
+              (doall
+               (map-indexed (fn [idx application]
+                              (if (contains? expected-failing-indices idx)
+                                (do
+                                  (should-be-nil (:hakemusOid application))
+                                  (should-not-be-nil (:failures application))
+                                  (should-not-be-nil (:code application)))
+                                (do
+                                  (should-be-nil (:failures application))
+                                  (should-be-nil (:code application))
+                                  (if failures-exist
+                                    (should-be-nil (:hakemusOid application))
+                                    (do
+                                      (should-not-be-nil (:hakemusOid application))
+                                      (should= "1.2.3.4.5.6" (:personOid application))
+                                      (check-for-db-application-with-haku-and-person (:hakemusOid application) "1.2.3.4.5.6"))))))
+                            applications))))
+
+          (describe "POST synthetic application"
+                    (around [spec]
+                            (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
+                                          hakuaika/hakukohteen-hakuaika                         hakuaika-ongoing
+                                          koodisto/all-koodisto-values                          (fn [_ uri _ _]
+                                                                                                  (case uri
+                                                                                                    "maatjavaltiot2"
+                                                                                                    #{"246", "840"}
+                                                                                                    "kunta"
+                                                                                                    #{"273"}
+                                                                                                    "sukupuoli"
+                                                                                                    #{"1" "2"}
+                                                                                                    "kieli"
+                                                                                                    #{"FI" "SV" "EN"}))]
+                              (spec)))
+                    (before-all
+                     (db/init-db-fixture fixtures/synthetic-application-test-form))
+
+                    (after-all
+                     (db/init-db-fixture fixtures/synthetic-application-test-form))
+
+                    (it "should validate and store synthetic application for hakukohde"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic]
+                          (check-synthetic-applications resp 1 #{})))
+
+                    (it "should validate and store synthetic application for person with non-finnish ssn"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-synthetic-applications resp 1 #{})))
+
+                    (it "should validate and store more than one synthetic applications in batch"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
+                                                             synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-synthetic-applications resp 2 #{})))
+
+                    (it "should not validate and store synthetic application for haku that doesn't have synthetic applications enabled"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-with-disabled-haku]
+                          (check-synthetic-applications resp 1 #{0})))
+
+                    (it "should not store anything when one or more applications fail validation"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
+                                                             synthetic-application-fixtures/synthetic-application-malformed
+                                                             synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-synthetic-applications resp 3 #{1})))))
 
 (run-specs)
