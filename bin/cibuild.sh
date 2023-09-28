@@ -16,7 +16,7 @@ clean() {
 
 compile-less() {
     echo "Compiling less"
-    time ./bin/lein less once
+    time ./bin/compile-less.sh
 }
 
 npm-dependencies() {

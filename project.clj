@@ -129,7 +129,6 @@
   :plugins [[lein-cljsbuild "1.1.8"]
             [lein-doo "0.1.11"]
             [lein-figwheel "0.5.20"]
-            [lein-less "1.7.5"]
             [lein-ancient "0.7.0"]
             [lein-environ "1.2.0"]
             [lein-resource "17.06.1"]
@@ -157,9 +156,6 @@
   :figwheel {:css-dirs ["resources/public/css"]
              :repl     false
              :readline false}
-
-  :less {:source-paths ["resources/less"]
-         :target-path  "resources/public/css/compiled"}
 
   :main ataru.core
 
