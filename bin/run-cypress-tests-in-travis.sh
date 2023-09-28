@@ -17,7 +17,7 @@ echo "Running ClojureScript build for Cypress tests"
 time lein cljsbuild once virkailija-cypress-travis hakija-cypress-travis
 
 echo "Running less compilation for Cypress tests"
-time lein less once
+time ./bin/compile-less.sh
 
 echo "Starting services for Cypress tests"
 
