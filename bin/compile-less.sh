@@ -1,7 +1,5 @@
 #!/bin/bash
 
-rm resources/public/css/compiled/*.css
-
 for FILE in resources/less/*.less; do
   NAME=${FILE##*/}
   BASE=${NAME%.less}
