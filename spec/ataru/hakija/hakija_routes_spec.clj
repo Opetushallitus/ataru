@@ -789,7 +789,7 @@
                                           koodisto/all-koodisto-values                          (fn [_ uri _ _]
                                                                                                   (case uri
                                                                                                     "maatjavaltiot2"
-                                                                                                    #{"246"}
+                                                                                                    #{"246", "840"}
                                                                                                     "kunta"
                                                                                                     #{"273"}
                                                                                                     "sukupuoli"
@@ -807,5 +807,10 @@
                         (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
                           (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
                             (should= 200 (:status resp))
-                            (print resp)
+                            (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
+
+                    (it "should validate synthetic application for hakukohde"
+                        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
+                          (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-foreign
+                            (should= 200 (:status resp))
                             (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id]))))))))
