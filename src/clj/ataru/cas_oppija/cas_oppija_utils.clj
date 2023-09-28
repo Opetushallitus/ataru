@@ -78,8 +78,7 @@
     url))
 
 (defn parse-ticket-from-lockout-request [logout-request]
-  (if-let [ticket (some #(when (= (:tag %) :SessionIndex)
+  (when-let [ticket (some #(when (= (:tag %) :SessionIndex)
                            (first (:content %)))
                         (:content (xml/parse-str logout-request)))]
-    (str/trim ticket)
-    nil))
+    (str/trim ticket)))
