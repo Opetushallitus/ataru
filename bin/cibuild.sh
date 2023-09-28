@@ -121,6 +121,7 @@ reset-test-database-with-fixture() {
 ui-compile() {
     clean
     build-clojurescript
+    npm-dependencies
     compile-less
 }
 
@@ -133,6 +134,7 @@ prepare-ui-tests() {
 create-uberjar() {
     clean
     build-clojurescript
+    npm-dependencies
     compile-less
     process-resources
     echo "Creating uberjar"
