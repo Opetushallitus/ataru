@@ -151,6 +151,12 @@ jobs:
         with:
           lein: 2.9.1
 
+      - uses: actions/setup-node@v3
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          cache-dependency-path: 'package-lock.json'
+
       - name: Build
         run: ./bin/cibuild.sh create-uberjar
 
