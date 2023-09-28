@@ -88,19 +88,6 @@
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
 
-(defn logout-dropdown []
-  (fn []
-    (let [menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])]
-      [:div.application__logout-dropdown-wrapper
-       [:div.application__logout-dropdown-content {:class (when @menu-open? :application__logout-dropdown-content-open)}
-        [icons/icon-logout]
-        [:a.application__hakija-logout-button
-         {:key "cas-oppija-logout"
-          :href "https://untuvaopintopolku.fi/cas-oppija/logout?service=https://untuvaopintopolku.fi/konfo/fi/sivu/uloskirjautuminen"
-          :data-test-id "cas-oppija-logout"
-          }
-         "Kirjaudu ulos"]]])))
-
 (defn logged-in-indicator-or-placeholder []
   (let [lang (subscribe [:application/form-language])
         logged-in-name @(subscribe [:state-query [:oppija-session :data :display-name]])
