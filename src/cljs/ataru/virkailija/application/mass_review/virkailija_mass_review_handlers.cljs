@@ -27,9 +27,6 @@
 (reg-event-db
  :application/set-mass-review-notes
  (fn [db [_ review-note]]
-   (js/console.log "set-mass-review-notes")
-   (js/console.log review-note)
-   (js/console.log (-> db :application :mass-review-notes :review-notes))
    (assoc-in db [:application :mass-review-notes :review-notes] review-note)))
 
 (reg-event-db
@@ -53,7 +50,6 @@
 (reg-event-fx
  :application/mass-update-application-review-notes
  (fn [{:keys [db]} [_ review-note]]
-   (js/console.log "review notes" review-note)
    {:http {:method              :post
            :params              {:application-keys (map :key (get-in db [:application :applications]))
                                  :notes      review-note

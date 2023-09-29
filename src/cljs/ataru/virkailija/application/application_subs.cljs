@@ -316,10 +316,25 @@
            (some? list-selected-by)))))
 
 (re-frame/reg-sub
- :application/show-mass-review-notes-link? ;; TODO tänne tarkemmat ehdot
+ :application/filtering-for-mass-review-notes-link?
  (fn [db]
-   (and (not-empty (-> db :application :applications))
-        (some? (application-list-selected-by db)))))
+   (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
+         list-selected-by (application-list-selected-by db)]
+     (and (not-empty (-> db :application :applications)) ;;on hakemuksia listalla
+          (not (and yhteishaku? (= list-selected-by :selected-haku))) ;; jos yhteishaku, pelkkä haku-rajaus ei riitä vaan pitää olla hakukohde/hakukohderyhmä
+          (some? list-selected-by))))) ;; on joku rajaus päällä
+
+(re-frame/reg-sub
+ :application/show-mass-review-notes-link?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+    (re-frame/subscribe [:application/superuser?])
+    (re-frame/subscribe [:application/filtering-for-mass-review-notes-link?])])
+ (fn [[toisen-asteen-yhteishaku? superuser? filtering-for-mass-review-notes-link?]]
+    (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
+        (and filtering-for-mass-review-notes-link?  ;; pitää olla rajaus päällä
+             (not toisen-asteen-yhteishaku?))))) ;; ei näytetä ollenkaan 2. asteen yhteishaulle
+
 
 (re-frame/reg-sub
   :application/show-excel-link?
@@ -343,8 +358,6 @@
 
 (defn- mass-review-notes-button-enabled?
   [db]
-  (js/console.log "mass-review-notes-button-enabled?")
-  (js/console.log (-> db :application :mass-review-notes :review-notes u/not-blank?))
   (-> db :application :mass-review-notes :review-notes u/not-blank?))
 
 (re-frame/reg-sub
@@ -383,7 +396,6 @@
 (re-frame/reg-sub
  :application/mass-review-notes-form-status
  (fn [db]
-   (js/console.log "mass-review-notes-form-status")
    (cond (get-in db [:application :fetching-applications?])
      :loading-applications
      (not (mass-review-notes-button-enabled? db))
