@@ -110,6 +110,17 @@
                                                   {:id        "kysymys"
                                                    :fieldType "textField"
                                                    :options   [{:value "0"}]})))))
+
+  (testing "text field: single hidden option, empty followup:"
+    (is
+      (= {:kysymys {0         {:visible? false}
+                    :visible? true}}
+         (ui-of
+           (field-visibility/set-field-visibility {:application {:answers {:kysymys {:value "Vastaus"}}}}
+                                                  {:id        "kysymys"
+                                                   :fieldType "textField"
+                                                   :options   [{:value "0" :hidden true}]})))))
+
   (testing "text field: single option, single followup:"
     (is
       (= {:kysymys      {0         {:visible? true}
@@ -121,6 +132,7 @@
                                                    :fieldType "textField"
                                                    :options   [{:value     "0"
                                                                 :followups [{:id "jatkokysymys"}]}]})))))
+
   (testing "text field: multiple options, single followup each:"
     (is
       (= {:kysymys        {0         {:visible? true}
@@ -136,6 +148,7 @@
                                                                 :followups [{:id "jatkokysymys-0"}]}
                                                                {:value     "1"
                                                                 :followups [{:id "jatkokysymys-1"}]}]})))))
+
   (testing "text field: empty answer, followup should not be visible:"
     (is
       (= {:kysymys      {0         {:visible? true}
@@ -147,6 +160,7 @@
                                                    :fieldType "textField"
                                                    :options   [{:value     "0"
                                                                 :followups [{:id "jatkokysymys"}]}]})))))
+
   (testing "text field: option with condition:"
     (are [answer comparison-operator answer-compared-to option-visible? followup-visible?]
       (= {:kysymys      {0         {:visible? true}
@@ -162,6 +176,7 @@
                                                                 :followups [{:id "jatkokysymys"}]}]})))
       12 "=" 11 true false
       12 "=" 12 true true))
+
   (testing "text field: multiple options with condition"
     (are [answer-value visibility-0 visibility-1]
       (= {:kysymys        {0         {:visible? true}
@@ -184,6 +199,7 @@
       "-1" true false
       "1" false false
       "3" false true))
+
   (testing "text field: followup visibility for selected hakukohde:"
     (are [selected belongs-to visible?]
       (= {:kysymys-id      {0         {:visible? true}
@@ -200,3 +216,4 @@
                                         :belongs-to-hakukohteet [belongs-to]}]}]})))
       "valittu-hakukohde-id" "hakukohde-id" false
       "hakukohde-id" "hakukohde-id" true)))
+

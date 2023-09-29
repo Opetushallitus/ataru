@@ -119,12 +119,12 @@
                                          ylioppilastutkinto?
                                          hakukohteet-and-ryhmat)))
 
-(defn- set-option-visibility [db [index option] visible? id selected-hakukohteet-and-ryhmat]
+(defn- set-option-visibility [db [index option] parent-visible? id selected-hakukohteet-and-ryhmat]
   (let [belongs-to (set (concat (:belongs-to-hakukohderyhma option)
                                 (:belongs-to-hakukohteet option)))]
     (assoc-in db [:application :ui id index :visible?]
               (boolean
-                (and visible?
+                (and (and parent-visible? (not (:hidden option)))
                      (or (empty? belongs-to)
                          (not (empty? (set/intersection
                                         belongs-to
