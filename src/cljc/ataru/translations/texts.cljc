@@ -631,7 +631,17 @@
                                                  :en "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. en"}
    :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolussa"
                                                  :sv "Katso hakemustasi Oma Opintopolussa sv"
-                                                 :en "Katso hakemustasi Oma Opintopolussa en"}})
+                                                 :en "Katso hakemustasi Oma Opintopolussa en"}
+   :ht-jatka-palvelun-kayttoa                   {:fi "Jatka palvelun käyttöä"
+                                                 :sv "Jatka palvelun käyttöä sv"
+                                                 :en "Jatka palvelun käyttöä en"}
+   :ht-session-expiring-header                  {:fi "Istuntosi on vanhentumassa"
+                                                 :sv "Istuntosi on vanhentumassa sv"
+                                                 :en "Istuntosi on vanhentumassa en"}
+   :ht-session-expiring-text                    {:fi "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä"
+                                                 :sv "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä sv"
+                                                 :en "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä en"}
+   })
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"

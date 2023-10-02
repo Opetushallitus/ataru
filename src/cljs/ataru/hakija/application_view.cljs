@@ -389,6 +389,40 @@
              {:on-click #(reset! modal-hidden true)}
              button-text]]])))))
 
+(defn- ht-session-expired []
+  (let [lang                   (subscribe [:application/form-language])
+        expired? (subscribe [:state-query [:oppija-session :expired]])
+        expires-soon? (subscribe [:state-query [:oppija-session :expires-soon]])
+        expires-soon-dialog-bypassed? (subscribe [:state-query [:oppija-session :expires-soon-dialog-bypassed]])
+        submit-status (subscribe [:state-query [:application :submit-status]])]
+    (if (and @expired?
+             (not (= :submitted @submit-status)))
+      [:div.application__ht-session-expired-overlay
+       [:div.application__ht-session-expired-container
+        [:i.material-icons-outlined
+         {:title "danger"}
+         "error_outline"]
+        [:h1.application__ht-session-expired-title
+         "Istunto vanhentunut"]
+        [:p.application__ht-session-expired-main-text "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu."]
+        [:button.application__ht-session-expired-button.application__ht-session-expired-button--enabled
+         ;{:on-click on-click}
+         "siirry opintopolun etusivulle"]]]
+      (when (and @expires-soon?
+                 (not (= :submitted @submit-status))
+                 (not @expires-soon-dialog-bypassed?))
+        [:div.application__ht-session-expires-soon-overlay
+         [:div.application__ht-session-expires-soon-wrapper
+          [:div.application__ht-session-expires-soon-header-container
+           [:i.material-icons-outlined
+            {:title "danger"}
+            "error_outline"]
+           [:h1 (translations/get-hakija-translation :ht-session-expiring-header @lang)]]
+          [:p.application__ht-session-expires-soon-paragraph (translations/get-hakija-translation :ht-session-expiring-text @lang)]
+          [:button.application__ht-session-expires-soon-refresh-button
+           {:on-click #(dispatch [:application/close-session-expires-warning-dialog])}
+           (translations/get-hakija-translation :ht-jatka-palvelun-kayttoa @lang)]]]))))
+
 (defn- ht-notification-modal []
   (let [params @(subscribe [:state-query [:application :notification-modal]])
         {:keys [header main-text button-text on-click]} params]
@@ -474,5 +508,6 @@
    [application-contents]
    [submitted-overlay]
    [demo-overlay]
+   [ht-session-expired]
    [ht-notification-modal]
    [modal-info-element-overlay]])

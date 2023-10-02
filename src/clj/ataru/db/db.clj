@@ -52,6 +52,9 @@
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
      (~query ~params {:connection connection#})))
 
+(defmacro exec-conn [ds-key query params]
+  `(jdbc/with-db-connection [connection# {:datasource (get-datasource ~ds-key)}]
+                            (~query ~params {:connection connection#})))
 (defmacro exec-all [ds-key query-list]
   `(jdbc/with-db-transaction [connection# {:datasource (get-datasource ~ds-key)}]
      (last (for [[query# params#] (partition 2 ~query-list)]

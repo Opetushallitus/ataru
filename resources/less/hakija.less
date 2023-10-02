@@ -2730,6 +2730,79 @@ i.arkistoitu {
   }
 }
 
+.application__ht-session-expired-overlay {
+  background-color: @white;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__ht-session-expired-container {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__ht-session-expired-title {
+      font-size: 36px;
+    }
+
+    p,
+    .application__ht-notification-button {
+      font-size: 18px;
+    }
+
+    i {
+      color: white;
+      font-size: 40px;
+      background-color: @red;
+      border-radius: 50%;
+      padding: 10px;
+    }
+
+    .application__ht-session-expired-button {
+      .secondary-button;
+      background: @white;
+      height: 40px;
+      color: @primary-green-700;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+  @media only screen and (max-width: @mobile-width) {
+    .application__ht-session-expired-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+
+      .application__ht-session-expired-title {
+        font-size: 26px;
+      }
+
+      p,
+      .application__ht-session-expired-button {
+        font-size: 16px;
+      }
+
+      .application__ht-session-expired-button {
+        margin-top: 0.5rem;
+      }
+    }
+  }
+}
+
 .application__hakeminen-tunnistautuneena-has-applied-lander-wrapper {
   @media only screen and (max-width: @desktop-content-width) {
     margin: 0 5% 0 10%;
@@ -2747,5 +2820,157 @@ i.arkistoitu {
     text-align: center;
     width: 300px;
     margin-top: 20px;
+  }
+}
+
+.application__ht-session-expires-soon-overlay {
+  //background-color: @opaque-grey;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__ht-session-expires-soon-wrapper {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 60%;
+    max-width: 981px;
+    border: 3px solid @neutral-grey-200;
+    padding: 2rem 3rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__ht-session-expires-soon-header-container {
+      flex-direction: row;
+      display: flex;
+      align-items: center;
+      text-align: center;
+
+      i {
+        margin-right: 20px;
+        color: red;
+        font-size: 35px;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+
+    }
+
+
+    @media only screen and (max-width: @desktop-content-width) {
+      margin: 0 5% 0 10%;
+      margin-top: 20%;
+      min-width: 700px;
+    }
+
+    @media only screen and (max-width: @mobile-width) {
+      padding: 0.7rem 1.2rem;
+      margin: 0 0 0 0;
+      width: 100%;
+      margin-top: 20%;
+      min-width: 320px;
+      font-size: 16px;
+    }
+
+      .application__hakeminen-tunnistautuneena-lander-has-applied-haku-header {
+      font-size: 20px;
+    }
+
+    button {
+      .primary-button;
+      background: @primary-green-700;
+      height: 40px;
+      color: white;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+}
+
+
+.application__ht-notification-overlay {
+  background-color: @white;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__ht-notification-container {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 40%;
+    border: 3px solid @primary-green-700;
+    padding: 2rem 3rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: flex-start;
+    text-align: center;
+
+    .application__ht-notification-close {
+      justify-content: flex-end;
+      width: 100%;
+      display: flex;
+    }
+
+    .application__ht-notification-title {
+      font-size: 36px;
+    }
+
+    p,
+    .application__ht-notification-button {
+      font-size: 18px;
+    }
+
+
+    .application__ht-notification-button {
+      .primary-button;
+      background: @primary-green-700;
+      height: 40px;
+      color: white;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+  @media only screen and (max-width: @mobile-width) {
+    .application__ht-notification-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+
+      .application__ht-notification-title {
+        font-size: 26px;
+      }
+
+      p,
+      .application__ht-notification-button {
+        font-size: 16px;
+      }
+
+      .application__ht-notification-button {
+        margin-top: 0.5rem;
+      }
+    }
   }
 }
