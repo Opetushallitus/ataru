@@ -641,7 +641,15 @@
    :ht-session-expiring-text                    {:fi "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä"
                                                  :sv "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä sv"
                                                  :en "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä en"}
-   })
+   :ht-session-expired-header                   {:fi "Istunto on vanhentunut"
+                                                 :sv "Istunto on vanhentunut sv"
+                                                 :en "Istunto on vanhentunut en"}
+   :ht-session-expired-text                     {:fi "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu."
+                                                 :sv "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu. sv"
+                                                 :en "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu. en"}
+   :ht-session-expired                          {:fi "Siirry Opintopolun etusivulle"
+                                                 :sv "Siirry Opintopolun etusivulle sv"
+                                                 :en "Siirry Opintopolun etusivulle en"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
