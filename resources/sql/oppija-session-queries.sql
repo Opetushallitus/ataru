@@ -1,6 +1,8 @@
 -- name: yesql-read-oppija-session-query
 -- Get session data
-SELECT data
+SELECT data,
+       (created_at + interval '3 hours' - interval '5 minutes' <= now()
+            and created_at + interval '3 hours' > now()) as expires_soon
 FROM oppija_sessions
 WHERE key = :key
 and created_at + interval '3 hours'>= now();

@@ -195,10 +195,11 @@
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
-            enriched-session (-> session
-                                 (merge {:logged-in (boolean session)}))]
-        (log/info "Session for session" oppija-session " from db" session ", trimmed " enriched-session)
-        (response/ok enriched-session)))))
+            trimmed-session {:data (:data session)
+                             :logged-in (boolean session)
+                             :expires-soon (boolean (:expires_soon session))}]
+        (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
+        (response/ok trimmed-session)))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner

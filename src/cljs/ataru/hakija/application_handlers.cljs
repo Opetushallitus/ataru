@@ -134,6 +134,41 @@
             :handler [:application/handle-form]}}))
 
 (reg-event-fx
+  :application/start-oppija-session-polling
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    (let [logged-in? (get-in db [:oppija-session :logged-in])]
+      (js/console.log (str "Start session polling:" logged-in?))
+      (if logged-in?
+        {:db db
+         :interval {:action :start
+                    :id :oppija-session-polling
+                    :frequency 60000
+                    :event [:application/oppija-session-login-refresh]}}
+        db))))
+(reg-event-fx
+  :application/oppija-session-login-refresh
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/auth/session")
+            :handler [:application/handle-oppija-session-login-refresh]}}))
+
+
+(reg-event-fx
+  :application/handle-oppija-session-login-refresh
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (let [session-data (get-in response [:body])
+          session-fresh? (not (:logged-in session-data))
+          expires_soon? (:expires-soon session-data)]
+      (js/console.log (str "handle-oppija-session-login-refresh" session-data))
+      {:db (-> db
+               (assoc-in [:oppija-session :expired] session-fresh?)
+               (assoc-in [:oppija-session :expires-soon] expires_soon?))})))
+
+(reg-event-fx
   :application/get-oppija-session
   [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
@@ -647,12 +682,14 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])]
+      (js/console.log (str "Handle oppija session fetch, sess data" session-data))
       {:db (-> db
                (assoc :oppija-session session-data)
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                           :change-country-of-residence nil}]
-                    (when session-data [:application/fetch-has-applied-for-oppija-session session-data])]})))
+                    [:application/fetch-has-applied-for-oppija-session session-data]
+                    (when (:logged-in session-data) [:application/start-oppija-session-polling])]})))
 
 (reg-event-fx
   :application/fetch-has-applied-for-oppija-session
@@ -1512,6 +1549,12 @@
   [check-schema-interceptor]
   (fn [db _]
     (update-in db [:oppija-session :logout-menu-open] not)))
+
+(reg-event-db
+  :application/close-session-expires-warning-dialog
+  [check-schema-interceptor]
+  (fn [db _]
+    (assoc-in db [:oppija-session :expires-soon-dialog-bypassed] true)))
 
 (reg-event-fx
   :application/set-page-title

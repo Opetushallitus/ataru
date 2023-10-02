@@ -1,6 +1,6 @@
 (ns ataru.cas-oppija.cas-oppija-session-store
   (:require
-    [ataru.db.db :refer [exec]]
+    [ataru.db.db :refer [exec exec-conn]]
     [taoensso.timbre :as log]
     [yesql.core :refer [defqueries]])
   (:import (java.util UUID)))
@@ -22,12 +22,12 @@
 (defn read-session [key]
   (log/info "Read session by key" key)
   (when key
-    (first (exec :db yesql-read-oppija-session-query {:key key}))))
+    (first (exec-conn :db yesql-read-oppija-session-query {:key key}))))
 
 (defn delete-session-by-ticket! [ticket]
   (log/warn "Deleting session with ticket " ticket)
-  (exec :db yesql-delete-oppija-session-by-ticket-query! {:ticket ticket}))
+  (exec-conn :db yesql-delete-oppija-session-by-ticket-query! {:ticket ticket}))
 
 (defn delete-session-by-key! [key]
   (log/warn "Deleting session by key " key)
-  (exec :db yesql-delete-oppija-session-query! {:key key}))
+  (exec-conn :db yesql-delete-oppija-session-query! {:key key}))
