@@ -406,7 +406,7 @@
          (translations/get-hakija-translation :ht-session-expired-header @lang)]
         [:p.application__ht-session-expired-main-text (translations/get-hakija-translation :ht-session-expired-text @lang)]
         [:button.application__ht-session-expired-button.application__ht-session-expired-button--enabled
-         {:on-click #(dispatch [:application/redirect-to-opintopolku-etusivu])}
+         {:on-click #(dispatch [:application/redirect-to-opintopolku-etusivu (name @lang)])}
          (translations/get-hakija-translation :ht-session-expired @lang)]]]
       (when (and @expires-soon?
                  (not (= :submitted @submit-status))
