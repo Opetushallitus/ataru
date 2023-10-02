@@ -403,11 +403,11 @@
          {:title "danger"}
          "error_outline"]
         [:h1.application__ht-session-expired-title
-         "Istunto vanhentunut"]
-        [:p.application__ht-session-expired-main-text "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu."]
+         (translations/get-hakija-translation :ht-session-expired-header @lang)]
+        [:p.application__ht-session-expired-main-text (translations/get-hakija-translation :ht-session-expired-text @lang)]
         [:button.application__ht-session-expired-button.application__ht-session-expired-button--enabled
-         ;{:on-click on-click}
-         "siirry opintopolun etusivulle"]]]
+         {:on-click #(dispatch [:application/redirect-to-opintopolku-etusivu])}
+         (translations/get-hakija-translation :ht-session-expired @lang)]]]
       (when (and @expires-soon?
                  (not (= :submitted @submit-status))
                  (not @expires-soon-dialog-bypassed?))

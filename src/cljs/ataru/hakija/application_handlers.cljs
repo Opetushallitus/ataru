@@ -1532,6 +1532,15 @@
       (set! (.. js/window -location -href) target)
       nil)))
 
+(reg-event-fx
+  :application/redirect-to-opintopolku-etusivu
+  [check-schema-interceptor]
+  (fn [_]
+    (let [service-url (config/get-public-config [:applicant :service_url])]
+      (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+      (set! (.. js/window -location -href) service-url)
+      nil)))
+
 (reg-event-db
   :application/set-tunnistautuminen-declined
   [check-schema-interceptor]
