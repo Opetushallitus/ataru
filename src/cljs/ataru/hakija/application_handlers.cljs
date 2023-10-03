@@ -161,12 +161,13 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          session-fresh? (not (:logged-in session-data))
-          expires_soon? (:expires-soon session-data)]
+          logged-in? (:logged-in session-data)
+          expires-soon? (:expires-soon session-data)]
       (js/console.log (str "handle-oppija-session-login-refresh" session-data))
       {:db (-> db
-               (assoc-in [:oppija-session :expired] session-fresh?)
-               (assoc-in [:oppija-session :expires-soon] expires_soon?))})))
+               (assoc-in [:oppija-session :logged-in] logged-in?)
+               (assoc-in [:oppija-session :expired] (not logged-in?))
+               (assoc-in [:oppija-session :expires-soon] expires-soon?))})))
 
 (reg-event-fx
   :application/get-oppija-session
