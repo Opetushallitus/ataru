@@ -12,7 +12,8 @@ INSERT INTO applications (
   ssn,
   dob,
   email,
-  submitted
+  submitted,
+  tunnistautuminen
 ) VALUES (
   :form_id,
   :content,
@@ -25,7 +26,8 @@ INSERT INTO applications (
   upper(:ssn),
   :dob,
   :email,
-  now()
+  now(),
+  :tunnistautuminen
 );
 
 -- name: yesql-add-application-answers!
@@ -96,7 +98,8 @@ INSERT INTO applications (
   ssn,
   dob,
   email,
-  submitted
+  submitted,
+  tunnistautuminen
 ) VALUES (
   :form_id,
   :key,
@@ -114,7 +117,8 @@ INSERT INTO applications (
    FROM applications
    WHERE key = :key
    ORDER BY id ASC
-   LIMIT 1)
+   LIMIT 1),
+  tunnistautuminen
 );
 
 -- name: yesql-add-application-secret<!
@@ -302,7 +306,7 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                                     state <> 'inactivated') AS t
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
-
+--kissa
 -- name: yesql-get-latest-application-by-key
 SELECT
   a.id,
@@ -333,7 +337,8 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+   (a.tunnistautuminen->'session' is not null) as tunnistautunut
 FROM latest_applications AS a
 JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;

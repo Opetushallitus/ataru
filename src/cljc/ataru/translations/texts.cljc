@@ -2359,7 +2359,10 @@
                                                               :en "EN: Pohjakoulutusta ei löytynyt"}
    :error-loading-valinnat                                   {:fi "Virhe hakemuksen valintojen hakemisessa"
                                                               :sv "SV: Virhe hakemuksen valintojen hakemisessa"
-                                                              :en "EN: Virhe hakemuksen valintojen hakemisessa"}})
+                                                              :en "EN: Virhe hakemuksen valintojen hakemisessa"}
+   :ht-hakenut-vahvasti-tunnistautuneena                     {:fi "Hakija on kirjautunut lomakkeelle vahvasti tunnistautuneena."
+                                                              :sv "SV: Hakija on kirjautunut lomakkeelle vahvasti tunnistautuneena."
+                                                              :en "EN: Hakija on kirjautunut lomakkeelle vahvasti tunnistautuneena."}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

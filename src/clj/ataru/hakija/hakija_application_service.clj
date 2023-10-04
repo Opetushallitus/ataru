@@ -35,10 +35,10 @@
     [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
     [ataru.tarjonta.haku :as h]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
+        key-and-id (store-fn application applied-hakukohteet form session audit-logger oppija-session)]
     (log/info "Stored application with id: " (:id key-and-id))
     (when harkinnanvaraisuus-process-fn
       (harkinnanvaraisuus-process-fn (:id key-and-id) (:key key-and-id)))
@@ -406,7 +406,7 @@
       :else
       (do
         (remove-orphan-attachments liiteri-cas-client final-application latest-application)
-        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn)
+        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
           :key (:key latest-application))))))
 
 (defn- start-person-creation-job [job-runner application-id]
