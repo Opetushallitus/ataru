@@ -27,7 +27,7 @@
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
             [speclj.core :refer [after-all around before before-all describe
-                                 it run-specs should should-not-be-nil should=
+                                 it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
             [yesql.core :as sql]))
 
@@ -406,15 +406,26 @@
 (describe "/synthetic-application"
           (tags :unit :api-applications)
 
-          (defn check-single-synthetic-application-success [resp]
+          (defn check-synthetic-applications [resp expected-count expected-failing-indices]
             (should= 200 (:status resp))
             (let [body (:body resp)
-                  applications (:applications body)
-                  application (first applications)]
-              (should= 1 (count applications))
-              (should-not-be-nil (:id application))
-              (should= "1.2.3.4.5.6" (:personOid application))
-              (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6")))
+                  applications (:applications body)]
+              (should= expected-count (count applications))
+              (doall
+               (map-indexed (fn [idx application]
+                              (if (contains? expected-failing-indices idx)
+                                (do
+                                  (println "FAILURE" application)
+                                  (should-be-nil (:id application))
+                                  (should-not-be-nil (:failures application))
+                                  (should= "application-validation-failed-error" (:code application)))
+                                (do
+                                  (should-not-be-nil (:id application))
+                                  (should-be-nil (:failures application))
+                                  (should-be-nil (:code application))
+                                  (should= "1.2.3.4.5.6" (:personOid application))
+                                  (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6"))))
+                            applications))))
 
           (describe "POST synthetic application"
                     (around [spec]
@@ -438,11 +449,22 @@
                      (db/init-db-fixture fixtures/synthetic-application-test-form))
 
                     (it "should validate and store synthetic application for hakukohde"
-                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-initial]
-                          (check-single-synthetic-application-success resp)))
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic]
+                          (check-synthetic-applications resp 1 #{})))
 
                     (it "should validate and store synthetic application for person with non-finnish ssn"
                         (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-foreign]
-                          (check-single-synthetic-application-success resp)))))
+                          (check-synthetic-applications resp 1 #{})))
+
+                    (it "should validate and store more than one synthetic applications in batch"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
+                                                             synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-synthetic-applications resp 2 #{})))
+
+                    (it "should validate and store some applications while failing others"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
+                                                             synthetic-application-fixtures/synthetic-application-malformed
+                                                             synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-synthetic-applications resp 3 #{1})))))
 
 (run-specs)
