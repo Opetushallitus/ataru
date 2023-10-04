@@ -4,7 +4,6 @@
     [ataru.applications.application-store :as application-store]
     [ataru.applications.automatic-eligibility :as automatic-eligibility]
     [ataru.applications.field-deadline :as field-deadline]
-    [ataru.applications.synthetic-application-util :as synthetic-application-util]
     [ataru.background-job.job :as job]
     [ataru.cache.cache-service :as cache]
     [ataru.config.core :refer [config]]
@@ -217,7 +216,7 @@
                   :session   session
                   :id        {:email (util/extract-email application)}}))
 
-(defn validate-and-store [liiteri-cas-client
+(defn- validate-and-store [liiteri-cas-client
                            form-by-id-cache
                            koodisto-cache
                            tarjonta-service
@@ -494,8 +493,7 @@
    application
    session
    liiteri-cas-client
-   maksut-service
-   enable-submit-jobs]
+   maksut-service]
   (log/info "Application submitted:" application)
 
   (let [{:keys [passed? id]
@@ -525,8 +523,7 @@
             (log/info "Invoice details" invoice)
             (log/info "Generate maksut-link for email" url))
 
-          (when enable-submit-jobs
-            (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url))
+          (start-submit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id url)
           (-> result
               (cond-> tutu-form? (assoc :payment {:url url})))))
       (do
@@ -583,36 +580,6 @@
                         :id        {:applicationOid key}})
         (log/warn "Application" key "edit failed verification" result)))
     result))
-
-(defn handle-synthetic-application-submit
-  [form-by-id-cache
-   koodisto-cache
-   tarjonta-service
-   job-runner
-   organization-service
-   ohjausparametrit-service
-   hakukohderyhma-settings-cache
-   audit-logger
-   synthetic-application
-   session
-   liiteri-cas-client
-   maksut-service]
-  (log/info "Synthetic application submitted:" synthetic-application)
-  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid synthetic-application) tarjonta-service)
-        application (synthetic-application-util/synthetic-application->application synthetic-application form-id)]
-    (handle-application-submit form-by-id-cache
-                               koodisto-cache
-                               tarjonta-service
-                               job-runner
-                               organization-service
-                               ohjausparametrit-service
-                               hakukohderyhma-settings-cache
-                               audit-logger
-                               application
-                               session
-                               liiteri-cas-client
-                               maksut-service
-                               false)))
 
 (defn handle-application-attachment-post-process
   [koodisto-cache

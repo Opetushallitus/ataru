@@ -86,7 +86,8 @@
             [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
             [cuerdas.core :as str]
-            [clj-time.format :as f])
+            [clj-time.format :as f]
+            [ataru.virkailija.virkailija-application-service :as virkailija-application-service])
   (:import java.util.Locale
            java.time.ZonedDateTime
            org.joda.time.DateTime
@@ -220,10 +221,36 @@
                           audit-logger
                           application-service
                           suoritus-service
-                          valinta-laskenta-service]
+                          valinta-laskenta-service
+                          form-by-id-cache]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
+
+    (api/POST "/synthetic-application" {session :session}
+      :summary "Store synthetic application"
+      :body [application ataru-schema/SyntheticApplication]
+;      (if (get-in session [:identity :superuser])
+        (match (virkailija-application-service/handle-synthetic-application-submit
+                form-by-id-cache
+                koodisto-cache
+                tarjonta-service
+                organization-service
+                ohjausparametrit-service
+                audit-logger
+                application
+                session)
+          {:passed? false :failures failures :code code}
+          (response/bad-request {:failures failures :code code})
+
+          {:passed? true :id application-id :payment payment}
+          (response/ok {:id application-id :payment payment})
+
+          {:passed? true :id application-id}
+          (response/ok {:id application-id}))
+        ;(response/unauthorized {}))
+      )
+
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)

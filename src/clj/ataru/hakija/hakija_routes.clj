@@ -194,31 +194,6 @@
           (palaute-client/send-application-feedback amazon-sqs feedback)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request {})))
-    (api/POST "/synthetic-application" {session :session}
-      :summary "Store synthetic application"
-      :body [application ataru-schema/SyntheticApplication]
-      (match (hakija-application-service/handle-synthetic-application-submit
-              form-by-id-cache
-              koodisto-cache
-              tarjonta-service
-              job-runner
-              organization-service
-              ohjausparametrit-service
-              hakukohderyhma-settings-cache
-              audit-logger
-              application
-              session
-              liiteri-cas-client
-              maksut-service)
-              {:passed? false :failures failures :code code}
-              (response/bad-request {:failures failures :code code})
-
-              {:passed? true :id application-id :payment payment}
-              (response/ok {:id application-id :payment payment})
-
-              {:passed? true :id application-id}
-              (response/ok {:id application-id})))
-
     (api/POST "/application" {session :session}
       :summary "Submit application"
       :body [application ataru-schema/Application]
@@ -234,8 +209,7 @@
               application
               session
               liiteri-cas-client
-              maksut-service
-              true)
+              maksut-service)
              {:passed? false :failures failures :code code}
              (response/bad-request {:failures failures :code code})
 
