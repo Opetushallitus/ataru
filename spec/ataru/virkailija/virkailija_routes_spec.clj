@@ -103,10 +103,12 @@
       :virkailija-routes
       :routes)))
 
-(defn- have-synthetic-application-for-hakukohde-in-db
-  [application-id]
-  (when-let [actual (get-application-by-id application-id)]
-    (= (:id fixtures/synthetic-application-test-form) (:form actual))))
+(defn- check-for-application-with-haku-and-person
+  [application-id person-oid]
+  (let [application (get-application-by-id application-id)]
+    (should-not-be-nil application)
+    (should= (:id fixtures/synthetic-application-test-form) (:form application))
+    (should= person-oid (:person_oid application))))
 
 (defmacro with-synthetic-response
   [method resp application & body]
@@ -427,12 +429,18 @@
 
                     (it "should validate and store synthetic application for hakukohde"
                         (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
-                          (should= 200 (:status resp))
-                          (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id])))))
+                          (let [body (:body resp)]
+                            (should= 200 (:status resp))
+                            (should-not-be-nil (:id body))
+                            (should= "1.2.3.4.5.6" (:personOid body))
+                            (check-for-application-with-haku-and-person (:id body) "1.2.3.4.5.6"))))
 
                     (it "should validate and store synthetic application for person with non-finnish ssn"
                         (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-foreign
-                          (should= 200 (:status resp))
-                          (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id])))))))
+                          (let [body (:body resp)]
+                            (should= 200 (:status resp))
+                            (should-not-be-nil (:id body))
+                            (should= "1.2.3.4.5.6" (:personOid body))
+                            (check-for-application-with-haku-and-person (:id body) "1.2.3.4.5.6"))))))
 
 (run-specs)

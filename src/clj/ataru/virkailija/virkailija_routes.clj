@@ -245,11 +245,8 @@
           {:passed? false :failures failures :code code}
           (response/bad-request {:failures failures :code code})
 
-          {:passed? true :id application-id :payment payment}
-          (response/ok {:id application-id :payment payment})
-
-          {:passed? true :id application-id}
-          (response/ok {:id application-id}))
+          {:passed? true :id application-id :person-oid person-oid}
+          (response/ok {:id application-id :personOid person-oid}))
         (response/unauthorized {})))
 
     (api/GET "/user-info" {session :session}
