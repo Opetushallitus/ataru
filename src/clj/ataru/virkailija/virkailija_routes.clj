@@ -230,7 +230,7 @@
     (api/POST "/synthetic-application" {session :session}
       :summary "Store synthetic application"
       :body [application ataru-schema/SyntheticApplication]
-;      (if (get-in session [:identity :superuser])
+      (if (get-in session [:identity :superuser])
         (match (virkailija-application-service/handle-synthetic-application-submit
                 form-by-id-cache
                 koodisto-cache
@@ -248,9 +248,7 @@
 
           {:passed? true :id application-id}
           (response/ok {:id application-id}))
-        ;(response/unauthorized {}))
-      )
-
+        (response/unauthorized {})))
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)

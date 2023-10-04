@@ -108,7 +108,7 @@
   [method resp application & body]
   `(let [~resp (-> (mock/request ~method "/lomake-editori/api/synthetic-application" (json/generate-string ~application))
                    (mock/content-type "application/json")
-                   (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+                   (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
                    ((deref virkailija-routes))
                    parse-body)]
      ~@body))
