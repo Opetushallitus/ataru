@@ -3,24 +3,20 @@
             [ataru.applications.synthetic-application-util :as synthetic-application-util]
             [ataru.hakija.hakija-form-service :as hakija-form-service]
             [ataru.hakija.validator :as validator]
-            [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
             [ataru.log.audit-log :as audit-log]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
-            [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
-            [ataru.tarjonta.haku :as h]
             [ataru.util :as util]
             [taoensso.timbre :as log]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
         key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
     (log/info "Stored synthetic application with id" (:id key-and-id))
-    (when harkinnanvaraisuus-process-fn
-      (harkinnanvaraisuus-process-fn (:id key-and-id) (:key key-and-id)))
     {:passed?        true
      :id (:id key-and-id)}))
 
+ ; TODO add reference to inserted row as "key"?
 (defn validate-and-store [form-by-id-cache
                           koodisto-cache
                           tarjonta-service
@@ -30,11 +26,7 @@
                           application
                           is-modify?
                           session]
-  (let [haku                          (when (:haku application)
-                                        (tarjonta-service/get-haku
-                                         tarjonta-service
-                                         (:haku application)))
-        tarjonta-info                 (when (:haku application)
+  (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
                                          tarjonta-service
@@ -63,10 +55,7 @@
                                        applied-hakukohderyhmat
                                        true
                                        "NEW_APPLICATION_ID"
-                                       "NEW_APPLICATION_KEY")
-        harkinnanvaraisuus-process-fn (when (and haku (h/toisen-asteen-yhteishaku? haku))
-                                        (fn [application-id application-key]
-                                          (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
+                                       "NEW_APPLICATION_KEY")]
     (cond
       (and (:haku application)
            (empty? (:hakukohde application)))
@@ -85,8 +74,8 @@
       (assoc validation-result :key (:key nil))
 
       :else
-      (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn)
-             :key (:key nil))))) ; TODO
+      (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)
+             :key (:key nil)))))
 
 (defn handle-synthetic-application-submit
   [form-by-id-cache
