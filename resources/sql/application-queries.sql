@@ -298,7 +298,7 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                               JOIN application_reviews
                               ON application_key = a.key
                               WHERE a.haku = :haku_oid AND
-                                    a.email = :email AND
+                                    lower(a.email) = lower(:email) AND
                                     state <> 'inactivated') AS t
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
