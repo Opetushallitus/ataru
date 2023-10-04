@@ -103,7 +103,7 @@
       :virkailija-routes
       :routes)))
 
-(defn- check-for-application-with-haku-and-person
+(defn- check-for-db-application-with-haku-and-person
   [application-id person-oid]
   (let [application (get-application-by-id application-id)]
     (should-not-be-nil application)
@@ -111,8 +111,8 @@
     (should= person-oid (:person_oid application))))
 
 (defmacro with-synthetic-response
-  [method resp application & body]
-  `(let [~resp (-> (mock/request ~method "/lomake-editori/api/synthetic-application" (json/generate-string ~application))
+  [method resp applications & body]
+  `(let [~resp (-> (mock/request ~method "/lomake-editori/api/synthetic-applications" (json/generate-string ~applications))
                    (mock/content-type "application/json")
                    (update-in [:headers] assoc "cookie" (login @virkailija-routes "SUPERUSER"))
                    ((deref virkailija-routes))
@@ -406,6 +406,16 @@
 (describe "/synthetic-application"
           (tags :unit :api-applications)
 
+          (defn check-single-synthetic-application-success [resp]
+            (should= 200 (:status resp))
+            (let [body (:body resp)
+                  applications (:applications body)
+                  application (first applications)]
+              (should= 1 (count applications))
+              (should-not-be-nil (:id application))
+              (should= "1.2.3.4.5.6" (:personOid application))
+              (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6")))
+
           (describe "POST synthetic application"
                     (around [spec]
                             (with-redefs [application-email/start-email-submit-confirmation-job (constantly nil)
@@ -428,19 +438,11 @@
                      (db/init-db-fixture fixtures/synthetic-application-test-form))
 
                     (it "should validate and store synthetic application for hakukohde"
-                        (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
-                          (let [body (:body resp)]
-                            (should= 200 (:status resp))
-                            (should-not-be-nil (:id body))
-                            (should= "1.2.3.4.5.6" (:personOid body))
-                            (check-for-application-with-haku-and-person (:id body) "1.2.3.4.5.6"))))
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-initial]
+                          (check-single-synthetic-application-success resp)))
 
                     (it "should validate and store synthetic application for person with non-finnish ssn"
-                        (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-foreign
-                          (let [body (:body resp)]
-                            (should= 200 (:status resp))
-                            (should-not-be-nil (:id body))
-                            (should= "1.2.3.4.5.6" (:personOid body))
-                            (check-for-application-with-haku-and-person (:id body) "1.2.3.4.5.6"))))))
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-foreign]
+                          (check-single-synthetic-application-success resp)))))
 
 (run-specs)

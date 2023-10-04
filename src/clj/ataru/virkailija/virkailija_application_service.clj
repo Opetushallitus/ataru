@@ -7,7 +7,8 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [ataru.person-service.person-integration :as person-integration]))
+            [ataru.person-service.person-integration :as person-integration]
+            [clojure.core.match :refer [match]]))
 
 (defn- store-and-log [application applied-hakukohteet form session audit-logger job-runner person-service]
   (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
@@ -79,7 +80,7 @@
       (assoc (store-and-log final-application applied-hakukohteet form session audit-logger job-runner person-service)
              :key (:key nil)))))
 
-(defn handle-synthetic-application-submit
+(defn- handle-single-synthetic-application-submit
   [form-by-id-cache
    koodisto-cache
    tarjonta-service
@@ -113,3 +114,32 @@
                         :id        {:email (util/extract-email application)}})
         (log/warn "Synthetic application failed verification" result)
         result))))
+
+(defn batch-submit-synthetic-applications
+  [form-by-id-cache
+   koodisto-cache
+   tarjonta-service
+   organization-service
+   ohjausparametrit-service
+   person-service
+   audit-logger
+   job-runner
+   applications
+   session]
+  (let [single-submit-fn #(match (handle-single-synthetic-application-submit
+                                 form-by-id-cache
+                                 koodisto-cache
+                                 tarjonta-service
+                                 organization-service
+                                 ohjausparametrit-service
+                                 person-service
+                                 audit-logger
+                                 job-runner
+                                 %
+                                 session)
+                           {:passed? false :failures failures :code code}
+                           {:failures failures :code code}
+
+                           {:passed? true :id application-id :person-oid person-oid}
+                           {:id application-id :personOid person-oid})]
+    (map single-submit-fn applications)))

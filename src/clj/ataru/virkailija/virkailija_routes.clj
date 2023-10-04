@@ -227,27 +227,22 @@
   (api/context "/api" []
     :tags ["form-api"]
 
-    (api/POST "/synthetic-application" {session :session}
-      :summary "Store synthetic application"
-      :body [application ataru-schema/SyntheticApplication]
+    (api/POST "/synthetic-applications" {session :session}
+      :summary "Store one or more synthetic applications"
+      :body [applications [ataru-schema/SyntheticApplication]]
       (if (get-in session [:identity :superuser])
-        (match (virkailija-application-service/handle-synthetic-application-submit
-                form-by-id-cache
-                koodisto-cache
-                tarjonta-service
-                organization-service
-                ohjausparametrit-service
-                person-service
-                audit-logger
-                job-runner
-                application
-                session)
-          {:passed? false :failures failures :code code}
-          (response/bad-request {:failures failures :code code})
-
-          {:passed? true :id application-id :person-oid person-oid}
-          (response/ok {:id application-id :personOid person-oid}))
-        (response/unauthorized {})))
+        (ok {:applications
+             (virkailija-application-service/batch-submit-synthetic-applications form-by-id-cache
+                                                                                 koodisto-cache
+                                                                                 tarjonta-service
+                                                                                 organization-service
+                                                                                 ohjausparametrit-service
+                                                                                 person-service
+                                                                                 audit-logger
+                                                                                 job-runner
+                                                                                 applications
+                                                                                 session)})
+         (response/unauthorized {})))
 
     (api/GET "/user-info" {session :session}
       (ok {:organizations         (organization-list session)
