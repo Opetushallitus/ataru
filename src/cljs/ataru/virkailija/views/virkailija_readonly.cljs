@@ -332,7 +332,11 @@
     (into [:div.application__wrapper-contents]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
-            [field child application hakukohteet-and-ryhmat lang nil true]))]])
+            [field child application hakukohteet-and-ryhmat lang nil true]))
+    (when (:tunnistautunut application)
+      [:div.application-handling__hakenut-tunnistautuneena-infobox
+       [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+        @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]])]])
 
 (defn- base-education-module-2nd
   [content application hakukohteet-and-ryhmat lang children]

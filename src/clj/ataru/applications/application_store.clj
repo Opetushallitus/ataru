@@ -231,21 +231,22 @@
 
 (defn- add-new-application-version
   "Add application and also initial metadata (event for receiving application, and initial review record)"
-  [application create-new-secret? applied-hakukohteet old-answers form update? conn]
+  [application create-new-secret? applied-hakukohteet old-answers form update? conn oppija-session]
   (let [connection           {:connection conn}
         answers              (:answers application)
-        application-to-store {:form_id        (:form application)
-                              :key            (:key application)
-                              :lang           (:lang application)
-                              :preferred_name (find-value-from-answers "preferred-name" answers)
-                              :last_name      (find-value-from-answers "last-name" answers)
-                              :ssn            (find-value-from-answers "ssn" answers)
-                              :dob            (dob/str->dob (find-value-from-answers "birth-date" answers))
-                              :email          (find-value-from-answers "email" answers)
-                              :hakukohde      (or (:hakukohde application) [])
-                              :haku           (:haku application)
-                              :content        {:answers answers}
-                              :person_oid     (:person-oid application)}
+        application-to-store {:form_id          (:form application)
+                              :key              (:key application)
+                              :lang             (:lang application)
+                              :preferred_name   (find-value-from-answers "preferred-name" answers)
+                              :last_name        (find-value-from-answers "last-name" answers)
+                              :ssn              (find-value-from-answers "ssn" answers)
+                              :dob              (dob/str->dob (find-value-from-answers "birth-date" answers))
+                              :email            (find-value-from-answers "email" answers)
+                              :hakukohde        (or (:hakukohde application) [])
+                              :haku             (:haku application)
+                              :content          {:answers answers}
+                              :person_oid       (:person-oid application)
+                              :tunnistautuminen {:session oppija-session}}
         new-application      (if (contains? application :key)
                                (queries/yesql-add-application-version<! application-to-store connection)
                                (queries/yesql-add-application<! application-to-store connection))
@@ -319,7 +320,7 @@
   [answer]
   (update answer :value trim-and-remove-null-bytes-from-value))
 
-(defn add-application [new-application applied-hakukohteet form session audit-logger]
+(defn add-application [new-application applied-hakukohteet form session audit-logger oppija-session]
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
     (let [selection-id                         (:selection-id new-application)
           virkailija-oid                       (when-let [secret (:virkailija-secret new-application)]
@@ -331,7 +332,8 @@
                                                 nil
                                                 form
                                                 false
-                                                conn)
+                                                conn
+                                                oppija-session)
           connection                           {:connection conn}]
       (audit-log/log audit-logger
                      {:new       new-application
@@ -371,7 +373,7 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
-(defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger]
+(defn update-application [{:keys [secret virkailija-secret selection-id] :as new-application} applied-hakukohteet form session audit-logger oppija-session]
   {:pre [(or (not-blank? secret)
              (not-blank? virkailija-secret))]}
   (jdbc/with-db-transaction [conn {:datasource (db/get-datasource :db)}]
@@ -397,7 +399,8 @@
                                                 (-> old-application :answers util/answers-by-key)
                                                 form
                                                 true
-                                                conn)]
+                                                conn
+                                                oppija-session)]
       (log/info (str "Updating application with key "
                      (:key old-application)
                      " based on valid application secret, retaining key" (when-not updated-by-applicant? " and secret") " from previous version"))
