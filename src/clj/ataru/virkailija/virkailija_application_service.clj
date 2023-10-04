@@ -15,12 +15,11 @@
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
         key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
-    (log/info "Stored synthetic application with id: " (:id key-and-id))
+    (log/info "Stored synthetic application with id" (:id key-and-id))
     (when harkinnanvaraisuus-process-fn
       (harkinnanvaraisuus-process-fn (:id key-and-id) (:key key-and-id)))
     {:passed?        true
-     :id (:id key-and-id)
-     :application application}))
+     :id (:id key-and-id)}))
 
 (defn validate-and-store [form-by-id-cache
                           koodisto-cache
@@ -98,11 +97,10 @@
    audit-logger
    synthetic-application
    session]
-  (log/info "Synthetic application submitted:" synthetic-application)
+  (log/info "Synthetic application submitted" synthetic-application)
   (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid synthetic-application) tarjonta-service)
         application (synthetic-application-util/synthetic-application->application synthetic-application form-id)
-        {:keys [passed? id] :as result}
-        (validate-and-store form-by-id-cache
+        result (validate-and-store form-by-id-cache
                             koodisto-cache
                             tarjonta-service
                             organization-service
@@ -111,7 +109,7 @@
                             application
                             false
                             session)]
-    (if passed?
+    (if (:passed? result)
       result
       (do
         (audit-log/log audit-logger
@@ -119,5 +117,5 @@
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:email (util/extract-email application)}})
-        (log/warn "Application failed verification" result)
+        (log/warn "Synthetic application failed verification" result)
         result))))

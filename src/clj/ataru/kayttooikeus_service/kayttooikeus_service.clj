@@ -82,5 +82,4 @@
 (defrecord FakeKayttooikeusService []
   KayttooikeusService
   (virkailija-by-username [_ username]
-    (println "VIRKAILIJA BY USERNAME " username)
     (get fake-virkailija-value username (get fake-virkailija-value "1.2.246.562.11.11111111111"))))
