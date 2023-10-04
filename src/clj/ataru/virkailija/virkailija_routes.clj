@@ -237,7 +237,9 @@
                 tarjonta-service
                 organization-service
                 ohjausparametrit-service
+                person-service
                 audit-logger
+                job-runner
                 application
                 session)
           {:passed? false :failures failures :code code}

@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-routes-spec
   (:require [ataru.applications.application-service :as application-service]
+            [ataru.background-job.job :as job]
             [ataru.cache.cache-service :as cache-service]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as ataru-db]
@@ -18,6 +19,7 @@
             [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
             [ataru.test-utils :refer [login should-have-header]]
+            [ataru.virkailija.background-jobs.virkailija-jobs :as virkailija-jobs]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
             [cheshire.core :as json]
@@ -77,6 +79,7 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
+          :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -94,7 +97,8 @@
                                 :audit-logger
                                 :ohjausparametrit-service
                                 :form-by-id-cache
-                                :koodisto-cache]))
+                                :koodisto-cache
+                                :job-runner]))
       component/start
       :virkailija-routes
       :routes)))
@@ -421,16 +425,14 @@
                     (after-all
                      (db/init-db-fixture fixtures/synthetic-application-test-form))
 
-                    (it "should validate synthetic application for hakukohde"
-                        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
-                          (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
-                            (should= 200 (:status resp))
-                            (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id]))))))
+                    (it "should validate and store synthetic application for hakukohde"
+                        (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-initial
+                          (should= 200 (:status resp))
+                          (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id])))))
 
-                    (it "should validate synthetic application for hakukohde"
-                        (with-redefs [hakuaika/hakukohteen-hakuaika hakuaika-ongoing]
-                          (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-foreign
-                            (should= 200 (:status resp))
-                            (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id]))))))))
+                    (it "should validate and store synthetic application for person with non-finnish ssn"
+                        (with-synthetic-response :post resp synthetic-application-fixtures/synthetic-application-foreign
+                          (should= 200 (:status resp))
+                          (should (have-synthetic-application-for-hakukohde-in-db (get-in resp [:body :id])))))))
 
 (run-specs)

@@ -6,15 +6,16 @@
             [ataru.log.audit-log :as audit-log]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.util :as util]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.person-service.person-integration :as person-integration]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger]
-  {:pre [(boolean? is-modify?)]}
-  (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
-    (log/info "Stored synthetic application with id" (:id key-and-id))
+(defn- store-and-log [application applied-hakukohteet form session audit-logger job-runner person-service]
+  (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
+        person-oid (person-integration/upsert-person-synchronized job-runner person-service (:id key-and-id))]
+    (log/info "Stored synthetic application with id" (:id key-and-id) "and person oid" person-oid)
     {:passed?        true
-     :id (:id key-and-id)}))
+     :id (:id key-and-id)
+     :person-oid person-oid}))
 
  ; TODO add reference to inserted row as "key"?
 (defn validate-and-store [form-by-id-cache
@@ -22,9 +23,10 @@
                           tarjonta-service
                           organization-service
                           ohjausparametrit-service
+                          person-service
                           audit-logger
+                          job-runner
                           application
-                          is-modify?
                           session]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
@@ -74,7 +76,7 @@
       (assoc validation-result :key (:key nil))
 
       :else
-      (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger)
+      (assoc (store-and-log final-application applied-hakukohteet form session audit-logger job-runner person-service)
              :key (:key nil)))))
 
 (defn handle-synthetic-application-submit
@@ -83,21 +85,24 @@
    tarjonta-service
    organization-service
    ohjausparametrit-service
+   person-service
    audit-logger
+   job-runner
    synthetic-application
    session]
   (log/info "Synthetic application submitted" synthetic-application)
   (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid synthetic-application) tarjonta-service)
         application (synthetic-application-util/synthetic-application->application synthetic-application form-id)
         result (validate-and-store form-by-id-cache
-                            koodisto-cache
-                            tarjonta-service
-                            organization-service
-                            ohjausparametrit-service
-                            audit-logger
-                            application
-                            false
-                            session)]
+                                   koodisto-cache
+                                   tarjonta-service
+                                   organization-service
+                                   ohjausparametrit-service
+                                   person-service
+                                   audit-logger
+                                   job-runner
+                                   application
+                                   session)]
     (if (:passed? result)
       result
       (do
