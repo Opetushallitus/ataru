@@ -685,7 +685,7 @@
         :return [ataru-schema/ReviewNote]
         :body [body {:notes                       s/Str
                      :application-keys            [s/Str]
-                     (s/optional-key :hakukohde) s/Str
+                     (s/optional-key :hakukohde)  (s/maybe s/Str)
                      (s/optional-key :state-name) ataru-schema/HakukohdeReviewTypeNames}]
         (if-let [notes (application-service/add-review-notes
                         application-service

@@ -50,8 +50,6 @@
 (reg-event-fx
  :application/mass-update-application-review-notes
  (fn [{:keys [db]} [_ review-note]]
-   (js/console.log (-> db :application :application :rajaus-hakukohteella))
-   (js/console.log (-> db :application :selected-hakukohde))
    {:dispatch [:application/set-mass-review-notes-form-state :submitting]
     :http {:method              :post
            :params              {:application-keys (map :key (get-in db [:application :applications]))
