@@ -118,7 +118,11 @@ INSERT INTO applications (
    WHERE key = :key
    ORDER BY id ASC
    LIMIT 1),
-  tunnistautuminen
+  (SELECT tunnistautuminen
+   FROM applications
+   WHERE key = :key
+   ORDER BY id ASC
+   LIMIT 1)
 );
 
 -- name: yesql-add-application-secret<!
