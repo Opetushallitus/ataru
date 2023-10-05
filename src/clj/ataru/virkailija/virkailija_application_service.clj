@@ -19,16 +19,16 @@
      :person-oid person-oid}))
 
  ; TODO add reference to inserted row as "key"?
-(defn validate-and-store [form-by-id-cache
-                          koodisto-cache
-                          tarjonta-service
-                          organization-service
-                          ohjausparametrit-service
-                          person-service
-                          audit-logger
-                          job-runner
-                          application
-                          session]
+(defn validate-and-store [application
+                          {:keys [form-by-id-cache
+                                  koodisto-cache
+                                  tarjonta-service
+                                  organization-service
+                                  ohjausparametrit-service
+                                  person-service
+                                  audit-logger
+                                  job-runner
+                                  session]}]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -81,29 +81,11 @@
              :key (:key nil)))))
 
 (defn- handle-single-synthetic-application-submit
-  [form-by-id-cache
-   koodisto-cache
-   tarjonta-service
-   organization-service
-   ohjausparametrit-service
-   person-service
-   audit-logger
-   job-runner
-   synthetic-application
-   session]
-  (log/info "Synthetic application submitted" synthetic-application)
-  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid synthetic-application) tarjonta-service)
-        application (synthetic-application-util/synthetic-application->application synthetic-application form-id)
-        result (validate-and-store form-by-id-cache
-                                   koodisto-cache
-                                   tarjonta-service
-                                   organization-service
-                                   ohjausparametrit-service
-                                   person-service
-                                   audit-logger
-                                   job-runner
-                                   application
-                                   session)]
+  [application {:keys [tarjonta-service audit-logger session] :as data}]
+  (log/info "Synthetic application submitted" application)
+  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid application) tarjonta-service)
+        application (synthetic-application-util/synthetic-application->application application form-id)
+        result (validate-and-store application data)]
     (if (:passed? result)
       result
       (do
@@ -116,27 +98,8 @@
         result))))
 
 (defn batch-submit-synthetic-applications
-  [form-by-id-cache
-   koodisto-cache
-   tarjonta-service
-   organization-service
-   ohjausparametrit-service
-   person-service
-   audit-logger
-   job-runner
-   applications
-   session]
-  (let [single-submit-fn #(match (handle-single-synthetic-application-submit
-                                 form-by-id-cache
-                                 koodisto-cache
-                                 tarjonta-service
-                                 organization-service
-                                 ohjausparametrit-service
-                                 person-service
-                                 audit-logger
-                                 job-runner
-                                 %
-                                 session)
+  [applications data]
+  (let [single-submit-fn #(match (handle-single-synthetic-application-submit % data)
                            {:passed? false :failures failures :code code}
                            {:failures failures :code code}
 

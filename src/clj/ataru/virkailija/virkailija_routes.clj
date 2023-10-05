@@ -232,16 +232,17 @@
       :body [applications [ataru-schema/SyntheticApplication]]
       (if (get-in session [:identity :superuser])
         (ok {:applications
-             (virkailija-application-service/batch-submit-synthetic-applications form-by-id-cache
-                                                                                 koodisto-cache
-                                                                                 tarjonta-service
-                                                                                 organization-service
-                                                                                 ohjausparametrit-service
-                                                                                 person-service
-                                                                                 audit-logger
-                                                                                 job-runner
-                                                                                 applications
-                                                                                 session)})
+             (virkailija-application-service/batch-submit-synthetic-applications
+              applications
+              {:form-by-id-cache form-by-id-cache
+               :koodisto-cache koodisto-cache
+               :tarjonta-service tarjonta-service
+               :organization-service organization-service
+               :ohjausparametrit-service ohjausparametrit-service
+               :person-service person-service
+               :audit-logger audit-logger
+               :job-runner job-runner
+               :session session})})
          (response/unauthorized {})))
 
     (api/GET "/user-info" {session :session}

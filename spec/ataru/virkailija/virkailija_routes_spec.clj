@@ -415,7 +415,6 @@
                (map-indexed (fn [idx application]
                               (if (contains? expected-failing-indices idx)
                                 (do
-                                  (println "FAILURE" application)
                                   (should-be-nil (:id application))
                                   (should-not-be-nil (:failures application))
                                   (should= "application-validation-failed-error" (:code application)))
