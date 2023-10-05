@@ -316,12 +316,18 @@
            (some? list-selected-by)))))
 
 (re-frame/reg-sub
- :application/filtering-for-mass-review-notes-link?
+ :application/hakukohde-filtering-for-yhteishaku?
  (fn [db]
    (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
          list-selected-by (application-list-selected-by db)]
+     ;; jos yhteishaku, pelkkä haku-rajaus ei riitä vaan pitää olla hakukohde/hakukohderyhmä
+     (not (and yhteishaku? (= list-selected-by :selected-haku))))))
+
+(re-frame/reg-sub
+ :application/applications-visible-with-some-filter?
+ (fn [db]
+   (let [list-selected-by (application-list-selected-by db)]
      (and (not-empty (-> db :application :applications)) ;;on hakemuksia listalla
-          (not (and yhteishaku? (= list-selected-by :selected-haku))) ;; jos yhteishaku, pelkkä haku-rajaus ei riitä vaan pitää olla hakukohde/hakukohderyhmä
           (some? list-selected-by))))) ;; on joku rajaus päällä
 
 (re-frame/reg-sub
@@ -329,11 +335,13 @@
  (fn [_ _]
    [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
     (re-frame/subscribe [:application/superuser?])
-    (re-frame/subscribe [:application/filtering-for-mass-review-notes-link?])])
- (fn [[toisen-asteen-yhteishaku? superuser? filtering-for-mass-review-notes-link?]]
-    (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
-        (and filtering-for-mass-review-notes-link?  ;; pitää olla rajaus päällä
-             (not toisen-asteen-yhteishaku?))))) ;; ei näytetä ollenkaan 2. asteen yhteishaulle
+    (re-frame/subscribe [:application/hakukohde-filtering-for-yhteishaku?])
+    (re-frame/subscribe [:application/applications-visible-with-some-filter?])])
+ (fn [[toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?]]
+   (and applications-visible-with-some-filter?
+      (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
+        (and hakukohde-filtering-for-yhteishaku?  ;; muille pitää olla yhteisvalinnoissa hakukohderajaus päällä
+             (not toisen-asteen-yhteishaku?)))))) ;; muille ei näytetä ollenkaan 2. asteen yhteishaulle
 
 
 (re-frame/reg-sub
