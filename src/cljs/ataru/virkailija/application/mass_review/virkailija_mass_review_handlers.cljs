@@ -50,7 +50,10 @@
 (reg-event-fx
  :application/mass-update-application-review-notes
  (fn [{:keys [db]} [_ review-note]]
-   {:http {:method              :post
+   (js/console.log (-> db :application :application :rajaus-hakukohteella))
+   (js/console.log (-> db :application :selected-hakukohde))
+   {:dispatch [:application/set-mass-review-notes-form-state :submitting]
+    :http {:method              :post
            :params              {:application-keys (map :key (get-in db [:application :applications]))
                                  :notes      review-note
                                  :hakukohde    (or (-> db :application :rajaus-hakukohteella)
@@ -62,13 +65,14 @@
  :application/handle-submit-mass-review-notes-response
  (fn [_ _]
    {:dispatch       [:application/set-mass-review-notes-form-state :submitted]
-    :dispatch-later [{:ms       3000
+    :dispatch-later [{:ms       10000
                       :dispatch [:application/reset-submit-mass-review-notes-state]}]}))
 
 (reg-event-fx
  :application/reset-submit-mass-review-notes-state
  (fn [{:keys [db]} _]
    {:dispatch-n [[:application/set-mass-review-notes ""]
+                 [:application/set-mass-review-notes-form-state :enabled]
                  (when-let [current-application (-> db :application :selected-key)]
                    [:application/fetch-application current-application])]
     :db         (update-in db [:application :applications]
