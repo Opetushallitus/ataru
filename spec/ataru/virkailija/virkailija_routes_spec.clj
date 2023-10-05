@@ -409,8 +409,12 @@
           (defn check-synthetic-applications [resp expected-count expected-failing-indices]
             (should= 200 (:status resp))
             (let [body (:body resp)
-                  applications (:applications body)]
+                  applications (:applications body)
+                  failures-exist (not-empty expected-failing-indices)]
               (should= expected-count (count applications))
+              (if failures-exist
+                (should= false (:success body))
+                (should= true (:success body)))
               (doall
                (map-indexed (fn [idx application]
                               (if (contains? expected-failing-indices idx)
@@ -419,11 +423,14 @@
                                   (should-not-be-nil (:failures application))
                                   (should= "application-validation-failed-error" (:code application)))
                                 (do
-                                  (should-not-be-nil (:id application))
                                   (should-be-nil (:failures application))
                                   (should-be-nil (:code application))
-                                  (should= "1.2.3.4.5.6" (:personOid application))
-                                  (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6"))))
+                                  (if failures-exist
+                                    (should-be-nil (:id application))
+                                    (do
+                                      (should-not-be-nil (:id application))
+                                      (should= "1.2.3.4.5.6" (:personOid application))
+                                      (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6"))))))
                             applications))))
 
           (describe "POST synthetic application"
@@ -460,7 +467,7 @@
                                                              synthetic-application-fixtures/synthetic-application-foreign]
                           (check-synthetic-applications resp 2 #{})))
 
-                    (it "should validate and store some applications while failing others"
+                    (it "should not store anything when one or more applications fail validation"
                         (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
                                                              synthetic-application-fixtures/synthetic-application-malformed
                                                              synthetic-application-fixtures/synthetic-application-foreign]

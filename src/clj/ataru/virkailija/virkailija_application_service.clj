@@ -7,28 +7,49 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [ataru.person-service.person-integration :as person-integration]
-            [clojure.core.match :refer [match]]))
+            [ataru.person-service.person-integration :as person-integration]))
 
-(defn- store-and-log [application applied-hakukohteet form session audit-logger job-runner person-service]
-  (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
+(defn- store-synthetic-application [application {:keys [session
+                                                        audit-logger
+                                                        job-runner
+                                                        person-service
+                                                        koodisto-cache
+                                                        tarjonta-service
+                                                        organization-service
+                                                        ohjausparametrit-service
+                                                        form-by-id-cache]}]
+  (let [tarjonta-info                 (when (:haku application)
+                                        (tarjonta-parser/parse-tarjonta-info-by-haku
+                                         koodisto-cache
+                                         tarjonta-service
+                                         organization-service
+                                         ohjausparametrit-service
+                                         (:haku application)))
+        hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
+        applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
+                                              hakukohteet)
+        form                          (hakija-form-service/fetch-form-by-id
+                                       (:form application)
+                                       [:virkailija] ; TODO is this the correct role?
+                                       form-by-id-cache
+                                       koodisto-cache
+                                       nil
+                                       false
+                                       {}
+                                       false)
+        key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
         person-oid (person-integration/upsert-person-synchronized job-runner person-service (:id key-and-id))]
     (log/info "Stored synthetic application with id" (:id key-and-id) "and person oid" person-oid)
-    {:passed?        true
-     :id (:id key-and-id)
-     :person-oid person-oid}))
+    {:passed? true :id (:id key-and-id) :personOid person-oid}))
 
- ; TODO add reference to inserted row as "key"?
-(defn validate-and-store [application
-                          {:keys [form-by-id-cache
-                                  koodisto-cache
-                                  tarjonta-service
-                                  organization-service
-                                  ohjausparametrit-service
-                                  person-service
-                                  audit-logger
-                                  job-runner
-                                  session]}]
+(defn- validate-synthetic-application [application
+                                       {:keys [form-by-id-cache
+                                               koodisto-cache
+                                               tarjonta-service
+                                               organization-service
+                                               ohjausparametrit-service
+                                               audit-logger
+                                               session]}]
   (let [tarjonta-info                 (when (:haku application)
                                         (tarjonta-parser/parse-tarjonta-info-by-haku
                                          koodisto-cache
@@ -49,43 +70,34 @@
                                        false
                                        {}
                                        false)
-        final-application             application
         validation-result             (validator/valid-application?
                                        koodisto-cache
                                        false ; TODO: has-applied OK?
-                                       final-application
+                                       application
                                        form
                                        applied-hakukohderyhmat
                                        true
                                        "NEW_APPLICATION_ID"
-                                       "NEW_APPLICATION_KEY")]
-    (cond
-      (and (:haku application)
-           (empty? (:hakukohde application)))
-      {:passed? false
-       :failures ["Hakukohde must be specified"]
-       :key  (:key nil)
-       :code :internal-server-error}
+                                       "NEW_APPLICATION_KEY")
+        result (cond
+                 (and (:haku application)
+                      (empty? (:hakukohde application)))
+                 {:passed? false
+                  :failures ["Hakukohde must be specified"]
+                  :key  (:key nil)
+                  :code :internal-server-error}
 
-      (true? (get-in form [:properties :closed] false))
-      {:passed? false
-       :failures ["Form is closed"]
-       :key (:key nil)
-       :code :form-closed}
+                 (true? (get-in form [:properties :closed] false))
+                 {:passed? false
+                  :failures ["Form is closed"]
+                  :key (:key nil)
+                  :code :form-closed}
 
-      (not (:passed? validation-result))
-      (assoc validation-result :key (:key nil))
+                 (not (:passed? validation-result))
+                 (assoc validation-result :key (:key nil))
 
-      :else
-      (assoc (store-and-log final-application applied-hakukohteet form session audit-logger job-runner person-service)
-             :key (:key nil)))))
-
-(defn- handle-single-synthetic-application-submit
-  [application {:keys [tarjonta-service audit-logger session] :as data}]
-  (log/info "Synthetic application submitted" application)
-  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid application) tarjonta-service)
-        application (synthetic-application-util/synthetic-application->application application form-id)
-        result (validate-and-store application data)]
+                 :else
+                 {:passed? true})]
     (if (:passed? result)
       result
       (do
@@ -97,12 +109,18 @@
         (log/warn "Synthetic application failed verification" result)
         result))))
 
+(defn- convert-synthetic-application 
+  [application {:keys [tarjonta-service]}]
+  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid application) tarjonta-service)
+        converted (synthetic-application-util/synthetic-application->application application form-id)]
+    (log/info "Synthetic application submitted and converted" converted)
+    converted))
+
 (defn batch-submit-synthetic-applications
   [applications data]
-  (let [single-submit-fn #(match (handle-single-synthetic-application-submit % data)
-                           {:passed? false :failures failures :code code}
-                           {:failures failures :code code}
-
-                           {:passed? true :id application-id :person-oid person-oid}
-                           {:id application-id :personOid person-oid})]
-    (map single-submit-fn applications)))
+  (let [converted-applications (map #(convert-synthetic-application % data) applications)
+        validation-results     (map #(validate-synthetic-application % data) converted-applications)
+        all-applications-valid (not-any? #(= false (:passed? %)) validation-results)]
+    (if all-applications-valid
+      {:success true :applications (doall (map #(store-synthetic-application % data) converted-applications))}
+      {:success false :applications validation-results})))
