@@ -2604,6 +2604,7 @@ i.arkistoitu {
     margin-bottom: 10px;
     display: flex;
     text-align: center;
+    align-items: center;
     justify-content: center;
 
     .zmdi {
@@ -2653,78 +2654,22 @@ i.arkistoitu {
       padding-right: 5px;
     }
   }
-}
-
-.application__ht-notification-overlay {
-  background-color: @dark-overlay;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  position: fixed;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-
-  .application__ht-notification-container {
-    margin-top: 2 * @total-banner-height;
-    background-color: white;
-    width: 40%;
-    border: 3px solid @primary-green-700;
-    padding: 2rem 3rem;
-    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
-    display: flex;
-    flex-direction: column;
-    justify-content: left;
-    align-items: flex-start;
-    text-align: center;
-
-    .application__ht-notification-close {
-      justify-content: flex-end;
-      width: 100%;
-      display: flex;
-    }
-
-    .application__ht-notification-title {
-      font-size: 36px;
-    }
-
-    p,
-    .application__ht-notification-button {
-      font-size: 18px;
-    }
-
-
-    .application__ht-notification-button {
-      .primary-button;
-      background: @primary-green-700;
-      height: 40px;
-      color: white;
-      text-align: center;
-      width: 300px;
-      margin-top: 20px;
-    }
-  }
 
   @media only screen and (max-width: @mobile-width) {
-    .application__ht-notification-container {
-      margin-top: @total-banner-height-mobile + 20px;
-      width: 92%;
-      padding: 1.5rem 2rem;
-      border: 2px solid @button-blue;
-      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+    .application__logout-dropdown-content-open {
+      box-shadow: 0px 4px 2px @grey;
+      border: 1px solid black;
+      display: inline-flex;
+      color: @sg-color-gray;
+      z-index: 100;
+      position: fixed;
+      padding: 24px;
+      text-decoration: none;
+      background-color: red;
+      justify-content: center;
 
-      .application__ht-notification-title {
-        font-size: 26px;
-      }
-
-      p,
-      .application__ht-notification-button {
-        font-size: 16px;
-      }
-
-      .application__ht-notification-button {
-        margin-top: 0.5rem;
+      .i {
+        padding-right: 5px;
       }
     }
   }
@@ -2899,9 +2844,8 @@ i.arkistoitu {
 
 }
 
-
 .application__ht-notification-overlay {
-  background-color: @white;
+  background-color: @dark-overlay;
   top: 0;
   bottom: 0;
   left: 0;
@@ -2922,7 +2866,7 @@ i.arkistoitu {
     flex-direction: column;
     justify-content: left;
     align-items: flex-start;
-    text-align: center;
+    text-align: left;
 
     .application__ht-notification-close {
       justify-content: flex-end;
