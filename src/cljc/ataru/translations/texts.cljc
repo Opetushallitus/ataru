@@ -1555,6 +1555,9 @@
    :mass-review-notes-saving                                 {:fi "Tallennetaan muistiinpanoja..."
                                                               :sv "Tallennetaan muistiinpanoja..."
                                                               :en "Tallennetaan muistiinpanoja..."}
+   :mass-review-notes-saved                                  {:fi "Muistiinpanot on tallennettu!"
+                                                              :sv "Muistiinpanot on tallennettu!"
+                                                              :en "Muistiinpanot on tallennettu!"}
    :excel-request                                            {:fi "Excel"
                                                               :sv "Excel"
                                                               :en "Excel"}
