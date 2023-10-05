@@ -382,6 +382,7 @@
   (payment-poller-processing-state-change [this application-key state])
   (send-modify-application-link-email [this application-key payment-url session])
   (add-review-note [this session note])
+  (add-review-notes [this session review-notes])
   (get-application-version-changes [this koodisto-cache session application-key])
   (omatsivut-applications [this session person-oid])
   (get-applications-for-valintalaskenta [this form-by-haku-oid-str-cache session hakukohde-oid application-keys with-harkinnanvaraisuus-tieto])
@@ -616,6 +617,25 @@
       (enrich-virkailija-organizations
        organization-service
        (application-store/add-review-note note session))))
+
+
+  (add-review-notes [_ session review-notes]
+    (when (aac/applications-access-authorized?
+            organization-service
+            tarjonta-service
+            session
+            (:application-keys review-notes)
+            [:view-applications :edit-applications])
+      (log/info (str "add review notes authorized"))
+      (let [notes (map #(assoc {} :application-key %
+                                  :notes (:notes review-notes)
+                                  :hakukohde (:hakukohde review-notes)
+                                  :state-name (:state-name review-notes)) (:application-keys review-notes))]
+        (log/info (str "hakukohde: " :hakukohde))
+        (log/info (str "state-name: " :state-name))
+            (map
+              #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
+              notes))))
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
