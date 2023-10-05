@@ -1,6 +1,5 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
-            [ataru.feature-config :as fc]
             [ataru.application-common.application-field-common :refer [markdown-paragraph]]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-view-icons :as icons]
@@ -137,7 +136,6 @@
 
 (defn application-contents []
   (let [form                      (subscribe [:state-query [:form]])
-        load-failure?             (subscribe [:state-query [:error :code]])
         can-apply?                (subscribe [:application/can-apply?])
         editing?                  (subscribe [:state-query [:application :editing?]])
         expired                   (subscribe [:state-query [:application :secret-expired?]])
@@ -146,11 +144,9 @@
         secret-link-valid-days    (config/get-public-config [:secret-link-valid-days])
         demo?                     (subscribe [:application/demo?])
         demo-modal-open?       (subscribe [:application/demo-modal-open?])
-        session-fetched?          (subscribe [:state-query [:oppija-session :logged-in]])
         has-applied-to-haku?      (subscribe [:state-query [:application :has-applied]])
-        allow-tunnistautuminen-global (fc/feature-enabled? :hakeminen-tunnistautuneena)
-        allow-tunnistautuminen-form (subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
-        lander-active?            (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])]
+        ht-lander-active?         (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
+        loading-complete?         (subscribe [:application/loading-complete?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
@@ -159,13 +155,6 @@
          (when @demo-modal-open?
            {:visibility "hidden"
             :display "none"})
-         (when-not (or @load-failure?
-                       (and @form
-                            (or (not (nil? @session-fetched?))
-                                (not allow-tunnistautuminen-global)
-                                (not @allow-tunnistautuminen-form))))
-           [:div.application__form-loading-spinner
-            [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]])
          (when @expired
            [:div.application__secret-expired
             [:div.application__secret-expired-icon
@@ -179,13 +168,10 @@
                (translations/get-hakija-translation :expired-secret-sent @lang)
                (translations/get-hakija-translation :expired-secret-button @lang))]
             [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
-
-         (when (or @load-failure?
-                   (and @form
-                        (or (not (nil? @session-fetched?))
-                            (not allow-tunnistautuminen-global)
-                            (not @allow-tunnistautuminen-form))))
-           (if @lander-active?
+         (if-not @loading-complete?
+           [:div.application__form-loading-spinner
+            [:i.zmdi.zmdi-hc-3x.zmdi-spinner.spin]]
+           (if @ht-lander-active?
              (hakeminen-tunnistautuneena-lander @form @lang)
              (if @has-applied-to-haku?
                (has-applied-lander @form @lang)
