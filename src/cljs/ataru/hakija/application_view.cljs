@@ -376,11 +376,11 @@
              button-text]]])))))
 
 (defn- ht-session-expired []
-  (let [lang                   (subscribe [:application/form-language])
-        expired? (subscribe [:state-query [:oppija-session :expired]])
-        expires-soon? (subscribe [:state-query [:oppija-session :expires-soon]])
-        expires-soon-dialog-bypassed? (subscribe [:state-query [:oppija-session :expires-soon-dialog-bypassed]])
-        submit-status (subscribe [:state-query [:application :submit-status]])]
+  (let [lang             (subscribe [:application/form-language])
+        expired?         (subscribe [:state-query [:oppija-session :expired]])
+        expires-soon?    (subscribe [:state-query [:oppija-session :expires-soon]])
+        dialog-bypassed? (subscribe [:state-query [:oppija-session :expires-soon-dialog-bypassed]])
+        submit-status    (subscribe [:state-query [:application :submit-status]])]
     (if (and @expired?
              (not (= :submitted @submit-status)))
       [:div.application__ht-session-expired-overlay
@@ -396,7 +396,7 @@
          (translations/get-hakija-translation :ht-session-expired @lang)]]]
       (when (and @expires-soon?
                  (not (= :submitted @submit-status))
-                 (not @expires-soon-dialog-bypassed?))
+                 (not @dialog-bypassed?))
         [:div.application__ht-session-expires-soon-overlay
          [:div.application__ht-session-expires-soon-wrapper
           [:div.application__ht-session-expires-soon-header-container
