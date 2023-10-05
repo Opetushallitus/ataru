@@ -274,7 +274,8 @@
                             []
                             form
                             {}
-                            audit-logger)))
+                            audit-logger
+                            nil)))
           _             (Thread/sleep 1000) ;; avoid equal created_time
           event-id      (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
                           (:id (yesql-add-application-event<! {:application_key          (:key application)
@@ -298,7 +299,8 @@
                            []
                            form
                            {}
-                           audit-logger)))
+                           audit-logger
+                           nil)))
           wrong-form-application
           (application-store/get-application
             (:id (application-store/add-application
@@ -335,7 +337,8 @@
                   []
                   form
                   {}
-                  audit-logger)))]
+                  audit-logger
+                  nil)))]
       (binding [*form-id*                      form-id
                 *wrong-form-id*                wrong-form-id
                 *application-id*               (:id application)
