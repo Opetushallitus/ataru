@@ -644,10 +644,13 @@
             session
             (:application-keys review-notes)
             [:view-applications :edit-applications])
+      (log/info (str "add review notes authorized"))
       (let [notes (map #(assoc {} :application-key %
                                   :notes (:notes review-notes)
                                   :hakukohde (:hakukohde review-notes)
                                   :state-name (:state-name review-notes)) (:application-keys review-notes))]
+        (log/info (str "hakukohde: " :hakukohde))
+        (log/info (str "state-name: " :state-name))
             (map
               #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
               notes))))
