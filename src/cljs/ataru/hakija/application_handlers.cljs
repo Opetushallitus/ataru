@@ -598,6 +598,7 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} _]
     (let [selection-limited (selection-limits db)
+          virkailija-secret (get-in db [:application :virkailija-secret])
           form-allows-hakeminen-tunnistautuneena? (get-in db [:form :properties :allow-hakeminen-tunnistautuneena] false)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
@@ -607,6 +608,7 @@
                       [:application/hide-form-sections-with-text-component-visibility-rules]
                       [:application/fetch-koulutustyypit]
                       (when (and
+                              (clojure.string/blank? virkailija-secret)
                               form-allows-hakeminen-tunnistautuneena?
                               (fc/feature-enabled? :hakeminen-tunnistautuneena))
                         [:application/get-oppija-session])]}
@@ -685,7 +687,7 @@
     (let [session-data (get-in response [:body])]
       (js/console.log (str "Handle oppija session fetch, sess data" session-data))
       {:db (-> db
-               (assoc :oppija-session session-data)
+               (assoc :oppija-session (assoc session-data :session-fetched true))
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                           :change-country-of-residence nil}]

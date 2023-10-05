@@ -329,9 +329,25 @@
     (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (and feature-enabled
            form-allows
-           (not (some? virkailija-secret))
+           (clojure.string/blank? virkailija-secret)
            (not already-declined)
            (not logged-in)))))
+(re-frame/reg-sub
+  :application/loading-complete?
+  (fn [_ _]
+    [(re-frame/subscribe [:state-query [:error :code]])
+     (re-frame/subscribe [:state-query [:form]])
+     (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
+     (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])])
+  (fn [[load-failure form form-allows-ht session-fetched virkailija-secret] _]
+    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+      (or load-failure
+          (and form
+               (or (not ht-feature-enabled)
+                   (or (not (clojure.string/blank? virkailija-secret))
+                       (not form-allows-ht)
+                       session-fetched)))))))
 
 (re-frame/reg-sub
   :application/can-apply?
