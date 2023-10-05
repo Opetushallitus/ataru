@@ -38,7 +38,9 @@
                                application-fixture
                                (:hakukohde application-fixture)
                                form-fixture
-                               {} audit-logger)
+                               {}
+                               audit-logger
+                               nil)
                                :id)
         stored-application (application-store/get-application application-id)]
     (doseq [{hakukohde :hakukohde review-requirement :review-requirement review-state :review-state} application-reviews-fixture]

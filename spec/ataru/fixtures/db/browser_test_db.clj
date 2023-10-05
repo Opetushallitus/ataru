@@ -397,17 +397,17 @@
                                  (:key belongs-to-hakukohteet-test-form))
     (form-store/create-new-form! hakija-hakukohteen-hakuaika-test-form
                                  (:key hakija-hakukohteen-hakuaika-test-form))
-    (application-store/add-application application1 [] form1 {} audit-logger)
-    (application-store/add-application application2 [] form1 {} audit-logger)
-    (application-store/add-application application3 [] form1 {} audit-logger)
+    (application-store/add-application application1 [] form1 {} audit-logger nil)
+    (application-store/add-application application2 [] form1 {} audit-logger nil)
+    (application-store/add-application application3 [] form1 {} audit-logger nil)
     (application-store/add-application application4
                                        ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                                        form3a {}
-                                       audit-logger)
+                                       audit-logger nil)
     (application-store/add-application application5
                                        ["1.2.246.562.20.49028196523" "1.2.246.562.20.49028196524"]
                                        form3a {}
-                                       audit-logger)))
+                                       audit-logger nil)))
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))

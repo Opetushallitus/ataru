@@ -104,7 +104,7 @@
                                           ["application_id = ?" id])))
 
 (defn- init [application]
-  (let [stored (application-store/add-application application [] form-fixtures/person-info-form {} audit-logger)]
+  (let [stored (application-store/add-application application [] form-fixtures/person-info-form {} audit-logger nil)]
     (reset! test-application-id (:id stored))
     (store/upsert-harkinnanvaraisuus-process (:id stored) (:key stored) haku-key)))
 
