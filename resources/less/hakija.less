@@ -2591,13 +2591,6 @@ i.arkistoitu {
   text-align: center;
   display: flex;
   flex-direction: column;
-  margin-left: 10px;
-  .zmdia {
-    padding-top: 15px;
-    margin-bottom: 5px;
-    float: top;
-    display: block;
-  }
 
   .application__logged-in-name-container {
     float: bottom;
@@ -2606,10 +2599,11 @@ i.arkistoitu {
     text-align: center;
     align-items: center;
     justify-content: center;
+    padding-right: 10px;
 
     .zmdi {
       @media only screen and (max-width: @desktop-content-width) {
-        padding-left: 0px;
+        padding-left: 2px;
       }
       @media only screen and (min-width: @desktop-content-width) {
         padding-left: 5px;
@@ -2639,7 +2633,7 @@ i.arkistoitu {
 .application__logout-dropdown-wrapper {
   align-items: center;
   .application__logout-dropdown-content-open {
-    box-shadow: 0px 4px 2px @grey;
+    box-shadow: 0px 2px 1px @grey;
     border: 1px solid black;
     display: flex;
     color: @sg-color-green;
@@ -2655,22 +2649,17 @@ i.arkistoitu {
     }
   }
 
-  @media only screen and (max-width: @mobile-width) {
+  @media only screen and (max-width: @desktop-content-width) {
     .application__logout-dropdown-content-open {
-      box-shadow: 0px 4px 2px @grey;
+      box-shadow: 0px 2px 1px @grey;
       border: 1px solid black;
-      display: inline-flex;
-      color: @sg-color-gray;
+      display: flex;
+      color: @sg-color-green;
       z-index: 100;
       position: fixed;
-      padding: 24px;
+      flex-direction: column;
       text-decoration: none;
-      background-color: red;
-      justify-content: center;
-
-      .i {
-        padding-right: 5px;
-      }
+      justify-content: flex-start;
     }
   }
 }
@@ -2854,13 +2843,15 @@ i.arkistoitu {
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-width: 300px;
 
   .application__ht-notification-container {
     margin-top: 2 * @total-banner-height;
     background-color: white;
-    width: 40%;
+    width: 60%;
+    max-width: 1000px;
     border: 3px solid @primary-green-700;
-    padding: 2rem 3rem;
+    padding: 1.5rem 2rem;
     box-shadow: 0 6px 6px rgba(0,0,0,0.60);
     display: flex;
     flex-direction: column;
@@ -2868,14 +2859,24 @@ i.arkistoitu {
     align-items: flex-start;
     text-align: left;
 
-    .application__ht-notification-close {
-      justify-content: flex-end;
-      width: 100%;
-      display: flex;
-    }
 
-    .application__ht-notification-title {
-      font-size: 36px;
+    .application__ht-notification-top-container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+
+      .application__ht-notification-title {
+        font-size: 36px;
+      }
+
+      .application__ht-notification-close {
+        justify-content: flex-end;
+        align-self: normal;
+        display: flex;
+
+      }
+
     }
 
     p,
@@ -2890,21 +2891,25 @@ i.arkistoitu {
       height: 40px;
       color: white;
       text-align: center;
-      width: 300px;
+      width: 100%;
+      max-width: 300px;
       margin-top: 20px;
     }
   }
 
-  @media only screen and (max-width: @mobile-width) {
+  @media only screen and (max-width: @desktop-content-width) {
     .application__ht-notification-container {
       margin-top: @total-banner-height-mobile + 20px;
       width: 92%;
       padding: 1.5rem 2rem;
       border: 2px solid @button-blue;
       box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+      font-size: 16px;
 
-      .application__ht-notification-title {
-        font-size: 26px;
+      .application__ht-notification-top-container {
+        .application__ht-notification-title {
+          font-size: 26px;
+        }
       }
 
       p,
