@@ -176,7 +176,8 @@
     {:db   db
      :http {:method  :get
             :url     (str "/hakemus/auth/session")
-            :handler [:application/handle-oppija-session-fetch]}}))
+            :handler [:application/handle-oppija-session-fetch]
+            :error-handler [:application/handle-ht-error]}}))
 
 (reg-event-fx
   :application/get-latest-form-by-haku
@@ -679,6 +680,13 @@
               db
               locked-answers))
     db))
+
+(reg-event-fx
+  :application/handle-ht-error
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (js/console.log (str "Handle oppija session error fetch, resp" response))
+    {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
 
 (reg-event-fx
   :application/handle-oppija-session-fetch

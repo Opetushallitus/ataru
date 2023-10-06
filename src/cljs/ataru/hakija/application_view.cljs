@@ -415,14 +415,15 @@
     (when params
       [:div.application__ht-notification-overlay
        [:div.application__ht-notification-container
-        [:div.application__ht-notification-close
-         [:i.material-icons-outlined.toaster-close
-          {:on-click     #(dispatch [:application/set-active-notification-modal nil])
-           :title "title"}
-          "close"]]
-        [:h1.application__ht-notification-title
-         (when (not-empty header)
-           header)]
+        [:div.application__ht-notification-top-container
+         [:h1.application__ht-notification-title
+          (when (not-empty header)
+            header)]
+         [:div.application__ht-notification-close
+          [:i.material-icons-outlined
+           {:on-click     #(dispatch [:application/set-active-notification-modal nil])
+            :aria-label (get (:close general-texts) :fi)}
+           "close"]]]
         [:p.application__ht-notification-main-text main-text]
         [:button.application__ht-notification-button.application__ht-notification-button--enabled
          {:on-click on-click}
@@ -435,6 +436,17 @@
 
 (defn error-display []
   (let [error-code (subscribe [:state-query [:error :code]])
+        lang       (subscribe [:application/form-language])]
+    (fn [] (when-let [error-code @error-code]
+             [:div.application__message-display
+              {:class (if (some #(= error-code %) [:inactivated :network-offline])
+                        "application__message-display--warning"
+                        "application__message-display--error")}
+              [:div.application__message-display--exclamation [:i.zmdi.zmdi-alert-triangle]]
+              [:div.application__message-display--details (translations/get-hakija-translation error-code @lang)]]))))
+
+(defn ht-error-display []
+  (let [error-code (subscribe [:state-query [:oppija-session :error]])
         lang       (subscribe [:application/form-language])]
     (fn [] (when-let [error-code @error-code]
              [:div.application__message-display
