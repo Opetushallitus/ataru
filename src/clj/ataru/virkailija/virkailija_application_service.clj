@@ -9,35 +9,9 @@
             [taoensso.timbre :as log]
             [ataru.person-service.person-integration :as person-integration]))
 
-(defn- store-synthetic-application [application {:keys [session
-                                                        audit-logger
-                                                        job-runner
-                                                        person-service
-                                                        koodisto-cache
-                                                        tarjonta-service
-                                                        organization-service
-                                                        ohjausparametrit-service
-                                                        form-by-id-cache]}]
-  (let [tarjonta-info                 (when (:haku application)
-                                        (tarjonta-parser/parse-tarjonta-info-by-haku
-                                         koodisto-cache
-                                         tarjonta-service
-                                         organization-service
-                                         ohjausparametrit-service
-                                         (:haku application)))
-        hakukohteet                   (get-in tarjonta-info [:tarjonta :hakukohteet])
-        applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
-                                              hakukohteet)
-        form                          (hakija-form-service/fetch-form-by-id
-                                       (:form application)
-                                       [:virkailija] ; TODO is this the correct role?
-                                       form-by-id-cache
-                                       koodisto-cache
-                                       nil
-                                       false
-                                       {}
-                                       false)
-        key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
+(defn- store-synthetic-application [{:keys [application form applied-hakukohteet]}
+                                    {:keys [session audit-logger job-runner person-service]}]
+  (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
         person-oid (person-integration/upsert-person-synchronized job-runner person-service (:id key-and-id))]
     (log/info "Stored synthetic application with id" (:id key-and-id) "and person oid" person-oid)
     {:passed? true :id (:id key-and-id) :personOid person-oid}))
@@ -97,7 +71,10 @@
                  (assoc validation-result :key (:key nil))
 
                  :else
-                 {:passed? true})]
+                 {:passed? true
+                  :application application
+                  :form form
+                  :applied-hakukohteet applied-hakukohteet})]
     (if (:passed? result)
       result
       (do
@@ -122,5 +99,5 @@
         validation-results     (map #(validate-synthetic-application % data) converted-applications)
         all-applications-valid (not-any? #(= false (:passed? %)) validation-results)]
     (if all-applications-valid
-      {:success true :applications (doall (map #(store-synthetic-application % data) converted-applications))}
+      {:success true :applications (doall (map #(store-synthetic-application % data) validation-results))}
       {:success false :applications validation-results})))
