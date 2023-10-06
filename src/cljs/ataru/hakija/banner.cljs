@@ -93,7 +93,15 @@
         logged-in-name (subscribe [:state-query [:oppija-session :data :display-name]])
         logged-in? (subscribe [:state-query [:oppija-session :logged-in]])
         menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])
-        submit-status (subscribe [:state-query [:application :submit-status]])]
+        submit-status (subscribe [:state-query [:application :submit-status]])
+        logout-link-fn (fn []
+                         (dispatch [:application/toggle-logout-menu])
+                         (dispatch [:application/set-active-notification-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
+                                                                                :main-text (if (= @submit-status :submitted)
+                                                                                             (translations/get-hakija-translation :ht-logout-confirmation-text-submitted @lang)
+                                                                                             (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
+                                                                                :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
+                                                                                :on-click (fn [_] (dispatch [:application/redirect-to-logout (name @lang)]))}]))]
     (when (and @logged-in-name @logged-in?)
       [:div.application__logged-in-banner-wrapper
        [icons/icon-account]
@@ -109,12 +117,7 @@
          [:i.material-icons-outlined.logout
           {:title (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)} "logout"]
          [:div.application__banner-logout-link
-          {:on-click     #(dispatch [:application/set-active-notification-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
-                                                                                 :main-text (if (= @submit-status :submitted)
-                                                                                              (translations/get-hakija-translation :ht-logout-confirmation-text-submitted @lang)
-                                                                                              (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
-                                                                                 :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
-                                                                                 :on-click (fn [_] (dispatch [:application/redirect-to-logout (name @lang)]))}])
+          {:on-click     #(logout-link-fn)
            :data-test-id "tunnistautuminen-button"}
           (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
