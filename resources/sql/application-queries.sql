@@ -310,7 +310,7 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                                     state <> 'inactivated') AS t
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
---kissa
+
 -- name: yesql-get-latest-application-by-key
 SELECT
   a.id,
@@ -342,7 +342,7 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
-   (a.tunnistautuminen->'session' is not null) as tunnistautunut
+   (a.tunnistautuminen->'hakenut-tunnistautuneena') as tunnistautunut
 FROM latest_applications AS a
 JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;
