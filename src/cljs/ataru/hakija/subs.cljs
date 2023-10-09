@@ -324,12 +324,14 @@
     [(re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
      (re-frame/subscribe [:state-query [:oppija-session :logged-in]])
-     (re-frame/subscribe [:state-query [:application :virkailija-secret]])])
-  (fn [[form-allows already-declined logged-in virkailija-secret] _]
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])
+     (re-frame/subscribe [:state-query [:application :secret]])])
+  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret] _]
     (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (and feature-enabled
            form-allows
            (clojure.string/blank? virkailija-secret)
+           (clojure.string/blank? hakija-secret)
            (not already-declined)
            (not logged-in)))))
 (re-frame/reg-sub
@@ -340,13 +342,15 @@
      (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
-     (re-frame/subscribe [:state-query [:application :virkailija-secret]])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret] _]
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])
+     (re-frame/subscribe [:state-query [:application :secret]])])
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret] _]
     (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (or load-failure
           (and form
                (or (not ht-feature-enabled)
                    (or (not (clojure.string/blank? virkailija-secret))
+                       (not (clojure.string/blank? hakija-secret))
                        (not form-allows-ht)
                        (or session-fetched
                            session-fetch-errored))))))))
