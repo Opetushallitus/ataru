@@ -330,19 +330,21 @@
      (and (not-empty (-> db :application :applications)) ;;on hakemuksia listalla
           (some? list-selected-by))))) ;; on joku rajaus päällä
 
+(defn show-mass-review-notes-link?
+  [[toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?]]
+  (and applications-visible-with-some-filter?
+       (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
+           (and hakukohde-filtering-for-yhteishaku?  ;; muille pitää olla yhteisvalinnoissa hakukohderajaus päällä
+                (not toisen-asteen-yhteishaku?))))) ;; muille ei näytetä ollenkaan 2. asteen yhteishaulle
+
 (re-frame/reg-sub
  :application/show-mass-review-notes-link?
- (fn [_ _]
+ (fn []
    [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
     (re-frame/subscribe [:application/superuser?])
     (re-frame/subscribe [:application/hakukohde-filtering-for-yhteishaku?])
     (re-frame/subscribe [:application/applications-visible-with-some-filter?])])
- (fn [[toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?]]
-   (and applications-visible-with-some-filter?
-      (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
-        (and hakukohde-filtering-for-yhteishaku?  ;; muille pitää olla yhteisvalinnoissa hakukohderajaus päällä
-             (not toisen-asteen-yhteishaku?)))))) ;; muille ei näytetä ollenkaan 2. asteen yhteishaulle
-
+ show-mass-review-notes-link?)
 
 (re-frame/reg-sub
   :application/show-excel-link?
