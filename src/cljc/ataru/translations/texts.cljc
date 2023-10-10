@@ -581,9 +581,12 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
-   :ht-lander-header                            {:fi "Valitse kuinka haluat kirjautua lomakkeelle"
-                                                 :sv "Valitse kuinka haluat kirjautua lomakkeelle sv"
-                                                 :en "Valitse kuinka haluat kirjautua lomakkeelle en"}
+   :ht-lander-header                            {:fi "Miten haluat kirjautua hakulomakkeelle?"
+                                                 :sv "Miten haluat kirjautua hakulomakkeelle? sv"
+                                                 :en "Miten haluat kirjautua hakulomakkeelle? en"}
+   :ht-lander-top-text                          {:fi "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto."
+                                                 :sv "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. sv"
+                                                 :en "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. en"}
    :ht-kirjaudu-sisaan                          {:fi "Kirjaudu sisään"
                                                  :sv "Kirjaudu sisään sv"
                                                  :en "Kirjaudu sisään en"}
