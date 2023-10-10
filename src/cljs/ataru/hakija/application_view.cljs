@@ -114,8 +114,13 @@
     [:div.application__hakeminen-tunnistautuneena-lander-wrapper
      [:h1 (translations/get-hakija-translation :ht-lander-header lang)]
      [:div.application__hakeminen-tunnistautuneena-lander-haku-header header]
+     [:p.application__hakeminen-tunnistautuneena-lander-top-text
+      (translations/get-hakija-translation :ht-lander-top-text lang)]
      [:div.application__hakeminen-tunnistautuneena-tunnistaudu-wrapper
-      [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]
+      [:div.application__hakeminen-tunnistautuneena-lander-header-wrapper
+       [:img.logo-suomi-fi
+        {:src "/hakemus/images/suomifi_tunnus.svg"}]
+       [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]]
       [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
