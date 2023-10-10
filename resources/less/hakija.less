@@ -621,7 +621,12 @@ body {
   height: 43px;
   font-size: 16px;
   border: 1px solid #C1C1C1;
-  border-radius: 2px;
+}
+
+.application__form-select--locked {
+  width: @form-select-width - @lock-icon-width;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .application__form-select--enabled {
@@ -2633,7 +2638,7 @@ i.arkistoitu {
   flex-direction: row;
 
   .application__lock-icon-container {
-    width: 43px;
+    width: @lock-icon-width;
     background: @lock-background-gray;
     height: 43px;
     border: 1px solid #C1C1C1;
