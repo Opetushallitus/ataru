@@ -601,7 +601,8 @@
     (let [selection-limited (selection-limits db)
           virkailija-secret (get-in db [:application :virkailija-secret])
           hakija-secret (get-in db [:application :secret])
-          form-allows-hakeminen-tunnistautuneena? (get-in db [:form :properties :allow-hakeminen-tunnistautuneena] false)]
+          form-allows-hakeminen-tunnistautuneena? (get-in db [:form :properties :allow-hakeminen-tunnistautuneena] false)
+          demo? (demo/demo? db)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
          :dispatch-n [[:application/hakukohde-query-change (atom "")]
@@ -613,9 +614,10 @@
                               (clojure.string/blank? virkailija-secret)
                               (clojure.string/blank? hakija-secret)
                               form-allows-hakeminen-tunnistautuneena?
+                              (not demo?)
                               (fc/feature-enabled? :hakeminen-tunnistautuneena))
                         [:application/get-oppija-session])]}
-        (when (and selection-limited (not (demo/demo? db)))
+        (when (and selection-limited (not demo?))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
                   :handler [:application/handle-selection-limit]}})))))
