@@ -538,3 +538,26 @@
   (-> applications-list-query
       (assoc-in [:states-and-filters :processing-states-to-include]
                 (mapv first review-states/application-hakukohde-processing-states))))
+
+(def application-review-notes-without-hakukohde
+  {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
+   :notes           "Some notes about the applicant"})
+
+(def application-review-notes-with-hakukohde
+  {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
+   :hakukohde       "1.2.246.562.29.93102260101"
+   :notes           "Some notes about the applicant"})
+
+(def invalid-application-review-notes
+  {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
+   :notes           123})
+
+(def application-review-notes-with-invalid-state
+  {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
+   :notes           "Some notes about the applicant"
+   :state-name      "foobar"})
+
+(def application-review-notes-with-valid-state
+  {:application-keys ["c58df586-fdb9-4ee1-b4c4-030d4cfe9f81"]
+   :notes           "Some notes about the applicant"
+   :state-name      "processing-state"})
