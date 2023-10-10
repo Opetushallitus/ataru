@@ -199,39 +199,40 @@
   (fn []
     (let [lang @(subscribe [:application/form-language])
           answers @(subscribe [:state-query [:application :answers]])]
-      [:div.application__submitted-submit-notification-ht
-       {:role "alertdialog"
-        :aria-modal "true"
-        :aria-labelledby "submitted-submit-notification-heading submitted-submit-notification-confirmation"}
-       [:div.application__submitted-submit-notification-inner-ht
-        [:h1.application__submitted-submit-notification-heading
-         {:id "submitted-submit-notification-heading"}
-         (translations/get-hakija-translation
-           :ht-application-submitted
-           lang)]]
-       (when (-> answers
-                 (get-in [:email :value])
-                 (string/blank?)
-                 not)
-         [:div.application__submitted-submit-notification-heading
-          {:id "submitted-submit-notification-confirmation"
-           :role "text"}
-          (translations/get-hakija-translation :ht-application-confirmation lang)])
-       [:div.application__submitted-submit-notification-inner-ht
-        [:button.application__overlay-button.application__overlay-button--enabled
-         {:tab-index    "1"
-          :on-click     #(reset! hidden? true)
-          :data-test-id "send-feedback-button"
-          :autofocus ""}
-         (translations/get-hakija-translation :ht-katso-hakemustasi lang)]
-        [:button.application__overlay-button.application__overlay-button--enabled
-         {:tab-index    "2"
-          :on-click     #(dispatch [:application/redirect-to-logout (name lang)])
-          :data-test-id "send-feedback-button"
-          :autofocus ""}
-         [:i.material-icons-outlined.logout
-          {:title (translations/get-hakija-translation :ht-kirjaudu-ulos lang)} "logout"]
-         (translations/get-hakija-translation :ht-kirjaudu-ulos lang)]]])))
+      [:div.application__submitted-submit-notification-ht-overlay
+       [:div.application__submitted-submit-notification-ht
+        {:role "alertdialog"
+         :aria-modal "true"
+         :aria-labelledby "submitted-submit-notification-heading submitted-submit-notification-confirmation"}
+        [:div.application__submitted-submit-notification-inner-ht
+         [:h1.application__submitted-submit-notification-heading
+          {:id "submitted-submit-notification-heading"}
+          (translations/get-hakija-translation
+            :ht-application-submitted
+            lang)]]
+        (when (-> answers
+                  (get-in [:email :value])
+                  (string/blank?)
+                  not)
+          [:div.application__submitted-submit-notification-heading
+           {:id "submitted-submit-notification-confirmation"
+            :role "text"}
+           (translations/get-hakija-translation :ht-application-confirmation lang)])
+        [:div.application__submitted-submit-notification-inner-ht
+         [:button.application__overlay-button.application__overlay-button
+          {:tab-index    "1"
+           :on-click     #(reset! hidden? true)
+           :data-test-id "send-feedback-button"
+           :autofocus ""}
+          (translations/get-hakija-translation :ht-katso-hakemustasi lang)]
+         [:button.application__overlay-button.application__overlay-button
+          {:tab-index    "2"
+           :on-click     #(dispatch [:application/redirect-to-logout (name lang)])
+           :data-test-id "send-feedback-button"
+           :autofocus ""}
+          [:i.material-icons-outlined.logout
+           {:title (translations/get-hakija-translation :ht-kirjaudu-ulos lang)} "logout"]
+          (translations/get-hakija-translation :ht-kirjaudu-ulos lang)]]]])))
 
 (defn- submit-notification
   [hidden? demo?]
