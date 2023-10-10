@@ -476,12 +476,21 @@
 
 (defn wrapper-field
   [field-descriptor]
-  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))]
+  (let [label               (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
+        person-info-module? (= "person-info" (:module field-descriptor))
+        logged-in?          @(subscribe [:state-query [:oppija-session :logged-in]])
+        lang                @(subscribe [:application/form-language])]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
       [:h2 label]
       [scroll-to-anchor field-descriptor]]
-     (into [:div.application__wrapper-contents]
+     (into [:div.application__wrapper-contents
+            (when (and person-info-module? logged-in?)
+              [:div.application__person-info-module-ht-info-wrapper
+               [:div.application__person-info-module-ht-info-contents
+                [:i.zmdi.zmdi-info-outline]
+                [:p.application__person-info-module-ht-info-text
+                 (tu/get-hakija-translation :ht-person-info-module-top-text lang)]]])]
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
              (if (:per-hakukohde child)
