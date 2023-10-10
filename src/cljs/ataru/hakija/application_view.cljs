@@ -226,7 +226,7 @@
          (translations/get-hakija-translation :ht-katso-hakemustasi lang)]
         [:button.application__overlay-button.application__overlay-button--enabled
          {:tab-index    "2"
-          :on-click     #(dispatch [:application/redirect-to-logout (name @lang)])
+          :on-click     #(dispatch [:application/redirect-to-logout (name lang)])
           :data-test-id "send-feedback-button"
           :autofocus ""}
          [:i.material-icons-outlined.logout
