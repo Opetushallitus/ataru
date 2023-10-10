@@ -17,34 +17,35 @@
                        :content
                        (last)
                        :content)
-        parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))] ;todo onkohan tämä tarpeeksi robusti, xml-käsittely pitää vielä käydä läpi
-    ;todo, tähän tulee vielä lisää kenttiä.
-    ;Avaimet täytyy pitää samoina kuin henkilötietomoduulin esitäytettävien vastausten tunnisteet.
+        parsed-raw-map (into {} (map (fn [element] [(:tag element) (first (:content element))]) attributes))]
+    ;Fields-kentän sisällön avaimet vastaavat henkilötietomoduulin esitäytettävien vastausten tunnisteita.
     (when success?
-      {:person-oid (:personOid parsed-raw-map)
-       :display-name (:givenName parsed-raw-map)
-       :fields     {:first-name           {:value  (:firstName parsed-raw-map)
-                                           :locked true}
-                    :preferred-name       {:value  (:givenName parsed-raw-map)
-                                           :locked true}
-                    :last-name            {:value  (:sn parsed-raw-map)
-                                           :locked true}
-                    :ssn                  {:value  (:nationalIdentificationNumber parsed-raw-map)
-                                           :locked true}
-                    :email                {:value  (:mail parsed-raw-map)
-                                           :locked false}
-                    :country-of-residence {:value  (or
-                                                     (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
-                                                     "246")
-                                           :locked false}
-                    :address              {:value  (or
-                                                     (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
-                                                     (:VakinainenUlkomainenLahiosoite parsed-raw-map))
-                                           :locked false}
-                    :postal-code          {:value  (:VakinainenKotimainenLahiosoitePostinumero parsed-raw-map)
-                                           :locked false}
-                    :home-town            {:value  (:KotikuntaKuntanumero parsed-raw-map)
-                                           :locked false}}})))
+      (let [first-names (set (clojure.string/split (or (:firstName parsed-raw-map) "") #" "))
+            preferred-name-valid? (contains? first-names (:givenName parsed-raw-map))]
+        {:person-oid (:personOid parsed-raw-map)
+         :display-name (:givenName parsed-raw-map)
+         :fields     {:first-name           {:value  (:firstName parsed-raw-map)
+                                             :locked true}
+                      :preferred-name       {:value  (:givenName parsed-raw-map)
+                                             :locked preferred-name-valid?}
+                      :last-name            {:value  (:sn parsed-raw-map)
+                                             :locked true}
+                      :ssn                  {:value  (:nationalIdentificationNumber parsed-raw-map)
+                                             :locked true}
+                      :email                {:value  (:mail parsed-raw-map)
+                                             :locked false}
+                      :country-of-residence {:value  (or
+                                                       (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
+                                                       "246")
+                                             :locked false}
+                      :address              {:value  (or
+                                                       (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
+                                                       (:VakinainenUlkomainenLahiosoite parsed-raw-map))
+                                             :locked false}
+                      :postal-code          {:value  (:VakinainenKotimainenLahiosoitePostinumero parsed-raw-map)
+                                             :locked false}
+                      :home-town            {:value  (:KotikuntaKuntanumero parsed-raw-map)
+                                             :locked true}}}))))
 
 (defn parse-cas-oppija-login-url [locale target]
   (let [url (str
