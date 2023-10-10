@@ -325,11 +325,13 @@
      (re-frame/subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
      (re-frame/subscribe [:state-query [:oppija-session :logged-in]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
-     (re-frame/subscribe [:state-query [:application :secret]])])
-  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret] _]
+     (re-frame/subscribe [:state-query [:application :secret]])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret demo?] _]
     (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (and feature-enabled
            form-allows
+           (not demo?)
            (clojure.string/blank? virkailija-secret)
            (clojure.string/blank? hakija-secret)
            (not already-declined)
@@ -343,12 +345,14 @@
      (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
      (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
-     (re-frame/subscribe [:state-query [:application :secret]])])
-  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret] _]
+     (re-frame/subscribe [:state-query [:application :secret]])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret demo?] _]
     (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (or load-failure
           (and form
                (or (not ht-feature-enabled)
+                   demo?
                    (or (not (clojure.string/blank? virkailija-secret))
                        (not (clojure.string/blank? hakija-secret))
                        (not form-allows-ht)
