@@ -236,7 +236,7 @@
             {:keys [value
                     valid
                     errors
-                    locked]} @(subscribe [:application/answer id idx nil]);todo fixme, lisätään locked-kentän perusteella lukkoikoni
+                    locked]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
