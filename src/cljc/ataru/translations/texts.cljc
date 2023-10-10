@@ -649,7 +649,16 @@
                                                  :en "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu. en"}
    :ht-session-expired                          {:fi "Siirry Opintopolun etusivulle"
                                                  :sv "Siirry Opintopolun etusivulle sv"
-                                                 :en "Siirry Opintopolun etusivulle en"}})
+                                                 :en "Siirry Opintopolun etusivulle en"}
+   :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
+                                                 :sv "Din ansökan har tagits emot!"
+                                                 :en "Your application has been received!"}
+   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin."
+                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin. sv"
+                                                 :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin. en"}
+   :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
+                                                 :sv "Katso hakemustasi sv"
+                                                 :en "Katso hakemustasi en"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
