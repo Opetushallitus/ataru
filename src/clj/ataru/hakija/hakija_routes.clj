@@ -149,9 +149,7 @@
 
 (defn generate-new-random-key [] (str (UUID/randomUUID)))
 
-
-
-(defn hakija-auth-routes []
+(defn hakija-auth-routes [{:keys [audit-logger]}]
   (api/context "/auth" []
     :tags ["hakija-auth-api"]
     (api/GET "/oppija" [:as request]
@@ -169,6 +167,11 @@
           (log/info "Cas-oppija-response" rs  ", attributes" parsed-attributes)
           (if parsed-attributes
             (let [new-session-key (generate-new-random-key)]
+              (audit-log/log audit-logger
+                             {:new       parsed-attributes
+                              :operation audit-log/operation-oppija-login
+                              :session   (:session request)
+                              :id        {:oppija-session new-session-key}})
               (oss/persist-session! new-session-key ticket parsed-attributes)
               (-> (response/found target)
                   (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
@@ -191,6 +194,11 @@
             result (oss/delete-session-by-key! oppija-session-key)
             destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
         (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
+        (audit-log/log audit-logger
+                       {:new       {}
+                        :operation audit-log/operation-oppija-logout
+                        :session   (:session request)
+                        :id        {:oppija-session oppija-session-key}})
         (response/found destination)))
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
@@ -484,7 +492,7 @@
                                   (api/context "/hakemus" []
                                     (api/middleware [session-client/wrap-session-client-headers]
                                                     test-routes
-                                      (hakija-auth-routes)
+                                      (hakija-auth-routes this)
                                       (api-routes this)
                                       (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
                                         :path-params [haku-oid :- s/Str]
