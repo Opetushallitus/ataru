@@ -35,3 +35,4 @@ npm-debug.log*
 .java
 .java-version
 .lsp
+.calva

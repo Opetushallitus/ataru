@@ -357,16 +357,23 @@
           (if (and @demo-requested? @demo-open?)
             [:div.application__notification-overlay
              [:div.application__notification-container
+             {:role "alertdialog"
+              :aria-modal "true"
+              :aria-live "polite"}
               [:h1.application__notification-title
                (translations/get-hakija-translation :demo-notification-title (keyword @demo-lang))]
               [:p (translations/get-hakija-translation :demo-notification (keyword @demo-lang))]
               [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
                {:on-click     #(dispatch [:application/close-demo-modal])
-                :data-test-id "dismiss-demo-notification-button"}
+                :data-test-id "dismiss-demo-notification-button"
+                :tab-index    "1"}
                (translations/get-hakija-translation :dismiss-demo-notification (keyword @demo-lang))]]]
 
             [:div.application__notification-overlay
              [:div.application__notification-container
+             {:role "alertdialog"
+              :aria-modal "true"
+              :aria-live "polite"}
               [:h1.application__notification-title
                (translations/get-hakija-translation :demo-closed-title (keyword @demo-lang))]
               [:p text1
