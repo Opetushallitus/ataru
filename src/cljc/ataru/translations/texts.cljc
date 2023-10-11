@@ -662,9 +662,9 @@
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
                                                  :sv "Katso hakemustasi sv"
                                                  :en "Katso hakemustasi en"}
-   :ht-person-info-module-top-text              {:fi "Henkilötiedot on tuotu väestötietojärjestelmästä. Yhteystiedot ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä."
-                                                 :sv "Henkilötiedot on tuotu väestötietojärjestelmästä. Yhteystiedot ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. sv"
-                                                 :en "Henkilötiedot on tuotu väestötietojärjestelmästä. Yhteystiedot ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. en"}})
+   :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä."
+                                                 :sv "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. sv"
+                                                 :en "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. en"}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
