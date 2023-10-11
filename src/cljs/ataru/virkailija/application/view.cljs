@@ -87,7 +87,8 @@
 (defn- closed-row
   [on-click label]
   [:button.application-handling__hakukohde-rajaus-toggle-button
-   {:on-click on-click}
+   {:data-test-id "hakukohde-rajaus"
+    :on-click on-click}
    (or label [:i.zmdi.zmdi-spinner.spin])])
 
 (defn haku-applications-heading
