@@ -258,7 +258,8 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  las.secret
+  las.secret,
+  (a.tunnistautuminen->'hakenut-tunnistautuneena') as tunnistautunut
 FROM applications a
 JOIN LATERAL (SELECT secret
               FROM application_secrets

@@ -69,6 +69,11 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
+(defn- oma-opintopolku-link []
+  (-> config
+      (get-in [:public-config :applicant :service_url])
+      (str "/oma-opintopolku/")))
+
 (defn- escape-full-urls
   [content]
   (let [full-urls (re-seq #"\w+:\/\/\S*" content)]
@@ -248,7 +253,9 @@
                                                 (filter (comp not clojure.string/blank?))))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
-         application-url                 (modify-link (:secret application))
+         application-url                 (if (:tunnistautunut application)
+                                           (oma-opintopolku-link)
+                                           (modify-link (:secret application)))
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
                                           :application-url            application-url
