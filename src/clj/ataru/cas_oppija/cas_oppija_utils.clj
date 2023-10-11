@@ -21,26 +21,30 @@
     ;Fields-kentän sisällön avaimet vastaavat henkilötietomoduulin esitäytettävien vastausten tunnisteita.
     (when success?
       (let [first-names (set (clojure.string/split (or (:firstName parsed-raw-map) "") #" "))
-            preferred-name-valid? (contains? first-names (:givenName parsed-raw-map))]
+            preferred-name (:givenName parsed-raw-map)
+            preferred-name-valid? (contains? first-names preferred-name)
+            ssn (:nationalIdentificationNumber parsed-raw-map)
+            have-finnish-ssn? (not (clojure.string/blank? ssn))]
         {:person-oid (:personOid parsed-raw-map)
-         :display-name (:givenName parsed-raw-map)
+         :display-name (or (:givenName parsed-raw-map)
+                           (first first-names))
          :fields     {:first-name           {:value  (:firstName parsed-raw-map)
                                              :locked true}
-                      :preferred-name       {:value  (:givenName parsed-raw-map)
+                      :preferred-name       {:value  (when preferred-name-valid? preferred-name)
                                              :locked preferred-name-valid?}
                       :last-name            {:value  (:sn parsed-raw-map)
                                              :locked true}
-                      :ssn                  {:value  (:nationalIdentificationNumber parsed-raw-map)
+                      :ssn                  {:value  ssn
                                              :locked true}
+                      :have-finnish-ssn     {:value have-finnish-ssn?
+                                             :locked have-finnish-ssn?}
                       :email                {:value  (:mail parsed-raw-map)
                                              :locked false}
-                      :country-of-residence {:value  (or
-                                                       (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
-                                                       "246")
+                      :country-of-residence {:value  (or (:VakinainenUlkomainenLahiosoiteValtiokoodi3 parsed-raw-map)
+                                                         "246")
                                              :locked false}
-                      :address              {:value  (or
-                                                       (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
-                                                       (:VakinainenUlkomainenLahiosoite parsed-raw-map))
+                      :address              {:value  (or (:VakinainenKotimainenLahiosoiteS parsed-raw-map)
+                                                         (:VakinainenUlkomainenLahiosoite parsed-raw-map))
                                              :locked false}
                       :postal-code          {:value  (:VakinainenKotimainenLahiosoitePostinumero parsed-raw-map)
                                              :locked false}
