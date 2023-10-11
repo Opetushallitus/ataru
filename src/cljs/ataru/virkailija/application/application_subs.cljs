@@ -913,13 +913,6 @@
                                       (contains? selected-hakukohde-oids (str hakukohde)))
                              index)))))))
 
-(re-frame/reg-sub
-  :application/review-note-indexes-excluding-eligibility
-  (fn [db]
-    (->> (-> db :application :review-notes)
-         (keep-indexed (fn [index {:keys [state-name _]}]
-                         (when (not= "eligibility-state" state-name)
-                           index))))))
 
 (re-frame/reg-sub
   :application/review-notes
