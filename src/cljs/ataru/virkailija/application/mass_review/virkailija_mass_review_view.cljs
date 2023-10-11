@@ -159,7 +159,8 @@
     (fn []
       [:span.application-handling__mass-review-notes-container
        [:a.application-handling__mass-review-notes-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-mass-review-notes-popup-visibility true])}
+        {:data-test-id "mass-review-notes-button"
+          :on-click #(dispatch [:application/set-mass-review-notes-popup-visibility true])}
         @(subscribe [:editor/virkailija-translation :mass-review-notes])]
        (when @visible?
          [:div.application-handling__popup__mass-notes.application-handling__mass-review-notes-popup
@@ -208,4 +209,9 @@
             :submitted
             [:div.application-handling__mass-review-notes-status
              [:i.zmdi.zmdi-hc-lg.zmdi-check-circle.application-handling__mass-review-notes-status-icon.application-handling__mass-review-notes-status-icon--sent]
-             @(subscribe [:editor/virkailija-translation :mass-review-notes-saved])])])])))
+             @(subscribe [:editor/virkailija-translation :mass-review-notes-saved])]
+
+            :submit-error
+            [:div.application-handling__mass-review-notes-status.application-handling__mass-review-notes-status--error
+             [:i.zmdi.zmdi-hc-lg.zmdi-alert-circle.application-handling__mass-review-notes-status-icon.application-handling__mass-review-notes-status-icon--error]
+             @(subscribe [:editor/virkailija-translation :mass-review-notes-save-error])])])])))

@@ -1,5 +1,5 @@
 (ns ataru.virkailija.application.mass-review.virkailija-mass-review-handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx subscribe]]))
+  (:require [re-frame.core :refer [dispatch reg-event-db reg-event-fx subscribe]]))
 
 (reg-event-db
   :application/set-mass-update-popup-visibility
@@ -44,7 +44,7 @@
  :application/confirm-mass-review-notes
  (fn [_ _]
    {:dispatch       [:application/set-mass-review-notes-form-state :confirm]
-    :dispatch-later [{:dispatch [:application/cancel-mass-information-request]
+    :dispatch-later [{:dispatch [:application/cancel-mass-review-notes]
                       :ms       3000}]}))
 
 (reg-event-fx
@@ -57,13 +57,21 @@
                                  :hakukohde    (or (-> db :application :rajaus-hakukohteella)
                                                        (-> db :application :selected-hakukohde))}
            :path                "/lomake-editori/api/applications/mass-notes"
-           :handler-or-dispatch :application/handle-submit-mass-review-notes-response}}))
+           :handler-or-dispatch :application/handle-submit-mass-review-notes-response
+           :override-args       {:error-handler #(dispatch [:application/handle-submit-mass-review-notes-error])}}}))
 
 (reg-event-fx
  :application/handle-submit-mass-review-notes-response
  (fn [_ _]
    {:dispatch       [:application/set-mass-review-notes-form-state :submitted]
-    :dispatch-later [{:ms       10000
+    :dispatch-later [{:ms       3000
+                      :dispatch [:application/reset-submit-mass-review-notes-state]}]}))
+
+(reg-event-fx
+ :application/handle-submit-mass-review-notes-error
+ (fn [_ _]
+   {:dispatch       [:application/set-mass-review-notes-form-state :submit-error]
+    :dispatch-later [{:ms       3000
                       :dispatch [:application/reset-submit-mass-review-notes-state]}]}))
 
 (reg-event-fx
