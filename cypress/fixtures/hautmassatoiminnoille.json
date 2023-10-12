@@ -33,13 +33,11 @@
   "haut": {
     "1.2.246.562.29.10000000001": {
       "yhteishaku": true,
-      "kohdejoukko-uri": "haunkohdejoukko_11#1",
-      "ataru-form-key": "4f803823-c9f3-4eff-8411-ea82e259da4c"
+      "kohdejoukko-uri": "haunkohdejoukko_11#1"
     },
     "1.2.246.562.29.00000000000000018308": {
       "yhteishaku": false,
-      "kohdejoukko-uri": "haunkohdejoukko_12#1",
-      "ataru-form-key": "4f803823-c9f3-4eff-8411-ea82e259da4c"
+      "kohdejoukko-uri": "haunkohdejoukko_12#1"
     }
   },
   "hakukohteet": {

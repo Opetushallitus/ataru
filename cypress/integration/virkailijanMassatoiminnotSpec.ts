@@ -6,30 +6,13 @@ describe('Hakemusten massatoiminnot ei-rekisterinpitäjälle', () => {
     'hakemusten käsittelyä varten',
     () => {
       before(() => {
-        cy.fixture('yksiloimatonHakijaHakemuksessa.json').as(
-          'yksiloimatonHakija'
-        )
-        cy.fixture('aidinkieletonHakijaHakemuksessa.json').as(
-          'aidinkieletonHakija'
-        )
         cy.fixture('hakemuksetmassatoiminnoille.json').as('hakemuslistaus')
         cy.fixture('hautmassatoiminnoille.json').as('haut')
-        cy.fixture('randomlomake.json').as('lomake')
 
         cy.server()
         cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
           'VTS-kirjautuminen'
         )
-        cy.route(
-          'GET',
-          '/lomake-editori/api/applications/1.2.246.562.11.00000000000000000001',
-          '@yksiloimatonHakija'
-        ).as('yksiloimatonHakemus')
-        cy.route(
-          'GET',
-          '/lomake-editori/api/applications/1.2.246.562.11.00000000000000000002',
-          '@aidinkieletonHakija'
-        ).as('aidinkieletonHakemus')
         cy.route(
           'GET',
           '/valinta-tulos-service/auth/valinnan-tulos/hakemus/?hakemusOid=*',
@@ -41,39 +24,19 @@ describe('Hakemusten massatoiminnot ei-rekisterinpitäjälle', () => {
           '@hakemuslistaus'
         ).as('listApplications')
         cy.route('GET', '/lomake-editori/api/haut*', '@haut')
-        cy.route('GET', '/lomake-editori/api/forms/latest*', '@lomake')
         cy.route('GET', '/lomake-editori/api/haku*', '@haut')
       })
 
       after(() => {
         cy.server({ enable: false })
       })
-      const goToApplicationHandling = () => {
-        // editorin pääsivujen lataus välillä hidastelee rankasti, joten timeouttia on annettu tässä kohdin reilusti
-        cy.get('div.section-link.application > a', { timeout: 30000 }).click()
-      }
 
-      const navigateToUnprocessedHautTab = () => {
-        cy.get('.application__search-control-tab-selector').first().click()
-      }
-
-      const clickFirstHaku = () => {
-        cy.get('.application__search-control-haku').first().click()
-      }
-
-      describe('Toisen asteen yhteishaussa', () => {
-        before(() => {
-          goToApplicationHandling()
-        })
-
-        beforeEach(() => {
-          navigateToUnprocessedHautTab()
-          cy.reload()
-          clickFirstHaku()
-        })
-
+      describe('Haun hakemuslistauksessa', () => {
         it('Massaviestipainike on näkyvissä ja massaviesti-ikkuna latautuu oikeilla teksteillä', () => {
-          cy.get('[data-test-id="show-results"]').should('exist')
+          cy.avaaHaunHakemuksetVirkailijanNakymassa(
+            '1.2.246.562.29.00000000000000018308'
+          )
+          cy.get('[data-test-id="show-results"]').should('be.visible')
           cy.get('[data-test-id="show-results"]').click()
           cy.get('.application-handling__mass-information-request-link').should(
             'be.visible'
@@ -88,21 +51,28 @@ describe('Hakemusten massatoiminnot ei-rekisterinpitäjälle', () => {
           cy.get('p').contains('Lähetä sähköposti 2 hakijalle').should('exist')
         })
 
-        it('Ilman hakukohderajausta ei näy massamuistiinpanotoimintoa', () => {
-          cy.get('[data-test-id="show-results"]').should('exist')
+        it('Toisen asteen yhteishaussa ei näy massamuistiinpanotoimintoa', () => {
+          cy.avaaHaunHakemuksetVirkailijanNakymassa(
+            '1.2.246.562.29.10000000001'
+          )
+          cy.get('[data-test-id="show-results"]').should('be.visible')
           cy.get('[data-test-id="show-results"]').click()
-
+          cy.get('.application-handling__mass-information-request-link').should(
+            'be.visible'
+          )
           cy.get('[data-test-id="mass-review-notes-button"]').should(
-            'not.exist'
+            'not.be.visible'
           )
         })
-        it('Hakukohderajauksella massamuistiinpanotoiminto näkyy', () => {
-          cy.get('[data-test-id="hakukohde-rajaus"]').click()
-          cy.get('.hakukohde-and-hakukohderyhma-category-list-item')
-            .first()
-            .click()
+
+        it('Ei-yhteishaulle massamuistiinpanotoiminto näkyy', () => {
+          cy.avaaHaunHakemuksetVirkailijanNakymassa(
+            '1.2.246.562.29.00000000000000018308'
+          )
           cy.get('[data-test-id="show-results"]').click()
-          cy.get('[data-test-id="mass-review-notes-button"]').should('exist')
+          cy.get('[data-test-id="mass-review-notes-button"]').should(
+            'be.visible'
+          )
         })
       })
     }
