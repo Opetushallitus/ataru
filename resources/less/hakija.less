@@ -2612,6 +2612,7 @@ i.arkistoitu {
   text-align: center;
   display: flex;
   flex-direction: column;
+  padding: 15px 10px 0 0;
 
   .application__logged-in-name-container {
     float: bottom;
@@ -2620,7 +2621,10 @@ i.arkistoitu {
     text-align: center;
     align-items: center;
     justify-content: center;
-    padding-right: 10px;
+
+    @media only screen and (min-width: @desktop-content-width) {
+      padding-left: 10px;
+    }
 
     .zmdi {
       @media only screen and (max-width: @desktop-content-width) {
@@ -2647,14 +2651,16 @@ i.arkistoitu {
     padding-left: 12px;
   }
 }
-.application__logout-dropdown-content {
-   display: none;
-}
 
 .application__logout-dropdown-wrapper {
   align-items: center;
+  
+  .application__logout-dropdown-content {
+    display: none;
+  }
+
   .application__logout-dropdown-content-open {
-    box-shadow: 0px 2px 1px @grey;
+    box-shadow: 0 2px 1px @grey;
     border: 1px solid black;
     display: flex;
     color: @sg-color-green;
@@ -2672,13 +2678,13 @@ i.arkistoitu {
 
   @media only screen and (max-width: @desktop-content-width) {
     .application__logout-dropdown-content-open {
-      box-shadow: 0px 2px 1px @grey;
+      box-shadow: 0 2px 1px @grey;
       border: 1px solid black;
       display: flex;
       color: @sg-color-green;
       z-index: 100;
       position: fixed;
-      flex-direction: column;
+      right: 0;
       text-decoration: none;
       justify-content: flex-start;
     }
