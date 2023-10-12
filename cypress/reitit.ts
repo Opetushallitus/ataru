@@ -12,6 +12,9 @@ export const virkailija = {
 
   haeLomakkeenHakemuksetVirkailijanNakymassaOsoite: (lomakkeenAvain: string) =>
     `/lomake-editori/applications/${lomakkeenAvain}?ensisijaisesti=false`,
+
+  haeHaunHakemusListausOsoite: (hakuOid: string) =>
+    `/lomake-editori/applications/haku/${hakuOid}?ensisijaisesti=false`,
 }
 
 export const hakija = {
