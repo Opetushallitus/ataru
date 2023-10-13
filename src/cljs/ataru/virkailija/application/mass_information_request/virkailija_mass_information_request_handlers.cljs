@@ -71,6 +71,7 @@
   (fn [{:keys [db]} _]
     {:dispatch-n [[:application/set-mass-information-request-message ""]
                   [:application/set-mass-information-request-subject ""]
+                  [:application/set-mass-send-update-link false]
                   [:application/set-mass-information-request-form-state :enabled]
                   (when-let [current-application (-> db :application :selected-key)]
                     [:application/fetch-application current-application])]

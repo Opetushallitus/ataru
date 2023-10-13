@@ -167,11 +167,8 @@
      {:type      "checkbox"
       :checked   @checked?
       :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
-                               (dispatch [:application/set-send-update-link checkedNewValue])))}]
+                               (dispatch [:application/set-mass-send-update-link checkedNewValue])))}]
     [:span @(subscribe [:editor/virkailija-translation :send-update-link])]]])
-;  [:div.application-handling__information-request-row
-;   [:p.application-handling__information-request-contains-modification-link
-;    @(subscribe [:editor/virkailija-translation :edit-link-sent-automatically])]]
   )
 
 (defn haku-heading
