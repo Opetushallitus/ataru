@@ -1201,10 +1201,9 @@
    :applicant-email                                          {:fi "Lähetä sähköposti %d hakijalle"
                                                               :sv "Send %d applicant e-mail"
                                                               :en "Send %d applicant e-mail"}
-   :single-applicant-email                                   {:fi "Viestin mukana lähetetään hakemuksen muokkauslinkki"
-                                                              :sv "Viestin mukana lähetetään hakemuksen muokkauslinkki"
-                                                              :en "Viestin mukana lähetetään hakemuksen muokkauslinkki"}
-
+   :send-update-link                                         {:fi "Viestin mukana lähetetään hakemuksen muokkauslinkki"
+                                                              :sv "SV: Viestin mukana lähetetään hakemuksen muokkauslinkki"
+                                                              :en "EN: Viestin mukana lähetetään hakemuksen muokkauslinkki"}
    :guardian-email                                           {:fi "Lähetä sähköposti huoltajille"
                                                               :sv "Send guardian e-mail"
                                                               :en "Send guardian e-mail"}

@@ -50,7 +50,7 @@
                :checked   @checked?
                :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
                                         (dispatch [:application/set-send-update-link checkedNewValue])))}]
-             [:span @(subscribe [:editor/virkailija-translation :single-applicant-email])]]]]
+             [:span @(subscribe [:editor/virkailija-translation :send-update-link])]]]]
           [:div.application-handling__information-request-row
            (case @form-status
              (:disabled :enabled nil)

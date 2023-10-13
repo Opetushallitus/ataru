@@ -34,6 +34,11 @@
             (assoc-in [:application :mass-information-request :form-status] :enabled))))
 
 (reg-event-db
+ :application/set-mass-send-update-link
+ (fn [db [_ checkedNewValue] ]
+   (assoc-in db [:application :mass-send-update-link?-checkbox] checkedNewValue)))
+
+(reg-event-db
   :application/set-excel-request-included-ids
   (fn [db [_ included-ids]]
     (assoc-in db [:application :excel-request :included-ids] included-ids)))
@@ -43,13 +48,15 @@
   (fn [{:keys [db]} [_ recipient-target]]
     (let [message-and-subject (-> db :application :mass-information-request
                                   (select-keys [:message :subject]))
+          add-update-link (get-in db [:application :mass-send-update-link?-checkbox])
           application-keys    (map :key (get-in db [:application :applications]))]
       {:dispatch [:application/set-mass-information-request-form-state :submitting]
        :http     {:method              :post
                   :path                "/lomake-editori/api/applications/mass-information-request"
                   :params              {:application-keys    application-keys
                                         :recipient-target    recipient-target
-                                        :message-and-subject message-and-subject}
+                                        :message-and-subject message-and-subject
+                                        :add-update-link add-update-link}
                   :handler-or-dispatch :application/handle-submit-mass-information-request-response}})))
 
 (reg-event-fx
