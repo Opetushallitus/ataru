@@ -729,6 +729,7 @@
       (api/POST "/mass-information-request" {session :session}
         :body [body {:message-and-subject {:message s/Str
                                            :subject s/Str}
+                     :add-update-link     s/Bool
                      :recipient-target    s/Str
                      :application-keys    [s/Str]}]
         :summary "Send information requests to multiple applicants"
