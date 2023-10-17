@@ -3,16 +3,16 @@
 
 (defn synthetic-application->application
   [synthetic form-id]
-  (let [ssn (:hetu synthetic)
-        birth-date (or (:syntymaaika synthetic) (ssn/ssn->birth-date ssn))
+  (let [ssn (:henkilotunnus synthetic)
+        birth-date (or (:syntymaAika synthetic) (ssn/ssn->birth-date ssn))
         gender (or (:sukupuoli synthetic) (ssn/ssn->gender ssn))
         answers [{:key "hakukohteet" :value [(:hakukohdeOid synthetic)] :fieldType "hakukohteet" :label {:fi "Hakukohteet"}}
-                 {:key "first-name" :value (:etunimet synthetic) :fieldType "textField" :label {:fi "Etunimet"}}
+                 {:key "first-name" :value (:etunimi synthetic) :fieldType "textField" :label {:fi "Etunimet"}}
                  {:key "preferred-name" :value (:kutsumanimi synthetic) :fieldType "textField" :label {:fi "Kutsumanimi"}}
                  {:key "last-name" :value (:sukunimi synthetic) :fieldType "textField" :label {:fi "Sukunimi"}}
-                 {:key "phone" :value (:matkapuhelin synthetic) :fieldType "textField"  :label {:fi "Matkapuhelin"}}
-                 {:key "email" :value (:email synthetic) :fieldType "textField" :label {:fi "Sähköpostiosoite"}}
-                 {:key "ssn" :value (:hetu synthetic) :fieldType "textField" :label {:fi "Henkilötunnus"}}
+                 {:key "phone" :value (:puhelinnumero synthetic) :fieldType "textField"  :label {:fi "Matkapuhelin"}}
+                 {:key "email" :value (:sahkoposti synthetic) :fieldType "textField" :label {:fi "Sähköpostiosoite"}}
+                 {:key "ssn" :value (:henkilotunnus synthetic) :fieldType "textField" :label {:fi "Henkilötunnus"}}
                  {:key "nationality" :value [(:kansalaisuus synthetic)] :fieldType "dropdown" :label {:fi "Kansalaisuus"}}
                  {:key "gender" :value gender :fieldType "dropdown" :label {:fi "Sukupuoli"}}
                  {:key "birth-date" :value birth-date :fieldType "textField" :label {:fi "Syntymäaika"}}
@@ -20,15 +20,15 @@
                  {:key "passport-number" :value (:passinNumero synthetic) :fieldType "textField" :label {:fi "Passin numero"}}
                  {:key "national-id-number" :value (:idTunnus synthetic) :fieldType "textField" :label {:fi "Kansallinen ID-tunnus"}}
                  {:key "country-of-residence" :value (:asuinmaa synthetic) :fieldType "dropdown" :label {:fi "Asuinmaa"}}
-                 {:key "address" :value (:lahiosoite synthetic) :fieldType "textField" :label {:fi "Katuosoite"}}
+                 {:key "address" :value (:osoite synthetic) :fieldType "textField" :label {:fi "Katuosoite"}}
                  {:key "postal-code" :value (:postinumero synthetic) :fieldType "textField" :label {:fi "Postinumero"}}
                  {:key "postal-office" :value (:postitoimipaikka synthetic) :fieldType "textField" :label {:fi "Postitoimipaikka"}}
                  {:key "home-town" :value (:kotikunta synthetic) :fieldType "dropdown" :label {:fi "Kotikunta"}}
                  {:key "city" :value (:kaupunkiJaMaa synthetic) :fieldType "textField" :label {:fi "Kaupunki ja maa"}}
                  {:key "language" :value (:aidinkieli synthetic) :fieldType "dropdown" :label {:fi "Äidinkieli"}}
                  {:key "asiointikieli" :value (:asiointikieli synthetic) :fieldType "dropdown" :label {:fi "Asiointikieli"}}
-                 {:key "secondary-completed-base-education" :value (:toisenAsteenKoulutus synthetic) :fieldType "singleChoice" :label {:fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"}}
-                 {:key "secondary-completed-base-education–country" :value (:toisenAsteenKoulutusMaa synthetic) :fieldType "dropdown" :label {:fi "Suoritusmaa"}}]]
+                 {:key "secondary-completed-base-education" :value (:toisenAsteenSuoritus synthetic) :fieldType "singleChoice" :label {:fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"}}
+                 {:key "secondary-completed-base-education–country" :value (:toisenAsteenSuoritusmaa synthetic) :fieldType "dropdown" :label {:fi "Suoritusmaa"}}]]
         {:haku (:hakuOid synthetic)
          :hakukohde [(:hakukohdeOid synthetic)]
          :form form-id

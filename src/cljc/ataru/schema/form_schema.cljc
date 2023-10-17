@@ -924,26 +924,26 @@
 
    :hakuOid          s/Str
    :hakukohdeOid     s/Str
-   :sukunimi         s/Str
-   :etunimet         s/Str
+   :sukunimi         s/Str ; OK
+   :etunimi          s/Str ; OK
    :kutsumanimi      s/Str
-   :kansalaisuus     [s/Str]
-   :syntymaaika      (s/maybe s/Str)
+   :kansalaisuus     [s/Str] ; OK (ei array)
+   :syntymaAika      (s/maybe s/Str) ; OK
    :syntymapaikka    (s/maybe s/Str)
-   :hetu             (s/maybe s/Str)
-   :sukupuoli        (s/maybe s/Str)
+   :henkilotunnus    (s/maybe s/Str) ; OK
+   :sukupuoli        (s/maybe s/Str) ; OK
    :passinNumero     (s/maybe s/Str)
    :idTunnus         (s/maybe s/Str)
-   :email            s/Str
-   :matkapuhelin     s/Str
-   :asuinmaa         s/Str
-   :lahiosoite       s/Str
-   :postinumero      s/Str
-   :postitoimipaikka (s/maybe s/Str)
+   :sahkoposti       s/Str ; OK
+   :puhelinnumero    s/Str ; OK
+   :asuinmaa         s/Str ; OK
+   :osoite           s/Str ; OK
+   :postinumero      s/Str ; OK
+   :postitoimipaikka (s/maybe s/Str) ; OK
    :kaupunkiJaMaa    (s/maybe s/Str)
-   :kotikunta        (s/maybe s/Str)
-   :aidinkieli       s/Str
-   :asiointikieli    s/Str
+   :kotikunta        (s/maybe s/Str) ; OK
+   :aidinkieli       s/Str ; OK
+   :asiointikieli    s/Str ; OK
 
-   :toisenAsteenKoulutus    s/Str
-   :toisenAsteenKoulutusMaa (s/maybe s/Str)})
+   :toisenAsteenSuoritus    s/Str ; OK
+   :toisenAsteenSuoritusmaa (s/maybe s/Str)}) ; OK

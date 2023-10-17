@@ -4,77 +4,77 @@
   {:hakuOid          "1.2.246.562.29.93102260101"
    :hakukohdeOid     "1.2.246.562.20.49028196522"
    :sukunimi         "Ankka"
-   :etunimet         "Aku Fauntleroy"
+   :etunimi          "Aku Fauntleroy"
    :kutsumanimi      "Aku"
    :kansalaisuus     ["246"]
-   :syntymaaika      nil
+   :syntymaAika      nil
    :syntymapaikka    nil
-   :hetu             "010105A923H"
+   :henkilotunnus    "010105A923H"
    :sukupuoli        nil
    :passinNumero     nil
    :idTunnus         nil
-   :email            "aku.ankka@example.com"
-   :matkapuhelin     "050123"
+   :sahkoposti       "aku.ankka@example.com"
+   :puhelinnumero    "050123"
    :asuinmaa         "246"
-   :lahiosoite       "Paratiisitie 13"
+   :osoite           "Paratiisitie 13"
    :postinumero      "00013"
    :postitoimipaikka "Ankkalinna"
    :kotikunta        "273"
    :kaupunkiJaMaa    nil
    :aidinkieli       "FI"
    :asiointikieli    "1"
-   :toisenAsteenKoulutus "1"
-   :toisenAsteenKoulutusMaa nil
+   :toisenAsteenSuoritus "1"
+   :toisenAsteenSuoritusmaa nil
    })
 
 (def synthetic-application-foreign
   {:hakuOid          "1.2.246.562.29.93102260101"
    :hakukohdeOid     "1.2.246.562.20.49028196522"
    :sukunimi         "Duck"
-   :etunimet         "Donald Fauntleroy"
+   :etunimi          "Donald Fauntleroy"
    :kutsumanimi      "Donald"
    :kansalaisuus     ["840"]
-   :syntymaaika      "1.1.2001"
+   :syntymaAika      "1.1.2001"
    :syntymapaikka    "Duckburg, USA"
-   :hetu             nil
+   :henkilotunnus    nil
    :sukupuoli        "1"
    :passinNumero     "1234"
    :idTunnus         "333"
-   :email            "donald.duck@example.com"
-   :matkapuhelin     "050123"
+   :sahkoposti       "donald.duck@example.com"
+   :puhelinnumero    "050123"
    :asuinmaa         "840"
-   :lahiosoite       "1313 Webfoot Street"
+   :osoite           "1313 Webfoot Street"
    :postinumero      "00013"
    :postitoimipaikka nil
    :kotikunta        nil
    :kaupunkiJaMaa    "Duckburg, USA"
    :aidinkieli       "EN"
    :asiointikieli    "3"
-   :toisenAsteenKoulutus "0"
-   :toisenAsteenKoulutusMaa "840"})
+   :toisenAsteenSuoritus "0"
+   :toisenAsteenSuoritusmaa "840"})
 
 (def synthetic-application-malformed
   {:hakuOid          "1.2.246.562.29.93102260101"
    :hakukohdeOid     "1.2.246.562.20.49028196522"
    :sukunimi         "Duck"
-   :etunimet         "Donald Fauntleroy"
+   :etunimi          "Donald Fauntleroy"
    :kutsumanimi      "Donald"
    :kansalaisuus     ["840"]
-   :syntymaaika      nil
+   :syntymaAika      nil
    :syntymapaikka    "Duckburg, USA"
-   :hetu             nil
+   :henkilotunnus    nil
    :sukupuoli        "1"
    :passinNumero     "1234"
    :idTunnus         "333"
-   :email            "donald.duck@example.com"
-   :matkapuhelin     "050123"
+   :sahkoposti       "donald.duck@example.com"
+   :puhelinnumero    "050123"
    :asuinmaa         "840"
-   :lahiosoite       "1313 Webfoot Street"
+   :osoite           "1313 Webfoot Street"
    :postinumero      "00013"
    :postitoimipaikka nil
    :kotikunta        nil
    :kaupunkiJaMaa    "Duckburg, USA"
    :aidinkieli       "EN"
    :asiointikieli    "3"
-   :toisenAsteenKoulutus "0"
-   :toisenAsteenKoulutusMaa "840"})
+   :toisenAsteenSuoritus "0"
+   :toisenAsteenSuoritusmaa "840"})
