@@ -709,7 +709,7 @@
                                                                       application-in-processing?
                                                                       field-deadlines))
         person                     (if (= actor-role :virkailija)
-                                     (application-service/get-person application-service application)
+                                     (application-service/get-person application-service (dissoc application :person-oid))
                                      (when application
                                        (dissoc (application-service/get-person application-service (dissoc application :person-oid)) :ssn :birth-date)))
         full-application           (merge (some-> application
