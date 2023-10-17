@@ -711,7 +711,7 @@
         person                     (if (= actor-role :virkailija)
                                      (application-service/get-person application-service application)
                                      (when application
-                                       (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
+                                       (dissoc (application-service/get-person application-service (dissoc application :person-oid)) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
                                                   (attachments-metadata->answers liiteri-cas-client)
