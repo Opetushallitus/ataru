@@ -581,9 +581,9 @@
    :email-myos-pistevalinnassa                  {:fi "Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
-   :ht-lander-header                            {:fi "Miten haluat kirjautua hakulomakkeelle?"
-                                                 :sv "Miten haluat kirjautua hakulomakkeelle? sv"
-                                                 :en "Miten haluat kirjautua hakulomakkeelle? en"}
+   :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
+                                                 :sv "Miten haluat siirtyä hakulomakkeelle? sv"
+                                                 :en "Miten haluat siirtyä hakulomakkeelle? en"}
    :ht-lander-top-text                          {:fi "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto."
                                                  :sv "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. sv"
                                                  :en "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. en"}
@@ -593,9 +593,9 @@
    :ht-ilman-kirjautumista                      {:fi "Jatka ilman kirjautumista"
                                                  :sv "Jatka ilman kirjautumista sv"
                                                  :en "Jatka ilman kirjautumista en"}
-   :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ensin"
-                                                 :sv "Tunnistaudu ensin sv"
-                                                 :en "Tunnistaudu ensin en"}
+   :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ja täytä hakulomake"
+                                                 :sv "Tunnistaudu ja täytä hakulomake sv"
+                                                 :en "Tunnistaudu ja täytä hakulomake en"}
    :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
                                                  :sv "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. sv"
                                                  :en "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. en"}
@@ -626,9 +626,9 @@
    :ht-has-applied-lander-paragraph1            {:fi "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta."
                                                  :sv "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. sv"
                                                  :en "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. en"}
-   :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen."
-                                                 :sv "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen. sv"
-                                                 :en "Jos haluat muuttaa hakemustasi niin löydät muokkauslinkin sähköpostiviestistä jonka sait lähettäessäsi edellisen hakemuksen. en"}
+   :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun."
+                                                 :sv "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun. sv"
+                                                 :en "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun. en"}
    :ht-has-applied-lander-paragraph3            {:fi "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."
                                                  :sv "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. sv"
                                                  :en "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. en"}
@@ -656,9 +656,9 @@
    :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
-   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin."
-                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin. sv"
-                                                 :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin. en"}
+   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta."
+                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta. sv"
+                                                 :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta. en"}
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
                                                  :sv "Katso hakemustasi sv"
                                                  :en "Katso hakemustasi en"}
