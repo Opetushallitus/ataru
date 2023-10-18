@@ -22,6 +22,7 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
+    [ataru.person-service.person-util :as person-util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [cheshire.core :as json]
     [clj-time.core :as time]
@@ -647,7 +648,6 @@
    koodisto-cache
    ohjausparametrit-service
    organization-service
-   application-service
    tarjonta-service
    hakukohderyhma-settings-cache
    secret
@@ -709,9 +709,9 @@
                                                                       application-in-processing?
                                                                       field-deadlines))
         person                     (if (= actor-role :virkailija)
-                                     (application-service/get-person application-service application)
+                                     (person-util/person-info-from-application application)
                                      (when application
-                                       (dissoc (application-service/get-person application-service application) :ssn :birth-date)))
+                                       (dissoc (person-util/person-info-from-application application) :ssn :birth-date)))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
                                                   (attachments-metadata->answers liiteri-cas-client)
