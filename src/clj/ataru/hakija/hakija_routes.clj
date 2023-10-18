@@ -44,7 +44,6 @@
    koodisto-cache
    ohjausparametrit-service
    organization-service
-   application-service
    tarjonta-service
    hakukohderyhma-settings-cache
    audit-logger
@@ -56,7 +55,6 @@
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
                                                                      organization-service
-                                                                     application-service
                                                                      tarjonta-service
                                                                      hakukohderyhma-settings-cache
                                                                      secret
@@ -145,7 +143,6 @@
                           maksut-service
                           organization-service
                           ohjausparametrit-service
-                          application-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
@@ -249,7 +246,6 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             application-service
                              tarjonta-service
                              hakukohderyhma-settings-cache
                              audit-logger
@@ -262,7 +258,6 @@
                              koodisto-cache
                              ohjausparametrit-service
                              organization-service
-                             application-service
                              tarjonta-service
                              hakukohderyhma-settings-cache
                              audit-logger
