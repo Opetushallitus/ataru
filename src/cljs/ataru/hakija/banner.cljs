@@ -113,12 +113,13 @@
            [icons/icon-arrow-drop-up]
            [icons/icon-arrow-drop-down])]]
        [:div.application__logout-dropdown-wrapper
-        [:div.application__logout-dropdown-content {:class (when @menu-open? :application__logout-dropdown-content-open)}
-         [:i.material-icons-outlined.logout
-          {:title (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)} "logout"]
+        [:div.application__logout-dropdown-content
+         {:class (if @menu-open? :application__logout-dropdown-content-open :application__logout-dropdown-content-closed)}
          [:div.application__banner-logout-link
           {:on-click     #(logout-link-fn)
            :data-test-id "tunnistautuminen-button"}
+          [:i.material-icons
+           {:title (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)} "logout"]
           (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
 (defn send-button-or-placeholder []

@@ -2622,6 +2622,10 @@ i.arkistoitu {
     align-items: center;
     justify-content: center;
 
+    &:hover {
+      cursor: pointer;
+    }
+
     @media only screen and (min-width: @desktop-content-width) {
       padding-left: 10px;
     }
@@ -2652,27 +2656,35 @@ i.arkistoitu {
   }
 }
 
+@font-face {
+  font-family: 'Material Icons';
+  font-display: block;
+}
+
 .application__logout-dropdown-wrapper {
   align-items: center;
-  
-  .application__logout-dropdown-content {
+
+  .application__logout-dropdown-content-closed {
     display: none;
   }
 
   .application__logout-dropdown-content-open {
     box-shadow: 0 2px 1px @grey;
     border: 1px solid black;
-    display: flex;
     color: @sg-color-green;
     z-index: 100;
     position: fixed;
     padding: 12px;
     text-decoration: none;
     background-color: white;
-    justify-content: center;
 
-    .i {
-      padding-right: 5px;
+    .application__banner-logout-link {
+      display: flex;
+      justify-content: center;
+
+      &:hover {
+        cursor: pointer;
+      }
     }
   }
 
@@ -2903,12 +2915,17 @@ i.arkistoitu {
       }
 
       .application__ht-notification-close {
-        justify-content: flex-end;
         align-self: normal;
-        display: flex;
+        align-items: flex-start;
 
+        i {
+          display: flex;
+
+          &:hover {
+            cursor: pointer;
+          }
+        }
       }
-
     }
 
     p,
