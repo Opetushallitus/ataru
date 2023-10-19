@@ -745,6 +745,7 @@
           (do (information-request/mass-store
                 (-> (:message-and-subject body)
                     (assoc :recipient-target (:recipient-target body))
+                    (assoc :add-update-link (:add-update-link body))
                     (assoc :message-type "mass-information-request"))
                 (:application-keys body)
                 (get-in session [:identity :oid])

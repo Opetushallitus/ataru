@@ -165,6 +165,7 @@
    [:label
     [:input
      {:type      "checkbox"
+      :data-test-id "mass-send-update-link"
       :checked   @checked?
       :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
                                (dispatch [:application/set-mass-send-update-link checkedNewValue])))}]
