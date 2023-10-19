@@ -710,14 +710,13 @@
   :application/fetch-has-applied-for-oppija-session
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ session-data]]
-    (let [haku-oid @(subscribe [:state-query [:form :tarjonta :haku-oid]])
-          ssn (get-in session-data [:data :fields :ssn :value])
-          email (get-in session-data [:email :value])
-          yksiloiva-param (if ssn
-                            (str "&ssn=" ssn)
-                            (str "&email=" email))]
-      (if (and haku-oid
-               (or ssn email))
+    (let [haku-oid             @(subscribe [:state-query [:form :tarjonta :haku-oid]])
+          can-submit-multiple? @(subscribe [:state-query [:form :tarjonta :can-submit-multiple-applications]])
+          ssn                  (get-in session-data [:data :fields :ssn :value])
+          yksiloiva-param      (when ssn (str "&ssn=" ssn))]
+      (if (and (not can-submit-multiple?)
+               haku-oid
+               ssn)
         {:db   db
          :http {:method  :get
                 :url     (str "/hakemus/api/has-applied?hakuOid=" haku-oid yksiloiva-param)
