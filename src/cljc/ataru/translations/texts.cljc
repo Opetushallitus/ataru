@@ -611,12 +611,12 @@
    :ht-logout-confirmation-header               {:fi "Haluatko kirjautua ulos?"
                                                  :sv "Haluatko kirjautua ulos? sv"
                                                  :en "Haluatko kirjautua ulos? en"}
-   :ht-logout-confirmation-text                 {:fi "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
-                                                 :sv "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
-                                                 :en "Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
-   :ht-logout-confirmation-text-submitted       {:fi "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :)"
-                                                 :sv "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :) sv"
-                                                 :en "Olet jo jättänyt hakemuksen, eli et menetä mitään kirjautumalla ulos. :) en"}
+   :ht-logout-confirmation-text                 {:fi "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
+                                                 :sv "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
+                                                 :en "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
+   :ht-logout-confirmation-text-submitted       {:fi "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
+                                                 :sv "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. sv"
+                                                 :en "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. en"}
    :ht-kirjaudu-ulos                            {:fi "Kirjaudu ulos"
                                                  :sv "Kirjaudu ulos sv"
                                                  :en "Kirjaudu ulos en"}
@@ -656,9 +656,9 @@
    :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har tagits emot!"
                                                  :en "Your application has been received!"}
-   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta."
-                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta. sv"
-                                                 :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan hakemustasi myös myöhemmin Oma Opintopolku-palvelusta. en"}
+   :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
+                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. sv"
+                                                 :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. en"}
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
                                                  :sv "Katso hakemustasi sv"
                                                  :en "Katso hakemustasi en"}
