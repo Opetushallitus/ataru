@@ -27,6 +27,7 @@
             have-finnish-ssn? (not (clojure.string/blank? ssn))
             eidas? (some? (:personIdentifier parsed-raw-map))]
         {:person-oid (:personOid parsed-raw-map)
+         :eidas-id (:personIdentifier parsed-raw-map)
          :auth-type (if eidas? :eidas :vahva)
          :display-name (or (:givenName parsed-raw-map)
                            (first first-names))
@@ -34,7 +35,9 @@
                                              :locked true}
                       :preferred-name       {:value  (when preferred-name-valid? preferred-name)
                                              :locked preferred-name-valid?}
-                      :last-name            {:value  (:sn parsed-raw-map)
+                      :last-name            {:value  (or
+                                                       (:sn parsed-raw-map)
+                                                       (:familyName parsed-raw-map))
                                              :locked true}
                       :ssn                  {:value  ssn
                                              :locked true}
