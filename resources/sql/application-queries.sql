@@ -259,7 +259,7 @@ SELECT
   a.hakukohde,
   a.person_oid,
   las.secret,
-  (a.tunnistautuminen->'hakenut-tunnistautuneena') as tunnistautunut
+  (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications a
 JOIN LATERAL (SELECT secret
               FROM application_secrets
@@ -343,7 +343,7 @@ SELECT
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
    WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
-   (a.tunnistautuminen->'hakenut-tunnistautuneena') as tunnistautunut
+   (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM latest_applications AS a
 JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;

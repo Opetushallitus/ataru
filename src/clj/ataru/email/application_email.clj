@@ -253,7 +253,7 @@
                                                 (filter (comp not clojure.string/blank?))))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
-         application-url                 (if (:tunnistautunut application)
+         application-url                 (if (:tunnistautuminen application)
                                            (oma-opintopolku-link)
                                            (modify-link (:secret application)))
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)

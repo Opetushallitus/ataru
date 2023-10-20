@@ -24,8 +24,10 @@
             preferred-name (:givenName parsed-raw-map)
             preferred-name-valid? (contains? first-names preferred-name)
             ssn (:nationalIdentificationNumber parsed-raw-map)
-            have-finnish-ssn? (not (clojure.string/blank? ssn))]
+            have-finnish-ssn? (not (clojure.string/blank? ssn))
+            eidas? (some? (:personIdentifier parsed-raw-map))]
         {:person-oid (:personOid parsed-raw-map)
+         :auth-type (if eidas? :eidas :vahva)
          :display-name (or (:givenName parsed-raw-map)
                            (first first-names))
          :fields     {:first-name           {:value  (:firstName parsed-raw-map)

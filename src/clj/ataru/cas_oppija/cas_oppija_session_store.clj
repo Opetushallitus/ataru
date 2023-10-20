@@ -22,7 +22,9 @@
 (defn read-session [key]
   (log/info "Read session by key" key)
   (when key
-    (first (exec-conn :db yesql-read-oppija-session-query {:key key}))))
+    (if-let [full-session (first (exec-conn :db yesql-read-oppija-session-query {:key key}))]
+      (assoc full-session :logged-in true)
+      {:logged-in false})))
 
 (defn delete-session-by-ticket! [ticket]
   (log/warn "Deleting session with ticket " ticket)

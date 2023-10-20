@@ -330,12 +330,19 @@
         "Henkilöllä turvakielto!"])
      [scroll-to-anchor content]]
     (into [:div.application__wrapper-contents
-           (when (:tunnistautunut application)
-           [:div.application-handling__hakenut-tunnistautuneena-infobox
-            [:span.zmdi-hc-stack.zmdi-hc-lg
-             [:i.zmdi.zmdi-check-circle.zmdi-hc-stack-1x]]
-            [:div.application-handling__hakenut-tunnistautuneena-infobox-text
-             @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]])]
+           (cond
+             (= (:tunnistautuminen application) "vahva")
+             [:div.application-handling__hakenut-tunnistautuneena-infobox
+              [:span.application-handling__list-row--tunnistautunut-icon
+               [:img.logo-suomi-fi
+                {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
+                 :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+              [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+               @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]]
+             (= (:tunnistautuminen application) "eidas")
+             [:div.application-handling__hakenut-tunnistautuneena-infobox
+              [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+               @(subscribe [:editor/virkailija-translation :ht-eidas-tunnistautunut])]])]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
             [field child application hakukohteet-and-ryhmat lang nil true]))]])
