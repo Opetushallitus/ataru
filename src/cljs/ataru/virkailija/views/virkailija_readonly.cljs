@@ -329,14 +329,16 @@
         [:i.zmdi.zmdi-account-o]
         "Henkilöllä turvakielto!"])
      [scroll-to-anchor content]]
-    (into [:div.application__wrapper-contents]
+    (into [:div.application__wrapper-contents
+           (when (:tunnistautunut application)
+           [:div.application-handling__hakenut-tunnistautuneena-infobox
+            [:span.zmdi-hc-stack.zmdi-hc-lg
+             [:i.zmdi.zmdi-check-circle.zmdi-hc-stack-1x]]
+            [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+             @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]])]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
-            [field child application hakukohteet-and-ryhmat lang nil true]))
-    (when (:tunnistautunut application)
-      [:div.application-handling__hakenut-tunnistautuneena-infobox
-       [:div.application-handling__hakenut-tunnistautuneena-infobox-text
-        @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]])]])
+            [field child application hakukohteet-and-ryhmat lang nil true]))]])
 
 (defn- base-education-module-2nd
   [content application hakukohteet-and-ryhmat lang children]

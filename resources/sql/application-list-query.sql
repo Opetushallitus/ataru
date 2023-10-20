@@ -171,7 +171,8 @@ SELECT a.id,
                                             'state', state,
                                             'hakukohde', hakukohde))
         FROM application_hakukohde_attachment_reviews
-        WHERE application_key = a.key) AS "application-attachment-reviews"
+        WHERE application_key = a.key) AS "application-attachment-reviews",
+       (a.tunnistautuminen->'hakenut-tunnistautuneena') as tunnistautunut
 FROM applications AS a
 LEFT JOIN applications AS la
   ON la.key = a.key AND

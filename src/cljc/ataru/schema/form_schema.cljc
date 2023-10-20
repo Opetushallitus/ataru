@@ -437,7 +437,8 @@
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
-   :eligibility-set-automatically                   [s/Str]})
+   :eligibility-set-automatically                   [s/Str]
+   (s/optional-key :tunnistautunut)                 (s/maybe s/Bool)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
