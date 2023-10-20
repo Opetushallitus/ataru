@@ -194,28 +194,36 @@
           (log/warn "Something went wong when processing logout request..."))))
     (api/GET "/oppija/logout" [:as request]
       :query-params [{lang :- s/Str nil}]
-      (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
-            result (oss/delete-session-by-key! oppija-session-key)
-            destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
-        (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
-        (audit-log/log audit-logger
-                       {:new       {}
-                        :operation audit-log/operation-oppija-logout
-                        :session   (:session request)
-                        :id        {:oppija-session oppija-session-key}})
-        (response/found destination)))
+      (try
+        (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
+              result (oss/delete-session-by-key! oppija-session-key)
+              destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
+          (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
+          (audit-log/log audit-logger
+                         {:new       {}
+                          :operation audit-log/operation-oppija-logout
+                          :session   (:session request)
+                          :id        {:oppija-session oppija-session-key}})
+          (response/found destination))
+        (catch Exception e
+          (log/error e "Virhe oppijan uloskirjautumisessa.")
+          (response/internal-server-error))))
     (api/GET "/session" [:as request]
-      (let [oppija-session (get-in request [:cookies "oppija-session" :value])
-            session (oss/read-session oppija-session)
-            trimmed-session (if session
-                              {:fields (get-in session [:data :fields])
-                               :display-name (get-in session [:data :display-name])
-                               :auth-type (get-in session [:data :auth-type])
-                               :logged-in (:logged-in session)
-                               :expires-soon (:expires_soon session)}
-                              {:logged-in false})]
-        (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
-        (response/ok trimmed-session)))))
+      (try
+        (let [oppija-session (get-in request [:cookies "oppija-session" :value])
+              session (oss/read-session oppija-session)
+              trimmed-session (if session
+                                {:fields (get-in session [:data :fields])
+                                 :display-name (get-in session [:data :display-name])
+                                 :auth-type (get-in session [:data :auth-type])
+                                 :logged-in (:logged-in session)
+                                 :expires-soon (:expires_soon session)}
+                                {:logged-in false})]
+          (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
+          (response/ok trimmed-session))
+        (catch Exception e
+          (log/error e "Virhe haettaessa oppijan sessiota.")
+          (response/internal-server-error))))))
 
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
