@@ -90,7 +90,7 @@
 
 (defn logged-in-indicator-or-placeholder []
   (let [lang (subscribe [:application/form-language])
-        logged-in-name (subscribe [:state-query [:oppija-session :data :display-name]])
+        logged-in-name (subscribe [:state-query [:oppija-session :display-name]])
         logged-in? (subscribe [:state-query [:oppija-session :logged-in]])
         menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])
         submit-status (subscribe [:state-query [:application :submit-status]])

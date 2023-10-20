@@ -156,28 +156,32 @@
       :query-params [{ticket :- s/Str nil}
                      {target :- s/Str nil}
                      {lang :- s/Str nil}]
-      ;fixme ehkä, pitäisikö myös tarkistaa onko jo voimassaoleva sessio?
       (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
-      (if (nil? ticket)
-        (response/found
-          (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target))
-        (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
-                     (:body))
-              parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
-          (log/info "Cas-oppija-response" rs  ", attributes" parsed-attributes)
-          (if parsed-attributes
-            (let [new-session-key (generate-new-random-key)]
-              (audit-log/log audit-logger
-                             {:new       parsed-attributes
-                              :operation audit-log/operation-oppija-login
-                              :session   (:session request)
-                              :id        {:oppija-session new-session-key}})
-              (oss/persist-session! new-session-key ticket parsed-attributes)
-              (-> (response/found target)
-                  (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
-                                                                     :path "/hakemus"})))))
-            ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
-            (response/bad-request)))))
+      (try
+        (if (nil? ticket)
+          (response/found
+            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target))
+          (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
+                       (:body))
+                parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
+            (log/info "Cas-oppija-response" rs  ", attributes" parsed-attributes)
+            (if parsed-attributes
+              (let [new-session-key (generate-new-random-key)]
+                (audit-log/log audit-logger
+                               {:new       parsed-attributes
+                                :operation audit-log/operation-oppija-login
+                                :session   (:session request)
+                                :id        {:oppija-session new-session-key}})
+                (oss/persist-session! new-session-key ticket parsed-attributes)
+                (-> (response/found target)
+                    (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
+                                                                       :path "/hakemus"})))))
+              ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
+              (response/bad-request))))
+        (catch Exception e
+          (log/error e "Virhe oppijan tunnistautumisessa.")
+          (response/found
+            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))))
     (api/POST "/oppija" [:as request]
       (let [body (ring.util.request/body-string request)]
         (log/info "Received request for logout:" body)
@@ -203,9 +207,13 @@
     (api/GET "/session" [:as request]
       (let [oppija-session (get-in request [:cookies "oppija-session" :value])
             session (oss/read-session oppija-session)
-            trimmed-session {:data (:data session)
-                             :logged-in (boolean session)
-                             :expires-soon (boolean (:expires_soon session))}]
+            trimmed-session (if session
+                              {:fields (get-in session [:data :fields])
+                               :display-name (get-in session [:data :display-name])
+                               :auth-type (get-in session [:data :auth-type])
+                               :logged-in (:logged-in session)
+                               :expires-soon (:expires_soon session)}
+                              {:logged-in false})]
         (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
         (response/ok trimmed-session)))))
 

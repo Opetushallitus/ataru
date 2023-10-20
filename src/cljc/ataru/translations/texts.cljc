@@ -2377,7 +2377,10 @@
                                                               :en "EN: Virhe hakemuksen valintojen hakemisessa"}
    :ht-hakenut-vahvasti-tunnistautuneena                     {:fi "Hakija on vahvasti tunnistautunut."
                                                               :sv "SV: Hakija on vahvasti tunnistautunut."
-                                                              :en "EN: Hakija on vahvasti tunnistautunut."}})
+                                                              :en "EN: Hakija on vahvasti tunnistautunut."}
+   :ht-eidas-tunnistautunut                                  {:fi "Hakija on eidas-tunnistautunut."
+                                                              :sv "SV: Hakija on eidas-tunnistautunut."
+                                                              :en "EN: Hakija on eidas-tunnistautunut."}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"

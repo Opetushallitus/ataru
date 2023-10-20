@@ -248,11 +248,18 @@
        [:span.application-handling__list-row--applicant-name (or applicant [:span.application-handling__list-row--applicant-unknown
                                                                             @(subscribe [:editor/virkailija-translation :unknown])])]
        [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]
-       (when (:tunnistautunut application)
+       (cond
+         (= (:tunnistautuminen application) "vahva")
          [:span.application-handling__list-row--tunnistautunut-icon
           [:img.logo-suomi-fi
            {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
-            :src "/lomake-editori/images/suomifi_16x16.svg"}]])]
+            :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+         ;(= (:tunnistautuminen application) "eidas")
+         ;[:span.application-handling__list-row--tunnistautunut-icon
+         ; [:img.logo-suomi-fi
+         ;  {:title @(subscribe [:editor/virkailija-translation :ht-eidas-tunnistautunut])
+         ;   :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+         )]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]
