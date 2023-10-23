@@ -712,7 +712,7 @@
   (fn [{:keys [db]} [_ session-data]]
     (let [haku-oid             @(subscribe [:state-query [:form :tarjonta :haku-oid]])
           can-submit-multiple? @(subscribe [:state-query [:form :tarjonta :can-submit-multiple-applications]])
-          ssn                  (get-in session-data [:data :fields :ssn :value])
+          ssn                  (get-in session-data [:fields :ssn :value])
           yksiloiva-param      (when ssn (str "&ssn=" ssn))]
       (if (and (not can-submit-multiple?)
                haku-oid
