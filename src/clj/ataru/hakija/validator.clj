@@ -278,7 +278,7 @@
 (defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session]
   (when oppija-session
     (let [validation-result (for [[key answer] answers-by-key]
-                              (let [session-data (get-in oppija-session [:fields key])
+                              (let [session-data (get-in oppija-session [:data :fields key])
                                     oppija-session-value (:value session-data)
                                     hakemus-value (:value answer)
                                     locked? (:locked session-data)]
