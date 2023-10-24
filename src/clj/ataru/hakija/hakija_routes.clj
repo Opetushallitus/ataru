@@ -43,6 +43,7 @@
   [form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
+   application-service
    organization-service
    tarjonta-service
    hakukohderyhma-settings-cache
@@ -54,6 +55,7 @@
         (hakija-application-service/get-latest-application-by-secret form-by-id-cache
                                                                      koodisto-cache
                                                                      ohjausparametrit-service
+                                                                     application-service
                                                                      organization-service
                                                                      tarjonta-service
                                                                      hakukohderyhma-settings-cache
@@ -143,6 +145,7 @@
                           maksut-service
                           organization-service
                           ohjausparametrit-service
+                          application-service
                           koodisto-cache
                           form-by-id-cache
                           form-by-haku-oid-str-cache
@@ -245,6 +248,7 @@
             (get-application form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
+                             application-service
                              organization-service
                              tarjonta-service
                              hakukohderyhma-settings-cache
@@ -257,6 +261,7 @@
             (get-application form-by-id-cache
                              koodisto-cache
                              ohjausparametrit-service
+                             application-service
                              organization-service
                              tarjonta-service
                              hakukohderyhma-settings-cache

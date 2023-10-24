@@ -36,6 +36,7 @@
     [cheshire.core :as json]
     [clojure.set :as set]
     [clojure.string :as str]
+    [ataru.person-service.person-util :as person-util]
     [ataru.valintalaskentakoostepalvelu.valintalaskentakoostepalvelu-protocol :as valintalaskentakoostepalvelu])
   (:import
     java.io.ByteArrayInputStream
@@ -372,8 +373,13 @@
       (map (partial enrich-with-harkinnanvaraisuustieto tarjonta-service))
       (map (partial question-util/assoc-deduced-vakio-answers-for-toinen-aste-application questions)))))
 
+(defn- application-has-ssn [application]
+  (let [answers (util/answers-by-key (:answers application))]
+    (util/not-blank? (-> answers :ssn :value))))
+
 (defprotocol ApplicationService
   (get-person [this application])
+  (get-person-for-securelink [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
   (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
   (save-application-review [this session review])
@@ -412,6 +418,18 @@
     (let [person-from-onr (some->> (:person-oid application)
                                    (person-service/get-person person-service))]
       (person-service/parse-person application person-from-onr)))
+
+  ;Jos hakemuksella on hetu, palautetaan hakemuksen henkilö.
+  ;Jos hakemuksella ei ole hetua, palautetaan onr-henkilö PAITSI jos onr-henkilöllä on hetu.
+  (get-person-for-securelink
+    [_ application]
+    (if (application-has-ssn application)
+      (person-util/person-info-from-application application)
+      (let [person-from-onr (some->> (:person-oid application)
+                                     (person-service/get-person person-service))]
+        (if (util/not-blank? (:hetu person-from-onr))
+          (person-util/person-info-from-application application)
+          (person-service/parse-person application person-from-onr)))))
 
   ;;  Get application that has human-readable koodisto values populated
   ;;  onto raw koodi values."
