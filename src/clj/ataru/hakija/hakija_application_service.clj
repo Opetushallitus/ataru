@@ -348,6 +348,12 @@
     (when (not-empty hakeminen-tunnistautuneena-validation-errors)
       (log/error "Error(s) when validating fields from oppija-session: " (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
+      (not-empty hakeminen-tunnistautuneena-validation-errors)
+      {:passed? false
+       :failures ["Supplied application answers do not match fields from oppija-session."]
+       :key  nil
+       :code :internal-server-error}
+
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
       {:passed? false
