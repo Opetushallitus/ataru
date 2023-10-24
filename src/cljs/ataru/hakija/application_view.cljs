@@ -103,12 +103,16 @@
         delivery-status        (subscribe [:state-query [:application :secret-delivery-status]])
         lang                   (subscribe [:application/form-language])
         secret-link-valid-days (config/get-public-config [:secret-link-valid-days])
-        demo?                  (subscribe [:application/demo?])]
+        demo?                  (subscribe [:application/demo?])
+        demo-modal-open?       (subscribe [:application/demo-modal-open?])]
     (fn []
       (let [root-element (if @demo?
                            :div.application__form-content-area.application__form-content-area--demo
                            :div.application__form-content-area)]
         [root-element
+         (when @demo-modal-open?
+           {:visibility "hidden"
+            :display "none"})
          (when-not (or @load-failure?
                      @form)
            [:div.application__form-loading-spinner
@@ -128,9 +132,10 @@
             [:p (translations/get-hakija-translation :expired-secret-contact @lang)]])
 
          ^{:key (:id @form)}
-         [application-header]
+         (when (not @demo-modal-open?)
+           [application-header])
 
-         (when (or @can-apply? @editing?)
+         (when (and (not @demo-modal-open?) (or @can-apply? @editing?))
            ^{:key "form-fields"}
            [render-fields @form])]))))
 
@@ -357,16 +362,27 @@
           (if (and @demo-requested? @demo-open?)
             [:div.application__notification-overlay
              [:div.application__notification-container
+             {:role "alertdialog"
+              :aria-modal "true"
+              :aria-live "polite"
+              :aria-labelledby "demo-notification-title demo-notification-p"}
               [:h1.application__notification-title
+               {:id "demo-notification-title"}
                (translations/get-hakija-translation :demo-notification-title (keyword @demo-lang))]
-              [:p (translations/get-hakija-translation :demo-notification (keyword @demo-lang))]
+              [:p
+               {:id "demo-notification-p"}
+               (translations/get-hakija-translation :demo-notification (keyword @demo-lang))]
               [:button.application__overlay-button.application__overlay-button--enabled.application__notification-button
-               {:on-click     #(dispatch [:application/close-demo-modal])
-                :data-test-id "dismiss-demo-notification-button"}
+               {:on-click        #(dispatch [:application/close-demo-modal])
+                :data-test-id    "dismiss-demo-notification-button"
+                :tab-index       "1"}
                (translations/get-hakija-translation :dismiss-demo-notification (keyword @demo-lang))]]]
 
             [:div.application__notification-overlay
              [:div.application__notification-container
+             {:role "alertdialog"
+              :aria-modal "true"
+              :aria-live "polite"}
               [:h1.application__notification-title
                (translations/get-hakija-translation :demo-closed-title (keyword @demo-lang))]
               [:p text1
