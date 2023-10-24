@@ -97,8 +97,7 @@
         logout-link-fn (fn []
                          (dispatch [:application/toggle-logout-menu])
                          (dispatch [:application/set-active-notification-modal {:header (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
-                                                                                :main-text (if (= @submit-status :submitted)
-                                                                                             (translations/get-hakija-translation :ht-logout-confirmation-text-submitted @lang)
+                                                                                :main-text (when (not= @submit-status :submitted)
                                                                                              (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
                                                                                 :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
                                                                                 :on-click (fn [_] (dispatch [:application/redirect-to-logout (name @lang)]))}]))]

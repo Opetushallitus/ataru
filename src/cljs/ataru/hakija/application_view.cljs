@@ -475,7 +475,8 @@
             :aria-label (translations/get-hakija-translation :close @lang)
             :title      (translations/get-hakija-translation :close @lang)}
            "close"]]]
-        [:p.application__ht-notification-main-text main-text]
+        (when (not-empty main-text)
+          [:p.application__ht-notification-main-text main-text])
         [:button.application__ht-notification-button.application__ht-notification-button--enabled
          {:on-click on-click}
          button-text]]])))
