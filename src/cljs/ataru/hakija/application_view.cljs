@@ -459,7 +459,8 @@
            (translations/get-hakija-translation :ht-jatka-palvelun-kayttoa @lang)]]]))))
 
 (defn- ht-notification-modal []
-  (let [params @(subscribe [:state-query [:application :notification-modal]])
+  (let [lang (subscribe [:application/form-language])
+        params @(subscribe [:state-query [:application :notification-modal]])
         {:keys [header main-text button-text on-click]} params]
     (when params
       [:div.application__ht-notification-overlay
@@ -470,8 +471,9 @@
             header)]
          [:div.application__ht-notification-close
           [:i.material-icons-outlined
-           {:on-click     #(dispatch [:application/set-active-notification-modal nil])
-            :aria-label (get (:close general-texts) :fi)}
+           {:on-click   #(dispatch [:application/set-active-notification-modal nil])
+            :aria-label (translations/get-hakija-translation :close @lang)
+            :title      (translations/get-hakija-translation :close @lang)}
            "close"]]]
         [:p.application__ht-notification-main-text main-text]
         [:button.application__ht-notification-button.application__ht-notification-button--enabled

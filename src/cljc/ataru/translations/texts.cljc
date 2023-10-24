@@ -128,6 +128,9 @@
    :clear                                       {:fi "Tyhjennä"
                                                  :sv "Töm"
                                                  :en "Clear"}
+   :close                                       {:fi "Sulje"
+                                                 :sv "Stäng"
+                                                 :en "Close"}
    :contact-language                            {:fi "Asiointikieli"
                                                  :sv "Ärendespråk"
                                                  :en "Contact language"}
