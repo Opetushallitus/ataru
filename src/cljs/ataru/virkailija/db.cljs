@@ -86,7 +86,7 @@
                                 :mass-information-request          {:form-status :disabled}
                                 :mass-review-notes                 {:form-status :disabled}
                                 :single-information-request        {:form-status :disabled}
-                                :send-update-link?                 false
+                                :mass-send-update-link?-checkbox   false
                                 :send-update-link?-checkbox        false
                                 :filters                           default-filters
                                 :filters-checkboxes                default-filters

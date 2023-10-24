@@ -437,6 +437,10 @@
   (fn [db]
     (get-in db [:application :mass-information-request :visible?])))
 (re-frame/reg-sub
+ :application/is-mass-information-link-checkbox-set?
+ (fn [db]
+   (get-in db [:application :mass-send-update-link?-checkbox])))
+(re-frame/reg-sub
   :application/single-information-request-popup-visible?
   (fn [db]
     (get-in db [:application :single-information-request :visible?])))
