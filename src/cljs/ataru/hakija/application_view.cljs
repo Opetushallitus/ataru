@@ -121,7 +121,10 @@
        [:img.logo-suomi-fi
         {:src "/hakemus/images/suomifi_tunnus.svg"}]
        [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]]
-      [:p (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
+      [:p.application__hakeminen-tunnistautuneena-lander-main-text
+       [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]
+       [:span.application__hakeminen-tunnistautuneena-lander-main-text-bold
+        (translations/get-hakija-translation :ht-tunnistaudu-ensin-text-end-bold lang)]]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
         :data-test-id "tunnistautuminen-button"}

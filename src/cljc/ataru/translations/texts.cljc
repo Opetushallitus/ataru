@@ -602,6 +602,9 @@
    :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti."
                                                  :sv "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. sv"
                                                  :en "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. en"}
+   :ht-tunnistaudu-ensin-text-end-bold          {:fi "Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
+                                                 :sv "Yhteystietojasi voit kuitenkin muokata hakulomakkeella. sv"
+                                                 :en "Yhteystietojasi voit kuitenkin muokata hakulomakkeella. en"}
    :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman tunnistautumista"
                                                  :sv "Täytä hakulomake ilman tunnistautumista sv"
                                                  :en "Täytä hakulomake ilman tunnistautumista en"}
