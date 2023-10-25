@@ -55,6 +55,8 @@
         [:span label]])]))
 
 (defn- review-state-row [state-name current-review-state lang multiple-values? [review-state-id review-state-label]]
+  (js/console.log "review-state")
+  (js/console.log review-state-id)
   (if (or (= current-review-state review-state-id)
           multiple-values?)
     [review-state-selected-row state-name #() (get review-state-label lang) multiple-values?]
@@ -283,38 +285,42 @@
                                                              @current-hakukohteet)))
               multiple-values? (< 1 (count review-states-for-hakukohteet))
               review-state-for-current (when-not multiple-values? (first review-states-for-hakukohteet))]
-          [:div.application-handling__review-state-container
-           {:class (str "application-handling__review-state-container-" (name kw))}
-           (when @settings-visible?
-             [review-settings-checkbox kw])
-           [:div.application-handling__review-header
-            {:class (str "application-handling__review-header--" (name kw))}
-            [:span (util/non-blank-val label [@lang :fi :sv :en])]
-            (cond (and (= :eligibility-state kw)
-                       @eligibility-automatically-checked?)
-                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
-                  (and (= :payment-obligation kw)
-                       @payment-obligation-automatically-checked?)
-                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title @(subscribe [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
-           [:div.application-handling__review-state-list-container
-            (if @list-opened
-              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                     {:on-click list-click}]
-                    (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
-              [:div.application-handling__review-state-list
-               [review-state-selected-row
-                kw
-                list-click
-                (application-states/get-review-state-label-by-name
-                  states
-                  (or review-state-for-current (ffirst states))
-                  @lang)
-                multiple-values?]])
-            (when (and (= :eligibility-state kw)
-                       (= "uneligible" review-state-for-current))
-              [review-state-comment kw])]])))))
+          (when (not (= :processing-state kw))
+            [:div.application-handling__review-state-container
+             {:class (str "application-handling__review-state-container-" (name kw))}
+             (when @settings-visible?
+               [review-settings-checkbox kw])
+             [:div.application-handling__review-header
+              {:class (str "application-handling__review-header--" (name kw))}
+              [:span (util/non-blank-val label [@lang :fi :sv :en])]
+              (cond (and (= :eligibility-state kw)
+                         @eligibility-automatically-checked?)
+                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                 {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
+                (and (= :payment-obligation kw)
+                     @payment-obligation-automatically-checked?)
+                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                 {:title @(subscribe
+                           [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
+             [:div.application-handling__review-state-list-container
+              (if @list-opened
+                (into
+                 [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                  {:on-click list-click}]
+                 (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
+                [:div.application-handling__review-state-list
+                 [review-state-selected-row
+                  kw
+                  list-click
+                  (application-states/get-review-state-label-by-name
+                   states
+                   (or review-state-for-current (ffirst states))
+                   @lang)
+                  multiple-values?]])
+              (when
+                (and (= :eligibility-state kw)
+                     (= "uneligible" review-state-for-current))
+                [review-state-comment kw])]]))))))
 
 (defn- ehdollisesti-hyvaksyttavissa
   []
