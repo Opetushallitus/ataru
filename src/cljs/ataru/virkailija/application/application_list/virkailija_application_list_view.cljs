@@ -87,6 +87,7 @@
                                                                             hakukohde-oid]))
         korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
     [:span.application-handling__hakukohde-vastaanotto-cell
+     {:data-test-id "list-hakukohde-vastaanotto-state"}
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
       (if kevyt-valinta-enabled-for-application-and-hakukohde?
         (let [kevyt-valinta-property-exists? (some? @(subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key hakukohde-oid]))
@@ -122,6 +123,7 @@
                                                                             application-key
                                                                             hakukohde-oid]))]
     [:span.application-handling__hakukohde-selection-cell
+     {:data-test-id "list-hakukohde-selection-state"}
      [:span.application-handling__hakukohde-selection.application-handling__application-list-view-cell
       (let [css-modifier-prefix (cond (and kevyt-valinta-enabled-for-application-and-hakukohde?
                                            (= "KESKEN" kevyt-valinta-property-value))
@@ -168,7 +170,8 @@
         application-hakukohde-reviews (group-by #(vector (:hakukohde %) (:requirement %))
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
-        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])]
+        selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
+        opinto-ohjaaja                (subscribe [:editor/opinto-ohjaaja?])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -200,23 +203,25 @@
                         (:attachment-handling review-settings true))
                [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
-              [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
-               [:span.application-handling__state-label
-                {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
-               (or
-                 (application-states/get-review-state-label-by-name
+              (when (not @opinto-ohjaaja)
+                [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
+                 {:data-test-id "list-hakukohde-handling-state"}
+                 [:span.application-handling__state-label
+                  {:class (str "application-handling__state-label--" (or processing-state "unprocessed"))}]
+                 (or
+                  (application-states/get-review-state-label-by-name
                    review-states/application-hakukohde-processing-states
                    processing-state
                    @lang)
-                 @(subscribe [:editor/virkailija-translation :unprocessed]))
-               (when show-state-email-icon?
-                 [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])]]
-             (when (:selection-state review-settings true)
+                  @(subscribe [:editor/virkailija-translation :unprocessed]))
+                 (when show-state-email-icon?
+                   [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])])]
+             (when (and (not opinto-ohjaaja) (:selection-state review-settings true))
                [hakemuksen-valinnan-tila-sarake {:application-key               (:key application)
                                                  :hakukohde-oid                 hakukohde-oid
                                                  :application-hakukohde-reviews application-hakukohde-reviews
                                                  :lang                          @lang}])
-             (when (:vastaanotto-state review-settings true)
+             (when (and (not opinto-ohjaaja) (:vastaanotto-state review-settings true))
                [hakemuksen-vastaanoton-tila-sarake {:application-key               (:key application)
                                                     :hakukohde-oid                 hakukohde-oid}])]))
         application-hakukohde-oids))))
@@ -834,7 +839,8 @@
   (let [review-settings (subscribe [:state-query [:application :review-settings :config]])
         form-key        @(subscribe [:application/selected-form-key])
         tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])
-        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
+        korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])
+        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
@@ -853,50 +859,54 @@
           :state-counts-subs
           {:attachment-state-filter
            @(subscribe [:state-query [:application :attachment-state-counts]])}}]])
-     [:div.application-handling__list-row--state
-      [hakukohde-state-filter-controls
-       {:title
-        @(subscribe [:editor/virkailija-translation :processing-state])
-        :states
-        {:processing-state-filter
-         (if tutu-form?
-            review-states/application-hakukohde-processing-states
-            review-states/application-hakukohde-processing-states-normal)}
-        :state-counts-subs
-        {:processing-state-filter
-         @(subscribe [:state-query [:application :review-state-counts]])}}]]
-     (when (:selection-state @review-settings true)
-       [:div.application-handling__list-row--selection
+     (when (not @opinto-ohjaaja)
+       [:div.application-handling__list-row--state
+        {:data-test-id "processing-state-filter"}
         [hakukohde-state-filter-controls
          {:title
-          @(subscribe [:editor/virkailija-translation :selection])
-          :filter-titles
-          {:selection-state-filter
-           :valintakasittelymerkinta
-           :kevyt-valinta-selection-state-filter
-           :valinnan-tila}
+          @(subscribe [:editor/virkailija-translation :processing-state])
           :states
-          {:selection-state-filter
-           review-states/application-hakukohde-selection-states
-           :kevyt-valinta-selection-state-filter
-           review-states/kevyt-valinta-valinnan-tila-selection-states}
+          {:processing-state-filter
+           (if tutu-form?
+             review-states/application-hakukohde-processing-states
+             review-states/application-hakukohde-processing-states-normal)}
           :state-counts-subs
-          {:selection-state-filter
-           @(subscribe [:state-query [:application :selection-state-counts]])
-           :kevyt-valinta-selection-state-filter
-           @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])
-     (when (:selection-state @review-settings true)
-       [:div.application-handling__list-row--vastaanotto
-        [hakukohde-state-filter-controls
-         {:kk? korkeakouluhaku?
-          :title
-          @(subscribe [:editor/virkailija-translation :vastaanotto])
-          :filter-titles
-          {:kevyt-valinta-vastaanotto-state-filter
-           :vastaanotto}
-          :states
-          {:kevyt-valinta-vastaanotto-state-filter
-           (review-states/kevyt-valinta-vastaanoton-tila-selection-states korkeakouluhaku?)}
-          :state-counts-subs
-          {:kevyt-valinta-vastaanotto-state-filter
-           @(subscribe [:state-query [:application :kevyt-valinta-vastaanotto-state-counts]])}}]])]))
+          {:processing-state-filter
+           @(subscribe [:state-query [:application :review-state-counts]])}}]]
+       (when (:selection-state @review-settings true)
+         [:div.application-handling__list-row--selection
+          {:data-test-id "selection-state-filter"}
+          [hakukohde-state-filter-controls
+           {:title
+            @(subscribe [:editor/virkailija-translation :selection])
+            :filter-titles
+            {:selection-state-filter
+             :valintakasittelymerkinta
+             :kevyt-valinta-selection-state-filter
+             :valinnan-tila}
+            :states
+            {:selection-state-filter
+             review-states/application-hakukohde-selection-states
+             :kevyt-valinta-selection-state-filter
+             review-states/kevyt-valinta-valinnan-tila-selection-states}
+            :state-counts-subs
+            {:selection-state-filter
+             @(subscribe [:state-query [:application :selection-state-counts]])
+             :kevyt-valinta-selection-state-filter
+             @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])
+       (when (:selection-state @review-settings true)
+         [:div.application-handling__list-row--vastaanotto
+          {:data-test-id "vastaanotto-state-filter"}
+          [hakukohde-state-filter-controls
+           {:kk? korkeakouluhaku?
+            :title
+            @(subscribe [:editor/virkailija-translation :vastaanotto])
+            :filter-titles
+            {:kevyt-valinta-vastaanotto-state-filter
+             :vastaanotto}
+            :states
+            {:kevyt-valinta-vastaanotto-state-filter
+             (review-states/kevyt-valinta-vastaanoton-tila-selection-states korkeakouluhaku?)}
+            :state-counts-subs
+            {:kevyt-valinta-vastaanotto-state-filter
+             @(subscribe [:state-query [:application :kevyt-valinta-vastaanotto-state-counts]])}}]]))]))
