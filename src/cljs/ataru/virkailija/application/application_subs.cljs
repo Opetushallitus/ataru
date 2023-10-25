@@ -886,6 +886,14 @@
     (get-in db [:editor :user-info :superuser?])))
 
 (re-frame/reg-sub
+ :application/review-states-hidden?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+    (re-frame/subscribe [:editor/opinto-ohjaaja?])])
+ (fn [[toisen-asteen-yhteishaku? opinto-ohjaaja?] _]
+   (and toisen-asteen-yhteishaku? opinto-ohjaaja?)))
+
+(re-frame/reg-sub
   :application/single-information-request-allowed?
   (fn [_ _]
     [(re-frame/subscribe [:application/can-edit-application?])
