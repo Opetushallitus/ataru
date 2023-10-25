@@ -171,7 +171,7 @@
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
-        opinto-ohjaaja                (subscribe [:editor/opinto-ohjaaja?])]
+        review-states-hidden? (subscribe [:application/review-states-hidden?])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -203,7 +203,7 @@
                         (:attachment-handling review-settings true))
                [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
-              (when (not @opinto-ohjaaja)
+              (when (not @review-states-hidden?)
                 [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
                  {:data-test-id "list-hakukohde-handling-state"}
                  [:span.application-handling__state-label
@@ -216,12 +216,12 @@
                   @(subscribe [:editor/virkailija-translation :unprocessed]))
                  (when show-state-email-icon?
                    [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])])]
-             (when (and (not opinto-ohjaaja) (:selection-state review-settings true))
+             (when (and (not @review-states-hidden?) (:selection-state review-settings true))
                [hakemuksen-valinnan-tila-sarake {:application-key               (:key application)
                                                  :hakukohde-oid                 hakukohde-oid
                                                  :application-hakukohde-reviews application-hakukohde-reviews
                                                  :lang                          @lang}])
-             (when (and (not opinto-ohjaaja) (:vastaanotto-state review-settings true))
+             (when (and (not @review-states-hidden?) (:vastaanotto-state review-settings true))
                [hakemuksen-vastaanoton-tila-sarake {:application-key               (:key application)
                                                     :hakukohde-oid                 hakukohde-oid}])]))
         application-hakukohde-oids))))
@@ -840,7 +840,7 @@
         form-key        @(subscribe [:application/selected-form-key])
         tutu-form?       @(subscribe [:tutu-payment/tutu-form? form-key])
         korkeakouluhaku? @(subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])
-        opinto-ohjaaja (subscribe [:editor/opinto-ohjaaja?])]
+        review-states-hidden? (subscribe [:application/review-states-hidden?])]
     [:div.application-handling__list-header.application-handling__list-row
      [:span.application-handling__list-row--applicant
       [application-list-basic-column-header
@@ -859,7 +859,7 @@
           :state-counts-subs
           {:attachment-state-filter
            @(subscribe [:state-query [:application :attachment-state-counts]])}}]])
-     (when (not @opinto-ohjaaja)
+     (when (not @review-states-hidden?)
        [:div.application-handling__list-row--state
         {:data-test-id "processing-state-filter"}
         [hakukohde-state-filter-controls
