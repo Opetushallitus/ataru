@@ -1051,7 +1051,8 @@
               [application-deactivate-toggle]
               [application-review-events]
 
-              ]]]))})))
+              ]]]
+           ))})))
 
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
@@ -1066,4 +1067,5 @@
          [:div.application-handling__application-contents
           [application-contents @selected-application-and-form @hakukohteet]]
          [:span#application-handling__review-position-canary]
+         ;; TODO tähän ehto näytetäänkö
          [application-review]]))))
