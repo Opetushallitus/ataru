@@ -14,7 +14,7 @@
   (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
         person-oid (person-integration/upsert-person-synchronized job-runner person-service (:id key-and-id))]
     (log/info "Stored synthetic application with id" (:id key-and-id) "and person oid" person-oid)
-    {:passed? true :id (:id key-and-id) :personOid person-oid}))
+    {:passed? true :hakemusOid (:id key-and-id) :personOid person-oid}))
 
 (defn- validate-synthetic-application [application
                                        {:keys [form-by-id-cache

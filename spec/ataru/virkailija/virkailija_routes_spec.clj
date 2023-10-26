@@ -407,30 +407,28 @@
           (tags :unit :api-applications)
 
           (defn check-synthetic-applications [resp expected-count expected-failing-indices]
-            (should= 200 (:status resp))
-            (let [body (:body resp)
-                  applications (:applications body)
+            (let [applications (:body resp)
                   failures-exist (not-empty expected-failing-indices)]
-              (should= expected-count (count applications))
               (if failures-exist
-                (should= false (:success body))
-                (should= true (:success body)))
+                (should= 400 (:status resp))
+                (should= 200 (:status resp)))
+              (should= expected-count (count applications))
               (doall
                (map-indexed (fn [idx application]
                               (if (contains? expected-failing-indices idx)
                                 (do
-                                  (should-be-nil (:id application))
+                                  (should-be-nil (:hakemusOid application))
                                   (should-not-be-nil (:failures application))
                                   (should= "application-validation-failed-error" (:code application)))
                                 (do
                                   (should-be-nil (:failures application))
                                   (should-be-nil (:code application))
                                   (if failures-exist
-                                    (should-be-nil (:id application))
+                                    (should-be-nil (:hakemusOid application))
                                     (do
-                                      (should-not-be-nil (:id application))
+                                      (should-not-be-nil (:hakemusOid application))
                                       (should= "1.2.3.4.5.6" (:personOid application))
-                                      (check-for-db-application-with-haku-and-person (:id application) "1.2.3.4.5.6"))))))
+                                      (check-for-db-application-with-haku-and-person (:hakemusOid application) "1.2.3.4.5.6"))))))
                             applications))))
 
           (describe "POST synthetic application"
