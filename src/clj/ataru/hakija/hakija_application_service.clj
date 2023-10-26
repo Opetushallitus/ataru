@@ -22,7 +22,6 @@
     [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
     [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
     [ataru.util :as util]
-    [ataru.person-service.person-util :as person-util]
     [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
     [cheshire.core :as json]
     [clj-time.core :as time]
@@ -647,6 +646,7 @@
   [form-by-id-cache
    koodisto-cache
    ohjausparametrit-service
+   application-service
    organization-service
    tarjonta-service
    hakukohderyhma-settings-cache
@@ -708,10 +708,10 @@
                                                                       nil
                                                                       application-in-processing?
                                                                       field-deadlines))
-        person                     (if (= actor-role :virkailija)
-                                     (person-util/person-info-from-application application)
-                                     (when application
-                                       (dissoc (person-util/person-info-from-application application) :ssn :birth-date)))
+        new-person (application-service/get-person-for-securelink application-service application)
+        filtered-person (if (= actor-role :virkailija)
+                          new-person
+                          (dissoc new-person :ssn :birth-date))
         full-application           (merge (some-> application
                                                   (remove-unviewable-answers form)
                                                   (attachments-metadata->answers liiteri-cas-client)
@@ -719,12 +719,12 @@
                                                   (assoc :cannot-edit-because-in-processing (and
                                                                                              (not= actor-role :virkailija)
                                                                                              (in-processing-state? application form))))
-                                          (when (and (:yksiloity person)
+                                          (when (and (:yksiloity filtered-person)
                                                      (some? (:key application)))
                                             {:application-identifier (application-service/mask-application-key (:key application))}))]
     [(when full-application
        {:application full-application
-        :person      person
+        :person      filtered-person
         :form        form})
      secret-expired?
      lang-override
