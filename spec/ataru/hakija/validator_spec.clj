@@ -13,6 +13,16 @@
 (def a answer)
 (def extra-answers (update a :answers conj {:key "foo" :value "barbara"}))
 (def answers-by-key (util/answers-by-key (:answers a)))
+(def base-oppija-session {:data {:fields {:first-name  {:value  "Timo"
+                                                        :locked true}
+                                          :postal-code {:value  nil
+                                                        :locked false}
+                                          :address     {:value  "Niin pitkä ulkomaalaalainen osoite kuin on mahdollista antaa, jotta asikas voisi"
+                                                        :locked false}
+                                          :ssn         {:value  "120997-9998"
+                                                        :locked true}
+                                          :email       {:value  nil
+                                                        :locked false}}}})
 
 (def hakukohde-specific-question {:id "d2a26771-de96-4f34-867e-d112c09cbd6b"
                                   :label {:fi "Kerro lyhyesti masennuksestasi"
@@ -502,4 +512,13 @@
       (should (:passed? (validator/valid-application? koodisto-cache has-never-applied
                                                       (update a :answers conj hakukohde-answer per-hakukohde-specific-dropdown-answer per-hakukohde-specific-followup-answer)
                                                       (update f :content conj hakukohde-question per-hakukohde-specific-dropdown) #{} false "NEW_APPLICATION_ID" "NEW_APPLICATION_KEY"))))
-          )
+
+  (it "fails validation when validating fields from oppija-session when locked field has changed"
+      (should= '("Hakemus-answer '020202A0202' does not equal session-answer '120997-9998' for key :ssn" "Hakemus-answer 'Eemil' does not equal session-answer 'Timo' for key :first-name")
+               (validator/validate-tunnistautunut-oppija-fields answers-by-key base-oppija-session)))
+
+  (it "passes validation when validating fields from oppija-session when locked fields have not changed"
+      (should= '() (validator/validate-tunnistautunut-oppija-fields answers-by-key
+                                                                    (-> base-oppija-session
+                                                                        (assoc-in [:data :fields :first-name] (get-in answers-by-key [:first-name :value]))
+                                                                        (assoc-in [:data :fields :ssn] (get-in answers-by-key [:ssn :value])))))))
