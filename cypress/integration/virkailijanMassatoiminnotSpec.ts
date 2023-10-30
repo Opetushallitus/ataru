@@ -44,6 +44,10 @@ describe('Hakemusten massatoiminnot ei-rekisterinpitäjälle', () => {
         cy.get('.application-handling__mass-information-request-popup').should(
           'be.visible'
         )
+        cy.get('[data-test-id="mass-send-update-link"]').should('be.visible')
+        cy.contains(
+          'Viestin mukana lähetetään hakemuksen muokkauslinkki hakijalle'
+        ).should('be.visible')
         cy.get(
           '.application-handling__mass-edit-review-states-title-container > h4'
         ).contains('Massaviesti')
