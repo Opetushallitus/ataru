@@ -83,6 +83,13 @@
       ((deref virkailija-routes))
       (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
+(defn- post-review-notes [query]
+  (-> (mock/request :post "/lomake-editori/api/applications/mass-notes"
+                    (json/generate-string query))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))))
+
 (declare resp)
 
 (describe "GET /lomake-editori"
@@ -329,5 +336,33 @@
                 applications (:applications body)]
             (should= 200 status)
             (should= 1 (count applications))))))
+
+(describe "Submitting mass review notes"
+          (tags :unit :mass-notes)
+
+          (it "Should accept mass review notes without hakukohde"
+              (let [resp             (post-review-notes application-fixtures/application-review-notes-without-hakukohde)
+                    status           (:status resp)]
+                (should= 200 status)))
+
+          (it "Should accept mass review notes with hakukohde"
+              (let [resp             (post-review-notes application-fixtures/application-review-notes-with-hakukohde)
+                    status           (:status resp)]
+                (should= 200 status)))
+
+          (it "Should return http 400 for invalid mass review notes"
+              (let [resp             (post-review-notes application-fixtures/invalid-application-review-notes)
+                    status           (:status resp)]
+                (should= 400 status)))
+
+          (it "Should return http 400 for invalid mass review notes state"
+              (let [resp             (post-review-notes application-fixtures/application-review-notes-with-invalid-state)
+                    status           (:status resp)]
+                (should= 400 status)))
+
+          (it "Should return http 200 for valid mass review notes state"
+              (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
+                    status           (:status resp)]
+                (should= 200 status))))
 
 (run-specs)

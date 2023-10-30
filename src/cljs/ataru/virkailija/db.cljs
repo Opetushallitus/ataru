@@ -84,6 +84,7 @@
                                 :selected-time-column              "created-time"
                                 :application-list-expanded?        true
                                 :mass-information-request          {:form-status :disabled}
+                                :mass-review-notes                 {:form-status :disabled}
                                 :single-information-request        {:form-status :disabled}
                                 :mass-send-update-link?-checkbox   false
                                 :send-update-link?-checkbox        false

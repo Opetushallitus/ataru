@@ -1,0 +1,179 @@
+{
+  "tarjonta-haut": {
+    "1.2.246.562.29.10000000001": {
+      "oid": "1.2.246.562.29.10000000001",
+      "application-count": 1,
+      "processed": 0,
+      "yhteishaku": true,
+      "hakukohteet": [
+        "1.2.246.562.20.00000000000000018312",
+        "1.2.246.562.20.00000000000000018314"
+      ]
+    },
+    "1.2.246.562.29.00000000000000018308": {
+      "application-count": 1,
+      "processed": 0,
+      "yhteishaku": false,
+      "name": {
+        "fi": "Oulun ammattikorkeakoulu, Erillishaku kansainvälisiin koulutuksiin syksy 2022",
+        "en": "Oulu University of Applied Sciences, Separate Application for International Degree Programmes Autumn 2022"
+      },
+      "haun-tiedot-url": "https://virkailija.testiopintopolku.fi/kouta/haku/1.2.246.562.29.00000000000000018308",
+      "oid": "1.2.246.562.29.00000000000000018308",
+      "hakuajat": [
+        {
+          "hakuaika-id": "kouta-hakuaika-id",
+          "start": "2022-10-10T05:00:00.000Z",
+          "end": "2022-10-31T13:00:00.000Z"
+        }
+      ],
+      "kohdejoukko-uri": "haunkohdejoukko_12#1"
+    }
+  },
+  "direct-form-haut": {},
+  "haut": {
+    "1.2.246.562.29.10000000001": {
+      "yhteishaku": true,
+      "kohdejoukko-uri": "haunkohdejoukko_11#1"
+    },
+    "1.2.246.562.29.00000000000000018308": {
+      "yhteishaku": false,
+      "kohdejoukko-uri": "haunkohdejoukko_12#1"
+    }
+  },
+  "hakukohteet": {
+    "1.2.246.562.20.00000000000000018312": {
+      "archived": false,
+      "hakuaika-id": "kouta-hakuaika-id",
+      "selection-state-used": false,
+      "can-be-applied-to?": true,
+      "haku-oid": "1.2.246.562.29.10000000001",
+      "liitteet-onko-sama-toimitusosoite?": false,
+      "koulutustyyppikoodi": "koulutustyyppi_26",
+      "ryhmaliitokset": [
+        "1.2.246.562.28.49229456766",
+        "1.2.246.562.28.66557981306",
+        "1.2.246.562.28.85025336448"
+      ],
+      "jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?": false,
+      "liitteet-onko-sama-toimitusaika?": false,
+      "name": {
+        "sv": "Grundexamen i informations- och kommunikationsteknik"
+      },
+      "hakukelpoisuusvaatimus-uris": [
+        "pohjakoulutusvaatimuskouta_pk#1",
+        "pohjakoulutusvaatimuskouta_er#1"
+      ],
+      "user-organization?": true,
+      "voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?": true,
+      "tarjoaja-oids": [
+        "1.2.246.562.10.61734601463"
+      ],
+      "oid": "1.2.246.562.20.00000000000000021966",
+      "liitteet": [
+        {
+          "tyyppi": "liitetyypitamm_6#1",
+          "toimitusaika": {
+            "fi": "28.3.2023 klo 16:00",
+            "sv": "28.3.2023 kl. 16:00 EEST",
+            "en": "Mar. 28, 2023 at 04:00 PM EEST"
+          },
+          "toimitetaan-erikseen": true,
+          "toimitusosoite": {
+            "osoite": {
+              "sv": "Yrkesakademin i Österbotten, Antagningsbyrån\nKungsgårdsvägen 30 A"
+            },
+            "postinumero": {
+              "koodiUri": "posti_65380#2",
+              "nimi": {
+                "fi": "VAASA",
+                "sv": "VASA"
+              }
+            },
+            "verkkosivu": null
+          }
+        }
+      ],
+      "liitteiden-toimitusosoite": null,
+      "liitteiden-toimitusaika": null,
+      "tarjoaja-name": {
+        "fi": "Yrkesakademin i Österbotten, YA Vaasa",
+        "sv": "Yrkesakademin i Österbotten, YA Vasa",
+        "en": "Yrkesakademin i Österbotten, YA Vaasa"
+      },
+      "koulutus-oids": [
+        "1.2.246.562.17.00000000000000002108"
+      ],
+      "ylioppilastutkinto-antaa-hakukelpoisuuden?": false,
+      "yo-amm-autom-hakukelpoisuus": false
+    },
+    "1.2.246.562.20.00000000000000018314": {
+      "archived": false,
+      "hakuaika-id": "kouta-hakuaika-id",
+      "selection-state-used": false,
+      "can-be-applied-to?": true,
+      "haku-oid": "1.2.246.562.29.00000000000000018308",
+      "liitteet-onko-sama-toimitusosoite?": false,
+      "koulutustyyppikoodi": "koulutustyyppi_26",
+      "ryhmaliitokset": [
+        "1.2.246.562.28.15196945537",
+        "1.2.246.562.28.49229456766",
+        "1.2.246.562.28.66557981306",
+        "1.2.246.562.28.85025336448"
+      ],
+      "jos-ylioppilastutkinto-ei-muita-pohjakoulutusliitepyyntoja?": false,
+      "liitteet-onko-sama-toimitusaika?": false,
+      "name": {
+        "fi": "Sähkö- ja automaatioalan perustutkinto"
+      },
+      "hakukohteen-tiedot-url": "https://virkailija.testiopintopolku.fi/kouta/hakukohde/1.2.246.562.20.00000000000000025493",
+      "hakukelpoisuusvaatimus-uris": [
+        "pohjakoulutusvaatimuskouta_pk#1",
+        "pohjakoulutusvaatimuskouta_er#1"
+      ],
+      "user-organization?": true,
+      "voiko-hakukohteessa-olla-harkinnanvaraisesti-hakeneita?": true,
+      "tarjoaja-oids": [
+        "1.2.246.562.10.17758270502"
+      ],
+      "oid": "1.2.246.562.29.10000000001",
+      "liitteet": [
+        {
+          "tyyppi": "liitetyypitamm_6#1",
+          "toimitusaika": {
+            "fi": "28.3.2023 klo 15:00",
+            "sv": "28.3.2023 kl. 15:00 EEST",
+            "en": "Mar. 28, 2023 at 03:00 PM EEST"
+          },
+          "toimitetaan-erikseen": true,
+          "toimitusosoite": {
+            "osoite": {
+              "fi": "Hakupalvelut\nKorvanranta 50"
+            },
+            "postinumero": {
+              "koodiUri": "posti_96300#2",
+              "nimi": {
+                "fi": "ROVANIEMI",
+                "sv": "ROVANIEMI"
+              }
+            },
+            "verkkosivu": "https://www.turvaposti.fi/viesti/hannele.kenttala@redu.fi"
+          }
+        }
+      ],
+      "liitteiden-toimitusosoite": null,
+      "liitteiden-toimitusaika": null,
+      "tarjoaja-name": {
+        "fi": "Lapin koulutuskeskus REDU, Jokiväylän toimintayksikkö",
+        "sv": "Lapin koulutuskeskus REDU, Jokiväylän toimintayksikkö",
+        "en": "Lapin koulutuskeskus REDU, Jokiväylän toimintayksikkö"
+      },
+      "koulutus-oids": [
+        "1.2.246.562.17.00000000000000004125"
+      ],
+      "ylioppilastutkinto-antaa-hakukelpoisuuden?": false,
+      "yo-amm-autom-hakukelpoisuus": false
+    }
+  },
+  "hakukohderyhmat": {}
+}

@@ -5,6 +5,7 @@
             [ataru.dob-test]
             [ataru.virkailija.editor.handlers-test]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs-test]
+            [ataru.virkailija.application.virkailija-application-subs-test]
             [ataru.hakija.application.field-visibility-test]
             [ataru.hakija.application-test]
             [ataru.hakija.application-validators-test]
@@ -24,6 +25,7 @@
            'ataru.dob-test
            'ataru.virkailija.editor.handlers-test
            'ataru.virkailija.application.attachments.virkailija-attachment-subs-test
+           'ataru.virkailija.application.virkailija-application-subs-test
            'ataru.hakija.application.field-visibility-test
            'ataru.hakija.application-test
            'ataru.hakija.application-validators-test

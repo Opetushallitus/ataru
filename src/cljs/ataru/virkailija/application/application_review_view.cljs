@@ -613,8 +613,7 @@
         @(subscribe [:editor/virkailija-translation :add])]])))
 
 (defn application-review-notes []
-  (let [notes                     (subscribe [:application/review-note-indexes-excluding-eligibility])
-        notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
+  (let [notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
         selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
         editable?                 (subscribe [:application/review-field-editable? :notes])]
@@ -636,9 +635,7 @@
             {:for "application-handling__review-checkbox--only-selected-hakukohteet"}
             @(subscribe [:editor/virkailija-translation :only-selected-hakukohteet])]])]
        [application-review-note-input]
-       (->> (if @only-selected-hakukohteet
-              @notes-for-selected
-              @notes)
+       (->> @notes-for-selected
             (map (fn [idx]
                    ^{:key (str "application-review-note-" idx)}
                    [application-review-note idx])))])))

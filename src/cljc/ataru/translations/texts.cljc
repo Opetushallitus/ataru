@@ -1540,6 +1540,27 @@
    :mass-edit                                                {:fi "Massamuutos"
                                                               :sv "Massändring"
                                                               :en "Mass editing"}
+   :mass-review-notes                                        {:fi "Massamuistiinpano"
+                                                              :sv "SV: Massanteckningar"
+                                                              :en "EN: Mass notes"}
+   :mass-review-notes-n-applications                         {:fi "Olet lisäämässä muistiinpanoa %d hakijalle"
+                                                              :sv "SV: Olet lisäämässä muistiinpanoa %d hakijalle"
+                                                              :en "EN: Olet lisäämässä muistiinpanoa %d hakijalle"}
+   :mass-review-notes-content                                {:fi "Sisältö"
+                                                              :sv "SV: Sisältö"
+                                                              :en "EN: Sisältö"}
+   :mass-review-notes-confirm-n-applications                 {:fi "Vahvista %s muistiinpanon tallennus"
+                                                              :sv "SV: Vahvista %s muistiinpanon tallennus"
+                                                              :en "EN: Vahvista %s muistiinpanon tallennus"}
+   :mass-review-notes-saving                                 {:fi "Tallennetaan muistiinpanoja..."
+                                                              :sv "SV: Tallennetaan muistiinpanoja..."
+                                                              :en "EN: Tallennetaan muistiinpanoja..."}
+   :mass-review-notes-saved                                  {:fi "Muistiinpanot on tallennettu!"
+                                                              :sv "SV: Muistiinpanot on tallennettu!"
+                                                              :en "EN: Muistiinpanot on tallennettu!"}
+   :mass-review-notes-save-error                             {:fi "Muistiinpanon tallennus epäonnistui!"
+                                                              :sv "SV: Muistiinpanon tallennus epäonnistui!"
+                                                              :en "EN: Muistiinpanon tallennus epäonnistui!"}
    :excel-request                                            {:fi "Excel"
                                                               :sv "Excel"
                                                               :en "Excel"}

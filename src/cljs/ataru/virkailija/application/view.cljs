@@ -175,6 +175,7 @@
 (defn haku-heading
   []
   (let [show-mass-update-link? (subscribe [:application/show-mass-update-link?])
+        show-mass-review-notes-link? (subscribe [:application/show-mass-review-notes-link?])
         show-excel-link?       (subscribe [:application/show-excel-link?])
         rajaus-hakukohteella   (subscribe [:application/rajaus-hakukohteella-value])
         applications-count     (subscribe [:application/loaded-applications-count])
@@ -182,11 +183,13 @@
         haku-header            (subscribe [:application/list-heading-data-for-haku])]
     [:div.application-handling__header
      [selected-applications-heading @haku-header @header]
-     [:div.editor-form__form-controls-container
+     [:div.application-handling__form-controls-container
       (when (pos? @applications-count)
         [mass-information-request-view/mass-information-request-link application-information-request-contains-modification-link])
       (when @show-mass-update-link?
         [mass-review/mass-update-applications-link])
+      (when @show-mass-review-notes-link?
+        [mass-review/mass-review-notes-applications-link])
       (when @show-excel-link?
         (let [selected-hakukohde      (or @rajaus-hakukohteella (second @haku-header))
               selected-hakukohderyhma (when (nil? selected-hakukohde) (nth @haku-header 2))]

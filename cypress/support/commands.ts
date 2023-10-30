@@ -12,6 +12,10 @@ declare global {
       avaaLomakkeenHakemuksetVirkailijanNakymassa: (
         lomakkeenAvain: string
       ) => Chainable<WaitXHR>
+
+      avaaHaunHakemuksetVirkailijanNakymassa: (
+        hakuOid: string
+      ) => Chainable<WaitXHR>
     }
   }
 }
@@ -43,4 +47,10 @@ Cypress.Commands.add(
         lomakkeenAvain
       )
     )
+)
+
+Cypress.Commands.add(
+  'avaaHaunHakemuksetVirkailijanNakymassa',
+  (hakuOid: string) =>
+    cy.visit(reitit.virkailija.haeHaunHakemusListausOsoite(hakuOid))
 )

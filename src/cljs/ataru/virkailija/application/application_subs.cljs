@@ -316,6 +316,37 @@
            (some? list-selected-by)))))
 
 (re-frame/reg-sub
+ :application/hakukohde-filtering-for-yhteishaku?
+ (fn [db]
+   (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
+         list-selected-by (application-list-selected-by db)]
+     ;; jos yhteishaku, pelkkä haku-rajaus ei riitä vaan pitää olla hakukohde/hakukohderyhmä
+     (not (and yhteishaku? (= list-selected-by :selected-haku))))))
+
+(re-frame/reg-sub
+ :application/applications-visible-with-some-filter?
+ (fn [db]
+   (let [list-selected-by (application-list-selected-by db)]
+     (and (not-empty (-> db :application :applications)) ;;on hakemuksia listalla
+          (some? list-selected-by))))) ;; on joku rajaus päällä
+
+(defn show-mass-review-notes-link?
+  [[toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?]]
+  (and applications-visible-with-some-filter?
+       (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
+           (and hakukohde-filtering-for-yhteishaku?  ;; muille pitää olla yhteisvalinnoissa hakukohderajaus päällä
+                (not toisen-asteen-yhteishaku?))))) ;; muille ei näytetä ollenkaan 2. asteen yhteishaulle
+
+(re-frame/reg-sub
+ :application/show-mass-review-notes-link?
+ (fn []
+   [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
+    (re-frame/subscribe [:application/superuser?])
+    (re-frame/subscribe [:application/hakukohde-filtering-for-yhteishaku?])
+    (re-frame/subscribe [:application/applications-visible-with-some-filter?])])
+ show-mass-review-notes-link?)
+
+(re-frame/reg-sub
   :application/show-excel-link?
   (fn [db]
     (and (not-empty (-> db :application :applications))
@@ -335,6 +366,13 @@
     (<= (count (-> db :application :single-information-request :subject)) 120))
   )
 
+(defn- mass-review-notes-button-enabled?
+  [db]
+  (-> db :application :mass-review-notes :review-notes u/not-blank?))
+
+(re-frame/reg-sub
+ :application/mass-review-notes-button-enabled?
+ mass-review-notes-button-enabled?)
 
 (re-frame/reg-sub
   :application/mass-information-request-button-enabled?
@@ -365,6 +403,15 @@
         :else
         (get-in db [:application :single-information-request :form-status]))))
 
+(re-frame/reg-sub
+ :application/mass-review-notes-form-status
+ (fn [db]
+   (cond (get-in db [:application :fetching-applications?])
+     :loading-applications
+     (not (mass-review-notes-button-enabled? db))
+     :disabled
+     :else
+     (get-in db [:application :mass-review-notes :form-status]))))
 
 (re-frame/reg-sub
   :application/mass-information-request-only-guardian-enabled?
@@ -870,13 +917,6 @@
                                       (contains? selected-hakukohde-oids (str hakukohde)))
                              index)))))))
 
-(re-frame/reg-sub
-  :application/review-note-indexes-excluding-eligibility
-  (fn [db]
-    (->> (-> db :application :review-notes)
-         (keep-indexed (fn [index {:keys [state-name _]}]
-                         (when (not= "eligibility-state" state-name)
-                           index))))))
 
 (re-frame/reg-sub
   :application/review-notes

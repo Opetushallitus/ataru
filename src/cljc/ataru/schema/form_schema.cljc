@@ -734,7 +734,7 @@
                                                 :type                             (s/enum :organization :group)
                                                 (s/optional-key :hakukohderyhma?) s/Bool
                                                 (s/optional-key :active?)         s/Bool}]
-   (s/optional-key :hakukohde)                s/Str
+   (s/optional-key :hakukohde)                (s/maybe s/Str)
    (s/optional-key :state-name)               HakukohdeReviewTypeNames
    (s/optional-key :created-time)             org.joda.time.DateTime})
 
