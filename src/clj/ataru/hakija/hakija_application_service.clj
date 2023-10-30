@@ -719,8 +719,7 @@
                                                   (assoc :cannot-edit-because-in-processing (and
                                                                                              (not= actor-role :virkailija)
                                                                                              (in-processing-state? application form))))
-                                          (when (and (:yksiloity filtered-person)
-                                                     (some? (:key application)))
+                                          (when (some? (:key application))
                                             {:application-identifier (application-service/mask-application-key (:key application))}))]
     [(when full-application
        {:application full-application
