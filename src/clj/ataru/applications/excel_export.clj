@@ -11,6 +11,7 @@
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
             [clj-time.core :as t]
             [clj-time.format :as f]
+            [taoensso.timbre :as log]
             [clojure.set :as set]
             [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
@@ -279,32 +280,9 @@
           :else
           value)))
 
-(defn- write-application! [liiteri-cas-client
-                           writer application
-                           application-review
-                           application-review-notes
-                           person
-                           ehdollinen?
-                           headers
-                           application-meta-fields
-                           form-fields-by-key
-                           get-koodisto-options
-                           lang]
-  (doseq [meta-field application-meta-fields]
-    (let [format-fn  (:format-fn meta-field)
-          field      (get-in {:application              application
-                              :application-review       application-review
-                              :application-review-notes application-review-notes
-                              :person                   person
-                              :ehdollinen?              ehdollinen?}
-                             (:field meta-field))
-          meta-value (if (some? format-fn)
-                       (if (:lang? meta-field)
-                         (format-fn field lang)
-                         (format-fn field))
-                       field)]
-      (writer 0 (:column meta-field) meta-value)))
-  (doseq [answer (:answers application)]
+(defn- write-answer-value-for-excel!
+  [liiteri-cas-client writer person headers form-fields-by-key get-koodisto-options application answer]
+  (try
     (let [answer-key             (:key answer)
           field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
                                    (get form-fields-by-key (first (string/split answer-key #"_")))
@@ -331,12 +309,49 @@
           value-length           (count value)
           value-truncated        (if (< max-value-length value-length)
                                    (str
-                                    (subs value 0 (- max-value-length 100))
-                                    "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
-                                    (- value-length max-value-length -100) " merkkiä]")
+                                     (subs value 0 (- max-value-length 100))
+                                     "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                                     (- value-length max-value-length -100) " merkkiä]")
                                    value)]
       (when (and value-truncated column)
-        (writer 0 (+ column (count application-meta-fields)) value-truncated)))))
+        (writer 0 (+ column (count application-meta-fields)) value-truncated)))
+    (catch Exception e
+      (log/error "Caught exception while trying to parse value for answer"
+                 (:key answer)
+                 "from application"
+                 (:key application)
+                 ". Exception:"
+                 e)
+      (throw e))))
+
+(defn- write-application! [liiteri-cas-client
+                           writer application
+                           application-review
+                           application-review-notes
+                           person
+                           ehdollinen?
+                           headers
+                           application-meta-fields
+                           form-fields-by-key
+                           get-koodisto-options
+                           lang]
+  (doseq [meta-field application-meta-fields]
+    (let [format-fn  (:format-fn meta-field)
+          field      (get-in {:application              application
+                              :application-review       application-review
+                              :application-review-notes application-review-notes
+                              :person                   person
+                              :ehdollinen?              ehdollinen?}
+                             (:field meta-field))
+          meta-value (if (some? format-fn)
+                       (if (:lang? meta-field)
+                         (format-fn field lang)
+                         (format-fn field))
+                       field)]
+      (writer 0 (:column meta-field) meta-value)))
+  (doseq [answer (:answers application)]
+    (write-answer-value-for-excel! liiteri-cas-client writer person headers form-fields-by-key
+                                  get-koodisto-options application answer)))
 
 (defn- pick-header
   [form-fields-by-id form-field]
