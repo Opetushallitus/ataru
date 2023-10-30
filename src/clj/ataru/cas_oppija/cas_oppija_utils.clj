@@ -28,7 +28,7 @@
             eidas? (some? (:personIdentifier parsed-raw-map))]
         {:person-oid (:personOid parsed-raw-map)
          :eidas-id (:personIdentifier parsed-raw-map)
-         :auth-type (if eidas? :eidas :vahva)
+         :auth-type (if eidas? :eidas :strong)
          :display-name (or (:givenName parsed-raw-map)
                            (first first-names))
          :fields     {:first-name           {:value  (:firstName parsed-raw-map)

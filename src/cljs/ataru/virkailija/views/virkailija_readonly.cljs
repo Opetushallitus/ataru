@@ -331,7 +331,7 @@
      [scroll-to-anchor content]]
     (into [:div.application__wrapper-contents
            (cond
-             (= (:tunnistautuminen application) "vahva")
+             (= (:tunnistautuminen application) "strong")
              [:div.application-handling__hakenut-tunnistautuneena-infobox
               [:span.application-handling__list-row--tunnistautunut-icon
                [:img.logo-suomi-fi

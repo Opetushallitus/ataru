@@ -249,7 +249,7 @@
                                                                             @(subscribe [:editor/virkailija-translation :unknown])])]
        [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]
        (cond
-         (= (:tunnistautuminen application) "vahva")
+         (= (:tunnistautuminen application) "strong")
          [:span.application-handling__list-row--tunnistautunut-icon
           [:img.logo-suomi-fi
            {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
