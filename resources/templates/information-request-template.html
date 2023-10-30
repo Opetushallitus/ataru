@@ -17,9 +17,19 @@
             <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
         </td>
     </tr>
+    {% endif %}
+    {% if application-url-text|not-empty %}
     <tr>
-        <td style="padding-left: 20px; padding-top: 40px;">
-            {{modify-link-text}} {{do-not-share-warning-text}}
+        <td style="padding-left: 20px; padding-top: 20px;">
+            {{application-url-text|safe}}
+        </td>
+    </tr>
+    {% endif %}
+    {% if oma-opintopolku-link|not-empty %}
+    <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+            Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                    href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa.</a>.
         </td>
     </tr>
     {% endif %}

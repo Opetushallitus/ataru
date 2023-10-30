@@ -1,14 +1,13 @@
 (ns ataru.email.application-email
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
-            [ataru.config.core :refer [config]]
             [ataru.email.email-store :as email-store]
             [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts tutu-decision-email]]
+            [ataru.translations.texts :refer [email-default-texts email-link-section-texts tutu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -63,16 +62,6 @@
 (defn- submit-email-template-filename
   [lang]
   (str "templates/email_submit_confirmation_template_" (name lang) ".html"))
-
-(defn- modify-link [secret]
-  (-> config
-      (get-in [:public-config :applicant :service_url])
-      (str "/hakemus?modify=" secret)))
-
-(defn- oma-opintopolku-link []
-  (-> config
-      (get-in [:public-config :applicant :service_url])
-      (str "/oma-opintopolku/")))
 
 (defn- escape-full-urls
   [content]
@@ -144,6 +133,7 @@
                                                                          {:label "Liite 3"
                                                                           :deadline ""}]
                                             :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
+                                            :application-url-text (get-in email-link-section-texts [:default (keyword lang)])
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
                                             :content-ending  (->safe-html content-ending)
@@ -253,12 +243,12 @@
                                                 (filter (comp not clojure.string/blank?))))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
-         application-url                 (if (:tunnistautuminen application)
-                                           (oma-opintopolku-link)
-                                           (modify-link (:secret application)))
+         {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
                                           :application-url            application-url
+                                          :application-url-text       application-url-text
+                                          :oma-opintopolku-link       oma-opintopolku-link
                                           :payment-url                payment-url
                                           :content                    content
                                           :content-ending             content-ending

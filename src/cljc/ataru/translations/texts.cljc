@@ -998,6 +998,10 @@
                           :sv "dd.mm.åååå"
                           :en "dd.mm.yyyy"}})
 
+(def email-link-section-texts {:default {:fi "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
+                                         :sv "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."
+                                         :en "Voit katsella ja muokata hakemustasi yllä olevan linkin kautta. Älä jaa linkkiä ulkopuolisille. Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos sähköpostiohjelmasta."}})
+
 (def email-default-texts
   {:email-submit-confirmation-template
    {:submit-email-subjects      {:fi "Opintopolku: hakemuksesi on vastaanotettu"
