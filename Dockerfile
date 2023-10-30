@@ -12,7 +12,7 @@ ADD src src
 RUN lein resource
 RUN lein cljsbuild once hakija-min
 RUN lein cljsbuild once virkailija-min
-RUN lein less once
+RUN ./bin/compile-less.sh
 RUN lein uberjar
 ENV CONFIG config/docker-native.edn
 EXPOSE 3449
