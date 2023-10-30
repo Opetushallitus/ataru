@@ -1,6 +1,8 @@
 (ns ataru.email.email-util
-   (:require [ataru.translations.texts :refer [email-default-texts]]
-             [clojure.string :as string]))
+  (:require [ataru.translations.texts :refer [email-default-texts email-link-section-texts]]
+            [clojure.string :as string]
+            [ataru.config.core :refer [config]]
+            [taoensso.timbre :as log]))
 
 (def from-address "no-reply@opintopolku.fi")
 
@@ -44,3 +46,23 @@
   (let [email (make-email-for-applicant-or-guardian applicant-email-data render-file-fn false)
         guardian-email (make-email-for-applicant-or-guardian guardian-email-data render-file-fn true)]
     (filter (comp not nil?) [email guardian-email])))
+
+(defn- oma-opintopolku-link []
+  (-> config
+      (get-in [:public-config :applicant :service_url])
+      (str "/oma-opintopolku/")))
+(defn- modify-link [secret]
+  (-> config
+      (get-in [:public-config :applicant :service_url])
+      (str "/hakemus?modify=" secret)))
+
+(defn get-application-url-and-text [form application lang]
+  (let [form-allows-ht? (boolean (get-in form [:properties :allow-hakeminen-tunnistautuneena]))
+        strong-auth? (= (:tunnistautuminen application) "strong")]
+    (log/info "get application url and text " (:properties form) ", " form-allows-ht? " - " strong-auth?)
+    (if form-allows-ht?
+      (if strong-auth?
+        {:oma-opintopolku-link (oma-opintopolku-link)}
+        {:application-url (modify-link (:secret application))
+         :application-url-text (get-in email-link-section-texts [:none lang])})
+      {:application-url (modify-link (:secret application))})))

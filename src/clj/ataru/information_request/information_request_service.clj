@@ -1,6 +1,6 @@
 (ns ataru.information-request.information-request-service
-  (:require [ataru.config.core :refer [config]]
-            [ataru.db.db :as db]
+  (:require [ataru.db.db :as db]
+            [ataru.forms.form-store :as forms]
             [ataru.log.audit-log :as audit-log]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as u]
@@ -29,6 +29,7 @@
         application      (app-store/get-latest-application-by-key-in-tx
                           connection
                           (:application-key information-request))
+        form              (forms/fetch-by-id (:form application))
         lang             (-> application :lang keyword)
         recipient-emails (if guardian?
                            (distinct
@@ -38,13 +39,12 @@
                                         (extract-answer-value "guardian-email-secondary" application)])))
                            (remove string/blank? [(extract-answer-value "email" application)]))
         translations     (translations/get-translations lang)
-        service-url      (get-in config [:public-config :applicant :service_url])
-        application-url  (str service-url "/hakemus?modify=" secret)
+        url-and-link (email-util/get-application-url-and-text form application lang)
         body             (selmer/render-file "templates/information-request-template.html"
                                              (merge {:message (->safe-html (:message information-request))}
                                                     (if (or guardian? (not add-update-link?))
                                                       {}
-                                                      {:application-url application-url})
+                                                      url-and-link)
                                                     translations))
         subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
                                       (:subject information-request) (:application-key information-request) lang)]

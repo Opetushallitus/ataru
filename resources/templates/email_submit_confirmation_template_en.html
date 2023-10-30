@@ -100,6 +100,21 @@
         </td>
       </tr>
       {% endif %}
+      {% if application-url-text|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{application-url-text|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      {% if oma-opintopolku-link|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          EN Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa.</a>.
+        </td>
+      </tr>
+      {% endif %}
       {% if content-ending|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
