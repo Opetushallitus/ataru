@@ -886,12 +886,12 @@
     (get-in db [:editor :user-info :superuser?])))
 
 (re-frame/reg-sub
- :application/review-states-hidden?
+ :application/review-states-visible?
  (fn [_ _]
    [(re-frame/subscribe [:application/toisen-asteen-yhteishaku?])
     (re-frame/subscribe [:editor/opinto-ohjaaja?])])
  (fn [[toisen-asteen-yhteishaku? opinto-ohjaaja?] _]
-   (and toisen-asteen-yhteishaku? opinto-ohjaaja?)))
+   (not (or toisen-asteen-yhteishaku? opinto-ohjaaja?))))
 
 (re-frame/reg-sub
   :application/review-field-editable?
@@ -1261,6 +1261,19 @@
     (let [user-info (-> db :editor :user-info)]
       (or opinto-ohjaaja-or-admin?
         (some (fn [org] (some #(= "valinnat-valilehti" % ) (:rights org))) (:organizations user-info))))))
+
+(defn- edit-rights-for-selected-hakukohteet? [hakukohde-oids rights-by-hakukohde]
+  (->> hakukohde-oids
+       (map #(get rights-by-hakukohde %))
+       (every? (partial some #{:edit-applications}))))
+
+(re-frame/reg-sub
+ :application/edit-rights-for-selected-hakukohteet?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+    (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[hakukohde-oids rights-by-hakukohde]]
+   (edit-rights-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
 
 (re-frame/reg-sub
   :application/forms
