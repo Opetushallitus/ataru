@@ -64,5 +64,5 @@
       (if strong-auth?
         {:oma-opintopolku-link (oma-opintopolku-link)}
         {:application-url (modify-link (:secret application))
-         :application-url-text (get-in email-link-section-texts [:none lang])})
+         :application-url-text (get-in email-link-section-texts [:default lang])})
       {:application-url (modify-link (:secret application))})))
