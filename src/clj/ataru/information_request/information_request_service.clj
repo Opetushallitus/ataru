@@ -22,38 +22,39 @@
        (map :value)
        (first)))
 (defn- initial-state [connection information-request guardian?]
-  (let [add-update-link? (:add-update-link information-request)
-        secret           (app-store/add-new-secret-to-application-in-tx
-                          connection
-                          (:application-key information-request))
-        application      (app-store/get-latest-application-by-key-in-tx
-                          connection
-                          (:application-key information-request))
-        form              (forms/fetch-by-id (:form application))
-        lang             (-> application :lang keyword)
-        recipient-emails (if guardian?
-                           (distinct
-                             (flatten
-                               (filter some?
-                                       [(extract-answer-value "guardian-email" application)
-                                        (extract-answer-value "guardian-email-secondary" application)])))
-                           (remove string/blank? [(extract-answer-value "email" application)]))
-        translations     (translations/get-translations lang)
-        url-and-link (email-util/get-application-url-and-text form application lang)
-        body             (selmer/render-file "templates/information-request-template.html"
-                                             (merge {:message (->safe-html (:message information-request))}
-                                                    (if (or guardian? (not add-update-link?))
-                                                      {}
-                                                      url-and-link)
-                                                    translations))
-        subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
-                                      (:subject information-request) (:application-key information-request) lang)]
-    (when (not-empty recipient-emails)
-      (-> (select-keys information-request [:application-key :id])
-          (merge {:from       "no-reply@opintopolku.fi"
-                  :recipients recipient-emails
-                  :body       body})
-          (assoc :subject subject-with-application-key)))))
+  (let [add-update-link? (:add-update-link information-request)]
+    (when add-update-link?
+      (app-store/add-new-secret-to-application-in-tx
+        connection
+        (:application-key information-request)))
+    (let [application      (app-store/get-latest-application-by-key-in-tx
+                             connection
+                             (:application-key information-request))
+          form              (forms/fetch-by-id (:form application))
+          lang             (-> application :lang keyword)
+          recipient-emails (if guardian?
+                             (distinct
+                               (flatten
+                                 (filter some?
+                                         [(extract-answer-value "guardian-email" application)
+                                          (extract-answer-value "guardian-email-secondary" application)])))
+                             (remove string/blank? [(extract-answer-value "email" application)]))
+          translations     (translations/get-translations lang)
+          url-and-link (email-util/get-application-url-and-text form application lang)
+          body             (selmer/render-file "templates/information-request-template.html"
+                                               (merge {:message (->safe-html (:message information-request))}
+                                                      (if (or guardian? (not add-update-link?))
+                                                        {}
+                                                        url-and-link)
+                                                      translations))
+          subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
+                                         (:subject information-request) (:application-key information-request) lang)]
+      (when (not-empty recipient-emails)
+        (-> (select-keys information-request [:application-key :id])
+            (merge {:from       "no-reply@opintopolku.fi"
+                    :recipients recipient-emails
+                    :body       body})
+            (assoc :subject subject-with-application-key))))))
 
 (defn- start-email-job [job-runner connection information-request]
   (let [job-type (:type information-request-job/job-definition)
