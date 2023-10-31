@@ -246,8 +246,7 @@
                               :haku             (:haku application)
                               :content          {:answers answers}
                               :person_oid       (:person-oid application)
-                              :tunnistautuminen {:session oppija-session ;todo, how does session info work for application edits? Currently, the info is simply copied from the first version.
-                                                 :hakenut-tunnistautuneena (boolean oppija-session)}}
+                              :tunnistautuminen {:session oppija-session}} ;todo, how does session info work for application edits? Currently, the info is simply copied from the first version.
         new-application      (if (contains? application :key)
                                (queries/yesql-add-application-version<! application-to-store connection)
                                (queries/yesql-add-application<! application-to-store connection))
