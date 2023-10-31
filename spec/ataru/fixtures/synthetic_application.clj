@@ -6,7 +6,7 @@
    :sukunimi         "Ankka"
    :etunimi          "Aku Fauntleroy"
    :kutsumanimi      "Aku"
-   :kansalaisuus     ["246"]
+   :kansalaisuus     "246"
    :syntymaAika      nil
    :syntymapaikka    nil
    :henkilotunnus    "010105A923H"
@@ -33,7 +33,7 @@
    :sukunimi         "Duck"
    :etunimi          "Donald Fauntleroy"
    :kutsumanimi      "Donald"
-   :kansalaisuus     ["840"]
+   :kansalaisuus     "840"
    :syntymaAika      "1.1.2001"
    :syntymapaikka    "Duckburg, USA"
    :henkilotunnus    nil
@@ -59,7 +59,7 @@
    :sukunimi         "Duck"
    :etunimi          "Donald Fauntleroy"
    :kutsumanimi      "Donald"
-   :kansalaisuus     ["840"]
+   :kansalaisuus     "840"
    :syntymaAika      nil
    :syntymapaikka    "Duckburg, USA"
    :henkilotunnus    nil

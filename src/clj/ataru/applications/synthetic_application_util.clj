@@ -13,7 +13,7 @@
                  {:key "phone" :value (:puhelinnumero synthetic) :fieldType "textField"  :label {:fi "Matkapuhelin"}}
                  {:key "email" :value (:sahkoposti synthetic) :fieldType "textField" :label {:fi "Sähköpostiosoite"}}
                  {:key "ssn" :value (:henkilotunnus synthetic) :fieldType "textField" :label {:fi "Henkilötunnus"}}
-                 {:key "nationality" :value [(:kansalaisuus synthetic)] :fieldType "dropdown" :label {:fi "Kansalaisuus"}}
+                 {:key "nationality" :value [[(:kansalaisuus synthetic)]] :fieldType "dropdown" :label {:fi "Kansalaisuus"}}
                  {:key "gender" :value gender :fieldType "dropdown" :label {:fi "Sukupuoli"}}
                  {:key "birth-date" :value birth-date :fieldType "textField" :label {:fi "Syntymäaika"}}
                  {:key "birthplace" :value (:syntymapaikka synthetic) :fieldType "textField" :label {:fi "Syntymäpaikka ja -maa"}}
