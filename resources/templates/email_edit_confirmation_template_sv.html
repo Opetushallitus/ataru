@@ -74,6 +74,7 @@
         </td>
       </tr>
       {% endif %}
+      {% if application-url|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Ändringarna i din ansökan har mottagits. Under ansökningstiden kan
@@ -83,18 +84,13 @@
           inte länken vidare till utomstående.
         </td>
       </tr>
-      {% if application-url-text|not-empty %}
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
-          {{application-url-text|safe}}
-        </td>
-      </tr>
       {% endif %}
       {% if oma-opintopolku-link|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          SV Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
-                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a>.
+          SV Muutokset hakemukseesi on tallennettu. Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a> hakuaikana.
+          Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos Oma Opintopolku-palvelusta.
         </td>
       </tr>
       {% endif %}
