@@ -85,18 +85,12 @@
         </td>
       </tr>
       {% endif %}
-      {% if application-url-text|not-empty %}
-      <tr>
-        <td style="padding-left: 20px; padding-top: 20px;">
-          {{application-url-text|safe}}
-        </td>
-      </tr>
-      {% endif %}
       {% if oma-opintopolku-link|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
-          Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
-                                                  href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a>.
+          Muutokset hakemukseesi on tallennettu. Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                  href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a> hakuaikana.
+          Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos Oma Opintopolku-palvelusta.
         </td>
       </tr>
       {% endif %}
