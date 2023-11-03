@@ -1402,10 +1402,11 @@
 (reg-event-fx
   :editor/load-email-template
   (fn [{db :db} [_]]
-    (let [form-key (get-in db [:editor :selected-form-key])]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          form-allows-ht? (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))]
       {:http {:method              :get
               :handler-args        {:form-key form-key}
-              :path                (str "/lomake-editori/api/email-templates/" form-key)
+              :path                (str "/lomake-editori/api/email-templates/" form-key "?form-allows-ht=" form-allows-ht?)
               :handler-or-dispatch :editor/update-saved-email-template-preview}})))
 
 (reg-event-fx

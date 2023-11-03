@@ -14,8 +14,8 @@
   (application-email/->safe-html content))
 
 (defn get-email-templates
-  [form-key]
-  (application-email/get-email-templates form-key))
+  [form-key form-allows-ht?]
+  (application-email/get-email-templates form-key form-allows-ht?))
 
 (defn preview-submit-emails [previews]
   (map

@@ -320,7 +320,8 @@
 
     (api/GET "/email-templates/:form-key" []
       :path-params [form-key :- s/Str]
-      (ok (email/get-email-templates form-key)))
+      :query-params [{form-allows-ht :- s/Bool false}]
+      (ok (email/get-email-templates form-key form-allows-ht)))
 
     (api/context "/preview" []
       (api/GET "/haku/:haku-oid" {session :session}
