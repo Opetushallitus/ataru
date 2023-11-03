@@ -31,7 +31,7 @@
                                  tags with]]
             [yesql.core :as sql]))
 
-(declare yesql-get-application-by-id)
+(declare yesql-get-latest-application-by-key)
 (sql/defqueries "sql/application-queries.sql")
 
 (defn- parse-body
@@ -44,8 +44,8 @@
                         (json/parse-string true)))
     resp))
 
-(defn- get-application-by-id [id]
-  (first (ataru-db/exec :db yesql-get-application-by-id {:application_id id})))
+(defn- get-latest-application-by-key [key]
+  (first (ataru-db/exec :db yesql-get-latest-application-by-key {:application_key key})))
 
 (defn- hakuaika-ongoing
   [_ _ _ _]
@@ -105,7 +105,7 @@
 
 (defn- check-for-db-application-with-haku-and-person
   [application-id person-oid]
-  (let [application (get-application-by-id application-id)]
+  (let [application (get-latest-application-by-key application-id)]
     (should-not-be-nil application)
     (should= (:id fixtures/synthetic-application-test-form) (:form application))
     (should= person-oid (:person_oid application))))
