@@ -13,8 +13,8 @@
                                     {:keys [session audit-logger job-runner person-service]}]
   (let [key-and-id (application-store/add-application application applied-hakukohteet form session audit-logger)
         person-oid (person-integration/upsert-person-synchronized job-runner person-service (:id key-and-id))]
-    (log/info "Stored synthetic application with id" (:id key-and-id) "and person oid" person-oid)
-    {:passed? true :hakemusOid (:id key-and-id) :personOid person-oid}))
+    (log/info "Stored synthetic application with id" (:id key-and-id) ", oid " (:key key-and-id) " and person oid" person-oid)
+    {:passed? true :hakemusOid (:key key-and-id) :personOid person-oid}))
 
 (defn- validate-synthetic-application [application
                                        {:keys [form-by-id-cache
@@ -58,17 +58,15 @@
                       (empty? (:hakukohde application)))
                  {:passed? false
                   :failures ["Hakukohde must be specified"]
-                  :key  (:key nil)
                   :code :internal-server-error}
 
                  (true? (get-in form [:properties :closed] false))
                  {:passed? false
                   :failures ["Form is closed"]
-                  :key (:key nil)
                   :code :form-closed}
 
                  (not (:passed? validation-result))
-                 (assoc validation-result :key (:key nil))
+                 validation-result
 
                  :else
                  {:passed? true
