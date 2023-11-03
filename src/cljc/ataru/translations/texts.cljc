@@ -585,58 +585,58 @@
                                                  :sv "Du har sökt i den gemensamma ansökan till utbildning efter den grundläggande utbildningen. På grund av uppgifterna du uppgav på ansökningen fick du ett meddelande att din ansökning behandlas i antagning enligt prövning. Eftersom den här uppgiften enligt din läroanstalt har varit felaktig, behandlas din ansökan i den vanliga poängantagningen och inte i antagning enligt prövning."
                                                  :en "EN: Olet hakenut yhteishaussa perusopetuksen jälkeiseen koulutukseen. Hakemuksellasi ilmoittamiesi tietojen perusteella sait ilmoituksen, että hakemuksesi käsitellään harkinnanvaraisessa valinnassa. Oppilaitoksesi mukaan tämä tieto on ollut virheellinen, joten hakemuksesi käsitellään normaalissa pistevalinnassa harkinnanvaraisen valinnan sijaan."}
    :ht-lander-header                            {:fi "Miten haluat siirtyä hakulomakkeelle?"
-                                                 :sv "Miten haluat siirtyä hakulomakkeelle? sv"
+                                                 :sv "Hur vill du öppna ansökningsblanketten?"
                                                  :en "Miten haluat siirtyä hakulomakkeelle? en"}
    :ht-lander-top-text                          {:fi "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto."
-                                                 :sv "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. sv"
+                                                 :sv "I den här ansökan kan du också logga in i ansökningsblanketten. Välj här det alternativ som passar dig."
                                                  :en "Tässä haussa sinulla on mahdollisuus kirjautua hakulomakkeelle. Valitse sinulle sopiva vaihtoehto. en"}
    :ht-kirjaudu-sisaan                          {:fi "Kirjaudu sisään"
-                                                 :sv "Kirjaudu sisään sv"
+                                                 :sv "Logga in"
                                                  :en "Kirjaudu sisään en"}
    :ht-ilman-kirjautumista                      {:fi "Jatka ilman kirjautumista"
-                                                 :sv "Jatka ilman kirjautumista sv"
+                                                 :sv "Fortsätt utan att logga in"
                                                  :en "Jatka ilman kirjautumista en"}
    :ht-tunnistaudu-ensin-header                 {:fi "Tunnistaudu ja täytä hakulomake"
-                                                 :sv "Tunnistaudu ja täytä hakulomake sv"
+                                                 :sv "Identifiera dig och fyll i ansökningsblanketten"
                                                  :en "Tunnistaudu ja täytä hakulomake en"}
-   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
-                                                 :sv "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella. sv"
+   :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
+                                                 :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
                                                  :en "Kun tunnistaudut pankkitunnuksilla tai varmennekortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella. en"}
    :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman tunnistautumista"
-                                                 :sv "Täytä hakulomake ilman tunnistautumista sv"
+                                                 :sv "Fyll i ansökningsblanketten utan identifiering"
                                                  :en "Täytä hakulomake ilman tunnistautumista en"}
-   :ht-jatka-tunnistautumatta-text              {:fi "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot."
-                                                 :sv "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. sv"
+   :ht-jatka-tunnistautumatta-text              {:fi "Valitsemalla tämän vaihtoehdon täytät hakulomakkeelle itse kaikki vaaditut tiedot."
+                                                 :sv "Om du väljer detta alternativ bör du själv fylla i samtliga uppgifter i ansökningsblanketten."
                                                  :en "Valitsemalla tämän vaihtoehdon syötät hakulomakkeelle käsin kaikki vaaditut tiedot. en"}
    :ht-tai                                      {:fi "TAI"
                                                  :sv "ELLER"
                                                  :en "OR"}
    :ht-logout-confirmation-header               {:fi "Haluatko kirjautua ulos?"
-                                                 :sv "Haluatko kirjautua ulos? sv"
+                                                 :sv "Vill du logga ut?"
                                                  :en "Haluatko kirjautua ulos? en"}
-   :ht-logout-confirmation-text                 {:fi "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
-                                                 :sv "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. sv"
+   :ht-logout-confirmation-text                 {:fi "Et ole vielä lähettänyt hakemustasi, etkä voi tallentaa sitä keskeneräisenä. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä."
+                                                 :sv "Du har inte ännu skickat din ansökan och du kan inte heller spara den som halvfärdig. Om du loggar ut, sparas inte de uppgifter som du fyllt i."
                                                  :en "Et ole vielä lähettänyt hakemustasi. Jos kirjaudut ulos, täyttämiäsi tietoja ei tallenneta. Et voi tallentaa hakemustasi keskeneräisenä. en"}
    :ht-logout-confirmation-text-submitted       {:fi "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
                                                  :sv "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. sv"
                                                  :en "Hakemuksesi on tallennettu. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. en"}
    :ht-kirjaudu-ulos                            {:fi "Kirjaudu ulos"
-                                                 :sv "Kirjaudu ulos sv"
+                                                 :sv "Logga ut"
                                                  :en "Kirjaudu ulos en"}
    :ht-has-applied-lander-header                {:fi "Olet jo lähettänyt hakemuksen hakuun:"
-                                                 :sv "Olet jo lähettänyt hakemuksen hakuun: sv"
+                                                 :sv "Du har redan skickat en ansökan:"
                                                  :en "Olet jo lähettänyt hakemuksen hakuun: en"}
    :ht-has-applied-lander-paragraph1            {:fi "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta."
-                                                 :sv "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. sv"
+                                                 :sv "I den här ansökan kan du skicka bara en (1) ansökan. Du har redan skickat en ansökan och därför kan du inte skicka flera ansökningar."
                                                  :en "Tässä haussa voit lähettää vain yhden (1) hakemuksen. Olet jo lähettänyt hakemuksen tähän hakuun ja siksi et voi lähettää toista hakemusta. en"}
    :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun."
-                                                 :sv "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun. sv"
+                                                 :sv "Om du vill ändra din ansökan, ska du logga in i tjänsten Min Studieinfo."
                                                  :en "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun. en"}
    :ht-has-applied-lander-paragraph3            {:fi "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."
-                                                 :sv "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. sv"
+                                                 :sv "Vid problem kan du kontakta den läroanstalt som du har sökt till."
                                                  :en "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen. en"}
-   :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolussa"
-                                                 :sv "Katso hakemustasi Oma Opintopolussa sv"
+   :ht-siirry-oma-opintopolkuun                 {:fi "Katso hakemustasi Oma Opintopolku-palvelussa"
+                                                 :sv "Se din ansökan i tjänsten Min Studieinfo"
                                                  :en "Katso hakemustasi Oma Opintopolussa en"}
    :ht-jatka-palvelun-kayttoa                   {:fi "Jatka palvelun käyttöä"
                                                  :sv "Jatka palvelun käyttöä sv"
@@ -648,25 +648,25 @@
                                                  :sv "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä sv"
                                                  :en "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä en"}
    :ht-session-expired-header                   {:fi "Istunto on vanhentunut"
-                                                 :sv "Istunto on vanhentunut sv"
+                                                 :sv "Sessionen har löpt ut"
                                                  :en "Istunto on vanhentunut en"}
    :ht-session-expired-text                     {:fi "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu."
-                                                 :sv "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu. sv"
+                                                 :sv "Sessionen löpte ut och du har loggats ut ur tjänsten. Din ansökan sparades inte."
                                                  :en "Istunto vanhentui ja sinut on kirjattu ulos palvelusta. Hakemustasi ei ole tallennettu. en"}
    :ht-session-expired                          {:fi "Siirry Opintopolun etusivulle"
                                                  :sv "Siirry Opintopolun etusivulle sv"
                                                  :en "Siirry Opintopolun etusivulle en"}
    :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
-                                                 :sv "Din ansökan har tagits emot!"
+                                                 :sv "Din ansökan har mottagits!"
                                                  :en "Your application has been received!"}
    :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
-                                                 :sv "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. sv"
+                                                 :sv "Du får en bekräftelse i din e-post. Du kan granska din ansökan eller logga ut. Du kan senare granska och ändra din ansökan via tjänsten Min Studieinfo."
                                                  :en "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa. en"}
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
-                                                 :sv "Katso hakemustasi sv"
+                                                 :sv "Granska din ansökan"
                                                  :en "Katso hakemustasi en"}
    :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä."
-                                                 :sv "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. sv"
+                                                 :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten suomi.fi. "
                                                  :en "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. en"}})
 
 (def oppiaine-translations
