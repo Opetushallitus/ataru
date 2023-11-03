@@ -846,7 +846,9 @@
                                         (-> x
                                             (dissoc :belongs-to-hakukohderyhma)
                                             (dissoc :belongs-to-hakukohteet))
-                                        x))]
+                                        x))
+        properties (-> (or (get-in form [:properties]) {})
+                       (select-keys [:allow-hakeminen-tunnistautuneena]))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
@@ -857,7 +859,8 @@
                                                                         (remove-belongs-to)) component))
                                                  content)))
                          (assoc :key new-form-key))
-                     {:locked nil :locked-by nil}))
+                     {:locked nil :locked-by nil}
+                     {:properties properties}))
     db))
 
 (reg-event-db :editor/copy-form copy-form)
