@@ -175,7 +175,9 @@
                 (oss/persist-session! new-session-key ticket parsed-attributes)
                 (-> (response/found target)
                     (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
-                                                                       :path "/hakemus"})))))
+                                                                       :path "/hakemus"
+                                                                       :http-only true
+                                                                       :secure true})))))
               ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
               (response/bad-request))))
         (catch Exception e
