@@ -100,7 +100,7 @@
                           (util/non-blank-val tarjoaja-name [lang :fi :sv :en])))
                    hakukohteet))))
 
-(defn- add-blank-templates [templates]
+(defn- add-blank-templates [templates form-allows-ht?]
   (as-> templates x
         (util/group-by-first (comp keyword :lang) x)
         (merge languages-map x)
@@ -110,7 +110,9 @@
                  {:lang           (name lang)
                   :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
                   :content        (get template :content "")
-                  :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))
+                  :content-ending (get template :content_ending (if form-allows-ht?
+                                                                  ""
+                                                                  (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang])))
                   :signature      (get template :signature (get-in email-default-texts [:email-submit-confirmation-template :signature lang]))}))
              x)))
 
@@ -140,9 +142,9 @@
                                             :signature       (->safe-html signature)}))})
 
 (defn get-email-templates
-  [form-key]
+  [form-key form-allows-ht?]
   (as-> (email-store/get-email-templates form-key) x
-        (add-blank-templates x)
+        (add-blank-templates x form-allows-ht?)
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %) (:signature %)) x)))
 
 (defn- attachment-with-deadline [_ lang field]
@@ -270,7 +272,8 @@
         tarjonta-info                   (get-tarjonta-info koodisto-cache tarjonta-service organization-service ohjausparametrit-service application)
         raw-form                        (forms/fetch-by-id (:form application))
         application-attachment-reviews  (application-store/get-application-attachment-reviews (:key application))
-        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form)))
+        form-allows-ht?                 (boolean (get-in raw-form [:properties :allow-hakeminen-tunnistautuneena]))
+        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form) form-allows-ht?))
         get-attachment-type             (get-attachment-type-fn koodisto-cache)]
     (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url)))
 
