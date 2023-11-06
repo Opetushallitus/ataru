@@ -783,6 +783,10 @@
                                   :rating     s/Int
                                   :haku-oid   (s/maybe s/Str)
                                   :feedback   (s/maybe s/Str)})
+(s/defschema HasAppliedParams {:haku-oid s/Str
+                               (s/optional-key :ssn) (s/maybe s/Str)
+                               (s/optional-key :email) (s/maybe s/Str)
+                               (s/optional-key :eidas-id) (s/maybe s/Str)})
 
 (s/defschema PermissionCheckDto {:personOidsForSamePerson          [s/Str]
                                  :organisationOids                 [s/Str]

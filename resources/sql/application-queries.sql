@@ -302,6 +302,16 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
 
+-- name: yesql-has-eidas-applied
+SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
+                                                          JOIN application_reviews
+                                                               ON application_key = a.key
+                              WHERE a.haku = :haku_oid AND
+                                    a.tunnistautuminen->'session'->'data'->>'eidas-id' = :eidas_id AND
+                                    state <> 'inactivated') AS t
+               WHERE t.id = (SELECT max(id) FROM applications
+                             WHERE key = t.key)) AS has_applied;
+
 -- name: yesql-has-email-applied
 SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                               JOIN application_reviews

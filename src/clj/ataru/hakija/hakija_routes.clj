@@ -156,7 +156,7 @@
       :query-params [{ticket :- s/Str nil}
                      {target :- s/Str nil}
                      {lang :- s/Str nil}]
-      (log/info "login with ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
+      (log/info "login with lang" lang ",ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
       (try
         (if (nil? ticket)
           (response/found
@@ -219,6 +219,7 @@
                                  :display-name (get-in session [:data :display-name])
                                  :auth-type (get-in session [:data :auth-type])
                                  :logged-in (:logged-in session)
+                                 :eidas-id (get-in session [:data :eidas-id])
                                  :expires-soon (:expires_soon session)}
                                 {:logged-in false})]
           (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
@@ -435,17 +436,18 @@
       :summary "Get cached koulutustyypit from koodisto"
       (let [codes (koodisto/get-koulutustyypit koodisto-cache)]
         (response/ok codes)))
-    (api/GET "/has-applied" []
+    (api/POST "/has-applied" []
       :summary "Check if a person has already applied"
-      :query-params [hakuOid :- (api/describe s/Str "Haku OID")
-                     {ssn :- (api/describe s/Str "SSN") nil}
-                     {email :- (api/describe s/Str "Email address") nil}]
-      (cond (some? ssn)
-            (response/ok (application-store/has-ssn-applied hakuOid ssn))
-            (some? email)
-            (response/ok (application-store/has-email-applied hakuOid email))
-            :else
-            (response/bad-request {:error "Either ssn or email is required"})))
+      :body [has-applied-params ataru-schema/HasAppliedParams]
+      (let [{:keys [haku-oid ssn email eidas-id]} has-applied-params]
+        (cond (some? ssn)
+              (response/ok (application-store/has-ssn-applied haku-oid ssn))
+              (some? eidas-id)
+              (response/ok (application-store/has-eidas-applied haku-oid eidas-id))
+              (some? email)
+              (response/ok (application-store/has-email-applied haku-oid email))
+              :else
+              (response/bad-request {:error "Either ssn, email or eidas-id is required"}))))
     (api/PUT "/selection-limit" []
       :summary "Selection limits"
       :query-params [{form-key :- s/Str nil}
