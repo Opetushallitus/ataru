@@ -124,7 +124,7 @@
       [:p.application__hakeminen-tunnistautuneena-lander-main-text
        [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]]
       [:button.application__tunnistaudu-button
-       {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen])
+       {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen (name lang)])
         :data-test-id "tunnistautuminen-button"}
        [icons/icon-lock] (translations/get-hakija-translation :ht-kirjaudu-sisaan lang)]]
      [:div.application__hakeminen-tunnistautuneena-separator-wrapper

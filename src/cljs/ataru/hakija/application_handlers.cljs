@@ -713,14 +713,18 @@
     (let [haku-oid             @(subscribe [:state-query [:form :tarjonta :haku-oid]])
           can-submit-multiple? @(subscribe [:state-query [:form :tarjonta :can-submit-multiple-applications]])
           ssn                  (get-in session-data [:fields :ssn :value])
-          yksiloiva-param      (when ssn (str "&ssn=" ssn))]
+          eidas-id             (get-in session-data [:eidas-id])
+          body {:haku-oid haku-oid
+                :ssn      ssn
+                :eidas-id eidas-id}]
       (if (and (not can-submit-multiple?)
                haku-oid
-               ssn)
+               (or ssn eidas-id))
         {:db   db
-         :http {:method  :get
-                :url     (str "/hakemus/api/has-applied?hakuOid=" haku-oid yksiloiva-param)
-                :handler [:application/handle-fetch-has-applied-for-oppija-session]}}
+         :http {:method    :post
+                :url       "/hakemus/api/has-applied"
+                :post-data body
+                :handler   [:application/handle-fetch-has-applied-for-oppija-session]}}
         {:db db}))))
 
 (reg-event-fx
@@ -1519,10 +1523,10 @@
 (reg-event-fx
   :application/redirect-to-tunnistautuminen
   [check-schema-interceptor]
-  (fn [_]
+  (fn [_ [_ lang]]
     (let [location (.. js/window -location)
           service-url (config/get-public-config [:applicant :service_url])
-          target (str service-url "/hakemus/auth/oppija?target=" location)]
+          target (str service-url "/hakemus/auth/oppija?lang=" lang "&target=" location)]
       (set! (.. js/window -location -href) target)
       nil)))
 

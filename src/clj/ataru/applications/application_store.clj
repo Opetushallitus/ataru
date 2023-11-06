@@ -585,6 +585,12 @@
        first
        ->kebab-case-kw))
 
+(defn has-eidas-applied [haku-oid eidas-id]
+  (->> (exec-db :db queries/yesql-has-eidas-applied {:haku_oid haku-oid
+                                                     :eidas_id eidas-id})
+       first
+       ->kebab-case-kw))
+
 (defn has-email-applied [haku-oid email]
   (->> (exec-db :db queries/yesql-has-email-applied {:haku_oid haku-oid
                                                      :email    email})
