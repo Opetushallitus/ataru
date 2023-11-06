@@ -644,8 +644,8 @@
    :ht-session-expiring-header                  {:fi "Istuntosi on vanhentumassa"
                                                  :sv "Istuntosi on vanhentumassa sv"
                                                  :en "Istuntosi on vanhentumassa en"}
-   :ht-session-expiring-text                    {:fi "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä"
-                                                 :sv "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä sv"
+   :ht-session-expiring-text                    {:fi "Sinut kirjataan 15 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
+                                                 :sv "Du loggas ut ur tjänsten om 15 minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
                                                  :en "Sinut kirjataan 5 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et jatka palvelun käyttöä en"}
    :ht-session-expired-header                   {:fi "Istunto on vanhentunut"
                                                  :sv "Sessionen har löpt ut"
