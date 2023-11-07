@@ -26,7 +26,8 @@
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]
             [ataru.hakija.components.attachment :as attachment]
-            [ataru.application-common.accessibility-util :as a11y]))
+            [ataru.application-common.accessibility-util :as a11y]
+            [ataru.constants :as constants]))
 
 (defonce autocomplete-off "new-password")
 
@@ -479,7 +480,12 @@
   (let [label               (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
         person-info-module? (= "person-info" (:module field-descriptor))
         logged-in?          @(subscribe [:state-query [:oppija-session :logged-in]])
-        lang                @(subscribe [:application/form-language])]
+        auth-type           @(subscribe [:state-query [:oppija-session :auth-type]])
+        lang                @(subscribe [:application/form-language])
+        ht-info-text        (cond (= auth-type constants/auth-type-strong)
+                                  (tu/get-hakija-translation :ht-person-info-module-top-text lang)
+                                  (= auth-type constants/auth-type-eidas)
+                                  (tu/get-hakija-translation :ht-person-info-module-top-text-eidas lang))]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
       [:h2 label]
@@ -489,8 +495,9 @@
               [:div.application__person-info-module-ht-info-wrapper
                [:div.application__person-info-module-ht-info-contents
                 [:i.zmdi.zmdi-info-outline]
-                [:p.application__person-info-module-ht-info-text
-                 (tu/get-hakija-translation :ht-person-info-module-top-text lang)]]])]
+                (when ht-info-text
+                  [:p.application__person-info-module-ht-info-text
+                   ht-info-text])]])]
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
              (if (:per-hakukohde child)
