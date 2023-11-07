@@ -16,6 +16,10 @@
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
 
+(defn- information-request-email-template-filename
+  [lang]
+  (str "templates/information_request_template_" (name lang) ".html"))
+
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
        (filter (comp (partial = answer-key-str) :key))
@@ -41,7 +45,7 @@
                              (remove string/blank? [(extract-answer-value "email" application)]))
           translations     (translations/get-translations lang)
           url-and-link (email-util/get-application-url-and-text form application lang)
-          body             (selmer/render-file "templates/information-request-template.html"
+          body             (selmer/render-file (information-request-email-template-filename lang)
                                                (merge {:message (->safe-html (:message information-request))}
                                                       (if (or guardian? (not add-update-link?))
                                                         {}

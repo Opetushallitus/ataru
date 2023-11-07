@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title></title>
+</head>
+<body style="margin: 0; font-family: 'Open Sans', Arial, sans-serif;">
+<table style="width: 100%;">
+    <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+            {{message|safe}}
+        </td>
+    </tr>
+    {% if application-url|not-empty %}
+    <tr>
+        <td style="padding-left: 20px; padding-top: 10px;">
+            <a style="color: #0093C4;" href="{{application-url|safe}}">{{application-url|safe}}</a>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding-left: 20px; padding-top: 40px;">
+            {{modify-link-text}} {{do-not-share-warning-text}}
+        </td>
+    </tr>
+    {% endif %}
+    {% if oma-opintopolku-link|not-empty %}
+    <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+            Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                    href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a>.
+            Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos Oma Opintopolku-palvelusta.
+        </td>
+    </tr>
+    {% endif %}
+    <tr>
+        <td style="padding-top: 50px;"></td>
+    </tr>
+</table>
+</body>
+</html>
