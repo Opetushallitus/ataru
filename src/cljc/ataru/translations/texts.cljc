@@ -667,7 +667,10 @@
                                                  :en "Katso hakemustasi en"}
    :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä."
                                                  :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten suomi.fi. "
-                                                 :en "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. en"}})
+                                                 :en "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä. en"}
+   :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
+                                                 :sv "SV Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautuminen kautta."
+                                                 :en "EN Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautuminen kautta."}})
 
 (def oppiaine-translations
   {:oppiaine-a {:fi "Äidinkieli ja kirjallisuus"
