@@ -25,22 +25,26 @@
             preferred-name-valid? (contains? first-names preferred-name)
             ssn (:nationalIdentificationNumber parsed-raw-map)
             have-finnish-ssn? (not (clojure.string/blank? ssn))
-            eidas? (some? (:personIdentifier parsed-raw-map))]
+            last-name (or
+                        (:sn parsed-raw-map)
+                        (:familyName parsed-raw-map))
+            eidas? (some? (:personIdentifier parsed-raw-map))
+            auth-type (cond eidas? :eidas
+                            have-finnish-ssn? :strong
+                            :else :weak)]
         {:person-oid (:personOid parsed-raw-map)
          :eidas-id (:personIdentifier parsed-raw-map)
-         :auth-type (if eidas? :eidas :strong)
+         :auth-type auth-type
          :display-name (or (:givenName parsed-raw-map)
                            (first first-names))
          :fields     {:first-name           {:value  (:firstName parsed-raw-map)
-                                             :locked true}
+                                             :locked (not (clojure.string/blank? (:firstName parsed-raw-map)))}
                       :preferred-name       {:value  (when preferred-name-valid? preferred-name)
                                              :locked preferred-name-valid?}
-                      :last-name            {:value  (or
-                                                       (:sn parsed-raw-map)
-                                                       (:familyName parsed-raw-map))
-                                             :locked true}
+                      :last-name            {:value  last-name
+                                             :locked (not (clojure.string/blank? last-name))}
                       :ssn                  {:value  ssn
-                                             :locked true}
+                                             :locked have-finnish-ssn?}
                       :have-finnish-ssn     {:value have-finnish-ssn?
                                              :locked have-finnish-ssn?}
                       :email                {:value  (:mail parsed-raw-map)
@@ -54,7 +58,7 @@
                       :postal-code          {:value  (:VakinainenKotimainenLahiosoitePostinumero parsed-raw-map)
                                              :locked false}
                       :home-town            {:value  (:KotikuntaKuntanumero parsed-raw-map)
-                                             :locked true}}}))))
+                                             :locked (not (clojure.string/blank? (:KotikuntaKuntanumero parsed-raw-map)))}}}))))
 
 (defn parse-cas-oppija-login-url [locale target]
   (let [url (str
