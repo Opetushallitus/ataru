@@ -11,6 +11,17 @@
                                    (Integer/valueOf year)]
                             :cljs [day month year])))))
 
+(def ^:private cas-oppija-dob-pattern #"^(\d{4})-(\d{1,2})-(\d{1,2})$")
+
+;1981-02-04 to 04.02.1981
+(defn cas-oppija-dob-to-ataru-dob [dob]
+  (when-let [[_ year month day] (re-matches cas-oppija-dob-pattern dob)]
+    (let [f #?(:clj format :cljs gstring/format)]
+      (f "%02d.%02d.%d" #?@(:clj  [(Integer/valueOf day)
+                                   (Integer/valueOf month)
+                                   (Integer/valueOf year)]
+                            :cljs [day month year])))))
+
 (defn update-options-while-keeping-existing-followups [newest-options existing-options]
   (let [options (if (empty? existing-options)
                   newest-options
