@@ -2,7 +2,8 @@
   (:require [clojure.data.xml :as xml]
             [ataru.config.core :refer [config]]
             [taoensso.timbre :as log]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [ataru.component-data.value-transformers :as t]))
 
 (defn parse-oppija-attributes-if-successful [validation-response]
   (let [xml (xml/parse-str validation-response)
@@ -31,7 +32,9 @@
             eidas? (some? (:personIdentifier parsed-raw-map))
             auth-type (cond eidas? :eidas
                             have-finnish-ssn? :strong
-                            :else :weak)]
+                            :else :weak)
+            parsed-birth-date (when-let [dob (:dateOfBirth parsed-raw-map)]
+                                (t/cas-oppija-dob-to-ataru-dob dob))]
         {:person-oid (:personOid parsed-raw-map)
          :eidas-id (:personIdentifier parsed-raw-map)
          :auth-type auth-type
@@ -45,6 +48,8 @@
                                              :locked (not (clojure.string/blank? last-name))}
                       :ssn                  {:value  ssn
                                              :locked have-finnish-ssn?}
+                      :birth-date           {:value parsed-birth-date
+                                             :locked (not (clojure.string/blank? parsed-birth-date))}
                       :have-finnish-ssn     {:value have-finnish-ssn?
                                              :locked have-finnish-ssn?}
                       :email                {:value  (:mail parsed-raw-map)
