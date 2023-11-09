@@ -14,7 +14,8 @@
             [clojure.string :as string]
             [goog.string :as gstring]
             [reagent.core :as r]
-            [re-frame.core :refer [subscribe dispatch]]))
+            [re-frame.core :refer [subscribe dispatch]]
+            [ataru.constants :as constants]))
 
 (defn- application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
@@ -249,7 +250,7 @@
                                                                             @(subscribe [:editor/virkailija-translation :unknown])])]
        [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]
        (cond
-         (= (:tunnistautuminen application) "strong")
+         (= (:tunnistautuminen application) constants/auth-type-strong)
          [:span.application-handling__list-row--tunnistautunut-icon
           [:img.logo-suomi-fi
            {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
