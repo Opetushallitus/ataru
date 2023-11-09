@@ -917,7 +917,6 @@
                                       (contains? selected-hakukohde-oids (str hakukohde)))
                              index)))))))
 
-
 (re-frame/reg-sub
   :application/review-notes
   (fn [db]
@@ -929,16 +928,19 @@
     (set (-> db :application :selected-review-hakukohde-oids))))
 
 (re-frame/reg-sub
-  :application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet
-  (fn [_ _]
-    [(re-frame/subscribe [:application/review-notes])
-     (re-frame/subscribe [:application/selected-review-hakukohde-oids])])
-  (fn [[notes selected-review-hakukohde-oids] _]
-    (->> notes
-         (keep-indexed (fn [index {:keys [hakukohde]}]
-                         (when (or (not hakukohde)
-                                   (selected-review-hakukohde-oids hakukohde))
-                           index))))))
+ :application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet
+ (fn [_ _]
+   [(re-frame/subscribe [:application/review-notes])
+    (re-frame/subscribe [:application/selected-review-hakukohde-oids])])
+ (fn [[notes selected-review-hakukohde-oids] _]
+   (->> notes
+        (keep-indexed
+          (fn [index {:keys [state-name hakukohde]}]
+            (when
+              (and (not= "eligibility-state" state-name)
+                   (or (not hakukohde)
+                       (contains? selected-review-hakukohde-oids (str hakukohde))))
+              index))))))
 
 (re-frame/reg-sub
   :application/prioritize-hakukohteet?
