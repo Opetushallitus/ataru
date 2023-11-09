@@ -2,7 +2,8 @@
   (:require [ataru.translations.texts :refer [email-default-texts email-link-section-texts]]
             [clojure.string :as string]
             [ataru.config.core :refer [config]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [ataru.constants :as constants]))
 
 (def from-address "no-reply@opintopolku.fi")
 
@@ -58,7 +59,7 @@
 
 (defn get-application-url-and-text [form application lang]
   (let [form-allows-ht? (boolean (get-in form [:properties :allow-hakeminen-tunnistautuneena]))
-        strong-auth? (= (:tunnistautuminen application) "strong")]
+        strong-auth? (= (:tunnistautuminen application) constants/auth-type-strong)]
     (log/info "get application url and text " (:properties form) ", " form-allows-ht? " - " strong-auth?)
     (if form-allows-ht?
       (if strong-auth?
