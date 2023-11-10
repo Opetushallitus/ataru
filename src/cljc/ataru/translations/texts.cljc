@@ -636,10 +636,10 @@
                                                  :sv "Se din ansökan i tjänsten Min Studieinfo"
                                                  :en "View your application on My Studyinfo"}
    :ht-jatka-palvelun-kayttoa                   {:fi "Jatka palvelun käyttöä"
-                                                 :sv "Jatka palvelun käyttöä sv"
+                                                 :sv "Fortsätt använda tjänsten"
                                                  :en "Continue using the service"}
    :ht-session-expiring-header                  {:fi "Istuntosi on vanhentumassa"
-                                                 :sv "Istuntosi on vanhentumassa sv"
+                                                 :sv "Din session håller på att föråldras"
                                                  :en "Your session is about to expire"}
    :ht-session-expiring-text                    {:fi "Sinut kirjataan 15 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
                                                  :sv "Du loggas ut ur tjänsten om 15 minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
@@ -651,7 +651,7 @@
                                                  :sv "Sessionen löpte ut och du har loggats ut ur tjänsten. Din ansökan sparades inte."
                                                  :en "The session has expired and you have been logged out of the service. Your application has not been saved."}
    :ht-session-expired                          {:fi "Siirry Opintopolun etusivulle"
-                                                 :sv "Siirry Opintopolun etusivulle sv"
+                                                 :sv "Gå till framsidan av Studieinfo"
                                                  :en "Go to the Studyinfo front page"}
    :ht-application-submitted                    {:fi "Hakemuksesi on vastaanotettu!"
                                                  :sv "Din ansökan har mottagits!"
@@ -666,7 +666,7 @@
                                                  :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten suomi.fi. "
                                                  :en "Your personal information has been prefilled with data from the population data service. You can modify your contact information. You can modify the data from the population data service on Suomi.fi."}
    :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
-                                                 :sv "SV Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautuminen kautta."
+                                                 :sv "Ditt namn och födelsetid har hämtats till ansökningsblanketten via identifiering."
                                                  :en "Your name and date of birth have been prefilled on the application form via identification."}})
 
 (def oppiaine-translations
