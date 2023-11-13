@@ -6,7 +6,7 @@
     [ataru.applications.application-store :as application-store]
     [ataru.person-service.person-service :as person-service]
     [ataru.odw.odw-service :as odw-service]
-    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-service]
+    [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
     [ataru.tilastokeskus.tilastokeskus-service :as tilastokeskus-service]
     [ataru.valintapiste.valintapiste-service :as valintapiste-service]
     [ataru.util :as util]
@@ -36,20 +36,27 @@
    (some #(authorized-by-tarjoaja? authorized-organization-oids %)
          (:hakukohde application))))
 
-(defn authorized-by-hakukohde?
-  [authorized-organization-oids hakukohde-oid]
+(defn all-hakukohteet-authorized-by-tarjoajat?
+  [authorized-organization-oids hakukohteet]
   (boolean
-    (authorized-by-tarjoaja? authorized-organization-oids hakukohde-oid)))
+   (every? #(authorized-by-tarjoaja? authorized-organization-oids %)
+           hakukohteet)))
+
+(defn authorized-by-hakukohde?
+  [authorized-organization-oids hakukohde]
+  (boolean
+   (authorized-by-tarjoaja? authorized-organization-oids hakukohde)))
 
 (defn- populate-applications-hakukohteet
   [tarjonta-service applications]
   (let [hakukohteet (->> applications
                          (mapcat :hakukohde)
                          distinct
-                         (tarjonta-service/get-hakukohteet tarjonta-service)
+                         (tarjonta-protocol/get-hakukohteet tarjonta-service)
                          (reduce #(assoc %1 (:oid %2) %2) {}))]
-    (map #(update % :hakukohde (partial mapv (fn [oid] (get hakukohteet oid {:oid oid}))))
-         applications)))
+    (map
+      #(update % :hakukohde (partial mapv (fn [oid] (get hakukohteet oid {:oid oid}))))
+      applications)))
 
 (defn- depopulate-application-hakukohteet
   [application]
@@ -165,6 +172,17 @@
                           authorized-by-custom?)))
    (constantly true))))
 
+(defn applications-review-authorized?
+  ([organization-service tarjonta-service session hakukohde-oids rights]
+   (session-orgs/run-org-authorized
+    session
+    organization-service
+    rights
+    (constantly false)
+    #(all-hakukohteet-authorized-by-tarjoajat? %
+      (tarjonta-protocol/get-hakukohteet tarjonta-service (into (vector) (map name hakukohde-oids))))
+    (constantly true))))
+
 (defn- authenticate-by-opinto-ohjaaja-fn
   [organization-service suoritus-service person-service session]
   (fn [application-authorization-data]
@@ -214,7 +232,7 @@
     (or (applications-access-authorized? organization-service tarjonta-service session application-keys rights opinto-ohjaaja-fn)
         (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys))))
 
-(defn- rights-by-hakukohde
+(defn rights-by-hakukohde
   [organization-service session application]
   (let [authorized? (memoize
                      (fn [right]
@@ -387,16 +405,16 @@
          (map remove-organization-oid))))
 
 (defn kouta-application-count-for-hakukohde
-  [organization-service session hakukohde-oid]
+  [organization-service tarjonta-service session hakukohde-oid]
   (session-orgs/run-org-authorized
-    session
-    organization-service
-    [:view-applications :edit-applications]
-    (constantly nil)
-    #(if (authorized-by-hakukohde? % hakukohde-oid)
-       (application-store/kouta-application-count-for-hakukohde hakukohde-oid)
-       (constantly nil))
-    #(application-store/kouta-application-count-for-hakukohde hakukohde-oid)))
+   session
+   organization-service
+   [:view-applications :edit-applications]
+   (constantly nil)
+   #(if (authorized-by-hakukohde? % (tarjonta-protocol/get-hakukohde tarjonta-service hakukohde-oid))
+     (application-store/kouta-application-count-for-hakukohde hakukohde-oid)
+     (constantly nil))
+   #(application-store/kouta-application-count-for-hakukohde hakukohde-oid)))
 
 (defn valinta-ui-applications
   [organization-service tarjonta-service person-service session query]
