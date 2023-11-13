@@ -1005,6 +1005,7 @@
                                                      (group-by (comp :key first)))
                lang                             (subscribe [:application/lang])
                edit-rights-for-hakukohteet?     @(subscribe [:application/edit-rights-for-selected-hakukohteet?])
+               toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
@@ -1027,7 +1028,12 @@
              [:div.application-handling__review-outer-container
               [application-hakukohde-selection]
               (when (not-empty selected-review-hakukohde)
-                (if edit-rights-for-hakukohteet?
+                ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
+                (if (and (not edit-rights-for-hakukohteet?)
+                         toisen-asteen-yhteishaku?)
+                  [:div.application-handling__review-row
+                   [:span.hakukohde-review-rights-alert
+                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]
                   [:div
                    (when (not-empty attachment-reviews-for-hakukohde)
                      [:div.application-handling__attachment-review-toggle-container
@@ -1049,10 +1055,7 @@
                    [application-hakukohde-review-inputs
                     (if tutu-form?
                       review-states/hakukohde-review-types
-                      review-states/hakukohde-review-types-normal)]]
-                  [:div.application-handling__review-row
-                   [:span.hakukohde-review-rights-alert
-                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]))
+                      review-states/hakukohde-review-types-normal)]]))
               (when tutu-form?
                 [application-tutu-payment-status @payments])
               (when @(subscribe [:application/show-info-request-ui?])
