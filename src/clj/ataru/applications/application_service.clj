@@ -537,11 +537,11 @@
   (save-application-review
     [_ session review]
     (let [application-key (:application-key review)]
-      (when (aac/applications-access-authorized?
+      (when (aac/applications-review-authorized?
              organization-service
              tarjonta-service
              session
-             [application-key]
+             (keys (:hakukohde-reviews review))
              [:edit-applications])
         (when-let [event-id (application-store/save-application-review review session audit-logger)]
           (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
@@ -724,10 +724,11 @@
   (kouta-application-count-for-hakukohde
     [_ session hakukohde-oid]
     (if-let [application-count (aac/kouta-application-count-for-hakukohde
-                            organization-service
-                            session
-                            hakukohde-oid)]
-        {:applicationCount application-count}
+                                organization-service
+                                tarjonta-service
+                                session
+                                hakukohde-oid)]
+      {:applicationCount application-count}
       {:unauthorized nil}))
 
   (suoritusrekisteri-applications

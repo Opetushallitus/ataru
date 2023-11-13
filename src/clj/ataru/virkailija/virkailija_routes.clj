@@ -712,7 +712,7 @@
                           session
                           review)]
           (response/ok result)
-          (response/unauthorized {:error (str "Hakemuksen "
+          (response/forbidden {:error (str "Hakemuksen "
                                               (:application-key review)
                                               " käsittely ei ole sallittu")})))
 
