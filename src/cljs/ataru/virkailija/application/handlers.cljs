@@ -549,11 +549,7 @@
                                                                          (filter #(contains? hakukohde-keys (key %))))]
                                         (js/console.log "autosave")
                                           (js/console.log (count hakukohde-review-keys))
-                                          (js/console.log (type hakukohde-review-keys))
-                                          (js/console.log (map keyword selected-hakukohde-oids))
-                                          (js/console.log (count (map keyword selected-hakukohde-oids)))
                                         (js/console.log (select-keys (current :hakukohde-reviews) (map keyword selected-hakukohde-oids)))
-                                          (js/console.log (count (select-keys (current :hakukohde-reviews) (map keyword selected-hakukohde-oids))))
                                         (ajax/http
                                           :put
                                           "/lomake-editori/api/applications/review"
