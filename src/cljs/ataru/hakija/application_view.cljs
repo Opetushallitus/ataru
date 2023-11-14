@@ -1,6 +1,7 @@
 (ns ataru.hakija.application-view
   (:require [ataru.config :as config]
             [ataru.application-common.application-field-common :refer [markdown-paragraph]]
+            [ataru.constants :as constants]
             [ataru.hakija.banner :refer [banner]]
             [ataru.hakija.application-view-icons :as icons]
             [ataru.hakija.application-form-components :refer [editable-fields]]
@@ -95,18 +96,23 @@
           [editable-fields form submit-status])))))
 
 (defn- has-applied-lander [form selected-lang]
-  (let [lang                   (subscribe [:application/form-language])
-        header (or (-> form :tarjonta :haku-name selected-lang)
-                   (-> form :name selected-lang))]
+  (let [lang         (subscribe [:application/form-language])
+        header       (or (-> form :tarjonta :haku-name selected-lang)
+                         (-> form :name selected-lang))
+        auth-type    @(subscribe [:state-query [:oppija-session :auth-type]])
+        strong-auth? (= constants/auth-type-strong auth-type)]
     [:div.application__hakeminen-tunnistautuneena-has-applied-lander-wrapper
      [:h1 (translations/get-hakija-translation :ht-has-applied-lander-header @lang)]
      [:div.application__hakeminen-tunnistautuneena-has-applied-lander-haku-header header]
      [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph1 @lang)]
-     [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph2 @lang)]
+     [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation (if strong-auth?
+                                                                                                                      :ht-has-applied-lander-paragraph2
+                                                                                                                      :ht-has-applied-lander-paragraph2-eidas) @lang)]
      [:p.application__:hakeminen-tunnistautuneena-has-applied-lander-paragraph (translations/get-hakija-translation :ht-has-applied-lander-paragraph3 @lang)]
-     [:button.application__oma-opintopolku-button
-      {:on-click #(dispatch [:application/redirect-to-oma-opintopolku])}
-      (translations/get-hakija-translation :ht-siirry-oma-opintopolkuun @lang)]]))
+     (when strong-auth?
+       [:button.application__oma-opintopolku-button
+        {:on-click #(dispatch [:application/redirect-to-oma-opintopolku])}
+        (translations/get-hakija-translation :ht-siirry-oma-opintopolkuun @lang)])]))
 
 (defn- hakeminen-tunnistautuneena-lander [form lang]
   (let [header (or (-> form :tarjonta :haku-name lang)
@@ -199,6 +205,8 @@
   [hidden?]
   (fn []
     (let [lang @(subscribe [:application/form-language])
+          auth-type    @(subscribe [:state-query [:oppija-session :auth-type]])
+          strong-auth? (= constants/auth-type-strong auth-type)
           answers @(subscribe [:state-query [:application :answers]])]
       [:div.application__submitted-submit-notification-ht-overlay
        [:div.application__submitted-submit-notification-ht
@@ -218,7 +226,9 @@
           [:div.application__submitted-submit-notification-heading
            {:id "submitted-submit-notification-confirmation"
             :role "text"}
-           (translations/get-hakija-translation :ht-application-confirmation lang)])
+           (translations/get-hakija-translation (if strong-auth?
+                                                  :ht-application-confirmation
+                                                  :ht-application-confirmation-eidas) lang)])
         [:div.application__submitted-submit-notification-inner-ht
          [:button.application__overlay-button.application__overlay-button
           {:tab-index    "1"
@@ -229,7 +239,7 @@
          [:button.application__overlay-button.application__overlay-button
           {:tab-index    "2"
            :on-click     #(dispatch [:application/redirect-to-logout (name lang)])
-           :data-test-id "send-feedback-button"
+           :data-test-id "logout-button"
            :autofocus ""}
           [:i.material-icons-outlined.logout
            {:title (translations/get-hakija-translation :ht-kirjaudu-ulos lang)} "logout"]

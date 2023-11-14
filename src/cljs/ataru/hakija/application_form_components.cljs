@@ -481,11 +481,7 @@
         person-info-module? (= "person-info" (:module field-descriptor))
         logged-in?          @(subscribe [:state-query [:oppija-session :logged-in]])
         auth-type           @(subscribe [:state-query [:oppija-session :auth-type]])
-        lang                @(subscribe [:application/form-language])
-        ht-info-text        (cond (= auth-type constants/auth-type-strong)
-                                  (tu/get-hakija-translation :ht-person-info-module-top-text lang)
-                                  (= auth-type constants/auth-type-eidas)
-                                  (tu/get-hakija-translation :ht-person-info-module-top-text-eidas lang))]
+        lang                @(subscribe [:application/form-language])]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
       [:h2 label]
@@ -495,9 +491,15 @@
               [:div.application__person-info-module-ht-info-wrapper
                [:div.application__person-info-module-ht-info-contents
                 [:i.zmdi.zmdi-info-outline]
-                (when ht-info-text
-                  [:p.application__person-info-module-ht-info-text
-                   ht-info-text])]])]
+                (cond (= auth-type constants/auth-type-strong)
+                      [:p.application__person-info-module-ht-info-text
+                       (tu/get-hakija-translation :ht-person-info-module-top-text lang)
+                       [:a {:href "https://suomi.fi"
+                            :target "_blank"}
+                        (tu/get-hakija-translation :ht-person-info-module-top-text-link-text lang)]]
+                      (= auth-type constants/auth-type-eidas)
+                      [:p.application__person-info-module-ht-info-text
+                       (tu/get-hakija-translation :ht-person-info-module-top-text-eidas lang)])]])]
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
              (if (:per-hakukohde child)

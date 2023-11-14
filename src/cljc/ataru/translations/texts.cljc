@@ -629,6 +629,9 @@
    :ht-has-applied-lander-paragraph2            {:fi "Jos haluat muuttaa hakemustasi, niin kirjaudu Oma Opintopolku-palveluun."
                                                  :sv "Om du vill ändra din ansökan, ska du logga in i tjänsten Min Studieinfo."
                                                  :en "If you want to modify your application, log in to My Studyinfo."}
+   :ht-has-applied-lander-paragraph2-eidas      {:fi "Jos haluat muuttaa hakemustasi, niin löydät muokkauslinkin sähköpostiviestistä, jonka sait jättäessäsi edellisen hakemuksen."
+                                                 :sv "Om du vill ändra din ansökan, hittar du bearbetningslänken i e-postmeddelandet som du fick när du skickade din tidigare ansökning."
+                                                 :en "If you want to make changes to your previous application, you can do so by clicking the link in the confirmation email you have received with your earlier application."}
    :ht-has-applied-lander-paragraph3            {:fi "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."
                                                  :sv "Vid problem kan du kontakta den läroanstalt som du har sökt till."
                                                  :en "If you have any issues, please contact the educational institution you are applying to."}
@@ -659,12 +662,18 @@
    :ht-application-confirmation                 {:fi "Saat vahvistuksen sähköpostiisi. Voit katsoa hakemustasi tai kirjautua ulos. Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin Oma Opintopolku-palvelussa."
                                                  :sv "Du får en bekräftelse i din e-post. Du kan granska din ansökan eller logga ut. Du kan senare granska och ändra din ansökan via tjänsten Min Studieinfo."
                                                  :en "You will receive a confirmation to your email. You can view your application or log out. You can view or modify your application later on My Studyinfo."}
+   :ht-application-confirmation-eidas           {:fi "Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."
+                                                 :sv "SV Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."
+                                                 :en "EN Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."}
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
                                                  :sv "Granska din ansökan"
                                                  :en "View your application"}
-   :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa suomi.fi:ssä."
-                                                 :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten suomi.fi. "
-                                                 :en "Your personal information has been prefilled with data from the population data service. You can modify your contact information. You can modify the data from the population data service on Suomi.fi."}
+   :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa"
+                                                 :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten"
+                                                 :en "Your personal information has been prefilled with data from the population data service. You can modify your contact information. You can modify the data from the population data service on"}
+   :ht-person-info-module-top-text-link-text    {:fi "Suomi.fi:ssä."
+                                                 :sv "Suomi.fi."
+                                                 :en "Suomi.fi."}
    :ht-person-info-module-top-text-eidas        {:fi "Nimitietosi ja syntymäaikasi on tuotu hakulomakkeelle tunnistautumisen kautta."
                                                  :sv "Ditt namn och födelsetid har hämtats till ansökningsblanketten via identifiering."
                                                  :en "Your name and date of birth have been prefilled on the application form via identification."}})
