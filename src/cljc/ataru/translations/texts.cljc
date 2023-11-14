@@ -663,8 +663,8 @@
                                                  :sv "Du får en bekräftelse i din e-post. Du kan granska din ansökan eller logga ut. Du kan senare granska och ändra din ansökan via tjänsten Min Studieinfo."
                                                  :en "You will receive a confirmation to your email. You can view your application or log out. You can view or modify your application later on My Studyinfo."}
    :ht-application-confirmation-eidas           {:fi "Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."
-                                                 :sv "SV Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."
-                                                 :en "EN Pääset katsomaan ja muokkaamaan hakemustasi myöhemmin vahvistussähköpostista löytyvän muokkauslinkin kautta."}
+                                                 :sv "Du kan granska och redigera din ansökan senare via bearbetningslänken som finns i bekräftelsemeddelandet."
+                                                 :en "You can view and edit your application later via the edit link found in the confirmation email."}
    :ht-katso-hakemustasi                        {:fi "Katso hakemustasi"
                                                  :sv "Granska din ansökan"
                                                  :en "View your application"}
