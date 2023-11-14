@@ -537,30 +537,26 @@
     ;timestamp instances for same timestamp fetched via ajax are not equal :(
     (not= (dissoc current :created-time) (dissoc prev :created-time))))
 
-(defn- start-application-review-autosave [db selected-hakukohde-oids]
+(defn- start-application-review-autosave [db]
   (assoc-in
     db
     [:application :review-autosave]
     (autosave/interval-loop {:subscribe-path [:application :review]
                              :changed-predicate review-autosave-predicate
                              :handler (fn [current _]
-                                        (let [hakukohde-keys (set(map keyword selected-hakukohde-oids))
-                                              hakukohde-review-keys (->> (select-keys current [:hakukohde-reviews])
-                                                                         (filter #(contains? hakukohde-keys (key %))))]
-                                        (js/console.log "autosave")
-                                          (js/console.log (count hakukohde-review-keys))
-                                        (js/console.log (select-keys (current :hakukohde-reviews) (map keyword selected-hakukohde-oids)))
+                                        (let [selected-review-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+                                              filtered-hakukohde-reviews (select-keys (current :hakukohde-reviews) (map keyword selected-review-hakukohde-oids))]
                                         (ajax/http
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           :application/review-updated
-                                          :override-args {:params (select-keys current [:id
+                                          :override-args {:params (merge (select-keys current [:id
                                                                                         :application-id
                                                                                         :application-key
                                                                                         :score
                                                                                         :state
-                                                                                        :hakukohde-reviews
-                                                                                        :attachment-reviews])})))})))
+                                                                                        :attachment-reviews])
+                                                                         (hash-map :hakukohde-reviews filtered-hakukohde-reviews))})))})))
 
 (reg-event-db
   :application/handle-fetch-application-attachment-metadata
@@ -722,12 +718,9 @@
     (assoc db :fetching-haut-and-hakukohteet-errored true)))
 
 (reg-event-db
-  :application/start-autosave
-  (fn [db _]
-    (let [selected-hakukohde-oids (get-in db [:application :selected-review-hakukohde-oids])]
-      (js/console.log "start autosave")
-      (js/console.log "valittuja hakukohteita:" (count selected-hakukohde-oids))
-    (start-application-review-autosave db selected-hakukohde-oids))))
+ :application/start-autosave
+ (fn [db _]
+   (start-application-review-autosave db)))
 
 (reg-event-fx
   :application/stop-autosave
@@ -834,10 +827,6 @@
 (reg-event-db
   :application/select-review-hakukohde
   (fn [db [_ selected-hakukohde-oid]]
-    (js/console.log "hakukohde päivittyy, täpätty:")
-    (js/console.log selected-hakukohde-oid)
-    (js/console.log "valittuja hakukohteita ennen db-updatea" (count (get-in db [:application :selected-review-hakukohde-oids])))
-    (js/console.log "eka valittu hakukohde ennen db-updatea" (first (get-in db [:application :selected-review-hakukohde-oids])))
     (update-in db [:application :selected-review-hakukohde-oids]
                (fn [hakukohde-oids]
                  (if (contains? (set hakukohde-oids) selected-hakukohde-oid)
