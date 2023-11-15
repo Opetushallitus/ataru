@@ -249,7 +249,7 @@
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
                                           :application-url            application-url
-                                          :application-url-text       application-url-text
+                                          :application-url-text       (->safe-html application-url-text)
                                           :oma-opintopolku-link       oma-opintopolku-link
                                           :payment-url                payment-url
                                           :content                    content

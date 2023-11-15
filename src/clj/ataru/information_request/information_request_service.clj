@@ -44,12 +44,14 @@
                                           (extract-answer-value "guardian-email-secondary" application)])))
                              (remove string/blank? [(extract-answer-value "email" application)]))
           translations     (translations/get-translations lang)
-          url-and-link (email-util/get-application-url-and-text form application lang)
+          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
           body             (selmer/render-file (information-request-email-template-filename lang)
                                                (merge {:message (->safe-html (:message information-request))}
                                                       (if (or guardian? (not add-update-link?))
                                                         {}
-                                                        url-and-link)
+                                                        {:application-url application-url
+                                                         :application-url-text (->safe-html application-url-text)
+                                                         :oma-opintopolku-link oma-opintopolku-link})
                                                       translations))
           subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
                                          (:subject information-request) (:application-key information-request) lang)]

@@ -57,6 +57,7 @@
       (get-in [:public-config :applicant :service_url])
       (str "/hakemus?modify=" secret)))
 
+;Vahvasti tunnistautunut saa linkin oma-opintopolkuun, muut saavat suoran muokkauslinkin hakemukselle ja siihen liittyvän ohjetekstin.
 (defn get-application-url-and-text [form application lang]
   (let [form-allows-ht? (boolean (get-in form [:properties :allow-hakeminen-tunnistautuneena]))
         strong-auth? (= (:tunnistautuminen application) constants/auth-type-strong)]
