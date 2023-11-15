@@ -671,6 +671,9 @@
    :ht-person-info-module-top-text              {:fi "Henkilötietosi on tuotu väestötietojärjestelmästä. Yhteystietosi ovat muokattavissa. Väestötietojärjestelmän tietoja voit muuttaa"
                                                  :sv "Dina personuppgifter har hämtats från befolkningsdatasystemet. Du kan ändå ändra dina kontaktuppgifter. De uppgifter som finns i befolkningsdatasystemet kan du ändra via tjänsten"
                                                  :en "Your personal information has been prefilled with data from the population data service. You can modify your contact information. You can modify the data from the population data service on"}
+   :ht-person-info-module-top-text-link-url     {:fi "https://www.suomi.fi/omat-tiedot/henkilotiedot"
+                                                 :sv "https://www.suomi.fi/mina-uppgifter/personuppgifter"
+                                                 :en "https://www.suomi.fi/your-data/personal-data"}
    :ht-person-info-module-top-text-link-text    {:fi "Suomi.fi:ssä."
                                                  :sv "Suomi.fi."
                                                  :en "Suomi.fi."}

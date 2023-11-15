@@ -494,7 +494,7 @@
                 (cond (= auth-type constants/auth-type-strong)
                       [:p.application__person-info-module-ht-info-text
                        (tu/get-hakija-translation :ht-person-info-module-top-text lang)
-                       [:a {:href "https://suomi.fi"
+                       [:a {:href (tu/get-hakija-translation :ht-person-info-module-top-text-link-url lang)
                             :target "_blank"}
                         (tu/get-hakija-translation :ht-person-info-module-top-text-link-text lang)]]
                       (= auth-type constants/auth-type-eidas)
