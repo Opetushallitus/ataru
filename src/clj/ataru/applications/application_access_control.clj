@@ -38,9 +38,8 @@
 
 (defn all-hakukohteet-authorized-by-tarjoajat?
   [authorized-organization-oids hakukohteet]
-  (boolean
-   (every? #(authorized-by-tarjoaja? authorized-organization-oids %)
-           hakukohteet)))
+  (every? #(authorized-by-tarjoaja? authorized-organization-oids %)
+          hakukohteet))
 
 (defn authorized-by-hakukohde?
   [authorized-organization-oids hakukohde]
@@ -180,7 +179,7 @@
     rights
     (constantly false)
     #(all-hakukohteet-authorized-by-tarjoajat? %
-      (tarjonta-protocol/get-hakukohteet tarjonta-service (into (vector) (map name hakukohde-oids))))
+      (tarjonta-protocol/get-hakukohteet tarjonta-service (vec (map name hakukohde-oids))))
     (constantly true))))
 
 (defn- authenticate-by-opinto-ohjaaja-fn
