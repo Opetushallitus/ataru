@@ -2,7 +2,7 @@ import kirjautuminenVirkailijanNakymaanKayttajana from '../testit/kirjautuminenV
 
 describe('Hakemusten filtteröinti kevyt-valinnan tiedoilla', () => {
   kirjautuminenVirkailijanNakymaanKayttajana(
-    'OPINTO-OHJAAJA',
+    '1.2.246.562.11.11111111111',
     'hakemusten käsittelyä varten',
     () => {
       beforeEach(() => {
