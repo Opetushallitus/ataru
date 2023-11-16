@@ -715,7 +715,7 @@
             nil (response/unauthorized {:error (str "Hakemuksen "
                                                  (:application-key review)
                                                  " käsittely ei ole sallittu")})
-            (-> (response/ok result)))))
+            (response/ok result))))
 
       (api/POST "/information-request" {session :session}
         :body [information-request ataru-schema/NewInformationRequest]
