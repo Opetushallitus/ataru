@@ -267,10 +267,16 @@
                [application-review-note idx])
              selected-notes-idx)]])))
 
-(defn- show-processing-states
+(defn- show-processing-state
   [processing-state-kw]
-  (not (or (= :processing-state processing-state-kw)
-       (= :selection-state processing-state-kw))))
+  (let [opinto-ohjaaja            (subscribe [:editor/opinto-ohjaaja?])
+        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])]
+    (not
+     (and
+      opinto-ohjaaja
+      toisen-asteen-yhteishaku?
+      (or (= :processing-state processing-state-kw)
+          (= :selection-state processing-state-kw))))))
 
 (defn- application-hakukohde-review-input
   [label kw states]
@@ -288,7 +294,7 @@
                                                              @current-hakukohteet)))
               multiple-values? (< 1 (count review-states-for-hakukohteet))
               review-state-for-current (when-not multiple-values? (first review-states-for-hakukohteet))]
-          (when (show-processing-states kw)
+          (when (show-processing-state kw)
             [:div.application-handling__review-state-container
              {:class (str "application-handling__review-state-container-" (name kw))}
              (when @settings-visible?
@@ -1005,6 +1011,7 @@
                                                      (group-by (comp :key first)))
                lang                             (subscribe [:application/lang])
                edit-rights-for-hakukohteet?     @(subscribe [:application/edit-rights-for-selected-hakukohteet?])
+               opinto-ohjaaja                   (subscribe [:editor/opinto-ohjaaja?])
                toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
@@ -1029,7 +1036,8 @@
               [application-hakukohde-selection]
               (when (not-empty selected-review-hakukohde)
                 ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
-                (if (and (not edit-rights-for-hakukohteet?)
+                (if (and (not (or edit-rights-for-hakukohteet?
+                                  @opinto-ohjaaja))
                          toisen-asteen-yhteishaku?)
                   [:div.application-handling__review-row
                    [:span.hakukohde-review-rights-alert
