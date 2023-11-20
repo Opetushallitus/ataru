@@ -27,6 +27,10 @@
    :toisenAsteenSuoritusmaa nil
    })
 
+; Mock ohjausparametrit service returns false / empty synthetic application data with this haku OID
+(def synthetic-application-with-disabled-haku
+  (merge synthetic-application-basic {:hakuOid "1.2.246.562.29.12345678910"}))
+
 (def synthetic-application-foreign
   {:hakuOid          "1.2.246.562.29.93102260101"
    :hakukohdeOid     "1.2.246.562.20.49028196522"
