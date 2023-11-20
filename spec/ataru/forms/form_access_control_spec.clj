@@ -1,6 +1,6 @@
 (ns ataru.forms.form-access-control-spec
   (:require
-    [speclj.core :refer [describe it should= tags]]
+    [speclj.core :refer [describe it should= should-not-be-nil tags]]
     [ataru.organization-service.organization-service :as os]
     [ataru.forms.form-access-control :as fac]
     [ataru.forms.form-store :as form-store]
@@ -34,6 +34,40 @@
    :name             {:fi "Testilomake"}
    :locked           nil
    :locked-by        nil})
+
+(def locked-form
+  {:key              "form-access-control-test-basic-form"
+   :organization-oid "1.2.246.562.10.1234334543"
+   :locked           nil
+   :locked-by        nil})
+
+(def locked-synthetic-form
+  {:key              "form-access-control-test-basic-form"
+   :organization-oid "1.2.246.562.10.1234334543"
+   :locked           nil
+   :locked-by        nil
+   :locked-by-oid    "synteettinen_hakemus"})
+
+(describe "update-form-lock"
+   (tags :unit)
+
+   (it "changes form lock"
+     (with-redefs [form-store/fetch-form (fn [_] locked-form)
+                   fac/post-form (fn [form _ _ _ _] form)]
+       (let [tarjonta-service     (mts/->MockTarjontaService)
+             organization-service (os/->FakeOrganizationService)
+             result               (fac/update-form-lock 0 "close" session tarjonta-service organization-service nil)]
+         (should-not-be-nil (:locked result)))))
+
+   (it "doesn't allow changing form lock with synthetic forms"
+     (with-redefs [form-store/fetch-form (fn [_] locked-synthetic-form)
+                   fac/post-form (fn [form _ _ _ _] form)]
+       (let [tarjonta-service     (mts/->MockTarjontaService)
+             organization-service (os/->FakeOrganizationService)
+             result               (try (fac/update-form-lock 0 "close" session tarjonta-service organization-service nil)
+                                       (catch Throwable e
+                                         (.getMessage e)))]
+         (should= "Synteettistä hakemuslomaketta ei voi avata muokattavaksi" result)))))
 
 (describe
   "get-forms-for-editor"

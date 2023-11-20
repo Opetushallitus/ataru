@@ -11,6 +11,8 @@
     [ataru.tarjonta.haku :as haku]
     [taoensso.timbre :as log]))
 
+(def synthetic-application-permalock-user "synteettinen_hakemus")
+
 (defn- form-allowed-by-id?
   [authorized-organization-oids form-id]
   (contains? authorized-organization-oids
@@ -46,7 +48,10 @@
         :user-right-organizations
         :form-edit)))
 
-(defn- check-lock-authorization [{:keys [key]} session tarjonta-service]
+(defn- check-lock-authorization [{:keys [key]} session tarjonta-service form]
+  (when (= (:locked-by-oid form) synthetic-application-permalock-user)
+    (throw (user-feedback-exception
+            (format "Synteettistä hakemuslomaketta ei voi avata muokattavaksi"))))
   (when-not (-> session :identity :superuser)
     (let [haut (tarjonta-protocol/hakus-by-form-key tarjonta-service key)]
       (when (some :yhteishaku haut)
@@ -203,7 +208,7 @@
                                (if lock?
                                  {:locked "now()" :locked-by (-> session :identity :oid)}
                                  {:locked nil :locked-by nil}))]
-    (check-lock-authorization latest-version session tarjonta-service)
+    (check-lock-authorization latest-version session tarjonta-service latest-version)
     (if (or (and lock? (some? previous-locked))
             (and (not lock?) (nil? previous-locked)))
       (throw (user-feedback-exception "Lomakkeen sisältö on muuttunut. Lataa sivu uudelleen."))
