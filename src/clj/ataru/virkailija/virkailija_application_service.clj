@@ -7,7 +7,17 @@
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.util :as util]
             [taoensso.timbre :as log]
-            [ataru.person-service.person-integration :as person-integration]))
+            [ataru.person-service.person-integration :as person-integration]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit]))
+
+(defn- uses-synthetic-applications?
+  [ohjausparametrit-service haku-oid]
+  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetHakemukset))
+
+(defn- synthetic-application-form-key
+  [ohjausparametrit-service haku-oid]
+  (get (ohjausparametrit/get-parametri ohjausparametrit-service haku-oid) :synteettisetLomakeavain))
+
 
 (defn- store-synthetic-application [{:keys [application form applied-hakukohteet]}
                                     {:keys [session audit-logger job-runner person-service]}]
@@ -35,25 +45,41 @@
         applied-hakukohteet           (filter #(contains? (set (:hakukohde application)) (:oid %))
                                               hakukohteet)
         applied-hakukohderyhmat       (set (mapcat :hakukohderyhmat applied-hakukohteet))
-        form                          (hakija-form-service/fetch-form-by-id
-                                       (:form application)
-                                       [:virkailija] ; TODO is this the correct role?
-                                       form-by-id-cache
-                                       koodisto-cache
-                                       nil
-                                       false
-                                       {}
-                                       false)
-        validation-result             (validator/valid-application?
-                                       koodisto-cache
-                                       false ; TODO: has-applied OK?
-                                       application
-                                       form
-                                       applied-hakukohderyhmat
-                                       true
-                                       "NEW_APPLICATION_ID"
-                                       "NEW_APPLICATION_KEY")
+        form                          (when (:form application) (hakija-form-service/fetch-form-by-id
+                                                                 (:form application)
+                                                                 [:virkailija]
+                                                                 form-by-id-cache
+                                                                 koodisto-cache
+                                                                 nil
+                                                                 false
+                                                                 {}
+                                                                 false))
+        validation-result             (when form (validator/valid-application?
+                                                  koodisto-cache
+                                                  false ; TODO: has-applied OK?
+                                                  application
+                                                  form
+                                                  applied-hakukohderyhmat
+                                                  true
+                                                  "NEW_APPLICATION_ID"
+                                                  "NEW_APPLICATION_KEY"))
         result (cond
+                 (and (:haku application)
+                      (not (uses-synthetic-applications? ohjausparametrit-service (:haku application))))
+                 {:passed? false
+                  :failures ["Synthetic applications not enabled for haku"]
+                  :code :internal-server-error}
+
+                 (not (:form application))
+                 {:passed? false
+                  :failures ["Synthetic form key not defined for haku"]
+                  :code :internal-server-error}
+
+                 (not form)
+                 {:passed? false
+                  :failures ["Synthetic form was not found with form key"]
+                  :code :internal-server-error}
+
                  (and (:haku application)
                       (empty? (:hakukohde application)))
                  {:passed? false
@@ -84,9 +110,10 @@
         (log/warn "Synthetic application failed verification" result)
         result))))
 
-(defn- convert-synthetic-application 
-  [application {:keys [tarjonta-service]}]
-  (let [form-id (hakija-form-service/latest-form-id-by-haku-oid (:hakuOid application) tarjonta-service)
+(defn- convert-synthetic-application
+  [application {:keys [ohjausparametrit-service]}]
+  (let [haku-oid (:hakuOid application)
+        form-id (hakija-form-service/latest-form-id-by-key (synthetic-application-form-key ohjausparametrit-service haku-oid))
         converted (synthetic-application-util/synthetic-application->application application form-id)]
     (log/info "Synthetic application submitted and converted" converted)
     converted))

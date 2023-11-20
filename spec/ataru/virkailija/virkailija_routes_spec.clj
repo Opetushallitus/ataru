@@ -419,7 +419,7 @@
                                 (do
                                   (should-be-nil (:hakemusOid application))
                                   (should-not-be-nil (:failures application))
-                                  (should= "application-validation-failed-error" (:code application)))
+                                  (should-not-be-nil (:code application)))
                                 (do
                                   (should-be-nil (:failures application))
                                   (should-be-nil (:code application))
@@ -464,6 +464,10 @@
                         (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
                                                              synthetic-application-fixtures/synthetic-application-foreign]
                           (check-synthetic-applications resp 2 #{})))
+
+                    (it "should not validate and store synthetic application for haku that doesn't have synthetic applications enabled"
+                        (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-with-disabled-haku]
+                          (check-synthetic-applications resp 1 #{0})))
 
                     (it "should not store anything when one or more applications fail validation"
                         (with-synthetic-response :post resp [synthetic-application-fixtures/synthetic-application-basic
