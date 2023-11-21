@@ -49,4 +49,6 @@
  :urls            {:virkailija-host "toimimaton.virkailija-host-arvo.defaults.edn-tiedostosta"
                    :hakija-host     "toimimaton.hakija-host-arvo.defaults.edn-tiedostosta"
                    :editor-url      "http://localhost:8350/lomake-editori"
-                   :liiteri-url     "https://virkailija.untuvaopintopolku.fi/liiteri"}}
+                   :liiteri-url     "https://virkailija.untuvaopintopolku.fi/liiteri"
+                   :cas-oppija-url  ""
+                   :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/oppija"}}
