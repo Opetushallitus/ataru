@@ -6,7 +6,6 @@
             [cljs.reader :as reader]
             [cljs-uuid-utils.core :as uuid]
             [re-frame.core :refer [dispatch] :as re-frame]
-            [reagent.core :as r]
             [reagent.dom :as r-dom]
             [cemerick.url :as url]
             [camel-snake-kebab.core :refer [->kebab-case-keyword]]
