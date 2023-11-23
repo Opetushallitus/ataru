@@ -164,7 +164,6 @@
           (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
                        (:body))
                 parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
-            (log/info "Cas-oppija-response" rs  ", attributes" parsed-attributes)
             (if parsed-attributes
               (let [new-session-key (generate-new-random-key)]
                 (audit-log/log audit-logger
@@ -222,7 +221,6 @@
                                  :eidas-id (get-in session [:data :eidas-id])
                                  :expires-soon (:expires_soon session)}
                                 {:logged-in false})]
-          (log/info "Session for session" oppija-session " from db" session ", trimmed " trimmed-session)
           (response/ok trimmed-session))
         (catch Exception e
           (log/error e "Virhe haettaessa oppijan sessiota.")
