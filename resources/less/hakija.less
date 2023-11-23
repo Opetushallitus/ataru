@@ -407,6 +407,7 @@ body {
   width: 210px;
   font-size: 13px;
   margin-left: 15px;
+  margin-right: 15px;
 }
 .application__sent-placeholder {
   color: #fff;
@@ -620,7 +621,12 @@ body {
   height: 43px;
   font-size: 16px;
   border: 1px solid #C1C1C1;
-  border-radius: 2px;
+}
+
+.application__form-select--locked {
+  width: @form-select-width - @lock-icon-width;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .application__form-select--enabled {
@@ -2543,4 +2549,499 @@ th.application__readonly-adjacent--header {
 i.arkistoitu {
   font-size: 14px;
   margin-right: 4px;
+}
+
+.application__hakeminen-tunnistautuneena-lander-wrapper {
+  @media only screen and (max-width: @desktop-content-width) {
+    margin: 0 5% 0 10%;
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-haku-header {
+    font-size: 20px;
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-top-text {
+    padding-bottom: 20px;
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-header-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+    height: 40px;
+    .logo-suomi-fi {
+      margin-right: 18px;
+    }
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-main-text {
+    max-width: 800px;
+  }
+
+  button {
+    .primary-button;
+    background: @primary-green-700;
+    height: 40px;
+    color: white;
+    text-align: center;
+    width: 300px;
+    margin-top: 20px;
+  }
+
+  .application__hakeminen-tunnistautuneena-separator-wrapper {
+    margin-top: 40px;
+    text-align: center;
+    display: flex;
+  }
+
+  .application__hakeminen-tunnistautuneena-partial-line-left {
+    width: 50%;
+    height: 1px;
+    margin-top: 10px;
+  }
+
+  .application__hakeminen-tunnistautuneena-partial-line-right {
+    width: 50%;
+    height: 1px;
+    margin-top: 10px;
+  }
+
+  .application__hakeminen-tunnistautuneena-separator-text {
+    margin: 0 20px 0 20px;
+  }
+}
+
+.application__logged-in-banner-wrapper {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  padding: 15px 10px 0 0;
+
+  .application__logged-in-name-container {
+    float: bottom;
+    margin-bottom: 10px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    @media only screen and (min-width: @desktop-content-width) {
+      padding-left: 10px;
+    }
+
+    .zmdi {
+      @media only screen and (max-width: @desktop-content-width) {
+        padding-left: 2px;
+      }
+      @media only screen and (min-width: @desktop-content-width) {
+        padding-left: 5px;
+      }
+    }
+  }
+}
+
+.application__input-container {
+  display: flex;
+  flex-direction: row;
+
+  .application__lock-icon-container {
+    width: @lock-icon-width;
+    background: @lock-background-gray;
+    height: 43px;
+    border: 1px solid #C1C1C1;
+    border-radius: 2px;
+    color: darkgreen;
+    padding-left: 12px;
+  }
+}
+
+@font-face {
+  font-family: 'Material Icons';
+  font-display: block;
+}
+
+.application__logout-dropdown-wrapper {
+  align-items: center;
+
+  .application__logout-dropdown-content-closed {
+    display: none;
+  }
+
+  .application__logout-dropdown-content-open {
+    box-shadow: 0 2px 1px @grey;
+    border: 1px solid black;
+    color: @sg-color-green;
+    z-index: 100;
+    position: fixed;
+    padding: 12px;
+    text-decoration: none;
+    background-color: white;
+
+    .application__banner-logout-link {
+      display: flex;
+      justify-content: center;
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+  }
+
+  @media only screen and (max-width: @desktop-content-width) {
+    .application__logout-dropdown-content-open {
+      box-shadow: 0 2px 1px @grey;
+      border: 1px solid black;
+      display: flex;
+      color: @sg-color-green;
+      z-index: 100;
+      position: fixed;
+      right: 0;
+      text-decoration: none;
+      justify-content: flex-start;
+    }
+  }
+}
+
+.application__ht-session-expired-overlay {
+  background-color: @white;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__ht-session-expired-container {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 40%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__ht-session-expired-title {
+      font-size: 36px;
+    }
+
+    p,
+    .application__ht-notification-button {
+      font-size: 18px;
+    }
+
+    i {
+      color: white;
+      font-size: 40px;
+      background-color: @red;
+      border-radius: 50%;
+      padding: 10px;
+    }
+
+    .application__ht-session-expired-button {
+      .secondary-button;
+      background: @white;
+      height: 40px;
+      color: @primary-green-700;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+  @media only screen and (max-width: @mobile-width) {
+    .application__ht-session-expired-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+
+      .application__ht-session-expired-title {
+        font-size: 26px;
+      }
+
+      p,
+      .application__ht-session-expired-button {
+        font-size: 16px;
+      }
+
+      .application__ht-session-expired-button {
+        margin-top: 0.5rem;
+      }
+    }
+  }
+}
+
+.application__hakeminen-tunnistautuneena-has-applied-lander-wrapper {
+  @media only screen and (max-width: @desktop-content-width) {
+    margin: 0 5% 0 10%;
+  }
+
+  .application__hakeminen-tunnistautuneena-lander-has-applied-haku-header {
+    font-size: 20px;
+  }
+
+  .application__hakeminen-tunnistautuneena-has-applied-lander-haku-header {
+    font-weight: bold;
+    font-size: 18px;
+  }
+
+  button {
+    .primary-button;
+    background: @primary-green-700;
+    padding: 5px;
+    color: white;
+    text-align: center;
+    width: 300px;
+    margin-top: 20px;
+  }
+}
+
+.application__ht-session-expires-soon-overlay {
+  //background-color: @opaque-grey;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .application__ht-session-expires-soon-wrapper {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 60%;
+    max-width: 981px;
+    border: 3px solid @neutral-grey-200;
+    padding: 2rem 3rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    .application__ht-session-expires-soon-header-container {
+      flex-direction: row;
+      display: flex;
+      align-items: center;
+      text-align: center;
+
+      i {
+        margin-right: 20px;
+        color: red;
+        font-size: 35px;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+
+    }
+
+
+    @media only screen and (max-width: @desktop-content-width) {
+      margin: 0 5% 0 10%;
+      margin-top: 20%;
+      min-width: 700px;
+    }
+
+    @media only screen and (max-width: @mobile-width) {
+      padding: 0.7rem 1.2rem;
+      margin: 0 0 0 0;
+      width: 100%;
+      margin-top: 20%;
+      min-width: 320px;
+      font-size: 16px;
+    }
+
+      .application__hakeminen-tunnistautuneena-lander-has-applied-haku-header {
+      font-size: 20px;
+    }
+
+    button {
+      .primary-button;
+      background: @primary-green-700;
+      height: 40px;
+      color: white;
+      text-align: center;
+      width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+}
+
+.application__ht-notification-overlay {
+  background-color: @dark-overlay;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 300px;
+
+  .application__ht-notification-container {
+    margin-top: 2 * @total-banner-height;
+    background-color: white;
+    width: 60%;
+    max-width: 1000px;
+    border: 3px solid @primary-green-700;
+    padding: 1.5rem 2rem;
+    box-shadow: 0 6px 6px rgba(0,0,0,0.60);
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: flex-start;
+    text-align: left;
+
+
+    .application__ht-notification-top-container {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      justify-content: space-between;
+
+      .application__ht-notification-title {
+        font-size: 36px;
+      }
+
+      .application__ht-notification-close {
+        align-self: normal;
+        align-items: flex-start;
+
+        i {
+          display: flex;
+
+          &:hover {
+            cursor: pointer;
+          }
+        }
+      }
+    }
+
+    p,
+    .application__ht-notification-button {
+      font-size: 18px;
+    }
+
+
+    .application__ht-notification-button {
+      .primary-button;
+      background: @primary-green-700;
+      height: 40px;
+      color: white;
+      text-align: center;
+      width: 100%;
+      max-width: 300px;
+      margin-top: 20px;
+    }
+  }
+
+  @media only screen and (max-width: @desktop-content-width) {
+    .application__ht-notification-container {
+      margin-top: @total-banner-height-mobile + 20px;
+      width: 92%;
+      padding: 1.5rem 2rem;
+      border: 2px solid @button-blue;
+      box-shadow: 0 4px 4px rgba(0, 0, 0, 0.60);
+      font-size: 16px;
+
+      .application__ht-notification-top-container {
+        .application__ht-notification-title {
+          font-size: 26px;
+        }
+      }
+
+      p,
+      .application__ht-notification-button {
+        font-size: 16px;
+      }
+
+      .application__ht-notification-button {
+        margin-top: 0.5rem;
+      }
+    }
+  }
+}
+
+.application__submitted-submit-notification-ht-overlay {
+  background-color: @light-overlay;
+
+  .application__submitted-submit-notification-ht {
+    align-self: flex-start;
+    flex: 1 1 auto;
+    justify-content: center;
+    align-content: center;
+    width: 80%;
+    max-width: 800px;
+    margin: auto;
+    display: flex;
+    flex-flow: column nowrap;
+
+    .application__submitted-submit-notification-inner-ht {
+      display: flex;
+      justify-content: center;
+      padding: 25px;
+      text-align: center;
+      align-items: center;
+
+      button {
+        .primary-button;
+        padding: 20px;
+        margin: 15px 15px;
+        color: white;
+        background-color: @primary-green-700;
+
+        @media only screen and (max-width: @desktop-content-width) {
+          margin-bottom: 20px;
+        }
+      }
+
+      @media only screen and (max-width: @desktop-content-width) {
+        flex-direction: column;
+      }
+    }
+
+    @media only screen and (max-width: @desktop-content-width) {
+      width: 100%;
+      flex-direction: column;
+    }
+  }
+}
+
+.application__person-info-module-ht-info-wrapper {
+  padding-bottom: 20px;
+
+  .application__person-info-module-ht-info-contents {
+    display: flex;
+    background-color: @popover-highlighted-gray;
+
+    p {
+      margin: 10px;
+
+      a {
+        margin-left: 0.25em;
+        background-color: @popover-highlighted-gray;
+      }
+    }
+
+    i {
+      color: green;
+      font-size: 24px;
+      margin: 10px 0 10px 10px;
+    }
+  }
 }

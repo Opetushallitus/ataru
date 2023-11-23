@@ -100,6 +100,22 @@
         </td>
       </tr>
       {% endif %}
+      {% if application-url-text|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          {{application-url-text|safe}}
+        </td>
+      </tr>
+      {% endif %}
+      {% if oma-opintopolku-link|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          You can view your application and make modification to it on <a style="color: #0093C4;"
+                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">My Studyinfo</a>.
+          Modifications can be made during the application period. Additionally you can see the results of student admissions and accept an offer of admission on My Studyinfo.
+        </td>
+      </tr>
+      {% endif %}
       {% if content-ending|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">

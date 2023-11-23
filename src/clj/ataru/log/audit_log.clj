@@ -27,6 +27,8 @@
 (def operation-modify (create-operation "muutos"))
 (def operation-delete (create-operation "poisto"))
 (def operation-login (create-operation "kirjautuminen"))
+(def operation-oppija-login (create-operation "oppija-kirjautuminen"))
+(def operation-oppija-logout (create-operation "oppija-uloskirjautuminen"))
 
 ;; Huom: tätä funktiota tulee kutsua tuotantosovelluksessa vain kerran, jotta ei synny useampia Audit-instansseja.
 (defn new-audit-logger [service-name]
@@ -103,7 +105,9 @@
                              operation-read
                              operation-modify
                              operation-delete
-                             operation-login])]}
+                             operation-login
+                             operation-oppija-login
+                             operation-oppija-logout])]}
   (let [user      (User.
                    (when-let [oid (-> session :identity :oid)]
                      (Oid. oid))

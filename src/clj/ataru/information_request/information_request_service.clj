@@ -1,6 +1,6 @@
 (ns ataru.information-request.information-request-service
-  (:require [ataru.config.core :refer [config]]
-            [ataru.db.db :as db]
+  (:require [ataru.db.db :as db]
+            [ataru.forms.form-store :as forms]
             [ataru.log.audit-log :as audit-log]
             [ataru.translations.translation-util :as translations]
             [ataru.util :as u]
@@ -16,44 +16,51 @@
             [ataru.background-job.job :as job]
             [taoensso.timbre :as log]))
 
+(defn- information-request-email-template-filename
+  [lang]
+  (str "templates/information_request_template_" (name lang) ".html"))
+
 (defn- extract-answer-value [answer-key-str application]
   (->> (:answers application)
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
 (defn- initial-state [connection information-request guardian?]
-  (let [add-update-link? (:add-update-link information-request)
-        secret           (app-store/add-new-secret-to-application-in-tx
-                          connection
-                          (:application-key information-request))
-        application      (app-store/get-latest-application-by-key-in-tx
-                          connection
-                          (:application-key information-request))
-        lang             (-> application :lang keyword)
-        recipient-emails (if guardian?
-                           (distinct
-                             (flatten
-                               (filter some?
-                                       [(extract-answer-value "guardian-email" application)
-                                        (extract-answer-value "guardian-email-secondary" application)])))
-                           (remove string/blank? [(extract-answer-value "email" application)]))
-        translations     (translations/get-translations lang)
-        service-url      (get-in config [:public-config :applicant :service_url])
-        application-url  (str service-url "/hakemus?modify=" secret)
-        body             (selmer/render-file "templates/information-request-template.html"
-                                             (merge {:message (->safe-html (:message information-request))}
-                                                    (if (or guardian? (not add-update-link?))
-                                                      {}
-                                                      {:application-url application-url})
-                                                    translations))
-        subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
-                                      (:subject information-request) (:application-key information-request) lang)]
-    (when (not-empty recipient-emails)
-      (-> (select-keys information-request [:application-key :id])
-          (merge {:from       "no-reply@opintopolku.fi"
-                  :recipients recipient-emails
-                  :body       body})
-          (assoc :subject subject-with-application-key)))))
+  (let [add-update-link? (:add-update-link information-request)]
+    (when add-update-link?
+      (app-store/add-new-secret-to-application-in-tx
+        connection
+        (:application-key information-request)))
+    (let [application      (app-store/get-latest-application-by-key-in-tx
+                             connection
+                             (:application-key information-request))
+          form              (forms/fetch-by-id (:form application))
+          lang             (-> application :lang keyword)
+          recipient-emails (if guardian?
+                             (distinct
+                               (flatten
+                                 (filter some?
+                                         [(extract-answer-value "guardian-email" application)
+                                          (extract-answer-value "guardian-email-secondary" application)])))
+                             (remove string/blank? [(extract-answer-value "email" application)]))
+          translations     (translations/get-translations lang)
+          {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
+          body             (selmer/render-file (information-request-email-template-filename lang)
+                                               (merge {:message (->safe-html (:message information-request))}
+                                                      (if (or guardian? (not add-update-link?))
+                                                        {}
+                                                        {:application-url application-url
+                                                         :application-url-text (->safe-html application-url-text)
+                                                         :oma-opintopolku-link oma-opintopolku-link})
+                                                      translations))
+          subject-with-application-key (email-util/enrich-subject-with-application-key-and-limit-length
+                                         (:subject information-request) (:application-key information-request) lang)]
+      (when (not-empty recipient-emails)
+        (-> (select-keys information-request [:application-key :id])
+            (merge {:from       "no-reply@opintopolku.fi"
+                    :recipients recipient-emails
+                    :body       body})
+            (assoc :subject subject-with-application-key))))))
 
 (defn- start-email-job [job-runner connection information-request]
   (let [job-type (:type information-request-job/job-definition)

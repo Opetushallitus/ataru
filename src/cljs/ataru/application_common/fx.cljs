@@ -4,8 +4,7 @@
             [cljs.core.async :as async]
             [ataru.hakija.has-applied :refer [has-applied]]
             [ataru.hakija.application-validators :as validator]
-            [ataru.cljs-util :as util]
-            [ataru.translations.translation-util :as tu]))
+            [ataru.cljs-util :as util]))
 
 (defn http [caller-id
             {:keys [method
@@ -50,6 +49,15 @@
       (fn []
         (re-frame/dispatch dispatch-vec))
       timeout)))
+
+(re-frame.core/reg-fx
+  :interval
+  (let [live-intervals (atom {})]
+    (fn [{:keys [action id frequency event]}]
+      (if (= action :start)
+        (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
+        (do (js/clearInterval (get @live-intervals id))
+            (swap! live-intervals dissoc id))))))
 
 (defonce debounces (atom {}))
 
@@ -112,22 +120,13 @@
           #(async-validate-value params)
           validation-debounce-ms)))))
 
-(defn- confirm-window-close!
-  [event]
-  (let [lang          @(re-frame/subscribe [:application/form-language])
-        warning-label (tu/get-hakija-translation :window-close-warning lang)
-        edits?        @(re-frame/subscribe [:application/edits?])
-        submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
-    (when (and edits?
-               (nil? submit-status))
-      (set! (.-returnValue event) warning-label)
-      warning-label)))
+
 
 (re-frame/reg-fx
   :set-window-close-callback
   (fn []
-    (.removeEventListener js/window "beforeunload" confirm-window-close!)
-    (.addEventListener js/window "beforeunload" confirm-window-close!)))
+    (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+    (.addEventListener js/window "beforeunload" util/confirm-window-close!)))
 
 (re-frame/reg-fx
   :update-url-query-params

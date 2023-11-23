@@ -24,6 +24,7 @@
             [compojure.route :as route]
             [environ.core :refer [env]]
             [ring.middleware.gzip :refer [wrap-gzip]]
+            [ring.middleware.cookies :as cook]
             [ring.util.http-response :as response]
             [schema.core :as s]
             [selmer.parser :as selmer]
@@ -34,7 +35,11 @@
             [ataru.hakija.resumable-file-transfer :as resumable-file]
             [ataru.hakija.signed-direct-upload :as signed-upload]
             [taoensso.timbre :as log]
-            [string-normalizer.filename-normalizer-middleware :as normalizer])
+            [string-normalizer.filename-normalizer-middleware :as normalizer]
+            [ataru.util.http-util :as http]
+            [ataru.cas-oppija.cas-oppija-session-store :as oss]
+            [ataru.cas-oppija.cas-oppija-utils :as cas-oppija-utils]
+            [ataru.feature-config :as fc])
   (:import [java.util UUID]))
 
 (def ^:private cache-fingerprint (System/currentTimeMillis))
@@ -140,6 +145,87 @@
 (defn- not-blank? [x]
   (not (clojure.string/blank? x)))
 
+
+
+(defn generate-new-random-key [] (str (UUID/randomUUID)))
+
+(defn hakija-auth-routes [{:keys [audit-logger]}]
+  (api/context "/auth" []
+    :tags ["hakija-auth-api"]
+    (api/GET "/oppija" [:as request]
+      :query-params [{ticket :- s/Str nil}
+                     {target :- s/Str nil}
+                     {lang :- s/Str nil}]
+      (log/info "login with lang" lang ",ticket" ticket ". Redirect-to" target ". Cookies" (get-in request [:cookies "oppija-session" :value]))
+      (try
+        (if (nil? ticket)
+          (response/found
+            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target))
+          (let [rs (-> (http/do-get (cas-oppija-utils/parse-cas-oppija-ticket-validation-url ticket target))
+                       (:body))
+                parsed-attributes (cas-oppija-utils/parse-oppija-attributes-if-successful rs)]
+            (if parsed-attributes
+              (let [new-session-key (generate-new-random-key)]
+                (audit-log/log audit-logger
+                               {:new       parsed-attributes
+                                :operation audit-log/operation-oppija-login
+                                :session   (:session request)
+                                :id        {:oppija-session new-session-key}})
+                (oss/persist-session! new-session-key ticket parsed-attributes)
+                (-> (response/found target)
+                    (update :cookies (fn [c] (assoc c :oppija-session {:value new-session-key
+                                                                       :path "/hakemus"
+                                                                       :http-only true
+                                                                       :secure true})))))
+              ;fixme, mitä tehdään jos tiketin validointi epäonnistui?
+              (response/bad-request))))
+        (catch Exception e
+          (log/error e "Virhe oppijan tunnistautumisessa.")
+          (response/found
+            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))))
+    (api/POST "/oppija" [:as request]
+      (let [body (ring.util.request/body-string request)]
+        (log/info "Received request for logout:" body)
+        (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request body)]
+          (let [res (oss/delete-session-by-ticket! ticket)]
+            (log/info ticket ": db result" res)
+            (if (= res 1)
+              (response/ok)
+              (response/not-found)))
+          (log/warn "Something went wong when processing logout request..."))))
+    (api/GET "/oppija/logout" [:as request]
+      :query-params [{lang :- s/Str nil}]
+      (try
+        (let [oppija-session-key (get-in request [:cookies "oppija-session" :value])
+              result (oss/delete-session-by-key! oppija-session-key)
+              destination (cas-oppija-utils/parse-cas-oppija-logout-url (or (keyword lang) :fi))]
+          (log/info "LOGOUT for session " oppija-session-key "; result" result ", dest" destination)
+          (audit-log/log audit-logger
+                         {:new       {}
+                          :operation audit-log/operation-oppija-logout
+                          :session   (:session request)
+                          :id        {:oppija-session oppija-session-key}})
+          (response/found destination))
+        (catch Exception e
+          (log/error e "Virhe oppijan uloskirjautumisessa.")
+          (response/internal-server-error))))
+    (api/GET "/session" [:as request]
+      (try
+        (let [oppija-session (get-in request [:cookies "oppija-session" :value])
+              session (oss/read-session oppija-session)
+              trimmed-session (if session
+                                {:fields (get-in session [:data :fields])
+                                 :display-name (get-in session [:data :display-name])
+                                 :auth-type (get-in session [:data :auth-type])
+                                 :logged-in (:logged-in session)
+                                 :eidas-id (get-in session [:data :eidas-id])
+                                 :expires-soon (:expires_soon session)}
+                                {:logged-in false})]
+          (response/ok trimmed-session))
+        (catch Exception e
+          (log/error e "Virhe haettaessa oppijan sessiota.")
+          (response/internal-server-error))))))
+
 (defn api-routes [{:keys [tarjonta-service
                           job-runner
                           maksut-service
@@ -194,30 +280,40 @@
           (palaute-client/send-application-feedback amazon-sqs feedback)
           (response/ok {:id (:id saved-application)}))
         (response/bad-request {})))
-    (api/POST "/application" {session :session}
+    (api/POST "/application" [:as request]
       :summary "Submit application"
       :body [application ataru-schema/Application]
-      (match (hakija-application-service/handle-application-submit
-              form-by-id-cache
-              koodisto-cache
-              tarjonta-service
-              job-runner
-              organization-service
-              ohjausparametrit-service
-              hakukohderyhma-settings-cache
-              audit-logger
-              application
-              session
-              liiteri-cas-client
-              maksut-service)
-             {:passed? false :failures failures :code code}
-             (response/bad-request {:failures failures :code code})
+      (let [session {:session request}
+            tunnistautunut? (and (fc/feature-enabled? :hakeminen-tunnistautuneena)
+                                 (:tunnistautunut application))
+            oppija-session-from-db (when tunnistautunut?
+                                     (some-> (get-in request [:cookies "oppija-session" :value])
+                                             (oss/read-session)))]
+        (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
+        (if (and tunnistautunut? (nil? oppija-session-from-db))
+          (response/bad-request {:passed? false :failures ["Sessio on vanhentunut"] :code :session-not-found})
+          (match (hakija-application-service/handle-application-submit
+                   form-by-id-cache
+                   koodisto-cache
+                   tarjonta-service
+                   job-runner
+                   organization-service
+                   ohjausparametrit-service
+                   hakukohderyhma-settings-cache
+                   audit-logger
+                   application
+                   session
+                   liiteri-cas-client
+                   maksut-service
+                   oppija-session-from-db)
+                 {:passed? false :failures failures :code code}
+                 (response/bad-request {:failures failures :code code})
 
-             {:passed? true :id application-id :payment payment}
-             (response/ok {:id application-id :payment payment})
+                 {:passed? true :id application-id :payment payment}
+                 (response/ok {:id application-id :payment payment})
 
-             {:passed? true :id application-id}
-             (response/ok {:id application-id})))
+                 {:passed? true :id application-id}
+                 (response/ok {:id application-id})))))
     (api/PUT "/application" {session :session}
       :summary "Edit application"
       :body [application ataru-schema/Application]
@@ -338,17 +434,18 @@
       :summary "Get cached koulutustyypit from koodisto"
       (let [codes (koodisto/get-koulutustyypit koodisto-cache)]
         (response/ok codes)))
-    (api/GET "/has-applied" []
+    (api/POST "/has-applied" []
       :summary "Check if a person has already applied"
-      :query-params [hakuOid :- (api/describe s/Str "Haku OID")
-                     {ssn :- (api/describe s/Str "SSN") nil}
-                     {email :- (api/describe s/Str "Email address") nil}]
-      (cond (some? ssn)
-            (response/ok (application-store/has-ssn-applied hakuOid ssn))
-            (some? email)
-            (response/ok (application-store/has-email-applied hakuOid email))
-            :else
-            (response/bad-request {:error "Either ssn or email is required"})))
+      :body [has-applied-params ataru-schema/HasAppliedParams]
+      (let [{:keys [haku-oid ssn email eidas-id]} has-applied-params]
+        (cond (some? ssn)
+              (response/ok (application-store/has-ssn-applied haku-oid ssn))
+              (some? eidas-id)
+              (response/ok (application-store/has-eidas-applied haku-oid eidas-id))
+              (some? email)
+              (response/ok (application-store/has-email-applied haku-oid email))
+              :else
+              (response/bad-request {:error "Either ssn, email or eidas-id is required"}))))
     (api/PUT "/selection-limit" []
       :summary "Selection limits"
       :query-params [{form-key :- s/Str nil}
@@ -409,35 +506,37 @@
                                                        (ex/with-logging ex/safe-handler :error)}}}
                               (when (is-dev-env?) james-routes)
                               (api/routes
-                               (api/context "/hakemus" []
-                                 (api/middleware [session-client/wrap-session-client-headers]
-                                  test-routes
-                                  (api-routes this)
-                                  (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
-                                    :path-params [haku-oid :- s/Str]
-                                    :query-params [lang :- s/Str]
-                                    (if (form-service/is-demo-allowed (:form-by-haku-oid-str-cache this) haku-oid)
-                                      (response/temporary-redirect
-                                        (str (-> config :public-config :applicant :service_url)
-                                          "/hakemus/haku/" haku-oid
-                                          "?demo=true"
-                                          "&lang=" lang))
-                                      (response/not-found {})))
-                                  (route/resources "/")
-                                  (api/undocumented
-                                    (api/GET "/haku/:oid" []
-                                      :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))
-                                    (api/GET "/hakukohde/:oid" []
-                                      :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))
-                                    (api/GET "/:key" []
-                                      :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))
-                                    (api/GET "/" []
-                                      :query-params [{lang :- s/Str nil}]
-                                      (render-application lang))))
-                               (route/not-found "<h1>Page not found</h1>"))))
+                                (cook/wrap-cookies
+                                  (api/context "/hakemus" []
+                                    (api/middleware [session-client/wrap-session-client-headers]
+                                                    test-routes
+                                      (hakija-auth-routes this)
+                                      (api-routes this)
+                                      (api/GET ["/haku/:haku-oid/demo" :haku-oid #"[0-9\.]+"] []
+                                        :path-params [haku-oid :- s/Str]
+                                        :query-params [lang :- s/Str]
+                                        (if (form-service/is-demo-allowed (:form-by-haku-oid-str-cache this) haku-oid)
+                                          (response/temporary-redirect
+                                            (str (-> config :public-config :applicant :service_url)
+                                                 "/hakemus/haku/" haku-oid
+                                                 "?demo=true"
+                                                 "&lang=" lang))
+                                          (response/not-found {})))
+                                      (route/resources "/")
+                                      (api/undocumented
+                                        (api/GET "/haku/:oid" []
+                                          :query-params [{lang :- s/Str nil}]
+                                          (render-application lang))
+                                        (api/GET "/hakukohde/:oid" []
+                                          :query-params [{lang :- s/Str nil}]
+                                          (render-application lang))
+                                        (api/GET "/:key" []
+                                          :query-params [{lang :- s/Str nil}]
+                                          (render-application lang))
+                                        (api/GET "/" []
+                                          :query-params [{lang :- s/Str nil}]
+                                          (render-application lang))))
+                                    (route/not-found "<h1>Page not found</h1>")))))
                             (clj-access-logging/wrap-access-logging)
                             (clj-timbre-access-logging/wrap-timbre-access-logging
                              {:path (str (-> config :log :hakija-base-path)

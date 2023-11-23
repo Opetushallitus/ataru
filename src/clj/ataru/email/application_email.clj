@@ -1,14 +1,13 @@
 (ns ataru.email.application-email
   (:require [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
-            [ataru.config.core :refer [config]]
             [ataru.email.email-store :as email-store]
             [ataru.email.email-util :as email-util]
             [ataru.forms.form-store :as forms]
             [ataru.tarjonta-service.hakukohde :as hakukohde]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.translations.texts :refer [email-default-texts tutu-decision-email]]
+            [ataru.translations.texts :refer [email-default-texts email-link-section-texts tutu-decision-email]]
             [ataru.util :as util]
             [ataru.date :as date]
             [clj-time.core :as t]
@@ -64,11 +63,6 @@
   [lang]
   (str "templates/email_submit_confirmation_template_" (name lang) ".html"))
 
-(defn- modify-link [secret]
-  (-> config
-      (get-in [:public-config :applicant :service_url])
-      (str "/hakemus?modify=" secret)))
-
 (defn- escape-full-urls
   [content]
   (let [full-urls (re-seq #"\w+:\/\/\S*" content)]
@@ -106,7 +100,7 @@
                           (util/non-blank-val tarjoaja-name [lang :fi :sv :en])))
                    hakukohteet))))
 
-(defn- add-blank-templates [templates]
+(defn- add-blank-templates [templates form-allows-ht?]
   (as-> templates x
         (util/group-by-first (comp keyword :lang) x)
         (merge languages-map x)
@@ -116,7 +110,9 @@
                  {:lang           (name lang)
                   :subject        (get template :subject (get-in email-default-texts [:email-submit-confirmation-template :submit-email-subjects lang]))
                   :content        (get template :content "")
-                  :content-ending (get template :content_ending (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang]))
+                  :content-ending (get template :content_ending (if form-allows-ht?
+                                                                  ""
+                                                                  (get-in email-default-texts [:email-submit-confirmation-template :without-application-period lang])))
                   :signature      (get template :signature (get-in email-default-texts [:email-submit-confirmation-template :signature lang]))}))
              x)))
 
@@ -139,15 +135,16 @@
                                                                          {:label "Liite 3"
                                                                           :deadline ""}]
                                             :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
+                                            :application-url-text (get-in email-link-section-texts [:default (keyword lang)])
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
                                             :content-ending  (->safe-html content-ending)
                                             :signature       (->safe-html signature)}))})
 
 (defn get-email-templates
-  [form-key]
+  [form-key form-allows-ht?]
   (as-> (email-store/get-email-templates form-key) x
-        (add-blank-templates x)
+        (add-blank-templates x form-allows-ht?)
         (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %) (:signature %)) x)))
 
 (defn- attachment-with-deadline [_ lang field]
@@ -248,10 +245,12 @@
                                                 (filter (comp not clojure.string/blank?))))
          subject-prefix                  (if subject (subject lang) (email-template :subject))
          subject                         (email-util/enrich-subject-with-application-key-and-limit-length subject-prefix (:key application) lang)
-         application-url                 (modify-link (:secret application))
+         {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
          template-params                 {:hakukohteet                (hakukohde-names tarjonta-info lang application)
                                           :application-oid            (:key application)
                                           :application-url            application-url
+                                          :application-url-text       (->safe-html application-url-text)
+                                          :oma-opintopolku-link       oma-opintopolku-link
                                           :payment-url                payment-url
                                           :content                    content
                                           :content-ending             content-ending
@@ -273,7 +272,8 @@
         tarjonta-info                   (get-tarjonta-info koodisto-cache tarjonta-service organization-service ohjausparametrit-service application)
         raw-form                        (forms/fetch-by-id (:form application))
         application-attachment-reviews  (application-store/get-application-attachment-reviews (:key application))
-        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form)))
+        form-allows-ht?                 (boolean (get-in raw-form [:properties :allow-hakeminen-tunnistautuneena]))
+        email-template                  (find-first #(= (:lang application) (:lang %)) (get-email-templates (:key raw-form) form-allows-ht?))
         get-attachment-type             (get-attachment-type-fn koodisto-cache)]
     (create-emails subject template-name application tarjonta-info raw-form application-attachment-reviews email-template get-attachment-type guardian? payment-url)))
 

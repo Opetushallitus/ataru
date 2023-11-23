@@ -74,6 +74,7 @@
         </td>
       </tr>
       {% endif %}
+      {% if application-url|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           The changes to your application have been saved. You can change your application during the application
@@ -82,6 +83,16 @@
           share the link with others.
         </td>
       </tr>
+      {% endif %}
+      {% if oma-opintopolku-link|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Changes to the application have been saved. You can view your application and make modification to it on <a style="color: #0093C4;"
+                                                     href="{{oma-opintopolku-link|safe}}" target="_blank">My Studyinfo</a> during the application period.
+          If you are using a shared computer, please remember to log out of My Studyinfo.
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           This is an automatically generated email, please do not reply.

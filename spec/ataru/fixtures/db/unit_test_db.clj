@@ -1,6 +1,7 @@
 (ns ataru.fixtures.db.unit-test-db
   (:require [yesql.core :refer [defqueries]]
             [ataru.forms.form-store :as form-store]
+            [ataru.cas-oppija.cas-oppija-session-store :as oss]
             [ataru.applications.application-store :as application-store]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as ataru-db]
@@ -37,7 +38,9 @@
                                application-fixture
                                (:hakukohde application-fixture)
                                form-fixture
-                               {} audit-logger)
+                               {}
+                               audit-logger
+                               nil)
                                :id)
         stored-application (application-store/get-application application-id)]
     (doseq [{hakukohde :hakukohde review-requirement :review-requirement review-state :review-state} application-reviews-fixture]
@@ -51,6 +54,10 @@
   ([form-fixture application-fixture application-reviews-fixture]
     (nuke-old-fixture-data (:id form-fixture))
     (init-db-application-fixture form-fixture application-fixture application-reviews-fixture)))
+
+(defn init-oppija-session-to-db
+  [ticket data]
+  (oss/persist-session! (oss/generate-new-random-key) ticket data))
 
 (defn clear-database []
                      (ataru-db/clear-db! :db (get-in config [:db :schema])))

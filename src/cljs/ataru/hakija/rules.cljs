@@ -158,7 +158,8 @@
                                    (filter #(= "ssn" (:id %)))
                                    first
                                    :cannot-view))
-        demo?            (demo/demo? db)]
+        demo?            (demo/demo? db)
+        dob-from-session (get-in db [:oppija-session :fields :birth-date :value])]
     (if (= "true" have-finnish-ssn)
       (let [[birth-date gender] (cond (and (:valid ssn)
                                            (not-empty (:value ssn)))
@@ -167,6 +168,8 @@
                                       cannot-view?
                                       [(get-in db [:application :answers :birth-date :value])
                                        (get-in db [:application :answers :gender :value])]
+                                      (not (string/blank? dob-from-session))
+                                      [dob-from-session ""]
                                       :else
                                       ["" ""])]
         (-> db
@@ -186,13 +189,16 @@
                                    (filter #(= "ssn" (:id %)))
                                    first
                                    :cannot-view))
-        demo?            (demo/demo? db)]
+        demo?            (demo/demo? db)
+        dob-from-session (get-in db [:oppija-session :fields :birth-date :value])]
     (if (= "true" have-finnish-ssn)
       (let [birth-date (cond (and (:valid ssn)
                                   (not-empty (:value ssn)))
                              (ssn/parse-birth-date-from-ssn demo? (:value ssn))
                              cannot-view?
                              (get-in db [:application :answers :birth-date :value])
+                             (not (string/blank? dob-from-session))
+                             dob-from-session
                              :else
                              "")]
         (hide-field db :birth-date birth-date))

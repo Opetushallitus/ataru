@@ -74,6 +74,7 @@
         </td>
       </tr>
       {% endif %}
+      {% if application-url|not-empty %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Ändringarna i din ansökan har mottagits. Under ansökningstiden kan
@@ -83,6 +84,16 @@
           inte länken vidare till utomstående.
         </td>
       </tr>
+      {% endif %}
+      {% if oma-opintopolku-link|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Ändringarna i din ansökan har sparats. Du kan göra ändringarna i ansökan i <a style="color: #0093C4;"
+                                                                                        href="{{oma-opintopolku-link|safe}}" target="_blank">Min Studieinfo</a> under ansökningstiden.
+          Kom ihåg att logga ut från Min Studieinfo om du använder en gemensam dator.
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Svara inte på detta meddelande, det har skickats automatiskt.

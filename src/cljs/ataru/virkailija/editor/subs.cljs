@@ -639,6 +639,13 @@
     (get form-properties :allow-only-yhteishaut false)))
 
 (re-frame/reg-sub
+  :editor/allow-hakeminen-tunnistautuneena?
+  (fn [_ _]
+    (re-frame/subscribe [:editor/form-properties]))
+  (fn [form-properties]
+    (get form-properties :allow-hakeminen-tunnistautuneena false)))
+
+(re-frame/reg-sub
   :editor/form-closed?
   (fn [_ _]
     (re-frame/subscribe [:editor/form-properties]))

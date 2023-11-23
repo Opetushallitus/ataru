@@ -12,7 +12,8 @@ INSERT INTO applications (
   ssn,
   dob,
   email,
-  submitted
+  submitted,
+  tunnistautuminen
 ) VALUES (
   :form_id,
   :content,
@@ -25,7 +26,8 @@ INSERT INTO applications (
   upper(:ssn),
   :dob,
   :email,
-  now()
+  now(),
+  :tunnistautuminen
 );
 
 -- name: yesql-add-application-answers!
@@ -96,7 +98,8 @@ INSERT INTO applications (
   ssn,
   dob,
   email,
-  submitted
+  submitted,
+  tunnistautuminen
 ) VALUES (
   :form_id,
   :key,
@@ -111,6 +114,11 @@ INSERT INTO applications (
   :dob,
   :email,
   (SELECT created_time
+   FROM applications
+   WHERE key = :key
+   ORDER BY id ASC
+   LIMIT 1),
+  (SELECT tunnistautuminen
    FROM applications
    WHERE key = :key
    ORDER BY id ASC
@@ -250,7 +258,8 @@ SELECT
   a.haku,
   a.hakukohde,
   a.person_oid,
-  las.secret
+  las.secret,
+  (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM applications a
 JOIN LATERAL (SELECT secret
               FROM application_secrets
@@ -289,6 +298,16 @@ SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
                               ON application_key = a.key
                               WHERE a.haku = :haku_oid AND
                                     a.ssn = upper(:ssn) AND
+                                    state <> 'inactivated') AS t
+               WHERE t.id = (SELECT max(id) FROM applications
+                             WHERE key = t.key)) AS has_applied;
+
+-- name: yesql-has-eidas-applied
+SELECT EXISTS (SELECT 1 FROM (SELECT a.id, a.key FROM applications AS a
+                                                          JOIN application_reviews
+                                                               ON application_key = a.key
+                              WHERE a.haku = :haku_oid AND
+                                    a.tunnistautuminen->'session'->'data'->>'eidas-id' = :eidas_id AND
                                     state <> 'inactivated') AS t
                WHERE t.id = (SELECT max(id) FROM applications
                              WHERE key = t.key)) AS has_applied;
@@ -333,7 +352,8 @@ SELECT
                                      'state', state,
                                      'hakukohde', hakukohde))
    FROM application_hakukohde_reviews ahr
-   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews
+   WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+   (a.tunnistautuminen->'session'->'data'->'auth-type') as tunnistautuminen
 FROM latest_applications AS a
 JOIN latest_application_secrets las ON a.key = las.application_key
 WHERE a.key = :application_key;

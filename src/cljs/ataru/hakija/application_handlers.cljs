@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-handlers
-  (:require [clojure.string :as string]
+  (:require [ataru.config :as config]
+            [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
             [ataru.application-common.application-field-common :refer [sanitize-value]]
             [schema.core :as s]
@@ -133,6 +134,52 @@
             :handler [:application/handle-form]}}))
 
 (reg-event-fx
+  :application/start-oppija-session-polling
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    (let [logged-in? (get-in db [:oppija-session :logged-in])]
+      (js/console.log (str "Start session polling:" logged-in?))
+      (if logged-in?
+        {:db db
+         :interval {:action :start
+                    :id :oppija-session-polling
+                    :frequency 60000
+                    :event [:application/oppija-session-login-refresh]}}
+        db))))
+(reg-event-fx
+  :application/oppija-session-login-refresh
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/auth/session")
+            :handler [:application/handle-oppija-session-login-refresh]}}))
+
+
+(reg-event-fx
+  :application/handle-oppija-session-login-refresh
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (let [session-data (get-in response [:body])
+          logged-in? (:logged-in session-data)
+          expires-soon? (:expires-soon session-data)]
+      (js/console.log (str "handle-oppija-session-login-refresh" session-data))
+      {:db (-> db
+               (assoc-in [:oppija-session :logged-in] logged-in?)
+               (assoc-in [:oppija-session :expired] (not logged-in?))
+               (assoc-in [:oppija-session :expires-soon] expires-soon?))})))
+
+(reg-event-fx
+  :application/get-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    {:db   db
+     :http {:method  :get
+            :url     (str "/hakemus/auth/session")
+            :handler [:application/handle-oppija-session-fetch]
+            :error-handler [:application/handle-ht-error]}}))
+
+(reg-event-fx
   :application/get-latest-form-by-haku
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ haku-oid hakukohde-oids virkailija-secret]]
@@ -173,7 +220,8 @@
             :post-data     (create-application-to-submit (:application db)
                                                          (:form db)
                                                          (get-in db [:form :selected-language])
-                                                         (:strict-warnings-on-unchanged-edits? db))
+                                                         (:strict-warnings-on-unchanged-edits? db)
+                                                         (get-in db [:oppija-session :logged-in] false))
             :handler       [:application/handle-submit-response]
             :error-handler [:application/handle-submit-error]}}))
 
@@ -550,15 +598,26 @@
   :application/post-handle-form-dispatches
   [check-schema-interceptor]
   (fn [{:keys [db]} _]
-    (let [selection-limited (selection-limits db)]
+    (let [selection-limited (selection-limits db)
+          virkailija-secret (get-in db [:application :virkailija-secret])
+          hakija-secret (get-in db [:application :secret])
+          form-allows-hakeminen-tunnistautuneena? (get-in db [:form :properties :allow-hakeminen-tunnistautuneena] false)
+          demo? (demo/demo? db)]
       (merge
         {:db         (assoc db :selection-limited selection-limited)
          :dispatch-n [[:application/hakukohde-query-change (atom "")]
                       [:application/set-page-title]
                       [:application/validate-hakukohteet]
                       [:application/hide-form-sections-with-text-component-visibility-rules]
-                      [:application/fetch-koulutustyypit]]}
-        (when (and selection-limited (not (demo/demo? db)))
+                      [:application/fetch-koulutustyypit]
+                      (when (and
+                              (clojure.string/blank? virkailija-secret)
+                              (clojure.string/blank? hakija-secret)
+                              form-allows-hakeminen-tunnistautuneena?
+                              (not demo?)
+                              (fc/feature-enabled? :hakeminen-tunnistautuneena))
+                        [:application/get-oppija-session])]}
+        (when (and selection-limited (not demo?))
           {:http {:method  :put
                   :url     (str "/hakemus/api/selection-limit?form-key=" (-> db :form :key))
                   :handler [:application/handle-selection-limit]}})))))
@@ -601,6 +660,81 @@
   (fn [{:keys [db]} [_ response]]
     {:db       (handle-form db nil (get-in response [:headers "date"]) (:body response))
      :dispatch [:application/post-handle-form-dispatches]}))
+
+(defn- prefill-and-lock-answers [db]
+  (if (get-in db [:oppija-session :logged-in])
+    (let [locked-answers (get-in db [:oppija-session :fields])]
+      (js/console.log (str "Locking answers... " locked-answers))
+      (reduce (fn [db [key {:keys [locked value]}]]
+                (if (not (clojure.string/blank? value))
+                  ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
+                  ;ei-validi arvo? Se ois kyllä huono juttu, validaatio tai ei.
+                  ;ehkä cas-oppijalta tulevat arvot vois validoida jo backendissä.
+                  ;ssn erityistapaus, tarkistetaan onko jo hakenut haussa.
+                  (update-in db [:application :answers key] (fn [ans]
+                                                              (merge (-> ans
+                                                                         (assoc :cannot-edit true)
+                                                                         (assoc :value value)
+                                                                         (assoc :valid true);Tässä oletetaan nyt, että kaikki epätyhjät arvot ovat valideja. Niin ei välttämättä oikeasti ole.
+                                                                         (assoc :locked locked)
+                                                                         (assoc-in [:values :value] value)
+                                                                         (assoc-in [:values :valid] true))
+                                                                     (when (= key :email) {:verify value}))))
+                  db))
+              db
+              locked-answers))
+    db))
+
+(reg-event-fx
+  :application/handle-ht-error
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (js/console.log (str "Handle oppija session error fetch, resp" response))
+    {:db (assoc-in db [:oppija-session :session-fetch-errored] true)}))
+
+(reg-event-fx
+  :application/handle-oppija-session-fetch
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (let [session-data (get-in response [:body])]
+      (js/console.log (str "Handle oppija session fetch, sess data" session-data))
+      {:db (-> db
+               (assoc :oppija-session (assoc session-data :session-fetched true))
+               (prefill-and-lock-answers))
+       :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
+                                          :change-country-of-residence nil}]
+                    [:application/fetch-has-applied-for-oppija-session session-data]
+                    (when (:logged-in session-data) [:application/start-oppija-session-polling])]})))
+
+(reg-event-fx
+  :application/fetch-has-applied-for-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ session-data]]
+    (let [haku-oid             @(subscribe [:state-query [:form :tarjonta :haku-oid]])
+          can-submit-multiple? @(subscribe [:state-query [:form :tarjonta :can-submit-multiple-applications]])
+          ssn                  (get-in session-data [:fields :ssn :value])
+          eidas-id             (get-in session-data [:eidas-id])
+          body {:haku-oid haku-oid
+                :ssn      ssn
+                :eidas-id eidas-id}]
+      (if (and (not can-submit-multiple?)
+               haku-oid
+               (or ssn eidas-id))
+        {:db   db
+         :http {:method    :post
+                :url       "/hakemus/api/has-applied"
+                :post-data body
+                :handler   [:application/handle-fetch-has-applied-for-oppija-session]}}
+        {:db db}))))
+
+(reg-event-fx
+  :application/handle-fetch-has-applied-for-oppija-session
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ response]]
+    (let [has-applied? (get-in response [:body :has-applied])]
+      (js/console.log (str "has-applied result: " (get response :body) "," has-applied?))
+      {:db (-> db
+               (assoc-in [:application :has-applied] has-applied?))})))
 
 (reg-event-db
   :application/network-online
@@ -1385,6 +1519,69 @@
  (fn [{:keys [db]}]
    (when-let [url (get-in db [:application :submit-details :url])]
      (set! (.. js/window -location -href) url))))
+
+(reg-event-fx
+  :application/redirect-to-tunnistautuminen
+  [check-schema-interceptor]
+  (fn [_ [_ lang]]
+    (let [location (.. js/window -location)
+          service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/hakemus/auth/oppija?lang=" lang "&target=" location)]
+      (set! (.. js/window -location -href) target)
+      nil)))
+
+(reg-event-fx
+  :application/redirect-to-logout
+  [check-schema-interceptor]
+  (fn [_ [_ lang]]
+    (let [service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/hakemus/auth/oppija/logout?lang=" lang)]
+      (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+      (set! (.. js/window -location -href) target)
+      nil)))
+(reg-event-fx
+  :application/redirect-to-opintopolku-etusivu
+  [check-schema-interceptor]
+  (fn [_ [_ lang]]
+    (let [service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/konfo/" lang "/")]
+      (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+      (set! (.. js/window -location -href) target)
+      nil)))
+
+(reg-event-fx
+  :application/redirect-to-oma-opintopolku
+  [check-schema-interceptor]
+  (fn [_]
+    (let [service-url (config/get-public-config [:applicant :service_url])
+          target (str service-url "/oma-opintopolku/")]
+      (.removeEventListener js/window "beforeunload" util/confirm-window-close!)
+      (set! (.. js/window -location -href) target)
+      nil)))
+
+(reg-event-db
+  :application/set-tunnistautuminen-declined
+  [check-schema-interceptor]
+  (fn [db _]
+    (assoc-in db [:oppija-session :tunnistautuminen-declined] true)))
+
+(reg-event-db
+  :application/set-active-notification-modal
+  [check-schema-interceptor]
+  (fn [db [_ params]]
+    (assoc-in db [:application :notification-modal] params)))
+
+(reg-event-db
+  :application/toggle-logout-menu
+  [check-schema-interceptor]
+  (fn [db _]
+    (update-in db [:oppija-session :logout-menu-open] not)))
+
+(reg-event-db
+  :application/close-session-expires-warning-dialog
+  [check-schema-interceptor]
+  (fn [db _]
+    (assoc-in db [:oppija-session :expires-soon-dialog-bypassed] true)))
 
 (reg-event-fx
   :application/set-page-title

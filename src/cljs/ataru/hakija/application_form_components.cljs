@@ -1,5 +1,6 @@
 (ns ataru.hakija.application-form-components
-  (:require [re-frame.core :refer [subscribe dispatch]]
+  (:require [ataru.hakija.application-view-icons :as icons]
+            [re-frame.core :refer [subscribe dispatch]]
             [cljs.core.match :refer-macros [match]]
             [ataru.application-common.application-field-common
              :as application-field
@@ -25,7 +26,8 @@
             [ataru.hakija.arvosanat.arvosanat-render :as arvosanat]
             [ataru.hakija.render-generic-component :as generic-component]
             [ataru.hakija.components.attachment :as attachment]
-            [ataru.application-common.accessibility-util :as a11y]))
+            [ataru.application-common.accessibility-util :as a11y]
+            [ataru.constants :as constants]))
 
 (defonce autocomplete-off "new-password")
 
@@ -234,7 +236,8 @@
             disabled?        @disabled?
             {:keys [value
                     valid
-                    errors]} @(subscribe [:application/answer id idx nil])
+                    errors
+                    locked]} @(subscribe [:application/answer id idx nil])
             options          @(subscribe [:application/visible-options field-descriptor])
             cannot-view?     @cannot-view?
             cannot-edit?     @cannot-edit?
@@ -265,39 +268,45 @@
            [hakukohde-names-component/question-hakukohde-names field-descriptor])
          [:div.application__form-text-input-info-text
           [info-text-component/info-text field-descriptor]]
-         [:input.application__form-text-input
-          (merge {:id           form-field-id
-                  :type         "text"
-                  :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
-                                  (util/non-blank-val input-hint languages))
-                  :class        (str size-class
-                                     (if show-error?
-                                       " application__form-field-error"
-                                       " application__form-text-input--normal"))
-                  :on-blur      (fn [evt]
-                                  (swap! local-state assoc
-                                         :focused? false
-                                         :value (trimmed-or-empty-value value))
-                                  (on-change (trimmed-or-empty-value value))
-                                  (on-blur evt))
-                  :on-change    (event->value (fn [value]
-                                                (swap! local-state assoc
-                                                       :focused? true
-                                                       :value value)
-                                                (on-change value)))
-                  :required     (is-required-field? field-descriptor)
-                  :aria-invalid (not valid)
-                  :tab-index    "0"
-                  :autoComplete autocomplete-off
-                  :value        (cond cannot-view?
-                                      "***********"
-                                      (:focused? @local-state)
-                                      (:value @local-state)
-                                      :else
-                                      value)
-                  :data-test-id data-test-id}
-                 (when (or disabled? cannot-edit?)
-                   {:disabled true}))]
+
+         [:div.application__input-container
+          (when locked
+            [:div.application__lock-icon-container
+             [icons/icon-lock-closed]])
+          [:input.application__form-text-input
+           (merge {:id           form-field-id
+                   :type         "text"
+                   :placeholder  (when-let [input-hint (-> field-descriptor :params :placeholder)]
+                                   (util/non-blank-val input-hint languages))
+                   :class        (str size-class
+                                      (if show-error?
+                                        " application__form-field-error"
+                                        " application__form-text-input--normal"))
+                   :on-blur      (fn [evt]
+                                   (swap! local-state assoc
+                                          :focused? false
+                                          :value (trimmed-or-empty-value value))
+                                   (on-change (trimmed-or-empty-value value))
+                                   (on-blur evt))
+                   :on-change    (event->value (fn [value]
+                                                 (swap! local-state assoc
+                                                        :focused? true
+                                                        :value value)
+                                                 (on-change value)))
+                   :required     (is-required-field? field-descriptor)
+                   :aria-invalid (not valid)
+                   :tab-index    "0"
+                   :autoComplete autocomplete-off
+                   :value        (cond cannot-view?
+                                       "***********"
+                                       (:focused? @local-state)
+                                       (:value @local-state)
+                                       :else
+                                       value)
+                   :data-test-id data-test-id}
+                  (when (or disabled? cannot-edit? locked)
+                    {:disabled true}))]]
+
          [validation-error (some-> errors ;palautuu map jossa validaattorin id on avain ja varsinainen errorsetti arvot
                                    first ;tiedetään että validaattorin palauttamassa mapissa on vain 1 avain
                                    vals ;mapin arvot listana (jonka koko 1)
@@ -468,12 +477,29 @@
 
 (defn wrapper-field
   [field-descriptor]
-  (let [label (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))]
+  (let [label               (util/non-blank-val (:label field-descriptor) @(subscribe [:application/default-languages]))
+        person-info-module? (= "person-info" (:module field-descriptor))
+        logged-in?          @(subscribe [:state-query [:oppija-session :logged-in]])
+        auth-type           @(subscribe [:state-query [:oppija-session :auth-type]])
+        lang                @(subscribe [:application/form-language])]
     [:div.application__wrapper-element
      [:div.application__wrapper-heading
       [:h2 label]
       [scroll-to-anchor field-descriptor]]
-     (into [:div.application__wrapper-contents]
+     (into [:div.application__wrapper-contents
+            (when (and person-info-module? logged-in?)
+              [:div.application__person-info-module-ht-info-wrapper
+               [:div.application__person-info-module-ht-info-contents
+                [:i.zmdi.zmdi-info-outline]
+                (cond (= auth-type constants/auth-type-strong)
+                      [:p.application__person-info-module-ht-info-text
+                       (tu/get-hakija-translation :ht-person-info-module-top-text lang)
+                       [:a {:href (tu/get-hakija-translation :ht-person-info-module-top-text-link-url lang)
+                            :target "_blank"}
+                        (tu/get-hakija-translation :ht-person-info-module-top-text-link-text lang)]]
+                      (= auth-type constants/auth-type-eidas)
+                      [:p.application__person-info-module-ht-info-text
+                       (tu/get-hakija-translation :ht-person-info-module-top-text-eidas lang)])]])]
            (for [child (:children field-descriptor)
                  :when @(subscribe [:application/visible? (keyword (:id child))])]
              (if (:per-hakukohde child)

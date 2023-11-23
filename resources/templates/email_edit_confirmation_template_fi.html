@@ -85,6 +85,15 @@
         </td>
       </tr>
       {% endif %}
+      {% if oma-opintopolku-link|not-empty %}
+      <tr>
+        <td style="padding-left: 20px; padding-top: 20px;">
+          Muutokset hakemukseesi on tallennettu. Voit katsella ja muokata hakemustasi <a style="color: #0093C4;"
+                                                  href="{{oma-opintopolku-link|safe}}" target="_blank">Oma Opintopolku-palvelussa</a> hakuaikana.
+          Jos käytät yhteiskäyttöistä tietokonetta, muista kirjautua ulos Oma Opintopolku-palvelusta.
+        </td>
+      </tr>
+      {% endif %}
       <tr>
         <td style="padding-left: 20px; padding-top: 20px;">
           Älä vastaa tähän viestiin - viesti on lähetetty automaattisesti.

@@ -381,14 +381,6 @@ and (max-width: 1000px) {
     color: gray;
   }
 
-  .application-handling__list-row--applicant-details {
-    color: gray;
-    margin-left: 5px;
-  }
-
-  .application-handling__list-row--applicant-name {
-  }
-
   .unselectable
 }
 
@@ -521,11 +513,32 @@ and (max-width: 1000px) {
 
 .application-handling__list-row--application-applicant {
   flex: 1 3 450px;
-  display: inline-block;
+  display: flex;
   color: @pale-blue;
   padding-left: 12px;
+  align-items: center;
+
+
   &:hover {
     color: @selected-blue;
+  }
+
+  .application-handling__list-row--applicant-details {
+    color: gray;
+    margin-left: 5px;
+  }
+
+
+  .application-handling__list-row--tunnistautunut-icon {
+    align-items: center;
+    justify-content: center;
+
+    align-self: center;
+
+    img {
+      margin-top: 4px;
+      margin-left: 8px;
+    }
   }
 }
 
@@ -3616,5 +3629,29 @@ th.application__readonly-adjacent--header {
     &:disabled {
       border-bottom: 2px solid @pale-blue;
     }
+  }
+}
+
+.application-handling__hakenut-tunnistautuneena-infobox {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  align-self: start;
+
+  margin-bottom: 13px;
+  padding: 10px;
+  background-color: @neutral-grey-200;
+
+  .application-handling__list-row--tunnistautunut-icon {
+    align-items: center;
+    justify-content: center;
+
+    align-self: center;
+
+    img {
+      margin-top: 4px;
+      margin-right: 10px;
+    }
+
   }
 }

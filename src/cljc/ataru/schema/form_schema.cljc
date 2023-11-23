@@ -180,11 +180,12 @@
    :groups [CreateMoveElement]})
 
 (s/defschema FormProperties
-  {(s/optional-key :auto-expand-hakukohteet) s/Bool
-   (s/optional-key :allow-only-yhteishaut)   s/Bool
-   (s/optional-key :demo-validity-start)     (s/maybe s/Str)
-   (s/optional-key :demo-validity-end)       (s/maybe s/Str)
-   (s/optional-key :closed)                  s/Bool})
+  {(s/optional-key :auto-expand-hakukohteet)          s/Bool
+   (s/optional-key :allow-only-yhteishaut)            s/Bool
+   (s/optional-key :allow-hakeminen-tunnistautuneena) s/Bool
+   (s/optional-key :demo-validity-start)              (s/maybe s/Str)
+   (s/optional-key :demo-validity-end)                (s/maybe s/Str)
+   (s/optional-key :closed)                           s/Bool})
 
 (s/defschema FormDetails
   {:name                        localized-schema/LocalizedStringOptional
@@ -436,7 +437,8 @@
    (s/optional-key :application-attachment-reviews) [{:attachment-key s/Str
                                                       :state          (apply s/enum review-states/attachment-review-type-names)
                                                       :hakukohde      s/Str}]
-   :eligibility-set-automatically                   [s/Str]})
+   :eligibility-set-automatically                   [s/Str]
+   (s/optional-key :tunnistautuminen)                 (s/maybe s/Str)})
 
 (s/defschema Application
   {(s/optional-key :key)                s/Str
@@ -455,7 +457,9 @@
    (s/optional-key :form-key)           s/Str
    (s/optional-key :tarjonta)           FormTarjontaMetadata
    (s/optional-key :person-oid)         (s/maybe s/Str)
-   (s/optional-key :strict-warnings-on-unchanged-edits?) (s/maybe s/Bool)})
+   (s/optional-key :strict-warnings-on-unchanged-edits?) (s/maybe s/Bool)
+   (s/optional-key :tunnistautunut)     (s/maybe s/Bool)
+   (s/optional-key :tunnistautuminen)   (s/maybe s/Str)})
 
 (s/defschema Person
   {(s/optional-key :oid)         s/Str
@@ -779,6 +783,10 @@
                                   :rating     s/Int
                                   :haku-oid   (s/maybe s/Str)
                                   :feedback   (s/maybe s/Str)})
+(s/defschema HasAppliedParams {:haku-oid s/Str
+                               (s/optional-key :ssn) (s/maybe s/Str)
+                               (s/optional-key :email) (s/maybe s/Str)
+                               (s/optional-key :eidas-id) (s/maybe s/Str)})
 
 (s/defschema PermissionCheckDto {:personOidsForSamePerson          [s/Str]
                                  :organisationOids                 [s/Str]

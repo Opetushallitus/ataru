@@ -1,6 +1,7 @@
 (ns ataru.hakija.subs
   (:require [re-frame.core :as re-frame]
             [ataru.config :as config]
+            [ataru.feature-config :as fc]
             [ataru.util :as util]
             [ataru.application-common.application-field-common :as afc]
             [ataru.hakija.application :as autil]
@@ -316,6 +317,47 @@
   (fn [db]
     (let [demo-requested? (get db :demo-requested)]
       (boolean demo-requested?))))
+
+(re-frame/reg-sub
+  :application/hakeminen-tunnistautuneena-lander-active?
+  (fn [_ _]
+    [(re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
+     (re-frame/subscribe [:state-query [:oppija-session :tunnistautuminen-declined]])
+     (re-frame/subscribe [:state-query [:oppija-session :logged-in]])
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])
+     (re-frame/subscribe [:state-query [:application :secret]])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret demo?] _]
+    (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+      (and feature-enabled
+           form-allows
+           (not demo?)
+           (clojure.string/blank? virkailija-secret)
+           (clojure.string/blank? hakija-secret)
+           (not already-declined)
+           (not logged-in)))))
+(re-frame/reg-sub
+  :application/loading-complete?
+  (fn [_ _]
+    [(re-frame/subscribe [:state-query [:error :code]])
+     (re-frame/subscribe [:state-query [:form]])
+     (re-frame/subscribe [:state-query [:form :properties :allow-hakeminen-tunnistautuneena]])
+     (re-frame/subscribe [:state-query [:oppija-session :session-fetched]])
+     (re-frame/subscribe [:state-query [:oppija-session :session-fetch-errored]])
+     (re-frame/subscribe [:state-query [:application :virkailija-secret]])
+     (re-frame/subscribe [:state-query [:application :secret]])
+     (re-frame/subscribe [:application/demo?])])
+  (fn [[load-failure form form-allows-ht session-fetched session-fetch-errored virkailija-secret hakija-secret demo?] _]
+    (let [ht-feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
+      (or load-failure
+          (and form
+               (or (not ht-feature-enabled)
+                   demo?
+                   (or (not (clojure.string/blank? virkailija-secret))
+                       (not (clojure.string/blank? hakija-secret))
+                       (not form-allows-ht)
+                       (or session-fetched
+                           session-fetch-errored))))))))
 
 (re-frame/reg-sub
   :application/can-apply?

@@ -14,7 +14,8 @@
             [clojure.string :as string]
             [goog.string :as gstring]
             [reagent.core :as r]
-            [re-frame.core :refer [subscribe dispatch]]))
+            [re-frame.core :refer [subscribe dispatch]]
+            [ataru.constants :as constants]))
 
 (defn- application-list-basic-column-header [_ _]
   (let [application-sort (subscribe [:state-query [:application :sort]])]
@@ -247,7 +248,19 @@
       [:span.application-handling__list-row--application-applicant
        [:span.application-handling__list-row--applicant-name (or applicant [:span.application-handling__list-row--applicant-unknown
                                                                             @(subscribe [:editor/virkailija-translation :unknown])])]
-       [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]]
+       [:span.application-handling__list-row--applicant-details (or (-> application :person :ssn) (-> application :person :dob))]
+       (cond
+         (= (:tunnistautuminen application) constants/auth-type-strong)
+         [:span.application-handling__list-row--tunnistautunut-icon
+          [:img.logo-suomi-fi
+           {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
+            :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+         ;(= (:tunnistautuminen application) "eidas")
+         ;[:span.application-handling__list-row--tunnistautunut-icon
+         ; [:img.logo-suomi-fi
+         ;  {:title @(subscribe [:editor/virkailija-translation :ht-eidas-tunnistautunut])
+         ;   :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+         )]
       [:span.application-handling__list-row--application-time
        [:span.application-handling__list-row--time-day day]
        [:span date-time]]

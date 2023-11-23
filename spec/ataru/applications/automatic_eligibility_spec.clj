@@ -184,7 +184,9 @@
                                                        :person_oid     "1.2.246.562.24.00000000001"
                                                        :ssn            nil
                                                        :dob            (dob/str->dob "24.09.1989")
-                                                       :email          "test@example.com"}
+                                                       :email          "test@example.com"
+                                                       :tunnistautuminen {:oppija-session nil
+                                                                          :hakenut-tunnistautuneena false}}
                                                       {:connection connection}))]
       (binding [*form-id*         form-id
                 *application-id*  id

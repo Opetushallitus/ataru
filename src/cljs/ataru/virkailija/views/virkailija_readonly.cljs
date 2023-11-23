@@ -25,7 +25,8 @@
             [goog.string :as s]
             [ataru.application-common.hakukohde-specific-questions :as hsq]
             [ataru.virkailija.application.view.virkailija-application-icons :as icons]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :as pohjakoulutus-toinen-aste-view]))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-view :as pohjakoulutus-toinen-aste-view]
+            [ataru.constants :as constants]))
 
 (declare field)
 
@@ -329,7 +330,20 @@
         [:i.zmdi.zmdi-account-o]
         "Henkilöllä turvakielto!"])
      [scroll-to-anchor content]]
-    (into [:div.application__wrapper-contents]
+    (into [:div.application__wrapper-contents
+           (cond
+             (= (:tunnistautuminen application) constants/auth-type-strong)
+             [:div.application-handling__hakenut-tunnistautuneena-infobox
+              [:span.application-handling__list-row--tunnistautunut-icon
+               [:img.logo-suomi-fi
+                {:title @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])
+                 :src "/lomake-editori/images/suomifi_16x16.svg"}]]
+              [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+               @(subscribe [:editor/virkailija-translation :ht-hakenut-vahvasti-tunnistautuneena])]]
+             (= (:tunnistautuminen application) constants/auth-type-eidas)
+             [:div.application-handling__hakenut-tunnistautuneena-infobox
+              [:div.application-handling__hakenut-tunnistautuneena-infobox-text
+               @(subscribe [:editor/virkailija-translation :ht-eidas-tunnistautunut])]])]
           (for [child (:children content)
                 :when (not (:exclude-from-answers child))]
             [field child application hakukohteet-and-ryhmat lang nil true]))]])

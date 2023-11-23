@@ -52,4 +52,6 @@
                    :ohjausparametrit-service-base-url   "http://localhost:55443"
                    :valintalaskenta-ui-service-base-url "http://localhost:55443"
                    :editor-url                          "http://localhost:8354/lomake-editori"
-                   :liiteri-url                         ""}}
+                   :liiteri-url                         ""
+                   :cas-oppija-url                      ""
+                   :ataru-hakija-login-url "http://localhost:8351/hakemus/auth/oppija"}}

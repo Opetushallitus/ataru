@@ -1,5 +1,6 @@
 (ns ataru.hakija.components.dropdown-component
-  (:require [ataru.util :as util]
+  (:require [ataru.hakija.application-view-icons :as icons]
+            [ataru.util :as util]
             [ataru.hakija.components.form-field-label-component :as form-field-label-component]
             [ataru.hakija.components.info-text-component :as info-text-component]
             [ataru.hakija.components.question-hakukohde-names-component :as hakukohde-names-component]
@@ -13,8 +14,10 @@
 (defn dropdown [field-descriptor idx render-field]
   (let [languages     (re-frame/subscribe [:application/default-languages])
         id            (application-field/answer-key field-descriptor)
-        disabled?     @(re-frame/subscribe [:application/cannot-edit? id])
+        cannot-edit?  @(re-frame/subscribe [:application/cannot-edit? id])
         answer        @(re-frame/subscribe [:application/answer id idx nil])
+        locked?       (:locked answer)
+        disabled?     (or cannot-edit? locked?)
         on-change     (fn [e]
                         (re-frame/dispatch [:application/set-repeatable-application-field
                                             field-descriptor
@@ -45,31 +48,37 @@
          [:i.zmdi.zmdi-chevron-down]]
         [:span.application__form-select-arrow
          [:i.zmdi.zmdi-chevron-down]])
-      [(keyword (str "select.application__form-select" (when (not disabled?) ".application__form-select--enabled")))
-       {:id           form-field-id
-        :value        (or (:value answer) "")
-        :on-change    on-change
-        :disabled     disabled?
-        :required     (application-field/is-required-field? field-descriptor)
-        :aria-invalid (not (:valid answer))
-        :data-test-id data-test-id}
-       (doall
-         (concat
-           (when
-             (and
-               (nil? (:koodisto-source field-descriptor))
-               (not (:no-blank-option field-descriptor))
-               (not= "" (:value (first options))))
-             [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
-           (map
-             (fn [option]
-               [:option {:value (:value option)
-                         :key   (:value option)}
-                (util/non-blank-option-label option @languages)])
-             (cond->> options
-                      (and (some? (:koodisto-source field-descriptor))
-                           (not (:koodisto-ordered-by-user field-descriptor)))
-                      (sort-by #(util/non-blank-option-label % @languages))))))]]
+      [:div.application__input-container
+       (when locked?
+         [:div.application__lock-icon-container
+          [icons/icon-lock-closed]])
+       [(keyword (str "select.application__form-select"
+                      (when (not disabled?) ".application__form-select--enabled")
+                      (when locked? ".application__form-select--locked")))
+        {:id           form-field-id
+         :value        (or (:value answer) "")
+         :on-change    on-change
+         :disabled     disabled?
+         :required     (application-field/is-required-field? field-descriptor)
+         :aria-invalid (not (:valid answer))
+         :data-test-id data-test-id}
+        (doall
+          (concat
+            (when
+              (and
+                (nil? (:koodisto-source field-descriptor))
+                (not (:no-blank-option field-descriptor))
+                (not= "" (:value (first options))))
+              [^{:key (str "blank-" (:id field-descriptor))} [:option {:value ""} ""]])
+            (map
+              (fn [option]
+                [:option {:value (:value option)
+                          :key   (:value option)}
+                 (util/non-blank-option-label option @languages)])
+              (cond->> options
+                       (and (some? (:koodisto-source field-descriptor))
+                            (not (:koodisto-ordered-by-user field-descriptor)))
+                       (sort-by #(util/non-blank-option-label % @languages))))))]]]
      (when (seq followups)
        (into [:div.application__form-dropdown-followups.animated.fadeIn]
              (for [followup followups]

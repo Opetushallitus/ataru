@@ -286,7 +286,7 @@
         (some? duplikoitu-kysymys-hakukohde-oid) (assoc :duplikoitu-kysymys-hakukohde-oid duplikoitu-kysymys-hakukohde-oid)
         (some? duplikoitu-followup-hakukohde-oid) (assoc :duplikoitu-followup-hakukohde-oid duplikoitu-followup-hakukohde-oid)))))
 
-(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits?]
+(defn create-application-to-submit [application form lang strict-warnings-on-unchanged-edits? tunnistautunut?]
   (let [{secret :secret virkailija-secret :virkailija-secret} application]
     (cond-> {:form      (:id form)
              :strict-warnings-on-unchanged-edits? (if (nil? strict-warnings-on-unchanged-edits?)
@@ -296,7 +296,8 @@
              :haku      (-> form :tarjonta :haku-oid)
              :hakukohde (map :value (get-in application [:answers :hakukohteet :values] []))
 
-             :answers   (create-answers-to-submit (:answers application) form (:ui application))}
+             :answers   (create-answers-to-submit (:answers application) form (:ui application))
+             :tunnistautunut tunnistautunut?}
 
             (some? (get application :selection-id)) (assoc :selection-id (get application :selection-id))
 

@@ -35,10 +35,10 @@
     [ataru.harkinnanvaraisuus.harkinnanvaraisuus-process-store :as harkinnanvaraisuus-store]
     [ataru.tarjonta.haku :as h]))
 
-(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn]
+(defn- store-and-log [application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session]
   {:pre [(boolean? is-modify?)]}
   (let [store-fn (if is-modify? application-store/update-application application-store/add-application)
-        key-and-id (store-fn application applied-hakukohteet form session audit-logger)]
+        key-and-id (store-fn application applied-hakukohteet form session audit-logger oppija-session)]
     (log/info "Stored application with id: " (:id key-and-id))
     (when harkinnanvaraisuus-process-fn
       (harkinnanvaraisuus-process-fn (:id key-and-id) (:key key-and-id)))
@@ -226,7 +226,8 @@
                            audit-logger
                            application
                            is-modify?
-                           session]
+                           session
+                           oppija-session]
   (let [strict-warnings-on-unchanged-edits? (if (nil? (:strict-warnings-on-unchanged-edits? application))
                                               true
                                               (:strict-warnings-on-unchanged-edits? application))
@@ -329,6 +330,7 @@
                                           form
                                           cannot-edit-fields)
                                         final-application)
+        hakeminen-tunnistautuneena-validation-errors (validator/validate-tunnistautunut-oppija-fields (util/answers-by-key (:answers application)) oppija-session)
         validation-result             (validator/valid-application?
                                        koodisto-cache
                                        has-applied
@@ -343,7 +345,15 @@
                                           (harkinnanvaraisuus-store/upsert-harkinnanvaraisuus-process application-id application-key (:haku application))))]
     (when (not-empty cannot-edit-fields)
       (log/warnf "Skipping uneditable updated answers in application %s: %s" (:key latest-application) (str (vec cannot-edit-fields))))
+    (when (not-empty hakeminen-tunnistautuneena-validation-errors)
+      (log/error "Error(s) when validating fields from oppija-session: " (pr-str hakeminen-tunnistautuneena-validation-errors)))
     (cond
+      (not-empty hakeminen-tunnistautuneena-validation-errors)
+      {:passed? false
+       :failures ["Supplied application answers do not match fields from oppija-session."]
+       :key  nil
+       :code :internal-server-error}
+
       (and (some? (:virkailija-secret application))
            (nil? virkailija-secret))
       {:passed? false
@@ -402,7 +412,7 @@
       :else
       (do
         (remove-orphan-attachments liiteri-cas-client final-application latest-application)
-        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn)
+        (assoc (store-and-log final-application applied-hakukohteet form is-modify? session audit-logger harkinnanvaraisuus-process-fn oppija-session)
           :key (:key latest-application))))))
 
 (defn- start-person-creation-job [job-runner application-id]
@@ -493,7 +503,8 @@
    application
    session
    liiteri-cas-client
-   maksut-service]
+   maksut-service
+   oppija-session]
   (log/info "Application submitted:" application)
 
   (let [{:keys [passed? id]
@@ -508,7 +519,8 @@
                             audit-logger
                             application
                             false
-                            session)
+                            session
+                            oppija-session)
         {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application)
         virkailija-secret (:virkailija-secret application)]
 
@@ -563,7 +575,8 @@
                             audit-logger
                             input-application
                             true
-                            session)
+                            session
+                            {});fixme, miten oppija-sessio toimii muokkauksessa? Ei tällä hetkellä mitenkään?
         virkailija-secret (:virkailija-secret application)]
     (if passed?
       (if virkailija-secret

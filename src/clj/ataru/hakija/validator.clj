@@ -275,6 +275,19 @@
     (nil? (:duplikoitu-kysymys-hakukohde-oid answer))
     (nil? (:duplikoitu-followup-hakukohde-oid answer))))
 
+(defn validate-tunnistautunut-oppija-fields [answers-by-key oppija-session]
+  (when oppija-session
+    (let [validation-result (for [[key answer] answers-by-key]
+                              (let [session-data (get-in oppija-session [:data :fields key])
+                                    oppija-session-value (:value session-data)
+                                    hakemus-value (:value answer)
+                                    locked? (:locked session-data)]
+                                (when (and locked?
+                                           (not= oppija-session-value hakemus-value))
+                                  (format "Hakemus-answer '%s' does not equal session-answer '%s' for key %s"
+                                          hakemus-value oppija-session-value key))))]
+      (filter #(some? %) validation-result))))
+
 (defn valid-application?
   "Verifies that given application is valid by validating each answer
    against their associated validators."

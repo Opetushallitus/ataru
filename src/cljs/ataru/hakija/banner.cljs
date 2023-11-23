@@ -2,6 +2,7 @@
   (:require [ataru.util :as util]
             [re-frame.core :refer [subscribe dispatch]]
             [reagent.core :as r]
+            [ataru.hakija.application-view-icons :as icons]
             [cljs.core.match :refer-macros [match]]
             [ataru.translations.translation-util :as translations]
             [clojure.string :as string]))
@@ -86,6 +87,42 @@
 
         :else
         (translations/get-hakija-translation :hakija-new-text lang)))
+
+(defn logged-in-indicator-or-placeholder []
+  (let [lang (subscribe [:application/form-language])
+        logged-in-name (subscribe [:state-query [:oppija-session :display-name]])
+        logged-in? (subscribe [:state-query [:oppija-session :logged-in]])
+        menu-open? (subscribe [:state-query [:oppija-session :logout-menu-open]])
+        submit-status (subscribe [:state-query [:application :submit-status]])
+        already-applied? (subscribe [:state-query [:application :has-applied]])
+        logout-link-fn (fn []
+                         (dispatch [:application/toggle-logout-menu])
+                         (dispatch [:application/set-active-notification-modal {:header      (translations/get-hakija-translation :ht-logout-confirmation-header @lang)
+                                                                                :main-text   (when (and
+                                                                                                     (not @already-applied?)
+                                                                                                     (not= @submit-status :submitted))
+                                                                                               (translations/get-hakija-translation :ht-logout-confirmation-text @lang))
+                                                                                :button-text (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)
+                                                                                :on-click    (fn [_] (dispatch [:application/redirect-to-logout (name @lang)]))}]))]
+    (when (and @logged-in-name @logged-in?)
+      [:div.application__logged-in-banner-wrapper
+       [icons/icon-account]
+       [:div.application__logged-in-name-container
+        {:on-click #(dispatch [:application/toggle-logout-menu])}
+        @logged-in-name
+        [:div.application__dropdown-toggle
+         (if @menu-open?
+           [icons/icon-arrow-drop-up]
+           [icons/icon-arrow-drop-down])]]
+       [:div.application__logout-dropdown-wrapper
+        [:div.application__logout-dropdown-content
+         {:class (if @menu-open? :application__logout-dropdown-content-open :application__logout-dropdown-content-closed)}
+         [:div.application__banner-logout-link
+          {:on-click     #(logout-link-fn)
+           :data-test-id "tunnistautuminen-button"}
+          [:i.material-icons
+           {:title (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)} "logout"]
+          (translations/get-hakija-translation :ht-kirjaudu-ulos @lang)]]]])))
 
 (defn send-button-or-placeholder []
   (let [submit-status         @(subscribe [:state-query [:application :submit-status]])
@@ -208,7 +245,10 @@
       [notification-banner (translations/get-hakija-translation :demo lang)])))
 
 (defn banner []
-  (let [form? @(subscribe [:application/form])]
+  (let [form?             @(subscribe [:application/form])
+        ht-lander-active? @(subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
+        ht-error? @(subscribe [:state-query [:application :has-applied]]);todo add other potential errors here
+        control-active?   (and form? (not (or ht-lander-active? ht-error?)))]
     [:div.application__banner-container
      {:aria-live "polite"}
      [virkailija-fill-ribbon]
@@ -216,9 +256,10 @@
       [:div.application-top-banner
        [logo]
        [hakuaika-left]
-       (when form?
+       (when control-active?
          [:div.application__preview-control
           [preview-toggle]])
-       (when form?
-         [status-controls])]]
+       (when control-active?
+         [status-controls])
+       [logged-in-indicator-or-placeholder]]]
      [demo-notification-banner]]))

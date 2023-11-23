@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="20pt" height="22pt" viewBox="0 0 220 220">
+<defs>
+<clipPath id="clip_0">
+<path transform="matrix(1,0,0,-1,0,220)" d="M0 220H220V0H0Z"/>
+</clipPath>
+</defs>
+<g id="layer_1">
+<g clip-path="url(#clip_0)">
+<path transform="matrix(1,0,0,-1,212,220)" d="M0 0H-204C-208.4 0-212 3.6-212 8V212C-212 216.4-208.4 220-204 220H0C4.4 220 8 216.4 8 212V8C8 3.6 4.4 0 0 0" fill="#002f6b"/>
+<path transform="matrix(1,0,0,-1,56,60)" d="M0 0V-20H28V8H8C3.6 8 0 4.4 0 0" fill="#ffffff"/>
+<path transform="matrix(1,0,0,-1,56,164)" d="M0 0C0-2 1.6-4 4-4H24C26-4 28-2 28 0V56H0Z" fill="#ffffff"/>
+<path transform="matrix(1,0,0,-1,164,52)" d="M0 0H-52V-28H4V-4C4-1.6 2 0 0 0" fill="#ffffff"/>
+<path transform="matrix(1,0,0,-1,112,136)" d="M0 0H52C54.4 0 56 1.6 56 4V28H0Z" fill="#ffffff"/>
+</g>
+</g>
+</svg>

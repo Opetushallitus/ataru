@@ -846,7 +846,9 @@
                                         (-> x
                                             (dissoc :belongs-to-hakukohderyhma)
                                             (dissoc :belongs-to-hakukohteet))
-                                        x))]
+                                        x))
+        properties (-> (or (get-in form [:properties]) {})
+                       (select-keys [:allow-hakeminen-tunnistautuneena]))]
     (post-new-form (merge
                      (-> (select-keys form [:name :content :languages :organization-oid])
                          (update :content (fn [content]
@@ -857,7 +859,8 @@
                                                                         (remove-belongs-to)) component))
                                                  content)))
                          (assoc :key new-form-key))
-                     {:locked nil :locked-by nil}))
+                     {:locked nil :locked-by nil}
+                     {:properties properties}))
     db))
 
 (reg-event-db :editor/copy-form copy-form)
@@ -1399,10 +1402,11 @@
 (reg-event-fx
   :editor/load-email-template
   (fn [{db :db} [_]]
-    (let [form-key (get-in db [:editor :selected-form-key])]
+    (let [form-key (get-in db [:editor :selected-form-key])
+          form-allows-ht? (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))]
       {:http {:method              :get
               :handler-args        {:form-key form-key}
-              :path                (str "/lomake-editori/api/email-templates/" form-key)
+              :path                (str "/lomake-editori/api/email-templates/" form-key "?form-allows-ht=" form-allows-ht?)
               :handler-or-dispatch :editor/update-saved-email-template-preview}})))
 
 (reg-event-fx
@@ -1583,6 +1587,12 @@
         (remove-validator updated-db [nil "invalid-values" parent-path])
         updated-db))))
 
+(reg-event-db
+  :editor/toggle-allow-hakeminen-tunnistautuneena
+  (fn [db [_]]
+    (let [path (db/current-form-properties-path db [:allow-hakeminen-tunnistautuneena])
+          value (not (get-in db path))]
+      (assoc-in db path value))))
 (reg-event-db
   :editor/toggle-allow-only-yhteishaut
   (fn [db [_]]
