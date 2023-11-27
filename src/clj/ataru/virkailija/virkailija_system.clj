@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
-  (:require [com.stuartsierra.component :as component]
+  (:require [ataru.siirtotiedosto-service :as siirtotiedosto-service]
+            [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sns :as sns]
             [ataru.aws.sqs :as sqs]
@@ -241,6 +242,22 @@
                             :form-by-id-cache
                             :valintalaskentakoostepalvelu-service])
 
+    ;todo cleanup, lost of unneeded stuff here
+    :siirtotiedosto-service (component/using
+                              (siirtotiedosto-service/new-siirtotiedosto-service)
+                              [:liiteri-cas-client
+                               :organization-service
+                               :tarjonta-service
+                               :ohjausparametrit-service
+                               :audit-logger
+                               :person-service
+                               :valinta-tulos-service
+                               :koodisto-cache
+                               :job-runner
+                               :suoritus-service
+                               :form-by-id-cache
+                               :valintalaskentakoostepalvelu-service])
+
     :session-store (create-session-store (db/get-datasource :db))
 
     :handler (component/using
@@ -261,6 +278,7 @@
                             :temp-file-store
                             :audit-logger
                             :application-service
+                            :siirtotiedosto-service
                             :session-store
                             :suoritus-service]
                            (map first caches))))
