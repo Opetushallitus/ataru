@@ -1583,6 +1583,55 @@
                                                        :application_keys (cons "" application-keys)})
        (map unwrap-siirto-application)))
 
+
+(defn siirtotiedosto-applications [params]
+  (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications {:modified_before (:modified-before params)
+                                                                   :modified_after (:modified-after params)
+                                                                   :hakukohde_oid    (:hakukohde-oid params)
+                                                                   :application_keys (cons "" (:application-oids params))
+                                                                   :limit 2000
+                                                                   :offset 0
+                                                                   })
+       (map unwrap-siirto-application)))
+
+(def page-size 100000)
+
+(defn- mock-save-to-s3 [applications]
+  (log/info "Saving" (count applications) "applications to s3 in siirtotiedosto!");just a placeholder :)
+  )
+
+(defn siirtotiedosto-applications-paged [params]
+  (loop [pages-fetched 0
+         offset 0
+         statistics []
+         all-ok true]
+    (log/info "Start collecting page... " {:pages-fetched pages-fetched
+                                           :offset offset})
+    (let [start (System/currentTimeMillis)
+          applications (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications {:modified_before (:modified-before params)
+                                                                                        :modified_after (:modified-after params)
+                                                                                        :hakukohde_oid    (:hakukohde-oid params)
+                                                                                        :application_keys (cons "" (:application-oids params))
+                                                                                        :limit page-size
+                                                                                        :offset offset})
+                            (map unwrap-siirto-application))
+          returned-count (count applications)
+          took (- (System/currentTimeMillis) start)
+          stat (str "Collecting" returned-count "applications took " took "ms")
+          ]
+      (log/info "Got page" (inc pages-fetched) "for params" params ":" returned-count stat)
+      ;todo write data to s3
+      (mock-save-to-s3 applications)
+      (if (= returned-count page-size)
+        (recur
+          (inc pages-fetched)
+          (+ offset returned-count)
+          (conj statistics stat)
+          true) ;todo add some kind of simple error tracking
+        (do
+          (log/info "Siirtotiedosto ready! params" params ", stats" (conj statistics stat))
+          {:success all-ok})))))
+
 (defn kouta-application-count-for-hakukohde [hakukohde-oid]
   (->> (exec-db :db queries/yesql-kouta-application-count-for-hakukohde {:hakukohde_oid    hakukohde-oid})
        (map #(:application_count %))

@@ -6,6 +6,7 @@
             [ataru.hakija.hakija-application-service :as hakija-application-service]
             [ataru.applications.application-access-control :as access-controlled-application]
             [ataru.applications.application-service :as application-service]
+            [ataru.siirtotiedosto-service :as siirtotiedosto-service]
             [ataru.applications.application-store :as application-store]
             [ataru.applications.field-deadline :as field-deadline]
             [ataru.applications.excel-export :as excel]
@@ -221,6 +222,7 @@
                           get-haut-cache
                           audit-logger
                           application-service
+                          siirtotiedosto-service
                           suoritus-service
                           valinta-laskenta-service
                           valinta-tulos-service
@@ -1663,6 +1665,33 @@
                                                                                                hakukohdeOid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
+      (api/POST "/siirtotiedosto" {session :session}
+        :summary "Get applications for external systems"
+        :query-params [{hakukohdeOid :- s/Str nil}
+                       {modifiedBefore :- s/Int nil}
+                       {modifiedAfter :- s/Int nil}
+                       ]
+        :body [applicationOids [s/Str]]
+        :return [ataru-schema/SiirtotiedostoApplication]
+        (if (and (nil? modifiedBefore)
+                 (nil? modifiedAfter))
+          (response/bad-request {:error "Either modifiedAfter or modifiedBefore param required!"})
+          (let [siirtotiedosto-params {:modified-before modifiedBefore
+                                       :modified-after modifiedAfter
+                                       :hakukohde-oid hakukohdeOid
+                                       :application-oids (not-empty applicationOids)}]
+            (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+            (match (siirtotiedosto-service/siirtotiedosto-applications
+                     siirtotiedosto-service
+                     session
+                     siirtotiedosto-params)
+                   {:unauthorized _}
+                   (response/unauthorized {:error "Unauthorized"})
+                   {:success true}
+                   (response/ok "All ok!") ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+                   {:success false}
+                   (response/internal-server-error "sos")))))
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
