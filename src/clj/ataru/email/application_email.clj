@@ -135,9 +135,8 @@
                                                                          {:label "Liite 3"
                                                                           :deadline ""}]
                                             :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
-                                            :application-url-text (if form-allows-ht?
-                                                                    (get-in email-link-section-texts [:default (keyword lang)])
-                                                                    nil)
+                                            :application-url-text (when form-allows-ht?
+                                                                    (get-in email-link-section-texts [:default (keyword lang)]))
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
                                             :content-ending  (->safe-html content-ending)
