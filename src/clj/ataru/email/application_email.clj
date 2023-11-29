@@ -118,7 +118,7 @@
 
 
 (defn preview-submit-email
-  [lang subject content content-ending signature]
+  [lang subject content content-ending signature form-allows-ht?]
   {:from           email-util/from-address
    :subject        subject
    :content        content
@@ -135,7 +135,9 @@
                                                                          {:label "Liite 3"
                                                                           :deadline ""}]
                                             :application-url "https://opintopolku.fi/hakemus/01234567890abcdefghijklmn"
-                                            :application-url-text (get-in email-link-section-texts [:default (keyword lang)])
+                                            :application-url-text (if form-allows-ht?
+                                                                    (get-in email-link-section-texts [:default (keyword lang)])
+                                                                    nil)
                                             :application-oid "1.2.246.562.11.00000000000000000000"
                                             :content         (->safe-html content)
                                             :content-ending  (->safe-html content-ending)
@@ -145,7 +147,7 @@
   [form-key form-allows-ht?]
   (as-> (email-store/get-email-templates form-key) x
         (add-blank-templates x form-allows-ht?)
-        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %) (:signature %)) x)))
+        (map #(preview-submit-email (:lang %) (:subject %) (:content %) (:content-ending %) (:signature %) form-allows-ht?) x)))
 
 (defn- attachment-with-deadline [_ lang field]
   (let [attachment {:label (-> field

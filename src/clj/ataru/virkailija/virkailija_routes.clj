@@ -310,13 +310,15 @@
 
     (api/POST "/email-template/:form-key/previews" []
       :path-params [form-key :- s/Str]
+      :query-params [{form-allows-ht :- s/Bool false}]
       :body [body {:contents [ataru-schema/EmailTemplate]}]
-      (ok (email/preview-submit-emails (:contents body))))
+      (ok (email/preview-submit-emails (:contents body) form-allows-ht)))
 
     (api/POST "/email-templates/:form-key" {session :session}
       :path-params [form-key :- s/Str]
+      :query-params [{form-allows-ht :- s/Bool false}]
       :body [body {:contents [ataru-schema/EmailTemplate]}]
-      (ok (email/store-email-templates form-key session (:contents body))))
+      (ok (email/store-email-templates form-key session (:contents body) form-allows-ht)))
 
     (api/GET "/email-templates/:form-key" []
       :path-params [form-key :- s/Str]

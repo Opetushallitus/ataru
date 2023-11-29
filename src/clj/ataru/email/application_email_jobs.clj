@@ -17,14 +17,14 @@
   [form-key form-allows-ht?]
   (application-email/get-email-templates form-key form-allows-ht?))
 
-(defn preview-submit-emails [previews]
+(defn preview-submit-emails [previews form-allows-ht]
   (map
    #(let [lang           (:lang %)
           subject        (:subject %)
           content        (:content %)
           content-ending (:content-ending %)
           signature      (:signature %)]
-      (application-email/preview-submit-email lang subject content content-ending signature)) previews))
+      (application-email/preview-submit-email lang subject content content-ending signature form-allows-ht)) previews))
 
 (defn start-email-job [job-runner email]
   (let [job-id (jdbc/with-db-transaction [connection {:datasource (db/get-datasource :db)}]
@@ -71,7 +71,7 @@
        (start-email-job job-runner email)))))
 
 (defn store-email-templates
-  [form-key session templates]
+  [form-key session templates form-allows-ht?]
   (let [stored-templates (mapv #(email-store/create-or-update-email-template
                                   form-key
                                   (:lang %)
@@ -81,4 +81,4 @@
                                   (:content-ending %)
                                   (:signature %))
                            templates)]
-    (map #(application-email/preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %) (:signature %)) stored-templates)))
+    (map #(application-email/preview-submit-email (:lang %) (:subject %) (:content %) (:content_ending %) (:signature %) form-allows-ht?) stored-templates)))

@@ -1358,11 +1358,12 @@
   :editor/update-email-preview-immediately
   (fn [{db :db} [_]]
     (let [form-key              (get-in db [:editor :selected-form-key])
+          form-allows-ht?       (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))
           contents              (preview-map-to-list (get-in db [:editor :email-template form-key]))]
       {:http {:method              :post
               :params              {:contents contents}
               :handler-args        {:form-key form-key}
-              :path                (str "/lomake-editori/api/email-template/" form-key "/previews")
+              :path                (str "/lomake-editori/api/email-template/" form-key "/previews?form-allows-ht=" form-allows-ht?)
               :handler-or-dispatch :editor/update-email-template-preview}})))
 
 (reg-event-fx
@@ -1392,11 +1393,12 @@
   :editor/save-email-template
   (fn [{db :db} [_]]
     (let [contents (preview-map-to-list @(subscribe [:editor/email-template]))
-          form-key (get-in db [:editor :selected-form-key])]
+          form-key (get-in db [:editor :selected-form-key])
+          form-allows-ht? (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))]
       {:http {:method              :post
               :params              {:contents contents}
               :handler-args        {:form-key form-key}
-              :path                (str "/lomake-editori/api/email-templates/" form-key)
+              :path                (str "/lomake-editori/api/email-templates/" form-key "?form-allows-ht=" form-allows-ht?)
               :handler-or-dispatch :editor/update-saved-email-template-preview}})))
 
 (reg-event-fx
