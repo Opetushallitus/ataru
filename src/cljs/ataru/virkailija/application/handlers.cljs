@@ -544,17 +544,19 @@
     (autosave/interval-loop {:subscribe-path [:application :review]
                              :changed-predicate review-autosave-predicate
                              :handler (fn [current _]
+                                        (let [selected-review-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+                                              filtered-hakukohde-reviews (select-keys (current :hakukohde-reviews) (map keyword selected-review-hakukohde-oids))]
                                         (ajax/http
                                           :put
                                           "/lomake-editori/api/applications/review"
                                           :application/review-updated
-                                          :override-args {:params (select-keys current [:id
+                                          :override-args {:params (merge (select-keys current [:id
                                                                                         :application-id
                                                                                         :application-key
                                                                                         :score
                                                                                         :state
-                                                                                        :hakukohde-reviews
-                                                                                        :attachment-reviews])}))})))
+                                                                                        :attachment-reviews])
+                                                                         (hash-map :hakukohde-reviews filtered-hakukohde-reviews))})))})))
 
 (reg-event-db
   :application/handle-fetch-application-attachment-metadata
@@ -716,9 +718,9 @@
     (assoc db :fetching-haut-and-hakukohteet-errored true)))
 
 (reg-event-db
-  :application/start-autosave
-  (fn [db _]
-    (start-application-review-autosave db)))
+ :application/start-autosave
+ (fn [db _]
+   (start-application-review-autosave db)))
 
 (reg-event-fx
   :application/stop-autosave

@@ -267,6 +267,17 @@
                [application-review-note idx])
              selected-notes-idx)]])))
 
+(defn- show-processing-state
+  [processing-state-kw]
+  (let [opinto-ohjaaja            (subscribe [:editor/opinto-ohjaaja?])
+        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])]
+    (not
+     (and
+      opinto-ohjaaja
+      toisen-asteen-yhteishaku?
+      (or (= :processing-state processing-state-kw)
+          (= :selection-state processing-state-kw))))))
+
 (defn- application-hakukohde-review-input
   [label kw states]
   (let [current-hakukohteet                       (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
@@ -283,38 +294,42 @@
                                                              @current-hakukohteet)))
               multiple-values? (< 1 (count review-states-for-hakukohteet))
               review-state-for-current (when-not multiple-values? (first review-states-for-hakukohteet))]
-          [:div.application-handling__review-state-container
-           {:class (str "application-handling__review-state-container-" (name kw))}
-           (when @settings-visible?
-             [review-settings-checkbox kw])
-           [:div.application-handling__review-header
-            {:class (str "application-handling__review-header--" (name kw))}
-            [:span (util/non-blank-val label [@lang :fi :sv :en])]
-            (cond (and (= :eligibility-state kw)
-                       @eligibility-automatically-checked?)
-                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
-                  (and (= :payment-obligation kw)
-                       @payment-obligation-automatically-checked?)
-                  [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                   {:title @(subscribe [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
-           [:div.application-handling__review-state-list-container
-            (if @list-opened
-              (into [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                     {:on-click list-click}]
-                    (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
-              [:div.application-handling__review-state-list
-               [review-state-selected-row
-                kw
-                list-click
-                (application-states/get-review-state-label-by-name
-                  states
-                  (or review-state-for-current (ffirst states))
-                  @lang)
-                multiple-values?]])
-            (when (and (= :eligibility-state kw)
-                       (= "uneligible" review-state-for-current))
-              [review-state-comment kw])]])))))
+          (when (show-processing-state kw)
+            [:div.application-handling__review-state-container
+             {:class (str "application-handling__review-state-container-" (name kw))}
+             (when @settings-visible?
+               [review-settings-checkbox kw])
+             [:div.application-handling__review-header
+              {:class (str "application-handling__review-header--" (name kw))}
+              [:span (util/non-blank-val label [@lang :fi :sv :en])]
+              (cond (and (= :eligibility-state kw)
+                         @eligibility-automatically-checked?)
+                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                 {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
+                (and (= :payment-obligation kw)
+                     @payment-obligation-automatically-checked?)
+                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+                 {:title @(subscribe
+                           [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
+             [:div.application-handling__review-state-list-container
+              (if @list-opened
+                (into
+                 [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+                  {:on-click list-click}]
+                 (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
+                [:div.application-handling__review-state-list
+                 [review-state-selected-row
+                  kw
+                  list-click
+                  (application-states/get-review-state-label-by-name
+                   states
+                   (or review-state-for-current (ffirst states))
+                   @lang)
+                  multiple-values?]])
+              (when
+                (and (= :eligibility-state kw)
+                     (= "uneligible" review-state-for-current))
+                [review-state-comment kw])]]))))))
 
 (defn- ehdollisesti-hyvaksyttavissa
   []
@@ -995,6 +1010,9 @@
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
                                                      (group-by (comp :key first)))
                lang                             (subscribe [:application/lang])
+               edit-rights-for-hakukohteet?     @(subscribe [:application/edit-rights-for-selected-hakukohteet?])
+               opinto-ohjaaja                   (subscribe [:editor/opinto-ohjaaja?])
+               toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
             [:a.application-handling__review-area-settings-link
@@ -1009,32 +1027,43 @@
               [:div.application-handling__review-settings-indicator-inner]]
              [:div.application-handling__review-settings-header
               [:i.zmdi.zmdi-account.application-handling__review-settings-header-icon]
-              [:span.application-handling__review-settings-header-text @(subscribe [:editor/virkailija-translation :settings])]]]
+              [:span.application-handling__review-settings-header-text
+               @(subscribe [:editor/virkailija-translation :settings])]]]
             [:div.application-handling__review
              (when show-attachment-review?
                [attachment-review-area attachment-reviews-for-hakukohde @lang])
              [:div.application-handling__review-outer-container
               [application-hakukohde-selection]
               (when (not-empty selected-review-hakukohde)
-                [:div
-                 (when (not-empty attachment-reviews-for-hakukohde)
-                   [:div.application-handling__attachment-review-toggle-container
-                    (when @settings-visible
-                      [review-settings-checkbox :attachment-handling])
-                    [:span.application-handling__attachment-review-toggle-container-link
-                     {:on-click (fn []
-                                  (when-not @settings-visible
-                                    (dispatch [:state-update #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}
-                     [:span.application-handling__attachment-review-toggle
-                      (if show-attachment-review?
-                        [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
-                        [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
-                     (gstring/format "%s (%d)"
-                                     @(subscribe [:editor/virkailija-translation :attachments])
-                                     (count (keys attachment-reviews-for-hakukohde)))]])
-                 [application-hakukohde-review-inputs (if tutu-form?
-                                                        review-states/hakukohde-review-types
-                                                        review-states/hakukohde-review-types-normal)]])
+                ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
+                (if (and (not (or edit-rights-for-hakukohteet?
+                                  @opinto-ohjaaja))
+                         toisen-asteen-yhteishaku?)
+                  [:div.application-handling__review-row
+                   [:span.hakukohde-review-rights-alert
+                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]
+                  [:div
+                   (when (not-empty attachment-reviews-for-hakukohde)
+                     [:div.application-handling__attachment-review-toggle-container
+                      (when @settings-visible
+                        [review-settings-checkbox :attachment-handling])
+                      [:span.application-handling__attachment-review-toggle-container-link
+                       {:on-click (fn []
+                                    (when-not @settings-visible
+                                      (dispatch
+                                        [:state-update
+                                         #(assoc-in % [:application :show-attachment-reviews?] (not show-attachment-review?))])))}
+                       [:span.application-handling__attachment-review-toggle
+                        (if show-attachment-review?
+                          [:span [:i.zmdi.zmdi-chevron-right] [:i.zmdi.zmdi-chevron-right]]
+                          [:span [:i.zmdi.zmdi-chevron-left] [:i.zmdi.zmdi-chevron-left]])]
+                       (gstring/format "%s (%d)"
+                                       @(subscribe [:editor/virkailija-translation :attachments])
+                                       (count (keys attachment-reviews-for-hakukohde)))]])
+                   [application-hakukohde-review-inputs
+                    (if tutu-form?
+                      review-states/hakukohde-review-types
+                      review-states/hakukohde-review-types-normal)]]))
               (when tutu-form?
                 [application-tutu-payment-status @payments])
               (when @(subscribe [:application/show-info-request-ui?])

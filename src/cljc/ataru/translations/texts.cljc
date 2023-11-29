@@ -2015,6 +2015,9 @@
    :liitepyynto-deadline-unset                               {:fi "Hakijakohtainen aikaraja poistettu"
                                                               :sv "En tidsgräns enligt sökande har raderats"
                                                               :en "EN: Hakijakohtainen aikaraja poistettu"}
+   :selected-hakukohde-no-rights                             {:fi "Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
+                                                              :sv "SV: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"
+                                                              :en "EN: Sinulla on valittuna hakukohde, johon ei ole käsittelyoikeuksia"}
    :settings                                                 {:fi "Asetukset"
                                                               :sv "Inställningar"
                                                               :en "EN: Asetukset"}
