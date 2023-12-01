@@ -184,8 +184,9 @@
           (response/found
             (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))))
     (api/POST "/oppija" [:as request]
+      (log/info "Received request for logout:" request)
       (let [body (ring.util.request/body-string request)]
-        (log/info "Received request for logout:" body)
+        (log/info "Received request for logout, body:" body)
         (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request body)]
           (let [res (oss/delete-session-by-ticket! ticket)]
             (log/info ticket ": db result" res)
