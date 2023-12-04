@@ -121,9 +121,10 @@
                    parse-body)]
      ~@body))
 
-(defmacro with-auth-response
-  [method resp request-body & body]
-  `(let [~resp (-> (mock/request ~method "/hakemus/auth/oppija" ~request-body)
+(defmacro logout-request-with-response
+  [method resp logout-request & body]
+  `(let [~resp (-> (mock/request ~method "/hakemus/auth/oppija")
+                   (assoc-in [:params] {:logoutRequest ~logout-request})
                    handler
                    parse-body)]
      ~@body))
@@ -780,28 +781,28 @@
         (reset! form (db/init-db-fixture form-fixtures/form-with-followup-inside-a-question-group))
         (db/init-oppija-session-to-db "ST-6778-thisticketiknow-cas.1234567890ac" {:data {:fields {"email" "masa@kajaani.com"}}}))
       (it "CAS-OPPIJA LOGOUT should return 200 if session successfully found and deleted"
-          (with-auth-response :post resp
-                              "<samlp:LogoutRequest
-                                xmlns:samlp= \"urn:oasis:names:tc:SAML:2.0:protocol\"
-                                xmlns:saml= \"urn:oasis:names:tc:SAML:2.0:assertion\"
-                                ID= \"some-id\"
-                                Version= \"2.0\"
-                                IssueInstant= \"2019-09-12\" >
-                                <samlp:SessionIndex>
-                                  ST-6778-thisticketiknow-cas.1234567890ac
-                                </samlp:SessionIndex>
-                              </samlp:LogoutRequest>"
-                              (should= 200 (:status resp))))
+          (logout-request-with-response :post resp
+                                        "<samlp:LogoutRequest
+                                           xmlns:samlp= \"urn:oasis:names:tc:SAML:2.0:protocol\"
+                                           xmlns:saml= \"urn:oasis:names:tc:SAML:2.0:assertion\"
+                                           ID= \"some-id\"
+                                           Version= \"2.0\"
+                                           IssueInstant= \"2019-09-12\" >
+                                           <samlp:SessionIndex>
+                                             ST-6778-thisticketiknow-cas.1234567890ac
+                                           </samlp:SessionIndex>
+                                         </samlp:LogoutRequest>"
+                                        (should= 200 (:status resp))))
       (it "CAS-OPPIJA LOGOUT should return 404 if session with ticket not found"
-          (with-auth-response :post resp
-                 "<samlp:LogoutRequest
-                   xmlns:samlp= \"urn:oasis:names:tc:SAML:2.0:protocol\"
-                   xmlns:saml= \"urn:oasis:names:tc:SAML:2.0:assertion\"
-                   ID= \"some-id\"
-                   Version= \"2.0\"
-                   IssueInstant= \"2019-09-12\" >
-                   <samlp:SessionIndex>
-                     ST-6778-strangeticketthathasneverbeenusedbefore-cas.1234567890ac
-                   </samlp:SessionIndex>
-                 </samlp:LogoutRequest>"
-                         (should= 404 (:status resp))))))
+          (logout-request-with-response :post resp
+                                        "<samlp:LogoutRequest
+                                                           xmlns:samlp= \"urn:oasis:names:tc:SAML:2.0:protocol\"
+                                                           xmlns:saml= \"urn:oasis:names:tc:SAML:2.0:assertion\"
+                                                           ID= \"some-id\"
+                                                           Version= \"2.0\"
+                                                           IssueInstant= \"2019-09-12\" >
+                                                           <samlp:SessionIndex>
+                                                             ST-6778-strangeticketthathasneverbeenusedbefore-cas.1234567890ac
+                                                           </samlp:SessionIndex>
+                                                         </samlp:LogoutRequest>"
+                                        (should= 404 (:status resp))))))
