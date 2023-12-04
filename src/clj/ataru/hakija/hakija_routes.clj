@@ -184,7 +184,6 @@
           (response/found
             (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))))
     (api/POST "/oppija" [:as request]
-      (log/info "Received request for logout:" request)
       (let [logout-request (get-in request [:params :logoutRequest])]
         (log/info "Received request for logout:" logout-request)
         (if-let [ticket (cas-oppija-utils/parse-ticket-from-lockout-request logout-request)]
