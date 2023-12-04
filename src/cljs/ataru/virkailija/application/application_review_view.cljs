@@ -1017,6 +1017,7 @@
                lang                             (subscribe [:application/lang])
                rights-to-view-reviews?          @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])
                opinto-ohjaaja                   (subscribe [:editor/opinto-ohjaaja?])
+               only-opinto-ohjaaja              @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
                toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
            [:div.application-handling__review-outer
@@ -1040,17 +1041,18 @@
              [:div.application-handling__review-outer-container
               [application-hakukohde-selection]
               (when (not-empty selected-review-hakukohde)
-                ;; 2. asteen yhteishaussa näytetään ilmoitus jos valittuna hakukohde johon ei oikeuksia
-                (when (and toisen-asteen-yhteishaku?
-                       (not rights-to-view-reviews?))
-                  [:div.application-handling__review-row
-                   [:span.hakukohde-review-rights-alert
-                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]])
                 ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
-                (when (or (not toisen-asteen-yhteishaku?)
-                          rights-to-view-reviews?
-                              @opinto-ohjaaja)
+                (if (or (not toisen-asteen-yhteishaku?)
+                        rights-to-view-reviews?
+                        @opinto-ohjaaja)
                   [:div
+                   ;; 2. asteen yhteishaussa näytetään ilmoitus jos opo+käsittelijä ja valittuna hakukohde johon ei oikeuksia
+                   (when (and toisen-asteen-yhteishaku?
+                          (not rights-to-view-reviews?)
+                              (not only-opinto-ohjaaja))
+                     [:div.application-handling__review-row
+                      [:span.hakukohde-review-rights-alert
+                       @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]])
                    (when (not-empty attachment-reviews-for-hakukohde)
                      [:div.application-handling__attachment-review-toggle-container
                       (when @settings-visible
@@ -1071,7 +1073,10 @@
                    [application-hakukohde-review-inputs
                     (if tutu-form?
                       review-states/hakukohde-review-types
-                      review-states/hakukohde-review-types-normal)]]))
+                      review-states/hakukohde-review-types-normal)]]
+                  [:div.application-handling__review-row
+                   [:span.hakukohde-review-rights-alert
+                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]))
               (when tutu-form?
                 [application-tutu-payment-status @payments])
               (when @(subscribe [:application/show-info-request-ui?])
@@ -1086,9 +1091,7 @@
               [application-resend-modify-link]
               [application-resend-modify-link-confirmation]
               [application-deactivate-toggle]
-              [application-review-events]
-
-              ]]]))})))
+              [application-review-events]]]]))})))
 
 (defn application-review-area []
   (let [selected-application-and-form (subscribe [:state-query [:application :selected-application-and-form]])
