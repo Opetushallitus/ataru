@@ -269,14 +269,19 @@
 
 (defn- show-processing-state
   [processing-state-kw]
-  (let [opinto-ohjaaja            (subscribe [:editor/opinto-ohjaaja?])
-        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])]
-    (not
-     (and
-      opinto-ohjaaja
-      toisen-asteen-yhteishaku?
-      (or (= :processing-state processing-state-kw)
-          (= :selection-state processing-state-kw))))))
+  (let [only-opinto-ohjaaja       @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
+        toisen-asteen-yhteishaku? @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
+        rights-to-view-reviews?   @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])]
+    ;; 2. asteen yhteishaussa opoilta piilotetaan käsittely- ja valintatiedot
+    ;; jos on sekä opo että käsittelijä, piilotetaan jos valittuna muu kuin oma hakukohde
+    (if (or (= :processing-state processing-state-kw)
+            (= :selection-state processing-state-kw))
+      (not
+       (and
+        toisen-asteen-yhteishaku?
+        (or only-opinto-ohjaaja
+            (not rights-to-view-reviews?))))
+      true)))
 
 (defn- application-hakukohde-review-input
   [label kw states]
@@ -1010,7 +1015,7 @@
                                                             [liitepyynto (:hakukohde-oid liitepyynto)]))
                                                      (group-by (comp :key first)))
                lang                             (subscribe [:application/lang])
-               edit-rights-for-hakukohteet?     @(subscribe [:application/edit-rights-for-selected-hakukohteet?])
+               rights-to-view-reviews?          @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])
                opinto-ohjaaja                   (subscribe [:editor/opinto-ohjaaja?])
                toisen-asteen-yhteishaku?        @(subscribe [:application/toisen-asteen-yhteishaku-selected?])
                show-attachment-review?          @(subscribe [:state-query [:application :show-attachment-reviews?]])]
@@ -1035,13 +1040,16 @@
              [:div.application-handling__review-outer-container
               [application-hakukohde-selection]
               (when (not-empty selected-review-hakukohde)
-                ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
-                (if (and (not (or edit-rights-for-hakukohteet?
-                                  @opinto-ohjaaja))
-                         toisen-asteen-yhteishaku?)
+                ;; 2. asteen yhteishaussa näytetään ilmoitus jos valittuna hakukohde johon ei oikeuksia
+                (when (and toisen-asteen-yhteishaku?
+                       (not rights-to-view-reviews?))
                   [:div.application-handling__review-row
                    [:span.hakukohde-review-rights-alert
-                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]
+                    @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]])
+                ;; 2. asteen yhteishaussa piilotetaan käsittely jos valittuna hakukohde johon ei oikeuksia
+                (when (or (not toisen-asteen-yhteishaku?)
+                          rights-to-view-reviews?
+                              @opinto-ohjaaja)
                   [:div
                    (when (not-empty attachment-reviews-for-hakukohde)
                      [:div.application-handling__attachment-review-toggle-container

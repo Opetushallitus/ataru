@@ -172,7 +172,7 @@
                                                 (:application-hakukohde-reviews application))
         lang                          (subscribe [:editor/virkailija-lang])
         selected-hakukohde-oids       (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
-        review-states-visible? (subscribe [:application/review-states-visible?])]
+        review-states-visible?        (subscribe [:application/review-states-visible?])]
     (into
       [:div.application-handling__list-row-hakukohteet-wrapper
        {:class (when direct-form-application? "application-handling__application-hakukohde-cell--form")}]
@@ -182,7 +182,8 @@
                 show-state-email-icon? (and
                                          (< 0 (:new-application-modifications application))
                                          (= "information-request" processing-state))
-                hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)]
+                hakukohde-attachment-states ((keyword hakukohde-oid) attachment-states)
+                rights-to-review-states-for-hakukohde @(subscribe [:application/rights-to-view-review-states-for-hakukohde? hakukohde-oid])]
             [:div.application-handling__list-row-hakukohde
              {:class (when (and (not direct-form-application?)
                                 (some? @selected-hakukohde-oids)
@@ -204,7 +205,8 @@
                         (:attachment-handling review-settings true))
                [attachment-state-counts hakukohde-attachment-states])
              [:span.application-handling__hakukohde-state-cell
-              (when @review-states-visible?
+              (when (and @review-states-visible?
+                         rights-to-review-states-for-hakukohde)
                 [:span.application-handling__hakukohde-state.application-handling__application-list-view-cell
                  {:data-test-id "list-hakukohde-handling-state"}
                  [:span.application-handling__state-label
@@ -217,14 +219,23 @@
                   @(subscribe [:editor/virkailija-translation :unprocessed]))
                  (when show-state-email-icon?
                    [:i.zmdi.zmdi-email.application-handling__list-row-email-icon])])]
-             (when (and @review-states-visible? (:selection-state review-settings true))
-               [hakemuksen-valinnan-tila-sarake {:application-key               (:key application)
-                                                 :hakukohde-oid                 hakukohde-oid
-                                                 :application-hakukohde-reviews application-hakukohde-reviews
-                                                 :lang                          @lang}])
-             (when (and @review-states-visible? (:vastaanotto-state review-settings true))
-               [hakemuksen-vastaanoton-tila-sarake {:application-key               (:key application)
-                                                    :hakukohde-oid                 hakukohde-oid}])]))
+             (when (:selection-state review-settings true)
+               (if (and @review-states-visible?
+                        rights-to-review-states-for-hakukohde)
+                 [hakemuksen-valinnan-tila-sarake
+                  {:application-key               (:key application)
+                   :hakukohde-oid                 hakukohde-oid
+                   :application-hakukohde-reviews application-hakukohde-reviews
+                   :lang                          @lang}]
+                 [:span.application-handling__hakukohde-selection-cell]))
+
+             (when (:vastaanotto-state review-settings true)
+               (if (and @review-states-visible?
+                        rights-to-review-states-for-hakukohde)
+                 [hakemuksen-vastaanoton-tila-sarake
+                  {:application-key (:key application)
+                   :hakukohde-oid   hakukohde-oid}]
+                 [:span.application-handling__hakukohde-selection-cell]))]))
         application-hakukohde-oids))))
 
 (defn- application-list-row [application selected? select-application]
@@ -872,8 +883,8 @@
           :state-counts-subs
           {:attachment-state-filter
            @(subscribe [:state-query [:application :attachment-state-counts]])}}]])
-     (when @review-states-visible?
-       [:div.application-handling__list-row--state
+     [:div.application-handling__list-row--state
+      (when @review-states-visible?
         {:data-test-id "processing-state-filter"}
         [hakukohde-state-filter-controls
          {:title
@@ -885,9 +896,10 @@
              review-states/application-hakukohde-processing-states-normal)}
           :state-counts-subs
           {:processing-state-filter
-           @(subscribe [:state-query [:application :review-state-counts]])}}]]
-       (when (:selection-state @review-settings true)
-         [:div.application-handling__list-row--selection
+           @(subscribe [:state-query [:application :review-state-counts]])}}])]
+     (when (:selection-state @review-settings true)
+       [:div.application-handling__list-row--selection
+        (when @review-states-visible?
           {:data-test-id "selection-state-filter"}
           [hakukohde-state-filter-controls
            {:title
@@ -906,9 +918,10 @@
             {:selection-state-filter
              @(subscribe [:state-query [:application :selection-state-counts]])
              :kevyt-valinta-selection-state-filter
-             @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}]])
-       (when (:selection-state @review-settings true)
-         [:div.application-handling__list-row--vastaanotto
+             @(subscribe [:state-query [:application :kevyt-valinta-selection-state-counts]])}}])])
+     (when (:selection-state @review-settings true)
+       [:div.application-handling__list-row--vastaanotto
+        (when @review-states-visible?
           {:data-test-id "vastaanotto-state-filter"}
           [hakukohde-state-filter-controls
            {:kk? korkeakouluhaku?
@@ -922,4 +935,4 @@
              (review-states/kevyt-valinta-vastaanoton-tila-selection-states korkeakouluhaku?)}
             :state-counts-subs
             {:kevyt-valinta-vastaanotto-state-filter
-             @(subscribe [:state-query [:application :kevyt-valinta-vastaanotto-state-counts]])}}]]))]))
+             @(subscribe [:state-query [:application :kevyt-valinta-vastaanotto-state-counts]])}}])])]))
