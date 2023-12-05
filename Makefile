@@ -195,7 +195,7 @@ help:
 # ----------------
 
 compile-test-code:
-	lein with-profile test less once
+	./bin/compile-less.sh
 	lein with-profile test cljsbuild once virkailija-min hakija-min
 
 test-clojurescript: $(NODE_MODULES)
