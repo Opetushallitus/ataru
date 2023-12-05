@@ -69,3 +69,6 @@
 
 (defn cas-authenticated-get-as-stream [client url]
   (cas-http client :get url (constantly {:as :stream}) nil))
+
+(defn cas-authenticated-patch [client url body & [opts-fn]]
+  (cas-http client :patch url (if (nil? opts-fn) (constantly {}) opts-fn) body))

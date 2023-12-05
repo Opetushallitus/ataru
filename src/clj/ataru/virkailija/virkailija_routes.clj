@@ -48,6 +48,7 @@
             [ataru.valintaperusteet.service :as valintaperusteet]
             [ataru.valintaperusteet.client :as valintaperusteet-client]
             [ataru.valinta-laskenta-service.valintalaskentaservice-protocol :as vls]
+            [ataru.valinta-tulos-service.valintatulosservice-protocol :as vts]
             [ataru.virkailija.authentication.auth-utils :as auth-utils]
             [clj-ring-db-session.authentication.auth-middleware :as crdsa-auth-middleware]
             [cheshire.core :as json]
@@ -220,7 +221,8 @@
                           audit-logger
                           application-service
                           suoritus-service
-                          valinta-laskenta-service]
+                          valinta-laskenta-service
+                          valinta-tulos-service]
                    :as   dependencies}]
   (api/context "/api" []
     :tags ["form-api"]
@@ -1319,6 +1321,7 @@
                                 person-oid)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/GET "/onr/applications/:person-oid" {session :session}
         :path-params [person-oid :- (api/describe s/Str "Person OID")]
         :return [ataru-schema/OnrApplication]
@@ -1328,6 +1331,7 @@
                                 [person-oid])]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/POST "/onr/applications" {session :session}
         :body [person-oids [s/Str]]
         :return [ataru-schema/OnrApplication]
@@ -1339,6 +1343,7 @@
                                 person-oids)]
           (response/ok applications)
           (response/unauthorized {:error "Unauthorized"}))))
+
       (api/POST "/suoritusrekisteri" {session :session}
         :summary "Applications for suoritusrekisteri"
         :body-params [{hakuOid :- s/Str nil}
@@ -1367,6 +1372,7 @@
                   hakijaOids
                   modifiedAfter
                   offset))))
+
       (api/POST "/suoritusrekisteri/haku/:haku-oid/toinenaste" {session :session}
         :summary "Toisen asteen hakemukset for suoritusrekisteri"
         :path-params [haku-oid :- (api/describe s/Str "Haun OID")]
@@ -1415,6 +1421,7 @@
                                   hakemusOids)]
             (response/ok applications)
             (response/unauthorized {:error "Unauthorized"}))))
+
       (api/POST "/valinta-tulos-service" {session :session}
         :summary "Applications for valinta-tulos-service"
         :body-params [{hakuOid :- s/Str nil}
@@ -1446,6 +1453,70 @@
                   hakukohdeOid
                   hakemusOids
                   offset))))
+
+      (api/POST "/valinta-tulos-service/valinnan-tulos/hakemus" {session :session}
+        :summary "Applications for valinta-tulos-service"
+        :body-params [{hakemusOids :- [s/Str] nil}]
+        :return {:applications            [{:oid                  s/Str
+                                            :hakuOid              s/Str
+                                            :hakukohdeOids        [s/Str]
+                                            :henkiloOid           s/Str
+                                            :asiointikieli        s/Str
+                                            :email                s/Str
+                                            :paymentObligations   {s/Keyword s/Str}}]
+                 (s/optional-key :offset) s/Str}
+        (cond (nil? (seq hakemusOids))
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications :edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
+
+      (api/GET "/valinta-tulos-service/valinnan-tulos/hakemus" {session :session}
+        :summary "Valinnantulos for hakemus"
+        :query-params [{hakemusOid :- s/Str nil}]
+        :return {:applications            [{}]}
+        (cond (nil? hakemusOid)
+              (response/bad-request {:error "No query parameter given"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:view-applications :edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
+
+      (api/PATCH "/valinta-tulos-service/valinnan-tulos/:valintatapajono-oid" {session :session}
+        :summary ""
+        :path-params [valintatapajono-oid :- s/Str nil]
+        :header-params [x-if-unmodified-since :- s/Str nil]
+        :body [body s/Any]
+        (cond (or (nil? valintatapajono-oid) (nil? x-if-unmodified-since) (nil? body))
+              (response/bad-request {:error "Missing parameters"})
+              (session-orgs/run-org-authorized
+                session
+                organization-service
+                [:edit-applications]
+                (fn [] true)
+                (fn [oids] (not (contains? oids organization-client/oph-organization)))
+                (fn [] false))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (vts/change-kevyt-valinta-property
+                  valinta-tulos-service valintatapajono-oid body x-if-unmodified-since))))
+
       (api/GET "/valinta-ui" {session :session}
         :summary "Applications for valinta-ui"
         :query-params [{hakuOid :- s/Str nil}
@@ -1484,6 +1555,7 @@
                                                      :asiointikieli :asiointiKieli}))))
             (response/unauthorized {:error "Unauthorized"}))
           (response/bad-request {:error "No query parameters given"})))
+
       (api/GET "/persons" {session :session}                ;; deprecated, use /valinta-tulos-service
         :summary "Get application-oid <-> person-oid mapping for haku or hakukohdes"
         :query-params [hakuOid :- s/Str
@@ -1496,6 +1568,7 @@
                            hakukohdeOids)]
           (response/ok mapping)
           (response/unauthorized {:error "Unauthorized"})))
+
       (api/GET "/odw" {session :session}
         :summary "Get odw report"
         :query-params [{fromDate :- s/Str nil}
