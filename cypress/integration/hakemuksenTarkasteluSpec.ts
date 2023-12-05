@@ -225,13 +225,13 @@ describe('Hakemuksen tietojen tarkastelu', () => {
             })
             it('Varmista, että käsittelytila, valinta- ja vastaanottotieto ei näy listauksessa', () => {
               cy.get('[data-test-id=list-hakukohde-handling-state').should(
-                'not.be.visible'
+                'not.exist'
               )
               cy.get('[data-test-id=list-hakukohde-vastaanotto-state').should(
-                'not.be.visible'
+                'not.exist'
               )
               cy.get('[data-test-id=list-hakukohde-selection-state').should(
-                'not.be.visible'
+                'not.exist'
               )
             })
           }
