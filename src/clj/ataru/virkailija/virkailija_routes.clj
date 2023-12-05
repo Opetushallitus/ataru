@@ -1498,7 +1498,7 @@
                 (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
 
       (api/PATCH "/valinta-tulos-service/valinnan-tulos/:valintatapajono-oid" {session :session}
-        :summary ""
+        :summary "Patch valinnantulos"
         :path-params [valintatapajono-oid :- s/Str nil]
         :header-params [x-if-unmodified-since :- s/Str nil]
         :body [body s/Any]
