@@ -19,11 +19,14 @@
 (declare yesql-fetch-latest-version-by-id)
 (declare yesql-fetch-latest-version-by-id-lock-for-update)
 (declare yesql-get-by-id)
+(declare yesql-get-by-ids)
+(declare yesql-get-siirtotiedosto-form-ids)
 (declare yesql-form-by-key-has-applications)
 (declare yesql-fetch-latest-version-by-key)
 (declare yesql-latest-id-by-key)
 (declare yesql-add-form<!)
 (declare yesql-get-latest-form-by-name)
+(declare yesql-get-siirtotiedosto-forms)
 
 (defn- languages->vec [form]
   (update form :languages :languages))
@@ -96,6 +99,10 @@
 
 (defn fetch-by-id [id & [conn]]
   (first (execute yesql-get-by-id {:id id} conn)))
+
+(defn fetch-by-ids [ids & [conn]]
+  (log/info "fetch by ids " (set ids))
+  (execute yesql-get-by-ids {:ids ids} conn))
 
 (def fetch-form fetch-latest-version)
 
@@ -192,3 +199,15 @@
   (->> application
        :form_id
        fetch-by-id))
+
+(defn siirtotiedosto-forms-paged [{:keys [modified-before modified-after page-size highest-fetched-id] :as params}]
+  (log/info "Siirtotiedosto-forms-paged" params)
+  (execute-with-db :db yesql-get-siirtotiedosto-forms {:modified_before modified-before
+                                                       :modified_after modified-after
+                                                       :limit page-size
+                                                       :highest_fetched_id highest-fetched-id}))
+
+(defn siirtotiedosto-form-ids [{:keys [modified-before modified-after] :as params}]
+  (log/info "Siirtotiedosto-forms-paged" params)
+  (execute-with-db :db yesql-get-siirtotiedosto-form-ids {:modified_before modified-before
+                                                          :modified_after modified-after}))
