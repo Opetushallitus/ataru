@@ -11,11 +11,13 @@
         subject            (subscribe [:state-query [:application :single-information-request :subject]])
         message            (subscribe [:state-query [:application :single-information-request :message]])
         form-status        (subscribe [:application/single-information-request-form-status])
+        disabled?          (subscribe [:application/can-edit-application?])
         button-enabled?    (subscribe [:application/single-information-request-button-enabled?])]
     (fn []
       [:span.application-handling__single-information-request-container
        [:a.application-handling__send-message-button.application-handling__button
-        {:on-click #(dispatch [:application/set-single-information-request-popup-visibility true])}
+        {:on-click (when (not disabled?) #(dispatch [:application/set-single-information-request-popup-visibility true]))
+         :class (when disabled? "application-handling__button--disabled")}
         @(subscribe [:editor/virkailija-translation :send-email-to-applicant])]
        (when @visible?
          [:div.application-handling__popup.application-handling__-information-request-popup
