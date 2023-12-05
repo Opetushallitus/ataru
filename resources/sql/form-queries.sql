@@ -62,6 +62,54 @@ SELECT
 FROM forms
 WHERE id = :id;
 
+-- name: yesql-get-by-ids
+SELECT
+    id,
+    key,
+    name,
+    content,
+    created_by,
+    created_time,
+    languages,
+    deleted,
+    organization_oid,
+    properties
+FROM forms
+WHERE id in (:ids);
+
+-- name: yesql-get-siirtotiedosto-forms
+SELECT
+    id,
+    key,
+    name,
+    content,
+    created_by,
+    created_time,
+    languages,
+    deleted,
+    organization_oid,
+    properties
+FROM forms f
+WHERE
+    (:modified_after::TEXT IS NULL OR f.created_time >= to_timestamp(:modified_after/1000))
+  AND (:modified_before::TEXT IS NULL OR f.created_time <= to_timestamp(:modified_before/1000))
+  AND exists(SELECT 1
+             FROM latest_applications la where la.form_id = f.id)
+  and id > :highest_fetched_id
+ORDER BY f.id
+LIMIT :limit;
+
+-- name: yesql-get-siirtotiedosto-form-ids
+SELECT
+    id
+FROM forms f
+WHERE
+    (:modified_after::TEXT IS NULL OR f.created_time >= to_timestamp(:modified_after/1000))
+  AND (:modified_before::TEXT IS NULL OR f.created_time <= to_timestamp(:modified_before/1000))
+  AND exists(SELECT 1
+             FROM latest_applications la where la.form_id = f.id)
+ORDER BY f.id;
+
 -- name: yesql-fetch-latest-version-by-id
 SELECT
   f.id,
