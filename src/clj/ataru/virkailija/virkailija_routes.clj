@@ -1677,21 +1677,25 @@
         (if (and (nil? modifiedBefore)
                  (nil? modifiedAfter))
           (response/bad-request {:error "Either modifiedAfter or modifiedBefore param required!"})
-          (let [siirtotiedosto-params {:modified-before modifiedBefore
-                                       :modified-after modifiedAfter
-                                       :hakukohde-oid hakukohdeOid
-                                       :application-oids (not-empty applicationOids)}]
-            (log/info "Siirtotiedosto params: " siirtotiedosto-params)
-            (match (siirtotiedosto-service/siirtotiedosto-applications
-                     siirtotiedosto-service
-                     session
-                     siirtotiedosto-params)
-                   {:unauthorized _}
-                   (response/unauthorized {:error "Unauthorized"})
-                   {:success true}
-                   (response/ok "All ok!") ;todo, what do we actually want to return here? Maybe some timestamp information at least.
-                   {:success false}
-                   (response/internal-server-error "sos")))))
+          (if (boolean (-> session :identity :superuser))
+            (let [siirtotiedosto-params {:modified-before (or modifiedBefore (System/currentTimeMillis))
+                                         :modified-after modifiedAfter
+                                         :hakukohde-oid hakukohdeOid
+                                         :application-oids (not-empty applicationOids)}]
+              (log/info "Siirtotiedosto params: " siirtotiedosto-params)
+              (let [forms-result (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
+                    applications-result (siirtotiedosto-service/siirtotiedosto-applications
+                                          siirtotiedosto-service
+                                          siirtotiedosto-params)]
+                (match applications-result
+                       {:unauthorized _}
+                       (response/unauthorized {:error "Unauthorized"})
+                       {:success true
+                        :last-successful-timestamp timestamp}
+                       (response/ok (str "All ok until " timestamp)) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+                       {:success false}
+                       (response/internal-server-error "sos"))))
+            (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}
         :summary "Get applications for external systems"
