@@ -11,7 +11,7 @@
         subject            (subscribe [:state-query [:application :single-information-request :subject]])
         message            (subscribe [:state-query [:application :single-information-request :message]])
         form-status        (subscribe [:application/single-information-request-form-status])
-        enabled?           (subscribe [:application/can-edit-application?])
+        enabled?           (subscribe [:application/single-email-sending-enabled?])
         button-enabled?    (subscribe [:application/single-information-request-button-enabled?])]
     (fn []
       [:span.application-handling__single-information-request-container
