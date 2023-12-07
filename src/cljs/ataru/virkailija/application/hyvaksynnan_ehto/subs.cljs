@@ -58,6 +58,19 @@
          (map second)
          (apply clojure.set/union))))
 
+(defn- rights-to-edit-reviews-for-selected-hakukohteet? [hakukohde-oids rights-by-hakukohde]
+  (->> hakukohde-oids
+       (map #(get rights-by-hakukohde %))
+       (every? (partial some #{:edit-applications}))))
+
+(re-frame/reg-sub
+ :hyvaksynnan-ehto/rights-to-edit-for-selected-hakukohteet?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+    (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[hakukohde-oids rights-by-hakukohde]]
+   (rights-to-edit-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa?
   (fn [[_ application-key]]
@@ -170,12 +183,12 @@
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehdollisesti-hyvaksyttavissa-disabled?
   (fn [[_ application-key hakukohde-oids] _]
-    [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
+    [(re-frame/subscribe [:hyvaksynnan-ehto/rights-to-edit-for-selected-hakukohteet?])
      (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/valintatapajonoissa application-key hakukohde-oids])])
-  (fn [[rights requests-in-flight? error valintatapajonoissa] _]
-    (or (not (contains? rights :edit-applications))
+  (fn [[rights-to-edit-for-selected-hakukohteet? requests-in-flight? error valintatapajonoissa] _]
+    (or (not rights-to-edit-for-selected-hakukohteet?)
         requests-in-flight?
         (seq error)
         (seq valintatapajonoissa))))
@@ -203,11 +216,11 @@
 (re-frame/reg-sub
   :hyvaksynnan-ehto/ehto-text-disabled?
   (fn [[_ application-key] _]
-    [(re-frame/subscribe [:hyvaksynnan-ehto/rights])
+    [(re-frame/subscribe [:hyvaksynnan-ehto/rights-to-edit-for-selected-hakukohteet?])
      (re-frame/subscribe [:hyvaksynnan-ehto/requests-in-flight? application-key])
      (re-frame/subscribe [:hyvaksynnan-ehto/errors application-key])])
-  (fn [[rights requests-in-flight? error] _]
-    (or (not (contains? rights :edit-applications))
+  (fn [[rights-to-edit-for-selected-hakukohteet? requests-in-flight? error] _]
+    (or (not rights-to-edit-for-selected-hakukohteet?)
         requests-in-flight?
         (seq error))))
 
