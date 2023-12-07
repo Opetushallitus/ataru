@@ -906,9 +906,9 @@
  :application/mass-information-request-allowed?
  (fn [_ _]
    [(re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?])
-    (re-frame/subscribe [:editor/editor-rights-for-selected-organization?])])
- (fn [[opinto-ohjaaja-or-admin? editor-rights-for-selected-organization?] _]
-   (or opinto-ohjaaja-or-admin? editor-rights-for-selected-organization?)))
+    (re-frame/subscribe [:editor/editor-rights-for-any-organization?])])
+ (fn [[opinto-ohjaaja-or-admin? editor-rights-for-any-organization?] _]
+   (or opinto-ohjaaja-or-admin? editor-rights-for-any-organization?)))
 
 (re-frame/reg-sub
   :application/review-field-editable?
