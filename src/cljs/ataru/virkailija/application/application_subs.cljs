@@ -1270,7 +1270,6 @@
 
 (defn rights-to-view-review-states-for-hakukohde? [hakukohde-oid rights-by-hakukohde superuser toisen-asteen-yhteishaku?]
   ;; rights-by-hakukohde sisältää dataa vasta kun on hakemus valittuna, toistaiseksi ok näin, maybe fix later
-  (js/console.log "superuser" superuser)
   (or superuser
       (not toisen-asteen-yhteishaku?)
       (boolean (some #{:edit-applications} (get rights-by-hakukohde hakukohde-oid)))

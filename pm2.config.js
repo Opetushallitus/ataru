@@ -14,9 +14,8 @@ module.exports = {
   apps: [
     {
       name: 'ataru-css-compilation',
-      script: 'lein',
+      script: 'bin/compile-less.sh',
       interpreter: '/bin/sh',
-      args: ['less', 'auto'],
       cwd: __dirname,
       log_file: 'logs/pm2/less.log',
       pid_file: '.less.pid',
