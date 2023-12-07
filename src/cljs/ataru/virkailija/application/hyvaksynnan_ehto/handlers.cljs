@@ -224,10 +224,7 @@
       {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 1000)
        :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
                     (when (not needs-auth?)
-                          dispatch)]}
-      (when needs-auth?
-        {:authenticate-to-valinta-tulos-service
-         {:dispatch-after dispatch}}))))
+                          dispatch)]})))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
 

@@ -12,7 +12,6 @@
             [ataru.virkailija.routes :as routes]
             [ataru.virkailija.views :as views]
             [ataru.virkailija.editor.handlers]
-            [ataru.application-common.fx :refer [http]] ; ataru.application-common.fx must be required to have common fx handlers enabled
             [ataru.virkailija.views.banner :as banner]
             [ataru.virkailija.application.view :as app-handling-view]
             [ataru.schema-validation :as schema-validation]))
@@ -35,26 +34,6 @@
     (.addEventListener js/window "scroll" (banner/create-banner-position-handler))
     (.addEventListener js/window "scroll" #(debounce 500 :paging (app-handling-view/create-application-paging-scroll-handler)))))
 
-(re-frame/reg-event-fx
-  :authenticate-to-valinta-tulos-service-handler
-  (fn [_ [_ dispatch]]
-    (when (some? dispatch)
-      {:dispatch dispatch})))
-
-(re-frame/reg-fx
-  :authenticate-to-valinta-tulos-service
-  (fn [{:keys [dispatch-after]}]
-    (http (aget js/config "virkailija-caller-id")
-          {:method        :get
-           :url           (.url js/window "valinta-tulos-service.auth")
-           :handler       [:authenticate-to-valinta-tulos-service-handler dispatch-after]
-           :error-handler [:authenticate-to-valinta-tulos-service-handler nil]})))
-
-(re-frame/reg-event-fx
-  :authenticate-to-valinta-tulos-service
-  (fn [_ _]
-    {:authenticate-to-valinta-tulos-service {}}))
-
 (defn ^:export init []
   (schema-validation/enable-schema-fn-validation)
   (set-global-error-handler! #(post "/lomake-editori/api/client-error" % identity)
@@ -66,7 +45,6 @@
             (get "enable-re-frisk"))
     (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
-  (re-frame/dispatch [:authenticate-to-valinta-tulos-service])
   (re-frame/dispatch [:hyvaksynnan-ehto/get-koodit])
   (re-frame/dispatch [:editor/do-organization-query])
   (mount-root)

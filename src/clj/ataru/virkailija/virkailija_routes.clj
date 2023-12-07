@@ -1499,10 +1499,10 @@
 
       (api/PATCH "/valinta-tulos-service/valinnan-tulos/:valintatapajono-oid" {session :session}
         :summary "Patch valinnantulos"
-        :path-params [valintatapajono-oid :- s/Str nil]
-        :header-params [x-if-unmodified-since :- s/Str nil]
+        :path-params [{valintatapajono-oid :- s/Str nil}]
+        :header-params [{if-unmodified-since :- s/Str nil}]
         :body [body s/Any]
-        (cond (or (nil? valintatapajono-oid) (nil? x-if-unmodified-since) (nil? body))
+        (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (nil? body))
               (response/bad-request {:error "Missing parameters"})
               (session-orgs/run-org-authorized
                 session
@@ -1515,7 +1515,7 @@
               :else
               (response/ok
                 (vts/change-kevyt-valinta-property
-                  valinta-tulos-service valintatapajono-oid body x-if-unmodified-since))))
+                  valinta-tulos-service valintatapajono-oid body if-unmodified-since))))
 
       (api/GET "/valinta-ui" {session :session}
         :summary "Applications for valinta-ui"

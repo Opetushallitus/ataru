@@ -428,7 +428,7 @@
               :path                (str  "/lomake-editori/api/external/valinta-tulos-service/valinnan-tulos/" valintatapajono-oid)
               :id                  request-id
               :override-args       {:params  request-body
-                                    :headers {"X-If-Unmodified-Since" formatted-now}}
+                                    :headers {"If-Unmodified-Since" formatted-now}}
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
               :handler-args        {:application-key application-key}}})))
 
