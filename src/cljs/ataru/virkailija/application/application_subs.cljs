@@ -886,6 +886,14 @@
     (get-in db [:editor :user-info :superuser?])))
 
 (re-frame/reg-sub
+  :application/single-email-sending-enabled?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/can-edit-application?])
+      re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?]])
+  (fn [[can-edit-application? opinto-ohjaaja-or-admin?] _]
+    (or can-edit-application? opinto-ohjaaja-or-admin?)))
+
+(re-frame/reg-sub
   :application/review-field-editable?
   (fn [_ _]
     [(re-frame/subscribe [:application/can-edit-application?])
