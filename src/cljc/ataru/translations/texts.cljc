@@ -1031,7 +1031,13 @@
 
 
 (def virkailija-texts
-  {:valintakasittelymerkinta                                 {:fi "Valintakäsittelymerkintä"
+  {:person-found-matching                                    {:fi "Tämä hakija löytyi ONR:stä samalla sähköpostitiedolla ja syntymäajalla."
+                                                              :sv "Tämä hakija löytyi ONR:stä samalla sähköpostitiedolla ja syntymäajalla."
+                                                              :en "Tämä hakija löytyi ONR:stä samalla sähköpostitiedolla ja syntymäajalla."}
+   :person-dob-or-gender-conflict                            {:fi "Tämän hakemuksen sähköpostilla löytyi jo ONR:stä henkilö, mutta tämän hakijan syntymäaika eroaa ONR:stä löytyvän hakijan syntymäajasta. Tämän takia tästä hakijasta luotiin uusi henkilö ja tätä hakemuksella ilmoitettua sähköpostia ei tallennettu uuden henkilön tietoihin."
+                                                              :sv "Tämän hakemuksen sähköpostilla löytyi jo ONR:stä henkilö, mutta tämän hakijan syntymäaika eroaa ONR:stä löytyvän hakijan syntymäajasta. Tämän takia tästä hakijasta luotiin uusi henkilö ja tätä hakemuksella ilmoitettua sähköpostia ei tallennettu uuden henkilön tietoihin."
+                                                              :en "Tämän hakemuksen sähköpostilla löytyi jo ONR:stä henkilö, mutta tämän hakijan syntymäaika eroaa ONR:stä löytyvän hakijan syntymäajasta. Tämän takia tästä hakijasta luotiin uusi henkilö ja tätä hakemuksella ilmoitettua sähköpostia ei tallennettu uuden henkilön tietoihin."}
+   :valintakasittelymerkinta                                 {:fi "Valintakäsittelymerkintä"
                                                               :sv "Notering om antagningsbehandling"
                                                               :en "Valintakäsittelymerkintä"}
    :valinnan-tila                                            {:fi "Valinnan tila"
