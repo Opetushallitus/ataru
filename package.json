@@ -27,7 +27,7 @@
     "**/*.{js,ts}": [
       "npm run lint:js"
     ],
-    "**/*.{clj,cljs,cljc}": [
+    "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
       "npm run lint:clj:lint-staged"
     ]
   },
