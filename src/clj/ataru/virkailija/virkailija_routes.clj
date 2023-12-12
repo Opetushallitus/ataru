@@ -1454,69 +1454,6 @@
                   hakemusOids
                   offset))))
 
-      (api/POST "/valinta-tulos-service/valinnan-tulos/hakemus" {session :session}
-        :summary "Applications for valinta-tulos-service"
-        :body-params [{hakemusOids :- [s/Str] nil}]
-        :return {:applications            [{:oid                  s/Str
-                                            :hakuOid              s/Str
-                                            :hakukohdeOids        [s/Str]
-                                            :henkiloOid           s/Str
-                                            :asiointikieli        s/Str
-                                            :email                s/Str
-                                            :paymentObligations   {s/Keyword s/Str}}]
-                 (s/optional-key :offset) s/Str}
-        (cond (nil? (seq hakemusOids))
-              (response/bad-request {:error "No query parameter given"})
-              (session-orgs/run-org-authorized
-                session
-                organization-service
-                [:view-applications :edit-applications]
-                (fn [] true)
-                (fn [oids] (not (contains? oids organization-client/oph-organization)))
-                (fn [] false))
-              (response/unauthorized {:error "Unauthorized"})
-              :else
-              (response/ok
-                (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
-
-      (api/GET "/valinta-tulos-service/valinnan-tulos/hakemus" {session :session}
-        :summary "Valinnantulos for hakemus"
-        :query-params [{hakemusOid :- s/Str nil}]
-        :return {:applications            [{}]}
-        (cond (nil? hakemusOid)
-              (response/bad-request {:error "No query parameter given"})
-              (session-orgs/run-org-authorized
-                session
-                organization-service
-                [:view-applications :edit-applications]
-                (fn [] true)
-                (fn [oids] (not (contains? oids organization-client/oph-organization)))
-                (fn [] false))
-              (response/unauthorized {:error "Unauthorized"})
-              :else
-              (response/ok
-                (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
-
-      (api/PATCH "/valinta-tulos-service/valinnan-tulos/:valintatapajono-oid" {session :session}
-        :summary "Patch valinnantulos"
-        :path-params [{valintatapajono-oid :- s/Str nil}]
-        :header-params [{if-unmodified-since :- s/Str nil}]
-        :body [body s/Any]
-        (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (nil? body))
-              (response/bad-request {:error "Missing parameters"})
-              (session-orgs/run-org-authorized
-                session
-                organization-service
-                [:edit-applications]
-                (fn [] true)
-                (fn [oids] (not (contains? oids organization-client/oph-organization)))
-                (fn [] false))
-              (response/unauthorized {:error "Unauthorized"})
-              :else
-              (response/ok
-                (vts/change-kevyt-valinta-property
-                  valinta-tulos-service valintatapajono-oid body if-unmodified-since))))
-
       (api/GET "/valinta-ui" {session :session}
         :summary "Applications for valinta-ui"
         :query-params [{hakuOid :- s/Str nil}
@@ -1717,6 +1654,51 @@
           (response/ok {:applicationOid (:key application)
                         :personOid      (:person-oid application)})
           (response/not-found))))
+
+    (api/context "/valinta-tulos-service"  []
+      :tags ["valinta-tulos-service-api"]
+      (api/POST "/valinnan-tulos/hakemus" {session :session}
+                   :summary "Applications for valinta-tulos-service"
+                   :body-params [{hakemusOids :- [s/Str] nil}]
+                   (cond (nil? (seq hakemusOids))
+                         (response/bad-request {:error "No query parameter given"})
+                         (not (every?
+                                #(access-controlled-application/application-view-authorized?
+                                   organization-service tarjonta-service suoritus-service person-service session %)
+                                hakemusOids))
+                         (response/unauthorized {:error "Unauthorized"})
+                         :else
+                         (response/ok
+                           (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
+
+      (api/GET "/valinnan-tulos/hakemus" {session :session}
+        :summary "Valinnantulos for hakemus"
+        :query-params [{hakemusOid :- s/Str nil}]
+        (cond (nil? hakemusOid)
+              (response/bad-request {:error "No query parameter given"})
+              (access-controlled-application/application-view-authorized?
+                organization-service tarjonta-service suoritus-service person-service session hakemusOid)
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
+
+      (api/PATCH "/valinnan-tulos/:valintatapajono-oid" {session :session}
+        :summary "Patch valinnantulos"
+        :path-params [{valintatapajono-oid :- s/Str nil}]
+        :header-params [{if-unmodified-since :- s/Str nil}]
+        :body [body s/Any]
+        (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (or (nil? body) (empty? body)))
+              (response/bad-request {:error "Missing parameters"})
+              (not (every?
+                     #(access-controlled-application/application-edit-authorized?
+                        organization-service tarjonta-service suoritus-service person-service session %)
+                     (map #(get-in % [:hakemusOid :s]) body)))
+              (response/unauthorized {:error "Unauthorized"})
+              :else
+              (response/ok
+                (vts/change-kevyt-valinta-property
+                  valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
 
     (when (:dev? env)
       (api/context "/cypress" []
