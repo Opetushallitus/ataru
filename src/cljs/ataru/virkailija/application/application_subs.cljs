@@ -1268,6 +1268,11 @@
        (map #(get rights-by-hakukohde %))
        (every? (partial some #{:view-applications :edit-applications}))))
 
+(defn- rights-to-edit-reviews-for-selected-hakukohteet? [hakukohde-oids rights-by-hakukohde]
+  (->> hakukohde-oids
+       (map #(get rights-by-hakukohde %))
+       (every? (partial some #{:edit-applications}))))
+
 (defn rights-to-view-review-states-for-hakukohde? [hakukohde-oid rights-by-hakukohde superuser toisen-asteen-yhteishaku?]
   ;; rights-by-hakukohde sisältää dataa vasta kun on hakemus valittuna, toistaiseksi ok näin, maybe fix later
   (or superuser
@@ -1282,6 +1287,14 @@
     (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
  (fn [[hakukohde-oids rights-by-hakukohde]]
    (rights-to-view-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
+(re-frame/reg-sub
+ :application/rights-to-edit-reviews-for-selected-hakukohteet?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+    (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[hakukohde-oids rights-by-hakukohde]]
+   (rights-to-edit-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
 
 (re-frame/reg-sub
  :application/rights-to-view-review-states-for-hakukohde?
