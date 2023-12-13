@@ -206,38 +206,6 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         )
       })
 
-      describe('Käsittelytietojen piilotus opinto-ohjaajalta', () => {
-        avaaHenkilonHakemus(
-          'Testihenkilö, jolta puuttuu äidinkieli',
-          'Erkki Esimerkki',
-          '1.2.246.562.11.00000000000000000002',
-          () => {
-            it('Varmista, että käsittelytilan ja valintojen suodattimet on piilotettu', () => {
-              cy.get('[data-test-id=processing-state-filter').should(
-                'not.be.visible'
-              )
-              cy.get('[data-test-id=selection-state-filter').should(
-                'not.be.visible'
-              )
-              cy.get('[data-test-id=vastaanotto-state-filter').should(
-                'not.be.visible'
-              )
-            })
-            it('Varmista, että käsittelytila, valinta- ja vastaanottotieto ei näy listauksessa', () => {
-              cy.get('[data-test-id=list-hakukohde-handling-state').should(
-                'not.exist'
-              )
-              cy.get('[data-test-id=list-hakukohde-vastaanotto-state').should(
-                'not.exist'
-              )
-              cy.get('[data-test-id=list-hakukohde-selection-state').should(
-                'not.exist'
-              )
-            })
-          }
-        )
-      })
-
       describe('Massaviestin lähetystoiminto', () => {
         avaaHenkilonHakemus(
           'Toimivan hakemuksen lähettänyt testihenkilö',

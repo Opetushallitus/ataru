@@ -526,7 +526,8 @@
   (assoc (component/multiple-choice metadata)
     :id higher-completed-base-education-id
     :params {:hidden    false
-             :info-text {:label (:read-who-can-apply texts)}}
+             :info-text {:label (:read-who-can-apply texts)}
+             :data-test-id "higher-completed-base-education"}
     :koodisto-source {:uri            "pohjakoulutuskklomake"
                       :title          "Kk-pohjakoulutusvaihtoehdot"
                       :version        2
