@@ -1667,34 +1667,28 @@
           (response/unauthorized {:error "Unauthorized"})))
 
       (api/POST "/siirtotiedosto" {session :session}
-        :summary "Get applications for external systems"
-        :query-params [{hakukohdeOid :- s/Str nil}
-                       {modifiedBefore :- s/Int nil}
-                       {modifiedAfter :- s/Int nil}
-                       ]
-        :body [applicationOids [s/Str]]
-        :return [ataru-schema/SiirtotiedostoApplication]
+        :summary "Create siirtotiedostos containing appications and forms from a time period"
+        :query-params [{modifiedBefore :- s/Int nil}
+                       {modifiedAfter :- s/Int nil}]
+        :return s/Any
         (if (and (nil? modifiedBefore)
                  (nil? modifiedAfter))
           (response/bad-request {:error "Either modifiedAfter or modifiedBefore param required!"})
           (if (boolean (-> session :identity :superuser))
             (let [siirtotiedosto-params {:modified-before (or modifiedBefore (System/currentTimeMillis))
-                                         :modified-after modifiedAfter
-                                         :hakukohde-oid hakukohdeOid
-                                         :application-oids (not-empty applicationOids)}]
+                                         :modified-after modifiedAfter}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
-              (let [forms-result (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
-                    applications-result (siirtotiedosto-service/siirtotiedosto-applications
-                                          siirtotiedosto-service
-                                          siirtotiedosto-params)]
-                (match applications-result
-                       {:unauthorized _}
-                       (response/unauthorized {:error "Unauthorized"})
-                       {:success true
-                        :last-successful-timestamp timestamp}
-                       (response/ok (str "All ok until " timestamp)) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
+              (let [{applications-success :success applications :applications} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
+                    {forms-success :success forms :forms} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
+                    combined-result {:success (and forms-success applications-success)
+                                     :applications (or applications [])
+                                     :forms (or forms [])}]
+                (log/info "Siirtotiedosto success" (:success combined-result))
+                (match combined-result
+                       {:success true}
+                       (response/ok combined-result) ;todo, what do we actually want to return here? Maybe some timestamp information at least.
                        {:success false}
-                       (response/internal-server-error "sos"))))
+                       (response/internal-server-error "Siirtotiedoston muodostamisessa meni jotain vikaan."))))
             (response/unauthorized "Vain rekisterinpitäjille!"))))
 
       (api/POST "/siirto" {session :session}
