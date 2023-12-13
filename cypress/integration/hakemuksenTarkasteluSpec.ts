@@ -223,17 +223,17 @@ describe('Hakemuksen tietojen tarkastelu', () => {
                 'not.be.visible'
               )
             })
-            // it('Varmista, että käsittelytila, valinta- ja vastaanottotieto ei näy listauksessa', () => {
-            //   cy.get('[data-test-id=list-hakukohde-handling-state').should(
-            //     'not.be.visible'
-            //   )
-            //   cy.get('[data-test-id=list-hakukohde-vastaanotto-state').should(
-            //     'not.be.visible'
-            //   )
-            //   cy.get('[data-test-id=list-hakukohde-selection-state').should(
-            //     'not.be.visible'
-            //   )
-            // })
+            it('Varmista, että käsittelytila, valinta- ja vastaanottotieto ei näy listauksessa', () => {
+              cy.get('[data-test-id=list-hakukohde-handling-state').should(
+                'not.exist'
+              )
+              cy.get('[data-test-id=list-hakukohde-vastaanotto-state').should(
+                'not.exist'
+              )
+              cy.get('[data-test-id=list-hakukohde-selection-state').should(
+                'not.exist'
+              )
+            })
           }
         )
       })

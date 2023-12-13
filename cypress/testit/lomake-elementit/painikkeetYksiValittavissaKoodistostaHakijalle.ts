@@ -1,12 +1,17 @@
-import * as hakijanNakyma from '../../hakijanNakyma'
+//import * as hakijanNakyma from '../../hakijanNakyma'
 import hakemuksenLahettaminen from '../hakemuksenLahettaminen'
 
 export default () => {
   describe('Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"', () => {
     before(() => {
-      hakijanNakyma.klikkaa(
-        'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
-      )
+      cy.get('#higher-completed-base-education-id')
+        .get(
+          `label:contains('Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)')`
+        )
+        .click({ multiple: true })
+      // hakijanNakyma.klikkaa(
+      //   'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+      // )
     })
 
     hakemuksenLahettaminen(() => {
