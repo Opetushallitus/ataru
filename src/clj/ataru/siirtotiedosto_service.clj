@@ -28,6 +28,8 @@
                                         :created-time     org.joda.time.DateTime
                                         :languages        [s/Str]})
 
+;Todo fixme Hakemuksen henkilöoid-kentän kanssa voi olla ongelma sikäli, että henkilöOidin lisääminen hakemuksen tallentamisen jälkeen ei päivitä hakemuksen muokkaushetkeä
+;eli jälkikäteen lisätty person_oid ei välttämättä päädy mihinkään siirtotiedostoon
 (s/defschema SiirtotiedostoApplicationSchema {:hakemusOid s/Str
                                               :state s/Any
                                               (s/optional-key :form_key) s/Str
@@ -40,8 +42,7 @@
                                               (s/optional-key :application_hakukohde_reviews) s/Any
                                               (s/optional-key :hakuOid) (s/maybe s/Str)
                                               (s/optional-key :form) s/Num
-                                              (s/optional-key :person_oid) s/Str})
-
+                                              (s/optional-key :person_oid) (s/maybe s/Str)})
 (s/defschema SiirtotiedostoInactivatedApplicationSchema {:hakemusOid s/Str
                                                          :state "inactivated"})
 (defn- mock-save-applications-to-s3 [applications]
