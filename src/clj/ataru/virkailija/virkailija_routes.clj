@@ -709,14 +709,16 @@
         :summary "Update existing application review"
         :body [review ataru-schema/Review]
         :return {:events [ataru-schema/Event]}
-        (if-let [result (application-service/save-application-review
+        (let [result (application-service/save-application-review
                           application-service
                           session
                           review)]
-          (response/ok result)
-          (response/unauthorized {:error (str "Hakemuksen "
-                                              (:application-key review)
-                                              " käsittely ei ole sallittu")})))
+          (case result
+            :forbidden (response/forbidden {:error "Sinulla on valittuna hakukohde jonka käsittelyyn ei ole oikeuksia, käsittelytietoja ei tallennettu."})
+            nil (response/unauthorized {:error (str "Hakemuksen "
+                                                 (:application-key review)
+                                                 " käsittely ei ole sallittu")})
+            (response/ok result))))
 
       (api/POST "/information-request" {session :session}
         :body [information-request ataru-schema/NewInformationRequest]

@@ -339,3 +339,40 @@
                         ["application-1-oid" "application-2-oid"]
                         [:view-applications])]
           (should= false result))))))
+
+
+(describe "applications-review-authorized?"
+          (tags :unit)
+          (it "returns true if user has edit rights to all hakukohteet"
+              (let [session (session-with-rights :edit-applications
+                                                 ["1.2.246.562.10.10826252480" "1.2.246.562.10.10826252479"])
+                    result  (aac/applications-review-authorized?
+                             organization-service
+                             tarjonta-service
+                             session
+                             [:1.2.246.562.20.49028100004 :1.2.246.562.20.49028196522]
+                             [:edit-applications])]
+                (should= true result)))
+
+          (it "returns false if user has edit rights to only some of hakukohteet"
+              (let [session (session-with-rights :edit-applications ["1.2.246.562.10.10826252480"]
+                                                 :view-applications ["1.2.246.562.10.10826252479"])
+                    result  (aac/applications-review-authorized?
+                             organization-service
+                             tarjonta-service
+                             session
+                             [:1.2.246.562.20.49028100004 :1.2.246.562.20.49028196522]
+                             [:edit-applications])]
+                (should= false result)))
+
+          (it "returns true if user has edit rights to hakukohderyhma"
+              (let [session (session-with-rights :edit-applications ["1.2.246.562.28.00000000001"]
+                                                 :view-applications ["1.2.246.562.10.10826252479"])
+                    result  (aac/applications-review-authorized?
+                             organization-service
+                             tarjonta-service
+                             session
+                             [:1.2.246.562.20.49028196522]
+                             [:edit-applications])]
+                (should= false result))))
+

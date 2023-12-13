@@ -335,7 +335,7 @@
   (and applications-visible-with-some-filter?
        (or superuser? ;; rekisterinpitäjä saa aina tehdä massamuistiinpanoja
            (and hakukohde-filtering-for-yhteishaku?  ;; muille pitää olla yhteisvalinnoissa hakukohderajaus päällä
-                (not toisen-asteen-yhteishaku?))))) ;; muille ei näytetä ollenkaan 2. asteen yhteishaulle
+                (not toisen-asteen-yhteishaku?))))) ;; ei näytetä ollenkaan 2. asteen yhteishaulle
 
 (re-frame/reg-sub
  :application/show-mass-review-notes-link?
@@ -902,6 +902,15 @@
    (or opinto-ohjaaja-or-admin? edit-rights-for-any-organization?)))
 
 (re-frame/reg-sub
+ :application/review-states-visible?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/toisen-asteen-yhteishaku-selected?])
+    (re-frame/subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])])
+ (fn [[toisen-asteen-yhteishaku-selected? all-organizations-have-only-opinto-ohjaaja-rights?] _]
+   ;; piilotetaan opoilta käsittelytiedot 2. asteen yhteishaussa
+   (not (and toisen-asteen-yhteishaku-selected? all-organizations-have-only-opinto-ohjaaja-rights?))))
+
+(re-frame/reg-sub
   :application/review-field-editable?
   (fn [_ _]
     [(re-frame/subscribe [:application/can-edit-application?])
@@ -1269,6 +1278,48 @@
     (let [user-info (-> db :editor :user-info)]
       (or opinto-ohjaaja-or-admin?
         (some (fn [org] (some #(= "valinnat-valilehti" % ) (:rights org))) (:organizations user-info))))))
+
+(defn- rights-to-view-reviews-for-selected-hakukohteet? [hakukohde-oids rights-by-hakukohde]
+  (->> hakukohde-oids
+       (map #(get rights-by-hakukohde %))
+       (every? (partial some #{:view-applications :edit-applications}))))
+
+(defn- rights-to-edit-reviews-for-selected-hakukohteet? [hakukohde-oids rights-by-hakukohde]
+  (->> hakukohde-oids
+       (map #(get rights-by-hakukohde %))
+       (every? (partial some #{:edit-applications}))))
+
+(defn rights-to-view-review-states-for-hakukohde? [hakukohde-oid rights-by-hakukohde superuser toisen-asteen-yhteishaku?]
+  ;; rights-by-hakukohde sisältää dataa vasta kun on hakemus valittuna, toistaiseksi ok näin, maybe fix later
+  (or superuser
+      (not toisen-asteen-yhteishaku?)
+      (boolean (some #{:edit-applications} (get rights-by-hakukohde hakukohde-oid)))
+      (boolean (some #{:view-applications} (get rights-by-hakukohde hakukohde-oid)))))
+
+(re-frame/reg-sub
+ :application/rights-to-view-reviews-for-selected-hakukohteet?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+    (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[hakukohde-oids rights-by-hakukohde]]
+   (rights-to-view-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
+(re-frame/reg-sub
+ :application/rights-to-edit-reviews-for-selected-hakukohteet?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+    (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])])
+ (fn [[hakukohde-oids rights-by-hakukohde]]
+   (rights-to-edit-reviews-for-selected-hakukohteet? hakukohde-oids rights-by-hakukohde)))
+
+(re-frame/reg-sub
+ :application/rights-to-view-review-states-for-hakukohde?
+ (fn [_ _]
+   [(re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])
+    (re-frame/subscribe [:application/superuser?])
+    (re-frame/subscribe [:application/toisen-asteen-yhteishaku-selected?])])
+ (fn [[rights-by-hakukohde superuser toisen-asteen-yhteishaku?][_ hakukohde-oid]]
+   (rights-to-view-review-states-for-hakukohde? hakukohde-oid rights-by-hakukohde superuser toisen-asteen-yhteishaku?)))
 
 (re-frame/reg-sub
   :application/forms

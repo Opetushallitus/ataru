@@ -37,3 +37,19 @@
         expected      true
         actual        (app-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
     (is (= actual expected))))
+
+(deftest show-review-info-for-superuser-2-asteen-yhteishaku
+  (let [hakukohde-oid                          "1.2.246.562.20.00000000000000024490"
+        superuser                              true
+        toisen-asteen-yhteishaku?              true
+        expected      true
+        actual        (app-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
+    (is (= actual expected))))
+
+(deftest show-review-info-if-not-2-asteen-yhteishaku
+  (let [hakukohde-oid                          "1.2.246.562.20.00000000000000024490"
+        superuser                              false
+        toisen-asteen-yhteishaku?              false
+        expected      true
+        actual        (app-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
+    (is (= actual expected))))
