@@ -187,7 +187,7 @@
                   (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))
         {:db   db
          :http {:method              :post
-                :path                "/lomake-editori/api/external/valinta-tulos-service/valinnan-tulos/hakemus"
+                :path                "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus"
                 :params              ei-tulosta
                 :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
                 :handler-args        {:application-keys ei-tulosta}}}))))
@@ -209,7 +209,7 @@
                   (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count))))
       {:db   (update db :valinta-tulos-service dissoc application-key)
        :http {:method              :get
-              :path                (str "/lomake-editori/api/external/valinta-tulos-service/valinnan-tulos/hakemus?hakemusOid=" application-key)
+              :path                (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus?hakemusOid=" application-key)
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
 
@@ -425,7 +425,7 @@
           formatted-now                    (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
        :http {:method              :patch
-              :path                (str  "/lomake-editori/api/external/valinta-tulos-service/valinnan-tulos/" valintatapajono-oid)
+              :path                (str  "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/" valintatapajono-oid)
               :id                  request-id
               :override-args       {:params  request-body
                                     :headers {"If-Unmodified-Since" formatted-now}}
