@@ -3,84 +3,99 @@
             [ataru.forms.form-store :as form-store]
             [cheshire.core :as json]
             [taoensso.timbre :as log]
-            [clj-time.core :as time]))
+            [clj-time.core :as time]
+            [schema.core :as s]
+            [schema-tools.core :as st]))
 
 (defprotocol SiirtotiedostoService
   (siirtotiedosto-applications [this params])
   (siirtotiedosto-forms [this params]))
 
-(def applications-page-size 10000)
+(def applications-page-size 5000)
 
-(def forms-page-size 300)
+(def forms-page-size 100)
 
-(defn- mock-save-to-s3 [applications]
-  (log/info "Saving" (count applications) "applications to s3 in siirtotiedosto!");todo write data to s3 if not empty
-  )
+(s/defschema SiirtotiedostoFormSchema {:properties        s/Any
+                                        :deleted          (s/maybe s/Bool)
+                                        :key              s/Str
+                                        :content          [{:fieldClass s/Str
+                                                            :id         s/Str
+                                                            :fieldType  s/Str
+                                                            s/Any       s/Any}]
+                                        :name             {s/Any s/Str}
+                                        :organization-oid s/Str
+                                        :created-by       s/Str
+                                        :created-time     org.joda.time.DateTime
+                                        :languages        [s/Str]})
 
-(defn- mock-save-forms-to-s3 [forms last-timestamp]
-  (let [file-created (time/now)
-        json (json/generate-string forms)
-        filename (str "ataru-forms__" last-timestamp "__" file-created)]
-    (log/info "Saving" (count json) "of json to s3 in siirtotiedosto! Filename" filename)))
+(s/defschema SiirtotiedostoApplicationSchema {:hakemusOid s/Str
+                                              :state s/Any
+                                              (s/optional-key :form_key) s/Str
+                                              (s/optional-key :keyValues) {s/Any s/Any}
+                                              (s/optional-key :attachments) {s/Any s/Any}
+                                              (s/optional-key :created_time) org.joda.time.DateTime
+                                              (s/optional-key :eligibility-set-automatically) s/Any
+                                              (s/optional-key :submitted) org.joda.time.DateTime
+                                              (s/optional-key :lang) s/Str
+                                              (s/optional-key :application_hakukohde_reviews) s/Any
+                                              (s/optional-key :hakuOid) (s/maybe s/Str)
+                                              (s/optional-key :form) s/Num
+                                              (s/optional-key :person_oid) s/Str})
 
-(defrecord CommonSiirtotiedostoService [organization-service
-                                        tarjonta-service
-                                        ohjausparametrit-service
-                                        audit-logger
-                                        person-service
-                                        valinta-tulos-service
-                                        koodisto-cache
-                                        job-runner
-                                        liiteri-cas-client
-                                        suoritus-service
-                                        form-by-id-cache
-                                        valintalaskentakoostepalvelu-service]
+(s/defschema SiirtotiedostoInactivatedApplicationSchema {:hakemusOid s/Str
+                                                         :state "inactivated"})
+(defn- mock-save-applications-to-s3 [applications]
+  (let [schema-compliant-applications (map #(st/select-schema % SiirtotiedostoApplicationSchema) applications)
+        json (json/generate-string schema-compliant-applications)
+        file-created (time/now)
+        filename (str "ataru-applications__" file-created)]
+    (log/info "Saving" (count json) "of applications json to s3 in siirtotiedosto! Filename" filename)))
+
+(defn- mock-save-forms-to-s3 [forms]
+  (let [schema-compliant-forms (map #(st/select-schema % SiirtotiedostoFormSchema) forms)
+        json (json/generate-string schema-compliant-forms)
+        file-created (time/now)
+        filename (str "ataru-forms__" file-created)]
+    (log/info "Saving" (count json) "of forms json to s3 in siirtotiedosto! Filename" filename)))
+
+(defrecord CommonSiirtotiedostoService []
   SiirtotiedostoService
   (siirtotiedosto-applications
     [_ params]
-    (loop [pages-fetched 0
-           offset 0
-           statistics []
-           last-successful-timestamp nil]
-      (log/info "Start collecting applications for page" (inc pages-fetched) {:pages-fetched pages-fetched
-                                                                              :offset        offset} ". Last timestamp successfully fetched: " last-successful-timestamp)
-      (let [start (System/currentTimeMillis)
-            applications (application-store/siirtotiedosto-applications-paged (merge params {:page-size applications-page-size
-                                                                                             :offset offset}))
-            returned-count (count applications)
-            took (- (System/currentTimeMillis) start)
-            first-timestamp (:created_time (first applications))
-            last-timestamp (:created_time (last applications))
-            stat (str "Collecting " returned-count " applications took " took "ms. First created " first-timestamp ", last created " last-timestamp)]
-        (log/info "Got page" (inc pages-fetched) "for params" params ":" returned-count stat)
-        (mock-save-to-s3 applications)
-        (if (= returned-count applications-page-size)
-          (recur
-            (inc pages-fetched)
-            (+ offset returned-count)
-            (conj statistics stat)
-            last-timestamp) ;todo add some kind of simple error tracking
-          (do
-            (log/info "Siirtotiedosto ready! params" params ", stats" (conj statistics stat))
-            {:success (boolean last-successful-timestamp)
-             :last-successful-timestamp last-successful-timestamp})))))
+    (let [done (atom 0)
+          changed-ids (->> (application-store/siirtotiedosto-application-ids params)
+                           (map :id))
+          partitions (partition applications-page-size applications-page-size nil changed-ids)]
+      (log/info "Changed application ids in total: " (count changed-ids) ", partitions:" (count partitions))
+      (let [first-application-per-chunk (doall (for [application-ids partitions]
+                                          (let [start (System/currentTimeMillis)
+                                                applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)]
+                                            (mock-save-applications-to-s3 applications-chunk)
+                                            (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
+                                            (first applications-chunk))))]
+        ;(log/info "first applications" (flatten first-application-per-chunk))
+        {:applications (flatten first-application-per-chunk)
+         :success true
+         :modified-before (:modified-before params)})))
 
   (siirtotiedosto-forms
     [_ params]
-    (let [changed-ids (->> (form-store/siirtotiedosto-form-ids params)
+    (let [done (atom 0)
+          changed-ids (->> (form-store/siirtotiedosto-form-ids params)
                            (map :id))
           partitions (partition forms-page-size forms-page-size nil changed-ids)]
-      (log/info "Changed ids in total: " (count changed-ids) ", partitions:" (count partitions))
-      (let [first-forms-per-chunk (for [form-ids partitions]
-                                    (let [forms-chunk (form-store/fetch-by-ids form-ids)
-                                          last-timestamp (:created-time (last forms-chunk))]
-                                      ;(log/info "last form" (last forms-chunk))
-                                      (mock-save-forms-to-s3 forms-chunk last-timestamp)
-                                      (first forms-chunk)))]
-        (log/info "first forms" (flatten first-forms-per-chunk))
-        {:forms   (json/generate-string (flatten first-forms-per-chunk))
-         :success true})))
+      (log/info "Changed form ids in total: " (count changed-ids) ", partitions:" (count partitions))
+      (let [first-forms-per-chunk (doall (for [form-ids partitions]
+                                    (let [start (System/currentTimeMillis)
+                                          forms-chunk (form-store/fetch-forms-by-ids form-ids)]
+                                      (mock-save-forms-to-s3 forms-chunk)
+                                      (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
+                                      (first forms-chunk))))]
+        ;(log/info "first forms" (flatten first-forms-per-chunk))
+        {:forms   (flatten first-forms-per-chunk)
+         :success true
+         :modified-before (:modified-before params)})))
 
   )
 
-(defn new-siirtotiedosto-service [] (->CommonSiirtotiedostoService nil nil nil nil nil nil nil nil nil nil nil nil))
+(defn new-siirtotiedosto-service [] (->CommonSiirtotiedostoService))
