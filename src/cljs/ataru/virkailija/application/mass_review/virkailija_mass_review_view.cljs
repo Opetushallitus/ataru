@@ -70,6 +70,7 @@
         review-state-counts        (subscribe [:state-query [:application :review-state-counts]])
         loading?                   (subscribe [:application/fetching-applications?])
         tutu-form-visible?         (subscribe [:tutu-payment/tutu-form-selected?])
+        allowed?                   (subscribe [:application/mass-information-request-allowed?])
         processing-states          (if @tutu-form-visible?
                                        review-states/application-hakukohde-processing-states
                                        review-states/application-hakukohde-processing-states-normal)
@@ -81,7 +82,8 @@
       (let [from-states (merge all-states @review-state-counts)]
         [:span.application-handling__mass-edit-review-states-container
          [:a.application-handling__mass-edit-review-states-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-          {:on-click #(dispatch [:application/set-mass-update-popup-visibility true])}
+          {:on-click (when @allowed? #(dispatch [:application/set-mass-update-popup-visibility true]))
+           :class (when (not @allowed?) "application-handling__button--disabled")}
           @(subscribe [:editor/virkailija-translation :mass-edit])]
          (when @visible?
            [:div.application-handling__mass-edit-review-states-popup.application-handling__popup

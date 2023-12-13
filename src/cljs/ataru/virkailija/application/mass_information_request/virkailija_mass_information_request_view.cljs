@@ -12,11 +12,13 @@
         message            (subscribe [:state-query [:application :mass-information-request :message]])
         form-status        (subscribe [:application/mass-information-request-form-status])
         applications-count (subscribe [:application/loaded-applications-count])
+        allowed?           (subscribe [:application/mass-information-request-allowed?])
         button-enabled?    (subscribe [:application/mass-information-request-button-enabled?])]
     (fn [application-information-request-contains-modification-link]
       [:span.application-handling__mass-information-request-container
        [:a.application-handling__mass-information-request-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-mass-information-request-popup-visibility true])}
+        {:on-click (when @allowed? #(dispatch [:application/set-mass-information-request-popup-visibility true]))
+         :class (when (not @allowed?) "application-handling__button--disabled")}
         @(subscribe [:editor/virkailija-translation :mass-information-request])]
        (when @visible?
          [:div.application-handling__popup.application-handling__mass-information-request-popup

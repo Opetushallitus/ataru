@@ -886,6 +886,22 @@
     (get-in db [:editor :user-info :superuser?])))
 
 (re-frame/reg-sub
+  :application/single-information-request-allowed?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/can-edit-application?])
+     (re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?])])
+  (fn [[can-edit-application? opinto-ohjaaja-or-admin?] _]
+    (or can-edit-application? opinto-ohjaaja-or-admin?)))
+
+(re-frame/reg-sub
+ :application/mass-information-request-allowed?
+ (fn [_ _]
+   [(re-frame/subscribe [:editor/opinto-ohjaaja-or-admin?])
+    (re-frame/subscribe [:editor/edit-rights-for-any-organization?])])
+ (fn [[opinto-ohjaaja-or-admin? edit-rights-for-any-organization?] _]
+   (or opinto-ohjaaja-or-admin? edit-rights-for-any-organization?)))
+
+(re-frame/reg-sub
   :application/review-field-editable?
   (fn [_ _]
     [(re-frame/subscribe [:application/can-edit-application?])
