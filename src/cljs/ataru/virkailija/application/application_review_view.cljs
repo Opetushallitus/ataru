@@ -40,10 +40,11 @@
   [readonly-contents/readonly-fields form application hakukohteet])
 
 (defn- review-state-selected-row [state-name on-click label multiple-values?]
-  (let [editable?         (subscribe [:application/review-field-editable? state-name])]
+  (let [editable?                                 (subscribe [:application/review-field-editable? state-name])
+        rights-to-edit-reviews-for-selected?      @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])]
     [:div.application-handling__review-state-row.application-handling__review-state-row--selected
-     {:on-click #(when @editable? (on-click))
-      :class    (if @editable?
+     {:on-click #(when (and @editable? rights-to-edit-reviews-for-selected?) (on-click))
+      :class    (if (and @editable? rights-to-edit-reviews-for-selected?)
                   "application-handling__review-state-row--enabled"
                   "application-handling__review-state-row--disabled")}
      (if multiple-values?
@@ -636,7 +637,8 @@
   (let [notes-for-selected        (subscribe [:application/review-note-indexes-excluding-eligibility-for-selected-hakukohteet])
         selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
-        editable?                 (subscribe [:application/review-field-editable? :notes])]
+        editable?                 (subscribe [:application/review-field-editable? :notes])
+        rights-to-edit-reviews-for-selected?   @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])]
     (fn []
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
@@ -648,7 +650,7 @@
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
              :value     "only-selected"
-             :disabled  (not @editable?)
+             :disabled  (not rights-to-edit-reviews-for-selected?)
              :checked   @only-selected-hakukohteet
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
