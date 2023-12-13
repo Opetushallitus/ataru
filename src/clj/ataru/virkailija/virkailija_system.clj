@@ -242,21 +242,9 @@
                             :form-by-id-cache
                             :valintalaskentakoostepalvelu-service])
 
-    ;todo cleanup, lost of unneeded stuff here
     :siirtotiedosto-service (component/using
                               (siirtotiedosto-service/new-siirtotiedosto-service)
-                              [:liiteri-cas-client
-                               :organization-service
-                               :tarjonta-service
-                               :ohjausparametrit-service
-                               :audit-logger
-                               :person-service
-                               :valinta-tulos-service
-                               :koodisto-cache
-                               :job-runner
-                               :suoritus-service
-                               :form-by-id-cache
-                               :valintalaskentakoostepalvelu-service])
+                              [])
 
     :session-store (create-session-store (db/get-datasource :db))
 

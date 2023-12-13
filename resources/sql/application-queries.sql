@@ -1273,8 +1273,17 @@ where la.haku = :haku_oid
 and u.idx = 1) as ensisijaiset
 group by hakukohde_oid;
 
--- name: yesql-get-siirtotiedosto-applications
--- Get list of applications created between optional timestamps
+-- name: yesql-get-siirtotiedosto-application-ids
+-- Get list of ids for applications to be included in siirtotiedosto
+SELECT
+    la.id
+FROM latest_applications as la
+WHERE
+    (:modified_after::TEXT IS NULL OR la.created_time >= to_timestamp(:modified_after/1000))
+  AND (:modified_before::TEXT IS NULL OR la.created_time <= to_timestamp(:modified_before/1000));
+
+-- name: yesql-get-siirtotiedosto-applications-for-ids
+-- Get siirtotiedosto-applications by ids
 SELECT
     a.id,
     a.key,
@@ -1308,10 +1317,4 @@ SELECT
 FROM latest_applications AS a
          JOIN application_reviews AS ar ON a.key = ar.application_key
          JOIN forms AS f ON a.form_id = f.id
-  WHERE
-      (:modified_after::TEXT IS NULL OR a.created_time >= to_timestamp(:modified_after/1000))
-  AND (:modified_before::TEXT IS NULL OR a.created_time <= to_timestamp(:modified_before/1000))
-  AND ar.state <> 'inactivated'
-ORDER BY a.created_time
-LIMIT :limit
-OFFSET :offset;
+WHERE a.id in (:ids);
