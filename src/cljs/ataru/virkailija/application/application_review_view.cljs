@@ -1049,8 +1049,7 @@
                         @opinto-ohjaaja)
                   [:div
                    ;; 2. asteen yhteishaussa näytetään ilmoitus jos opo+käsittelijä ja valittuna hakukohde johon ei oikeuksia
-                   (when (and toisen-asteen-yhteishaku?
-                          (not rights-to-view-reviews?)
+                   (when (and (not rights-to-view-reviews?)
                               (not only-opinto-ohjaaja))
                      [:div.application-handling__review-row
                       [:span.hakukohde-review-rights-alert
