@@ -102,12 +102,6 @@
   (linked-oids [_ oids]
     (person-client/linked-oids oppijanumerorekisteri-cas-client oids)))
 
-(def fake-person-from-creation {:personOid    "1.2.3.4.5.6"
-                  :firstName    "Foo"
-                  :lastName     "Bar"
-                  :email        "foo.bar@mailinator.com"
-                  :idpEntitys   []})
-
 (def fake-onr-person {:oidHenkilo   "1.2.3.4.5.6"
                       :hetu         "020202A0202"
                       :etunimet     "Testi"
@@ -130,7 +124,8 @@
   (start [this] this)
   (stop [this] this)
 
-  (create-or-find-person [_ _person] fake-person-from-creation)
+  (create-or-find-person [_ _person]
+                         {:status :created :oid (:oidHenkilo fake-onr-person)})
 
   (get-persons [this oids]
     (reduce #(assoc %1 %2 (.get-person this %2))

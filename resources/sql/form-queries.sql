@@ -74,6 +74,7 @@ SELECT
   f.deleted,
   f.organization_oid,
   f.locked,
+  f.locked_by as locked_by_oid,
   f.properties,
   (CASE WHEN f.locked_by IS NULL THEN NULL ELSE CONCAT(first_name, ' ', last_name) END) as locked_by,
   (SELECT count(*)

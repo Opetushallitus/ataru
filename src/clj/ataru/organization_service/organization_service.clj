@@ -68,7 +68,8 @@
    "1.2.246.562.28.2"                    {:name {:fi "Test group 2"}, :oid "1.2.246.562.28.2" :type :group}
    "1.2.246.562.10.10826252480"          {:name {:fi "Testiorganisaatio"}, :oid "1.2.246.562.10.10826252480" :type :organization}
    "form-access-control-test-oppilaitos" {:name {:fi "Testioppilaitos"}, :oid "form-access-control-test-oppilaitos" :type :organization}
-   "1.2.246.562.10.10826252479"          {:name {:fi "Tarjoajan oppilaitos"} :oid "1.2.246.562.10.10826252479" :type :organization}})
+   "1.2.246.562.10.10826252479"          {:name {:fi "Tarjoajan oppilaitos"} :oid "1.2.246.562.10.10826252479" :type :organization}
+   "1.2.246.562.10.00000000001"          {:name {:fi "Test OPH"}, :oid "1.2.246.562.10.00000000001" :type :organization}})
 
 (defn fake-orgs-by-root-orgs [root-orgs]
   (some->> root-orgs

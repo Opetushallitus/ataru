@@ -101,6 +101,10 @@
 
 (def haut
   {:1.2.246.562.29.65950024185               base-haku
+   :1.2.246.562.29.93102260101               (merge
+                                               base-haku
+                                               {:oid "1.2.246.562.29.93102260101"
+                                                :ataruLomakeAvain "synthetic-application-test-form"})
    :haku.oid                                 (merge
                                                base-haku
                                                {:oid           "haku.oid"
