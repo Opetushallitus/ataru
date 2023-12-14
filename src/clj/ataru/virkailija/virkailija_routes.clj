@@ -1657,48 +1657,136 @@
 
     (api/context "/valinta-tulos-service"  []
       :tags ["valinta-tulos-service-api"]
-      (api/POST "/valinnan-tulos/hakemus" {session :session}
-                   :summary "Applications for valinta-tulos-service"
-                   :body-params [{hakemusOids :- [s/Str] nil}]
-                   (cond (nil? (seq hakemusOids))
-                         (response/bad-request {:error "No query parameter given"})
-                         (not (every?
-                                #(access-controlled-application/application-view-authorized?
-                                   organization-service tarjonta-service suoritus-service person-service session %)
-                                hakemusOids))
-                         (response/unauthorized {:error "Unauthorized"})
-                         :else
-                         (response/ok
-                           (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
+      (api/context "/valinnan-tulos" []
+        (api/POST "/hakemus" {session :session}
+          :summary "Applications for valinta-tulos-service"
+          :body-params [{hakemusOids :- [s/Str] nil}]
+          (cond (nil? (seq hakemusOids))
+                (response/bad-request {:error "No query parameter given"})
+                (not (every?
+                       #(access-controlled-application/application-view-authorized?
+                          organization-service tarjonta-service suoritus-service person-service session %)
+                       hakemusOids))
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
 
-      (api/GET "/valinnan-tulos/hakemus" {session :session}
-        :summary "Valinnantulos for hakemus"
-        :query-params [{hakemusOid :- s/Str nil}]
-        (cond (nil? hakemusOid)
-              (response/bad-request {:error "No query parameter given"})
-              (access-controlled-application/application-view-authorized?
-                organization-service tarjonta-service suoritus-service person-service session hakemusOid)
-              (response/unauthorized {:error "Unauthorized"})
-              :else
-              (response/ok
-                (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
+        (api/GET "/hakemus" {session :session}
+          :summary "Valinnantulos for hakemus"
+          :query-params [{hakemusOid :- s/Str nil}]
+          (cond (nil? hakemusOid)
+                (response/bad-request {:error "No query parameter given"})
+                (access-controlled-application/application-view-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session hakemusOid)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
 
-      (api/PATCH "/valinnan-tulos/:valintatapajono-oid" {session :session}
-        :summary "Patch valinnantulos"
-        :path-params [{valintatapajono-oid :- s/Str nil}]
-        :header-params [{if-unmodified-since :- s/Str nil}]
-        :body [body s/Any]
-        (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (or (nil? body) (empty? body)))
-              (response/bad-request {:error "Missing parameters"})
-              (not (every?
-                     #(access-controlled-application/application-edit-authorized?
-                        organization-service tarjonta-service suoritus-service person-service session %)
-                     (map #(get-in % [:hakemusOid :s]) body)))
-              (response/unauthorized {:error "Unauthorized"})
-              :else
-              (response/ok
-                (vts/change-kevyt-valinta-property
-                  valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
+        (api/PATCH "/:valintatapajono-oid" {session :session}
+          :summary "Patch valinnantulos"
+          :path-params [{valintatapajono-oid :- s/Str nil}]
+          :header-params [{if-unmodified-since :- s/Str nil}]
+          :body [body s/Any]
+          (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (or (nil? body) (empty? body)))
+                (response/bad-request {:error "Missing parameters"})
+                (not (every?
+                       #(access-controlled-application/application-edit-authorized?
+                          organization-service tarjonta-service suoritus-service person-service session %)
+                       (map #(get-in % [:hakemusOid :s]) body)))
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/change-kevyt-valinta-property
+                    valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
+
+      (api/context "/hyvaksynnan-ehto" []
+        (api/GET "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
+          :summary "Get hyvaksynnan-ehto hakukohteessa"
+          :path-params [{hakukohde-oid :- s/Str nil}
+                        {application-key :- s/Str nil}]
+          (cond (or (nil? hakukohde-oid) (nil? application-key))
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-view-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service hakukohde-oid application-key))))
+
+        (api/PUT "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
+          :summary "Save hyvaksynnan-ehto hakukohteessa"
+          :path-params [{hakukohde-oid :- s/Str nil}
+                        {application-key :- s/Str nil}]
+          :header-params [{if-unmodified-since :- s/Str nil}]
+          :body [ehto s/Any]
+          (cond (or (nil? hakukohde-oid) (nil? application-key) (or (nil? ehto) (empty? ehto)))
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-edit-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since))))
+
+        (api/DELETE "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
+          :summary "Delete hyvaksynnan-ehto hakukohteessa"
+          :path-params [{hakukohde-oid :- s/Str nil}
+                        {application-key :- s/Str nil}]
+          :header-params [{if-unmodified-since :- s/Str nil}]
+          (cond (or (nil? hakukohde-oid) (nil? application-key) (nil? if-unmodified-since))
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-edit-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
+                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since))))
+
+        (api/GET "/valintatapajonoissa/:hakukohde-oid/hakemus/:application-key" {session :session}
+          :summary "Get hyvaksynnan-ehto valintatapajonoissa"
+          :path-params [{hakukohde-oid :- s/Str nil}
+                        {application-key :- s/Str nil}]
+          (cond (or (nil? hakukohde-oid) (nil? application-key))
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-view-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/hyvaksynnan-ehto-valintatapajonoissa-hakemus
+                    valinta-tulos-service hakukohde-oid application-key))))
+
+        (api/GET "/muutoshistoria/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
+          :summary "Get hyvaksynnan-ehto hakukohteessa muutoshistoria"
+          :path-params [{hakukohde-oid :- s/Str nil}
+                        {application-key :- s/Str nil}]
+          (cond (or (nil? hakukohde-oid) (nil? application-key))
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-view-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/hyvaksynnan-ehto-hakukohteessa-muutoshistoria
+                    valinta-tulos-service hakukohde-oid application-key))))
+
+        (api/GET "/hakemukselle/:application-key" {session :session}
+          :summary "Get hyvaksynnan-ehto hakumukselle"
+          :path-params [{application-key :- s/Str nil}]
+          (cond (nil? application-key)
+                (response/bad-request {:error "Missing parameters"})
+                (access-controlled-application/application-view-authorized?
+                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (response/unauthorized {:error "Unauthorized"})
+                :else
+                (response/ok
+                  (vts/hyvaksynnan-ehto-hakemukselle
+                    valinta-tulos-service application-key))))))
 
     (when (:dev? env)
       (api/context "/cypress" []

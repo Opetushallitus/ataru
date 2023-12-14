@@ -58,8 +58,8 @@
 (defn cas-authenticated-get [client url]
   (cas-http client :get url (constantly {})))
 
-(defn cas-authenticated-delete [client url]
-  (cas-http client :delete url (constantly {})))
+(defn cas-authenticated-delete [client url & [opts-fn]]
+  (cas-http client :delete url (if (nil? opts-fn) (constantly {}) opts-fn)))
 
 (defn cas-authenticated-post [client url body & [opts-fn]]
   (cas-http client :post url (if (nil? opts-fn) (constantly {}) opts-fn) body))
@@ -72,3 +72,6 @@
 
 (defn cas-authenticated-patch [client url body & [opts-fn]]
   (cas-http client :patch url (if (nil? opts-fn) (constantly {}) opts-fn) body))
+
+(defn cas-authenticated-put [client url body & [opts-fn]]
+  (cas-http client :put url (if (nil? opts-fn) (constantly {}) opts-fn) body))
