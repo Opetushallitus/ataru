@@ -181,8 +181,7 @@
               (response/bad-request))))
         (catch Exception e
           (log/error e "Virhe oppijan tunnistautumisessa.")
-          (response/found
-            (cas-oppija-utils/parse-cas-oppija-login-url (or lang "fi") target)))))
+          (response/internal-server-error))))
     (api/POST "/oppija" [:as request]
       (let [logout-request (get-in request [:params :logoutRequest])]
         (log/info "Received request for logout:" logout-request)

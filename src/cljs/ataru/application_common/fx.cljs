@@ -54,10 +54,10 @@
   :interval
   (let [live-intervals (atom {})]
     (fn [{:keys [action id frequency event]}]
-      (if (= action :start)
-        (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
-        (do (js/clearInterval (get @live-intervals id))
-            (swap! live-intervals dissoc id))))))
+      (case action
+        :start (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
+        :stop  (do (js/clearInterval (get @live-intervals id))
+                   (swap! live-intervals dissoc id))))))
 
 (defonce debounces (atom {}))
 
