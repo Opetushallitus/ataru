@@ -21,10 +21,10 @@ const takeScreenshot = page => {
     return page.screenshot({path: filename, fullPage: true}).then(done => {
         console.log('Moving screenshot to S3');
         const {
-            TRAVIS_REPO_SLUG: slugName,
-            TRAVIS_BUILD_NUMBER: buildNumber,
-            TRAVIS_JOB_NUMBER: jobNumber,
-            TRAVIS_BUILD_DIR: buildDir
+            CI_REPO_SLUG: slugName,
+            CI_BUILD_NUMBER: buildNumber,
+            CI_JOB_NUMBER: jobNumber,
+            CI_BUILD_DIR: buildDir
         } = process.env;
         const upload = spawn("artifacts",
             ["upload",
@@ -38,7 +38,7 @@ const takeScreenshot = page => {
         upload.on('error', (error) => {
                 console.log(error);
         });
-        console.log(`The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-travis-artifacts/artifacts/${slugName}/${buildNumber}/${jobNumber}/tmp/`);
+        console.log(`The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-ci-artifacts/artifacts/${slugName}/${buildNumber}/${jobNumber}/tmp/`);
     });
 };
 

@@ -1,6 +1,6 @@
 # Ataru
 
-[![Build Status](https://travis-ci.org/Opetushallitus/ataru.svg?branch=master)](https://travis-ci.org/Opetushallitus/ataru)
+[![Build Status](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml/badge.svg)](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml)
 ![NPM Dependencies Status](https://david-dm.org/Opetushallitus/ataru.svg)
 
 A system for creating custom forms, applying to education and handling applications.
@@ -70,9 +70,9 @@ or run it headless using command
 
     npm run cypress:run
 
-### Cypress tests in Travis
+### Cypress tests in Github Actions
 
-Travis runs Cypress tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs, captured screenshots and recorded videos are automatically uploaded to S3.
+Github Actions runs Cypress tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs, captured screenshots and recorded videos are automatically uploaded to S3.
 
 ### Running legacy browser tests
 
@@ -94,7 +94,7 @@ insert the required fixtures by running:
 ./bin/cibuild.sh reset-test-database-with-fixture
 ```
 
-For Travis CI the ataru-test-db and ataru-test-ftpd images have to be
+For Github Actions CI the ataru-test-db and ataru-test-ftpd images have to be
 available as
 `190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`
 and
