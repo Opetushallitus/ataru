@@ -2822,7 +2822,7 @@
                            :en "The postal code is incorrect."}
    :main-first-name       {:fi "Kutsumanimen tulee olla yksi etunimistäsi."
                            :sv "Ditt tilltalsnamn ska vara ett av dina förnamn."
-                           :en "The preferred name has to be on of your first/given names."}
+                           :en "The preferred name has to be one of your first/given names."}
    :past-date             {:fi "Syntymäajan on oltava muodossa pp.kk.vvvv."
                            :sv "Födelsetiden ska anges i formen dd.mm.åååå."
                            :en "The date of birth has to be in the format dd.mm.yyyy."}
