@@ -23,9 +23,11 @@
     (fn []
       (when (seq (:invalid-fields @valid-status))
         [:div.application__invalid-field-status
-         {:role "alertdialog"}
          [:span.application__invalid-field-status-title
-          {:on-click toggle-show-details}
+          {:id "application__invalid-field-status-title"
+           :role "status"
+           :aria-labelledby "application__invalid-field-status-title"
+           :on-click toggle-show-details}
           (first (translations/get-hakija-translation :check-answers @lang))
           [:b (count (:invalid-fields @valid-status))]
           (last (translations/get-hakija-translation :check-answers @lang))]
