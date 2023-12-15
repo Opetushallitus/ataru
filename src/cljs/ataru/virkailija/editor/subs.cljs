@@ -574,6 +574,12 @@
     (or opinto-ohjaaja? superuser?)))
 
 (re-frame/reg-sub
+ :editor/edit-rights-for-any-organization?
+ (fn [db _]
+   (let [user-info (-> db :editor :user-info)]
+     (some (fn [org] (some #(= "edit-applications" %) (:rights org))) (:organizations user-info)))))
+
+(re-frame/reg-sub
   :editor/all-organizations-have-only-opinto-ohjaaja-rights?
   (fn [db _]
     (let [user-info (-> db :editor :user-info)]
