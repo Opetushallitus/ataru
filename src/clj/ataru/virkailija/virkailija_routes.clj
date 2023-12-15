@@ -1660,9 +1660,9 @@
       (api/context "/valinnan-tulos" []
         (api/POST "/hakemus" {session :session}
           :summary "Applications for valinta-tulos-service"
-          :body-params [{hakemusOids :- [s/Str] nil}]
-          (cond (nil? (seq hakemusOids))
-                (response/bad-request {:error "No query parameter given"})
+          :body [hakemusOids [s/Str]]
+          (cond (empty? hakemusOids)
+                (response/bad-request {:error "No hakemusOids given"})
                 (not (every?
                        #(access-controlled-application/application-view-authorized?
                           organization-service tarjonta-service suoritus-service person-service session %)
@@ -1677,8 +1677,8 @@
           :query-params [{hakemusOid :- s/Str nil}]
           (cond (nil? hakemusOid)
                 (response/bad-request {:error "No query parameter given"})
-                (access-controlled-application/application-view-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session hakemusOid)
+                (not (access-controlled-application/application-view-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session hakemusOid))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1708,8 +1708,8 @@
                         {application-key :- s/Str nil}]
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-view-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-view-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1724,8 +1724,8 @@
           :body [ehto s/Any]
           (cond (or (nil? hakukohde-oid) (nil? application-key) (or (nil? ehto) (empty? ehto)))
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-edit-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-edit-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1739,8 +1739,8 @@
           :header-params [{if-unmodified-since :- s/Str nil}]
           (cond (or (nil? hakukohde-oid) (nil? application-key) (nil? if-unmodified-since))
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-edit-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-edit-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1753,8 +1753,8 @@
                         {application-key :- s/Str nil}]
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-view-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-view-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1767,8 +1767,8 @@
                         {application-key :- s/Str nil}]
           (cond (or (nil? hakukohde-oid) (nil? application-key))
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-view-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-view-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1780,8 +1780,8 @@
           :path-params [{application-key :- s/Str nil}]
           (cond (nil? application-key)
                 (response/bad-request {:error "Missing parameters"})
-                (access-controlled-application/application-view-authorized?
-                  organization-service tarjonta-service suoritus-service person-service session application-key)
+                (not (access-controlled-application/application-view-authorized?
+                       organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
