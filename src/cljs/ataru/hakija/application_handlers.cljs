@@ -145,7 +145,7 @@
         {:db db
          :interval {:action :start
                     :id :oppija-session-polling
-                    :frequency (or polling-interval 300000)
+                    :frequency polling-interval
                     :event [:application/oppija-session-login-refresh]}}
         db))))
 
