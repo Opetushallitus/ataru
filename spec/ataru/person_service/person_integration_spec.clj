@@ -50,7 +50,7 @@
                          (person-integration/upsert-person {:application-id (:matched-person test-application-ids)} {:person-service fake-person-service}))
                 (should-have-invoked :start-jobs-for-person {:with [{:person-service fake-person-service} (:matched-person test-person-oids)]})
                 (should-have-invoked :add-person-oid {:with [(:matched-person test-application-ids) (:matched-person test-person-oids)]})
-                (should-have-invoked :add-application-event {:with [{:application-key application-key :event-type "person-found-matching"}]})))
+                (should-have-invoked :add-application-event {:with [{:application-key application-key :event-type "person-found-matching"} nil]})))
 
           (it "upserts a person, updates application and adds an event for person with matching email, but conflicting date of birth or gender"
               (with-redefs [application-store/get-application (stub :get-application
@@ -59,4 +59,4 @@
                          (person-integration/upsert-person {:application-id (:conflicting-person test-application-ids)} {:person-service fake-person-service}))
                 (should-have-invoked :start-jobs-for-person {:with [{:person-service fake-person-service} (:conflicting-person test-person-oids)]})
                 (should-have-invoked :add-person-oid {:with [(:conflicting-person test-application-ids) (:conflicting-person test-person-oids)]})
-                (should-have-invoked :add-application-event {:with [{:application-key application-key :event-type "person-dob-or-gender-conflict"}]}))))
+                (should-have-invoked :add-application-event {:with [{:application-key application-key :event-type "person-dob-or-gender-conflict"} nil]}))))
