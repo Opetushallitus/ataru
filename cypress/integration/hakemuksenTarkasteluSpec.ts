@@ -20,9 +20,6 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         cy.fixture('haut.json').as('haut')
 
         cy.server()
-        cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
-          'VTS-kirjautuminen'
-        )
         cy.route(
           'GET',
           '/lomake-editori/api/applications/1.2.246.562.11.00000000000000000001',
@@ -35,7 +32,7 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         ).as('aidinkieletonHakemus')
         cy.route(
           'GET',
-          '/valinta-tulos-service/auth/valinnan-tulos/hakemus/?hakemusOid=*',
+          '/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus/?hakemusOid=*',
           '[]'
         )
         cy.route(

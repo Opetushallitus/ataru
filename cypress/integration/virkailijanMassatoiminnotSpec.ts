@@ -10,12 +10,9 @@ describe('Hakemusten massatoiminnot ei-rekisterinpitäjälle', () => {
         cy.fixture('hautmassatoiminnoille.json').as('haut')
 
         cy.server()
-        cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
-          'VTS-kirjautuminen'
-        )
         cy.route(
           'GET',
-          '/valinta-tulos-service/auth/valinnan-tulos/hakemus/?hakemusOid=*',
+          'lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus/?hakemusOid=*',
           '[]'
         )
         cy.route(
