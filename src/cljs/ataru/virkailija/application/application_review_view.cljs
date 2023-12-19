@@ -4,6 +4,7 @@
             [ataru.cljs-util :as cljs-util]
             [ataru.util :as util]
             [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.application.application-authorization-subs]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-subs]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-view :as lir]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
@@ -648,7 +649,6 @@
         editable?                 (subscribe [:application/review-field-editable? :notes])
         rights-to-edit-reviews-for-selected?   (subscribe [:application/rights-to-edit-reviews-for-selected-hakukohteet?])]
     (fn []
-      (js/console.log rights-to-edit-reviews-for-selected?)
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
         {:class (when (not @editable?) "application-handling__review-header--disabled")}

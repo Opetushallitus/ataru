@@ -545,7 +545,6 @@
                              :changed-predicate review-autosave-predicate
                              :handler (fn [current _]
                                         (let [selected-review-hakukohde-oids @(subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-                                              current-application @(subscribe [:state-query [:application :selected-key]])
                                               filtered-hakukohde-reviews (select-keys (current :hakukohde-reviews) (map keyword selected-review-hakukohde-oids))]
                                         (ajax/http
                                           :put
@@ -557,12 +556,7 @@
                                                                                         :score
                                                                                         :state
                                                                                         :attachment-reviews])
-                                                                         (hash-map :hakukohde-reviews filtered-hakukohde-reviews))
-                                                          :error-handler (fn [response]
-                                                                           (when (= (count (str (:status response))) 3)
-                                                                             (dispatch [:add-toast-message (-> response :response :error)]))
-                                                                           (when current-application
-                                                                             (dispatch [:application/fetch-application current-application])))})))})))
+                                                                         (hash-map :hakukohde-reviews filtered-hakukohde-reviews))})))})))
 
 (reg-event-db
   :application/handle-fetch-application-attachment-metadata
