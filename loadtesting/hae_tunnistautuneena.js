@@ -1,16 +1,17 @@
 import { browser } from 'k6/experimental/browser';
 import { sleep } from 'k6';
+import { check } from 'k6';
 
 export const options = {
   scenarios: {
     ui: {
       vus: 2,
-      iterations: 4,
+      iterations: 2,
       executor: 'shared-iterations',
       options: {
         browser: {
           type: 'chromium',
-          headless: true,
+          headless: false,
           timeout: '120s'
         },
       },
@@ -25,10 +26,11 @@ export default async function () {
   const context = browser.newContext();
   const page = context.newPage();
 
-  try {
-    await page.goto('https://untuvaopintopolku.fi/hakemus/85a8f75c-a64c-40cf-92e4-e47102d22db6?lang=fi', { waitUntil: 'load'});
-    console.log("initial load done" + page.title())
+  await page.goto('https://untuvaopintopolku.fi/hakemus/85a8f75c-a64c-40cf-92e4-e47102d22db6?lang=fi', { waitUntil: 'load'});
+  console.log("initial load done" + page.title())
 
+  //fakesuomifi-tunnistautuminen
+  try {
     const tunnistauduButton = page.locator('[data-test-id="tunnistautuminen-button"]');
     await Promise.all([page.waitForNavigation(), tunnistauduButton.click()]);
 
@@ -42,45 +44,66 @@ export default async function () {
     const suomiFiTunnistauduButton = page.locator('button[id="tunnistaudu"]')
 
     try {
-      console.log("click suomiFiTunnistauduButton" + page.title())
+      console.log("click suomiFiTunnistauduButton " + page.title())
       page.screenshot({ path: 'screenshot_suomiFiTunnistauduButton.png' })
       await Promise.all([page.waitForNavigation(), suomiFiTunnistauduButton.click()]);
-      console.log("clicked suomiFiTunnistauduButton" + page.title())
+      console.log("clicked suomiFiTunnistauduButton " + page.title())
       page.screenshot({ path: 'screenshot_after_suomiFiTunnistauduButton.png' })
 
     } catch (e) {
       console.log("Error in suomiFiTunnistauduButton", e)
     }
-    try {
-      const jatkaPalveluunButton = page.locator('#continue-button')
-      await Promise.all([page.waitForNavigation(), jatkaPalveluunButton.click()]);
-    } catch (e) {
-      console.log("error in promise...", e)
-    } finally {
-      console.log("mid-promise finally")
-    }
-    // check(page, {
-    //   header: (p) => p.locator('h2').textContent() == 'Opintopolku - hakulomake - testilomake (ht2)',
-    // });
+
+    const jatkaPalveluunButton = page.locator('#continue-button')
+    jatkaPalveluunButton.click()
+    await page.waitForNavigation()
+    sleep(5) //todo fixme, pärjätäänkö jotenkin ilman?
   } catch (e) {
     console.log("Unforeseen error in fakesuomifi-tunnistautuminen: ", e)
   }
+  console.log("Waiting for email input...")
+  page.waitForSelector('input[data-test-id="email-input"]', {
+    timeout: 10000
+  });
   const emailInput = page.locator('input[data-test-id="email-input"]')
   const emailInputVerify = page.locator('input[data-test-id="verify-email-input"]')
   const phoneInput = page.locator('input[data-test-id="phone-input"]')
   const postalCodeInput = page.locator('input[data-test-id="postal-code-input"]')
-  const sendApplicationButton = page.locator('button[data-test-id="send-application-button')
+  const sendApplicationButton = page.locator('button[data-test-id="send-application-button"]')
 
+  console.log("Filling hakemus fields...")
   emailInput.type("a@b.com")
   emailInputVerify.type("a@b.com")
   phoneInput.type("1234567890")
-  postalCodeInput.fill('')
+  postalCodeInput.fill('') //tunnistautumisen kautta tullut, mahdollisesti ei-validi postinumero pois tieltä
   postalCodeInput.type("20100")
-  sleep(2)
+
   console.log("ready to submit?")
   sendApplicationButton.click()
-  var sleepAmount = Math.random() * 50
-  console.log("Sleeping for " + sleepAmount)
-  sleep(sleepAmount)
   console.log("application submitted, hopefully?")
+
+  page.waitForSelector('button[data-test-id="logout-button"]', {
+    timeout: 10000
+  });
+  const logoutButton = page.locator('button[data-test-id="logout-button"]')
+  console.log("clicking logout button")
+  logoutButton.click();
+  await page.waitForNavigation()
+
+  console.log("waiting for sivu-header1 selector")
+  try {
+    page.waitForSelector('.Sivu-header1', {
+      timeout: 30000
+    });
+  } catch (e) {
+    page.screenshot({ path: 'screenshot_uloskirjautuminen_header.png' })
+    console.log("error while waiting for uloskirjautuminen onnistui header: ", e)
+  }
+  check(page, {
+    'uloskirjautuminen onnistui': (p) => {
+      console.log("checking success: " + p.title())
+      return p.title() == 'Uloskirjautuminen onnistui! - Opintopolku'
+    }
+  })
+
 }
