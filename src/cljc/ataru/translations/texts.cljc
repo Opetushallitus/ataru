@@ -242,6 +242,9 @@
    :confirm-cancel-upload                       {:fi "Vahvista keskeytys"
                                                  :sv "Bekräfta avbrytning"
                                                  :en "Confirm cancel"}
+   :decrease-priority                           {:fi "Siirrä hakukohdetta tärkeysjärjestyksessä alas"
+                                                 :en "EN siirrä hakukohdetta tärkeysjärjestyksessä alas"
+                                                 :sv "SV siirrä hakukohdetta tärkeysjärjestyksessä alas"}
    :finnish                                     {:fi "Suomi"
                                                  :sv "Finska"
                                                  :en "Finnish"}
@@ -278,6 +281,9 @@
    :hours                                       {:fi "tuntia"
                                                  :en "hours"
                                                  :sv "timmar"}
+   :increase-priority                           {:fi "Siirrä hakukohdetta tärkeysjärjestyksessä ylös"
+                                                 :en "EN siirrä hakukohdetta tärkeysjärjestyksessä ylös"
+                                                 :sv "SV siirrä hakukohdetta tärkeysjärjestyksessä ylös"}
    :insufficient-base-education                 {:fi "Ilmoitus riittämättömästä pohjakoulutuksesta"
                                                  :sv "Meddelande om otillräcklig grundutbildning"
                                                  :en "Insufficient educational background"}

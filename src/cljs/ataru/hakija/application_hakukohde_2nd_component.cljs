@@ -146,13 +146,16 @@
   (let [editable? (subscribe [:application/hakukohteet-editable?])
         increase-disabled (or (not @editable?) (= idx 0))
         decrease-disabled (or (not @editable?) (= idx (max 0 (dec hakukohteet-count))))
-        change-priority-fn (fn [acc] (dispatch [:application/change-hakukohde-priority hakukohde-oid acc idx]))]
+        change-priority-fn (fn [acc] (dispatch [:application/change-hakukohde-priority hakukohde-oid acc idx]))
+        lang @(subscribe [:application/form-language])]
     [:div.application__hakukohde-2nd-row__hakukohde-order
      [:span
       [:i.zmdi.zmdi-caret-up.zmdi-hc-2x
        (if increase-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
          {:tab-index 0
+          :role "button"
+          :aria-label (translations/get-hakija-translation :increase-priority lang)
           :on-key-up #(when (a11y/is-enter-or-space? %)
                         (change-priority-fn -1))
           :on-click #(change-priority-fn -1)})]]
@@ -162,6 +165,8 @@
        (if decrease-disabled
          {:class "application__hakukohde-2nd-row__hakukohde-change-order-hidden"}
          {:tab-index 0
+          :role "button"
+          :aria-label (translations/get-hakija-translation :decrease-priority lang)
           :on-key-up #(when (a11y/is-enter-or-space? %)
                         (change-priority-fn 1))
           :on-click #(change-priority-fn 1 )})]]]))
