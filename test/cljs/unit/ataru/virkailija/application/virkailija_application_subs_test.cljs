@@ -1,6 +1,6 @@
 (ns ataru.virkailija.application.virkailija-application-subs-test
   (:require [cljs.test :refer-macros [deftest is]]
-            [ataru.virkailija.application.application-subs :as app-subs]))
+            [ataru.virkailija.application.application-authorization-subs :as app-auth-subs]))
 
 (deftest show-mass-review-notes-link-for-superuser-2-asteen-yhteishaku
   (let [toisen-asteen-yhteishaku?              true
@@ -8,7 +8,7 @@
         hakukohde-filtering-for-yhteishaku?    false
         applications-visible-with-some-filter? true
         expected      true
-        actual        (app-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
+        actual        (app-auth-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
     (is (= actual expected))))
 
 (deftest dont-show-mass-review-notes-link-for-2-asteen-yhteishaku
@@ -17,7 +17,7 @@
         hakukohde-filtering-for-yhteishaku?    true
         applications-visible-with-some-filter? true
         expected      false
-        actual        (app-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
+        actual        (app-auth-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
     (is (= actual expected))))
 
 (deftest dont-show-mass-review-notes-link-without-hakukohde-filter-for-kkyhteishaku
@@ -26,7 +26,7 @@
         hakukohde-filtering-for-yhteishaku?    false
         applications-visible-with-some-filter? true
         expected      false
-        actual        (app-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
+        actual        (app-auth-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
     (is (= actual expected))))
 
 (deftest show-mass-review-notes-link-with-hakukohde-filter-for-kkyhteishaku
@@ -35,7 +35,7 @@
         hakukohde-filtering-for-yhteishaku?    true
         applications-visible-with-some-filter? true
         expected      true
-        actual        (app-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
+        actual        (app-auth-subs/show-mass-review-notes-link? [toisen-asteen-yhteishaku? superuser? hakukohde-filtering-for-yhteishaku? applications-visible-with-some-filter?])]
     (is (= actual expected))))
 
 (deftest show-review-info-for-superuser-2-asteen-yhteishaku
@@ -43,7 +43,7 @@
         superuser                              true
         toisen-asteen-yhteishaku?              true
         expected      true
-        actual        (app-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
+        actual        (app-auth-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
     (is (= actual expected))))
 
 (deftest show-review-info-if-not-2-asteen-yhteishaku
@@ -51,5 +51,5 @@
         superuser                              false
         toisen-asteen-yhteishaku?              false
         expected      true
-        actual        (app-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
+        actual        (app-auth-subs/rights-to-view-review-states-for-hakukohde? hakukohde-oid {} superuser toisen-asteen-yhteishaku?)]
     (is (= actual expected))))
