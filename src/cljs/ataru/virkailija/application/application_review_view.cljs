@@ -268,6 +268,53 @@
                [application-review-note idx])
              selected-notes-idx)]])))
 
+(defn- application-review-header [label kw]
+  (let [eligibility-automatically-checked?        (subscribe [:application/eligibility-automatically-checked?])
+        payment-obligation-automatically-checked? (subscribe [:application/payment-obligation-automatically-checked?])
+        lang                                      (subscribe [:editor/virkailija-lang])]
+    [:div.application-handling__review-header
+     {:class (str "application-handling__review-header--" (name kw))}
+     [:span (util/non-blank-val label [@lang :fi :sv :en])]
+     (cond (and (= :eligibility-state kw)
+                @eligibility-automatically-checked?)
+       [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+        {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
+       (and (= :payment-obligation kw)
+            @payment-obligation-automatically-checked?)
+       [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
+        {:title @(subscribe
+                  [:editor/virkailija-translation :payment-obligation-set-automatically])}])]))
+
+(defn review-state-list [kw states]
+  (let [current-hakukohteet                       (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
+        review-states-for-hakukohteet             (set (doall (map (fn [oid]
+                                                                     @(subscribe [:state-query [:application :review :hakukohde-reviews (keyword oid) kw]]))
+                                                                   @current-hakukohteet)))
+        multiple-values?                          (< 1 (count review-states-for-hakukohteet))
+        review-state-for-current                  (when-not multiple-values? (first review-states-for-hakukohteet))
+        list-click                                (partial toggle-review-list-visibility kw)
+        list-opened                               (subscribe [:state-query [:application :ui/review kw]])
+        lang                                      (subscribe [:editor/virkailija-lang])]
+    [:div.application-handling__review-state-list-container
+     (if @list-opened
+       (into
+        [:div.application-handling__review-state-list.application-handling__review-state-list--opened
+         {:on-click list-click}]
+        (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
+       [:div.application-handling__review-state-list
+        [review-state-selected-row
+         kw
+         list-click
+         (application-states/get-review-state-label-by-name
+          states
+          (or review-state-for-current (ffirst states))
+          @lang)
+         multiple-values?]])
+     (when
+       (and (= :eligibility-state kw)
+            (= "uneligible" review-state-for-current))
+       [review-state-comment kw])]))
+
 (defn- show-processing-state
   [processing-state-kw]
   (let [only-opinto-ohjaaja       @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
@@ -286,56 +333,17 @@
 
 (defn- application-hakukohde-review-input
   [label kw states]
-  (let [current-hakukohteet                       (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
-        list-click                                (partial toggle-review-list-visibility kw)
-        list-opened                               (subscribe [:state-query [:application :ui/review kw]])
-        settings-visible?                         (subscribe [:state-query [:application :review-settings :visible?]])
-        input-visible?                            (subscribe [:application/review-state-setting-enabled? kw])
-        eligibility-automatically-checked?        (subscribe [:application/eligibility-automatically-checked?])
-        payment-obligation-automatically-checked? (subscribe [:application/payment-obligation-automatically-checked?])
-        lang                                      (subscribe [:editor/virkailija-lang])]
+  (let [settings-visible?                         (subscribe [:state-query [:application :review-settings :visible?]])
+        input-visible?                            (subscribe [:application/review-state-setting-enabled? kw])]
     (fn [_ _ _]
       (when (or @settings-visible? @input-visible?)
-        (let [review-states-for-hakukohteet (set (doall (map (fn [oid] @(subscribe [:state-query [:application :review :hakukohde-reviews (keyword oid) kw]]))
-                                                             @current-hakukohteet)))
-              multiple-values? (< 1 (count review-states-for-hakukohteet))
-              review-state-for-current (when-not multiple-values? (first review-states-for-hakukohteet))]
-          (when (show-processing-state kw)
-            [:div.application-handling__review-state-container
-             {:class (str "application-handling__review-state-container-" (name kw))}
-             (when @settings-visible?
-               [review-settings-checkbox kw])
-             [:div.application-handling__review-header
-              {:class (str "application-handling__review-header--" (name kw))}
-              [:span (util/non-blank-val label [@lang :fi :sv :en])]
-              (cond (and (= :eligibility-state kw)
-                         @eligibility-automatically-checked?)
-                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                 {:title @(subscribe [:editor/virkailija-translation :eligibility-set-automatically])}]
-                (and (= :payment-obligation kw)
-                     @payment-obligation-automatically-checked?)
-                [:i.zmdi.zmdi-check-circle.zmdi-hc-lg.application-handling__eligibility-automatically-checked
-                 {:title @(subscribe
-                           [:editor/virkailija-translation :payment-obligation-set-automatically])}])]
-             [:div.application-handling__review-state-list-container
-              (if @list-opened
-                (into
-                 [:div.application-handling__review-state-list.application-handling__review-state-list--opened
-                  {:on-click list-click}]
-                 (opened-review-state-list kw review-state-for-current states @lang multiple-values?))
-                [:div.application-handling__review-state-list
-                 [review-state-selected-row
-                  kw
-                  list-click
-                  (application-states/get-review-state-label-by-name
-                   states
-                   (or review-state-for-current (ffirst states))
-                   @lang)
-                  multiple-values?]])
-              (when
-                (and (= :eligibility-state kw)
-                     (= "uneligible" review-state-for-current))
-                [review-state-comment kw])]]))))))
+        (when (show-processing-state kw)
+          [:div.application-handling__review-state-container
+           {:class (str "application-handling__review-state-container-" (name kw))}
+           (when @settings-visible?
+             [review-settings-checkbox kw])
+           [application-review-header label kw]
+           [review-state-list kw states]])))))
 
 (defn- ehdollisesti-hyvaksyttavissa
   []
@@ -638,8 +646,9 @@
         selected-review-hakukohde (subscribe [:state-query [:application :selected-review-hakukohde-oids]])
         only-selected-hakukohteet (subscribe [:state-query [:application :only-selected-hakukohteet]])
         editable?                 (subscribe [:application/review-field-editable? :notes])
-        rights-to-edit-reviews-for-selected?   @(subscribe [:application/rights-to-view-reviews-for-selected-hakukohteet?])]
+        rights-to-edit-reviews-for-selected?   (subscribe [:application/rights-to-edit-reviews-for-selected-hakukohteet?])]
     (fn []
+      (js/console.log rights-to-edit-reviews-for-selected?)
       [:div.application-handling__review-row--nocolumn
        [:div.application-handling__review-header
         {:class (when (not @editable?) "application-handling__review-header--disabled")}
@@ -650,7 +659,7 @@
             {:id        "application-handling__review-checkbox--only-selected-hakukohteet"
              :type      "checkbox"
              :value     "only-selected"
-             :disabled  (not rights-to-edit-reviews-for-selected?)
+             :disabled  (not @rights-to-edit-reviews-for-selected?)
              :checked   @only-selected-hakukohteet
              :on-change #(dispatch [:application/toggle-only-selected-hakukohteet])}]
            [:label
