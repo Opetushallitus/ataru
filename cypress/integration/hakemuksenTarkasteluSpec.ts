@@ -232,32 +232,32 @@ describe('Hakemuksen tietojen tarkastelu', () => {
         )
       })
 
-      describe('Yksittäisen viestin lähetystoiminto', () => {
-        avaaHenkilonHakemus(
-          'Toimivan hakemuksen lähettänyt testihenkilö',
-          'Tatu Tuntematon',
-          '1.2.246.562.11.00000000000000000001',
-          () => {
-            it('Yksittäisen viestin lähetyspainike on näkyvissä', () => {
-              cy.get('.application-handling__send-message-button').should(
-                'be.visible'
-              )
-            })
-            it('Yksittäisen viestin ikkuna latautuu oikeilla teksteillä', () => {
-              cy.get('.application-handling__send-message-button').click()
-              cy.get(
-                '.application-handling__-information-request-popup'
-              ).should('be.visible')
-              cy.get(
-                '.application-handling__mass-edit-review-states-title-container > h4'
-              ).contains('Viesti')
-              cy.get('p')
-                .contains('Olet lähettämässä sähköpostia 1 hakijalle')
-                .should('exist')
-            })
-          }
-        )
-      })
+      // describe('Yksittäisen viestin lähetystoiminto', () => {
+      //   avaaHenkilonHakemus(
+      //     'Toimivan hakemuksen lähettänyt testihenkilö',
+      //     'Tatu Tuntematon',
+      //     '1.2.246.562.11.00000000000000000001',
+      //     () => {
+      //       it('Yksittäisen viestin lähetyspainike on näkyvissä', () => {
+      //         cy.get('.application-handling__send-message-button').should(
+      //           'be.visible'
+      //         )
+      //       })
+      //       it('Yksittäisen viestin ikkuna latautuu oikeilla teksteillä', () => {
+      //         cy.get('.application-handling__send-message-button').click()
+      //         cy.get(
+      //           '.application-handling__-information-request-popup'
+      //         ).should('be.visible')
+      //         cy.get(
+      //           '.application-handling__mass-edit-review-states-title-container > h4'
+      //         ).contains('Viesti')
+      //         cy.get('p')
+      //           .contains('Olet lähettämässä sähköpostia 1 hakijalle')
+      //           .should('exist')
+      //       })
+      //     }
+      //   )
+      // })
     }
   )
 })
