@@ -1399,7 +1399,7 @@
       (-> {:event_type               nil
            :new_review_state         nil
            :virkailija_oid           (-> session :identity :oid)
-           :virkailija_organizations (edit-application-right-organizations->json session)
+           :virkailija_organizations (some-> session edit-application-right-organizations->json)
            :hakukohde                nil
            :review_key               nil}
           (merge (transform-keys ->snake_case event))

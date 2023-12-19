@@ -561,6 +561,14 @@
                                                          valinnan-tila])]
            [[:span event-text]])
 
+         {:event-type "person-found-matching"}
+         [[:span @(subscribe [:editor/virkailija-translation :person-found-matching])]
+          nil]
+
+         {:event-type "person-dob-or-gender-conflict"}
+         [[:span @(subscribe [:editor/virkailija-translation :person-dob-or-gender-conflict])]
+          nil]
+
          {:subject _ :message _ :message-type message-type}
          [[:span
            (case message-type
