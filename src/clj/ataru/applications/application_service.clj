@@ -377,6 +377,21 @@
   (let [answers (util/answers-by-key (:answers application))]
     (util/not-blank? (-> answers :ssn :value))))
 
+(defn- check-review-rights [hakukohde application-keys organization-service tarjonta-service session]
+  (if (not (clojure.string/blank? hakukohde))
+    (aac/applications-review-authorized?
+     organization-service
+     tarjonta-service
+     session
+     [(keyword hakukohde)] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
+     [:edit-applications])
+    (aac/applications-access-authorized?
+     organization-service
+     tarjonta-service
+     session
+     application-keys
+     [:view-applications :edit-applications])))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -633,42 +648,17 @@
                                                 session))))
 
   (add-review-note [_ session note]
-    (let [hakukohde (:hakukohde note)]
-      (when
-        (if (not (clojure.string/blank? hakukohde))
-          (aac/applications-review-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [(keyword hakukohde)] ;; rights check assumes that hakukohde-oid is a keyword
-           [:edit-applications])
-          (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [(:application-key note)]
-           [:view-applications :edit-applications]))
+    (let [hakukohde (:hakukohde note)
+          review-note-rights (check-review-rights hakukohde [(:application-key note)] organization-service tarjonta-service session)]
+      (when review-note-rights
         (enrich-virkailija-organizations
          organization-service
          (application-store/add-review-note note session)))))
 
-
   (add-review-notes [_ session review-notes]
-    (let [hakukohde (:hakukohde review-notes)] ;; jos on hakukohderajaus, on vaan yksi valittu hakukohde
-      (when
-        (if (not (clojure.string/blank? hakukohde))
-          (aac/applications-review-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [(keyword hakukohde)] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
-           [:edit-applications])
-          (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           (:application-keys review-notes)
-           [:view-applications :edit-applications]))
+    (let [hakukohde (:hakukohde review-notes) ;; jos on hakukohderajaus, on vaan yksi valittu hakukohde
+          review-note-rights (check-review-rights hakukohde (:application-keys review-notes) organization-service tarjonta-service session)]
+      (when review-note-rights
         (let [notes (map
                       #(assoc {} :application-key %
                         :notes                    (:notes review-notes)
