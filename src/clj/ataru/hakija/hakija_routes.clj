@@ -437,6 +437,7 @@
       :summary "Check if a person has already applied"
       :body [has-applied-params ataru-schema/HasAppliedParams]
       (let [{:keys [haku-oid ssn email eidas-id]} has-applied-params]
+        (log/info "Checking has-applied" has-applied-params)
         (cond (some? ssn)
               (response/ok (application-store/has-ssn-applied haku-oid ssn))
               (some? eidas-id)
