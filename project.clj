@@ -155,7 +155,8 @@
 
   :figwheel {:css-dirs ["resources/public/css"]
              :repl     false
-             :readline false}
+             :readline false
+             :hawk-options {:watcher :polling}}
 
   :main ataru.core
 
@@ -300,7 +301,8 @@
                                                :config "config/test.edn"}
                               :jvm-opts       ^:replace ["-Durl.valinta-tulos-service.baseUrl=http://localhost:8097"]}
              :figwheel {:nrepl-port  3334
-                        :server-port 3449}
+                        :server-port 3449
+                        :hawk-options {:watcher :polling}}
 
              :virkailija-cypress        {:env {:dev? "true"}
                                          :target-path "target/target-cypess-virkailija"}

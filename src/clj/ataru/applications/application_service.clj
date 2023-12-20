@@ -377,6 +377,21 @@
   (let [answers (util/answers-by-key (:answers application))]
     (util/not-blank? (-> answers :ssn :value))))
 
+(defn- check-review-rights [hakukohde application-keys organization-service tarjonta-service session]
+  (if (not (clojure.string/blank? hakukohde))
+    (aac/applications-review-authorized?
+     organization-service
+     tarjonta-service
+     session
+     [(keyword hakukohde)] ;; oikeustarkistus olettaa että hakukohde-oid on keyword
+     [:edit-applications])
+    (aac/applications-access-authorized?
+     organization-service
+     tarjonta-service
+     session
+     application-keys
+     [:view-applications :edit-applications])))
+
 (defprotocol ApplicationService
   (get-person [this application])
   (get-person-for-securelink [this application])
@@ -547,9 +562,16 @@
           (tutkintojen-tunnustaminen/start-tutkintojen-tunnustaminen-review-state-changed-job
            job-runner
            event-id))
-        (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
         (save-attachment-hakukohde-reviews application-key (:attachment-reviews review) session audit-logger)
-        {:events (get-application-events organization-service application-key)})))
+        (if (aac/applications-review-authorized?
+             organization-service
+             tarjonta-service
+             session
+             (keys (:hakukohde-reviews review))
+             [:edit-applications])
+          (do (save-application-hakukohde-reviews application-key (:hakukohde-reviews review) session audit-logger)
+            {:events (get-application-events organization-service application-key)})
+          :forbidden))))
 
   (payment-triggered-processing-state-change
     [_ session application-key message payment-url state]
@@ -626,31 +648,26 @@
                                                 session))))
 
   (add-review-note [_ session note]
-    (when (aac/applications-access-authorized?
-           organization-service
-           tarjonta-service
-           session
-           [(:application-key note)]
-           [:view-applications :edit-applications])
-      (enrich-virkailija-organizations
-       organization-service
-       (application-store/add-review-note note session))))
-
+    (let [hakukohde (:hakukohde note)
+          review-note-rights (check-review-rights hakukohde [(:application-key note)] organization-service tarjonta-service session)]
+      (when review-note-rights
+        (enrich-virkailija-organizations
+         organization-service
+         (application-store/add-review-note note session)))))
 
   (add-review-notes [_ session review-notes]
-    (when (aac/applications-access-authorized?
-            organization-service
-            tarjonta-service
-            session
-            (:application-keys review-notes)
-            [:view-applications :edit-applications])
-      (let [notes (map #(assoc {} :application-key %
-                                  :notes (:notes review-notes)
-                                  :hakukohde (:hakukohde review-notes)
-                                  :state-name (:state-name review-notes)) (:application-keys review-notes))]
-            (map
-              #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
-              notes))))
+    (let [hakukohde (:hakukohde review-notes) ;; jos on hakukohderajaus, on vaan yksi valittu hakukohde
+          review-note-rights (check-review-rights hakukohde (:application-keys review-notes) organization-service tarjonta-service session)]
+      (when review-note-rights
+        (let [notes (map
+                      #(assoc {} :application-key %
+                        :notes                    (:notes review-notes)
+                        :hakukohde                (:hakukohde review-notes)
+                        :state-name               (:state-name review-notes))
+                      (:application-keys review-notes))]
+          (map
+           #(enrich-virkailija-organizations organization-service (application-store/add-review-note % session))
+           notes)))))
 
   (get-application-version-changes
     [_ koodisto-cache session application-key]
@@ -724,10 +741,11 @@
   (kouta-application-count-for-hakukohde
     [_ session hakukohde-oid]
     (if-let [application-count (aac/kouta-application-count-for-hakukohde
-                            organization-service
-                            session
-                            hakukohde-oid)]
-        {:applicationCount application-count}
+                                organization-service
+                                tarjonta-service
+                                session
+                                hakukohde-oid)]
+      {:applicationCount application-count}
       {:unauthorized nil}))
 
   (suoritusrekisteri-applications
