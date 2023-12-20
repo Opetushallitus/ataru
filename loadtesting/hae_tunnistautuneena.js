@@ -65,6 +65,14 @@ export default async function () {
   page.waitForSelector('input[data-test-id="email-input"]', {
     timeout: 10000
   });
+
+  const nameInput = page.locator('input[data-test-id="first-name-input"]')
+  check(nameInput, {
+    'Etunimi on esitäytetty': (n) => {
+      return n.inputValue() === 'Nordea'
+    }
+  })
+
   const emailInput = page.locator('input[data-test-id="email-input"]')
   const emailInputVerify = page.locator('input[data-test-id="verify-email-input"]')
   const phoneInput = page.locator('input[data-test-id="phone-input"]')
