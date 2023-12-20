@@ -1,5 +1,4 @@
 import { browser } from 'k6/experimental/browser';
-import { sleep } from 'k6';
 import { check } from 'k6';
 
 export const options = {
@@ -29,38 +28,33 @@ export default async function () {
   await page.goto('https://untuvaopintopolku.fi/hakemus/85a8f75c-a64c-40cf-92e4-e47102d22db6?lang=fi', { waitUntil: 'load'});
   console.log("initial load done" + page.title())
 
-  //fakesuomifi-tunnistautuminen
+  const tunnistauduButton = page.locator('[data-test-id="tunnistautuminen-button"]');
+  await Promise.all([page.waitForNavigation(), tunnistauduButton.click()]);
+
+  const fakeVetumaButton = page.locator('#fakevetuma2')
+  await Promise.all([page.waitForNavigation(), fakeVetumaButton.click()]);
+
+  const hetuInput = page.locator('#hetu_input')
+  const hetu = '210281-9988'
+  hetuInput.type(hetu)
+  console.log("hetu input done: " + hetu)
+
+  const suomiFiTunnistauduButton = page.locator('button[id="tunnistaudu"]')
+
   try {
-    const tunnistauduButton = page.locator('[data-test-id="tunnistautuminen-button"]');
-    await Promise.all([page.waitForNavigation(), tunnistauduButton.click()]);
-
-    const fakeVetumaButton = page.locator('#fakevetuma2')
-    await Promise.all([page.waitForNavigation(), fakeVetumaButton.click()]);
-
-    const hetuInput = page.locator('#hetu_input')
-    const hetu = '210281-9988'
-    hetuInput.type(hetu)
-    console.log("hetu input done: " + hetu)
-    const suomiFiTunnistauduButton = page.locator('button[id="tunnistaudu"]')
-
-    try {
-      console.log("click suomiFiTunnistauduButton " + page.title())
-      page.screenshot({ path: 'screenshot_suomiFiTunnistauduButton.png' })
-      await Promise.all([page.waitForNavigation(), suomiFiTunnistauduButton.click()]);
-      console.log("clicked suomiFiTunnistauduButton " + page.title())
-      page.screenshot({ path: 'screenshot_after_suomiFiTunnistauduButton.png' })
-
-    } catch (e) {
-      console.log("Error in suomiFiTunnistauduButton", e)
-    }
-
-    const jatkaPalveluunButton = page.locator('#continue-button')
-    jatkaPalveluunButton.click()
-    await page.waitForNavigation()
-    sleep(5) //todo fixme, pärjätäänkö jotenkin ilman?
+    console.log("click suomiFiTunnistauduButton " + page.title())
+    await Promise.all([page.waitForNavigation(), suomiFiTunnistauduButton.click()]);
+    console.log("clicked suomiFiTunnistauduButton " + page.title())
   } catch (e) {
-    console.log("Unforeseen error in fakesuomifi-tunnistautuminen: ", e)
+    page.screenshot({ path: 'screenshot_error_after_suomiFiTunnistauduButton_'+ + Date.now() +'.png' })
+    console.log("Error in suomiFiTunnistauduButton", e)
   }
+
+  const jatkaPalveluunButton = page.locator('#continue-button')
+  jatkaPalveluunButton.click()
+  await page.waitForNavigation()
+  await page.waitForNavigation() //Todo, tämä tuplasiirtymä vaikuttaa vähän rumalta. Olisiko siistimpi tapa?
+
   console.log("Waiting for email input...")
   page.waitForSelector('input[data-test-id="email-input"]', {
     timeout: 10000
@@ -101,10 +95,10 @@ export default async function () {
   console.log("waiting for sivu-header1 selector")
   try {
     page.waitForSelector('.Sivu-header1', {
-      timeout: 30000
+      timeout: 45000
     });
   } catch (e) {
-    page.screenshot({ path: 'screenshot_uloskirjautuminen_header.png' })
+    page.screenshot({ path: 'screenshot_uloskirjautuminen_header_' + Date.now() + '.png' })
     console.log("error while waiting for uloskirjautuminen onnistui header: ", e)
   }
   check(page, {
@@ -113,5 +107,4 @@ export default async function () {
       return p.title() == 'Uloskirjautuminen onnistui! - Opintopolku'
     }
   })
-
 }
