@@ -210,7 +210,7 @@
                                                              session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))) ;TODO: is this necessary as opinto-ohjaaja-fn exists?
 
 (defn application-view-authorized?
   [organization-service tarjonta-service suoritus-service person-service session application-key]
@@ -220,7 +220,7 @@
                                                              session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))) ;TODO: is this necessary as opinto-ohjaaja-fn exists?
 
 (defn applications-access-authorized-including-opinto-ohjaaja?
   [organization-service tarjonta-service suoritus-service person-service session application-keys rights]
@@ -229,7 +229,7 @@
                                                                              person-service
                                                                              session)]
     (or (applications-access-authorized? organization-service tarjonta-service session application-keys rights opinto-ohjaaja-fn)
-        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys))))
+        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys)))) ;TODO: is this necessary as opinto-ohjaaja-fn exists?
 
 (defn rights-by-hakukohde
   [organization-service session application]
