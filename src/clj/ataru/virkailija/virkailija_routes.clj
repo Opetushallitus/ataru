@@ -1663,10 +1663,8 @@
           :body [hakemusOids [s/Str]]
           (cond (empty? hakemusOids)
                 (response/bad-request {:error "No hakemusOids given"})
-                (not (every?
-                       #(access-controlled-application/application-view-authorized?
-                          organization-service tarjonta-service suoritus-service person-service session %)
-                       hakemusOids))
+                (not (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+                          organization-service tarjonta-service suoritus-service person-service session hakemusOids [:view-applications :edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
@@ -1691,10 +1689,14 @@
           :body [body s/Any]
           (cond (or (nil? valintatapajono-oid) (nil? if-unmodified-since) (or (nil? body) (empty? body)))
                 (response/bad-request {:error "Missing parameters"})
-                (not (every?
-                       #(access-controlled-application/application-edit-authorized?
-                          organization-service tarjonta-service suoritus-service person-service session %)
-                       (map #(get-in % [:hakemusOid :s]) body)))
+                (not (access-controlled-application/applications-access-authorized-including-opinto-ohjaaja?
+                       organization-service
+                       tarjonta-service
+                       suoritus-service
+                       person-service
+                       session
+                       (map #(get-in % [:hakemusOid :s]) body)
+                       [:edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
                 (response/ok
