@@ -57,7 +57,7 @@ export default async function () {
 
   console.log("Waiting for email input...")
   page.waitForSelector('input[data-test-id="email-input"]', {
-    timeout: 10000
+    timeout: 40000
   });
 
   const nameInput = page.locator('input[data-test-id="first-name-input"]')
@@ -85,7 +85,7 @@ export default async function () {
   console.log("application submitted, hopefully?")
 
   page.waitForSelector('button[data-test-id="logout-button"]', {
-    timeout: 10000
+    timeout: 25000
   });
   const logoutButton = page.locator('button[data-test-id="logout-button"]')
   console.log("clicking logout button")
@@ -95,7 +95,7 @@ export default async function () {
   console.log("waiting for sivu-header1 selector")
   try {
     page.waitForSelector('.Sivu-header1', {
-      timeout: 45000
+      timeout: 50000
     });
   } catch (e) {
     page.screenshot({ path: 'screenshot_uloskirjautuminen_header_' + Date.now() + '.png' })
