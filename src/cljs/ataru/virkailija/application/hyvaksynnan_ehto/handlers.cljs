@@ -212,7 +212,7 @@
   (fn [db _] db))
 
 (defn- retry-dispatch
-  [db application-key hakukohde-oid needs-auth? dispatch]
+  [db application-key hakukohde-oid dispatch]
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
     (if (< retry-delay 5000)
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
@@ -223,8 +223,7 @@
     (merge
       {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 1000)
        :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
-                    (when (not needs-auth?)
-                          dispatch)]})))
+                    dispatch]})))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
 
@@ -347,8 +346,6 @@
       nil
       {}
       (retry-dispatch db application-key hakukohde-oid
-                      (or (= 401 (:status response))
-                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-hakukohteessa
                        application-key
                        hakukohde-oid]))))
@@ -360,8 +357,6 @@
             200
             {:db (update-ehdot-hakemukselle db response)}
             (retry-dispatch db application-key "kaikki-hakukohteet"
-                            (or (= 401 (:status response))
-                                (= 403 (:status response)))
                             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
                              application-key]))))
 
@@ -376,8 +371,6 @@
                            [:hyvaksynnan-ehto/get-valintatapajono (name oid)])
                          (:body response))}
       (retry-dispatch db application-key hakukohde-oid
-                      (or (= 401 (:status response))
-                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
                        application-key
                        hakukohde-oid]))))
