@@ -1031,7 +1031,13 @@
 
 
 (def virkailija-texts
-  {:valintakasittelymerkinta                                 {:fi "Valintakäsittelymerkintä"
+  {:person-found-matching                                    {:fi "ONR:stä löytyi hakija samalla sähköpostilla, syntymäajalla ja sukupuolella."
+                                                              :sv "Sökande med samma e-postadress, födelsetid och kön hittades i studentnummerregistret."
+                                                              :en "An applicant with the same e-mail address, date of birth and gender was found in the Student number register."}
+   :person-dob-or-gender-conflict                            {:fi "Tämän hakemuksen sähköpostilla löytyi jo ONR:stä henkilö, mutta syntymäaika ja/tai sukupuoli eroaa ONR:stä löytyvän hakijan syntymäajasta ja/tai sukupuolesta. Tämän hakemuksen hakijasta luotiin siksi uusi henkilö, eikä hakemuksella ilmoitettua sähköpostia tallennettu uuden henkilön tietoihin."
+                                                              :sv "I studentnummerregistret hittades redan en person med samma e-postadress som används i den här ansökningen, men födelsetid och/eller kön skiljer sig från den födelsetid och/eller kön som finns för sökande i studentnummerregistret. En ny person har därför skapats istället för den här ansökningens sökande. E-postadressen som meddelades på ansökningen har inte sparats i den nya personens uppgifter."
+                                                              :en "A person with the same e-mail address as on the application was already found in the Student number register, but the date of birth and/or gender differ from the date of birth and/or gender for the person in the register. A new person was therefore created of the applicant on this application. The e-mail address on this application was not saved in the new person’s data."}
+   :valintakasittelymerkinta                                 {:fi "Valintakäsittelymerkintä"
                                                               :sv "Notering om antagningsbehandling"
                                                               :en "Valintakäsittelymerkintä"}
    :valinnan-tila                                            {:fi "Valinnan tila"

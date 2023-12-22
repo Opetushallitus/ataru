@@ -50,9 +50,17 @@
              :exists
              (log/info "Person" oid "already existed in oppijanumerorekisteri")
              :found-matching
-             (log/info "Found person" oid "with matching email, date of birth and gender")
+             (do
+               (log/info "Found person" oid "with matching email, date of birth and gender")
+               (application-store/add-application-event {:application-key (:key application)
+                                                         :event-type      "person-found-matching"}
+                                                        nil))
              :dob-or-gender-conflict
-             (log/info "Found person with matching email, but conflicting date of birth or gender. Created new person" oid)
+             (do
+               (log/info "Found person with matching email, but conflicting date of birth or gender. Created new person" oid)
+               (application-store/add-application-event {:application-key (:key application)
+                                                         :event-type      "person-dob-or-gender-conflict"}
+                                                        nil))
              :created-with-email-id
              (log/info "Added person" oid "with email identification to oppijanumerorekisteri"))
       (application-store/add-person-oid application-id oid)

@@ -693,7 +693,9 @@
                          "attachment-review-state-change"
                          "modification-link-sent"
                          "field-deadline-set"
-                         "field-deadline-unset"))
+                         "field-deadline-unset"
+                         "person-found-matching"
+                         "person-dob-or-gender-conflict"))
 
 (s/defschema Event
   {:event-type                                event-types
