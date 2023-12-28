@@ -75,7 +75,7 @@
       (throw (new RuntimeException (str "Could not get " url ", "
                                         "status: " status ", "
                                         "parameters: valintatapajono-oid " valintatapajono-oid
-                                        ", X-If-Unmodified-Since" if-unmodified-since ", request body " body))))))
+                                        ", X-If-Unmodified-Since " if-unmodified-since ", request body " body))))))
 
 (defn get-hyvaksynnan-ehto-hakukohteessa-hakemus
   [cas-client hakukohde-oid application-key]
