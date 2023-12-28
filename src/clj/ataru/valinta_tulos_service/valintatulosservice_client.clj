@@ -102,9 +102,9 @@
       (json/parse-string body true)
       (throw (new RuntimeException (str "Could not put " url ", "
                                         "status: " status ", "
-                                        "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid ", "
+                                        "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid
                                         ", If-Unmodified-Since" if-unmodified-since ", request body " ehto
-                                        "body: " body))))))
+                                        ", body: " body))))))
 
 (defn delete-hyvaksynnan-ehto-hakukohteessa-hakemus
   [cas-client hakukohde-oid application-key if-unmodified-since]
@@ -116,9 +116,9 @@
       (json/parse-string body true)
       (throw (new RuntimeException (str "Could not delete " url ", "
                                         "status: " status ", "
-                                        "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid ", "
-                                        ", If-Unmodified-Since" if-unmodified-since
-                                        "body: " body))))))
+                                        "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid
+                                        ", If-Unmodified-Since " if-unmodified-since
+                                        ", body: " body))))))
 (defn get-hyvaksynnan-ehto-valintatapajonoissa-hakemus
   [cas-client hakukohde-oid application-key]
   (let [url (url-helper/resolve-url
