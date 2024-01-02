@@ -64,8 +64,8 @@
             check-char (get check-chars check-mod)]
         (and
           (valid-year? (+ 2000 (->int year)) century)
-          (or (not= (get-public-config :environment-name) "sade")
-              (boolean (re-matches #"(?!9)\d{3}" individual)))
+          (or (not= "sade" (get-public-config [:environment-name]))
+              (not= \9 (first individual)))
           (= (clojure.string/upper-case check) check-char))))))
 
 (defn- parse-birth-date-from-ssn
