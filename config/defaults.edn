@@ -36,7 +36,8 @@
                    :virkailija                          {:service_url "http://localhost:8350/lomake-editori/"}
                    :konfo                               {:service_url "http://localhost:8351"}
                    :environment-name                    "dev"
-                   :features                            {:hakeminen-tunnistautuneena true}
+                   :features                            {}
+                   :oppija-session-polling-interval     300000
                    :secret-link-valid-days              14
                    :tutu-payment-form-keys              ""
                    :attachment-modify-grace-period-days 14

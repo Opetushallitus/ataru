@@ -137,15 +137,30 @@
   :application/start-oppija-session-polling
   [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
-    (let [logged-in? (get-in db [:oppija-session :logged-in])]
-      (js/console.log (str "Start session polling:" logged-in?))
+    (let [logged-in? (get-in db [:oppija-session :logged-in])
+          polling-interval (-> js/config
+                               js->clj
+                               (get "oppija-session-polling-interval"))]
       (if logged-in?
         {:db db
          :interval {:action :start
                     :id :oppija-session-polling
-                    :frequency 60000
+                    :frequency polling-interval
                     :event [:application/oppija-session-login-refresh]}}
         db))))
+
+(reg-event-fx
+  :application/stop-oppija-session-polling
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    (let [logged-in? (get-in db [:oppija-session :logged-in])]
+      (if (not logged-in?)
+        {:db db
+         :interval {:action :stop
+                    :id :oppija-session-polling
+                    :event [:application/oppija-session-login-refresh]}}
+        db))))
+
 (reg-event-fx
   :application/oppija-session-login-refresh
   [check-schema-interceptor]
@@ -163,11 +178,11 @@
     (let [session-data (get-in response [:body])
           logged-in? (:logged-in session-data)
           expires-soon? (:expires-soon session-data)]
-      (js/console.log (str "handle-oppija-session-login-refresh" session-data))
-      {:db (-> db
-               (assoc-in [:oppija-session :logged-in] logged-in?)
-               (assoc-in [:oppija-session :expired] (not logged-in?))
-               (assoc-in [:oppija-session :expires-soon] expires-soon?))})))
+      (merge {:db (-> db
+                      (assoc-in [:oppija-session :logged-in] logged-in?)
+                      (assoc-in [:oppija-session :expired] (not logged-in?))
+                      (assoc-in [:oppija-session :expires-soon] expires-soon?))}
+             (when (not logged-in?) {:dispatch [:application/stop-oppija-session-polling]})))))
 
 (reg-event-fx
   :application/get-oppija-session
@@ -697,7 +712,6 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])]
-      (js/console.log (str "Handle oppija session fetch, sess data" session-data))
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
                (prefill-and-lock-answers))
