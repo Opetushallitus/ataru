@@ -1,7 +1,8 @@
 (ns ataru.ssn
   (:require #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [ataru.config :refer [get-public-config]]))
 
 (def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A-F|U-Y])(\d{3})([0-9a-zA-Z])$")
 
@@ -63,6 +64,8 @@
             check-char (get check-chars check-mod)]
         (and
           (valid-year? (+ 2000 (->int year)) century)
+          (or (not= (get-public-config :environment-name) "sade")
+              (boolean (re-matches #"(?!9)\d{3}" individual)))
           (= (clojure.string/upper-case check) check-char))))))
 
 (defn- parse-birth-date-from-ssn
