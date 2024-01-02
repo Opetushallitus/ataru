@@ -212,7 +212,7 @@
   (fn [db _] db))
 
 (defn- retry-dispatch
-  [db application-key hakukohde-oid needs-auth? dispatch]
+  [db application-key hakukohde-oid dispatch]
   (if-let [retry-delay (get-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay])]
     (if (< retry-delay 5000)
       {:db             (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] (+ 2000 retry-delay))
@@ -223,11 +223,7 @@
     (merge
       {:db         (assoc-in db [:hyvaksynnan-ehto application-key hakukohde-oid :retry-delay] 1000)
        :dispatch-n [[:hyvaksynnan-ehto/flash-error application-key hakukohde-oid]
-                    (when (not needs-auth?)
-                          dispatch)]}
-      (when needs-auth?
-        {:authenticate-to-valinta-tulos-service
-         {:dispatch-after dispatch}}))))
+                    dispatch]})))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ssZZ"))
 
@@ -350,8 +346,6 @@
       nil
       {}
       (retry-dispatch db application-key hakukohde-oid
-                      (or (= 401 (:status response))
-                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-hakukohteessa
                        application-key
                        hakukohde-oid]))))
@@ -363,8 +357,6 @@
             200
             {:db (update-ehdot-hakemukselle db response)}
             (retry-dispatch db application-key "kaikki-hakukohteet"
-                            (or (= 401 (:status response))
-                                (= 403 (:status response)))
                             [:hyvaksynnan-ehto/get-ehdot-koko-hakemukselle
                              application-key]))))
 
@@ -379,8 +371,6 @@
                            [:hyvaksynnan-ehto/get-valintatapajono (name oid)])
                          (:body response))}
       (retry-dispatch db application-key hakukohde-oid
-                      (or (= 401 (:status response))
-                          (= 403 (:status response)))
                       [:hyvaksynnan-ehto/get-ehto-valintatapajonoissa
                        application-key
                        hakukohde-oid]))))
@@ -404,10 +394,9 @@
   (fn [{:keys [application-key hakukohde-oid]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
-           :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.muutoshistoria"
-                                hakukohde-oid
-                                application-key)
+           :url           (str
+                            "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/muutoshistoria/hakukohteessa/"
+                            hakukohde-oid "/hakemus/" application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa-muutoshistoria
                            application-key
                            hakukohde-oid]
@@ -418,9 +407,7 @@
   (fn [{:keys [application-key]}]
       (http (aget js/config "virkailija-caller-id")
             {:method        :get
-             :url           (.url js/window
-                                  "valinta-tulos-service.hyvaksynnan-ehto.hakemukselle"
-                                  application-key)
+             :url           (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/hakemukselle/" application-key)
              :handler       [:hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
                              application-key]
              :error-handler [:hyvaksynnan-ehto/set-ehdot-koko-hakemukselle
@@ -431,10 +418,9 @@
   (fn [{:keys [application-key hakukohde-oid]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
-           :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
-                                hakukohde-oid
-                                application-key)
+           :url           (str
+                            "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/hakukohteessa/" hakukohde-oid
+                            "/hakemus/" application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key
                            hakukohde-oid]
@@ -447,10 +433,8 @@
   (fn [{:keys [application-key hakukohde-oid]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :get
-           :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.valintatapajonoissa.hakemus"
-                                hakukohde-oid
-                                application-key)
+           :url           (str "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/valintatapajonoissa/"
+                               hakukohde-oid "/hakemus/" application-key)
            :handler       [:hyvaksynnan-ehto/set-ehto-valintatapajonoissa
                            application-key
                            hakukohde-oid]
@@ -472,14 +456,13 @@
   (fn [{:keys [application-key hakukohde-oid ehto last-modified]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :put
-           :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
-                                hakukohde-oid
-                                application-key)
+           :url           (str
+                            "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/hakukohteessa/" hakukohde-oid
+                            "/hakemus/" application-key)
            :post-data     ehto
            :headers       (if (some? last-modified)
                             {"If-Unmodified-Since" last-modified}
-                            {"If-None-Match" "*"})
+                            {})
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key
                            hakukohde-oid]
@@ -492,10 +475,9 @@
   (fn [{:keys [application-key hakukohde-oid last-modified]}]
     (http (aget js/config "virkailija-caller-id")
           {:method        :delete
-           :url           (.url js/window
-                                "valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus"
-                                hakukohde-oid
-                                application-key)
+           :url           (str
+                            "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/hakukohteessa/" hakukohde-oid
+                            "/hakemus/" application-key)
            :headers       {"If-Unmodified-Since" last-modified}
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key

@@ -12,17 +12,14 @@ describe('Hakemusten filtteröinti kevyt-valinnan tiedoilla', () => {
         cy.fixture('kayttaavalintalaskentaa.json').as('kayttaavalintalaskentaa')
 
         cy.server()
-        cy.route('GET', '/valinta-tulos-service/auth/login', {}).as(
-          'VTS-kirjautuminen'
-        )
         cy.route(
           'GET',
-          '/valinta-tulos-service/auth/valinnan-tulos/hakemus/?hakemusOid=*',
+          '/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus?hakemusOid=*',
           '[]'
         )
         cy.route(
           'POST',
-          '/valinta-tulos-service/auth/valinnan-tulos/hakemus/',
+          '/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus',
           '@valinnantulokset'
         )
         cy.route(

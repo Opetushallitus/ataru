@@ -43,23 +43,23 @@
         cas-session-id      (:session-id client)]
     (when (nil? @cas-session-id)
       (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name))))
-    (let [resp (http-util/do-request (merge {:url url :method method}
-                                            (opts-fn)
-                                            (create-params session-cookie-name cas-session-id body)))]
+    (let [resp (http-util/do-request (merge-with conj {:url url :method method}
+                                                      (opts-fn)
+                                                      (create-params session-cookie-name cas-session-id body)))]
       (if (or (= 401 (:status resp))
               (= 302 (:status resp)))
         (do
           (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params session-cookie-name)))
-          (http-util/do-request (merge {:url url :method method}
-                                       (opts-fn)
-                                       (create-params session-cookie-name cas-session-id body))))
+          (http-util/do-request (merge-with conj {:url url :method method}
+                                                 (opts-fn)
+                                                 (create-params session-cookie-name cas-session-id body))))
         resp))))
 
 (defn cas-authenticated-get [client url]
   (cas-http client :get url (constantly {})))
 
-(defn cas-authenticated-delete [client url]
-  (cas-http client :delete url (constantly {})))
+(defn cas-authenticated-delete [client url & [opts-fn]]
+  (cas-http client :delete url (if (nil? opts-fn) (constantly {}) opts-fn)))
 
 (defn cas-authenticated-post [client url body & [opts-fn]]
   (cas-http client :post url (if (nil? opts-fn) (constantly {}) opts-fn) body))
@@ -69,3 +69,9 @@
 
 (defn cas-authenticated-get-as-stream [client url]
   (cas-http client :get url (constantly {:as :stream}) nil))
+
+(defn cas-authenticated-patch [client url body & [opts-fn]]
+  (cas-http client :patch url (if (nil? opts-fn) (constantly {}) opts-fn) body))
+
+(defn cas-authenticated-put [client url body & [opts-fn]]
+  (cas-http client :put url (if (nil? opts-fn) (constantly {}) opts-fn) body))

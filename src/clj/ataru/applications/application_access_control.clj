@@ -182,7 +182,7 @@
       (tarjonta-protocol/get-hakukohteet tarjonta-service (vec (map name hakukohde-oids))))
     (constantly true))))
 
-(defn- authenticate-by-opinto-ohjaaja-fn
+(defn- authorize-by-opinto-ohjaaja-fn
   [organization-service suoritus-service person-service session]
   (fn [application-authorization-data]
     (application-authorized-by-lahtokoulu? organization-service
@@ -204,32 +204,32 @@
 
 (defn application-edit-authorized?
   [organization-service tarjonta-service suoritus-service person-service session application-key]
-  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
-                                                             suoritus-service
-                                                             person-service
-                                                             session)]
+  (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
+                                                          suoritus-service
+                                                          person-service
+                                                          session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn application-view-authorized?
   [organization-service tarjonta-service suoritus-service person-service session application-key]
-  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
-                                                             suoritus-service
-                                                             person-service
-                                                             session)]
+  (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
+                                                          suoritus-service
+                                                          person-service
+                                                          session)]
     (or
       (applications-access-authorized? organization-service tarjonta-service session [application-key] [:view-applications :edit-applications] opinto-ohjaaja-fn)
-      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key))))
+      (opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-key)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn applications-access-authorized-including-opinto-ohjaaja?
   [organization-service tarjonta-service suoritus-service person-service session application-keys rights]
-  (let [opinto-ohjaaja-fn (authenticate-by-opinto-ohjaaja-fn organization-service
-                                                                             suoritus-service
-                                                                             person-service
-                                                                             session)]
+  (let [opinto-ohjaaja-fn (authorize-by-opinto-ohjaaja-fn organization-service
+                                                          suoritus-service
+                                                          person-service
+                                                          session)]
     (or (applications-access-authorized? organization-service tarjonta-service session application-keys rights opinto-ohjaaja-fn)
-        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys))))
+        (applications-opinto-ohjaaja-access-authorized? organization-service suoritus-service person-service session application-keys)))) ;necessary as opinto-ohjaaja might not have any regular orgs
 
 (defn rights-by-hakukohde
   [organization-service session application]

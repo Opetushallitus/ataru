@@ -172,10 +172,7 @@
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valinnan-tulos-monelle
-  [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
-                                                  :target-key :valinta-tulos-service-url})]
-  (fn [{db                        :db
-        valinta-tulos-service-url :valinta-tulos-service-url} [_ {:keys [application-keys]}]]
+  (fn [{db                        :db} [_ {:keys [application-keys]}]]
     (let [ei-tulosta (set (doall (filter (fn [application-key] (not (contains? (get db :valinta-tulos-service) application-key))) application-keys)))
           new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
       (if (empty? ei-tulosta)
@@ -190,18 +187,14 @@
                   (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count)))
         {:db   db
          :http {:method              :post
-                :path                valinta-tulos-service-url
+                :path                "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus"
                 :params              ei-tulosta
                 :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
                 :handler-args        {:application-keys ei-tulosta}}}))))
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/fetch-valinnan-tulos
-  [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos.hakemus
-                                                  :target-key :valinta-tulos-service-url})]
-  (fn [{db                        :db
-        valinta-tulos-service-url :valinta-tulos-service-url} [_ {:keys [application-key
-                                                                         memoize]}]]
+  (fn [{db                        :db} [_ {:keys [application-key memoize]}]]
     (if (and memoize
              (-> db :valinta-tulos-service (get application-key) not-empty))
       (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
@@ -216,7 +209,7 @@
                   (assoc-in db [:kevyt-valinta :multiple-requests-count] new-multiple-requests-count))))
       {:db   (update db :valinta-tulos-service dissoc application-key)
        :http {:method              :get
-              :path                (str valinta-tulos-service-url "?hakemusOid=" application-key)
+              :path                (str "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/hakemus?hakemusOid=" application-key)
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
 
@@ -341,10 +334,7 @@
 
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/change-kevyt-valinta-property
-  [(re-frame/inject-cofx :virkailija/resolve-url {:url-key    :valinta-tulos-service.valinnan-tulos
-                                                  :target-key :valinta-tulos-service-url})]
-  (fn [{valinta-tulos-service-url :valinta-tulos-service-url
-        db                        :db}
+  (fn [{db                        :db}
        [_
         kevyt-valinta-property
         hakukohde-oid
@@ -435,10 +425,10 @@
           formatted-now                    (str (format/unparse rfc-1123-date-formatter now) " GMT")]
       {:db   db
        :http {:method              :patch
-              :path                (str valinta-tulos-service-url "/" valintatapajono-oid "?erillishaku=true")
+              :path                (str  "/lomake-editori/api/valinta-tulos-service/valinnan-tulos/" valintatapajono-oid)
               :id                  request-id
               :override-args       {:params  request-body
-                                    :headers {"X-If-Unmodified-Since" formatted-now}}
+                                    :headers {"If-Unmodified-Since" formatted-now}}
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-changed-kevyt-valinta-property
               :handler-args        {:application-key application-key}}})))
 
