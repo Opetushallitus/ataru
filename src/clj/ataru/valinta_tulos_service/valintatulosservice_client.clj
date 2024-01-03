@@ -98,7 +98,7 @@
                                                       {:headers (if (some? if-unmodified-since)
                                                                   {"If-Unmodified-Since" if-unmodified-since}
                                                                   {"If-None-Match" "*"}) }))]
-    (if (= 200 status)
+    (if (= 201 status)
       (json/parse-string body true)
       (throw (new RuntimeException (str "Could not put " url ", "
                                         "status: " status ", "
@@ -112,8 +112,7 @@
               :valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus hakukohde-oid application-key)
         {:keys [status body]} (cas-client/cas-authenticated-delete
                                 cas-client url (fn [] {:headers {"If-Unmodified-Since" if-unmodified-since}}))]
-    (if (= 200 status)
-      (json/parse-string body true)
+    (when-not (= 204 status)
       (throw (new RuntimeException (str "Could not delete " url ", "
                                         "status: " status ", "
                                         "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid
