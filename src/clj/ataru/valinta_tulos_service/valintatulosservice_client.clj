@@ -98,7 +98,7 @@
                                                       {:headers (if (some? if-unmodified-since)
                                                                   {"If-Unmodified-Since" if-unmodified-since}
                                                                   {"If-None-Match" "*"}) }))]
-    (if (= 201 status)
+    (if (or (= 200 status) (= 201 status))
       (json/parse-string body true)
       (throw (new RuntimeException (str "Could not put " url ", "
                                         "status: " status ", "
