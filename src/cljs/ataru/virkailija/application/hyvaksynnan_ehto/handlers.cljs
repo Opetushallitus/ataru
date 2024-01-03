@@ -478,7 +478,9 @@
            :url           (str
                             "/lomake-editori/api/valinta-tulos-service/hyvaksynnan-ehto/hakukohteessa/" hakukohde-oid
                             "/hakemus/" application-key)
-           :headers       {"If-Unmodified-Since" last-modified}
+           :headers       (if (some? last-modified)
+                            {"If-Unmodified-Since" last-modified}
+                            {})
            :handler       [:hyvaksynnan-ehto/set-ehto-hakukohteessa
                            application-key
                            hakukohde-oid]

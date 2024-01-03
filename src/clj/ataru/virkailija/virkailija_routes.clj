@@ -1739,8 +1739,7 @@
           :path-params [{hakukohde-oid :- s/Str nil}
                         {application-key :- s/Str nil}]
           :header-params [{if-unmodified-since :- s/Str nil}]
-          (cond (or (nil? hakukohde-oid) (nil? application-key)
-                    (nil? if-unmodified-since) (= "null" if-unmodified-since))
+          (cond (or (nil? hakukohde-oid) (nil? application-key) (nil? if-unmodified-since))
                 (response/bad-request {:error "Missing parameters"})
                 (not (access-controlled-application/application-edit-authorized?
                        organization-service tarjonta-service suoritus-service person-service session application-key))
