@@ -2,7 +2,8 @@
   (:require [ataru.cas.client :as cas-client]
             [ataru.config.url-helper :as url-helper]
             [cheshire.core :as json]
-            [cuerdas.core :as str]))
+            [cuerdas.core :as str]
+            [ring.util.http-response :refer [get-header]]))
 
 (defn get-hyvaksynnan-ehto-hakukohteessa
   [cas-client hakukohde-oid]
@@ -72,7 +73,7 @@
         {:keys [status]} (cas-client/cas-authenticated-patch
                            cas-client url body (fn [] {:headers {"X-If-Unmodified-Since" if-unmodified-since}}))]
     (when-not (= 200 status)
-      (throw (new RuntimeException (str "Could not get " url ", "
+      (throw (new RuntimeException (str "Could not patch " url ", "
                                         "status: " status ", "
                                         "parameters: valintatapajono-oid " valintatapajono-oid
                                         ", X-If-Unmodified-Since " if-unmodified-since ", request body " body))))))
@@ -93,13 +94,17 @@
   [cas-client ehto hakukohde-oid application-key if-unmodified-since]
   (let [url (url-helper/resolve-url
               :valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus hakukohde-oid application-key)
-        {:keys [status body]} (cas-client/cas-authenticated-put
+        response (cas-client/cas-authenticated-put
                                 cas-client url ehto (fn []
                                                       {:headers (if (some? if-unmodified-since)
                                                                   {"If-Unmodified-Since" if-unmodified-since}
-                                                                  {"If-None-Match" "*"}) }))]
-    (if (= 200 status)
-      (json/parse-string body true)
+                                                                  {"If-None-Match" "*"}) }))
+        {:keys [status body]} response
+        last-modified (get-header response "last-modified")]
+    (if (or (= 200 status) (= 201 status))
+      {:status status
+       :body (json/parse-string body true)
+       :headers {"Last-Modified" last-modified}}
       (throw (new RuntimeException (str "Could not put " url ", "
                                         "status: " status ", "
                                         "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid
@@ -112,8 +117,7 @@
               :valinta-tulos-service.hyvaksynnan-ehto.hakukohteessa.hakemus hakukohde-oid application-key)
         {:keys [status body]} (cas-client/cas-authenticated-delete
                                 cas-client url (fn [] {:headers {"If-Unmodified-Since" if-unmodified-since}}))]
-    (if (= 200 status)
-      (json/parse-string body true)
+    (when-not (= 204 status)
       (throw (new RuntimeException (str "Could not delete " url ", "
                                         "status: " status ", "
                                         "parameters: hakemus-oid " application-key ", hakukohde-oid " hakukohde-oid

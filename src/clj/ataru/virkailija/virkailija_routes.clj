@@ -1730,9 +1730,8 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
-                    valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since))))
+                (vts/add-hyvaksynnan-ehto-hakukohteessa-hakemus
+                  valinta-tulos-service ehto hakukohde-oid application-key if-unmodified-since)))
 
         (api/DELETE "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Delete hyvaksynnan-ehto hakukohteessa"
@@ -1745,9 +1744,10 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
+                (do
                   (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
-                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since))))
+                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since)
+                  (response/no-content))))
 
         (api/GET "/valintatapajonoissa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto valintatapajonoissa"
