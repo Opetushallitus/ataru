@@ -4,6 +4,9 @@ import hakemuksenLahettaminen from '../hakemuksenLahettaminen'
 export default () => {
   describe('Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"', () => {
     before(() => {
+      cy.contains(
+        'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
+      ).should('be.visible')
       hakijanNakyma.klikkaa(
         'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)'
       )
