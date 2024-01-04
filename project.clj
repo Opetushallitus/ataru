@@ -208,20 +208,20 @@
                                        :parallel-build       true
                                        :optimizations        :none}}
 
-                       {:id           "virkailija-cypress-travis"
+                       {:id           "virkailija-cypress-ci"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler     {:main                 "ataru.virkailija.core"
-                                       :output-to            "resources/public/js/compiled/virkailija-cypress-travis-app.js"
-                                       :output-dir           "resources/public/js/compiled/virkailija-cypress-travis-out"
+                                       :output-to            "resources/public/js/compiled/virkailija-cypress-ci-app.js"
+                                       :output-dir           "resources/public/js/compiled/virkailija-cypress-ci-out"
                                        :externs              ["resources/virkailija-externs.js"]
                                        :parallel-build       true
                                        :optimizations        :advanced}}
 
-                       {:id           "hakija-cypress-travis"
+                       {:id           "hakija-cypress-ci"
                         :source-paths ["src/cljs" "src/cljc"]
                         :compiler     {:main                 "ataru.hakija.core"
-                                       :output-to            "resources/public/js/compiled/hakija-cypress-travis-app.js"
-                                       :output-dir           "resources/public/js/compiled/hakija-cypress-travis-out"
+                                       :output-to            "resources/public/js/compiled/hakija-cypress-ci-app.js"
+                                       :output-dir           "resources/public/js/compiled/hakija-cypress-ci-out"
                                        :externs              ["resources/hakija-externs.js"]
                                        :parallel-build       true
                                        :optimizations        :advanced}}
@@ -273,8 +273,8 @@
                               :buildTime ~(.format
                                             (java.text.SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                             (java.util.Date.))
-                              :branch    ~(System/getenv "TRAVIS_BRANCH")
-                              :commit    ~(System/getenv "TRAVIS_COMMIT")}
+                              :branch    ~(System/getenv "CI_BRANCH")
+                              :commit    ~(System/getenv "CI_COMMIT")}
              :silent         false}
 
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]

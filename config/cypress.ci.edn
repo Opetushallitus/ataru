@@ -1,6 +1,6 @@
 {:server          {:allow-db-clear? true
-                   :js-bundle-names {:virkailija "virkailija-cypress-travis-app.js"
-                                     :hakija "hakija-cypress-travis-app.js"}}
+                   :js-bundle-names {:virkailija "virkailija-cypress-ci-app.js"
+                                     :hakija "hakija-cypress-ci-app.js"}}
  :db              {:database-name "ataru-test"
                    :pool-name     "ataru-pool"
                    :username      "oph"
@@ -48,8 +48,8 @@
                               :hakeminen-tunnistautuneena false}}
  :temp-files      {:filesystem {:base-path "/tmp"}}
  :dev             {:fake-dependencies true}
- :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.cypress.travis.edn-tiedostosta"
-                   :hakija-host                         "toimimaton.hakija-host-arvo.cypress.travis.edn-tiedostosta"
+ :urls            {:virkailija-host                     "toimimaton.virkailija-host-arvo.cypress.ci.edn-tiedostosta"
+                   :hakija-host                         "toimimaton.hakija-host-arvo.cypress.ci.edn-tiedostosta"
                    :valinta-tulos-service-base-url      "http://localhost:55443"
                    :organisaatio-service-base-url       "http://localhost:55443"
                    :koodisto-service-base-url           "http://localhost:55443"
