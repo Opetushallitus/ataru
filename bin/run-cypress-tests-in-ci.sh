@@ -3,9 +3,6 @@
 echo "Creating directory for logs"
 mkdir -p logs/pm2
 
-echo "Installing https://github.com/ci-ci/artifacts"
-curl -sL --insecure https://raw.githubusercontent.com/ci-ci/artifacts/master/install | bash
-
 echo "Generating nginx configuration"
 ./bin/generate-nginx-conf.sh || exit 1
 
@@ -36,18 +33,6 @@ echo "Stopping processes used by Cypress tests"
 npx pm2 kill
 docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
 docker-compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
-
-if [ -x "$(command -v artifacts)" ]; then
-  echo "Uploading screenshots to S3"
-  artifacts upload \
-    --target-paths "artifacts/$CI_REPO_SLUG/$CI_BUILD_NUMBER/$CI_JOB_NUMBER" \
-    cypress/screenshots/ \
-    cypress/videos \
-    logs/pm2/
-  echo "The screenshots can be found at: https://s3.console.aws.amazon.com/s3/buckets/opintopolku-utility-ci-artifacts/artifacts/$CI_REPO_SLUG/$CI_BUILD_NUMBER/$CI_JOB_NUMBER/"
-else
-  echo "Not uploading screenshots to S3"
-fi
 
 if [ $RESULT != 0 ]; then
   echo "Cypress tests failed! Please see logs and screenshots from AWS S3"
