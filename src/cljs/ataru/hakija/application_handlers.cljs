@@ -261,6 +261,7 @@
 (defn response->error-message [db response]
   (assoc db :error {:code    (keyword (get-in response [:body :code] "internal-server-error"))
                     :message "Tapahtui virhe"
+                    :lang    (keyword (get-in response [:body :lang]))
                     :detail  (str response)}))
 
 (reg-event-fx
