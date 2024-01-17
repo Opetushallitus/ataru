@@ -575,7 +575,9 @@
    _
    ]
   (log/info "Application edited:" input-application)
-  (let [{:keys [passed? id application key]
+  (let [answers-empty-removed (remove-empty-answers (:answers input-application))
+        application-empty-answers-removed (assoc input-application :answers answers-empty-removed)
+        {:keys [passed? id application key]
          :as   result}
         (validate-and-store liiteri-cas-client
                             form-by-id-cache
@@ -585,7 +587,7 @@
                             ohjausparametrit-service
                             hakukohderyhma-settings-cache
                             audit-logger
-                            input-application
+                            application-empty-answers-removed
                             true
                             session
                             {});fixme, miten oppija-sessio toimii muokkauksessa? Ei tällä hetkellä mitenkään?
@@ -599,7 +601,7 @@
         (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
       (do
         (audit-log/log audit-logger
-                       {:new       input-application
+                       {:new       application-empty-answers-removed
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:applicationOid key}})
