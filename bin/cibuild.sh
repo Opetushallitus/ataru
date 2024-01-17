@@ -79,7 +79,7 @@ test-clojurescript() {
 test-browser() {
   start_fake_deps_server
   time ./bin/lein spec -t ui
-  time ./bin/run-cypress-tests-in-travis.sh
+  time ./bin/run-cypress-tests-in-ci.sh
   stop_fake_deps_server
 }
 
@@ -91,7 +91,7 @@ test-browser-mocha() {
 
 test-browser-cypress() {
   start_fake_deps_server
-  time ./bin/run-cypress-tests-in-travis.sh
+  time ./bin/run-cypress-tests-in-ci.sh
   stop_fake_deps_server
 }
 

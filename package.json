@@ -8,7 +8,7 @@
   "scripts": {
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
-    "cypress:run:travis": "cypress run -C oph-configuration/cypress.travis.json --browser /opt/hostedtoolcache/chromium/1160321/x64/chrome --headless",
+    "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser /opt/hostedtoolcache/chromium/1160321/x64/chrome --headless",
     "lint:clj": "clj-kondo --lint src",
     "lint:clj:lint-staged": "clj-kondo --lint",
     "lint:js": "eslint '**/*.{ts,js}'",
@@ -27,7 +27,7 @@
     "**/*.{js,ts}": [
       "npm run lint:js"
     ],
-    "**/*.{clj,cljs,cljc}": [
+    "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
       "npm run lint:clj:lint-staged"
     ]
   },
