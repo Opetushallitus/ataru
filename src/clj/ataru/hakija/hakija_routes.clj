@@ -67,7 +67,8 @@
                                                                      secret
                                                                      liiteri-cas-client)]
     (cond inactivated?
-          (response/bad-request {:code :inactivated :error "Inactivated"})
+          (let [lang (application-store/get-application-language-by-secret secret)]
+            (response/bad-request {:code :inactivated :error "Inactivated" :lang lang}))
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
