@@ -19,12 +19,12 @@ export const lisaaLomake = () => {
   )
   haeLomakkeenLisaysNappi().click()
   return cy.wait('@postForms').then((response) => ({
-    lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
-      response
-    ),
-    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
-      response
-    ),
+    lomakkeenAvain:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
+        response
+      ),
+    lomakkeenId:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(response),
   }))
 }
 
@@ -37,12 +37,12 @@ export const kopioiLomake = () => {
   haeLomakkeenKopiointiNappi().click()
 
   return cy.wait('@postForms').then((response) => ({
-    lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
-      response
-    ),
-    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
-      response
-    ),
+    lomakkeenAvain:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
+        response
+      ),
+    lomakkeenId:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(response),
   }))
 }
 

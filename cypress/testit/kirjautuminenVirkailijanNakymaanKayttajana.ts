@@ -1,4 +1,4 @@
-export default (ticket: string, kuvaus: String, testit: () => void) => {
+export default (ticket: string, kuvaus: string, testit: () => void) => {
   describe(`Virkailijan näkymään kirjautuminen käyttäjänä ${ticket} ${kuvaus}`, () => {
     before(() => {
       Cypress.Cookies.defaults({

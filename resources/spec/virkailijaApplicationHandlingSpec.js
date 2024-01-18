@@ -637,12 +637,10 @@
         expect(includedHakukohdeProcessingStateFilters()).to.equal(9)
         expect(filteredApplicationsCount()).to.equal(3)
 
-        const stateOfFirstApplicationHakukohde = applicationHakukohdeProcessingStates()
-          .eq(0)
-          .text()
-        const stateOfSecondApplicationHakukohde = applicationHakukohdeProcessingStates()
-          .eq(2)
-          .text()
+        const stateOfFirstApplicationHakukohde =
+          applicationHakukohdeProcessingStates().eq(0).text()
+        const stateOfSecondApplicationHakukohde =
+          applicationHakukohdeProcessingStates().eq(2).text()
 
         filterOutBasedOnFirstApplicationState(stateOfFirstApplicationHakukohde)
         wait
