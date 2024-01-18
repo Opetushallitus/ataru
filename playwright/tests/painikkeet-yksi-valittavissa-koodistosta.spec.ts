@@ -1,81 +1,19 @@
-import { test, expect, Page, Response, Locator } from '@playwright/test'
-import {
-  getSensitiveAnswer,
-  kirjauduVirkailijanNakymaan,
-  waitForResponse,
-} from './playwright-utils'
-import * as Option from 'fp-ts/lib/Option'
-import * as Record from 'fp-ts/lib/Record'
+import { test, expect, Page, Locator } from '@playwright/test'
+import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 import { pipe } from 'fp-ts/lib/function'
-import { AssertionError } from 'assert'
+import {
+  asetaKysymyksenVastausArkaluontoiseksi,
+  getHakemuksenLahettamisenOsoite,
+  getHakijanNakymanOsoite,
+  getLomakkeenHaunOsoite,
+  getLomakkeenPoistamisenOsoite,
+  kirjauduVirkailijanNakymaan,
+  lisaaLomake,
+  taytaHenkilotietomoduuli,
+  teeJaOdotaLomakkeenTallennusta,
+} from '../playwright-ataru-utils'
 
 test.describe.configure({ mode: 'serial' })
-
-const getUudenLomakkeenLahettamisenOsoite = () => '/lomake-editori/api/forms'
-const getLomakkeenMuuttamisenOsoite = (lomakkeenId: number) =>
-  `/lomake-editori/api/forms/${lomakkeenId}`
-const getLomakkeenPoistamisenOsoite = () => '/lomake-editori/api/cypress/form'
-const getHakijanNakymanOsoite = (lomakkeenAvain: string) =>
-  `/hakemus/${lomakkeenAvain}`
-
-const getLomakkeenHaunOsoite = (lomakkeenAvain: string) =>
-  `/hakemus/api/form/${lomakkeenAvain}?role=hakija`
-
-const getHakemuksenLahettamisenOsoite = () => '/hakemus/api/application'
-
-const unsafeFoldOption = <T>(o: Option.Option<T>): T => {
-  return Option.fold<T, T>(
-    () => {
-      throw new AssertionError({ message: 'Option was None' })
-    },
-    (val) => val
-  )(o)
-}
-
-const getJsonResponseKey = async <T>(res: Response, key: string) => {
-  try {
-    const body = await res.json()
-    return Record.hasOwnProperty(key, body)
-      ? Option.some(body[key] as T)
-      : Option.none
-  } catch (e) {
-    return Option.none
-  }
-}
-
-const clickLisaaLomakeButton = async (page: Page) =>
-  await page.getByTestId('add-form-button').click()
-
-const lisaaLomake = async (
-  page: Page
-): Promise<{
-  lomakkeenId: Option.Option<number>
-  lomakkeenAvain: Option.Option<string>
-}> => {
-  const [response] = await Promise.all([
-    waitForResponse(page, 'POST', (url) =>
-      url.includes(getUudenLomakkeenLahettamisenOsoite())
-    ),
-    clickLisaaLomakeButton(page),
-  ])
-  return Promise.resolve({
-    lomakkeenId: await getJsonResponseKey<number>(response, 'id'),
-    lomakkeenAvain: await getJsonResponseKey<string>(response, 'key'),
-  })
-}
-
-const teeJaOdotaLomakkeenTallennusta = async (
-  page: Page,
-  lomakeId: number,
-  fn: () => Promise<void>
-) => {
-  await Promise.all([
-    waitForResponse(page, 'PUT', (url) =>
-      url.includes(getLomakkeenMuuttamisenOsoite(lomakeId))
-    ),
-    fn(),
-  ])
-}
 
 let page: Page
 let lomakkeenTunnisteet: { lomakkeenAvain: string; lomakkeenId: number }
@@ -186,11 +124,7 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   ).toHaveCount(1)
 
   // Asetetaan tieto arkaluontoiseksi
-  const sensitiveAnswer = getSensitiveAnswer(page)
-  await expect(sensitiveAnswer).toBeVisible()
-  await expect(sensitiveAnswer).not.toBeChecked()
-  await sensitiveAnswer.click()
-  await expect(sensitiveAnswer).toBeChecked()
+  await asetaKysymyksenVastausArkaluontoiseksi(page)
 
   // Aseta kysymys näkyväksi, koska yhteishaussa kysymys on oletuksena piilotettu
   await teeJaOdotaLomakkeenTallennusta(
@@ -212,33 +146,7 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   const lomakkeenNimi = page.getByTestId('application-header-label')
   await expect(lomakkeenNimi).toHaveText('Testilomake')
 
-  // Henkilötietomoduulin täyttäminen
-  const inputFieldValues = {
-    'first-name': 'Frank Zacharias',
-    'last-name': 'Testerberg',
-    ssn: '160600A999C',
-    email: 'f.t@ex.com',
-    'verify-email': 'f.t@ex.com',
-    phone: '0401234567',
-    address: 'Yliopistonkatu 4',
-    'postal-code': '00100',
-    'home-town': 'Forssa',
-  }
-
-  for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
-    const loc = page.getByTestId(`${idPrefix}-input`)
-    if (idPrefix === 'home-town') {
-      await loc.selectOption(value)
-      await expect(loc).toHaveValue('061')
-    } else {
-      await loc.fill(value)
-      await expect(loc).toHaveValue(value)
-    }
-
-    // FIXME: Jos lomake täytetään ilman taukoja, lähettäessä jotkin lomakkeen kentät ovat tyhjiä, vaikka yllä tarkistetaan, että kenttään on mennyt syötetty arvo.
-    await page.waitForTimeout(100)
-  }
-
+  await taytaHenkilotietomoduuli(page)
   // Näyttää täytetyn henkilötietomoduulin
   await expect(page.getByTestId('postal-office-input')).toHaveValue('HELSINKI')
 
@@ -263,7 +171,6 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   await expect(lomakkeenNimi).toHaveText('Testilomake')
 
   // Painikkeet, yksi valittavissa, koodisto -toiminnon arvojen näyttäminen hakemuksen lähettämisen jälkeen
-
   // Näyttää kysymyksen tekstin
   await expect(
     page.getByText('Minkä koulutuksen olet suorittanut?')

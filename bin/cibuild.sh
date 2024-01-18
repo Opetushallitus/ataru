@@ -197,10 +197,6 @@ run-spec-and-mocha-tests() {
     test-browser-mocha
 }
 
-install-playwright-deps() {
-    npx playw
-}
-
 run-browser-tests-integration() {
     echo "Starting browser integration test run"
     clean
