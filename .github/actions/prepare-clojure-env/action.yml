@@ -1,0 +1,27 @@
+name: prepare-clojure-env
+description: 'Prepare clojure enviroment'
+runs:
+  using: "composite"
+  steps:
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'corretto'
+
+    - uses: szenius/set-timezone@v1.2
+      with:
+        timezoneLinux: "Europe/Helsinki"
+
+    - name: Install clojure tools
+      uses: DeLaGuardo/setup-clojure@12.3
+      with:
+        lein: 2.9.1
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}
+        restore-keys: |
+          ${{ runner.os }}-m2-
