@@ -9,6 +9,8 @@ import * as Record from 'fp-ts/lib/Record'
 import { pipe } from 'fp-ts/lib/function'
 import { AssertionError } from 'assert'
 
+test.describe.configure({ mode: 'serial' })
+
 const getUudenLomakkeenLahettamisenOsoite = () => '/lomake-editori/api/forms'
 const getLomakkeenMuuttamisenOsoite = (lomakkeenId: number) =>
   `/lomake-editori/api/forms/${lomakkeenId}`
@@ -61,8 +63,6 @@ const lisaaLomake = async (
     lomakkeenAvain: await getJsonResponseKey<string>(response, 'key'),
   })
 }
-
-test.describe.configure({ mode: 'serial' })
 
 const teeJaOdotaLomakkeenTallennusta = async (
   page: Page,
@@ -142,11 +142,11 @@ const getAllByTestId = (loc: Locator | Page, testId: string) =>
 test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
   //Painikkeet, yksi valittavissa, koodisto -elementin lisäys
   const valikko = page.getByTestId('component-toolbar')
+  await valikko.dispatchEvent('mouseover')
 
   const lisaysLinkki = valikko.getByText(
     'Painikkeet, yksi valittavissa, koodisto'
   )
-  await valikko.dispatchEvent('mouseover')
   await lisaysLinkki.click()
   const kysymysTeksti = page
     .getByTestId('editor-form__singleChoice-component-question-wrapper')
@@ -225,14 +225,6 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
     'home-town': 'Forssa',
   }
 
-  // Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"
-  await page
-    .getByText(
-      'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)',
-      { exact: true }
-    )
-    .click()
-
   for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
     const loc = page.getByTestId(`${idPrefix}-input`)
     if (idPrefix === 'home-town') {
@@ -247,6 +239,17 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
     await page.waitForTimeout(100)
   }
 
+  // Näyttää täytetyn henkilötietomoduulin
+  await expect(page.getByTestId('postal-office-input')).toHaveValue('HELSINKI')
+
+  // Hakijan lomake, jolla on "Painikkeet, yksi valittavissa, koodisto"
+  await page
+    .getByText(
+      'Suomessa suoritettu kansainvälinen ylioppilastutkinto (IB, EB ja RP/DIA)',
+      { exact: true }
+    )
+    .click()
+
   await Promise.all([
     waitForResponse(page, 'POST', (url) =>
       url.includes(getHakemuksenLahettamisenOsoite())
@@ -258,6 +261,8 @@ test('Painikkeet, yksi valittavissa, koodisto -lomake-elementti', async () => {
 
   // Näyttää lomakkeen nimen
   await expect(lomakkeenNimi).toHaveText('Testilomake')
+
+  // Painikkeet, yksi valittavissa, koodisto -toiminnon arvojen näyttäminen hakemuksen lähettämisen jälkeen
 
   // Näyttää kysymyksen tekstin
   await expect(
