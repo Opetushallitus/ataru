@@ -67,7 +67,7 @@
                                                                      secret
                                                                      liiteri-cas-client)]
     (cond inactivated?
-          (response/bad-request {:code :inactivated :error "Inactivated"})
+          (response/bad-request {:code :inactivated :error "Inactivated" :lang lang-override})
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
