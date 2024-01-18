@@ -74,9 +74,7 @@ See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
 
 You can also use Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
 
-Both Playwright and Cypress tests are run together in the same CI-job and use shared config and browser in CI. 
-
-** If you want to write new tests, please use Playwright. Hopefully at some point all integration tests will use Playwright. **
+**If you want to write new tests, please use Playwright. Hopefully at some point all integration tests will use Playwright.**
 
 ### Running Cypress tests
 
@@ -92,9 +90,10 @@ or run it headless using command
 
     npm run cypress:run
 
-### Cypress tests in Github Actions
+### Cypress & Playwright tests in Github Actions
 
-Github Actions runs Cypress & Playwright tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs, captured screenshots and recorded videos are automatically uploaded to S3.
+Github Actions runs Cypress & Playwright tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs are automatically uploaded to S3.
+Both Playwright and Cypress tests are run together in the same CI-job and use shared config and browser in CI. 
 
 ### Running legacy browser tests
 

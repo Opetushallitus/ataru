@@ -35,7 +35,7 @@ docker-compose kill ataru-cypress-test-db ataru-cypress-http-proxy
 docker-compose rm -f ataru-cypress-test-db ataru-cypress-http-proxy
 
 if [ $RESULT != 0 ]; then
-  echo "Integratio tests failed! Please see logs for more info"
+  echo "Integration tests failed! Please see logs for more info"
 fi
 
 exit $RESULT
