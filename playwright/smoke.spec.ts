@@ -1,8 +1,5 @@
-import { test, expect, Page } from '@playwright/test'
-
-const kirjauduVirkailijanNakymaan = async (page: Page, ticket?: string) => {
-  await page.goto(`/lomake-editori/auth/cas?ticket=${ticket || 'DEVELOPER'}`)
-}
+import { test, expect } from '@playwright/test'
+import { kirjauduVirkailijanNakymaan } from './playwright-utils'
 
 test('Smoke', async ({ page }) => {
   await kirjauduVirkailijanNakymaan(page)
