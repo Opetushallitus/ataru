@@ -8,7 +8,7 @@
   "scripts": {
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
-    "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser /opt/hostedtoolcache/chromium/1160321/x64/chrome --headless",
+    "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser /home/runner/.cache/ms-playwright/chromium-1097/chrome-linux/chrome --headless",
     "lint:clj": "clj-kondo --lint src",
     "lint:clj:lint-staged": "clj-kondo --lint",
     "lint:js": "eslint '**/*.{ts,js}'",
@@ -33,7 +33,7 @@
     ]
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.1",
+    "@playwright/test": "^1.41.0",
     "@types/node": "^18.19.3",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "@typescript-eslint/parser": "^6.17.0",

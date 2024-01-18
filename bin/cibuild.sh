@@ -79,7 +79,7 @@ test-clojurescript() {
 test-browser() {
   start_fake_deps_server
   time ./bin/lein spec -t ui
-  time ./bin/run-cypress-tests-in-ci.sh
+  time ./bin/run-integration-tests-in-ci.sh
   stop_fake_deps_server
 }
 
@@ -89,9 +89,9 @@ test-browser-mocha() {
   stop_fake_deps_server
 }
 
-test-browser-cypress() {
+test-browser-integration() {
   start_fake_deps_server
-  time ./bin/run-cypress-tests-in-ci.sh
+  time ./bin/run-integration-tests-in-ci.sh
   stop_fake_deps_server
 }
 
@@ -197,15 +197,18 @@ run-spec-and-mocha-tests() {
     test-browser-mocha
 }
 
-run-browser-tests-cypress() {
-    echo "Starting cypress browser test run"
+install-playwright-deps() {
+    npx playw
+}
+
+run-browser-tests-integration() {
+    echo "Starting browser integration test run"
     clean
-    npm-dependencies
     nuke-test-db
     run-migrations
     compile-less
     build-clojurescript
-    test-browser-cypress
+    test-browser-integration
 }
 
 command="$1"
@@ -262,8 +265,8 @@ case "$command" in
     "run-browser-tests" )
         run-browser-tests
         ;;
-    "run-browser-tests-cypress" )
-        run-browser-tests-cypress
+    "run-browser-tests-integration" )
+        run-browser-tests-integration
         ;;
     "run-spec-and-mocha-tests" )
         run-spec-and-mocha-tests
@@ -306,6 +309,6 @@ case "$command" in
 * run-tests-and-create-uberjar
 * run-clojure-tests
 * run-browser-tests
-* run-browser-tests-cypress
+* run-browser-tests-integration
 * run-spec-and-mocha-tests"
 esac
