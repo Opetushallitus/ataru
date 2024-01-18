@@ -52,7 +52,7 @@ const lisaaLomake = async (
   lomakkeenId: Option.Option<number>
   lomakkeenAvain: Option.Option<string>
 }> => {
-  const [response, _] = await Promise.all([
+  const [response] = await Promise.all([
     waitForResponse(page, 'POST', (url) =>
       url.includes(getUudenLomakkeenLahettamisenOsoite())
     ),
