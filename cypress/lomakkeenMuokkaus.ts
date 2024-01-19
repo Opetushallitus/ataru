@@ -19,12 +19,12 @@ export const lisaaLomake = () => {
   )
   haeLomakkeenLisaysNappi().click()
   return cy.wait('@postForms').then((response) => ({
-    lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
-      response
-    ),
-    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
-      response
-    ),
+    lomakkeenAvain:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
+        response
+      ),
+    lomakkeenId:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(response),
   }))
 }
 
@@ -37,12 +37,12 @@ export const kopioiLomake = () => {
   haeLomakkeenKopiointiNappi().click()
 
   return cy.wait('@postForms').then((response) => ({
-    lomakkeenAvain: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
-      response
-    ),
-    lomakkeenId: httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(
-      response
-    ),
+    lomakkeenAvain:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenAvain(
+        response
+      ),
+    lomakkeenId:
+      httpPaluusanomat.lomakkeenLahetyksenPaluusanoma.haeLomakkeenId(response),
   }))
 }
 
@@ -77,16 +77,6 @@ export const haeLomakkeenEsikatseluLinkki = () =>
 
 export const valitseKoodisto = (koodistonNimi: string) =>
   koodistonValitsin().select(koodistonNimi)
-
-export const naytaVastausvaihtoehdot = () =>
-  cy
-    .get('[data-test-id=editor-form__show_koodisto-values__link]:visible')
-    .click()
-
-export const vastausvaihtoehdot = () =>
-  cy
-    .get('[data-test-id=editor-form__multi-options-container')
-    .find('[data-test-id=editor-form__koodisto-field]:visible')
 
 export const hakukohteet = {
   haeOtsikko: () => cy.get('[data-test-id=hakukohteet-header-label]:visible'),
@@ -153,28 +143,4 @@ export const komponentinLisays = {
       komponentinLisays.avaaValikko()
       return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
     }),
-  lisaaKoodistoElementti: (formId: number, elementinTeksti: string) => {
-    return komponentinLisays.avaaValikko().then(() => {
-      return komponentinLisays.haeElementinLisaysLinkki(elementinTeksti).click()
-    })
-  },
-}
-
-export const painikeYksiValittavissa = {
-  haeKysymysTeksti: () =>
-    cy
-      .get(
-        '[data-test-id=editor-form__singleChoice-component-question-wrapper]:visible'
-      )
-      .find('input'),
-  haeElementinOtsikko: () =>
-    cy.get(
-      '[data-test-id=editor-form__singleChoice-component-main-label]:visible'
-    ),
-  syotaKysymysTeksti: (teksti: string) => {
-    return tekstinSyotto.syotaTeksti(
-      painikeYksiValittavissa.haeKysymysTeksti(),
-      teksti
-    )
-  },
 }

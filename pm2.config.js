@@ -1,7 +1,5 @@
 'use strict'
 
-const path = require('path')
-
 // Allow local overriding of hakija and virkailija configs via environment variables
 const virkailijaConfig =
   process.env['VIRKAILIJA_CONFIG'] ||

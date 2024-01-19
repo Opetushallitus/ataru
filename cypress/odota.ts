@@ -3,7 +3,7 @@ import WaitXHR = Cypress.WaitXHR
 
 // eslint-disable-next-line prefer-arrow/prefer-arrow-functions
 export function odotaHttpPyyntoa<T>(
-  route: () => Chainable<unknown>,
+  route: () => Chainable<null>,
   f: () => Chainable<T>
 ): Chainable<{ result: T; xhr: WaitXHR }> {
   cy.server()

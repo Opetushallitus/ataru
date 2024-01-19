@@ -138,16 +138,15 @@ export const arvosanat = {
       ),
 }
 
-const syota = <T>(
-  elementti: Chainable<T>,
-  teksti: string
-): (() => Chainable<T>) => () =>
-  tekstinSyotto.syotaTekstiTarkistamatta(elementti, teksti)
+const syota =
+  <T>(elementti: Chainable<T>, teksti: string): (() => Chainable<T>) =>
+  () =>
+    tekstinSyotto.syotaTekstiTarkistamatta(elementti, teksti)
 
-const syotaTurvallisesti = <T>(
-  elementti: Chainable<T>,
-  teksti: string
-): (() => Chainable<T>) => () => tekstinSyotto.syotaTeksti(elementti, teksti)
+const syotaTurvallisesti =
+  <T>(elementti: Chainable<T>, teksti: string): (() => Chainable<T>) =>
+  () =>
+    tekstinSyotto.syotaTeksti(elementti, teksti)
 
 export const henkilotiedot = {
   etunimi: () => cy.get('[data-test-id=first-name-input]'),

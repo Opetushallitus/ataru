@@ -1,21 +1,23 @@
 import * as reitit from '../reitit'
 
 declare global {
-  // eslint-disable-next-line no-redeclare
+  // eslint-disable-next-line no-redeclare, @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
       kirjauduVirkailijanNakymaan: (ticket?: string) => Chainable<Window>
 
       poistaLomake: (lomakkeenAvain: string) => Chainable<Response>
 
-      avaaLomakeHakijanNakymassa: (lomakkeenAvain: string) => Chainable<WaitXHR>
+      avaaLomakeHakijanNakymassa: (
+        lomakkeenAvain: string
+      ) => Chainable<Cypress.WaitXHR>
       avaaLomakkeenHakemuksetVirkailijanNakymassa: (
         lomakkeenAvain: string
-      ) => Chainable<WaitXHR>
+      ) => Chainable<Cypress.WaitXHR>
 
       avaaHaunHakemuksetVirkailijanNakymassa: (
         hakuOid: string
-      ) => Chainable<WaitXHR>
+      ) => Chainable<Cypress.WaitXHR>
     }
   }
 }

@@ -3,7 +3,9 @@ import * as Option from 'fp-ts/lib/Option'
 import WaitXHR = Cypress.WaitXHR
 
 export const lomakkeenLahetyksenPaluusanoma = {
-  haeLomakkeenAvain: ({ response: { body } }: WaitXHR): Option.Option<string> =>
+  haeLomakkeenAvain: ({
+    response: { body },
+  }: WaitXHR): Option.Option<string> =>
     typeof body === 'object' && 'key' in body
       ? Option.some(body.key)
       : Option.none,
