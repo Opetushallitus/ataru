@@ -82,8 +82,8 @@ SELECT
     id
 FROM forms f
 WHERE
-    (:modified_after::TEXT IS NULL OR f.created_time >= to_timestamp(:modified_after/1000))
-  AND (:modified_before::TEXT IS NULL OR f.created_time <= to_timestamp(:modified_before/1000))
+    (:modified_after::TEXT IS NULL OR f.created_time >= :modified_after::timestamptz)
+  AND (:modified_before::TEXT IS NULL OR f.created_time <= :modified_before::timestamptz)
   AND exists(SELECT 1
              FROM latest_applications la where la.form_id = f.id)
 ORDER BY f.id;

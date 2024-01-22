@@ -93,7 +93,9 @@
            java.time.ZonedDateTime
            org.joda.time.DateTime
            org.joda.time.format.DateTimeFormat
-           java.time.format.DateTimeFormatter))
+           java.time.format.DateTimeFormatter
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 ;; Compojure will normally dereference deferreds and return the realized value.
 ;; This unfortunately blocks the thread. Since aleph can accept the un-realized
@@ -1607,15 +1609,17 @@
 
       (api/POST "/siirtotiedosto" {session :session}
         :summary "Create siirtotiedostos containing appications and forms from a time period"
-        :query-params [{modifiedBefore :- s/Int nil}
-                       {modifiedAfter :- s/Int nil}]
+        :query-params [{modifiedAfter :- s/Str nil}
+                       {modifiedBefore :- s/Str nil}]
         :return s/Any
         (if (and (nil? modifiedBefore)
                  (nil? modifiedAfter))
           (response/bad-request {:error "Either modifiedAfter or modifiedBefore param required!"})
           (if (boolean (-> session :identity :superuser))
-            (let [siirtotiedosto-params {:modified-before (or modifiedBefore (System/currentTimeMillis))
-                                         :modified-after modifiedAfter}]
+            (let [siirtotiedosto-params {:modified-after  modifiedAfter
+                                         :modified-before (or modifiedBefore (.format
+                                                                               (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
+                                                                               (Date.)))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
               (let [{applications-success :success applications :applications} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
                     {forms-success :success forms :forms} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
