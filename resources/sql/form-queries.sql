@@ -77,11 +77,11 @@ SELECT
   f.properties,
   (CASE WHEN f.locked_by IS NULL THEN NULL ELSE CONCAT(first_name, ' ', last_name) END) as locked_by,
   (SELECT count(*)
-   FROM latest_applications
-   WHERE haku IS NULL
-     AND form_id IN (SELECT id
-                     FROM forms
-                     WHERE key = f.key)) AS application_count
+   FROM applications AS a
+   LEFT JOIN applications AS newer_a ON a.key = newer_a.key AND newer_a.id > a.id
+   WHERE newer_a.id IS NULL
+     AND a.haku IS NULL
+     AND a.form_id IN (SELECT id FROM forms WHERE key = f.key)) AS application_count
 FROM latest_forms f
 LEFT JOIN virkailija ON f.locked_by = virkailija.oid
 WHERE f.key = (SELECT key FROM forms WHERE id = :id);
