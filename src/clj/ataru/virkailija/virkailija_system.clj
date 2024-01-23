@@ -40,6 +40,7 @@
             [ataru.db.db :as db]
             [ataru.temp-file-storage.s3-client :as s3-client])
   (:import java.time.Duration
+           [fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu]
            [java.util.concurrent TimeUnit]))
 
 (defn new-system
@@ -227,6 +228,8 @@
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
+    :siirtotiedosto-client (new SiirtotiedostoPalvelu "eu-west-1" "opintopolku-untuva-siirtotiedostot");todo, get values from config
+
     :application-service (component/using
                            (application-service/new-application-service)
                            [:liiteri-cas-client
@@ -244,7 +247,7 @@
 
     :siirtotiedosto-service (component/using
                               (siirtotiedosto-service/new-siirtotiedosto-service)
-                              [])
+                              [:siirtotiedosto-client])
 
     :session-store (create-session-store (db/get-datasource :db))
 
