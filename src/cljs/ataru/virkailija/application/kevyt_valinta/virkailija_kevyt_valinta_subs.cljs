@@ -42,19 +42,29 @@
     (true? valintalaskenta-in-hakukohde?)))
 
 (re-frame/reg-sub
+  :virkailija-kevyt-valinta-filter/person-yksiloity?
+  (fn [[_ application-key]]
+    [(re-frame/subscribe [:virkailija-kevyt-valinta/get-application-by-key application-key])])
+  (fn [[application]]
+    (-> application :person :yksiloity)))
+
+(re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
   (fn [[_ application-key hakukohde-oid]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu-enabled-for-application? application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohde? hakukohde-oid])
-     (re-frame/subscribe [:state-query [:hakukohteet hakukohde-oid :selection-state-used]])])
+     (re-frame/subscribe [:state-query [:hakukohteet hakukohde-oid :selection-state-used]])
+     (re-frame/subscribe [:virkailija-kevyt-valinta-filter/person-yksiloity? application-key])])
   (fn [[sijoittelu-enabled-for-application?
         valintalaskenta-in-hakukohde?
-        selection-state-used?]
+        selection-state-used?
+        yksiloity?]
        [_ _ hakukohde-oid]]
     (and (not= hakukohde-oid "form")
          (not sijoittelu-enabled-for-application?)
          (false? valintalaskenta-in-hakukohde?)
-         (not selection-state-used?))))
+         (not selection-state-used?)
+         yksiloity?)))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet
