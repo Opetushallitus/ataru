@@ -4,8 +4,8 @@
 (defn synthetic-application->application
   [synthetic form-id]
   (let [ssn (:henkilotunnus synthetic)
-        birth-date (or (seq (:syntymaAika synthetic)) (ssn/ssn->birth-date ssn))
-        gender (or (seq (:sukupuoli synthetic)) (ssn/ssn->gender ssn))
+        birth-date (or (not-empty (:syntymaAika synthetic)) (ssn/ssn->birth-date ssn))
+        gender (or (not-empty (:sukupuoli synthetic)) (ssn/ssn->gender ssn))
         birthplace (when (empty? ssn) (:syntymapaikka synthetic)) ; Doesn't pass validation together with Finnish SSN, so silently remove.
         answers [{:key "hakukohteet" :value [(:hakukohdeOid synthetic)] :fieldType "hakukohteet" :label {:fi "Hakukohteet"}}
                  {:key "first-name" :value (:etunimi synthetic) :fieldType "textField" :label {:fi "Etunimet"}}
