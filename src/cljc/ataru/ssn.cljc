@@ -54,7 +54,7 @@
           (contains? this-century (string/upper-case century))
           (-> year (>= (+ current-year 1)))))))
 
-(defn- test-ssn-in-prod? [individual]
+(defn- temporary-ssn-in-prod? [individual]
   (and (= "sade" (get-public-config [:environment-name]))
        (= \9 (first individual))))
 
@@ -68,7 +68,7 @@
             check-char (get check-chars check-mod)]
         (and
           (valid-year? (+ 2000 (->int year)) century)
-          (not (test-ssn-in-prod? individual))
+          (not (temporary-ssn-in-prod? individual))
           (= (clojure.string/upper-case check) check-char))))))
 
 (defn- parse-birth-date-from-ssn

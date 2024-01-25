@@ -30,7 +30,7 @@
   (async done
          (asyncm/go
            (with-redefs
-             [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "sade"} keys))]
+             [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "dev"} keys))]
              (doseq [ssn ssn/ssn-list]
                (doseq [century-char ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]]
                  (let [ssn (str (:start ssn) century-char (:end ssn))]
@@ -44,11 +44,17 @@
                                                             :value            "020202A0202"
                                                             :field-descriptor
                                                             {:params {:can-submit-multiple-applications false
-                                                                      :haku-oid "dummy-haku-oid"}}}))))))
+                                                                      :haku-oid "dummy-haku-oid"}}})))))
 
+             (is (first (async/<! (validator/validate {:has-applied      has-never-applied
+                                                       :validator        "ssn"
+                                                       :value            "010170-960F"
+                                                       :field-descriptor
+                                                       {:params {:can-submit-multiple-applications false
+                                                                 :haku-oid "dummy-haku-oid"}}})))))
            (done))))
 
-(deftest test-ssn-validation
+(deftest ssn-validation-temporary-ssn-does-not-work-in-production
   (async done
     (asyncm/go
       (with-redefs
