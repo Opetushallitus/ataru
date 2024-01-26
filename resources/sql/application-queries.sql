@@ -1272,3 +1272,49 @@ cross join unnest(la.hakukohde) with ordinality as u(hakukohde_oid, idx)
 where la.haku = :haku_oid
 and u.idx = 1) as ensisijaiset
 group by hakukohde_oid;
+
+-- name: yesql-get-siirtotiedosto-application-ids
+-- Get list of ids for applications to be included in siirtotiedosto
+SELECT
+    la.id
+FROM latest_applications as la
+WHERE
+    (:modified_after::TEXT IS NULL OR la.created_time >= :modified_after::timestamptz)
+  AND (:modified_before::TEXT IS NULL OR la.created_time <= :modified_before::timestamptz);
+
+-- name: yesql-get-siirtotiedosto-applications-for-ids
+-- Get siirtotiedosto-applications by ids
+SELECT
+    a.id,
+    a.key,
+    a.lang,
+    a.form_id                           AS form,
+    a.created_time,
+    a.submitted,
+    (SELECT content
+     FROM answers_as_content
+     WHERE application_id = a.id) AS content,
+    a.person_oid,
+    a.hakukohde,
+    a.haku,
+    ar.state                            AS state,
+    f.key                               AS form_key,
+    (SELECT json_agg(json_build_object('requirement', requirement,
+                                       'state', state,
+                                       'hakukohde', hakukohde))
+     FROM application_hakukohde_reviews ahr
+     WHERE ahr.application_key = a.key) AS application_hakukohde_reviews,
+    (SELECT coalesce(array_agg(ae.hakukohde), '{}')
+     FROM application_events ae
+     WHERE ae.id = (SELECT max(id)
+                    FROM application_events
+                    WHERE application_key = ae.application_key AND
+                            hakukohde = ae.hakukohde AND
+                            review_key = ae.review_key) AND
+             ae.application_key = a.key AND
+             ae.event_type = 'eligibility-state-automatically-changed' AND
+             ae.review_key = 'eligibility-state') AS "eligibility-set-automatically"
+FROM latest_applications AS a
+         JOIN application_reviews AS ar ON a.key = ar.application_key
+         JOIN forms AS f ON a.form_id = f.id
+WHERE a.id in (:ids);
