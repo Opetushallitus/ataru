@@ -55,7 +55,7 @@
           (-> year (>= (+ current-year 1)))))))
 
 (defn- temporary-ssn-in-prod? [individual]
-  (and (= "sade" (get-public-config [:environment-name]))
+  (and (= "hahtuva" (get-public-config [:environment-name]))
        (= \9 (first individual))))
 
 (defn ssn?

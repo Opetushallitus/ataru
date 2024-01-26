@@ -58,7 +58,7 @@
   (async done
     (asyncm/go
       (with-redefs
-        [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "sade"} keys))]
+        [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "hahtuva"} keys))]
 
         (is (not (first (async/<! (validator/validate {:has-applied      has-never-applied
                                                        :validator        "ssn"
