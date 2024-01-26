@@ -39,7 +39,7 @@ describe('Hakulomakkeen validoinnit', () => {
             .invoke('attr', 'aria-invalid')
             .should('eq', 'true')
           cy.contains(
-            'Henkilötunnus on oltava muodossa PPKKVVzNNNT, jossa z on "-" tai "A".',
+            'Henkilötunnus on oltava muodossa PPKKVVvälimerkkiNNNT, jossa välimerkki on "-" tai "A". Myös välimerkit "Y" ja "B" ovat sallittuja.',
             {
               matchCase: true,
             }
