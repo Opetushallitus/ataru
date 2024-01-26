@@ -76,6 +76,7 @@
         application-identifier (subscribe [:application/application-identifier])
         header                 (util/non-blank-val (:label field-descriptor) @languages)
         text                   (util/non-blank-val (:text field-descriptor) @languages)]
+    (prn field-descriptor)
     [:div.application__form-info-element.application__form-field
      (when (not-empty header)
        [:label.application__form-field-label [:span header]])

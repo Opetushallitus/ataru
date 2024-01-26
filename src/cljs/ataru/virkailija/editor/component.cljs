@@ -163,66 +163,6 @@
               {:data-test-id (some-> data-test-id-prefix (str "-fields-label"))}
               (string/join ", " (get-leaf-component-labels @value @(subscribe [:editor/virkailija-lang])))]])]]))))
 
-(defn info-element
-  "Info text which is a standalone component"
-  [_ path]
-  (let [languages        (subscribe [:editor/languages])
-        collapse-checked (subscribe [:editor/get-component-value path :params :info-text-collapse])
-        sub-header       (subscribe [:editor/get-component-value path :label])
-        component-locked?     (subscribe [:editor/component-locked? path])]
-    (fn [initial-content path]
-      [:div.editor-form__component-wrapper
-       [text-header-component/text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
-        :sub-header @sub-header]
-       [component-content/component-content
-        path ;(:id initial-content)
-        [:div
-         [:div.editor-form__component-row-wrapper
-          [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
-           (input-fields-with-lang-component/input-fields-with-lang
-            (fn [lang]
-              [input-field-component/input-field {:path        path
-                                                  :lang        lang
-                                                  :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                (-> % .-target .-value)
-                                                                                path :label lang])}])
-            @languages
-            :header? true)
-           [:div.infoelement
-            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :text])]
-            (->> (input-fields-with-lang-component/input-fields-with-lang
-                  (fn [lang]
-                    [input-field-component/input-field {:path        path
-                                                        :lang        lang
-                                                        :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                      (-> % .-target .-value)
-                                                                                      path :text lang])
-                                                        :value-fn    (fn [component] (get-in component [:text lang]))
-                                                        :tag         :textarea}])
-                  @languages
-                  :header? true)
-                 (map (fn [field]
-                        (into field [[:div.editor-form__markdown-anchor
-                                      (markdown-help-component/markdown-help)]])))
-                 doall)]]
-          [:div.editor-form__checkbox-wrapper
-           (let [collapsed-id (util/new-uuid)]
-             [:div.editor-form__checkbox-container
-              [:input.editor-form__checkbox {:type      "checkbox"
-                                             :id        collapsed-id
-                                             :checked   (boolean @collapse-checked)
-                                             :disabled  @component-locked?
-                                             :on-change (fn [event]
-                                                          (dispatch [:editor/set-component-value
-                                                                     (-> event .-target .-checked)
-                                                                     path :params :info-text-collapse]))}]
-              [:label.editor-form__checkbox-label
-               {:for   collapsed-id
-                :class (when @component-locked? "editor-form__checkbox-label--disabled")}
-               @(subscribe [:editor/virkailija-translation :collapse-info-text])]])]
-          [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]])))
-
 (defn pohjakoulutusristiriita
   [_ _]
   (let [languages (subscribe [:editor/languages])]
