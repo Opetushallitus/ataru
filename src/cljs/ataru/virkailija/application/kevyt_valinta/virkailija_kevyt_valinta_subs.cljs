@@ -117,13 +117,14 @@
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/show-kevyt-valinta?
-  (fn []
+  (fn [[_ application-key]]
     [(re-frame/subscribe [:state-query [:application :selected-review-hakukohde-oids]])
      (re-frame/subscribe [:state-query [:application :selected-application-and-form :application :rights-by-hakukohde]])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valintalaskenta-in-hakukohteet])
      (re-frame/subscribe [:virkailija-kevyt-valinta/sijoittelu?])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/selection-state-used-in-selected-hakukohteet?])])
-  (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu? selection-state-used?]]
+     (re-frame/subscribe [:virkailija-kevyt-valinta/selection-state-used-in-selected-hakukohteet?])
+     (re-frame/subscribe [:virkailija-kevyt-valinta-filter/person-yksiloity? application-key])])
+  (fn [[hakukohde-oids rights-by-hakukohde valintalaskenta-in-hakukohteet sijoittelu? selection-state-used? yksiloity?]]
     (and (fc/feature-enabled? :kevyt-valinta)
          ;; On päätetty, että kevyt valinta näkyy ainoastaan kun on yksi
          ;; hakukohde valittavissa, muuten moni asia on todella epätriviaaleja
@@ -135,7 +136,8 @@
          ;; false?, koska nil tarkoittaa ettei tietoa ole vielä ladattu
          ;; backendiltä ja nil? palauttaisi väärän positiivisen tiedon
          (every? false? valintalaskenta-in-hakukohteet)
-         (not selection-state-used?))))
+         (not selection-state-used?)
+         yksiloity?)))
 
 (defn- default-kevyt-valinta-property-value [kevyt-valinta-property]
   (cond
