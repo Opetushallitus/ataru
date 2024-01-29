@@ -5,15 +5,16 @@
             [taoensso.timbre :as log]
             [schema.core :as s]
             [schema-tools.core :as st]
-            [clojure.java.io :refer [input-stream]])
+            [clojure.java.io :refer [input-stream]]
+            [ataru.config.core :refer [config]])
   (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)))
 
 (defprotocol SiirtotiedostoService
   (siirtotiedosto-applications [this params])
   (siirtotiedosto-forms [this params]))
 
-(def applications-page-size 20000);todo, nämä konffattaviksi
-(def forms-page-size 200)
+(def applications-page-size (or (-> config :siirtotiedostot :applications-page-size) 10000))
+(def forms-page-size (or (-> config :siirtotiedostot :forms-page-size) 500))
 
 (s/defschema SiirtotiedostoFormSchema {:properties        s/Any
                                         :deleted          (s/maybe s/Bool)
