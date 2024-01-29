@@ -13,8 +13,8 @@
   (siirtotiedosto-applications [this params])
   (siirtotiedosto-forms [this params]))
 
-(def applications-page-size (or (-> config :siirtotiedostot :applications-page-size) 10000))
-(def forms-page-size (or (-> config :siirtotiedostot :forms-page-size) 500))
+(def applications-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :applications-page-size)) (catch Exception _ nil)) 10000))
+(def forms-page-size (or (try (Integer/parseInt (-> config :siirtotiedostot :forms-page-size)) (catch Exception _ nil)) 500))
 
 (s/defschema SiirtotiedostoFormSchema {:properties        s/Any
                                         :deleted          (s/maybe s/Bool)
