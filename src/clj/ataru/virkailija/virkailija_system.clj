@@ -228,7 +228,9 @@
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
-    :siirtotiedosto-client (new SiirtotiedostoPalvelu "eu-west-1" "opintopolku-untuva-siirtotiedostot");todo, get values from config
+    :siirtotiedosto-client (new SiirtotiedostoPalvelu
+                                (-> config :siirtotiedostot :aws-region)
+                                (-> config :siirtotiedostot :s3-bucket))
 
     :application-service (component/using
                            (application-service/new-application-service)
