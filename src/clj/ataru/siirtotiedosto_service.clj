@@ -6,8 +6,7 @@
             [schema.core :as s]
             [schema-tools.core :as st]
             [clojure.java.io :refer [input-stream]])
-  (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)
-           (java.util Optional)))
+  (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)))
 
 (defprotocol SiirtotiedostoService
   (siirtotiedosto-applications [this params])
@@ -51,18 +50,18 @@
         json (json/generate-string schema-compliant-applications)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of applications json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client (Optional/empty) (Optional/empty) "ataru" (Optional/of "applications") stream) (catch Exception e
-                                                                                                                                  (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))))))
+    (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream)
+         (catch Exception e
+           (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))))))
 
 (defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms start-time]
   (let [schema-compliant-forms (map #(st/select-schema % SiirtotiedostoFormSchema) forms)
         json (json/generate-string schema-compliant-forms)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of forms json to s3 in siirtotiedosto! Start " start-time)
-    (try
-      (.saveSiirtotiedosto client (Optional/empty) (Optional/empty) "ataru" (Optional/of "forms") stream)
-      (catch Exception e
-        (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))))))
+    (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream)
+         (catch Exception e
+           (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))))))
 
 (defrecord CommonSiirtotiedostoService [siirtotiedosto-client]
   SiirtotiedostoService
