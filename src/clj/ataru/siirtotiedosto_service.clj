@@ -76,7 +76,7 @@
       (let [first-application-per-chunk (doall (for [application-ids partitions]
                                           (let [start (System/currentTimeMillis)
                                                 applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)]
-                                            (save-applications-to-s3 siirtotiedosto-client applications-chunk (:modified_after params))
+                                            (save-applications-to-s3 siirtotiedosto-client applications-chunk (:modified-after params))
                                             (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
                                             (first applications-chunk))))]
         ;(log/info "first applications" (flatten first-application-per-chunk))
@@ -94,7 +94,7 @@
       (let [first-forms-per-chunk (doall (for [form-ids partitions]
                                     (let [start (System/currentTimeMillis)
                                           forms-chunk (form-store/fetch-forms-by-ids form-ids)]
-                                      (save-forms-to-s3 siirtotiedosto-client forms-chunk (:modified_after params))
+                                      (save-forms-to-s3 siirtotiedosto-client forms-chunk (:modified-after params))
                                       (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
                                       (first forms-chunk))))]
         ;(log/info "first forms" (flatten first-forms-per-chunk))
