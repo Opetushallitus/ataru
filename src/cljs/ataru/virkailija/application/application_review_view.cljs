@@ -219,7 +219,7 @@
                [:li
                 [:a
                  {:key    oid
-                  :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+                  :href   (str "/organisaatio-service/lomake/" oid)
                   :target "_blank"}
                  (util/non-blank-val (:name org) [@lang :fi :sv :en])]]))]])
        [:div.application-handling__review-note-content
@@ -411,7 +411,7 @@
          [:li
           [:a
            {:key    oid
-            :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+            :href   (str "/organisaatio-service/lomake/" oid)
             :target "_blank"}
            (util/non-blank-val (:name org) [lang :fi :sv :en])]]))]))
 
