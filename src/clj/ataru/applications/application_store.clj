@@ -1561,11 +1561,6 @@
            (partition partition-size partition-size nil)
            (mapcat fetch)))))
 
-(defn- replace-inactivated-application-with-placeholder [application]
-  (if (= (:state application) "inactivated")
-    (select-keys application [:hakemusOid :state])
-    application))
-
 (defn- unwrap-siirto-application [application]
   (let [attachments (->> application
                          :content
@@ -1595,8 +1590,7 @@
 (defn siirtotiedosto-applications-for-ids [ids]
   (log/info "Fetching applications for" (count ids) "ids.")
   (->> (exec-db :db queries/yesql-get-siirtotiedosto-applications-for-ids {:ids ids})
-       (map unwrap-siirto-application)
-       (map replace-inactivated-application-with-placeholder)))
+       (map unwrap-siirto-application)))
 
 (defn siirtotiedosto-application-ids [{:keys [modified-before modified-after] :as params}]
   (log/info "Siirtotiedosto-forms-paged" params)
