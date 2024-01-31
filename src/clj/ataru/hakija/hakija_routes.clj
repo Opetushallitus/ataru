@@ -440,7 +440,7 @@
             session (:session request)
             oppija-session-from-db (some-> (get-in request [:cookies "oppija-session" :value])
                                            (oss/read-session))]
-        (log/info "Checking has-applied" has-applied-params session oppija-session-from-db)
+        (log/info "Checking has-applied" has-applied-params "session" session "logged-in" (boolean (:logged-in oppija-session-from-db)))
         (cond (some? ssn)
               (response/ok (application-store/has-ssn-applied haku-oid ssn))
               (some? eidas-id)
