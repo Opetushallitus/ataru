@@ -1103,3 +1103,8 @@
   :application/forms
   (fn forms [db _]
     (get-in db [:forms])))
+
+(re-frame/reg-sub
+ :application/excel-request-filter-value
+ (fn [db [_ id]]
+   (get-in db [:excel-request :filters id])))

@@ -98,7 +98,8 @@
                                                                   :visible? false
                                                                   :error nil
                                                                   :selected-mode "valitse-tiedot"
-                                                                  :included-ids nil}}
+                                                                  :included-ids nil
+                                                                  :filters {}}}
    :haut                       {}
    :hakukohteet                {}
    :fetching-haut              0
