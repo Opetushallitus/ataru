@@ -93,7 +93,12 @@
                                 :ensisijaisesti?                   false
                                 :ensisijaisesti?-checkbox          false
                                 :rajaus-hakukohteella              nil
-                                :rajaus-hakukohteella-value        nil}
+                                :rajaus-hakukohteella-value        nil
+                                :excel-request                   {:fetching? false
+                                                                  :visible? false
+                                                                  :error nil
+                                                                  :selected-mode "valitse-tiedot"
+                                                                  :included-ids nil}}
    :haut                       {}
    :hakukohteet                {}
    :fetching-haut              0

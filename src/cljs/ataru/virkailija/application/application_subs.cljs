@@ -27,6 +27,11 @@
     (get-in db [:application :selected-application-and-form :application])))
 
 (re-frame/reg-sub
+ :application/excel-download-mode
+ (fn [db]
+   (get-in db [:application :excel-request :selected-mode])))
+
+(re-frame/reg-sub
   :application/selected-application-answers
   (fn [db _] (selected-application-answers db)))
 
