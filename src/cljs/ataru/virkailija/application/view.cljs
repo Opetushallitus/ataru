@@ -19,6 +19,7 @@
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-subs]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view :refer [valinnat]]
             [ataru.virkailija.application.view.application-heading :refer [application-heading]]
+            [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]
             [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
@@ -26,6 +27,23 @@
 (defn use-excel-download-mode-state []
   [(subscribe [:application/excel-download-mode])
    (fn [mode] (dispatch [:application/change-excel-download-mode mode]))])
+
+(defn excel-selection-accordion [id title & children]
+  (let [folded? @(subscribe [:editor/folded? id])]
+    [:<>
+     [:div.editor-form__header-wrapper
+      [:header.editor-form__component-header
+       (if folded?
+         [:button.editor-form__component-fold-button
+          {:type "button"
+           :on-click #(dispatch [:editor/unfold id])}
+          [:i.zmdi.zmdi-chevron-down]]
+         [:button.editor-form__component-fold-button
+          {:type "button"
+           :on-click #(dispatch [:editor/fold id])}
+          [:i.zmdi.zmdi-chevron-up]])
+       [:span.editor-form__component-main-header title]]]
+     (when (not folded?) children)]))
 
 (defn excel-download-link
   [_ _ _]
@@ -79,7 +97,15 @@
                :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
              [:label "Kirjoita tunnisteet"]]]
            (case @excel-download-mode
-             "valitse-tiedot" [:div "Valitse tiedot"]
+             "valitse-tiedot" [:div
+                               [excel-selection-accordion
+                                :hakemuksen-yleiset-tiedot
+                                @(subscribe [:editor/virkailija-translation :excel-hakemuksen-yleiset-tiedot])
+                                [:div [checkbox-component/checkbox "excel.valitse-tiedot" {:hakemuksen-yleiset-tiedot false} :hakemuksen-yleiset-tiedot]]]
+                               [excel-selection-accordion
+                                :kasittelymerkinnat
+                                @(subscribe [:editor/virkailija-translation :excel-kasittelymerkinnat])
+                                [:div "Kasittelymerkinnat content"]]]
              "kirjoita-tunnisteet"
              [:<>
               [:div.application-handling__excel-request-row
@@ -96,7 +122,7 @@
             [:span
              @(subscribe [:editor/virkailija-translation :load-excel])]
             (when (or @fetching-applications? @fetching-excel?)
-               [:i.zmdi.zmdi-spinner.spin])]]])])))
+              [:i.zmdi.zmdi-spinner.spin])]]])])))
 
 (defn- closed-row
   [on-click label]
