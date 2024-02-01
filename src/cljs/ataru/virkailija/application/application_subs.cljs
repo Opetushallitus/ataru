@@ -1107,4 +1107,4 @@
 (re-frame/reg-sub
  :application/excel-request-filter-value
  (fn [db [_ id]]
-   (get-in db [:excel-request :filters id])))
+   (get-in db [:application :excel-request :filters id :checked])))
