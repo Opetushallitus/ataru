@@ -1,0 +1,127 @@
+@import "vars";
+@import "mixins";
+
+.application-handling__excel-download-link {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.application-handling__excel-request-button {
+  color: @white;
+  background-color: @link-color;
+  border-radius: 3px;
+  box-shadow :none;
+  padding: 5px;
+  height: 41px;
+  width: 100%;
+  margin-right: 0;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+
+  &:disabled {
+    background-color: @section-gray-border;
+  }
+}
+
+.application-handling__excel-request-heading {
+  flex-basis: 95px;
+  display: flex;
+  margin-right: 10px;
+}
+
+.application-handling__excel-request-popup {
+  .arrow(top, white, 8px, 90%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
+  box-sizing: border-box;
+  display: block;
+  border-radius: 3px;
+  position: absolute;
+  z-index: 10;
+  top: 50px;
+  text-align: start;
+  background-color: white;
+  padding: 15px;
+  font-size: 13px;
+  line-height: 21px;
+  min-width: 340px;
+  left: -218px;
+}
+
+.application-handling__excel-request-container {
+  position: relative;
+}
+
+.application-handling__excel-accordion-header-button {
+  display: flex;
+  padding: 0;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: inherit;
+  background-color: transparent;
+  cursor: pointer;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  height: 45px;
+  padding: 25px 10px 25px 10px;
+  .zmdi {
+    font-size: 30px;
+    font-weight: light;
+    color: @neutral-grey-600
+  }
+}
+
+.application-handling__excel-accordion-heading-wrapper {
+  margin: 0;
+}
+
+.application-handling__excel-accordion-group {
+  border-bottom: 1px solid @neutral-grey-200;
+}
+
+
+.application-handling__excel-accordion-content {
+  margin: 0px 15px 10px 15px;
+}
+
+.appication-handling__excel-download-mode-radiogroup {
+  display: flex;
+  border-bottom: 2px solid @neutral-grey-200;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.appication-handling__excel-download-mode-radio-control {
+  display: inline-flex;
+  align-items: center;
+  line-height: 30px;
+  gap: 5px;
+  padding: 0 2px;
+  & > * {
+    cursor: pointer;
+  }
+  input {
+    margin: 0;
+    accent-color: @link-color;
+  }
+  &:has(> input:checked) {
+    border-bottom: 2px solid @link-color;
+    margin-bottom: -2px;
+  }
+}
+
+.appication-handling__excel-download-valitse-tiedot {
+
+}

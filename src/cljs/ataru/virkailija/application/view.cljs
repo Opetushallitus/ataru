@@ -21,6 +21,7 @@
             [ataru.virkailija.application.view.application-heading :refer [application-heading]]
             [ataru.virkailija.editor.components.checkbox-component :as checkbox-component]
             [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+            [clojure.string :as str]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -28,22 +29,37 @@
   [(subscribe [:application/excel-download-mode])
    (fn [mode] (dispatch [:application/change-excel-download-mode mode]))])
 
-(defn excel-selection-accordion [id title & children]
+(defn- classes [& cs] (str/join " " (vec cs)))
+
+(defn- accordion-heading-id [id] (str (name id) "_heading"))
+(defn- accordion-content-id [id] (str (name id) "_content"))
+(defn- accordion-heading [id title folded?]
+  (let [click-action (if folded?
+                       #(dispatch [:editor/unfold id])
+                       #(dispatch [:editor/fold id]))]
+    [:h3.application-handling__excel-accordion-heading-wrapper
+     [:button.application-handling__excel-accordion-header-button
+      {:id (accordion-heading-id id)
+       :type "button"
+       "aria-expanded" (not folded?)
+       "aria-controls" (accordion-content-id id)
+       :on-click click-action}
+      [:span.excel-accordion-heading-text title]
+      [:i
+       {:class (classes "zmdi"
+                        (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]]]))
+
+(defn excel-accordion [id title content]
   (let [folded? @(subscribe [:editor/folded? id])]
-    [:<>
-     [:div.editor-form__header-wrapper
-      [:header.editor-form__component-header
-       (if folded?
-         [:button.editor-form__component-fold-button
-          {:type "button"
-           :on-click #(dispatch [:editor/unfold id])}
-          [:i.zmdi.zmdi-chevron-down]]
-         [:button.editor-form__component-fold-button
-          {:type "button"
-           :on-click #(dispatch [:editor/fold id])}
-          [:i.zmdi.zmdi-chevron-up]])
-       [:span.editor-form__component-main-header title]]]
-     (when (not folded?) children)]))
+    [:div.application-handling__excel-accordion-group
+     ^{:key (str (name id) "_accordion")}
+     [accordion-heading id title folded?]
+     [:div.application-handling__excel-accordion-content
+      {:id (accordion-content-id id)
+       :role "region"
+       :style {:display (if folded? "none" "block")}
+       "aria-labelledby" (accordion-heading-id id)}
+      ^{:key (accordion-content-id id)} content]]))
 
 (defn excel-download-link
   [_ _ _]
@@ -56,11 +72,15 @@
         [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
-       [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-excel-popup-visibility true])}
+       [:a
+        {:class (classes "application-handling__excel-download-link"
+                         "editor-form__control-button"
+                         "editor-form__control-button--enabled"
+                         "editor-form__control-button--variable-width")
+         :on-click #(dispatch [:application/set-excel-popup-visibility true])}
         @(subscribe [:editor/virkailija-translation :load-excel])]
        (when @visible?
-         [:div.application-handling__popup__excel.application-handling__excel-request-popup
+         [:div.application-handling__excel-request-popup
           [:div.application-handling__mass-edit-review-states-title-container
            [:h4.application-handling__mass-edit-review-states-title
             @(subscribe [:editor/virkailija-translation :excel-request])]
@@ -79,38 +99,38 @@
                                            :selected-hakukohderyhma selected-hakukohderyhma}
                                form-params (into {} (map (fn [entry] [(first entry) (second entry)]) (.entries form-data)))]
                            (dispatch [:application/start-excel-download (into {} (remove (comp nil? second) (merge ext-params form-params)))])))}
-           [:div.appication-handling__excel-request-row
-            [:span
+           [:div.appication-handling__excel-download-mode-radiogroup
+            [:span.appication-handling__excel-download-mode-radio-control
              [:input
               {:type      "radio"
                :value     "valitse-tiedot"
                :checked   (= @excel-download-mode "valitse-tiedot")
                :name      "download-mode"
                :on-change (fn [] (set-excel-download-mode "valitse-tiedot"))}]
-             [:label "Valitse excelin tiedot"]]
-            [:span
+             [:label {:on-click (fn [] (set-excel-download-mode "valitse-tiedot"))} "Valitse excelin tiedot"]]
+            [:span.appication-handling__excel-download-mode-radio-control
              [:input
               {:type      "radio"
                :value     "kirjoita-tunnisteet"
                :checked   (= @excel-download-mode "kirjoita-tunnisteet")
                :name      "download-mode"
                :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
-             [:label "Kirjoita tunnisteet"]]]
+             [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet" ]]]
            (case @excel-download-mode
-             "valitse-tiedot" [:div
-                               [excel-selection-accordion
+             "valitse-tiedot" [:div.appication-handling__excel-download-valitse-tiedot
+                               [excel-accordion
                                 :hakemuksen-yleiset-tiedot
                                 @(subscribe [:editor/virkailija-translation :excel-hakemuksen-yleiset-tiedot])
                                 [:div [checkbox-component/checkbox "excel.valitse-tiedot" {:hakemuksen-yleiset-tiedot false} :hakemuksen-yleiset-tiedot]]]
-                               [excel-selection-accordion
+                               [excel-accordion
                                 :kasittelymerkinnat
                                 @(subscribe [:editor/virkailija-translation :excel-kasittelymerkinnat])
                                 [:div "Kasittelymerkinnat content"]]]
              "kirjoita-tunnisteet"
              [:<>
-              [:div.application-handling__excel-request-row
+              [:div
                [:div.application-handling__excel-request-heading @(subscribe [:editor/virkailija-translation :excel-included-ids])]]
-              [:div.application-handling__excel-request-row
+              [:div
                [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
                 {:value       (or @included-ids "")
                  :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
