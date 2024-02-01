@@ -1,25 +1,30 @@
 (ns ataru.virkailija.application.handlers
-  (:require [ataru.virkailija.virkailija-ajax :as ajax]
-            [re-frame.core :refer [subscribe dispatch reg-event-db reg-event-fx]]
-            [ataru.virkailija.autosave :as autosave]
-            [ataru.application.review-states :as review-states]
-            [ataru.virkailija.db :as initial-db]
-            [ataru.util :as util]
+  (:require [ataru.application.application-states :as application-states]
             [ataru.application.filtering :as application-filtering]
+            [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
+            [ataru.component-data.base-education-module-higher :as higher-module]
+            [ataru.tarjonta.haku :as haku]
+            [ataru.util :as util]
+            [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
+            [ataru.virkailija.application.application-search-control-handlers :as asch]
+            [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
+                                                                        hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+                                                                        selected-hakukohde-oid-set]]
+            [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]
+            [ataru.virkailija.autosave :as autosave]
+            [ataru.virkailija.db :as initial-db]
+            [ataru.virkailija.editor.editor-selectors :refer [db-all-organizations-have-only-opinto-ohjaaja-rights?]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.virkailija-ajax :as ajax]
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]
             [clojure.set :as clj-set]
             [clojure.string :as clj-string]
-            [ataru.component-data.base-education-module-higher :as higher-module]
-            [ataru.application.application-states :as application-states]
-            [ataru.virkailija.application.application-search-control-handlers :as asch]
-            [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
-            [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
-            [ataru.virkailija.temporal :as temporal]
-            [ataru.tarjonta.haku :as haku]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]))
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
+                                   subscribe]]))
 
 (defn- valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec [db]
   (->> db
@@ -194,7 +199,7 @@
           (assoc-in [:application :applications] updated-applications)
           (assoc-in [:application :attachment-state-counts] (attachment-state-counts
                                                               updated-applications
-                                                              @(subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])))))))
+                                                              (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db) ))))))
 
 (defn- add-attachment-state-counts
   [counts applications selected-hakukohde-oids]
@@ -268,7 +273,7 @@
 (reg-event-fx
   :application/handle-fetch-applications-response
   (fn [{:keys [db]} [_ {:keys [applications sort]} {:keys [fetch-valintalaskenta-in-use-and-valinnan-tulos-for-applications?]}]]
-    (let [selected-hakukohde-oids @(subscribe [:application/selected-hakukohde-oid-set])
+    (let [selected-hakukohde-oids (selected-hakukohde-oid-set db)
           all-applications        (let [loaded   (get-in db [:application :applications])
                                         new-keys (set (map :key applications))]
                                     (into (filterv #(not (contains? new-keys (:key %))) loaded)
@@ -350,7 +355,7 @@
   (fn [db [_ form-key]]
     (let [query-params    (cljs-util/extract-query-params)
           ensisijaisesti? (= "true" (:ensisijaisesti query-params))
-          tutu-form?      @(subscribe [:tutu-payment/tutu-form? form-key])
+          tutu-form?      (get-tutu-form? form-key)
           processing-states (if tutu-form?
                               review-states/application-hakukohde-processing-states
                               review-states/application-hakukohde-processing-states-normal)]
@@ -665,9 +670,9 @@
                                        [(if (application-has-attachments? db)
                                           [:application/fetch-application-attachment-metadata]
                                           [:application/start-autosave])
-                                        (when (not @(subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?]))
+                                        (when (not (db-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                           [:liitepyynto-information-request/get-deadlines application-key])
-                                        (when @(subscribe [:tutu-payment/tutu-form? form-key])
+                                        (when (get-tutu-form? form-key)
                                           [:tutu-payment/fetch-payments application-key])
                                         [:application/get-application-change-history application-key]]
                                        (valintalaskentakoostepalvelu-valintalaskenta-dispatch-vec db)
@@ -1138,7 +1143,7 @@
     (when-let [current-idx (util/first-index-of #(= (:key %) (-> db :application :selected-key))
                                                 (-> db :application :applications))]
       (let [applications         (-> db :application :applications)
-            filtered-hakukohde   (subscribe [:application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma])
+            filtered-hakukohde   (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)
             next-idx             (mod (+ current-idx step) (count applications))
             next-application-key (-> applications (nth next-idx) :key)
             next-not-visible?    (= next-idx (-> db :application :applications-to-render))]
