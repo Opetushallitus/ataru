@@ -2,7 +2,7 @@
   (:require #?(:clj  [clj-time.core :as c]
                :cljs [cljs-time.core :as c])
             [clojure.string :as string]
-            [ataru.config :refer [get-public-config]]))
+            [ataru.feature-config :refer [feature-enabled?]]))
 
 (def ^:private ssn-pattern #"^(\d{2})(\d{2})(\d{2})([-|A-F|U-Y])(\d{3})([0-9a-zA-Z])$")
 
@@ -55,7 +55,7 @@
           (-> year (>= (+ current-year 1)))))))
 
 (defn- temporary-ssn-in-prod? [individual]
-  (and (= "sade" (get-public-config [:environment-name]))
+  (and (feature-enabled? :disallow-temporary-ssn)
        (= \9 (first individual))))
 
 (defn ssn?

@@ -9,7 +9,7 @@
             [ataru.hakija.application-validators :as validator]
             [cljs.core.async :as async]
             [cljs.test :refer-macros [deftest is async]]
-            [ataru.config]))
+            [ataru.feature-config]))
 
 (defn- has-never-applied [_ _] (asyncm/go false))
 
@@ -30,7 +30,7 @@
   (async done
          (asyncm/go
            (with-redefs
-             [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "dev"} keys))]
+             [ataru.feature-config/feature-enabled? (fn [feature] (when (= feature :disallow-temporary-ssn) false))]
              (doseq [ssn ssn/ssn-list]
                (doseq [century-char ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]]
                  (let [ssn (str (:start ssn) century-char (:end ssn))]
@@ -58,7 +58,7 @@
   (async done
     (asyncm/go
       (with-redefs
-        [ataru.config/get-public-config (fn [keys] (get-in {:environment-name "sade"} keys))]
+        [ataru.feature-config/feature-enabled? (fn [feature] (when (= feature :disallow-temporary-ssn) true))]
 
         (is (not (first (async/<! (validator/validate {:has-applied      has-never-applied
                                                        :validator        "ssn"
