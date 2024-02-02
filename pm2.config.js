@@ -1,7 +1,5 @@
 'use strict'
 
-const path = require('path')
-
 // Allow local overriding of hakija and virkailija configs via environment variables
 const virkailijaConfig =
   process.env['VIRKAILIJA_CONFIG'] ||
@@ -14,8 +12,7 @@ module.exports = {
   apps: [
     {
       name: 'ataru-css-compilation',
-      script: 'bin/compile-less.sh',
-      interpreter: '/bin/sh',
+      script: 'bin/watch-compile-less.sh',
       cwd: __dirname,
       log_file: 'logs/pm2/less.log',
       pid_file: '.less.pid',
@@ -25,7 +22,6 @@ module.exports = {
       restart_delay: 4000,
       wait_ready: true,
       watch: false,
-      exec_interpreter: 'none',
       exec_mode: 'fork',
     },
     {

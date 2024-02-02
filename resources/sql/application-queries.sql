@@ -1263,3 +1263,12 @@ WHERE a.key = :key;
 -- name: yesql-add-application-delete-history!
 INSERT INTO application_delete_history (application_key, deleted_by, delete_ordered_by, reason_of_delete)
 VALUES (:application_key, :deleted_by, :delete_ordered_by, :reason_of_delete);
+
+--name: yesql-get-ensisijaisesti-hakeneet-counts
+select hakukohde_oid, count(*) from
+(select u.hakukohde_oid, u.idx
+from latest_applications la
+cross join unnest(la.hakukohde) with ordinality as u(hakukohde_oid, idx)
+where la.haku = :haku_oid
+and u.idx = 1) as ensisijaiset
+group by hakukohde_oid;

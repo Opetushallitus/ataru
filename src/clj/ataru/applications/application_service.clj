@@ -413,6 +413,7 @@
   (suoritusrekisteri-toinenaste-applications [this form-by-haku-oid-str-cache haku-oid hakukohde-oids person-oids modified-after offset])
   (get-applications-paged [this session params])
   (get-applications-persons-and-hakukohteet-by-haku [this haku])
+  (get-ensisijainen-application-counts-for-haku [this haku-oid])
   (mass-delete-application-data [this session application-keys delete-ordered-by reason-of-delete]))
 
 
@@ -899,6 +900,10 @@
   (get-applications-persons-and-hakukohteet-by-haku
     [_ haku]
     (application-store/get-applications-persons-and-hakukohteet haku))
+
+  (get-ensisijainen-application-counts-for-haku
+    [_ haku-oid]
+    (into {} (map (fn [item] [(:hakukohde_oid item) (:count item)]) (application-store/get-ensisijainen-applications-counts-for-haku haku-oid))))
 
   (mass-delete-application-data
     [_ session application-keys delete-ordered-by reason-of-delete]

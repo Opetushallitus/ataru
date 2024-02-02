@@ -559,6 +559,10 @@
   [haku]
   (exec-db :db queries/yesql-applications-person-and-hakukohteet-by-haku {:haku haku}))
 
+(defn get-ensisijainen-applications-counts-for-haku
+  [haku-oid]
+  (exec-db :db queries/yesql-get-ensisijaisesti-hakeneet-counts {:haku_oid haku-oid}))
+
 (defn- unwrap-onr-application
   [{:keys [key haku form email content person_oid]}]
   (let [answers (answers-by-key (:answers content))]

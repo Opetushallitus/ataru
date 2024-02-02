@@ -1,17 +1,24 @@
 {
-  "extends": ["prettier", "plugin:prettier/recommended"],
-  "plugins": ["prettier", "prefer-arrow"],
+  "extends": [
+    "prettier",
+    "plugin:prettier/recommended",
+    "plugin:@typescript-eslint/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint", "prettier", "prefer-arrow"],
   "rules": {
     "prettier/prettier": ["error"],
     "prefer-arrow/prefer-arrow-functions": "error",
     "array-callback-return": "off",
     "prefer-const": "error",
-    "no-var": "error"
+    "no-var": "error",
+    "@typescript-eslint/no-unused-vars": "warn"
   },
   "env": {
     "browser": true
   },
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 6,
+    "sourceType": "module"
   }
 }

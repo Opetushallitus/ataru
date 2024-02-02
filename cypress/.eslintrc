@@ -9,7 +9,6 @@
     "airbnb-base",
     "plugin:import/typescript",
     "plugin:prettier/recommended",
-    "prettier/@typescript-eslint",
     "plugin:cypress/recommended",
     "plugin:chai-friendly/recommended"
   ],
@@ -27,6 +26,7 @@
     "array-callback-return": "off",
     "prefer-arrow/prefer-arrow-functions": "error",
     "prefer-const": "error",
-    "spaced-comment": "off"
+    "spaced-comment": "off",
+    "cypress/unsafe-to-chain-command": "warn"
   }
 }

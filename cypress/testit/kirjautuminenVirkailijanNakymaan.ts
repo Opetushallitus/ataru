@@ -1,4 +1,4 @@
-export default (kuvaus: String, testit: () => void) => {
+export default (kuvaus: string, testit: () => void) => {
   describe(`Virkailijan näkymään kirjautuminen ${kuvaus}`, () => {
     before(() => {
       Cypress.Cookies.defaults({

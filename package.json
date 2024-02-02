@@ -8,10 +8,11 @@
   "scripts": {
     "cypress:open": "cypress open -C oph-configuration/cypress.json",
     "cypress:run": "cypress run -C oph-configuration/cypress.json --browser chrome --headless",
-    "cypress:run:travis": "cypress run -C oph-configuration/cypress.travis.json --browser /opt/hostedtoolcache/chromium/1160321/x64/chrome --headless",
+    "cypress:run:ci": "cypress run -C oph-configuration/cypress.ci.json --browser /home/runner/.cache/ms-playwright/chromium-1097/chrome-linux/chrome --headless",
     "lint:clj": "clj-kondo --lint src",
     "lint:clj:lint-staged": "clj-kondo --lint",
     "lint:js": "eslint '**/*.{ts,js}'",
+    "lint:js:lint-staged": "eslint",
     "lint:js:fix": "eslint --fix '**/*.{ts,js}'",
     "tsc:type-check": "./bin/type-check.sh"
   },
@@ -25,27 +26,29 @@
       "npm run tsc:type-check"
     ],
     "**/*.{js,ts}": [
-      "npm run lint:js"
+      "npm run lint:js:lint-staged"
     ],
-    "**/*.{clj,cljs,cljc}": [
+    "!(.clj-kondo/**/*)*.{clj,cljs,cljc}": [
       "npm run lint:clj:lint-staged"
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "3.7.1",
-    "@typescript-eslint/parser": "3.7.1",
+    "@playwright/test": "^1.41.0",
+    "@types/node": "^18.19.3",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "@typescript-eslint/parser": "^6.17.0",
     "chai": "4.2.0",
     "child-process": "^1.0.2",
     "clj-kondo": "^2023.7.13",
     "cypress": "4.11.0",
-    "eslint": "7.5.0",
-    "eslint-config-airbnb-base": "14.2.0",
-    "eslint-config-prettier": "6.11.0",
-    "eslint-plugin-chai-friendly": "0.6.0",
-    "eslint-plugin-cypress": "2.11.1",
-    "eslint-plugin-import": "^2.28.1",
-    "eslint-plugin-prefer-arrow": "1.2.2",
-    "eslint-plugin-prettier": "3.1.4",
+    "eslint": "8.56.0",
+    "eslint-config-airbnb-base": "15.0.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-chai-friendly": "0.7.2",
+    "eslint-plugin-cypress": "2.15.1",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-prefer-arrow": "1.2.3",
+    "eslint-plugin-prettier": "5.1.2",
     "fp-ts": "2.6.3",
     "http-server": "^0.12.3",
     "husky": "4.2.5",
@@ -55,11 +58,12 @@
     "karma-cljs-test": "0.1.0",
     "karma-mocha": "2.0.1",
     "less": "^4.2.0",
+    "less-watch-compiler": "^1.16.3",
     "lint-staged": "10.2.9",
     "mocha": "8.0.1",
     "pm2": "4.4.0",
-    "prettier": "2.0.5",
+    "prettier": "3.1.1",
     "puppeteer": "3.3.0",
-    "typescript": "3.9.5"
+    "typescript": "^5.3.3"
   }
 }

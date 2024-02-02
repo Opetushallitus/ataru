@@ -35,3 +35,7 @@ npm-debug.log*
 .java
 .lsp
 .calva
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

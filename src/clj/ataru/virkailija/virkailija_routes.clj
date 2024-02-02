@@ -1643,6 +1643,14 @@
             (response/ok response)
             (response/unauthorized {:error "Unauthorized"}))))
 
+      (api/GET "/kouta/haku/:haku-oid/hakukohde-ensisijainen-application-counts" {session :session}
+        :summary "Return counts for ensisijainen applications for given haku, grouped by hakukohde oids"
+        :path-params [haku-oid :- String]
+        :return {s/Keyword s/Int}
+        (if-let [result (application-service/get-ensisijainen-application-counts-for-haku application-service haku-oid)]
+          (response/ok result)
+          (response/bad-request)))
+
       (api/GET "/application-identifier/:application-identifier" {session :session}
         :summary "Get the application oid and person oid matching the
                   application identifier"

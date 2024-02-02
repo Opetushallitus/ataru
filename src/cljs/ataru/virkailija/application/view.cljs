@@ -202,13 +202,15 @@
    (cljs-util/update-url-with-query-params {:application-key application-key})
    (dispatch [:application/select-application application-key selected-hakukohde-oid with-newest-form?])))
 
+(def end-of-list-tolerance-px 2)
 (defn create-application-paging-scroll-handler
   []
   (fn [_]
     (when-let [end-of-list-element (.getElementById js/document "application-handling__end-of-list-element")]
       (let [element-offset  (-> end-of-list-element .getBoundingClientRect .-bottom)
             viewport-offset (.-innerHeight js/window)]
-        (when (< element-offset viewport-offset)
+        ; Sometimes element is fraction of a pixel below the viewport even if page is scrolled to the bottom.
+        (when (< element-offset (+ viewport-offset end-of-list-tolerance-px))
           (.click end-of-list-element))))))
 
 (defn- application-tab []

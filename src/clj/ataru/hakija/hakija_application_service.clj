@@ -703,9 +703,9 @@
                                      (conj :with-henkilo))
         secret-expired?            (when (nil? application)
                                      (application-store/application-exists-with-secret? secret))
-        lang-override              (when secret-expired? (application-store/get-application-language-by-secret secret))
         application-in-processing? (util/application-in-processing? (:application-hakukohde-reviews application))
         inactivated?               (is-inactivated? application)
+        lang-override              (when (or secret-expired? inactivated?) (application-store/get-application-language-by-secret secret))
         field-deadlines            (or (some->> application
                                                 :key
                                                 field-deadline/get-field-deadlines
@@ -739,15 +739,15 @@
         filtered-person (if (= actor-role :virkailija)
                           new-person
                           (dissoc new-person :ssn :birth-date))
-        full-application           (merge (some-> application
-                                                  (remove-unviewable-answers form)
-                                                  (attachments-metadata->answers liiteri-cas-client)
-                                                  (dissoc :person-oid :application-hakukohde-reviews)
-                                                  (assoc :cannot-edit-because-in-processing (and
-                                                                                             (not= actor-role :virkailija)
-                                                                                             (in-processing-state? application form))))
-                                          (when (some? (:key application))
-                                            {:application-identifier (application-service/mask-application-key (:key application))}))]
+        full-application (merge (some-> application
+                                        (remove-unviewable-answers form)
+                                        (attachments-metadata->answers liiteri-cas-client)
+                                        (dissoc :person-oid :application-hakukohde-reviews)
+                                        (assoc :cannot-edit-because-in-processing (and
+                                                                                   (not= actor-role :virkailija)
+                                                                                   (in-processing-state? application form))))
+                                (when (some? (:key application))
+                                  {:application-identifier (application-service/mask-application-key (:key application))}))]
     [(when full-application
        {:application full-application
         :person      filtered-person

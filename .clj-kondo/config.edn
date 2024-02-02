@@ -4,6 +4,7 @@
                 {:ignore [:unresolved-symbol]}}
  :linters {:not-empty?          {:level :off}
            :refer-all           {:exclude [speclj.core]}
+           :unresolved-var {:exclude [taoensso.carmine ring.util.http-response]}
            :unresolved-symbol   {:exclude [(compojure.api.sweet/context)
                                            (compojure.api.sweet/defroutes)
                                            (secretary.core/defroute)
@@ -31,5 +32,6 @@
            :invalid-arity       {:skip-args [clojure.core.match/match
                                              cljs.core.match/match]}}
  :lint-as {compojure.api.sweet/defroutes clojure.core/def
-           speclj.core/with clojure.core/def}}
+           speclj.core/with clojure.core/def
+           ajax.macros/easy-api clojure.core/def}}
 

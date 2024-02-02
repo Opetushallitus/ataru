@@ -67,7 +67,7 @@
                                                                      secret
                                                                      liiteri-cas-client)]
     (cond inactivated?
-          (response/bad-request {:code :inactivated :error "Inactivated"})
+          (response/bad-request {:code :inactivated :error "Inactivated" :lang lang-override})
 
           (some? application-form-and-person)
           (let [application (:application application-form-and-person)]
@@ -433,11 +433,14 @@
       :summary "Get cached koulutustyypit from koodisto"
       (let [codes (koodisto/get-koulutustyypit koodisto-cache)]
         (response/ok codes)))
-    (api/POST "/has-applied" []
+    (api/POST "/has-applied" [:as request]
       :summary "Check if a person has already applied"
       :body [has-applied-params ataru-schema/HasAppliedParams]
-      (let [{:keys [haku-oid ssn email eidas-id]} has-applied-params]
-        (log/info "Checking has-applied" has-applied-params)
+      (let [{:keys [haku-oid ssn email eidas-id]} has-applied-params
+            session (:session request)
+            oppija-session-from-db (some-> (get-in request [:cookies "oppija-session" :value])
+                                           (oss/read-session))]
+        (log/info "Checking has-applied" has-applied-params "session" session "logged-in" (boolean (:logged-in oppija-session-from-db)))
         (cond (some? ssn)
               (response/ok (application-store/has-ssn-applied haku-oid ssn))
               (some? eidas-id)

@@ -1,6 +1,6 @@
 # Ataru
 
-[![Build Status](https://travis-ci.org/Opetushallitus/ataru.svg?branch=master)](https://travis-ci.org/Opetushallitus/ataru)
+[![Build Status](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml/badge.svg)](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml)
 ![NPM Dependencies Status](https://david-dm.org/Opetushallitus/ataru.svg)
 
 A system for creating custom forms, applying to education and handling applications.
@@ -56,11 +56,31 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 ## Running tests
 
+### Running Playwright test
+
+When Playwright is updated or installed for the first time, it needs some dependencies installed. Since we only use Chromium in tests, needed dependencies can be installed with:
+
+    npx playwright --with-deps chromium
+
+Start the service locally with make start command
+
+    make start VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
+
+Then run all Playwright tests 
+
+   npx playwright test
+
+See more Playwright CLI-tips at https://playwright.dev/docs/test-cli
+
+You can also use Playwright [VSCode-extension](https://playwright.dev/docs/getting-started-vscode) for running and debugging tests.
+
+**If you want to write new tests, please use Playwright. Hopefully at some point all integration tests will use Playwright.**
+
 ### Running Cypress tests
 
 Start the service locally with make start command
 
-    make start VIRKAILIJA_CONFIG=$PWD/config/test.edn HAKIJA_CONFIG=$PWD/config/test.edn
+    make start VIRKAILIJA_CONFIG=$PWD/config/cypress.edn HAKIJA_CONFIG=$PWD/config/cypress.edn
 
 Then either open Cypress with command
 
@@ -70,9 +90,10 @@ or run it headless using command
 
     npm run cypress:run
 
-### Cypress tests in Travis
+### Cypress & Playwright tests in Github Actions
 
-Travis runs Cypress tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs, captured screenshots and recorded videos are automatically uploaded to S3.
+Github Actions runs Cypress & Playwright tests with separate configuration (ClojureScript is compiled with `:advanced` optimizations for improved page load performance). All server logs are automatically uploaded to S3.
+Both Playwright and Cypress tests are run together in the same CI-job and use shared config and browser in CI. 
 
 ### Running legacy browser tests
 
@@ -94,7 +115,7 @@ insert the required fixtures by running:
 ./bin/cibuild.sh reset-test-database-with-fixture
 ```
 
-For Travis CI the ataru-test-db and ataru-test-ftpd images have to be
+For Github Actions CI the ataru-test-db and ataru-test-ftpd images have to be
 available as
 `190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-postgres`
 and

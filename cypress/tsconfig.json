@@ -2,10 +2,10 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "target": "ES6"
+    "target": "ES6",
+    "types": ["cypress", "node"],
   },
   "include": [
-    "../node_modules/cypress",
     "./**/*.ts"
   ]
 }
