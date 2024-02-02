@@ -35,41 +35,43 @@
         sub-header       (subscribe [:editor/get-component-value path :label])
         component-locked?     (subscribe [:editor/component-locked? path])]
     (fn [initial-content path]
-      [:div.editor-form__component-wrapper
-       [text-header-component/text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
-        :sub-header @sub-header]
-       [component-content/component-content
-        path
-        [:div
-         [:div.editor-form__component-row-wrapper
-          [:div.editor-form__text-field-wrapper
-           [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
-           (input-fields-with-lang-component/input-fields-with-lang
-             (fn [lang]
-               [input-field-component/input-field {:path        path
-                                                   :lang        lang
-                                                   :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                 (-> % .-target .-value)
-                                                                                 path :label lang])}])
-             @languages
-             :header? true)
-           [:div.infoelement
-            [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :text])]
-            (->> (input-fields-with-lang-component/input-fields-with-lang
-                   (fn [lang]
-                     [input-field-component/input-field {:path        path
-                                                         :lang        lang
-                                                         :dispatch-fn #(dispatch-sync [:editor/set-component-value
-                                                                                       (-> % .-target .-value)
-                                                                                       path :text lang])
-                                                         :value-fn    (fn [component] (get-in component [:text lang]))
-                                                         :tag         :textarea}])
-                   @languages
-                   :header? true)
-                 (map (fn [field]
-                        (into field [[:div.editor-form__markdown-anchor
-                                      (markdown-help-component/markdown-help)]])))
-                 doall)]]
-          [info-checkbox path component-locked? :info-text-collapse :collapse-info-text]
-          [info-checkbox path component-locked? :show-for-identified :show-for-identified-info-text]
-          [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]])))
+      (let [applying-as-identified-enabled? (subscribe [:editor/allow-hakeminen-tunnistautuneena?])]
+        [:div.editor-form__component-wrapper
+         [text-header-component/text-header (:id initial-content) @(subscribe [:editor/virkailija-translation :info-element]) path (:metadata initial-content)
+          :sub-header @sub-header]
+         [component-content/component-content
+          path
+          [:div
+           [:div.editor-form__component-row-wrapper
+            [:div.editor-form__text-field-wrapper
+             [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :title])]
+             (input-fields-with-lang-component/input-fields-with-lang
+               (fn [lang]
+                 [input-field-component/input-field {:path        path
+                                                     :lang        lang
+                                                     :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                   (-> % .-target .-value)
+                                                                                   path :label lang])}])
+               @languages
+               :header? true)
+             [:div.infoelement
+              [:header.editor-form__component-item-header @(subscribe [:editor/virkailija-translation :text])]
+              (->> (input-fields-with-lang-component/input-fields-with-lang
+                     (fn [lang]
+                       [input-field-component/input-field {:path        path
+                                                           :lang        lang
+                                                           :dispatch-fn #(dispatch-sync [:editor/set-component-value
+                                                                                         (-> % .-target .-value)
+                                                                                         path :text lang])
+                                                           :value-fn    (fn [component] (get-in component [:text lang]))
+                                                           :tag         :textarea}])
+                     @languages
+                     :header? true)
+                   (map (fn [field]
+                          (into field [[:div.editor-form__markdown-anchor
+                                        (markdown-help-component/markdown-help)]])))
+                   doall)]]
+            [info-checkbox path component-locked? :info-text-collapse :collapse-info-text]
+            (when @applying-as-identified-enabled?
+              [info-checkbox path component-locked? :show-for-identified :show-for-identified-info-text])
+            [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]]))))

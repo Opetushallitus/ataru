@@ -1295,6 +1295,9 @@
    :collapse-info-text                                       {:fi "Pienennä pitkä ohjeteksti"
                                                               :sv "Visa mindre av långa anvisningar"
                                                               :en "EN: Pienennä pitkä ohjeteksti"}
+   :show-for-identified-info-text                            {:fi "Näytä vain tunnistautuneille hakijoille"
+                                                              :sv "SV: Näytä vain tunnistautuneille hakijoille"
+                                                              :en "EN: Näytä vain tunnistautuneille hakijoille"}
    :compare                                                  {:fi "Vertaile"
                                                               :sv "Jämför"
                                                               :en "Compare"}

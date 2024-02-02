@@ -1564,7 +1564,6 @@
 (reg-event-db
   :editor/add-invalid-value-validator
   (fn [db [_ option-value parent-path]]
-    (println :editor/add-invalid-value-validator option-value parent-path)
     (-> db
       (update-in
         (db/current-form-content-path db [parent-path :params :invalid-values])
@@ -1578,7 +1577,6 @@
 (reg-event-db
   :editor/remove-invalid-value-validator
   (fn [db [_ option-value parent-path]]
-    (println :editor/remove-invalid-value-validator option-value parent-path)
     (let [invalid-values-path    (db/current-form-content-path db [parent-path :params :invalid-values])
           invalid-values         (get-in db invalid-values-path)
           updated-invalid-values (->> invalid-values
@@ -1595,6 +1593,7 @@
     (let [path (db/current-form-properties-path db [:allow-hakeminen-tunnistautuneena])
           value (not (get-in db path))]
       (assoc-in db path value))))
+
 (reg-event-db
   :editor/toggle-allow-only-yhteishaut
   (fn [db [_]]
