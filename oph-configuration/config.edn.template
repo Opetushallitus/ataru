@@ -45,7 +45,7 @@
                             :schema-validation {{ ataru_schema_validation | default('false') }}
                             :arvosanat {{ ataru_arvosanat | default('false') }}
                             :hakeminen-tunnistautuneena "{{ ataru_hakeminen_tunnistautuneena_enabled | default('false') }}"
-                            :disallow-temporary-ssn {{ataru_disallow_temporary_ssn | default('false')}}
+                            :disallow-temporary-ssn {{ataru_disallow_temporary_ssn | default('false')}}}
                  :oppija-session-polling-interval "{{ataru_oppija_session_poll_interval_ms | default('300000') }}"
                  :secret-link-valid-days {{ataru_secret_link_valid_days | default('14')}}
                  :tutu-payment-form-keys "{{ataru_tutu_payment_form_key}}"
