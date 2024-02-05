@@ -64,7 +64,7 @@ test('Hakemuksen täyttö virkailijana', async () => {
 
   const [newPage] = await Promise.all([
     page.context().waitForEvent('page'),
-    await page.getByTestId('application-preview-link-fi').click(),
+    page.getByTestId('application-preview-link-fi').click(),
   ])
 
   await newPage.waitForLoadState()
