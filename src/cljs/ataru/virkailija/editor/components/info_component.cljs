@@ -16,7 +16,6 @@
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox {:type      "checkbox"
                                        :id        input-id
-                                       :data-test-id (str "info-field-checkbox-" (keyword param))
                                        :checked   (boolean @checked?)
                                        :disabled  @component-locked?
                                        :on-change (fn [event]
