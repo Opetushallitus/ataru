@@ -3,6 +3,8 @@ import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
 
 import {
   getHakemuksenLahettamisenOsoite,
+  getHakijanNakymanOsoite,
+  getLomakkeenHaunOsoite,
   getLomakkeenPoistamisenOsoite,
   kirjauduVirkailijanNakymaan,
   lisaaLomake,
@@ -48,9 +50,6 @@ test.afterAll(async ({ request }) => {
   await page.close()
 })
 
-const getAllByTestId = (loc: Locator | Page, testId: string) =>
-  loc.locator(`[data-test-id=${testId}]`)
-
 test('Hakemuksen täyttö virkailijana', async () => {
   const valikko = page.getByTestId('component-toolbar')
   await valikko.dispatchEvent('mouseover')
@@ -60,25 +59,29 @@ test('Hakemuksen täyttö virkailijana', async () => {
   await lisaysLinkki.click()
 
   const infoField = page.getByTestId('info-input-field')
-  await infoField.fill('Tämä teksti näkyy')
 
-  const [newPage] = await Promise.all([
-    page.context().waitForEvent('page'),
-    page.getByTestId('application-preview-link-fi').click(),
-  ])
-
-  await newPage.waitForLoadState()
+  await teeJaOdotaLomakkeenTallennusta(
+    page,
+    lomakkeenTunnisteet.lomakkeenId,
+    async () => {
+      await infoField.fill('Tämä teksti näkyy')
+    }
+  )
 
   // Hakijan näkymään siirtyminen lataa hakijan näkymän
-  await waitForResponse(newPage, 'GET', (url) =>
-    url.includes(lomakkeenTunnisteet.lomakkeenAvain)
-  )
-  const lomakkeenNimi = newPage.getByTestId('application-header-label')
+  await Promise.all([
+    page.goto(getHakijanNakymanOsoite(lomakkeenTunnisteet.lomakkeenAvain)),
+    waitForResponse(page, 'GET', (url) =>
+      url.includes(getLomakkeenHaunOsoite(lomakkeenTunnisteet.lomakkeenAvain))
+    ),
+  ])
+
+  const lomakkeenNimi = page.getByTestId('application-header-label')
   await expect(lomakkeenNimi).toHaveText('Testilomake')
 
-  await expect(newPage.getByText('Tarkista 10 tietoa')).toBeVisible()
+  await expect(page.getByText('Tarkista 10 tietoa')).toBeVisible()
 
-  await taytaHenkilotietomoduuli(newPage, {
+  await taytaHenkilotietomoduuli(page, {
     'first-name': 'Virkailijan',
     'last-name': 'Täyttämä',
     ssn: '020202A0202',
@@ -90,26 +93,26 @@ test('Hakemuksen täyttö virkailijana', async () => {
     'home-town': 'Forssa',
   })
 
-  await expect(newPage.getByText('Tämä teksti näkyy')).toBeVisible()
+  await expect.soft(page.getByText('Tämä teksti näkyy')).toBeVisible()
 
-  await expect(newPage.getByText('Tarkista')).toBeHidden()
+  await expect(page.getByText('Tarkista')).toBeHidden()
 
   await Promise.all([
-    waitForResponse(newPage, 'POST', (url) =>
+    waitForResponse(page, 'POST', (url) =>
       url.includes(getHakemuksenLahettamisenOsoite())
     ),
-    newPage.getByTestId('send-application-button').click(),
+    page.getByTestId('send-application-button').click(),
   ])
-  await newPage.getByTestId('send-feedback-button').click()
+  await page.getByTestId('send-feedback-button').click()
 
   // Näyttää täytetyn henkilötietomoduulin
-  await expect(lomakkeenNimi).toHaveText('Testilomake')
-  await expect(newPage.getByText('Virkailijan')).toHaveCount(2)
-  await expect(newPage.getByText('Täyttämä')).toBeVisible()
-  await expect(newPage.getByText('020202A0202')).toBeVisible()
-  await expect(newPage.getByText('test@example.com')).toBeVisible()
-  await expect(newPage.getByText('0123456789')).toBeVisible()
-  await expect(newPage.getByText('Katutie 12 B')).toBeVisible()
-  await expect(newPage.getByText('00100')).toBeVisible()
-  await expect(newPage.getByText('HELSINKI')).toBeVisible()
+  await expect.soft(lomakkeenNimi).toHaveText('Testilomake')
+  await expect.soft(page.getByText('Virkailijan')).toHaveCount(2)
+  await expect.soft(page.getByText('Täyttämä')).toBeVisible()
+  await expect.soft(page.getByText('020202A0202')).toBeVisible()
+  await expect.soft(page.getByText('test@example.com')).toBeVisible()
+  await expect.soft(page.getByText('0123456789')).toBeVisible()
+  await expect.soft(page.getByText('Katutie 12 B')).toBeVisible()
+  await expect.soft(page.getByText('00100')).toBeVisible()
+  await expect(page.getByText('HELSINKI')).toBeVisible()
 })
