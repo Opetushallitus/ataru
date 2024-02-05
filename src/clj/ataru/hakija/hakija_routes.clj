@@ -110,10 +110,6 @@
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
-    (api/GET "/virkailija-haku-test.html" []
-      (if (is-dev-env?)
-        (render-file-in-dev "templates/virkailija-haku-test.html")
-        (response/not-found "Not found")))
     (api/GET "/latest-application-secret" []
       (if (is-dev-env?)
         (get-latest-application-secret)

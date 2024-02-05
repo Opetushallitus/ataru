@@ -1,6 +1,6 @@
 import { test, expect, Page, Locator } from '@playwright/test'
 import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
-import { pipe } from 'fp-ts/lib/function'
+
 import {
   getHakemuksenLahettamisenOsoite,
   getLomakkeenPoistamisenOsoite,
@@ -52,18 +52,15 @@ const getAllByTestId = (loc: Locator | Page, testId: string) =>
   loc.locator(`[data-test-id=${testId}]`)
 
 test('Hakemuksen täyttö virkailijana', async () => {
-  //Painikkeet, yksi valittavissa, koodisto -elementin lisäys
   const valikko = page.getByTestId('component-toolbar')
   await valikko.dispatchEvent('mouseover')
 
-  const lisaysLinkki = valikko.getByText('Infoteksti, koko ruutu')
+  const lisaysLinkki = valikko.getByText('Infoteksti').first()
 
   await lisaysLinkki.click()
-  await page.getByTestId('info-input-field')
-  //await lisaysLinkki.click()
 
-  //const infoField = await page.getByTestId('info-input-field').locator('input')
-  //await infoField.fill("Tämä teksti näkyy");
+  const infoField = page.getByTestId('info-input-field')
+  await infoField.fill('Tämä teksti näkyy')
 
   const [newPage] = await Promise.all([
     page.context().waitForEvent('page'),
@@ -79,14 +76,23 @@ test('Hakemuksen täyttö virkailijana', async () => {
   const lomakkeenNimi = newPage.getByTestId('application-header-label')
   await expect(lomakkeenNimi).toHaveText('Testilomake')
 
-  await taytaHenkilotietomoduuli(newPage)
-  // Näyttää täytetyn henkilötietomoduulin
-  await expect(newPage.getByTestId('postal-office-input')).toHaveValue(
-    'HELSINKI'
-  )
+  await expect(newPage.getByText('Tarkista 10 tietoa')).toBeVisible()
 
-  // Näyttää näkyväksi tarkoitetun infotekstin
+  await taytaHenkilotietomoduuli(newPage, {
+    'first-name': 'Virkailijan',
+    'last-name': 'Täyttämä',
+    ssn: '020202A0202',
+    email: 'test@example.com',
+    'verify-email': 'test@example.com',
+    phone: '0123456789',
+    address: 'Katutie 12 B',
+    'postal-code': '00100',
+    'home-town': 'Forssa',
+  })
+
   await expect(newPage.getByText('Tämä teksti näkyy')).toBeVisible()
+
+  await expect(newPage.getByText('Tarkista')).toBeHidden()
 
   await Promise.all([
     waitForResponse(newPage, 'POST', (url) =>
@@ -96,6 +102,14 @@ test('Hakemuksen täyttö virkailijana', async () => {
   ])
   await newPage.getByTestId('send-feedback-button').click()
 
-  // Näyttää lomakkeen nimen
+  // Näyttää täytetyn henkilötietomoduulin
   await expect(lomakkeenNimi).toHaveText('Testilomake')
+  await expect(newPage.getByText('Virkailijan')).toHaveCount(2)
+  await expect(newPage.getByText('Täyttämä')).toBeVisible()
+  await expect(newPage.getByText('020202A0202')).toBeVisible()
+  await expect(newPage.getByText('test@example.com')).toBeVisible()
+  await expect(newPage.getByText('0123456789')).toBeVisible()
+  await expect(newPage.getByText('Katutie 12 B')).toBeVisible()
+  await expect(newPage.getByText('00100')).toBeVisible()
+  await expect(newPage.getByText('HELSINKI')).toBeVisible()
 })

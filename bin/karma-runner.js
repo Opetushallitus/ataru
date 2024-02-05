@@ -74,8 +74,6 @@ const getUrl = () => {
             return 'http://localhost:8351/hakemus/hakija-ssn-test.html';
         case 'hakija-edit':
             return 'http://localhost:8351/hakemus/hakija-edit-test.html';
-        case 'virkailija-haku':
-            return 'http://localhost:8351/hakemus/virkailija-haku-test.html';
         case 'virkailija-hakemus-edit':
             /* To run this test individually, run hakija edit-test, create a fake virkailija with update secret
              *  to the same application as hakija-edit-test uses and use the fake secret in the url. Easiest way to do it

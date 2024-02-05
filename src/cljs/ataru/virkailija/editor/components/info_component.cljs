@@ -16,6 +16,7 @@
        [:div.editor-form__checkbox-container
         [:input.editor-form__checkbox {:type      "checkbox"
                                        :id        input-id
+                                       :data-test-id (str "info-field-checkbox-" (keyword param))
                                        :checked   (boolean @checked?)
                                        :disabled  @component-locked?
                                        :on-change (fn [event]
@@ -60,6 +61,7 @@
                      (fn [lang]
                        [input-field-component/input-field {:path        path
                                                            :lang        lang
+                                                           :data-test-id "info-input-field"
                                                            :dispatch-fn #(dispatch-sync [:editor/set-component-value
                                                                                          (-> % .-target .-value)
                                                                                          path :text lang])
