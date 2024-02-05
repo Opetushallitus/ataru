@@ -46,7 +46,9 @@
   (fn [[_ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/get-application-by-key application-key])])
   (fn [[application]]
-    (-> application :person :yksiloity)))
+    (let [person (:person application)]
+      (or (:yksiloity person)
+          (:yksiloityVTJ person)))))
 
 (re-frame/reg-sub
   :virkailija-kevyt-valinta/kevyt-valinta-enabled-for-application-and-hakukohde?
