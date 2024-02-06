@@ -18,14 +18,14 @@ test.beforeAll(async ({ browser }) => {
 
   await kirjauduVirkailijanNakymaan(page)
 
-  await page.route('/lomake-editori/api/tarjonta/haku**', async (route) => {
+  await page.route('**/lomake-editori/api/tarjonta/haku**', async (route) => {
     await route.fulfill({
-      json: { oid: '1.2.246.562.29.00000000000000009710', yhteishaku: true },
+      json: [{ oid: '1.2.246.562.29.00000000000000009710', yhteishaku: true }],
     })
   })
 
   await page.route(
-    '/lomake-editori/api/tarjonta/haku/1.2.246.562.29.00000000000000009710',
+    '**/lomake-editori/api/tarjonta/haku/1.2.246.562.29.00000000000000009710',
     async (route) => {
       await route.fulfill({
         json: { yhteishaku: true },
