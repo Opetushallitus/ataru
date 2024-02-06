@@ -491,6 +491,17 @@
      :req-fn     req-fn
      :lang       (:lang application)}))
 
+(defn remove-empty-arrays [answers]
+  (filter #(not= (:value %) [[]]) answers))
+
+(defn remove-arrays-with-quotations-only [answers]
+  (filter #(not= (:value %)  [[""]] ) answers))
+
+(defn remove-empty-answers [answers]
+  (-> answers
+      (remove-empty-arrays)
+      (remove-arrays-with-quotations-only)))
+
 (defn handle-application-submit
   [form-by-id-cache
    koodisto-cache
@@ -506,8 +517,9 @@
    maksut-service
    oppija-session]
   (log/info "Application submitted:" application)
-
-  (let [{:keys [passed? id]
+  (let [answers-empty-removed (remove-empty-answers (:answers application))
+        application-empty-answers-removed (assoc application :answers answers-empty-removed)
+        {:keys [passed? id]
          :as   result}
         (validate-and-store liiteri-cas-client
                             form-by-id-cache
@@ -517,12 +529,12 @@
                             ohjausparametrit-service
                             hakukohderyhma-settings-cache
                             audit-logger
-                            application
+                            application-empty-answers-removed
                             false
                             session
                             oppija-session)
-        {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application)
-        virkailija-secret (:virkailija-secret application)]
+        {:keys [tutu-form? req-fn lang]} (handle-tutu-form form-by-id-cache id application-empty-answers-removed)
+        virkailija-secret (:virkailija-secret application-empty-answers-removed)]
 
     (if passed?
       (do
@@ -540,10 +552,10 @@
               (cond-> tutu-form? (assoc :payment {:url url})))))
       (do
         (audit-log/log audit-logger
-                       {:new       application
+                       {:new       application-empty-answers-removed
                         :operation audit-log/operation-failed
                         :session   session
-                        :id        {:email (util/extract-email application)}})
+                        :id        {:email (util/extract-email application-empty-answers-removed)}})
         (log/warn "Application failed verification" result)
         result))
     ))
@@ -563,7 +575,9 @@
    _
    ]
   (log/info "Application edited:" input-application)
-  (let [{:keys [passed? id application key]
+  (let [answers-empty-removed (remove-empty-answers (:answers input-application))
+        application-empty-answers-removed (assoc input-application :answers answers-empty-removed)
+        {:keys [passed? id application key]
          :as   result}
         (validate-and-store liiteri-cas-client
                             form-by-id-cache
@@ -573,7 +587,7 @@
                             ohjausparametrit-service
                             hakukohderyhma-settings-cache
                             audit-logger
-                            input-application
+                            application-empty-answers-removed
                             true
                             session
                             {});fixme, miten oppija-sessio toimii muokkauksessa? Ei tällä hetkellä mitenkään?
@@ -587,7 +601,7 @@
         (start-hakija-edit-jobs koodisto-cache tarjonta-service organization-service ohjausparametrit-service job-runner id nil))
       (do
         (audit-log/log audit-logger
-                       {:new       input-application
+                       {:new       application-empty-answers-removed
                         :operation audit-log/operation-failed
                         :session   session
                         :id        {:applicationOid key}})
