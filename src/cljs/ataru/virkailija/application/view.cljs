@@ -25,17 +25,21 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
-(defn- accordion-heading-id [id] (str (name id) "_heading"))
-(defn- accordion-content-id [id] (str (name id) "_content"))
-(defn- checkbox-name [id] (str (name id) "_checkbox"))
+(defn- accordion-heading-id [id] (str "accordion-heading_" id))
+(defn- accordion-content-id [id] (str "accordion-content_" id))
+(defn- checkbox-name [id] (str "checkbox_" id))
+
+(defn excel-checkbox-on-change [e]
+  (dispatch [:application/excel-request-filter-changed
+             (-> e .-target .-value)]))
 
 (defn excel-checkbox [id]
   (let [checked? @(subscribe [:application/excel-request-filter-value id])]
     [:input
      {:type "checkbox"
       :id (checkbox-name id)
-      :on-change #(dispatch [:application/excel-request-filter-changed id])
       :value id
+      :on-change excel-checkbox-on-change
       :checked (boolean checked?)}]))
 
 (defn excel-checkbox-control
@@ -72,8 +76,8 @@
   [id title content]
   (let [folded? @(subscribe [:editor/folded? id])]
     [:div.application-handling__excel-accordion-group
-     ^{:key (str (name id) "_accordion")}
-     [accordion-heading id title folded? content]
+     ^{:key (str "accordion_" id)}
+     [accordion-heading id title folded?]
      [:div.application-handling__excel-accordion-content
       {:id (accordion-content-id id)
        :role "region"
@@ -83,42 +87,60 @@
 
 
 (defn get-form-checkbox-filters
-  ([form-content parent]
-   (if (empty? form-content)
+  ([form-content parent-id level parent-index-acc]
+   (if (or (empty? form-content) (>= level 2))
      nil
      (reduce (fn [acc item]
-               (let [children (get-form-checkbox-filters (:children item) item)]
+               (let [index-acc (+ parent-index-acc (count acc))
+                     children (get-form-checkbox-filters (:children item) (:id item) (inc level) (inc index-acc))]
                  (if (or (= (:fieldClass item) "infoElement")
                          (and (= (:fieldClass item) "wrapperElement") (empty? children)))
                    acc
-                   (conj acc (-> item
-                                 (select-keys [:id :label])
-                                 (assoc? :parent parent)
-                                 (assoc? :children children))))))
-             []
+                   (merge acc children {(:id item) (-> {:id (:id item)
+                                                        :index index-acc
+                                                        :label (:label item)}
+                                                       (assoc? :parent-id parent-id)
+                                                       (assoc? :child-ids (->> children
+                                                                               (map second)
+                                                                               (sort-by :index)
+                                                                               (map :id))))}))))
+             {}
              form-content)))
   ([form-content]
-   (get-form-checkbox-filters form-content nil)))
+   (get-form-checkbox-filters form-content nil 0 0)))
+
+(defn get-label-trans [l lng default]
+  (let [label (into {} (filter #(not-empty (second %)) l))]
+    (or (get label lng) (get label :fi) (get label :sv) (get label :en) default)))
+
+(defn init-excel-checkbox-filters [form-content]
+  (let [filter-defs (get-form-checkbox-filters form-content)]
+    (dispatch [:application/excel-request-filters-init filter-defs])
+    filter-defs))
 
 (defn- excel-valitse-tiedot-content []
   (let [form-key @(subscribe [:application/selected-form-key])
-        form @(subscribe [:state-query [:forms form-key]])
-        sections (get-form-checkbox-filters (:content form))]
-    [:div.application-handling__excel-tiedot
-     [:div.application-handling__excel-request-margins
-      (->> sections
-           (map (fn [section]
-                  (let [section-label (get-in section [:label :fi])]
+        form-content @(subscribe [:state-query [:forms form-key :content]])
+        filters (init-excel-checkbox-filters form-content)
+        top-filters (->> filters
+                         (filter #(not (:parent-id (second %))))
+                         (map second)
+                         (sort-by :index))]
+    (fn []
+      [:div.application-handling__excel-tiedot
+       [:div.application-handling__excel-request-margins
+        (->> top-filters
+             (map (fn [section]
                     ^{:key (str (:id section) "_section")}
-                    [excel-accordion (:id section) (if (empty? section-label) (:id section) section-label)
+                    [excel-accordion (:id section) (get-label-trans (:label section) :fi (:id section))
                      [:div.application-handling__excel-accordion-checkbox-col
-                      (map (fn [question]
-                             (let [label (get-in question [:label :fi])]
-                               ^{:key (str (:id question) "_checkbox")}
+                      (map (fn [child-id]
+                             (let [sub-filter (get-in filters [child-id])]
+                               ^{:key (str child-id "_checkbox")}
                                [excel-checkbox-control
-                                (:id question)
-                                (if (empty? label) (:id question) label)]))
-                           (:children section))]]))))]]))
+                                child-id
+                                (get-label-trans (:label sub-filter) :fi (:id sub-filter))]))
+                           (:child-ids section))]])))]])))
 
 (defn- excel-kirjoita-tunnisteet-content
   []
@@ -192,9 +214,11 @@
                 :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
               [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet"]]]]
            [:div
-            (case @excel-download-mode
-              "valitse-tiedot" [excel-valitse-tiedot-content]
-              "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content])]
+            (if @fetching-applications?
+              [:i.zmdi.zmdi-spinner.spin]
+              (case @excel-download-mode
+                "valitse-tiedot" [excel-valitse-tiedot-content {}]
+                "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content {}]))]
            (when @excel-error [:span "Tapahtui virhe"])
            [:div.application-handling__excel-request-actions
             [:button.application-handling__excel-request-button
