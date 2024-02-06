@@ -11,9 +11,14 @@
 ; and restarting the repl is meaningless
 (def repl-started (atom false))
 
-(defn start-repl! [repl-port]
+(defn start-repl! [repl-port, dev?]
   (when (and (:dev? env) (compare-and-set! repl-started false true))
-    (nrepl/start-server :port repl-port :bind "0.0.0.0")
+    (nrepl/start-server
+      :port repl-port
+      :bind "0.0.0.0"
+      :handler (if dev?
+                 ((requiring-resolve 'com.gfredericks.debug-repl/wrap-debug-repl) (nrepl.server/default-handler))
+                 (nrepl.server/default-handler)))
     (log/report "nREPL started on port" repl-port)))
 
 (defrecord Server []
@@ -28,7 +33,7 @@
           executor     (flow/utilization-executor 0.9 512)
           server       (http/start-server handler {:port port
                                                    :executor executor})]
-      (start-repl! repl-port)
+      (start-repl! repl-port (:dev? env))
       (log/report (str "Started server on port " port))
       (assoc this :server server)))
 
