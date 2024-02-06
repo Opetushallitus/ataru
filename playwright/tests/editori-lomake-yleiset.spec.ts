@@ -88,5 +88,7 @@ test.describe('Lomake-editori Yleiset asetukset -osio', () => {
 
     await demoAlkaa.fill('2021-01-01')
     await demoPaattyy.fill('2021-12-31')
+    await expect(demoAlkaa).toHaveValue('2021-01-01')
+    await expect(demoPaattyy).toHaveValue('2021-12-31')
   })
 })
