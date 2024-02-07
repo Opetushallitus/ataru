@@ -155,7 +155,7 @@
         lang                      (subscribe [:application/form-language])
         secret-link-valid-days    (config/get-public-config [:secret-link-valid-days])
         demo?                     (subscribe [:application/demo?])
-        demo-modal-open?       (subscribe [:application/demo-modal-open?])
+        demo-modal-open?          (subscribe [:application/demo-modal-open?])
         has-applied-to-haku?      (subscribe [:state-query [:application :has-applied]])
         ht-lander-active?         (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
         loading-complete?         (subscribe [:application/loading-complete?])]

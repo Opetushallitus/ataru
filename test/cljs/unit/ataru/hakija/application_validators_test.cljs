@@ -8,7 +8,8 @@
             [ataru.fixtures.first-name :as first-name]
             [ataru.hakija.application-validators :as validator]
             [cljs.core.async :as async]
-            [cljs.test :refer-macros [deftest is async]]))
+            [cljs.test :refer-macros [deftest is async]]
+            [ataru.feature-config]))
 
 (defn- has-never-applied [_ _] (asyncm/go false))
 
@@ -28,21 +29,45 @@
 (deftest ssn-validation
   (async done
          (asyncm/go
-           (doseq [ssn ssn/ssn-list]
-             (doseq [century-char ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]]
-               (let [ssn (str (:start ssn) century-char (:end ssn))]
-                 (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
-                     (str "SSN " ssn " is not valid")))))
+           (with-redefs
+             [ataru.feature-config/feature-enabled? (fn [feature] (when (= feature :disallow-temporary-ssn) false))]
+             (doseq [ssn ssn/ssn-list]
+               (doseq [century-char ["A" "B" "C" "D" "E" "F" "U" "V" "W" "X" "Y" "-"]]
+                 (let [ssn (str (:start ssn) century-char (:end ssn))]
+                   (is (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn" :value ssn})))
+                       (str "SSN " ssn " is not valid")))))
 
-           (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
-           (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
-           (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
-                                                          :validator        "ssn"
-                                                          :value            "020202A0202"
-                                                          :field-descriptor {:params {:can-submit-multiple-applications false
-                                                                                      :haku-oid                         "dummy-haku-oid"}}})))))
+             (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
+             (is (not (first (async/<! (validator/validate {:has-applied has-never-applied :validator "ssn"})))))
+             (is (not (first (async/<! (validator/validate {:has-applied      (fn [_ _] (asyncm/go true))
+                                                            :validator        "ssn"
+                                                            :value            "020202A0202"
+                                                            :field-descriptor
+                                                            {:params {:can-submit-multiple-applications false
+                                                                      :haku-oid "dummy-haku-oid"}}})))))
+
+             (is (first (async/<! (validator/validate {:has-applied      has-never-applied
+                                                       :validator        "ssn"
+                                                       :value            "010170-960F"
+                                                       :field-descriptor
+                                                       {:params {:can-submit-multiple-applications false
+                                                                 :haku-oid "dummy-haku-oid"}}})))))
            (done))))
 
+(deftest ssn-validation-temporary-ssn-does-not-work-in-production
+  (async done
+    (asyncm/go
+      (with-redefs
+        [ataru.feature-config/feature-enabled? (fn [feature] (when (= feature :disallow-temporary-ssn) true))]
+
+        (is (not (first (async/<! (validator/validate {:has-applied      has-never-applied
+                                                       :validator        "ssn"
+                                                       :value            "010170-960F"
+                                                       :field-descriptor
+                                                       {:params {:can-submit-multiple-applications false
+                                                                 :haku-oid "dummy-haku-oid"}}}))))))
+
+      (done))))
 (deftest email-validation
   (async done
          (asyncm/go
