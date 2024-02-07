@@ -129,6 +129,8 @@
        [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]]
       [:p.application__hakeminen-tunnistautuneena-lander-main-text
        [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]]
+      [:p.application__hakeminen-tunnistautuneena-lander-main-text
+       [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text-2 lang)]]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen (name lang)])
         :data-test-id "tunnistautuminen-button"}

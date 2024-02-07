@@ -608,6 +608,9 @@
    :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
                                                  :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
                                                  :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically. You can modify your contact information on the application form."}
+   :ht-tunnistaudu-ensin-text-2                 {:fi "Sinulla on tunnistautumisen jälkeen neljä tuntia aikaa täyttää ja lähettää hakulomake, minkä jälkeen istuntosi aikakatkaistaan."
+                                                 :sv "Efter att du har identifierat dig har du fyra timmar på dig att fylla i och skicka din ansökningsblankett. Efter detta avbryts din session."
+                                                 :en "Once you have completed identification, you have four hours to fill in and send the application form. The session will expire after four hours."}
    :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman tunnistautumista"
                                                  :sv "Fyll i ansökningsblanketten utan identifiering"
                                                  :en "Fill in the application without identification"}
