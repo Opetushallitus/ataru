@@ -653,6 +653,9 @@
    :ht-session-expiring-text                    {:fi "Sinut kirjataan 15 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
                                                  :sv "Du loggas ut ur tjänsten om 15 minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
                                                  :en "You will be logged out of the service in 15 minutes. If you do not send your application before that, the application will not be saved."}
+   :ht-session-expiring-text-variable           {:fi "Sinut kirjataan %d min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
+                                                 :sv "Du loggas ut ur tjänsten om %d minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
+                                                 :en "You will be logged out of the service in %d minutes. If you do not send your application before that, the application will not be saved."}
    :ht-session-expired-header                   {:fi "Istunto on vanhentunut"
                                                  :sv "Sessionen har löpt ut"
                                                  :en "The session has expired"}

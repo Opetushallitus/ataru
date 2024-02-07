@@ -141,6 +141,7 @@
           polling-interval (-> js/config
                                js->clj
                                (get "oppija-session-polling-interval"))]
+      (js/console.log (str "Starting session polling, interval " polling-interval))
       (if logged-in?
         {:db db
          :interval {:action :start
@@ -170,19 +171,61 @@
             :url     (str "/hakemus/auth/session")
             :handler [:application/handle-oppija-session-login-refresh]}}))
 
+(reg-event-db
+  :application/show-session-expiry-warning-dialog
+  [check-schema-interceptor]
+  (fn [db [_ warning-minutes]]
+    (js/console.log (str "Setting active warning for... " warning-minutes))
+    (assoc-in db [:oppija-session :session-expires-in-minutes-warning] warning-minutes)))
+
+(reg-event-fx
+  :application/show-session-expiry-warning-dialog-if-needed
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ seconds-left-in-session]]
+    (let [polling-interval-seconds  (/ (-> js/config
+                                           js->clj
+                                           (get "oppija-session-polling-interval"))
+                                       1000)
+          warning-target-minutes '(30 20 10)
+          previous-warnings (get-in db [:oppija-session :activated-warnings] #{})
+          extra-margin-seconds 30;ettei käy ikäviä harvinaisia yllätyksiä esim. hitaiden kutsujen kanssa. Tästä ei haittaa, pidentää vain vähän setTimeoutille passattavaa odotusaikaa.
+          should-set-warning-fn (fn [warning-target seconds-left]
+                                  (let [target-seconds (* 60 warning-target)
+                                        warning-target-in-future? (<= target-seconds seconds-left)
+                                        reaching-warning-target-soon? (>= (+ target-seconds polling-interval-seconds extra-margin-seconds) seconds-left)
+                                        not-previously-activated? (not (contains? previous-warnings warning-target))]
+                                    (js/console.log (str "seconds left " seconds-left ", target-seconds" target-seconds
+                                                         ", polling-interval" polling-interval-seconds "---" warning-target-in-future?
+                                                         "-" reaching-warning-target-soon? "-" not-previously-activated?))
+                                    (when (and
+                                            warning-target-in-future?
+                                            reaching-warning-target-soon?
+                                            not-previously-activated?)
+                                      [warning-target (* 1000 (- seconds-left target-seconds))])))
+          warning-to-set (first (filter some? (map #(should-set-warning-fn % seconds-left-in-session) warning-target-minutes)))]
+      (js/console.log (str "Maybe set warning? " warning-to-set ", previous" previous-warnings ", seconds left " seconds-left-in-session))
+      (if warning-to-set
+        (do
+          (js/console.log (str "Setting warning! " warning-to-set))
+          {:db (-> db
+                   (update-in [:oppija-session :activated-warnings] (fn [warnings] (conj (or warnings #{}) (first warning-to-set)))))
+           :dispatch-debounced {:timeout  (second warning-to-set)
+                                :id       (str "oppija-session-expires-warning-" (first warning-to-set))
+                                :dispatch [:application/show-session-expiry-warning-dialog (first warning-to-set)]}})
+        {:db db}))))
 
 (reg-event-fx
   :application/handle-oppija-session-login-refresh
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          logged-in? (:logged-in session-data)
-          expires-soon? (:expires-soon session-data)]
-      (merge {:db (-> db
-                      (assoc-in [:oppija-session :logged-in] logged-in?)
-                      (assoc-in [:oppija-session :expired] (not logged-in?))
-                      (assoc-in [:oppija-session :expires-soon] expires-soon?))}
-             (when (not logged-in?) {:dispatch [:application/stop-oppija-session-polling]})))))
+          logged-in? (:logged-in session-data)]
+      (js/console.log (str "Handle session login refresh, data " session-data))
+      {:db (-> db
+               (assoc-in [:oppija-session :logged-in] logged-in?)
+               (assoc-in [:oppija-session :expired] (not logged-in?)))
+       :dispatch-n [[:application/show-session-expiry-warning-dialog-if-needed (:seconds-left session-data)]
+                    (when (not logged-in?) [:application/stop-oppija-session-polling])]})))
 
 (reg-event-fx
   :application/get-oppija-session
@@ -1596,7 +1639,7 @@
   :application/close-session-expires-warning-dialog
   [check-schema-interceptor]
   (fn [db _]
-    (assoc-in db [:oppija-session :expires-soon-dialog-bypassed] true)))
+    (assoc-in db [:oppija-session :session-expires-in-minutes-warning] nil)))
 
 (reg-event-fx
   :application/set-page-title
