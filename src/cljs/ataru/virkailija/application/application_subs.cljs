@@ -753,7 +753,7 @@
     [(re-frame/subscribe [:state-query [:application :events]])
      (re-frame/subscribe [:state-query [:application :information-requests]])
      (re-frame/subscribe [:state-query [:hyvaksynnan-ehto application-key]])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+     (re-frame/subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta? application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/tila-historia-for-application application-key])
      (re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])])
   (fn [[events
