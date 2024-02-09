@@ -36,7 +36,8 @@
                  [com.lucasbradstreet/cljs-uuid-utils "1.0.2"]
                  [cljs-ajax "0.8.4"]
                  [binaryage/devtools "1.0.7"]
-                 [re-frisk "1.6.0"]
+                 [day8.re-frame/tracing "0.6.2"]
+                 [day8.re-frame/re-frame-10x "1.9.3"]
                  [venantius/accountant "0.2.5"]
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]
@@ -166,25 +167,29 @@
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.virkailija.core/mount-root"}
                         :compiler     {:main                 "ataru.virkailija.core"
-                                       :preloads             [devtools.preload]
+                                       :preloads             [devtools.preload day8.re-frame-10x.preload.react-18]
                                        :output-to            "resources/public/js/compiled/virkailija-app.js"
                                        :output-dir           "resources/public/js/compiled/virkailija-out"
                                        :asset-path           "/lomake-editori/js/compiled/virkailija-out"
                                        :parallel-build       true
                                        :optimizations        :none
-                                       :source-map-timestamp true}}
+                                       :source-map           true
+                                       :source-map-timestamp true
+                                       :closure-defines      {"re_frame.trace.trace_enabled_QMARK_" true}}}
 
                        {:id           "hakija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
                         :figwheel     {:on-jsload "ataru.hakija.core/mount-root"}
                         :compiler     {:main                 "ataru.hakija.core"
-                                       :preloads             [devtools.preload]
+                                       :preloads             [devtools.preload day8.re-frame-10x.preload.react-18]
                                        :output-to            "resources/public/js/compiled/hakija-app.js"
                                        :output-dir           "resources/public/js/compiled/hakija-out"
                                        :asset-path           "/hakemus/js/compiled/hakija-out"
                                        :parallel-build       true
                                        :optimizations        :none
-                                       :source-map-timestamp true}}
+                                       :source-map           true
+                                       :source-map-timestamp true
+                                       :closure-defines      {"re_frame.trace.trace_enabled_QMARK_" true}}}
 
                        {:id           "virkailija-cypress"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -331,7 +336,7 @@
 
   :aliases {"virkailija-dev"      ["with-profile" "virkailija-dev" "run" "virkailija"]
             "hakija-dev"          ["with-profile" "hakija-dev" "run" "hakija"]
-            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev" "virkailija-cypress" "hakija-cypress"]
+            "start-figwheel"      ["with-profile" "figwheel" "figwheel" "virkailija-dev" "hakija-dev"]
             "export-locales"      ["with-profile" "dev" "run" "-m" "ataru.scripts.export-locales"]
             "anonymize-data"      ["with-profile" "dev" "run" "-m" "ataru.anonymizer.core/anonymize-data"]
             "db-schema"           ["with-profile" "dev" "run" "-m" "ataru.scripts.generate-schema-diagram"]

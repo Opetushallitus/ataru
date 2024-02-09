@@ -1,7 +1,6 @@
 (ns ataru.virkailija.core
   (:require [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
-            [re-frisk.core :as re-frisk]
             ataru.virkailija.application.hyvaksynnan-ehto.handlers
             [ataru.virkailija.handlers]
             [ataru.virkailija.subs]
@@ -40,10 +39,6 @@
                              (constantly "Virkailija lomake-editori"))
   (routes/app-routes)
   (re-frame/dispatch-sync [:initialize-db])
-  (when (-> js/config
-            js->clj
-            (get "enable-re-frisk"))
-    (re-frisk/enable-re-frisk!))
   (re-frame/dispatch [:editor/get-user-info])
   (re-frame/dispatch [:hyvaksynnan-ehto/get-koodit])
   (re-frame/dispatch [:editor/do-organization-query])
