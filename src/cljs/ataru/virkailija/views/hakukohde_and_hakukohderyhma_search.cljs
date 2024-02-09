@@ -1,9 +1,10 @@
 (ns ataru.virkailija.views.hakukohde-and-hakukohderyhma-search
   (:require [ataru.util :as util]
-            [re-frame.core :as re-frame]
-            [reagent.core :as r]
+            [ataru.virkailija.application.view.virkailija-application-icons :as icons]
+            [ataru.virkailija.editor.editor-selectors :refer [get-virkailija-lang]]
             [clojure.string :as string]
-            [ataru.virkailija.application.view.virkailija-application-icons :as icons]))
+            [re-frame.core :as re-frame]
+            [reagent.core :as r]))
 
 (defn- search-input->search-terms
   [search-input]
@@ -74,7 +75,7 @@
 (re-frame/reg-event-db
   :hakukohde-and-hakukohderyhma/set-search-input
   (fn [db [_ id haut hakukohderyhmat hakukohde-selected? hakukohderyhma-selected? search-input]]
-    (let [lang         @(re-frame/subscribe [:editor/virkailija-lang])
+    (let [lang         (get-virkailija-lang db)
           search-terms (search-input->search-terms search-input)
           did-search?  (some util/should-search? search-terms)]
       (-> db

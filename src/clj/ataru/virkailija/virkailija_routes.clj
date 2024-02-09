@@ -157,7 +157,6 @@
                                                     "virkailija-app.js")})
         (ok)
         (content-type "text/html"))))
-
 (api/defroutes app-routes
   (api/undocumented
     (api/GET "/" [] (render-virkailija-page))
@@ -271,7 +270,7 @@
     (api/GET "/forms/:id" []
       :path-params [id :- Long]
       :return ataru-schema/FormWithContent
-      :summary "Get content for form"
+      :summary "Get content for form" 
       (ok (form-store/fetch-form id)))
 
     (api/PUT "/forms/:id" {session :session}
@@ -778,20 +777,19 @@
           (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"})))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-keys :- s/Str
+        :body-params [application-keys :- [s/Str]
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
-                      {included-ids :- s/Str ""}
+                      {included-ids :- [s/Str] nil}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
-        (let [size-limit       40000
-              application-keys (json/parse-string application-keys)]
+        (let [size-limit       40000]
           (log/info "Yritetään" (count application-keys) "hakemuksen excelin luontia")
           (if (< size-limit (count application-keys))
             (response/request-entity-too-large
               {:error (str "Cannot create excel for more than " size-limit " applications")})
-            (let [included-ids (set (remove clojure.string/blank? (clojure.string/split included-ids #"\s+")))
+            (let [included-ids (if included-ids (set included-ids) #{})
                   xls          (application-service/get-excel-report-of-applications-by-key
                                  application-service
                                  application-keys
