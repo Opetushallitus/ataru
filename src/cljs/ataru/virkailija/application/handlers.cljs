@@ -879,7 +879,26 @@
 (reg-event-db
  :application/excel-request-filter-changed
  (fn [db [_ id]]
-   (assoc-in-excel db [:filters id] (not (get-in db [:application :excel-request :filters id])))))
+   (js/console.log id)
+   (let [filter (get-in db [:application :excel-request :filters id])
+         parent-id (:parent-id filter)
+         parent-filter (get-in db [:application :excel-request :filters (:parent-id filter)])
+         child-ids (:child-ids filter)
+         new-checked (not (:checked filter))]
+     (as-> db x
+       (assoc-in-excel x [:filters id :checked] new-checked)
+       ; if checked, then select all children
+       (loop [cids child-ids acc x]
+         (if (not-empty cids)
+           (recur (rest cids) (assoc-in-excel acc [:filters (first cids) :checked] new-checked))
+           acc))
+       (if parent-filter (let [sibling-checkeds (map (fn [sibling-id] (boolean (get-in x [:application :excel-request :filters sibling-id :checked]))) (:child-ids parent-filter))]
+                           (cond (every? true? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] true)
+                                 (every? false? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] false)
+                                 :else (-> x
+                                           (assoc-in-excel [:filters parent-id :checked] false)
+                                           (assoc-in-excel [:filters parent-id :indeterminate] true))))
+           x)))))
 
 (reg-event-db
  :application/change-excel-download-mode
@@ -932,6 +951,13 @@
              :override-args       {:response-format {:type :blob
                                                      :read pr/-body}
                                    :error-handler #(dispatch [:application/handle-excel-download-error %])}}})))
+
+(reg-event-db
+ :application/excel-request-filters-init
+ (fn [db [_ filter-defs]]
+   (let [old-filters (get-in db [:application :excel-request :filters])]
+     (assoc-in db [:application :excel-request :filters] (merge-with merge old-filters filter-defs)))))
+
 
 (reg-event-fx
  :application/handle-submit-information-request-response
