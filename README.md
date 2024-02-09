@@ -60,7 +60,7 @@ AWS_ACCESS_KEY_ID=abc AWS_SECRET_ACCESS_KEY=xyz CONFIG=../ataru-secrets/hakija-<
 
 When Playwright is updated or installed for the first time, it needs some dependencies installed. Since we only use Chromium in tests, needed dependencies can be installed with:
 
-    npx playwright --with-deps chromium
+    npx playwright install --with-deps chromium
 
 Start the service locally with make start command
 
