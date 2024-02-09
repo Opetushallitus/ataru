@@ -62,6 +62,30 @@ SELECT
 FROM forms
 WHERE id = :id;
 
+-- name: yesql-get-by-ids
+SELECT
+    id,
+    key,
+    name,
+    content,
+    created_by,
+    created_time,
+    languages,
+    deleted,
+    organization_oid,
+    properties
+FROM forms
+WHERE id in (:ids);
+
+-- name: yesql-get-siirtotiedosto-form-ids
+SELECT
+    id
+FROM forms f
+WHERE
+    (:modified_after::TEXT IS NULL OR f.created_time >= :modified_after::timestamptz)
+  AND (:modified_before::TEXT IS NULL OR f.created_time <= :modified_before::timestamptz)
+ORDER BY f.id;
+
 -- name: yesql-fetch-latest-version-by-id
 SELECT
   f.id,

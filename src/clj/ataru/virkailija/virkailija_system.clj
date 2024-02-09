@@ -1,5 +1,6 @@
 (ns ataru.virkailija.virkailija-system
-  (:require [com.stuartsierra.component :as component]
+  (:require [ataru.siirtotiedosto-service :as siirtotiedosto-service]
+            [com.stuartsierra.component :as component]
             [ataru.aws.auth :as aws-auth]
             [ataru.aws.sns :as sns]
             [ataru.aws.sqs :as sqs]
@@ -39,6 +40,7 @@
             [ataru.db.db :as db]
             [ataru.temp-file-storage.s3-client :as s3-client])
   (:import java.time.Duration
+           [fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu]
            [java.util.concurrent TimeUnit]))
 
 (defn new-system
@@ -226,6 +228,10 @@
     :liiteri-cas-client (cas/new-client "/liiteri" "/liiteri/auth/cas"
                                         "ring-session" (-> config :public-config :virkailija-caller-id))
 
+    :siirtotiedosto-client (new SiirtotiedostoPalvelu
+                                (-> config :siirtotiedostot :aws-region)
+                                (-> config :siirtotiedostot :s3-bucket))
+
     :application-service (component/using
                            (application-service/new-application-service)
                            [:liiteri-cas-client
@@ -240,6 +246,10 @@
                             :suoritus-service
                             :form-by-id-cache
                             :valintalaskentakoostepalvelu-service])
+
+    :siirtotiedosto-service (component/using
+                              (siirtotiedosto-service/new-siirtotiedosto-service)
+                              [:siirtotiedosto-client])
 
     :session-store (create-session-store (db/get-datasource :db))
 
@@ -261,6 +271,7 @@
                             :temp-file-store
                             :audit-logger
                             :application-service
+                            :siirtotiedosto-service
                             :session-store
                             :suoritus-service]
                            (map first caches))))
