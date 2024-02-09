@@ -73,6 +73,9 @@
                                         (markdown-help-component/markdown-help)]])))
                    doall)]]
             [info-checkbox path component-locked? :info-text-collapse :collapse-info-text]
-            (when @applying-as-identified-enabled?
-              [info-checkbox path component-locked? :show-for-identified :show-for-identified-info-text])
+            [info-checkbox
+             path
+             (or component-locked? (not @applying-as-identified-enabled?))
+             :show-only-for-identified
+             :show-for-identified-info-text]
             [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]]))))

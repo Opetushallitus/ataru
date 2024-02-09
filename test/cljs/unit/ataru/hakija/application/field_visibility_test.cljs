@@ -19,7 +19,7 @@
              (field-visibility/set-field-visibility {} {:id "kysymys"}))))))
 
 (deftest set-field-visibility-for-hakeminen-tunnistautuneena-field-test
-  (let [field-for-tunnistautunut {:id "kysymys" :params {:show-for-identified true}}]
+  (let [field-for-tunnistautunut {:id "kysymys" :params {:show-only-for-identified true}}]
     (testing "field is invisible when unidentified:"
       (is (= {:kysymys {:visible? false}}
              (ui-of

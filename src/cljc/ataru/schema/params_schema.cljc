@@ -26,5 +26,5 @@
                      (s/optional-key :attachment-type)                  (s/maybe s/Str)
                      (s/optional-key :info-text)                        (s/maybe info-text-schema/InfoText)
                      (s/optional-key :info-text-collapse)               (s/maybe s/Bool)
-                     (s/optional-key :show-for-identified)              (s/maybe s/Bool)
+                     (s/optional-key :show-only-for-identified)         (s/maybe s/Bool)
                      (s/optional-key :invalid-values)                   [s/Str]})

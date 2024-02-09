@@ -161,7 +161,7 @@
          answers                (get-in db [:application :answers])
          visible?               (and (not (or (get-in field-descriptor [:params :hidden])
                                               (get-in field-descriptor [:hidden])))
-                                     (not (and (get-in field-descriptor [:params :show-for-identified])
+                                     (not (and (get-in field-descriptor [:params :show-only-for-identified])
                                                (not applies-as-identified?)))
                                      visible?
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
