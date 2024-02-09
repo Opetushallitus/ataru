@@ -26,11 +26,12 @@
             [reagent.core :as r]))
 
 (defn excel-checkbox [id]
-  [:input
-   {:type "checkbox"
-    :name id
-    :on-change (fn [val] (println val))
-    :value false}])
+  (let [checked @(subscribe [:application/excel-request-filter-value])]
+    [:input
+     {:type "checkbox"
+      :name id
+      :on-change #(dispatch [:application/excel-request-filter-changed id (not checked)])
+      :value checked}]))
 
 (defn excel-checkbox-control
   [id title]
@@ -51,7 +52,7 @@
                        #(dispatch [:editor/unfold id])
                        #(dispatch [:editor/fold id]))]
     [:h4.application-handling__excel-accordion-heading-wrapper
-     [excel-checkbox :hakemuksen-yleiset-tiedot]
+     [excel-checkbox id]
      [:button.application-handling__excel-accordion-header-button
       {:id (accordion-heading-id id)
        :type "button"
@@ -79,27 +80,27 @@
 
 
 (defn get-form-checkbox-filters
-  ([form-content level]
+  ([form-content parent]
    (if (empty? form-content)
      nil
      (reduce (fn [acc item]
-               (let [children (get-form-checkbox-filters (:children item) (+ level 1))]
+               (let [children (get-form-checkbox-filters (:children item) item)]
                  (if (or (= (:fieldClass item) "infoElement")
                          (and (= (:fieldClass item) "wrapperElement") (empty? children)))
                    acc
                    (conj acc (-> item
                                  (select-keys [:id :label])
+                                 (assoc? :parent parent)
                                  (assoc? :children children))))))
              []
              form-content)))
   ([form-content]
-   (get-form-checkbox-filters form-content 0)))
+   (get-form-checkbox-filters form-content nil)))
 
 (defn- excel-valitse-tiedot-content []
   (let [form-key @(subscribe [:application/selected-form-key])
         form @(subscribe [:state-query [:forms form-key]])
         sections (get-form-checkbox-filters (:content form))]
-    (js/console.log (clj->js form))
     [:div.application-handling__excel-tiedot
      [:div.application-handling__excel-request-margins
       (->> sections
