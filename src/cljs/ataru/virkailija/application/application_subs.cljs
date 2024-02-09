@@ -794,6 +794,11 @@
          (not (get-in db [:application :fetching-applications-errored?])))))
 
 (re-frame/reg-sub
+ :application/fetching-form-content?
+ (fn [db _]
+   (get-in db [:application :fetching-form-content?])))
+
+(re-frame/reg-sub
   :application/review-state-setting-enabled?
   (fn [db [_ setting-kwd]]
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
