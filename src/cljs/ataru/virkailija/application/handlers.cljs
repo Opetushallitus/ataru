@@ -879,7 +879,6 @@
 (reg-event-db
  :application/excel-request-filter-changed
  (fn [db [_ id]]
-   (js/console.log id)
    (let [filter (get-in db [:application :excel-request :filters id])
          parent-id (:parent-id filter)
          parent-filter (get-in db [:application :excel-request :filters (:parent-id filter)])
@@ -899,6 +898,15 @@
                                            (assoc-in-excel [:filters parent-id :checked] false)
                                            (assoc-in-excel [:filters parent-id :indeterminate] true))))
            x)))))
+
+(reg-event-db
+ :application/excel-request-filters-set-all
+ (fn [db [_ checked]]
+   (let [ids (map (fn [[_ v]] (:id v)) (get-in db [:application :excel-request :filters]))]
+     (loop [rest-ids ids acc db]
+       (if (not-empty rest-ids)
+         (recur (rest rest-ids) (assoc-in-excel acc [:filters (first rest-ids) :checked] (boolean checked)))
+         acc)))))
 
 (reg-event-db
  :application/change-excel-download-mode
