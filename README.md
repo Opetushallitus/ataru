@@ -604,8 +604,6 @@ Output should be like this:
  [prismatic/schema "1.4.1"]
  [re-frame "1.3.0" :exclusions [[org.clojure/tools.logging]]]
    [net.cgrand/macrovich "0.2.1"]
- [re-frisk "1.6.0"]
-   [re-com "2.8.0"]
  [reagent "1.2.0"]
  [reloaded.repl "0.2.4" :scope "test"]
    [org.clojure/tools.namespace "0.2.11"]
