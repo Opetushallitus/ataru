@@ -88,22 +88,25 @@
 
 (defn get-form-checkbox-filters
   ([form-content parent-id level parent-index-acc]
-   (if (or (empty? form-content) (>= level 2))
+   (if (empty? form-content)
      nil
      (reduce (fn [acc item]
                (let [index-acc (+ parent-index-acc (count acc))
-                     children (get-form-checkbox-filters (:children item) (:id item) (inc level) (inc index-acc))]
+                     children (get-form-checkbox-filters (:children item) (or parent-id (:id item)) (inc level) (inc index-acc))]
                  (if (or (= (:fieldClass item) "infoElement")
-                         (and (= (:fieldClass item) "wrapperElement") (empty? children)))
+                         (and (= (:fieldClass item) "wrapperElement") (empty? children))
+                         (:exclude-from-answers item)
+                         (= (:id item) "hakukohteet"))
                    acc
-                   (merge acc children {(:id item) (-> {:id (:id item)
-                                                        :index index-acc
-                                                        :label (:label item)}
-                                                       (assoc? :parent-id parent-id)
-                                                       (assoc? :child-ids (->> children
-                                                                               (map second)
-                                                                               (sort-by :index)
-                                                                               (map :id))))}))))
+                   (merge acc children (when (or (= level 0) (not-any? #(= (:fieldClass item) %) #{"questionGroup" "wrapperElement"}))
+                                         {(:id item) (-> {:id (:id item)
+                                                          :index index-acc
+                                                          :label (:label item)}
+                                                         (assoc? :parent-id parent-id)
+                                                         (assoc? :child-ids (->> children
+                                                                                 (map second)
+                                                                                 (sort-by :index)
+                                                                                 (map :id))))})))))
              {}
              form-content)))
   ([form-content]
