@@ -289,8 +289,8 @@
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
         (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
-        (if (and tunnistautunut? (nil? oppija-session-from-db))
-          (response/bad-request {:passed? false :failures ["Sessio on vanhentunut"] :code :session-not-found})
+        (if (and tunnistautunut? (not (:logged-in oppija-session-from-db)))
+          (response/bad-request {:passed? false :failures ["No active oppija-session found"] :code :oppija-session-not-found})
           (match (hakija-application-service/handle-application-submit
                    form-by-id-cache
                    koodisto-cache
