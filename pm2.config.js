@@ -12,17 +12,17 @@ module.exports = {
   apps: [
     {
       name: 'ataru-css-compilation',
-      script: 'bin/watch-compile-less.sh',
+      script: 'bin/compile-less.sh',
+      instances: 1,
       cwd: __dirname,
       log_file: 'logs/pm2/less.log',
       pid_file: '.less.pid',
       combine_logs: true,
-      min_uptime: 30000,
-      max_restarts: 5,
-      restart_delay: 4000,
-      wait_ready: true,
-      watch: false,
+      watch: ['resources/less'],
+      autorestart: false,
       exec_mode: 'fork',
+      min_uptime: 0,
+      exec_interpreter: 'none',
     },
     {
       name: 'ataru-hakija-backend-8351',
