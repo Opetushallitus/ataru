@@ -25,16 +25,17 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
-(defn excel-checkbox
+(defn excel-checkbox [id]
+  [:input
+   {:type "checkbox"
+    :name id
+    :on-change (fn [val] (println val))
+    :value false}])
+
+(defn excel-checkbox-control
   [id title]
   [:span.application-handling__excel-checkbox-control
-   {"data-tooltip" title}
-   [:input
-    {:type "checkbox"
-
-     :name id
-     :on-change (fn [val] (println val))
-     :value false}]
+   [excel-checkbox id title]
    (when title [:label title])])
 
 (defn use-excel-download-mode-state []
@@ -49,7 +50,7 @@
   (let [click-action (if folded?
                        #(dispatch [:editor/unfold id])
                        #(dispatch [:editor/fold id]))]
-    [:h3.application-handling__excel-accordion-heading-wrapper
+    [:h4.application-handling__excel-accordion-heading-wrapper
      [excel-checkbox :hakemuksen-yleiset-tiedot]
      [:button.application-handling__excel-accordion-header-button
       {:id (accordion-heading-id id)
@@ -110,7 +111,7 @@
                       (map (fn [question]
                              (let [label (get-in question [:label :fi])]
                                ^{:key (str (:id question) "_checkbox")}
-                               [excel-checkbox
+                               [excel-checkbox-control
                                 (:id question)
                                 (if (empty? label) (:id question) label)]))
                            (:children section))]]))))]]))
