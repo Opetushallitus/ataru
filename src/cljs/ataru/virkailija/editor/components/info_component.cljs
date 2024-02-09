@@ -76,6 +76,6 @@
             [info-checkbox
              path
              (or component-locked? (not @applying-as-identified-enabled?))
-             :show-for-identified
+             :show-only-for-identified
              :show-for-identified-info-text]
             [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]]))))
