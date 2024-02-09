@@ -1,27 +1,30 @@
 (ns ataru.virkailija.editor.handlers
-  (:require [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe]]
-            [clojure.walk :as walk]
-            [clojure.string :as string]
-            [cljs-time.core :as c]
-            [cljs.core.async :as async]
-            [ataru.number :as number]
-            [cljs.core.match :refer-macros [match]]
+  (:require [ataru.cljs-util :as cu]
             [ataru.collections :as collections]
-            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
-            [ataru.virkailija.autosave :as autosave]
             [ataru.component-data.component :as component]
             [ataru.component-data.person-info-module :as pm]
+            [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
             [ataru.koodisto.koodisto-whitelist :as koodisto-whitelist]
-            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
-            [ataru.virkailija.routes :refer [set-history!]]
-            [ataru.virkailija.virkailija-ajax :refer [http post put dispatch-flasher-error-msg]]
-            [ataru.util :as util :refer [collect-ids assoc?]]
+            [ataru.number :as number]
             [ataru.user-rights :as user-rights]
-            [ataru.cljs-util :as cu]
-            [ataru.virkailija.temporal :as temporal]
-            [ataru.virkailija.editor.form-diff :as form-diff]
+            [ataru.util :as util :refer [assoc? collect-ids]]
+            [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.editor.db :as db]
-            [ataru.virkailija.editor.demo.handlers])
+            [ataru.virkailija.editor.demo.handlers]
+            [ataru.virkailija.editor.editor-macros :refer-macros [with-form-key]]
+            [ataru.virkailija.editor.editor-selectors :refer [get-email-template]]
+            [ataru.virkailija.editor.form-diff :as form-diff]
+            [ataru.virkailija.routes :refer [set-history!]]
+            [ataru.virkailija.temporal :as temporal]
+            [ataru.virkailija.virkailija-ajax :refer [dispatch-flasher-error-msg
+                                                      http post put]]
+            [cljs-time.core :as c]
+            [cljs.core.async :as async]
+            [cljs.core.match :refer-macros [match]]
+            [clojure.string :as string]
+            [clojure.walk :as walk]
+            [re-frame.core :refer [dispatch reg-event-db reg-event-fx
+                                   subscribe]])
   (:require-macros [ataru.async-macros :as asyncm]
                    [cljs.core.async.macros :refer [go-loop]]))
 
@@ -136,6 +139,8 @@
                  (fn [condition]
                    (assoc condition :comparison-operator value))))))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-db
   :editor/lisää-pudotusvalikon-arvon-perusteella-osion-piilottamis-ehto
   (fn [db [_ path]]
@@ -371,7 +376,8 @@
               (not max?)
               (update-in (db/current-form-content-path db path) (fn [params]
                                                                (dissoc params :max-value)))))))
-
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-db
   :editor/set-range-value
   (fn [db [_ id range value & path]]
@@ -1392,7 +1398,7 @@
 (reg-event-fx
   :editor/save-email-template
   (fn [{db :db} [_]]
-    (let [contents (preview-map-to-list @(subscribe [:editor/email-template]))
+    (let [contents (preview-map-to-list (get-email-template db))
           form-key (get-in db [:editor :selected-form-key])
           form-allows-ht? (boolean (get-in db [:editor :forms form-key :properties :allow-hakeminen-tunnistautuneena]))]
       {:http {:method              :post
