@@ -188,7 +188,8 @@
                                            js->clj
                                            (get "oppija-session-polling-interval"))
                                        1000)
-          warning-to-set (ht-util/warning-to-set seconds-left-in-session polling-interval-seconds previous-warnings)]
+          extra-margin-seconds 30 ;Pelataan varman päälle ettei esimerkiksi hitaiden kutsujen kanssa käy yllätyksiä
+          warning-to-set (ht-util/warning-to-set seconds-left-in-session polling-interval-seconds extra-margin-seconds previous-warnings)]
       (js/console.log (str "Maybe set warning? " warning-to-set ", previous" previous-warnings ", seconds left " seconds-left-in-session))
       (if warning-to-set
         (do

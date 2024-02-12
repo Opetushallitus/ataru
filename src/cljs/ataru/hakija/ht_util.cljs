@@ -1,8 +1,7 @@
 (ns ataru.hakija.ht-util)
 
-(defn warning-to-set [seconds-left polling-interval-seconds previous-warnings]
+(defn warning-to-set [seconds-left polling-interval-seconds extra-margin-seconds previous-warnings]
   (let [warning-target-minutes '(30 20 10)
-        extra-margin-seconds 30;ettei käy ikäviä harvinaisia yllätyksiä esim. hitaiden kutsujen kanssa.
         should-set-warning-fn (fn [warning-target seconds-left]
                                 (let [target-seconds (* 60 warning-target)
                                       warning-target-in-future? (<= target-seconds seconds-left)
