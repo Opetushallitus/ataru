@@ -39,8 +39,6 @@ test.beforeAll(async ({ browser }) => {
   lomakkeenId = unsafeFoldOption(lomake.lomakkeenId)
 
   await teeJaOdotaLomakkeenTallennusta(page, lomakkeenId, async () => {
-    // FIXME: Jos lomakkeen nimen syöttää liian aikaisin, automaattitallennus ei triggeröidy! https://jira.eduuni.fi/browse/OY-4642
-    await page.waitForTimeout(800)
     const nameInput = page.getByTestId('form-name-input')
     await nameInput.fill('Testilomake')
   })
