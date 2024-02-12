@@ -10,6 +10,7 @@
             [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
+            [ataru.hakija.ht-util :as ht-util]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
@@ -182,27 +183,12 @@
   :application/show-session-expiry-warning-dialog-if-needed
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ seconds-left-in-session]]
-    (let [polling-interval-seconds  (/ (-> js/config
+    (let [previous-warnings (get-in db [:oppija-session :activated-warnings] #{})
+          polling-interval-seconds  (/ (-> js/config
                                            js->clj
                                            (get "oppija-session-polling-interval"))
                                        1000)
-          warning-target-minutes '(30 20 10)
-          previous-warnings (get-in db [:oppija-session :activated-warnings] #{})
-          extra-margin-seconds 30;ettei käy ikäviä harvinaisia yllätyksiä esim. hitaiden kutsujen kanssa. Tästä ei haittaa, pidentää vain vähän setTimeoutille passattavaa odotusaikaa.
-          should-set-warning-fn (fn [warning-target seconds-left]
-                                  (let [target-seconds (* 60 warning-target)
-                                        warning-target-in-future? (<= target-seconds seconds-left)
-                                        reaching-warning-target-soon? (>= (+ target-seconds polling-interval-seconds extra-margin-seconds) seconds-left)
-                                        not-previously-activated? (not (contains? previous-warnings warning-target))]
-                                    (js/console.log (str "seconds left " seconds-left ", target-seconds" target-seconds
-                                                         ", polling-interval" polling-interval-seconds "---" warning-target-in-future?
-                                                         "-" reaching-warning-target-soon? "-" not-previously-activated?))
-                                    (when (and
-                                            warning-target-in-future?
-                                            reaching-warning-target-soon?
-                                            not-previously-activated?)
-                                      [warning-target (* 1000 (- seconds-left target-seconds))])))
-          warning-to-set (first (filter some? (map #(should-set-warning-fn % seconds-left-in-session) warning-target-minutes)))]
+          warning-to-set (ht-util/warning-to-set seconds-left-in-session polling-interval-seconds previous-warnings)]
       (js/console.log (str "Maybe set warning? " warning-to-set ", previous" previous-warnings ", seconds left " seconds-left-in-session))
       (if warning-to-set
         (do
