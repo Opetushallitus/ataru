@@ -17,14 +17,14 @@
         [:input.editor-form__checkbox {:type      "checkbox"
                                        :id        input-id
                                        :checked   (boolean @checked?)
-                                       :disabled  @component-locked?
+                                       :disabled  component-locked?
                                        :on-change (fn [event]
                                                     (dispatch [:editor/set-component-value
                                                                (-> event .-target .-checked)
                                                                path :params param]))}]
         [:label.editor-form__checkbox-label
          {:for   input-id
-          :class (when @component-locked? "editor-form__checkbox-label--disabled")}
+          :class (when component-locked? "editor-form__checkbox-label--disabled")}
          @(subscribe [:editor/virkailija-translation translation-key])]])])
   )
 
@@ -72,10 +72,10 @@
                           (into field [[:div.editor-form__markdown-anchor
                                         (markdown-help-component/markdown-help)]])))
                    doall)]]
-            [info-checkbox path component-locked? :info-text-collapse :collapse-info-text]
+            [info-checkbox path @component-locked? :info-text-collapse :collapse-info-text]
             [info-checkbox
              path
-             (or component-locked? (not @applying-as-identified-enabled?))
+             (or @component-locked? (not @applying-as-identified-enabled?))
              :show-only-for-identified
              :show-for-identified-info-text]
             [belongs-to-hakukohteet-component/belongs-to-hakukohteet path initial-content]]]]]))))
