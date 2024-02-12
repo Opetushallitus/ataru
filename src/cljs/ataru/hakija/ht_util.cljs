@@ -12,5 +12,4 @@
                                           reaching-warning-target-soon?
                                           not-previously-activated?)
                                     [warning-target (* 1000 (- seconds-left target-seconds))])))]
-
     (first (filter some? (map #(should-set-warning-fn % seconds-left) warning-target-minutes)))))

@@ -142,7 +142,6 @@
           polling-interval (-> js/config
                                js->clj
                                (get "oppija-session-polling-interval"))]
-      (js/console.log (str "Starting session polling, interval " polling-interval))
       (if logged-in?
         {:db db
          :interval {:action :start
@@ -176,7 +175,6 @@
   :application/show-session-expiry-warning-dialog
   [check-schema-interceptor]
   (fn [db [_ warning-minutes]]
-    (js/console.log (str "Setting active warning for... " warning-minutes))
     (assoc-in db [:oppija-session :session-expires-in-minutes-warning] warning-minutes)))
 
 (reg-event-fx
@@ -190,15 +188,12 @@
                                        1000)
           extra-margin-seconds 30 ;Pelataan varman päälle ettei esimerkiksi hitaiden kutsujen kanssa käy yllätyksiä
           warning-to-set (ht-util/warning-to-set seconds-left-in-session polling-interval-seconds extra-margin-seconds previous-warnings)]
-      (js/console.log (str "Maybe set warning? " warning-to-set ", previous" previous-warnings ", seconds left " seconds-left-in-session))
       (if warning-to-set
-        (do
-          (js/console.log (str "Setting warning! " warning-to-set))
-          {:db (-> db
-                   (update-in [:oppija-session :activated-warnings] (fn [warnings] (conj (or warnings #{}) (first warning-to-set)))))
-           :dispatch-debounced {:timeout  (second warning-to-set)
-                                :id       (str "oppija-session-expires-warning-" (first warning-to-set))
-                                :dispatch [:application/show-session-expiry-warning-dialog (first warning-to-set)]}})
+        {:db (-> db
+                 (update-in [:oppija-session :activated-warnings] (fn [warnings] (conj (or warnings #{}) (first warning-to-set)))))
+         :dispatch-debounced {:timeout  (second warning-to-set)
+                              :id       (str "oppija-session-expires-warning-" (first warning-to-set))
+                              :dispatch [:application/show-session-expiry-warning-dialog (first warning-to-set)]}}
         {:db db}))))
 
 (reg-event-fx
@@ -207,7 +202,6 @@
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
           logged-in? (:logged-in session-data)]
-      (js/console.log (str "Handle session login refresh, data " session-data))
       {:db (-> db
                (assoc-in [:oppija-session :logged-in] logged-in?)
                (assoc-in [:oppija-session :expired] (not logged-in?)))
@@ -710,7 +704,6 @@
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :fields])]
-      (js/console.log (str "Locking answers... " locked-answers))
       (reduce (fn [db [key {:keys [locked value]}]]
                 (if (not (clojure.string/blank? value))
                   ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
@@ -777,7 +770,6 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [has-applied? (get-in response [:body :has-applied])]
-      (js/console.log (str "has-applied result: " (get response :body) "," has-applied?))
       {:db (-> db
                (assoc-in [:application :has-applied] has-applied?))})))
 
