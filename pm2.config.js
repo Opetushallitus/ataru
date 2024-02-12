@@ -13,6 +13,7 @@ module.exports = {
     {
       name: 'ataru-css-compilation',
       script: 'bin/compile-less.sh',
+      instances: 1,
       cwd: __dirname,
       log_file: 'logs/pm2/less.log',
       pid_file: '.less.pid',
@@ -20,6 +21,7 @@ module.exports = {
       watch: ['resources/less'],
       autorestart: false,
       exec_mode: 'fork',
+      min_uptime: 0,
       exec_interpreter: 'none',
     },
     {

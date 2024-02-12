@@ -1,7 +1,6 @@
 (ns ataru.hakija.core
   (:require [reagent.dom :as reagent-dom]
             [re-frame.core :as re-frame]
-            [re-frisk.core :as re-frisk]
             [ataru.cljs-util :as cljs-util]
             [ataru.hakija.hakija-ajax :as ajax]
             [ataru.hakija.application-view :refer [form-view]]
@@ -62,13 +61,6 @@
   (reagent-dom/render [form-view]
                   (.getElementById js/document "app")))
 
-(defn- re-frisk-environment?
-  []
-  (let [cfg (js->clj js/config)]
-    (or (get cfg "enable-re-frisk")
-        (= (get cfg "environment-name") "luokka"))))
-
-
 (defn network-listener []
   (.addEventListener js/window "online" (fn [] (re-frame/dispatch [:application/network-online])))
   (.addEventListener js/window "offline" (fn [] (re-frame/dispatch [:application/network-offline]))))
@@ -94,6 +86,4 @@
   (network-listener)
   (mount-root)
   (re-frame/dispatch-sync [:application/initialize-db])
-  (when (re-frisk-environment?)
-    (re-frisk/enable-re-frisk!))
   (dispatch-form-load))
