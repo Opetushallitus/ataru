@@ -290,6 +290,8 @@
            (translations/get-hakija-translation :application-submitted-payment lang)]
           [:div.application__submitted-submit-notification-heading
             (translations/get-hakija-translation :application-submitted-payment-text lang)]
+          [:div.application__submitted-submit-notification-heading
+            (translations/get-hakija-translation :application-submitted-payment-text-2 lang)]
 
           [:div.application__submitted-submit-payment-button-container
             [:button.application__maksut-button
@@ -527,7 +529,7 @@
         demo-open? (subscribe [:application/demo-open?])
         demo-requested? (subscribe [:application/demo-requested?])
         demo-modal-open? (subscribe [:application/demo-modal-open?])]
-    (fn [] 
+    (fn []
       (when (and @demo-requested? @demo-modal-open? @form?)
         (let [demo-lang (subscribe [:application/demo-lang])
               url (when-let [konfo-base (config/get-public-config [:konfo :service_url])]
