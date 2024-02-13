@@ -1,10 +1,10 @@
 -- name: yesql-read-oppija-session-query
 -- Get session data
 SELECT key, data,
-       EXTRACT(EPOCH from (created_at + interval '4 hours') - now()) as seconds_left
+       EXTRACT(EPOCH from (created_at + interval '40 minutes') - now()) as seconds_left
 FROM oppija_sessions
 WHERE key = :key
-and created_at + interval '4 hours'>= now();
+and created_at + interval '40 minutes'>= now();
 
 -- name: yesql-add-oppija-session-query!
 -- Add session
