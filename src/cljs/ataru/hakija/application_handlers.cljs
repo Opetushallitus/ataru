@@ -141,6 +141,8 @@
           polling-interval (-> js/config
                                js->clj
                                (get "oppija-session-polling-interval"))]
+      ;Tämä kuuntelija auttaa sellaisiin tilanteisiin, kun selain on syystä tai toisesta ollut unten mailla pidempään.
+      (.addEventListener js/window "focus" (fn [] (dispatch [:application/oppija-session-login-refresh-if-late])))
       (if logged-in?
         {:db db
          :interval {:action :start
@@ -162,6 +164,24 @@
         db))))
 
 (reg-event-fx
+  :application/oppija-session-login-refresh-if-late
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_]]
+    (let [polling-interval (-> js/config
+                               js->clj
+                               (get "oppija-session-polling-interval"))
+          logged-in? (get-in db [:oppija-session :logged-in])
+          last-poll (get-in db [:oppija-session :last-refresh])
+          now (.getTime (js/Date.))
+          long-time-since-last-poll? (> now (+ last-poll polling-interval 30000))]
+      (if (and logged-in? long-time-since-last-poll?)
+        {:db   (assoc-in db [:oppija-session :last-refresh] now)
+         :http {:method  :get
+                :url     (str "/hakemus/auth/session")
+                :handler [:application/handle-oppija-session-login-refresh]}}
+        {:db db}))))
+
+(reg-event-fx
   :application/oppija-session-login-refresh
   [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
@@ -176,13 +196,13 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          logged-in? (:logged-in session-data)
-          expires-soon? (:expires-soon session-data)]
-      (merge {:db (-> db
-                      (assoc-in [:oppija-session :logged-in] logged-in?)
-                      (assoc-in [:oppija-session :expired] (not logged-in?))
-                      (assoc-in [:oppija-session :expires-soon] expires-soon?))}
-             (when (not logged-in?) {:dispatch [:application/stop-oppija-session-polling]})))))
+          logged-in? (:logged-in session-data)]
+      {:db (-> db
+               (assoc-in [:oppija-session :logged-in] logged-in?)
+               (assoc-in [:oppija-session :expired] (not logged-in?))
+               (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.))))
+       :dispatch-n [[:application/show-session-expiry-warning-dialog-if-needed (:seconds-left session-data)]
+                    (when (not logged-in?) [:application/stop-oppija-session-polling])]})))
 
 (reg-event-fx
   :application/get-oppija-session
@@ -715,6 +735,7 @@
     (let [session-data (get-in response [:body])]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
+               (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.)))
                (prefill-and-lock-answers))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                           :change-country-of-residence nil}]
