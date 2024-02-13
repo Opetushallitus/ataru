@@ -128,13 +128,29 @@
              field-hakukohde-and-group-oids)
      uniques)))
 
+(defn- is-summertime-transition-between-dates?
+  [start end]
+  (let [year (t/year end)
+        month 3
+        last-sunday (loop [day-of-month 31]
+                      (if (= (t/day-of-week (t/date-time year month day-of-month)) 7)
+                        day-of-month
+                        (recur (- day-of-month 1))))
+        summertime (t/date-time year month last-sunday 3)]
+    (and (t/before? start summertime) (t/after? end summertime))))
+
 (defn attachment-edit-end [hakuaika]
   (let [default-modify-grace-period (-> config
                                         :public-config
                                         (get :attachment-modify-grace-period-days 14))
-        hakuaika-end                (some-> hakuaika :end c/from-long)]
-    (some-> hakuaika-end (t/plus (t/days (or (:attachment-modify-grace-period-days hakuaika)
-                                             default-modify-grace-period))))))
+        modify-grace-period (or (:attachment-modify-grace-period-days hakuaika) default-modify-grace-period)
+        attachment-end                (some-> hakuaika
+                                            :end
+                                            c/from-long
+                                            (t/plus (t/days modify-grace-period)))]
+    (if (and attachment-end (is-summertime-transition-between-dates? (c/from-long (:end hakuaika)) attachment-end))
+      (t/minus attachment-end (t/hours 1))
+      attachment-end)))
 
 (defn hakuaika-with-label
   ([{:keys [start end] :as hakuaika}]
