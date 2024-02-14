@@ -219,7 +219,7 @@
                [:li
                 [:a
                  {:key    oid
-                  :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+                  :href   (str "/organisaatio-service/lomake/" oid)
                   :target "_blank"}
                  (util/non-blank-val (:name org) [@lang :fi :sv :en])]]))]])
        [:div.application-handling__review-note-content
@@ -355,9 +355,9 @@
       [hyvaksynnan-ehto/hyvaksynnan-ehto application-key hakukohde-oids]]]))
 
 (defn- application-hakukohde-review-inputs
-  [review-types]
+  [review-types application-key]
   (let [show-ehdollisesti-hyvaksyttavissa? @(subscribe [:hyvaksynnan-ehto/show?])
-        show-kevyt-valinta?                @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta?])
+        show-kevyt-valinta?                @(subscribe [:virkailija-kevyt-valinta/show-kevyt-valinta? application-key])
         show-selection-state-dropdown?     @(subscribe [:virkailija-kevyt-valinta/show-selection-state-dropdown?])
         hakukohde-review-input-components  (->> review-types
                                                 (filter (fn [[kw]]
@@ -411,7 +411,7 @@
          [:li
           [:a
            {:key    oid
-            :href   (str "/organisaatio-ui/html/organisaatiot/" oid)
+            :href   (str "/organisaatio-service/lomake/" oid)
             :target "_blank"}
            (util/non-blank-val (:name org) [lang :fi :sv :en])]]))]))
 
@@ -1091,7 +1091,7 @@
                    [application-hakukohde-review-inputs
                     (if tutu-form?
                       review-states/hakukohde-review-types
-                      review-states/hakukohde-review-types-normal)]]
+                      review-states/hakukohde-review-types-normal) application-key]]
                   [:div.application-handling__review-row
                    [:span.hakukohde-review-rights-alert
                     @(subscribe [:editor/virkailija-translation :selected-hakukohde-no-rights])]]))

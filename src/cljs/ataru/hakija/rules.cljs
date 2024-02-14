@@ -333,13 +333,14 @@
   [db]
   (let [country     (get-in db [:application :answers :country-of-residence :value])
         is-finland? (or (= country finland-country-code)
-                        (string/blank? country))]
+                        (string/blank? country))
+        home-town-from-session (or (get-in db [:oppija-session :fields :home-town :value]) "")]
     (if is-finland?
       (-> db
           (show-field :home-town)
           (hide-field :city))
       (-> db
-          (hide-field :home-town)
+          (hide-field :home-town home-town-from-session)
           (show-field :city)))))
 
 (defn- select-postal-office-based-on-postal-code

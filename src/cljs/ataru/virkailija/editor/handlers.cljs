@@ -629,7 +629,8 @@
 (defn- editor-autosave-predicate [current prev]
   (match [current (merge {:content []} prev)]
     [_ {:content []}]
-    false
+    (if (= (:name current) (:name prev))
+      false true)
 
     :else
     (not=
