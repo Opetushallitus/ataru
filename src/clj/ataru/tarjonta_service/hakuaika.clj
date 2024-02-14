@@ -128,29 +128,53 @@
              field-hakukohde-and-group-oids)
      uniques)))
 
-(defn- is-summertime-transition-between-dates?
+(defn- last-sunday-of-month
+  [year month days-in-month]
+  (loop [day-of-month days-in-month]
+    (if (= (t/day-of-week (t/date-time year month day-of-month)) 7)
+      day-of-month
+      (recur (- day-of-month 1)))))
+
+(defn- modify-with-summertime
   [start end]
   (let [year (t/year end)
         month 3
-        last-sunday (loop [day-of-month 31]
-                      (if (= (t/day-of-week (t/date-time year month day-of-month)) 7)
-                        day-of-month
-                        (recur (- day-of-month 1))))
+        last-sunday (last-sunday-of-month year month 31)
         summertime (t/date-time year month last-sunday 3)]
-    (and (t/before? start summertime) (t/after? end summertime))))
+    (if (and (t/before? start summertime) (t/after? end summertime))
+      (t/minus end (t/hours 1))
+      end)))
+
+(defn- modify-with-wintertime
+  [start end]
+  (let [month 10
+        start-year (t/year start)
+        end-year (t/year end)
+        last-sunday-of-start-year (last-sunday-of-month start-year month 31)
+        use-startyear? (or (< month (t/month start))
+                        (and (== month (t/month start))
+                             (> last-sunday-of-start-year (t/day start))))
+        wintertime (if use-startyear?
+                     (t/date-time start-year month last-sunday-of-start-year 3)
+                     (t/date-time end-year month (last-sunday-of-month end-year month 31) 3))]
+    (if (and (t/before? start wintertime) (t/after? end wintertime))
+      (t/plus end (t/hours 1))
+      end)))
 
 (defn attachment-edit-end [hakuaika]
   (let [default-modify-grace-period (-> config
                                         :public-config
                                         (get :attachment-modify-grace-period-days 14))
         modify-grace-period (or (:attachment-modify-grace-period-days hakuaika) default-modify-grace-period)
-        attachment-end                (some-> hakuaika
-                                            :end
-                                            c/from-long
-                                            (t/plus (t/days modify-grace-period)))]
-    (if (and attachment-end (is-summertime-transition-between-dates? (c/from-long (:end hakuaika)) attachment-end))
-      (t/minus attachment-end (t/hours 1))
-      attachment-end)))
+        hakuaika-end (some-> hakuaika
+                             :end
+                             c/from-long)
+        attachment-end (some-> hakuaika-end
+                               (t/plus (t/days modify-grace-period)))]
+    ; huom. tämä implementaatio ei tue useampaa kuin kahta kesäajan- ja talviajan muutosta
+    (some->> attachment-end
+         (modify-with-wintertime hakuaika-end)
+         (modify-with-summertime hakuaika-end))))
 
 (defn hakuaika-with-label
   ([{:keys [start end] :as hakuaika}]
