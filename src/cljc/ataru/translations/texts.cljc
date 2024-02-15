@@ -518,6 +518,9 @@
    :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}
+   :oppija-session-not-found                    {:fi "Hakemuksesi tallentaminen ei onnistunut, koska istuntosi ei ole enää voimassa. Voit lähettää uuden hakemuksen kirjautumalla uudelleen tai ilman kirjautumista."
+                                                 :sv "Din ansökan kunde inte sparas eftersom din session har utgått. Du kan skicka en ny ansökan genom att logga in på nytt eller utan inloggning."
+                                                 :en "Your session has expired and your application has not been saved. You can send a new application by logging in again. You can also send a new application without identification."}
    :application-validation-failed-error         {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}
