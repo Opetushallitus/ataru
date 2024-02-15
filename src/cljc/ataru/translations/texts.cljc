@@ -539,6 +539,9 @@
    :application-submitted-payment-text          {:fi "Olet saanut vahvistusviestin sähköpostiisi. Siirry nyt maksamaan käsittelymaksu. Pääset maksamaan käsittelymaksun myös sähköpostiisi saamasi linkin kautta. Huomaathan, ettet voi muokata hakemusta sen jälkeen, kun olet maksanut käsittelymaksun."
                                                  :sv "Du har fått en bekräftelse till din e-post. Gå nu till betalning av din behandlingsavgift. Du kan också betala behandlingsavgiften via länken du har fått till din e-post. Vänligen notera att du kan inte ändra din ansökan efter att du har betalt behandlingsavgiften."
                                                  :en "You have received a confirmation to your email. Proceed now to the payment of your processing fee. You can also pay the processing fee through the link you have received by email. Please note that you cannot edit your application after you have paid the decision fee."}
+   :application-submitted-payment-text-2        {:fi "Emme palauta käsittelymaksua, vaikka peruuttaisit hakemuksesi."
+                                                 :sv "Vi returnerar inte den betalda behandlingsavgiften även om du skulle dra tillbaka din ansökan."
+                                                 :en "We will not return the processing fee to you even if you cancel your application."}
    :payment-button                              {:fi "Siirry maksamaan"
                                                  :sv "Gå till betalning"
                                                  :en "Go to payment"}
