@@ -136,7 +136,6 @@
 
 (reg-event-fx
   :application/start-oppija-session-polling
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
     (let [logged-in? (get-in db [:oppija-session :logged-in])
           polling-interval (-> js/config
@@ -154,7 +153,6 @@
 
 (reg-event-fx
   :application/stop-oppija-session-polling
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
     (let [logged-in? (get-in db [:oppija-session :logged-in])]
       (if (not logged-in?)
@@ -166,7 +164,6 @@
 
 (reg-event-fx
   :application/oppija-session-login-refresh-if-late
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
     (let [polling-interval (-> js/config
                                js->clj
@@ -184,7 +181,6 @@
 
 (reg-event-fx
   :application/oppija-session-login-refresh
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
     {:db   db
      :http {:method  :get
@@ -193,13 +189,30 @@
 
 (reg-event-db
   :application/show-session-expiry-warning-dialog
-  [check-schema-interceptor]
   (fn [db [_ warning-minutes]]
     (assoc-in db [:oppija-session :session-expires-in-minutes-warning] warning-minutes)))
 
 (reg-event-fx
+  :application/schedule-extra-poll-after-predicted-expiry-if-needed
+  (fn [{:keys [db]} [_ seconds-left-in-session]]
+    (let [already-set? (get-in db [:oppija-session :expiry-poll-scheduled] false)
+          polling-interval-seconds  (/ (-> js/config
+                                           js->clj
+                                           (get "oppija-session-polling-interval"))
+                                       1000)
+          need-to-set? (and (not already-set?) (>= (+ polling-interval-seconds 5) seconds-left-in-session))
+          timeout-millis (* 1000 (+ 2 seconds-left-in-session))]
+      (prn "need to set? " already-set? need-to-set? seconds-left-in-session)
+      (if need-to-set?
+        {:db (-> db
+                 (assoc-in [:oppija-session :expiry-poll-scheduled] true))
+         :dispatch-debounced {:timeout  timeout-millis
+                              :id       "oppija-session-expires-extra-poll"
+                              :dispatch [:application/oppija-session-login-refresh]}}
+        {:db db}))))
+
+(reg-event-fx
   :application/show-session-expiry-warning-dialog-if-needed
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_ seconds-left-in-session]]
     (let [previous-warnings (get-in db [:oppija-session :activated-warnings] #{})
           polling-interval-seconds  (/ (-> js/config
@@ -218,7 +231,6 @@
 
 (reg-event-fx
   :application/handle-oppija-session-login-refresh
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
           logged-in? (:logged-in session-data)]
@@ -227,11 +239,11 @@
                (assoc-in [:oppija-session :expired] (not logged-in?))
                (assoc-in [:oppija-session :last-refresh] (.getTime (js/Date.))))
        :dispatch-n [[:application/show-session-expiry-warning-dialog-if-needed (:seconds-left session-data)]
+                    [:application/schedule-extra-poll-after-predicted-expiry-if-needed (:seconds-left session-data)]
                     (when (not logged-in?) [:application/stop-oppija-session-polling])]})))
 
 (reg-event-fx
   :application/get-oppija-session
-  [check-schema-interceptor]
   (fn [{:keys [db]} [_]]
     {:db   db
      :http {:method  :get
