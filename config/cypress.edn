@@ -35,7 +35,6 @@
                    :virkailija                          {:service_url "http://localhost:8354/lomake-editori/"}
                    :konfo                               {:service_url "http://localhost:8354"}
                    :environment-name                    "test"
-                   :enable-re-frisk                     false
                    :local-dev-logout                    true
                    :secret-link-valid-days              14
                    :attachment-file-max-size-bytes      10485760
