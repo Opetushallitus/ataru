@@ -18,6 +18,17 @@
            (ui-of
              (field-visibility/set-field-visibility {} {:id "kysymys"}))))))
 
+(deftest set-field-visibility-for-hakeminen-tunnistautuneena-field-test
+  (let [field-for-tunnistautunut {:id "kysymys" :params {:show-only-for-identified true}}]
+    (testing "field is invisible when unidentified:"
+      (is (= {:kysymys {:visible? false}}
+             (ui-of
+               (field-visibility/set-field-visibility {} field-for-tunnistautunut true false false [])))))
+    (testing "field is visible when identified:"
+      (is (= {:kysymys {:visible? true}}
+             (ui-of
+               (field-visibility/set-field-visibility {} field-for-tunnistautunut true false true [])))))))
+
 (deftest set-field-visibility-for-options-test
   (testing "single option:"
     (is (= {:application {:answers {:kysymys {:value "0"}}

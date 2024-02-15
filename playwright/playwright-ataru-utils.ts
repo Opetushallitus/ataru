@@ -70,19 +70,23 @@ export const asetaKysymyksenVastausArkaluontoiseksi = async (
   await expect(sensitiveAnswer).toBeChecked()
 }
 
-export const taytaHenkilotietomoduuli = async (page: Page) => {
+const defaultHenkiloInputFieldValues = {
+  'first-name': 'Frank Zacharias',
+  'last-name': 'Testerberg',
+  ssn: '160600A999C',
+  email: 'f.t@ex.com',
+  'verify-email': 'f.t@ex.com',
+  phone: '0401234567',
+  address: 'Yliopistonkatu 4',
+  'postal-code': '00100',
+  'home-town': 'Forssa',
+}
+
+export const taytaHenkilotietomoduuli = async (
+  page: Page,
+  inputFieldValues = defaultHenkiloInputFieldValues
+) => {
   // Henkilötietomoduulin täyttäminen
-  const inputFieldValues = {
-    'first-name': 'Frank Zacharias',
-    'last-name': 'Testerberg',
-    ssn: '160600A999C',
-    email: 'f.t@ex.com',
-    'verify-email': 'f.t@ex.com',
-    phone: '0401234567',
-    address: 'Yliopistonkatu 4',
-    'postal-code': '00100',
-    'home-town': 'Forssa',
-  }
 
   for (const [idPrefix, value] of Object.entries(inputFieldValues)) {
     const loc = page.getByTestId(`${idPrefix}-input`)
