@@ -57,10 +57,11 @@
   (fn [{:keys [action id frequency event]}]
     (case action
       :start (if-not ((keyword id) @live-intervals) 
-               (do (prn "Starting interval with id " id) (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency)))
-               (prn "No need to set interval as it already exists"))
-      :stop  (do (js/clearInterval (get @live-intervals id))
-                 (swap! live-intervals dissoc id)))))
+               (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
+               (prn "No need to set interval as it already exists!"))
+      :stop  (do
+               (js/clearInterval (get @live-intervals id))
+               (swap! live-intervals dissoc id)))))
 
 (defonce debounces (atom {}))
 
