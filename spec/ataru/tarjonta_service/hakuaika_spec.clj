@@ -1,7 +1,8 @@
 (ns ataru.tarjonta-service.hakuaika-spec
   (:require [ataru.tarjonta-service.hakuaika :as hakuaika]
             [clj-time.coerce :as coerce]
-            [clj-time.core :as time]
+            [clj-time.core :as t]
+            [clojure.pprint :refer [pprint]]
             [clojure.test.check :as tc]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
@@ -54,7 +55,7 @@
   (let [result (tc/quick-check times prop)]
     (when-not (:result result)
       (let [input (-> result :shrunk :smallest first)]
-        (-fail (with-out-str (clojure.pprint/pprint input)))))))
+        (-fail (with-out-str (pprint input)))))))
 
 (defn- relevant-hakuajat [input]
   (let [oids (set (concat (:belongs-to-hakukohteet (:field-descriptor input))
@@ -102,3 +103,51 @@
                          (hakuaika/index-hakuajat (:hakukohteet input)))
                         (max-key :end paattyneet))
                      true))))))
+
+(describe "Attachment end time"
+          (tags :unit)
+
+          (it "Returns attachment end time"
+              (let [end (t/date-time 2024 02 14 9)
+                    hakuajat {:attachment-modify-grace-period-days 7 :end (coerce/to-long end)}]
+                (should= (t/plus end (t/days 7)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with -1 hours do to period overlap with summertime"
+              (let [end (t/date-time 2024 02 14 9)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/minus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with -1 hours do to period overlap with summertime with hour 23"
+              (let [end (t/date-time 2024 02 14 23)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/minus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with -1 hours do to period overlap with summertime with midnight"
+              (let [end (t/date-time 2024 02 14 0)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/minus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with +1 hours do to period overlap with wintertime"
+              (let [end (t/date-time 2024 10 14 9)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/plus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with +1 hours do to period overlap with wintertime with hour 23"
+              (let [end (t/date-time 2024 10 14 23)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/plus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with +1 hours do to period overlap with wintertime with midnight"
+              (let [end (t/date-time 2024 10 14 0)
+                    hakuajat {:attachment-modify-grace-period-days 60 :end (coerce/to-long end)}]
+                (should= (t/plus (t/plus end (t/days 60)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time unmodified if both wintertime and summertime overlap"
+              (let [end (t/date-time 2024 10 14 9)
+                    hakuajat {:attachment-modify-grace-period-days 200 :end (coerce/to-long end)}]
+                (should= (t/plus end (t/days 200)) (hakuaika/attachment-edit-end hakuajat))))
+
+          (it "Returns attachment end time with -1 hours do to period overlap with summertime if it starts after wintertime"
+              (let [end (t/date-time 2024 10 30 9)
+                    hakuajat {:attachment-modify-grace-period-days 200 :end (coerce/to-long end)}]
+                (should= (t/minus (t/plus end (t/days 200)) (t/hours 1)) (hakuaika/attachment-edit-end hakuajat)))))

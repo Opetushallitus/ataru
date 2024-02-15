@@ -715,7 +715,8 @@
     (let [session-data (get-in response [:body])]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
-               (prefill-and-lock-answers))
+               (prefill-and-lock-answers)
+               (set-field-visibilities))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                           :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
