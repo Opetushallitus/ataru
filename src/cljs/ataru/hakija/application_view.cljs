@@ -290,7 +290,7 @@
            (translations/get-hakija-translation :application-submitted-payment lang)]
           [:div.application__submitted-submit-notification-heading
             (translations/get-hakija-translation :application-submitted-payment-text lang)]
-          [:div.application__submitted-submit-notification-heading
+          [:div.application__submitted-submit-notification-paragraph
             (translations/get-hakija-translation :application-submitted-payment-text-2 lang)]
 
           [:div.application__submitted-submit-payment-button-container
