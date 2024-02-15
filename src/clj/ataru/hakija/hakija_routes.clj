@@ -214,7 +214,7 @@
                                  :auth-type (get-in session [:data :auth-type])
                                  :logged-in (:logged-in session)
                                  :eidas-id (get-in session [:data :eidas-id])
-                                 :expires-soon (:expires_soon session)}
+                                 :seconds-left (:seconds_left session)}
                                 {:logged-in false})]
           (response/ok trimmed-session))
         (catch Exception e
