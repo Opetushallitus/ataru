@@ -434,18 +434,27 @@
    [:div
     [editor-name]
     [form-usage form-key]]
-     [properties]
+   [properties]
    [c/editor]])
 
+(defn- editor-panel-loading []
+  [:div.editor-form__panel-container
+   [close-form]
+   [:div.editor-form__loading-indicator
+    [:i.zmdi.zmdi-spinner]]])
+
 (defn editor []
-  (let [form-key @(subscribe [:editor/selected-form-key])]
+  (let [form-key @(subscribe [:editor/selected-form-key])
+        form-loading @(subscribe [:editor/form-loading?])]
     [:div
      [:div.editor-form__container.panel-content
       [form-header-row]
       [form-list]]
-     (when form-key
-       ^{:key "editor-panel"}
-       [editor-panel form-key])
-     (when form-key
+     ^{:key "editor-panel"}
+     (if form-loading
+       [editor-panel-loading]
+       (when form-key
+         [editor-panel form-key]))
+     (when (and form-key (not form-loading))
        ^{:key "form-toolbar"}
        [form-toolbar])]))
