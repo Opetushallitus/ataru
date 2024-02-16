@@ -4,7 +4,6 @@
             [cheshire.core :as json]
             [taoensso.timbre :as log]
             [schema.core :as s]
-            [schema-tools.core :as st]
             [clojure.java.io :refer [input-stream]]
             [ataru.config.core :refer [config]])
   (:import (fi.vm.sade.valinta.dokumenttipalvelu SiirtotiedostoPalvelu)))
@@ -19,10 +18,11 @@
 (s/defschema SiirtotiedostoFormSchema {:properties        s/Any
                                         :deleted          (s/maybe s/Bool)
                                         :key              s/Str
-                                        :content          [{:fieldClass s/Str
+                                        :flat-content          [{:fieldClass s/Str
                                                             :id         s/Str
                                                             :fieldType  s/Str
                                                             s/Any       s/Any}]
+                                        :content          {s/Any s/Any}
                                         :name             {s/Any s/Str}
                                         :organization-oid s/Str
                                         :created-by       s/Str
@@ -40,6 +40,7 @@
                                               (s/optional-key :eligibility-set-automatically) s/Any
                                               (s/optional-key :submitted) org.joda.time.DateTime
                                               (s/optional-key :lang) s/Str
+                                              (s/optional-key :id) s/Str
                                               (s/optional-key :application_hakukohde_reviews) s/Any
                                               (s/optional-key :hakuOid) (s/maybe s/Str)
                                               (s/optional-key :form) s/Num
@@ -47,20 +48,18 @@
 (s/defschema SiirtotiedostoInactivatedApplicationSchema {:hakemusOid s/Str
                                                          :state "inactivated"})
 (defn- save-applications-to-s3 [^SiirtotiedostoPalvelu client applications start-time]
-  (let [schema-compliant-applications (map #(st/select-schema % SiirtotiedostoApplicationSchema) applications)
-        json (json/generate-string schema-compliant-applications)
+  (let [json (json/generate-string applications)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of applications json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream)
+    (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream 2)
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))))))
 
 (defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms start-time]
-  (let [schema-compliant-forms (map #(st/select-schema % SiirtotiedostoFormSchema) forms)
-        json (json/generate-string schema-compliant-forms)
+  (let [json (json/generate-string forms)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of forms json to s3 in siirtotiedosto! Start " start-time)
-    (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream)
+    (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream 2)
          (catch Exception e
            (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))))))
 
