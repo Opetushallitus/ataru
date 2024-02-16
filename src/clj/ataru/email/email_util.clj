@@ -58,13 +58,14 @@
       (str "/hakemus?modify=" secret)))
 
 ;Vahvasti tunnistautunut saa linkin oma-opintopolkuun, muut saavat suoran muokkauslinkin hakemukselle ja siihen liittyvän ohjetekstin.
+;Todo fixme: Tämä sisältää nyt vähän harmillisen virityksen application-url-textin kanssa.
+;Kts: application-url-textin sisältö ja content-ending-kentän oletussisältö ja niiden samankaltaisuudet.
+;Tuo viritys olisi hyvä purkaa, mutta pitää olla todella varovainen että kaikkien lomakkeiden sähköpostit säilyvät järkevinä.
 (defn get-application-url-and-text [form application lang]
   (let [form-allows-ht? (boolean (get-in form [:properties :allow-hakeminen-tunnistautuneena]))
         strong-auth? (= (:tunnistautuminen application) constants/auth-type-strong)]
     (log/info "get application url and text " (:properties form) ", " form-allows-ht? " - " strong-auth?)
-    (if form-allows-ht?
-      (if strong-auth?
-        {:oma-opintopolku-link (oma-opintopolku-link)}
-        {:application-url (modify-link (:secret application))
-         :application-url-text (get-in email-link-section-texts [:default lang])})
-      {:application-url (modify-link (:secret application))})))
+    (if strong-auth?
+      {:oma-opintopolku-link (oma-opintopolku-link)}
+      (merge {:application-url (modify-link (:secret application))}
+             (when form-allows-ht? {:application-url-text (get-in email-link-section-texts [:default lang])})))))

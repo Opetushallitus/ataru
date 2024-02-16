@@ -37,7 +37,6 @@
                    :virkailija                          {:service_url "http://localhost:8350/lomake-editori/"}
                    :konfo                               {:service_url "http://localhost:8351"}
                    :environment-name                    "test"
-                   :enable-re-frisk                     true
                    :local-dev-logout                    true
                    :secret-link-valid-days              14
                    :tutu-payment-form-keys              ""

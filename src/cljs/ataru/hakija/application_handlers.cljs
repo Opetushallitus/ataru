@@ -10,6 +10,7 @@
             [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.cljs-util :as util]
             [ataru.util :as autil]
+            [ataru.hakija.ht-util :as ht-util]
             [ataru.hakija.person-info-fields :as person-info-fields]
             [ataru.hakija.rules :as rules]
             [ataru.hakija.resumable-upload :as resumable-upload]
@@ -170,19 +171,42 @@
             :url     (str "/hakemus/auth/session")
             :handler [:application/handle-oppija-session-login-refresh]}}))
 
+(reg-event-db
+  :application/show-session-expiry-warning-dialog
+  [check-schema-interceptor]
+  (fn [db [_ warning-minutes]]
+    (assoc-in db [:oppija-session :session-expires-in-minutes-warning] warning-minutes)))
+
+(reg-event-fx
+  :application/show-session-expiry-warning-dialog-if-needed
+  [check-schema-interceptor]
+  (fn [{:keys [db]} [_ seconds-left-in-session]]
+    (let [previous-warnings (get-in db [:oppija-session :activated-warnings] #{})
+          polling-interval-seconds  (/ (-> js/config
+                                           js->clj
+                                           (get "oppija-session-polling-interval"))
+                                       1000)
+          extra-margin-seconds 30 ;Pelataan varman päälle ettei esimerkiksi hitaiden kutsujen kanssa käy yllätyksiä
+          warning-to-set (ht-util/warning-to-set seconds-left-in-session polling-interval-seconds extra-margin-seconds previous-warnings)]
+      (if warning-to-set
+        {:db (-> db
+                 (update-in [:oppija-session :activated-warnings] (fn [warnings] (conj (or warnings #{}) (first warning-to-set)))))
+         :dispatch-debounced {:timeout  (second warning-to-set)
+                              :id       (str "oppija-session-expires-warning-" (first warning-to-set))
+                              :dispatch [:application/show-session-expiry-warning-dialog (first warning-to-set)]}}
+        {:db db}))))
 
 (reg-event-fx
   :application/handle-oppija-session-login-refresh
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [session-data (get-in response [:body])
-          logged-in? (:logged-in session-data)
-          expires-soon? (:expires-soon session-data)]
-      (merge {:db (-> db
-                      (assoc-in [:oppija-session :logged-in] logged-in?)
-                      (assoc-in [:oppija-session :expired] (not logged-in?))
-                      (assoc-in [:oppija-session :expires-soon] expires-soon?))}
-             (when (not logged-in?) {:dispatch [:application/stop-oppija-session-polling]})))))
+          logged-in? (:logged-in session-data)]
+      {:db (-> db
+               (assoc-in [:oppija-session :logged-in] logged-in?)
+               (assoc-in [:oppija-session :expired] (not logged-in?)))
+       :dispatch-n [[:application/show-session-expiry-warning-dialog-if-needed (:seconds-left session-data)]
+                    (when (not logged-in?) [:application/stop-oppija-session-polling])]})))
 
 (reg-event-fx
   :application/get-oppija-session
@@ -680,7 +704,6 @@
 (defn- prefill-and-lock-answers [db]
   (if (get-in db [:oppija-session :logged-in])
     (let [locked-answers (get-in db [:oppija-session :fields])]
-      (js/console.log (str "Locking answers... " locked-answers))
       (reduce (fn [db [key {:keys [locked value]}]]
                 (if (not (clojure.string/blank? value))
                   ;Fixme ehkä, Mitä jos cas-oppijan kautta saadaan syystä tai toisesta
@@ -715,7 +738,8 @@
     (let [session-data (get-in response [:body])]
       {:db (-> db
                (assoc :oppija-session (assoc session-data :session-fetched true))
-               (prefill-and-lock-answers))
+               (prefill-and-lock-answers)
+               (set-field-visibilities))
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                           :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
@@ -747,7 +771,6 @@
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ response]]
     (let [has-applied? (get-in response [:body :has-applied])]
-      (js/console.log (str "has-applied result: " (get response :body) "," has-applied?))
       {:db (-> db
                (assoc-in [:application :has-applied] has-applied?))})))
 
@@ -1596,7 +1619,7 @@
   :application/close-session-expires-warning-dialog
   [check-schema-interceptor]
   (fn [db _]
-    (assoc-in db [:oppija-session :expires-soon-dialog-bypassed] true)))
+    (assoc-in db [:oppija-session :session-expires-in-minutes-warning] nil)))
 
 (reg-event-fx
   :application/set-page-title

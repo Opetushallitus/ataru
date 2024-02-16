@@ -72,7 +72,8 @@
 
 (declare set-field-visibility)
 
-(defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
+(defn- set-followup-visibility [db field-descriptor show-followups? show-conditional-followups-fn
+                                ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat]
   (let [field-id (-> field-descriptor :id keyword)
         value (get-in db [:application :answers field-id :value])
         fields-by-id (u/form-sections-by-id-memo (:form db))
@@ -86,22 +87,28 @@
                                   (map (comp keyword :section-name))
                                   (keep (partial get fields-by-id)))]
     (as-> db db'
-          (set-field-visibility db' field-descriptor show-followups? ylioppilastutkinto? hakukohteet-and-ryhmat)
+          (set-field-visibility db' field-descriptor show-followups? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
           (reduce #(set-nested-visibility %1 (:id %2) (show-conditional-followups-fn show-followups? %2) hakukohteet-and-ryhmat)
                   db'
                   conditional-sections))))
 
-(defn- set-visibility-for-option-followups [db options show-followups-fn show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat]
+(defn- set-visibility-for-option-followups [db options show-followups-fn show-conditional-followups-fn
+                                            ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat]
   (reduce (fn [db option]
             (let [show-followups? (show-followups-fn option)]
-              (reduce #(set-followup-visibility %1 %2 show-followups? show-conditional-followups-fn ylioppilastutkinto? hakukohteet-and-ryhmat)
+              (reduce #(set-followup-visibility %1 %2 show-followups?
+                                                show-conditional-followups-fn ylioppilastutkinto?
+                                                applies-as-identified? hakukohteet-and-ryhmat)
                       db
                       (:followups option))))
           db
           options))
 
+(defn- applies-as-identified? [db]
+  (get-in db [:oppija-session :logged-in] false))
+
 (defn- set-followups-visibility
-  [db field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat]
+  [db field-descriptor visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat]
   (let [component-visibility (atom {})
         answer-value (get-in db [:application :answers (keyword (:id field-descriptor)) :value])
         visibility-checker (option-visibility/visibility-checker field-descriptor answer-value)
@@ -117,6 +124,7 @@
                                          show-followups-fn
                                          show-conditional-followups-fn
                                          ylioppilastutkinto?
+                                         applies-as-identified?
                                          hakukohteet-and-ryhmat)))
 
 (defn- set-option-visibility [db [index option] parent-visible? id selected-hakukohteet-and-ryhmat]
@@ -137,11 +145,13 @@
      field-descriptor
      true
      (ylioppilastutkinto? db)
+     (applies-as-identified? db)
      (selected-hakukohteet-and-ryhmat db)))
   ([db
     field-descriptor
     visible?
     ylioppilastutkinto?
+    applies-as-identified?
     [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]]
    (let [hakukohteet-and-ryhmat [selected-hakukohteet-and-ryhmat selected-ei-jyemp-hakukohteet-and-ryhmat]
          id                     (keyword (:id field-descriptor))
@@ -151,6 +161,8 @@
          answers                (get-in db [:application :answers])
          visible?               (and (not (or (get-in field-descriptor [:params :hidden])
                                               (get-in field-descriptor [:hidden])))
+                                     (not (and (get-in field-descriptor [:params :show-only-for-identified])
+                                               (not applies-as-identified?)))
                                      visible?
                                      (or (not jyemp?) (not (empty? selected-ei-jyemp-hakukohteet-and-ryhmat)))
                                      (or (empty? belongs-to)
@@ -162,7 +174,7 @@
                                      (or (not (= :hakukohteet id)) (some? (get-in db [:form :tarjonta])))
                                      (not (u/is-field-hidden-by-section-visibility-conditions form answers field-descriptor)))
          child-visibility       (fn [db]
-                                  (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? hakukohteet-and-ryhmat)
+                                  (reduce #(set-field-visibility %1 %2 visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)
                                           db
                                           (:children field-descriptor)))
          option-visibility      (fn [db]
@@ -182,4 +194,4 @@
                  option-visibility
                  field-visibility)
              (#{"dropdown" "multipleChoice" "singleChoice" "textField"} (:fieldType field-descriptor))
-             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? hakukohteet-and-ryhmat)))))
+             (set-followups-visibility field-descriptor visible? ylioppilastutkinto? applies-as-identified? hakukohteet-and-ryhmat)))))

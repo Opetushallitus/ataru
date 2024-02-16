@@ -110,10 +110,6 @@
       (if (is-dev-env?)
         (render-file-in-dev (str "templates/hakija-" testname "-test.html"))
         (response/not-found "Not found")))
-    (api/GET "/virkailija-haku-test.html" []
-      (if (is-dev-env?)
-        (render-file-in-dev "templates/virkailija-haku-test.html")
-        (response/not-found "Not found")))
     (api/GET "/latest-application-secret" []
       (if (is-dev-env?)
         (get-latest-application-secret)
@@ -218,7 +214,7 @@
                                  :auth-type (get-in session [:data :auth-type])
                                  :logged-in (:logged-in session)
                                  :eidas-id (get-in session [:data :eidas-id])
-                                 :expires-soon (:expires_soon session)}
+                                 :seconds-left (:seconds_left session)}
                                 {:logged-in false})]
           (response/ok trimmed-session))
         (catch Exception e
@@ -289,8 +285,8 @@
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
         (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
-        (if (and tunnistautunut? (nil? oppija-session-from-db))
-          (response/bad-request {:passed? false :failures ["Sessio on vanhentunut"] :code :session-not-found})
+        (if (and tunnistautunut? (not (:logged-in oppija-session-from-db)))
+          (response/bad-request {:passed? false :failures ["No active oppija-session found"] :code :oppija-session-not-found})
           (match (hakija-application-service/handle-application-submit
                    form-by-id-cache
                    koodisto-cache

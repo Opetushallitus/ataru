@@ -3,6 +3,7 @@
             [ataru.virkailija.editor.components.drag-n-drop-spacer :as dnd]
             [ataru.virkailija.editor.components.dropdown-component :as dc]
             [ataru.virkailija.editor.components.modal-info-element :as mie]
+            [ataru.virkailija.editor.components.info-component :as ic]
             [ataru.virkailija.editor.components.toolbar :as toolbar]
             [re-frame.core :refer [subscribe]]
             [cljs.core.match :refer-macros [match]]
@@ -66,7 +67,7 @@
                    [ec/pohjakoulutusristiriita content path]
 
                    {:fieldClass "infoElement"}
-                   [ec/info-element content path]
+                   [ic/info-element content path]
 
                    {:fieldClass "modalInfoElement"}
                    [mie/modal-info-element content path]

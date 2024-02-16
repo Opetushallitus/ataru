@@ -1,6 +1,7 @@
 (ns ataru.unit-runner
   (:require [doo.runner :refer-macros [doo-tests]]
             [ataru.application-common.option-visibility-test]
+            [ataru.hakija.oppija-session-test]
             [ataru.cljs-util-test]
             [ataru.dob-test]
             [ataru.virkailija.editor.handlers-test]
@@ -21,6 +22,7 @@
             [ataru.liitteet-test]))
 
 (doo-tests 'ataru.application-common.option-visibility-test
+           'ataru.hakija.oppija-session-test
            'ataru.cljs-util-test
            'ataru.dob-test
            'ataru.virkailija.editor.handlers-test

@@ -221,6 +221,19 @@
     (-> db :form :tarjonta :hakuaika)))
 
 (re-frame/reg-sub
+  :application/haku-aika-is-on-or-not-applicable?
+  (fn [_ _]
+    [(re-frame/subscribe [:application/haku-aika])
+    (re-frame/subscribe [:application/virkailija?])])
+  (fn [[hakuaika virkailija?] _]
+    (or
+      (nil? hakuaika)
+      virkailija?
+      (:joustava-haku? hakuaika)
+      (:jatkuva-haku? hakuaika)
+      (boolean (:on hakuaika)))))
+
+(re-frame/reg-sub
   :application/repeatable-answer-count
   (fn [_ _]
     (re-frame/subscribe [:application/answers]))
@@ -326,11 +339,15 @@
      (re-frame/subscribe [:state-query [:oppija-session :logged-in]])
      (re-frame/subscribe [:state-query [:application :virkailija-secret]])
      (re-frame/subscribe [:state-query [:application :secret]])
-     (re-frame/subscribe [:application/demo?])])
-  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret demo?] _]
+     (re-frame/subscribe [:application/demo?])
+     (re-frame/subscribe [:application/haku-aika-is-on-or-not-applicable?])
+     (re-frame/subscribe [:application/form-closed?])])
+  (fn [[form-allows already-declined logged-in virkailija-secret hakija-secret demo? haku-aika-is-on-or-not-applicable? form-closed?] _]
     (let [feature-enabled (fc/feature-enabled? :hakeminen-tunnistautuneena)]
       (and feature-enabled
            form-allows
+           haku-aika-is-on-or-not-applicable?
+           (not form-closed?)
            (not demo?)
            (clojure.string/blank? virkailija-secret)
            (clojure.string/blank? hakija-secret)

@@ -129,6 +129,8 @@
        [:h2 (translations/get-hakija-translation :ht-tunnistaudu-ensin-header lang)]]
       [:p.application__hakeminen-tunnistautuneena-lander-main-text
        [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text lang)]]
+      [:p.application__hakeminen-tunnistautuneena-lander-main-text
+       [:span (translations/get-hakija-translation :ht-tunnistaudu-ensin-text-2 lang)]]
       [:button.application__tunnistaudu-button
        {:on-click     #(dispatch [:application/redirect-to-tunnistautuminen (name lang)])
         :data-test-id "tunnistautuminen-button"}
@@ -155,7 +157,7 @@
         lang                      (subscribe [:application/form-language])
         secret-link-valid-days    (config/get-public-config [:secret-link-valid-days])
         demo?                     (subscribe [:application/demo?])
-        demo-modal-open?       (subscribe [:application/demo-modal-open?])
+        demo-modal-open?          (subscribe [:application/demo-modal-open?])
         has-applied-to-haku?      (subscribe [:state-query [:application :has-applied]])
         ht-lander-active?         (subscribe [:application/hakeminen-tunnistautuneena-lander-active?])
         loading-complete?         (subscribe [:application/loading-complete?])]
@@ -436,11 +438,10 @@
              button-text]]])))))
 
 (defn- ht-session-expired []
-  (let [lang             (subscribe [:application/form-language])
-        expired?         (subscribe [:state-query [:oppija-session :expired]])
-        expires-soon?    (subscribe [:state-query [:oppija-session :expires-soon]])
-        dialog-bypassed? (subscribe [:state-query [:oppija-session :expires-soon-dialog-bypassed]])
-        submit-status    (subscribe [:state-query [:application :submit-status]])]
+  (let [lang                       (subscribe [:application/form-language])
+        expired?                   (subscribe [:state-query [:oppija-session :expired]])
+        session-expires-in-minutes (subscribe [:state-query [:oppija-session :session-expires-in-minutes-warning]])
+        submit-status              (subscribe [:state-query [:application :submit-status]])]
     (if (and @expired?
              (not (= :submitted @submit-status)))
       [:div.application__ht-session-expired-overlay
@@ -454,9 +455,8 @@
         [:button.application__ht-session-expired-button.application__ht-session-expired-button--enabled
          {:on-click #(dispatch [:application/redirect-to-opintopolku-etusivu (name @lang)])}
          (translations/get-hakija-translation :ht-session-expired @lang)]]]
-      (when (and @expires-soon?
-                 (not (= :submitted @submit-status))
-                 (not @dialog-bypassed?))
+      (when (and @session-expires-in-minutes
+                 (not (= :submitted @submit-status)))
         [:div.application__ht-session-expires-soon-overlay
          [:div.application__ht-session-expires-soon-wrapper
           [:div.application__ht-session-expires-soon-header-container
@@ -464,7 +464,7 @@
             {:title "danger"}
             "error_outline"]
            [:h1 (translations/get-hakija-translation :ht-session-expiring-header @lang)]]
-          [:p.application__ht-session-expires-soon-paragraph (translations/get-hakija-translation :ht-session-expiring-text @lang)]
+          [:p.application__ht-session-expires-soon-paragraph (translations/get-hakija-translation :ht-session-expiring-text-variable @lang @session-expires-in-minutes)]
           [:button.application__ht-session-expires-soon-refresh-button
            {:on-click #(dispatch [:application/close-session-expires-warning-dialog])}
            (translations/get-hakija-translation :ht-jatka-palvelun-kayttoa @lang)]]]))))
