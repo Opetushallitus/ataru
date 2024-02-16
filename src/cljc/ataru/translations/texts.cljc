@@ -1703,6 +1703,12 @@
    :excel-include-all-placeholder                            {:fi "Kaikki tunnisteet"
                                                               :sv "Alla identifikationer"
                                                               :en "All identifiers"}
+   :excel-kasittelymerkinnat                                 {:fi "Käsittelymerkinnät"
+                                                              :sv "Käsittelymerkinnät"
+                                                              :en "Käsittelymerkinnät"}
+   :excel-hakemuksen-yleiset-tiedot                          {:fi "Hakemuksen yleiset tiedot"
+                                                              :sv "Hakemuksen yleiset tiedot"
+                                                              :en "Hakemuksen yleiset tiedot"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
