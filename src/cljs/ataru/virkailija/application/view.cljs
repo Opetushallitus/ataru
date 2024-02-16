@@ -49,7 +49,8 @@
        {:class (classes "zmdi"
                         (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]]]))
 
-(defn excel-accordion [id title content]
+(defn excel-accordion
+  [id title content]
   (let [folded? @(subscribe [:editor/folded? id])]
     [:div.application-handling__excel-accordion-group
      ^{:key (str (name id) "_accordion")}
@@ -60,6 +61,31 @@
        :style {:display (if folded? "none" "block")}
        "aria-labelledby" (accordion-heading-id id)}
       ^{:key (accordion-content-id id)} content]]))
+
+(defn- excel-valitse-tiedot-content []
+  [:div
+   [excel-accordion
+    :hakemuksen-yleiset-tiedot
+    @(subscribe [:editor/virkailija-translation :excel-hakemuksen-yleiset-tiedot])
+    [:div [checkbox-component/checkbox "excel.valitse-tiedot" {:hakemuksen-yleiset-tiedot false} :hakemuksen-yleiset-tiedot]]]
+   [excel-accordion
+    :kasittelymerkinnat
+    @(subscribe [:editor/virkailija-translation :excel-kasittelymerkinnat])
+    [:div "Kasittelymerkinnat content"]]])
+
+(defn- excel-kirjoita-tunnisteet-content
+  []
+  (let [included-ids (subscribe [:state-query [:application :excel-request :included-ids]])]
+    [:<>
+     [:div
+      [:div.application-handling__excel-tunnisteet-heading @(subscribe [:editor/virkailija-translation :excel-included-ids])]]
+     [:div
+      [:textarea
+       {:class (classes "application-handling__information-request-message-area"
+                        "application-handling__information-request-message-area--large")
+        :value       (or @included-ids "")
+        :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
+        :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]]))
 
 (defn excel-download-link
   [_ _ _]
@@ -81,12 +107,6 @@
         @(subscribe [:editor/virkailija-translation :load-excel])]
        (when @visible?
          [:div.application-handling__excel-request-popup
-          [:div.application-handling__mass-edit-review-states-title-container
-           [:h4.application-handling__mass-edit-review-states-title
-            @(subscribe [:editor/virkailija-translation :excel-request])]
-           [:button.virkailija-close-button
-            {:on-click #(dispatch [:application/set-excel-popup-visibility false])}
-            [:i.zmdi.zmdi-close]]]
           [:form
            {:on-submit (fn [e]
                          (.preventDefault e)
@@ -99,50 +119,44 @@
                                            :selected-hakukohderyhma selected-hakukohderyhma}
                                form-params (into {} (map (fn [entry] [(first entry) (second entry)]) (.entries form-data)))]
                            (dispatch [:application/start-excel-download (into {} (remove (comp nil? second) (merge ext-params form-params)))])))}
-           [:div.appication-handling__excel-download-mode-radiogroup
-            [:span.appication-handling__excel-download-mode-radio-control
-             [:input
-              {:type      "radio"
-               :value     "valitse-tiedot"
-               :checked   (= @excel-download-mode "valitse-tiedot")
-               :name      "download-mode"
-               :on-change (fn [] (set-excel-download-mode "valitse-tiedot"))}]
-             [:label {:on-click (fn [] (set-excel-download-mode "valitse-tiedot"))} "Valitse excelin tiedot"]]
-            [:span.appication-handling__excel-download-mode-radio-control
-             [:input
-              {:type      "radio"
-               :value     "kirjoita-tunnisteet"
-               :checked   (= @excel-download-mode "kirjoita-tunnisteet")
-               :name      "download-mode"
-               :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
-             [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet" ]]]
-           (case @excel-download-mode
-             "valitse-tiedot" [:div.appication-handling__excel-download-valitse-tiedot
-                               [excel-accordion
-                                :hakemuksen-yleiset-tiedot
-                                @(subscribe [:editor/virkailija-translation :excel-hakemuksen-yleiset-tiedot])
-                                [:div [checkbox-component/checkbox "excel.valitse-tiedot" {:hakemuksen-yleiset-tiedot false} :hakemuksen-yleiset-tiedot]]]
-                               [excel-accordion
-                                :kasittelymerkinnat
-                                @(subscribe [:editor/virkailija-translation :excel-kasittelymerkinnat])
-                                [:div "Kasittelymerkinnat content"]]]
-             "kirjoita-tunnisteet"
-             [:<>
-              [:div
-               [:div.application-handling__excel-request-heading @(subscribe [:editor/virkailija-translation :excel-included-ids])]]
-              [:div
-               [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-                {:value       (or @included-ids "")
-                 :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
-                 :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]])
-           (when @excel-error [:span "Tapahtui virhe"])
-           [:button.application-handling__excel-request-button
-            {:disabled (or @fetching-applications? @fetching-excel?)
-             :type "submit"}
-            [:span
-             @(subscribe [:editor/virkailija-translation :load-excel])]
-            (when (or @fetching-applications? @fetching-excel?)
-              [:i.zmdi.zmdi-spinner.spin])]]])])))
+          [:div.application-handling__excel-request-main
+           [:div.application-handling__mass-edit-review-states-title-container
+            [:h4.application-handling__mass-edit-review-states-title
+             @(subscribe [:editor/virkailija-translation :excel-request])]
+            [:button.virkailija-close-button
+             {:on-click #(dispatch [:application/set-excel-popup-visibility false])}
+             [:i.zmdi.zmdi-close]]]
+           
+            [:div.application-handling__excel-download-mode-radiogroup
+             [:span.application-handling__excel-download-mode-radio-control
+              [:input
+               {:type      "radio"
+                :value     "valitse-tiedot"
+                :checked   (= @excel-download-mode "valitse-tiedot")
+                :name      "download-mode"
+                :on-change (fn [] (set-excel-download-mode "valitse-tiedot"))}]
+              [:label {:on-click (fn [] (set-excel-download-mode "valitse-tiedot"))} "Valitse excelin tiedot"]]
+             [:span.application-handling__excel-download-mode-radio-control
+              [:input
+               {:type      "radio"
+                :value     "kirjoita-tunnisteet"
+                :checked   (= @excel-download-mode "kirjoita-tunnisteet")
+                :name      "download-mode"
+                :on-change (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))}]
+              [:label {:on-click (fn [] (set-excel-download-mode "kirjoita-tunnisteet"))} "Kirjoita tunnisteet"]]]
+            [:div
+             (case @excel-download-mode
+               "valitse-tiedot" [excel-valitse-tiedot-content]
+               "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content])]
+            (when @excel-error [:span "Tapahtui virhe"])]
+           [:div.application-handling__excel-request-actions
+            [:button.application-handling__excel-request-button
+             {:disabled (or @fetching-applications? @fetching-excel?)
+              :type "submit"}
+             [:span
+              @(subscribe [:editor/virkailija-translation :load-excel])]
+             (when (or @fetching-applications? @fetching-excel?)
+               [:i.zmdi.zmdi-spinner.spin])]]]])])))
 
 (defn- closed-row
   [on-click label]
