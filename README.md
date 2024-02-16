@@ -1,7 +1,6 @@
 # Ataru
 
 [![Build Status](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml/badge.svg)](https://github.com/Opetushallitus/ataru/actions/workflows/build.yml)
-![NPM Dependencies Status](https://david-dm.org/Opetushallitus/ataru.svg)
 
 A system for creating custom forms, applying to education and handling applications.
 
