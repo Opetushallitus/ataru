@@ -386,10 +386,16 @@
  :application/handle-fetch-form-contents
  (fn [db [_ form]]
    (-> db
+       (assoc-in [:application :fetching-form-content?] false)
        (assoc-in [:application :form-key-for-haku] [(get-in db [:application :selected-haku]) (:key form)])
        (assoc-in [:forms (:key form)] form)
        (assoc-in [:forms (:key form) :flat-form-fields] (util/flatten-form-fields (:content form)))
        (assoc-in [:forms (:key form) :form-fields-by-id] (util/form-fields-by-id form)))))
+
+(reg-event-db
+ :application/handle-fetch-form-contents-error
+ (fn [db [_]]
+   (assoc-in db [:application :fetching-form-content?] false)))
 
 (reg-event-fx
  :application/fetch-form-contents
@@ -398,17 +404,18 @@
                            (get-in db [:hakukohteet (get-in db [:application :selected-hakukohde]) :haku-oid])
                            (get-in db [:application :selected-hakukohderyhma 0]))
          selected-form (or (get-in db [:application :selected-form-key])
-                           (get-in db [:haut selected-haku :ataru-form-key]))]
+                           (get-in db [:haut selected-haku :ataru-form-key]))
+         base-http {:method :get
+                    :handler-or-dispatch :application/handle-fetch-form-contents
+                    :override-args {:error-handler #(dispatch [:application/handle-fetch-form-contents-error])}
+                    :skip-parse-times? true}]
      (if selected-form
-       {:http {:method              :get
-               :path                (str "/lomake-editori/api/forms/latest/" selected-form)
-               :handler-or-dispatch :application/handle-fetch-form-contents
-               :skip-parse-times?   true}}
+       {:db (assoc-in db [:application :fetching-form-content?] true)
+        :http (merge base-http
+                     {:path (str "/lomake-editori/api/forms/latest/" selected-form)})}
        (when selected-haku
-         {:http {:method              :get
-                 :path                (str "/lomake-editori/api/forms/latest-by-haku/" selected-haku)
-                 :handler-or-dispatch :application/handle-fetch-form-contents
-                 :skip-parse-times?   true}})))))
+         {:db (assoc-in db [:application :fetching-form-content?] true)
+          :http (merge base-http {:path (str "/lomake-editori/api/forms/latest-by-haku/" selected-haku)})})))))
 
 (reg-event-fx
  :application/reload-applications
