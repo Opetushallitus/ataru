@@ -33,37 +33,37 @@
   ([date-time formatter]
    (f/unparse formatter date-time))
   ([date-time]
-    (time-formatter date-time modified-time-format)))
+   (time-formatter date-time modified-time-format)))
 
 (defn application-state-formatter
   [state lang]
   (or
-    (lang (->> review-states/application-review-states
-               (filter #(= (first %) state))
-               first
-               second))
-    "Tuntematon"))
+   (lang (->> review-states/application-review-states
+              (filter #(= (first %) state))
+              first
+              second))
+   "Tuntematon"))
 
 (defn hakukohde-review-formatter
   [requirement-name application-hakukohde-reviews lang]
   (let [reviews     (filter
-                      #(= (:requirement %) requirement-name)
-                      application-hakukohde-reviews)
+                     #(= (:requirement %) requirement-name)
+                     application-hakukohde-reviews)
         requirement (last
-                      (first
-                        (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
+                     (first
+                      (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
         get-label   (partial application-states/get-review-state-label-by-name requirement)]
     (if (= 1 (count reviews))
       (get-label (-> (first reviews) :state) lang)
       (clojure.string/join
-        "\n"
-        (map
-          (fn [{:keys [hakukohde hakukohde-name state]}]
-            (format "%s (%s): %s"
-                    hakukohde-name
-                    hakukohde
-                    (get-label state lang)))
-          reviews)))))
+       "\n"
+       (map
+        (fn [{:keys [hakukohde hakukohde-name state]}]
+          (format "%s (%s): %s"
+                  hakukohde-name
+                  hakukohde
+                  (get-label state lang)))
+        reviews)))))
 
 (defn- ehdollinen-formatter
   [ehdollinen?]
@@ -80,24 +80,24 @@
 
 (defn- application-review-notes-formatter
   ([review-notes]
-    (application-review-notes-formatter nil review-notes))
+   (application-review-notes-formatter nil review-notes))
   ([state-to-select review-notes]
    (->> (if state-to-select
           (filter #(= state-to-select (:state-name %)) review-notes)
           (remove #(some? (:state-name %)) review-notes))
         (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
                (str
-                 (time-formatter created-time)
-                 " "
-                 (when (and first-name last-name)
-                   (str
-                     first-name
-                     " "
-                     last-name))
-                 (when hakukohde
-                   (str " (hakukohde " hakukohde ")"))
-                 ": "
-                 notes)))
+                (time-formatter created-time)
+                " "
+                (when (and first-name last-name)
+                  (str
+                   first-name
+                   " "
+                   last-name))
+                (when hakukohde
+                  (str " (hakukohde " hakukohde ")"))
+                ": "
+                notes)))
         (clojure.string/join ",\n"))))
 
 (def ^:private form-meta-fields
@@ -209,11 +209,11 @@
 (defn- make-writer [styles sheet row-offset]
   (fn [row column value]
     (update-row-cell!
-      styles
-      sheet
-      (+ row-offset row)
-      column
-      value)
+     styles
+     sheet
+     (+ row-offset row)
+     column
+     value)
     [sheet row-offset row column value]))
 
 (defn- write-form-meta!
@@ -251,8 +251,7 @@
           (when (= value (:value option))
             (or (util/non-blank-val (:label option) [lang :fi :sv :en])
                 value)))
-        options)
-  )
+        options))
 
 (defn- raw-values->human-readable-value [liiteri-cas-client field-descriptor {:keys [lang]} get-koodisto-options value]
   (let [lang (-> lang clojure.string/lower-case keyword)
@@ -309,9 +308,9 @@
           value-length           (count value)
           value-truncated        (if (< max-value-length value-length)
                                    (str
-                                     (subs value 0 (- max-value-length 100))
-                                     "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
-                                     (- value-length max-value-length -100) " merkkiä]")
+                                    (subs value 0 (- max-value-length 100))
+                                    "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                                    (- value-length max-value-length -100) " merkkiä]")
                                    value)]
       (when (and value-truncated column)
         (writer 0 (+ column (count application-meta-fields)) value-truncated)))
@@ -351,7 +350,7 @@
       (writer 0 (:column meta-field) meta-value)))
   (doseq [answer (:answers application)]
     (write-answer-value-for-excel! liiteri-cas-client writer person headers form-fields-by-key
-                                  get-koodisto-options application answer)))
+                                   get-koodisto-options application answer)))
 
 (defn- pick-header
   [form-fields-by-id form-field]
@@ -382,10 +381,10 @@
 (defn- is-per-hakukohde-followup?
   [form-fields-by-id question]
   (boolean
-    (some->> question
-      :followup-of
-      (get form-fields-by-id)
-      :per-hakukohde)))
+   (some->> question
+            :followup-of
+            (get form-fields-by-id)
+            :per-hakukohde)))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
@@ -440,16 +439,16 @@
 (defn- headers-from-applications
   [form-fields form-fields-by-id skip-answers? applications]
   (->> applications
-    (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
-    (flatten)
-    (remove #(or (contains? form-fields-by-id (:key %))
-               (and skip-answers?
-                 (not (answer-to-always-include? (:key %))))))
-    (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
-                        (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
-                        (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
-    (distinct)
-    (sort (application-header-comparator form-fields form-fields-by-id))))
+       (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
+       (flatten)
+       (remove #(or (contains? form-fields-by-id (:key %))
+                    (and skip-answers?
+                         (not (answer-to-always-include? (:key %))))))
+       (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
+                           (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
+                           (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
+       (distinct)
+       (sort (application-header-comparator form-fields form-fields-by-id))))
 
 (defn- extract-headers
   [applications form form-field-belongs-to skip-answers? included-ids]
@@ -539,22 +538,22 @@
   [get-hakukohde selected-hakukohde-oids application]
   (let [active-hakukohteet     (set (or
                                      (not-empty
-                                       (:hakukohde application))
+                                      (:hakukohde application))
                                      ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
-                                      application
-                                      selected-hakukohde-oids)
+                                     application
+                                     selected-hakukohde-oids)
                                     (filter
-                                      #(contains? active-hakukohteet (:hakukohde %))))
+                                     #(contains? active-hakukohteet (:hakukohde %))))
         all-reviews-with-names (map
                                 (fn [{:keys [hakukohde] :as review}]
-                                    (assoc review
-                                           :hakukohde-name
-                                           (get-hakukohde-name
-                                             get-hakukohde
-                                             (:lang application)
-                                             (:haku application)
-                                             hakukohde)))
+                                  (assoc review
+                                         :hakukohde-name
+                                         (get-hakukohde-name
+                                          get-hakukohde
+                                          (:lang application)
+                                          (:haku application)
+                                          hakukohde)))
                                 all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
@@ -616,50 +615,50 @@
         get-koodisto-options         (memoize (fn [uri version allow-invalid?]
                                                 (koodisto/get-koodisto-options koodisto-cache uri version allow-invalid?)))
         get-tarjonta-info            (memoize (fn [haku-oid]
-                                                  (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                   koodisto-cache
-                                                   tarjonta-service
-                                                   organization-service
-                                                   ohjausparametrit-service
-                                                   haku-oid)))
+                                                (tarjonta-parser/parse-tarjonta-info-by-haku
+                                                 koodisto-cache
+                                                 tarjonta-service
+                                                 organization-service
+                                                 ohjausparametrit-service
+                                                 haku-oid)))
         get-hakukohde                (memoize (fn [haku-oid hakukohde-oid]
-                                                  (->> (get-tarjonta-info haku-oid)
-                                                       :tarjonta
-                                                       :hakukohteet
-                                                       (some #(when (= hakukohde-oid (:oid %)) %)))))
+                                                (->> (get-tarjonta-info haku-oid)
+                                                     :tarjonta
+                                                     :hakukohteet
+                                                     (some #(when (= hakukohde-oid (:oid %)) %)))))
         all-hakukohteet              (delay (->> (group-by :haku applications)
                                                  (mapcat (fn [[haku applications]]
-                                                             (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))))
+                                                           (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))))
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
         form-field-belongs-to        (let [belongs-not-specified? (fn [form-field]
                                                                     (and (empty? (:belongs-to-hakukohderyhma form-field))
                                                                          (empty? (:belongs-to-hakukohteet form-field))))]
-                                        (cond
-                                          (some? selected-hakukohde) (fn [form-field]
-                                                                        (or
-                                                                          (belongs-not-specified? form-field)
-                                                                          (contains?
-                                                                            (set (:belongs-to-hakukohteet form-field))
-                                                                            selected-hakukohde)
-                                                                          (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
-                                                                            (-> (set/intersection
-                                                                                  (set (:belongs-to-hakukohderyhma form-field))
-                                                                                  (set hakukohderyhmas))
-                                                                                empty?
-                                                                                not))))
-                                          (some? selected-hakukohderyhma) (fn [form-field]
-                                                                            (or
-                                                                              (belongs-not-specified? form-field)
-                                                                              (contains?
-                                                                                (set (:belongs-to-hakukohderyhma form-field))
-                                                                                selected-hakukohderyhma)
-                                                                              (let [hakukohderyhmas (->>
-                                                                                                      (:belongs-to-hakukohteet form-field)
-                                                                                                      (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
-                                                                                 (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
-                                          :else (fn [_] true)))]
+                                       (cond
+                                         (some? selected-hakukohde) (fn [form-field]
+                                                                      (or
+                                                                       (belongs-not-specified? form-field)
+                                                                       (contains?
+                                                                        (set (:belongs-to-hakukohteet form-field))
+                                                                        selected-hakukohde)
+                                                                       (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
+                                                                         (-> (set/intersection
+                                                                              (set (:belongs-to-hakukohderyhma form-field))
+                                                                              (set hakukohderyhmas))
+                                                                             empty?
+                                                                             not))))
+                                         (some? selected-hakukohderyhma) (fn [form-field]
+                                                                           (or
+                                                                            (belongs-not-specified? form-field)
+                                                                            (contains?
+                                                                             (set (:belongs-to-hakukohderyhma form-field))
+                                                                             selected-hakukohderyhma)
+                                                                            (let [hakukohderyhmas (->>
+                                                                                                   (:belongs-to-hakukohteet form-field)
+                                                                                                   (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
+                                                                              (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
+                                         :else (fn [_] true)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
