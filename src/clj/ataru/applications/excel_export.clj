@@ -374,13 +374,13 @@
             :per-hakukohde)))
 
 (defn- headers-from-form
-  [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
+  [form-fields form-fields-by-id included-ids skip-answers? form-field-belongs-to]
   (let [should-include? (fn [field]
                           (let [candidate? (and (not (:exclude-from-answers field))
                                                 (util/answerable? field))
                                 always?    (answer-to-always-include? (:id field))
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))
-                                id-match?  (included-ids (:id field))]
+                                id-match?  (contains? included-ids (:id field))]
                             (and candidate?
                                  (or always?
                                      (and (not always?)
@@ -420,27 +420,25 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id skip-answers? applications]
+  [form-fields form-fields-by-id should-include-id? applications]
   (->> applications
-       (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
+       (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (and skip-answers?
-                         (not (answer-to-always-include? (:key %))))))
+                    (not (should-include-id? (:key %)))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
        (distinct)
        (sort (application-header-comparator form-fields form-fields-by-id))))
 
-(defn headers-from-meta-fields [skip-answers? included-ids lang]
+(defn headers-from-meta-fields [should-include-id? lang]
   (->> application-meta-fields
-       (filter #(and (contains? included-ids (:id %))
-                     (not skip-answers?)))
+       (filter #(should-include-id? (:id %)))
        (map #(vec [(:id %) (-> % :label lang)]))))
 
 (defn- extract-headers
-  [applications form form-field-belongs-to skip-answers? included-ids lang]
+  [applications form form-field-belongs-to should-include-id? included-ids skip-answers? lang]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -448,17 +446,15 @@
                     :decorated-header (or header "")
                     :column           idx})
                  (concat
-                  (headers-from-meta-fields skip-answers?
-                                            included-ids
-                                            lang)
+                  (headers-from-meta-fields should-include-id? lang)
                   (headers-from-form form-fields
                                      form-fields-by-id
-                                     skip-answers?
                                      included-ids
+                                     skip-answers?
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
-                                             skip-answers?
+                                             should-include-id?
                                              applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
@@ -595,6 +591,7 @@
    selected-hakukohderyhma
    skip-answers?
    included-ids
+   include-default-columns?
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -602,6 +599,13 @@
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
+        should-include-id?       (fn [id] (if skip-answers?
+                                            false
+                                            (or (and include-default-columns?
+                                                     (or
+                                                      (get application-meta-fields-by-id id)
+                                                      (answer-to-always-include? id)))
+                                                (contains? included-ids id))))
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
         get-form-by-id               (memoize form-store/fetch-by-id)
@@ -676,7 +680,7 @@
          (vals)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form form-field-belongs-to skip-answers? included-ids lang)
+                              headers            (extract-headers applications form form-field-belongs-to should-include-id? included-ids skip-answers? lang)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
