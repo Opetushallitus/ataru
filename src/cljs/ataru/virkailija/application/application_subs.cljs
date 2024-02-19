@@ -2,15 +2,19 @@
   (:require [ataru.application-common.application-field-common :as common]
             [ataru.cljs-util :as util]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.tarjonta.haku :as haku]
             [ataru.util :as u]
+            [ataru.virkailija.application.application-selectors :refer [hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+                                                                        selected-application-answers
+                                                                        selected-hakukohde-oid-set
+                                                                        selected-hakukohderyhma-hakukohteet]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
             [cljs-time.core :as t]
             [clojure.core.match :refer [match]]
             [clojure.set :as set]
             [clojure.string :as string]
-            [re-frame.core :as re-frame]
-            [ataru.tarjonta.haku :as haku]))
+            [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -23,9 +27,27 @@
     (get-in db [:application :selected-application-and-form :application])))
 
 (re-frame/reg-sub
+ :application/excel-download-mode
+ (fn [db]
+   (get-in db [:application :excel-request :selected-mode])))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-some-selected?
+ (fn [db]
+   (let [filter-vals (vals (get-in db [:application :excel-request :filters]))]
+     (boolean (some :checked filter-vals)))))
+
+(re-frame/reg-sub
+ :application/excel-request-filter-indeterminate?
+ (fn [db [_ id]]
+   (let [top-filter (get-in db [:application :excel-request :filters id])
+         children-checked (->> (:child-ids top-filter)
+                               (map #(get-in db [:application :excel-request :filters % :checked])))]
+     (and (not (:parent-id top-filter)) (some true? children-checked) (not (:checked top-filter))))))
+
+(re-frame/reg-sub
   :application/selected-application-answers
-  (fn selected-application-answers [db _]
-    (get-in db [:application :selected-application-and-form :application :answers])))
+  (fn [db _] (selected-application-answers db)))
 
 (re-frame/reg-sub
   :application/selected-form-fields-by-id
@@ -209,38 +231,9 @@
   :application/application-list-selected-by
   application-list-selected-by)
 
-(defn- selected-hakukohderyhma-hakukohteet
-  [db]
-  (when-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-    (->> (:hakukohteet db)
-         vals
-         (filter (fn [hakukohde]
-                   (some #(= hakukohderyhma-oid %)
-                         (:ryhmaliitokset hakukohde)))))))
-
-(defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
-  [db]
-  (case (application-list-selected-by db)
-    :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
-    :selected-hakukohderyhma (if-let [h (get-in db [:application :rajaus-hakukohteella])]
-                               #{h}
-                               (set (map :oid (selected-hakukohderyhma-hakukohteet db))))
-    nil))
-
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma)
-
-(defn- selected-hakukohde-oid-set
-  [db]
-  (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
-    (cond
-      (some? hakukohde-oids-from-hakukohde-or-ryhma)
-      hakukohde-oids-from-hakukohde-or-ryhma
-      (some? (-> db :application :selected-form-key))
-      #{"form"}
-      :else
-      nil)))
 
 (re-frame/reg-sub
   :application/selected-hakukohde-oid-set
@@ -801,6 +794,11 @@
          (not (get-in db [:application :fetching-applications-errored?])))))
 
 (re-frame/reg-sub
+ :application/fetching-form-content?
+ (fn [db _]
+   (get-in db [:application :fetching-form-content?])))
+
+(re-frame/reg-sub
   :application/review-state-setting-enabled?
   (fn [db [_ setting-kwd]]
     (if-some [enabled-in-state? (-> db :application :review-settings :config setting-kwd)]
@@ -1124,3 +1122,17 @@
   :application/forms
   (fn forms [db _]
     (get-in db [:forms])))
+
+(re-frame/reg-sub
+ :application/excel-request-filter-value
+ (fn [db [_ id]]
+   (get-in db [:application :excel-request :filters id :checked])))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-selected-count-by-ids
+ (fn [db [_ ids]]
+   (as-> (get-in db [:application :excel-request :filters]) filters
+     (select-keys filters ids)
+     (vals filters)
+     (filter :checked filters)
+     (count filters))))

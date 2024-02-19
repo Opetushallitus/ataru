@@ -1,0 +1,224 @@
+@import "vars";
+@import "mixins";
+
+.application-handling__excel-download-link {
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.application-handling__excel-request-button {
+  display: flex;
+  color: @white;
+  background-color: @link-color;
+  border-radius: 3px;
+  box-shadow: none;
+  padding: 5px 15px;
+  height: 41px;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 14px;
+  border: none;
+  flex-flow: row nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: @editor-control-button-hover-blue;
+  }
+
+  &:disabled {
+    background-color: @section-gray-border;
+  }
+}
+
+.application-handling__excel-tunnisteet-heading {
+  margin: 6px 0px;
+}
+
+.application-handling__excel-request-popup {
+  .arrow(top, white, 8px, 90%);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
+  box-sizing: border-box;
+  display: block;
+  border-radius: 3px;
+  position: absolute;
+  z-index: 10;
+  top: 50px;
+  text-align: start;
+  background-color: white;
+  font-size: 13px;
+  line-height: 21px;
+  width: 500px;
+  left: -370px;
+}
+
+.application-handling__excel-request-margins {
+  padding: 15px 15px 0px 15px;
+}
+
+.application-handling__excel-request-container {
+  position: relative;
+}
+
+.application-handling__excel-accordion-header-button {
+  display: inline-block;
+  position: relative;
+  padding: 0;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+  color: inherit;
+  background-color: transparent;
+  padding: 0;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  .zmdi {
+    float: right;
+    font-size: 30px;
+    font-weight: light;
+    color: @neutral-grey-600;
+  }
+}
+
+.application-handling__excel-accordion-heading-wrapper {
+  display: flex;
+  margin: 0;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  align-items: flex-start;
+  input {
+    cursor: pointer;
+    accent-color: @link-color;
+    margin-top: 11px;
+    margin-right: 7px;
+  }
+
+  .excel-accordion-heading-text {
+    position: absolute;
+    display: flex;
+    gap: 10px;
+    justify-content: space-between;
+    width: calc(100% - 20px);
+    margin-top: 8px;
+    max-width: 410px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 20px;
+    padding: 0px 5px;
+  }
+  &:hover .excel-accordion-heading-text {
+    overflow: visible;
+    text-overflow: visible;
+    white-space: normal;
+    background: white;
+    z-index: 11;
+    outline: 2px solid @neutral-grey-200;
+    box-shadow: 2px 2px 3px @gray;
+    border-radius: 2px;
+  }
+}
+
+.application-handling__excel-accordion-group {
+  border-bottom: 1px solid @neutral-grey-200;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.application-handling__excel-accordion-content {
+  display: flex;
+  column-gap: 15px;
+  margin: 0px 15px 10px 15px;
+}
+
+.application-handling__excel-download-mode-radiogroup {
+  display: flex;
+  border-bottom: 2px solid @neutral-grey-200;
+  gap: 10px;
+  flex-wrap: nowrap;
+}
+
+.application-handling__excel-download-mode-radio-control {
+  display: inline-flex;
+  align-items: center;
+  line-height: 30px;
+  gap: 7px;
+  padding-right: 2px;
+  & > * {
+    cursor: pointer;
+  }
+  input {
+    margin: 0;
+    accent-color: @link-color;
+  }
+  &:has(> input:checked) {
+    border-bottom: 2px solid @link-color;
+    margin-bottom: -2px;
+  }
+}
+
+.application-handling__excel-request-actions {
+  display: flex;
+  border-top: 1px solid @neutral-grey-200;
+  padding: 15px;
+  gap: 10px;
+}
+
+.application-handling__excel-checkbox-control {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  line-height: 20px;
+  gap: 7px;
+  width: 100%;
+  align-items: flex-start;
+  margin-top: 8px;
+  background: white;
+  input {
+    cursor: pointer;
+    margin-top: 5px;
+    accent-color: @link-color;
+  }
+
+  label {
+    position: absolute;
+    display: inline-block;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    left: 20px;
+    width: 100%;
+    padding: 0px 5px;
+  }
+  
+  &:hover label {
+    overflow: visible;
+    text-overflow: visible;
+    white-space: normal;
+    background: white;
+    z-index: 11;
+    border-radius: 2px;
+    outline: 2px solid @neutral-grey-200;
+    box-shadow: 2px 2px 3px @gray;
+  }
+}
+
+.application-handling__excel-accordion-checkbox-col {
+  display: flex;
+  flex-direction: column;
+  column-gap: 15px;
+  width: 100%;
+}
+
+.application-handling__excel-tiedot {
+  max-height: 330px;
+  overflow-y: scroll;
+}
+
+.application-handling__excel-toggle-all-button {
+  cursor: pointer;
+}

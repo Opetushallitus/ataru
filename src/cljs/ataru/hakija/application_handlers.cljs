@@ -782,8 +782,8 @@
   :application/fetch-has-applied-for-oppija-session
   [check-schema-interceptor]
   (fn [{:keys [db]} [_ session-data]]
-    (let [haku-oid             @(subscribe [:state-query [:form :tarjonta :haku-oid]])
-          can-submit-multiple? @(subscribe [:state-query [:form :tarjonta :can-submit-multiple-applications]])
+    (let [haku-oid             (get-in db [:form :tarjonta :haku-oid])
+          can-submit-multiple? (get-in db [:form :tarjonta :can-submit-multiple-applications])
           ssn                  (get-in session-data [:fields :ssn :value])
           eidas-id             (get-in session-data [:eidas-id])
           body {:haku-oid haku-oid
@@ -1299,11 +1299,13 @@
        :progress-handler [:application-file-upload/handle-attachment-progress-resumable field-descriptor attachment-idx question-group-idx]
        :started-handler  [:application/handle-attachment-upload-started field-descriptor question-group-idx attachment-idx]})))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/add-single-attachment-resumable
   [check-schema-interceptor]
-  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]]
-    (let [id       (keyword (:id field-descriptor))
+  (fn [{:keys [db]} [_ field-descriptor question-group-idx attachment-idx file retries]] 
+    (let [id       (keyword (:id field-descriptor)) 
           filename (:filename @(subscribe [:application/answer
                                            id
                                            question-group-idx
@@ -1384,6 +1386,8 @@
        :dispatch-n [[:application/set-validator-processed id]
                     [:application/run-rules (:rules field-descriptor)]]})))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/handle-attachment-upload
   [check-schema-interceptor]
@@ -1429,6 +1433,8 @@
         (assoc-in db [:application :answers id :values question-group-idx attachment-idx :request] request)
         (assoc-in db [:application :answers id :values attachment-idx :request] request)))))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
+; TODO: Replace subscribe call in this event handler with a selector function call
 (reg-event-fx
   :application/handle-attachment-upload-error
   [check-schema-interceptor]
@@ -1443,6 +1449,7 @@
                           400 :file-type-forbidden
                           ;; generic error, e.g. transfer interrupted:
                           :file-upload-error)]
+      
       (if (and (contains? #{:file-upload-failed :retransmit} current-error) (< retries 3))
         {:db               db
          :delayed-dispatch {:dispatch-vec [:application/add-single-attachment-resumable

@@ -230,7 +230,7 @@
     (when (not-empty to-show)
       [:div.toaster
        [:div.toaster__wrapper
-        (map #(toast (:message %) (:id %)) to-show)]])))
+        (map (fn [t] ^{:key (:id t)} [toast  (:message t) (:id t)]) to-show)]])))
 
 (defn top-banner []
   (let [banner-type (subscribe [:state-query [:banner :type]])]

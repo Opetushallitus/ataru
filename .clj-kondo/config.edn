@@ -2,6 +2,9 @@
                 {:ignore [:unresolved-symbol]}
                 ataru.schema.form-schema
                 {:ignore [:unresolved-symbol]}}
+ :hooks   {:analyze-call {re-frame.core/reg-event-db  dfreeman.re-frame/reg-event-db
+                          re-frame.core/reg-event-fx  dfreeman.re-frame/reg-event-*
+                          re-frame.core/reg-event-ctx dfreeman.re-frame/reg-event-*}}
  :linters {:not-empty?          {:level :off}
            :refer-all           {:exclude [speclj.core]}
            :unresolved-var {:exclude [taoensso.carmine ring.util.http-response]}
@@ -30,7 +33,14 @@
                                                       pst
                                                       source]}}
            :invalid-arity       {:skip-args [clojure.core.match/match
-                                             cljs.core.match/match]}}
+                                             cljs.core.match/match]}
+           :dfreeman.re-frame/db-arg-in-reg-event-fx {:level :warning}
+           :dfreeman.re-frame/sub-in-event-handler   {:level :warning
+                                                      :subscribe-symbols [re-frame.core/subscribe
+                                                                          re-frame.subs/subscribe
+                                                                          re-frame/subscribe
+                                                                          rf/subscribe
+                                                                          subscribe]}}
  :lint-as {compojure.api.sweet/defroutes clojure.core/def
            speclj.core/with clojure.core/def
            ajax.macros/easy-api clojure.core/def}}
