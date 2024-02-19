@@ -146,4 +146,3 @@ jobs:
       jarfile: ataru.jar
     secrets: 
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-
