@@ -202,7 +202,6 @@
                                        1000)
           need-to-set? (and (not already-set?) (>= (+ polling-interval-seconds 5) seconds-left-in-session))
           timeout-millis (* 1000 (+ 2 seconds-left-in-session))]
-      (prn "need to set? " already-set? need-to-set? seconds-left-in-session)
       (if need-to-set?
         {:db (-> db
                  (assoc-in [:oppija-session :expiry-poll-scheduled] true))
