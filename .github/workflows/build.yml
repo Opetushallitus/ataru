@@ -135,7 +135,6 @@ jobs:
       jarfile: ataru.jar
     secrets: 
       AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-
   
   build-and-deploy-ataru-editori:
     needs: [test-integration, test-spec-and-mocha, build]
@@ -147,5 +146,3 @@ jobs:
       jarfile: ataru.jar
     secrets: 
         AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
-
-        
