@@ -50,14 +50,18 @@
         (re-frame/dispatch dispatch-vec))
       timeout)))
 
+(defonce live-intervals (atom {}))
+
 (re-frame.core/reg-fx
   :interval
-  (let [live-intervals (atom {})]
-    (fn [{:keys [action id frequency event]}]
-      (case action
-        :start (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
-        :stop  (do (js/clearInterval (get @live-intervals id))
-                   (swap! live-intervals dissoc id))))))
+  (fn [{:keys [action id frequency event]}]
+    (case action
+      :start (if-not ((keyword id) @live-intervals) 
+               (swap! live-intervals assoc id (js/setInterval #(re-frame/dispatch event) frequency))
+               (prn "No need to set interval as it already exists!"))
+      :stop  (do
+               (js/clearInterval (get @live-intervals id))
+               (swap! live-intervals dissoc id)))))
 
 (defonce debounces (atom {}))
 
