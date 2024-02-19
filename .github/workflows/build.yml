@@ -130,7 +130,7 @@ jobs:
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-hakija
-      base-image: baseimage-fatjar-openjdk17
+      base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
       jarfile: ataru.jar
     secrets: 
@@ -142,7 +142,7 @@ jobs:
     uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
     with:
       application: ataru-editori
-      base-image: baseimage-fatjar-openjdk17
+      base-image: baseimage-fatjar-openjdk17:master
       configfolder: oph-configuration
       jarfile: ataru.jar
     secrets: 
