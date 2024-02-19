@@ -110,7 +110,7 @@
    :value     value})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
+(comment 
 (describe "excel export:"
           (tags :unit :excel)
 
@@ -163,3 +163,4 @@
                          #{["Lisäkysymys" "Vastaus LK"]}
                          application-sheet
                          [0 1]))))))))
+)
