@@ -37,7 +37,7 @@
                  [cljs-ajax "0.8.4"]
                  [binaryage/devtools "1.0.7"]
                  [day8.re-frame/tracing "0.6.2"]
-                 [day8.re-frame/re-frame-10x "1.9.3"]
+                 [day8.re-frame/re-frame-10x "1.9.8"]
                  [venantius/accountant "0.2.5"]
                  [com.cemerick/url "0.1.1"]
                  [cljsjs/react "18.2.0-1"]

@@ -300,30 +300,37 @@
 (defn- new-kevyt-valinta-states [valinnan-tila
                                  julkaisun-tila
                                  vastaanotto-tila
+                                 vastaanotto-deadline-mennyt
                                  ilmoittautumisen-tila]
-  (match [vastaanotto-tila]
-         [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI")]
+  (match [vastaanotto-tila vastaanotto-deadline-mennyt]
+         [(:or "EHDOLLISESTI_VASTAANOTTANUT" "VASTAANOTTANUT_SITOVASTI") _]
          {:valinnantila       "HYVAKSYTTY"
           :julkaistavissa     julkaisun-tila
           :vastaanottotila    vastaanotto-tila
           :ilmoittautumistila ilmoittautumisen-tila}
 
-         [(:or "EI_VASTAANOTETTU_MAARA_AIKANA" "OTTANUT_VASTAAN_TOISEN_PAIKAN")]
+         [(:or "EI_VASTAANOTETTU_MAARA_AIKANA" "OTTANUT_VASTAAN_TOISEN_PAIKAN") _]
          {:valinnantila       "PERUUNTUNUT"
           :julkaistavissa     julkaisun-tila
           :vastaanottotila    vastaanotto-tila
           :ilmoittautumistila ilmoittautumisen-tila}
 
-         ["PERUNUT"]
+         ["PERUNUT" _]
          {:valinnantila       "PERUNUT"
           :julkaistavissa     julkaisun-tila
           :vastaanottotila    vastaanotto-tila
           :ilmoittautumistila ilmoittautumisen-tila}
 
-         ["PERUUTETTU"]
+         ["PERUUTETTU" _]
          {:valinnantila       "PERUUTETTU"
           :julkaistavissa     julkaisun-tila
           :vastaanottotila    vastaanotto-tila
+          :ilmoittautumistila ilmoittautumisen-tila}
+
+         [_ true]
+         {:valinnantila       valinnan-tila
+          :julkaistavissa     julkaisun-tila
+          :vastaanottotila    "EI_VASTAANOTETTU_MAARA_AIKANA"
           :ilmoittautumistila ilmoittautumisen-tila}
 
          :else
@@ -362,17 +369,22 @@
                                                                  :valinnantulos]
                                                             (fn [valinnantulos]
                                                               (if valinnantulos
-                                                                (let [{valinnan-tila         :valinnantila
-                                                                       julkaisun-tila        :julkaistavissa
-                                                                       vastaanotto-tila      :vastaanottotila
-                                                                       ilmoittautumisen-tila :ilmoittautumistila} (assoc
+                                                                (let [_ (println "valinnantulos ennen:" valinnantulos)
+                                                                      {valinnan-tila               :valinnantila
+                                                                       julkaisun-tila              :julkaistavissa
+                                                                       vastaanotto-tila            :vastaanottotila
+                                                                       ilmoittautumisen-tila       :ilmoittautumistila
+                                                                       vastaanotto-deadline-mennyt :vastaanottoDeadlineMennyt} (assoc
                                                                                                                     valinnantulos
                                                                                                                     valinta-tulos-service-property
                                                                                                                     new-kevyt-valinta-property-value)
                                                                       kevyt-valinta-states (new-kevyt-valinta-states valinnan-tila
                                                                                                                      julkaisun-tila
                                                                                                                      vastaanotto-tila
+                                                                                                                     vastaanotto-deadline-mennyt
                                                                                                                      ilmoittautumisen-tila)]
+                                                                  (println "valinnantulos jälkeen:" valinnantulos)
+                                                                  (println "kevyt-valinta-states jälkeen:" kevyt-valinta-states)
                                                                   (merge valinnantulos kevyt-valinta-states))
                                                                 {:vastaanottotila              "KESKEN"
                                                                  :hakukohdeOid                 hakukohde-oid

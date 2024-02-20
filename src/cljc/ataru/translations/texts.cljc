@@ -518,6 +518,9 @@
    :internal-server-error                       {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}
+   :oppija-session-not-found                    {:fi "Hakemuksesi tallentaminen ei onnistunut, koska istuntosi ei ole enää voimassa. Voit lähettää uuden hakemuksen kirjautumalla uudelleen tai ilman kirjautumista."
+                                                 :sv "Din ansökan kunde inte sparas eftersom din session har utgått. Du kan skicka en ny ansökan genom att logga in på nytt eller utan inloggning."
+                                                 :en "Your session has expired and your application has not been saved. You can send a new application by logging in again. You can also send a new application without identification."}
    :application-validation-failed-error         {:fi "Tapahtui palvelinvirhe."
                                                  :sv "Internal server error."
                                                  :en "Internal server error."}
@@ -536,6 +539,9 @@
    :application-submitted-payment-text          {:fi "Olet saanut vahvistusviestin sähköpostiisi. Siirry nyt maksamaan käsittelymaksu. Pääset maksamaan käsittelymaksun myös sähköpostiisi saamasi linkin kautta. Huomaathan, ettet voi muokata hakemusta sen jälkeen, kun olet maksanut käsittelymaksun."
                                                  :sv "Du har fått en bekräftelse till din e-post. Gå nu till betalning av din behandlingsavgift. Du kan också betala behandlingsavgiften via länken du har fått till din e-post. Vänligen notera att du kan inte ändra din ansökan efter att du har betalt behandlingsavgiften."
                                                  :en "You have received a confirmation to your email. Proceed now to the payment of your processing fee. You can also pay the processing fee through the link you have received by email. Please note that you cannot edit your application after you have paid the decision fee."}
+   :application-submitted-payment-text-2        {:fi "Emme palauta käsittelymaksua, vaikka peruuttaisit hakemuksesi."
+                                                 :sv "Vi returnerar inte den betalda behandlingsavgiften även om du skulle dra tillbaka din ansökan."
+                                                 :en "We will not return the processing fee to you even if you cancel your application."}
    :payment-button                              {:fi "Siirry maksamaan"
                                                  :sv "Gå till betalning"
                                                  :en "Go to payment"}
@@ -608,6 +614,9 @@
    :ht-tunnistaudu-ensin-text                   {:fi "Kun tunnistaudut suomi.fi-palvelussa pankkitunnuksilla, mobiilivarmenteella tai sirullisella henkilökortilla, tuodaan henkilötietosi hakulomakkeelle automaattisesti. Yhteystietojasi voit kuitenkin muokata hakulomakkeella."
                                                  :sv "Då du identifierar dig i suomi.fi-tjänsten med bankkoder, mobilcertifikat eller elektroniskt ID-kort, hämtas dina personuppgifter automatiskt till ansökningsblanketten. Du kan ändra dina kontaktuppgifter i ansökningsblanketten."
                                                  :en "When you identify yourself on Suomi.fi with your banking credentials, mobile authenticator or with your ID card, your personal information will be prefilled on the application form automatically. You can modify your contact information on the application form."}
+   :ht-tunnistaudu-ensin-text-2                 {:fi "Sinulla on tunnistautumisen jälkeen neljä tuntia aikaa täyttää ja lähettää hakulomake, minkä jälkeen istuntosi aikakatkaistaan."
+                                                 :sv "Efter att du har identifierat dig har du fyra timmar på dig att fylla i och skicka din ansökningsblankett. Efter detta avbryts din session."
+                                                 :en "Once you have completed identification, you have four hours to fill in and send the application form. The session will expire after four hours."}
    :ht-jatka-tunnistautumatta-header            {:fi "Täytä hakulomake ilman tunnistautumista"
                                                  :sv "Fyll i ansökningsblanketten utan identifiering"
                                                  :en "Fill in the application without identification"}
@@ -653,6 +662,9 @@
    :ht-session-expiring-text                    {:fi "Sinut kirjataan 15 min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
                                                  :sv "Du loggas ut ur tjänsten om 15 minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
                                                  :en "You will be logged out of the service in 15 minutes. If you do not send your application before that, the application will not be saved."}
+   :ht-session-expiring-text-variable           {:fi "Sinut kirjataan %d min päästä ulos palvelusta ja hakemustasi ei tallenneta, jos et lähetä hakemustasi sitä ennen."
+                                                 :sv "Du loggas ut ur tjänsten om %d minuter. Din ansökan sparas inte om du inte har skickat in din ansökan före utloggningen."
+                                                 :en "You will be logged out of the service in %d minutes. If you do not send your application before that, the application will not be saved."}
    :ht-session-expired-header                   {:fi "Istunto on vanhentunut"
                                                  :sv "Sessionen har löpt ut"
                                                  :en "The session has expired"}

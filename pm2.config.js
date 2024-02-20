@@ -23,6 +23,12 @@ module.exports = {
       exec_mode: 'fork',
       min_uptime: 0,
       exec_interpreter: 'none',
+      watch_options: {
+        persistent: true,
+        ignoreInitial: false,
+        usePolling: true,
+        interval: 200,
+      },
     },
     {
       name: 'ataru-hakija-backend-8351',

@@ -208,14 +208,12 @@
       (try
         (let [oppija-session (get-in request [:cookies "oppija-session" :value])
               session (oss/read-session oppija-session)
-              trimmed-session (if session
-                                {:fields (get-in session [:data :fields])
-                                 :display-name (get-in session [:data :display-name])
-                                 :auth-type (get-in session [:data :auth-type])
-                                 :logged-in (:logged-in session)
-                                 :eidas-id (get-in session [:data :eidas-id])
-                                 :expires-soon (:expires_soon session)}
-                                {:logged-in false})]
+              trimmed-session {:fields (get-in session [:data :fields])
+                               :display-name (get-in session [:data :display-name])
+                               :auth-type (get-in session [:data :auth-type])
+                               :logged-in (boolean (:logged-in session))
+                               :eidas-id (get-in session [:data :eidas-id])
+                               :seconds-left (or (:seconds_left session) 0)}]
           (response/ok trimmed-session))
         (catch Exception e
           (log/error e "Virhe haettaessa oppijan sessiota.")
@@ -285,8 +283,8 @@
                                      (some-> (get-in request [:cookies "oppija-session" :value])
                                              (oss/read-session)))]
         (log/info "Submit application, tunnistautunut" tunnistautunut? ", session" oppija-session-from-db)
-        (if (and tunnistautunut? (nil? oppija-session-from-db))
-          (response/bad-request {:passed? false :failures ["Sessio on vanhentunut"] :code :session-not-found})
+        (if (and tunnistautunut? (not (:logged-in oppija-session-from-db)))
+          (response/bad-request {:passed? false :failures ["No active oppija-session found"] :code :oppija-session-not-found})
           (match (hakija-application-service/handle-application-submit
                    form-by-id-cache
                    koodisto-cache
