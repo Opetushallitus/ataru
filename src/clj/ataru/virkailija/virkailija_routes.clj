@@ -1609,7 +1609,7 @@
         :query-params [{hakukohdeOid :- s/Str nil}]
         :body [applicationOids [s/Str]]
         :return [ataru-schema/SiirtoApplication]
-        (log/info (str "User: " (-> session :identity :oid) " | Content-type: " content-type " | Body: " applicationOids))
+        (log/info (str "User: " (-> session :identity :oid) " | Content-type: " content-type " | HakukohdeOid: " hakukohdeOid " | Body: " applicationOids))
         (if (and (nil? hakukohdeOid)
                  (empty? applicationOids))
           (response/bad-request {:error "Either hakukohdeOid or nonempty list of application oids is required"})
