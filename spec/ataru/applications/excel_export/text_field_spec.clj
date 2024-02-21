@@ -14,14 +14,10 @@
 (def liiteri-cas-client nil)
 
 (def koodisto-cache (reify cache-service/Cache
-                      #_{:clj-kondo/ignore [:unused-binding]}
-                      (get-from [this key])
-                      #_{:clj-kondo/ignore [:unused-binding]}
-                      (get-many-from [this keys])
-                      #_{:clj-kondo/ignore [:unused-binding]}
-                      (remove-from [this key])
-                      #_{:clj-kondo/ignore [:unused-binding]}
-                      (clear-all [this])))
+                      (get-from [_this _key])
+                      (get-many-from [_this _keys])
+                      (remove-from [_this _key])
+                      (clear-all [_this])))
 
 (defn export-applications [applications input-params]
   (let [application-reviews      {}
@@ -110,7 +106,6 @@
    :value     value})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(comment 
 (describe "excel export:"
           (tags :unit :excel)
 
@@ -163,4 +158,3 @@
                          #{["Lisäkysymys" "Vastaus LK"]}
                          application-sheet
                          [0 1]))))))))
-)

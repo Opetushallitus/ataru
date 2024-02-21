@@ -2,7 +2,9 @@
   (:require [ataru.application.application-states :as application-states]
             [ataru.application.review-states :as review-states]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
-            [ataru.excel-common :refer [hakemuksen-yleiset-tiedot-fields
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
+                                        hakemuksen-yleiset-tiedot-fields
+                                        hakukohderyhma-to-hakukohde-oids
                                         kasittelymerkinnat-fields]]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
@@ -13,7 +15,6 @@
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.core.match :refer [match]]
-            [clojure.set :as set]
             [clojure.string :as string :refer [trim]]
             [taoensso.timbre :as log])
   (:import [java.io ByteArrayOutputStream]
@@ -420,12 +421,13 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id should-include-id? applications]
+  [form-fields form-fields-by-id skip-answers? applications]
   (->> applications
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (not (should-include-id? (:key %)))))
+                    (and skip-answers?
+                         (not (answer-to-always-include? (:key %))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
@@ -454,7 +456,7 @@
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
-                                             should-include-id?
+                                             skip-answers?
                                              applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
@@ -571,15 +573,6 @@
     (update application :eligibility-set-automatically
             (partial filter (set selected-hakukohde-oids)))))
 
-(defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
-  (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
-           :hakukohderyhmat))
-
-(defn hakukohderyhma-to-hakukohde-oids [all-hakukohteet selected-hakukohderyhma]
-  (->> @all-hakukohteet
-       (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
-       (map :oid)))
-
 (def desc #(compare %2 %1))
 
 (defn export-applications
@@ -600,7 +593,10 @@
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         should-include-id?       (fn [id] (if skip-answers?
-                                            false
+                                            (if include-default-columns?
+                                              (or (get application-meta-fields-by-id id)
+                                                  (answer-to-always-include? id))
+                                              false)
                                             (or (and include-default-columns?
                                                      (or
                                                       (get application-meta-fields-by-id id)
@@ -636,33 +632,7 @@
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
-        form-field-belongs-to        (let [belongs-not-specified? (fn [form-field]
-                                                                    (and (empty? (:belongs-to-hakukohderyhma form-field))
-                                                                         (empty? (:belongs-to-hakukohteet form-field))))]
-                                       (cond
-                                         (some? selected-hakukohde) (fn [form-field]
-                                                                      (or
-                                                                       (belongs-not-specified? form-field)
-                                                                       (contains?
-                                                                        (set (:belongs-to-hakukohteet form-field))
-                                                                        selected-hakukohde)
-                                                                       (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
-                                                                         (-> (set/intersection
-                                                                              (set (:belongs-to-hakukohderyhma form-field))
-                                                                              (set hakukohderyhmas))
-                                                                             empty?
-                                                                             not))))
-                                         (some? selected-hakukohderyhma) (fn [form-field]
-                                                                           (or
-                                                                            (belongs-not-specified? form-field)
-                                                                            (contains?
-                                                                             (set (:belongs-to-hakukohderyhma form-field))
-                                                                             selected-hakukohderyhma)
-                                                                            (let [hakukohderyhmas (->>
-                                                                                                   (:belongs-to-hakukohteet form-field)
-                                                                                                   (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
-                                                                              (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
-                                         :else (fn [_] true)))]
+        form-field-belongs-to        (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
          (map (partial add-hakukohde-names get-haku get-hakukohde))
