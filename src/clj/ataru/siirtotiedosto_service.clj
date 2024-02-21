@@ -52,16 +52,20 @@
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of applications json to s3 in siirtotiedosto! Start " start-time)
     (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream 2)
+         true
          (catch Exception e
-           (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))))))
+           (log/error (str "Ei onnistuttu tallentamaan hakemuksia:" e))
+           false))))
 
 (defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms start-time]
   (let [json (json/generate-string forms)
         stream (input-stream (.getBytes json))]
     (log/info "Saving" (count json) "of forms json to s3 in siirtotiedosto! Start " start-time)
     (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream 2)
+         true
          (catch Exception e
-           (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))))))
+           (log/error (str "Ei onnistuttu tallentamaan lomakkeita:" (.getMessage e)))
+           false))))
 
 (defrecord CommonSiirtotiedostoService [siirtotiedosto-client]
   SiirtotiedostoService
@@ -71,16 +75,16 @@
           changed-ids (->> (application-store/siirtotiedosto-application-ids params)
                            (map :id))
           partitions (partition applications-page-size applications-page-size nil changed-ids)]
-      (log/info "Changed application ids in total: " (count changed-ids) ", partitions:" (count partitions))
-      (let [first-application-per-chunk (doall (for [application-ids partitions]
+      (log/info "Changed application ids in total: " (count changed-ids) ", partition size " applications-page-size ", partitions:" (count partitions))
+      (let [chunk-results (doall (for [application-ids partitions]
                                           (let [start (System/currentTimeMillis)
-                                                applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)]
-                                            (save-applications-to-s3 siirtotiedosto-client applications-chunk (:modified-after params))
-                                            (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
-                                            (first applications-chunk))))]
-        ;(log/info "first applications" (flatten first-application-per-chunk))
-        {:applications (flatten first-application-per-chunk)
-         :success true
+                                                applications-chunk (application-store/siirtotiedosto-applications-for-ids application-ids)
+                                                success? (save-applications-to-s3 siirtotiedosto-client applications-chunk (:modified-after params))]
+                                            (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                            success?)))]
+        (log/info "application-chunk results" chunk-results)
+        {:applications []
+         :success (every? boolean chunk-results)
          :modified-before (:modified-before params)})))
 
   (siirtotiedosto-forms
@@ -89,16 +93,16 @@
           changed-ids (->> (form-store/siirtotiedosto-form-ids params)
                            (map :id))
           partitions (partition forms-page-size forms-page-size nil changed-ids)]
-      (log/info "Changed form ids in total: " (count changed-ids) ", partitions:" (count partitions))
-      (let [first-forms-per-chunk (doall (for [form-ids partitions]
+      (log/info "Changed form ids in total: " (count changed-ids) ", partition size " forms-page-size ", partitions:" (count partitions))
+      (let [chunk-results (doall (for [form-ids partitions]
                                     (let [start (System/currentTimeMillis)
-                                          forms-chunk (form-store/fetch-forms-by-ids form-ids)]
-                                      (save-forms-to-s3 siirtotiedosto-client forms-chunk (:modified-after params))
-                                      (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start))
-                                      (first forms-chunk))))]
-        ;(log/info "first forms" (flatten first-forms-per-chunk))
-        {:forms   (flatten first-forms-per-chunk)
-         :success true
+                                          forms-chunk (form-store/fetch-forms-by-ids form-ids)
+                                          success? (save-forms-to-s3 siirtotiedosto-client forms-chunk (:modified-after params))]
+                                      (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
+                                      success?)))]
+        (log/info "form-chunk results" chunk-results)
+        {:forms   []
+         :success (every? boolean chunk-results)
          :modified-before (:modified-before params)})))
 
   )
