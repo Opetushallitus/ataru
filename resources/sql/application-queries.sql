@@ -1315,8 +1315,8 @@ SELECT
     la.id
 FROM latest_applications as la
 WHERE
-    (:modified_after::TEXT IS NULL OR la.created_time >= :modified_after::timestamptz)
-  AND (:modified_before::TEXT IS NULL OR la.created_time <= :modified_before::timestamptz);
+    (:modified_after::TEXT IS NULL OR la.modified_time >= :modified_after::timestamptz)
+  AND (:modified_before::TEXT IS NULL OR la.modified_time <= :modified_before::timestamptz);
 
 -- name: yesql-get-siirtotiedosto-applications-for-ids
 -- Get siirtotiedosto-applications by ids
