@@ -1,6 +1,7 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.cljs-util :as cljs-util]
-            [ataru.excel-common :refer [hakemuksen-yleiset-tiedot-fields
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
+                                        hakemuksen-yleiset-tiedot-fields
                                         kasittelymerkinnat-fields]]
             [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc?]]
@@ -102,41 +103,35 @@
 (defn info-element? [item] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass item)))
 
 (defn get-excel-checkbox-filter-defs
-  ([form-content selected-hakukohde selected-hakukohderyhma parent-id level parent-index-acc]
+  ([form-content form-field-belongs-to parent-id level parent-index-acc]
    (if (empty? form-content)
      nil
-     (reduce (fn [acc item]
+     (reduce (fn [acc form-field]
                (let [index-acc (+ parent-index-acc (count acc))
-                     belongs-to-hakukohteet (:belongs-to-hakukohteet item)
-                     belongs-to-hakukohderyhma (:belongs-to-hakukohderyhma item)
-                     children (get-excel-checkbox-filter-defs (:children item)
-                                                              selected-hakukohde
-                                                              selected-hakukohderyhma
-                                                              (or parent-id (:id item))
+                     children (get-excel-checkbox-filter-defs (:children form-field)
+                                                              form-field-belongs-to
+                                                              (or parent-id (:id form-field))
                                                               (inc level)
                                                               (inc index-acc))]
-                 (if (or (and (question-wrapper? item) (empty? children))
-                         (info-element? item)
-                         (:exclude-from-answers item))
+                 (if (or (and (question-wrapper? form-field) (empty? children))
+                         (info-element? form-field)
+                         (:exclude-from-answers form-field))
                    acc
-                   (merge acc children (when (and (or (= level 0) (not (question-wrapper? item)))
-                                                  (or (some nil? [selected-hakukohde belongs-to-hakukohteet])
-                                                      (contains? belongs-to-hakukohteet selected-hakukohde))
-                                                  (or (some nil? [selected-hakukohderyhma belongs-to-hakukohderyhma])
-                                                      (contains? belongs-to-hakukohderyhma selected-hakukohderyhma)))
-                                         {(:id item) (-> {:id (:id item)
-                                                          :index index-acc
-                                                          :label (:label item)
-                                                          :checked true}
-                                                         (assoc? :parent-id parent-id)
-                                                         (assoc? :child-ids (->> children
-                                                                                 (map second)
-                                                                                 (sort-by :index)
-                                                                                 (map :id))))})))))
+                   (merge acc children (when (and (or (= level 0) (not (question-wrapper? form-field)))
+                                                  (form-field-belongs-to form-field))
+                                         {(:id form-field) (-> {:id (:id form-field)
+                                                                :index index-acc
+                                                                :label (:label form-field)
+                                                                :checked true}
+                                                               (assoc? :parent-id parent-id)
+                                                               (assoc? :child-ids (->> children
+                                                                                       (map second)
+                                                                                       (sort-by :index)
+                                                                                       (map :id))))})))))
              {}
              form-content)))
-  ([form-content selected-hakukohde selected-hakukohderyhma]
-   (get-excel-checkbox-filter-defs form-content selected-hakukohde selected-hakukohderyhma nil 0 0)))
+  ([form-content form-field-belongs-to]
+   (get-excel-checkbox-filter-defs form-content form-field-belongs-to nil 0 0)))
 
 
 (def common-fields
@@ -154,10 +149,11 @@
 (defn- excel-valitse-tiedot-content [selected-hakukohde selected-hakukohderyhma]
   (let [form-key @(subscribe [:application/selected-form-key])
         form-content @(subscribe [:state-query [:forms form-key :content]])
+        all-hakukohteet (subscribe [:state-query [:hakukohteet]])
+        form-field-belongs-to (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))
         filter-defs (get-excel-checkbox-filter-defs
                      (concat common-fields form-content)
-                     selected-hakukohde
-                     selected-hakukohderyhma)
+                     form-field-belongs-to)
         top-filters (->> filter-defs
                          (filter #(not (:parent-id (second %))))
                          (map second)
