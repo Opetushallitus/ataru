@@ -1643,11 +1643,9 @@
                                                                                (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZZZ")
                                                                                (Date.)))}]
               (log/info "Siirtotiedosto params: " siirtotiedosto-params)
-              (let [{forms-success :success forms :forms} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
-                    {applications-success :success applications :applications} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
-                    combined-result {:success (and forms-success applications-success)
-                                     :applications (or applications [])
-                                     :forms (or forms [])}]
+              (let [{forms-success :success} (siirtotiedosto-service/siirtotiedosto-forms siirtotiedosto-service siirtotiedosto-params)
+                    {applications-success :success} (siirtotiedosto-service/siirtotiedosto-applications siirtotiedosto-service siirtotiedosto-params)
+                    combined-result {:success (and forms-success applications-success)}]
                 (log/info "Siirtotiedosto success" (:success combined-result))
                 (match combined-result
                        {:success true}
