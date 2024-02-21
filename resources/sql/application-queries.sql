@@ -576,7 +576,8 @@ WHERE application_key = :application_key;
 -- Add person OID to an application. Update also new versions of application if the user has updated
 -- the application while we have been talking to person service (ONR)
 UPDATE applications
-SET person_oid = :person_oid
+SET person_oid    = :person_oid,
+    modified_time = now()
 WHERE key IN (select key from applications where id = :id)
       AND id >= :id;
 
