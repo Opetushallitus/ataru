@@ -1577,6 +1577,8 @@
                    hakukohdeOid
                    (not-empty applicationOids)
                    harkinnanvaraisuustiedotHakutoiveille)
+                 {:unauthorized _}
+                 (response/unauthorized {:error "Unauthorized"})
                  {:yksiloimattomat (_ :guard empty?)
                   :applications    applications}
                  (response/ok applications)
@@ -1587,9 +1589,7 @@
                        (response/ok applications))
                    (response/conflict
                      {:error      "Yksilöimättömiä hakijoita"
-                      :personOids yksiloimattomat}))
-                 {:unauthorized _}
-                 (response/unauthorized {:error "Unauthorized"}))))
+                      :personOids yksiloimattomat})))))
 
       (api/GET "/valintapiste" {session :session}
         :summary "Get application answers for Valintapiste Service"
@@ -1616,6 +1616,8 @@
                    session
                    hakukohdeOid
                    (not-empty applicationOids))
+                 {:unauthorized _}
+                 (response/unauthorized {:error "Unauthorized"})
                  {:yksiloimattomat (_ :guard empty?)
                   :applications    applications}
                  (response/ok applications)
@@ -1626,9 +1628,7 @@
                        (response/ok applications))
                    (response/conflict
                      {:error      "Yksilöimättömiä hakijoita"
-                      :personOids yksiloimattomat}))
-                 {:unauthorized _}
-                 (response/unauthorized {:error "Unauthorized"}))))
+                      :personOids yksiloimattomat})))))
 
       (api/GET "/kouta/hakukohde/:hakukohde-oid" {session :session}
         :summary "get hakukohde info for kouta"
