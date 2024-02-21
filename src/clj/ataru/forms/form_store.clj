@@ -106,7 +106,8 @@
 (defn fetch-forms-by-ids [ids]
   (log/info "Fetching forms for" (count ids) "ids.")
   (->> (execute yesql-get-by-ids {:ids ids} nil)
-       (map assoc-flattened-content)))
+       ;(map assoc-flattened-content)
+       ))
 
 (def fetch-form fetch-latest-version)
 
