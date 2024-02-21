@@ -50,7 +50,7 @@
 (defn- save-applications-to-s3 [^SiirtotiedostoPalvelu client applications start-time]
   (let [json (json/generate-string applications)
         stream (input-stream (.getBytes json))]
-    (log/info "Saving" (count json) "of applications json to s3 in siirtotiedosto! Start " start-time)
+    (log/info "Saving" (count applications) "applications as json to s3 in siirtotiedosto! Start " start-time)
     (try (.saveSiirtotiedosto client start-time "" "ataru" "applications" stream 2)
          true
          (catch Exception e
@@ -60,7 +60,7 @@
 (defn- save-forms-to-s3 [^SiirtotiedostoPalvelu client forms start-time]
   (let [json (json/generate-string forms)
         stream (input-stream (.getBytes json))]
-    (log/info "Saving" (count json) "of forms json to s3 in siirtotiedosto! Start " start-time)
+    (log/info "Saving" (count forms) "forms as json to s3 in siirtotiedosto! Start " start-time)
     (try (.saveSiirtotiedosto client start-time "" "ataru" "forms" stream 2)
          true
          (catch Exception e
@@ -83,8 +83,7 @@
                                             (log/info "Applications-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
                                             success?)))]
         (log/info "application-chunk results" chunk-results)
-        {:applications []
-         :success (every? boolean chunk-results)
+        {:success (every? boolean chunk-results)
          :modified-before (:modified-before params)})))
 
   (siirtotiedosto-forms
@@ -101,8 +100,7 @@
                                       (log/info "Forms-chunk" (str (swap! done inc) "/" (count partitions)) "complete, took" (- (System/currentTimeMillis) start) ", success " success?)
                                       success?)))]
         (log/info "form-chunk results" chunk-results)
-        {:forms   []
-         :success (every? boolean chunk-results)
+        {:success (every? boolean chunk-results)
          :modified-before (:modified-before params)})))
 
   )
