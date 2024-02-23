@@ -282,38 +282,38 @@
 (defn- write-answer-value-for-excel!
   [liiteri-cas-client writer person headers form-fields-by-key get-koodisto-options application answer]
   (try
-    (let [answer-key             (:key answer)
-          field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
-                                   (get form-fields-by-key (first (string/split answer-key #"_")))
-                                   (get form-fields-by-key answer-key))
-          column                 (:column (first (filter #(= answer-key (:id %)) headers)))
-          value-or-values        (get person (keyword answer-key) (:value answer))
-          ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
-          value                  (cond
-                                   (util/is-question-group-answer? value-or-values)
-                                   (->> value-or-values
-                                        (map #(clojure.string/join "," %))
-                                        (map ->human-readable-value)
-                                        (map-indexed #(format "#%s: %s,\n" %1 %2))
-                                        (apply str))
+    (when-let [column (:column (first (filter #(= (:key answer) (:id %)) headers)))]
+      (let [answer-key             (:key answer)
+            field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
+                                     (get form-fields-by-key (first (string/split answer-key #"_")))
+                                     (get form-fields-by-key answer-key))
+            value-or-values        (get person (keyword answer-key) (:value answer))
+            ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
+            value                  (cond
+                                     (util/is-question-group-answer? value-or-values)
+                                     (->> value-or-values
+                                          (map #(clojure.string/join "," %))
+                                          (map ->human-readable-value)
+                                          (map-indexed #(format "#%s: %s,\n" %1 %2))
+                                          (apply str))
 
-                                   (vector? value-or-values)
-                                   (->> value-or-values
-                                        (map ->human-readable-value)
-                                        (interpose ",\n")
-                                        (apply str))
+                                     (vector? value-or-values)
+                                     (->> value-or-values
+                                          (map ->human-readable-value)
+                                          (interpose ",\n")
+                                          (apply str))
 
-                                   :else
-                                   (->human-readable-value value-or-values))
-          value-length           (count value)
-          value-truncated        (if (< max-value-length value-length)
-                                   (str
-                                    (subs value 0 (- max-value-length 100))
-                                    "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
-                                    (- value-length max-value-length -100) " merkkiä]")
-                                   value)]
-      (when (and value-truncated column)
-        (writer 0 (+ column (count application-meta-fields)) value-truncated)))
+                                     :else
+                                     (->human-readable-value value-or-values))
+            value-length           (count value)
+            value-truncated        (if (< max-value-length value-length)
+                                     (str
+                                      (subs value 0 (- max-value-length 100))
+                                      "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                                      (- value-length max-value-length -100) " merkkiä]")
+                                     value)]
+        (when value-truncated
+          (writer 0 (+ column (count application-meta-fields)) value-truncated))))
     (catch Exception e
       (log/error "Caught exception while trying to parse value for answer"
                  (:key answer)
