@@ -61,8 +61,9 @@
 
 (defn- classes [& cs] (str/join " " (vec cs)))
 
-(defn- accordion-heading [id title folded?]
-  (let [click-action (if folded?
+(defn- accordion-heading [id title folded? child-ids]
+  (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
+        click-action (if folded?
                        #(dispatch [:editor/unfold id])
                        #(dispatch [:editor/fold id]))]
     [:h4.application-handling__excel-accordion-heading-wrapper
@@ -73,18 +74,19 @@
        "aria-expanded" (not folded?)
        "aria-controls" (accordion-content-id id)
        :on-click click-action}
-      [:span.excel-accordion-heading-text title]
-
+      [:span.excel-accordion-heading-text 
+       [:span title] 
+       [:span (str @selected-children-count "/" (count child-ids) " valittu")]]
       [:i
        {:class (classes "zmdi"
                         (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]]]))
 
 (defn excel-accordion
-  [id title content]
+  [id title child-ids content]
   (let [folded? @(subscribe [:editor/folded? id])]
     [:div.application-handling__excel-accordion-group
      ^{:key (str "accordion_" id)}
-     [accordion-heading id title folded?]
+     [accordion-heading id title folded? child-ids]
      [:div.application-handling__excel-accordion-content
       {:id (accordion-content-id id)
        :role "region"
@@ -103,8 +105,7 @@
                  (if (or (= (:fieldClass item) "infoElement")
                          (and (= (:fieldClass item) "wrapperElement") (empty? children))
                          (:exclude-from-answers item)
-                         (contains?  #{"hakukohteet" "lupatiedot"} (:id item))
-                         (= (:module item) "person-info"))
+                         (contains?  #{"hakukohteet" "lupatiedot"} (:id item)))
                    acc
                    (merge acc children (when (or (= level 0) (not-any? #(= (:fieldClass item) %) #{"questionGroup" "wrapperElement"}))
                                          {(:id item) (-> {:id (:id item)
@@ -143,7 +144,10 @@
         (->> top-filters
              (map (fn [section]
                     ^{:key (str (:id section) "_section")}
-                    [excel-accordion (:id section) (get-label-trans (:label section) :fi (:id section))
+                    [excel-accordion
+                     (:id section)
+                     (get-label-trans (:label section) :fi (:id section)) 
+                     (:child-ids section)
                      [:div.application-handling__excel-accordion-checkbox-col
                       (map (fn [child-id]
                              (let [sub-filter (get-in filters [child-id])]
