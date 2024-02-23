@@ -25,19 +25,24 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
+(defn- accordion-heading-id [id] (str (name id) "_heading"))
+(defn- accordion-content-id [id] (str (name id) "_content"))
+(defn- checkbox-name [id] (str (name id) "_checkbox"))
+
 (defn excel-checkbox [id]
-  (let [checked @(subscribe [:application/excel-request-filter-value])]
+  (let [checked? @(subscribe [:application/excel-request-filter-value id])]
     [:input
      {:type "checkbox"
-      :name id
-      :on-change #(dispatch [:application/excel-request-filter-changed id (not checked)])
-      :value checked}]))
+      :id (checkbox-name id)
+      :on-change #(dispatch [:application/excel-request-filter-changed id])
+      :value id
+      :checked (boolean checked?)}]))
 
 (defn excel-checkbox-control
   [id title]
   [:span.application-handling__excel-checkbox-control
    [excel-checkbox id title]
-   (when title [:label title])])
+   (when title [:label {:for (checkbox-name id)} title])])
 
 (defn use-excel-download-mode-state []
   [(subscribe [:application/excel-download-mode])
@@ -45,8 +50,6 @@
 
 (defn- classes [& cs] (str/join " " (vec cs)))
 
-(defn- accordion-heading-id [id] (str (name id) "_heading"))
-(defn- accordion-content-id [id] (str (name id) "_content"))
 (defn- accordion-heading [id title folded?]
   (let [click-action (if folded?
                        #(dispatch [:editor/unfold id])
