@@ -1136,3 +1136,8 @@
      (vals filters)
      (filter :checked filters)
      (count filters))))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-initialized?
+ (fn [db [_ ]]
+   (not (empty? (get-in db [:application :excel-request :filters])))))
