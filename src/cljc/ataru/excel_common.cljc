@@ -1,5 +1,6 @@
 (ns ataru.excel-common
-  (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]))
+  (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]
+            [clojure.set :as set]))
 
 (def hakemuksen-yleiset-tiedot-fields
   [{:id        "application-number"
@@ -38,3 +39,38 @@
     :label     (:pisteet excel-texts)}
    {:id        "application-review-notes"
     :label     (:notes excel-texts)}])
+
+(defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
+  (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
+           :hakukohderyhmat))
+
+(defn hakukohderyhma-to-hakukohde-oids [all-hakukohteet selected-hakukohderyhma]
+  (->> @all-hakukohteet
+       (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
+       (map :oid)))
+
+(defn form-field-belongs-to-hakukohde [form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet]
+  (let [belongs-not-specified? (and (empty? (:belongs-to-hakukohderyhma form-field))
+                                    (empty? (:belongs-to-hakukohteet form-field)))]
+    (cond
+      (some? selected-hakukohde) (or
+                                  belongs-not-specified?
+                                  (contains?
+                                   (set (:belongs-to-hakukohteet form-field))
+                                   selected-hakukohde)
+                                  (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
+                                    (-> (set/intersection
+                                         (set (:belongs-to-hakukohderyhma form-field))
+                                         (set hakukohderyhmas))
+                                        empty?
+                                        not)))
+      (some? selected-hakukohderyhma) (or
+                                       belongs-not-specified?
+                                       (contains?
+                                        (set (:belongs-to-hakukohderyhma form-field))
+                                        selected-hakukohderyhma)
+                                       (let [hakukohderyhmas (->>
+                                                              (:belongs-to-hakukohteet form-field)
+                                                              (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
+                                         (contains? (set hakukohderyhmas) selected-hakukohderyhma)))
+      :else true)))
