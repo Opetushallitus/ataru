@@ -28,7 +28,7 @@
     :label     (:eligibility-set-automatically virkailija-texts)}
    {:id        "ineligibility-reason"
     :label     (:ineligibility-reason virkailija-texts)}
-   {:id        "maksulvelvollisuus"
+   {:id        "maksuvelvollisuus"
     :label     (:maksuvelvollisuus excel-texts)}
    {:id        "valinnan-tila"
     :label     (:valinnan-tila excel-texts)}
