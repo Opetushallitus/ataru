@@ -34,13 +34,20 @@
              (-> e .-target .-value)]))
 
 (defn excel-checkbox [id]
-  (let [checked? @(subscribe [:application/excel-request-filter-value id])]
+  (let [ref (atom nil)
+        checked? @(subscribe [:application/excel-request-filter-value id])
+        indeterminate? @(subscribe [:application/excel-request-filter-indeterminate? id])]
+    (r/after-render (fn []
+                      (when @ref
+                        (set! (.-indeterminate @ref) indeterminate?))))
     [:input
-     {:type "checkbox"
+     {:key (str id "_" indeterminate?)
+      :type "checkbox"
       :id (checkbox-name id)
+      :ref #(reset! ref %)
       :value id
       :on-change excel-checkbox-on-change
-      :checked (boolean checked?)}]))
+      :checked checked?}]))
 
 (defn excel-checkbox-control
   [id title]
