@@ -781,8 +781,8 @@
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
-                      {include-default-columns :- s/Str false}
-                      {included-ids :- [s/Str] nil}
+                      {include-default-columns :- s/Bool false}
+                      {included-ids :- [s/Str] []}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
         (let [size-limit       40000]
@@ -790,7 +790,7 @@
           (if (< size-limit (count application-keys))
             (response/request-entity-too-large
               {:error (str "Cannot create excel for more than " size-limit " applications")})
-            (let [included-ids (if included-ids (set included-ids) #{})
+            (let [included-ids (set included-ids)
                   xls          (application-service/get-excel-report-of-applications-by-key
                                  application-service
                                  application-keys

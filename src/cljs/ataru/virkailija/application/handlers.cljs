@@ -952,7 +952,7 @@
    (when (not (get-in db [:application :excel-request :fetching?]))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in db [:application :excel-request :selected-mode])
-           written-ids (get-in db [:application :excel-request :included-ids])
+           written-ids (clj-string/split #"\s+" (get-in db [:application :excel-request :included-ids]))
            filtered-ids (->> (get-in db [:application :excel-request :filters])
                              (map second)
                              (filter :checked)
@@ -969,14 +969,16 @@
                                         (assoc? :included-ids (->> (case selected-mode
                                                                      "kirjoita-tunnisteet" written-ids
                                                                      "valitse-tiedot" filtered-ids
-                                                                     :else ""))))
+                                                                     :else "")))
+                                        (assoc? :include-default-columns (= selected-mode "kirjoita-tunnisteet"))) 
                :skip-parse-times?   true
                :skip-flasher?       true
                :handler-or-dispatch :application/handle-excel-download-success
                :handler-args        {:filename (:filename params)}
                :override-args       {:response-format {:type :blob
                                                        :read pr/-body}
-                                     :error-handler #(dispatch [:application/handle-excel-download-error %])}}}))))
+                                     :error-handler #(do (dispatch [:add-toast-message (str "Excelin muodostaminen epäonnistui, status: " (:status %))])
+                                                         (dispatch [:application/handle-excel-download-error %]))}}}))))
 
 (reg-event-db
  :application/excel-request-filters-init

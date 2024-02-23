@@ -69,21 +69,24 @@
   (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
         click-action (if folded?
                        #(dispatch [:editor/unfold id])
-                       #(dispatch [:editor/fold id]))]
+                       #(dispatch [:editor/fold id]))
+        has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
-     [excel-checkbox id]
-     [:button.application-handling__excel-accordion-header-button
-      {:id (accordion-heading-id id)
-       :type "button"
-       "aria-expanded" (not folded?)
-       "aria-controls" (accordion-content-id id)
-       :on-click click-action}
-      [:span.excel-accordion-heading-text
-       [:span title]
-       [:span (str @selected-children-count "/" (count child-ids) " valittu")]]
-      [:i
-       {:class (classes "zmdi"
-                        (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]]]))
+     (if has-children?
+       [excel-checkbox id]
+       [excel-checkbox-control id title])
+     (when has-children? [:button.application-handling__excel-accordion-header-button
+                             {:id (accordion-heading-id id)
+                              :type "button"
+                              "aria-expanded" (not folded?)
+                              "aria-controls" (accordion-content-id id)
+                              :on-click click-action}
+                             [:span.excel-accordion-heading-text
+                              [:span title]
+                              [:span (str @selected-children-count "/" (count child-ids) " valittu")]]
+                             [:i
+                              {:class (classes "zmdi"
+                                               (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]])]))
 
 (defn excel-accordion
   [id title child-ids content]
@@ -157,8 +160,10 @@
         top-filters (->> filter-defs
                          (filter #(not (:parent-id (second %))))
                          (map second)
-                         (sort-by :index))]
-    (dispatch [:application/excel-request-filters-init filter-defs])
+                         (sort-by :index))
+        filters-initialized? (subscribe [:application/excel-request-filters-initialized?])]
+    (when (not @filters-initialized?)
+      (dispatch [:application/excel-request-filters-init filter-defs]))
     (fn []
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
@@ -198,7 +203,6 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
-        excel-error (subscribe [:state-query [:application :excel-request :error]])
         [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
@@ -248,7 +252,6 @@
              (case @excel-download-mode
                "valitse-tiedot" [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma]
                "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content]))]
-          (when @excel-error [:span "Tapahtui virhe"])
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
             {:disabled (or @fetching-applications? @fetching-excel?)

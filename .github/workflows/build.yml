@@ -5,6 +5,9 @@ on:
   push:
     paths-ignore:
       - '**.md'
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   test-integration:
@@ -13,6 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare-clojure-env
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+          aws-region: eu-west-1
+      
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
       - uses: actions/setup-node@v4
         with:
@@ -27,7 +40,7 @@ jobs:
         id: playwright-version
         run: echo "PLAYWRIGHT_VERSION=$(node -e "console.log(require('./package-lock.json').dependencies['@playwright/test'].version)")" >> $GITHUB_ENV
       - name: Cache playwright binaries
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -37,15 +50,14 @@ jobs:
 
       - name: Prepare tests
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           GA_BUILD_NUMBER: ${{ github.run_number }}
         run: |
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/postgres:11
-          docker run -d --name ataru-test-redis -p 6380:6379 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/redis:5.0
-          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $REGISTRY/utility/postgres:11
+          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/utility/redis:5.0
+          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
       - name: Run integration tests (Cypress & Playwright)
         run: |
@@ -58,6 +70,16 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/prepare-clojure-env
 
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+          aws-region: eu-west-1
+    
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
       - uses: actions/setup-node@v4
         with:
           node-version-file: '.nvmrc'
@@ -66,17 +88,16 @@ jobs:
 
       - name: Prepare tests
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           GA_BUILD_NUMBER: ${{ github.run_number }}
         run: |
           sudo apt-get update
           sudo apt-get install -y lftp
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/postgres:11
-          docker run -d --name ataru-test-redis -p 6380:6379 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/redis:5.0
-          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 190073735177.dkr.ecr.eu-west-1.amazonaws.com/utility/hiekkalaatikko:ataru-test-ftpd
+          docker run -d --name ataru-test-db -p 5433:5432 -e POSTGRES_DB=ataru-test -e POSTGRES_PASSWORD=oph -e POSTGRES_USER=oph $REGISTRY/utility/postgres:11
+          docker run -d --name ataru-test-redis -p 6380:6379 $REGISTRY/utility/redis:5.0
+          docker run -d --name ataru-test-ftpd -p 2221:21 -p 30000-30009:30000-30009 $REGISTRY/utility/hiekkalaatikko:ataru-test-ftpd
 
       - name: Run Spec and Mocha tests
         run: |
@@ -98,41 +119,30 @@ jobs:
       - name: Build
         run: ./bin/cibuild.sh create-uberjar
 
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: restore-build
         with:
           path: target
           key: ${{ github.sha }}
 
-  build-and-deploy-container:
+  build-and-deploy-ataru-hakija:
     needs: [test-integration, test-spec-and-mocha, build]
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/cache@v3
-        id: restore-build
-        with:
-          path: target
-          key: ${{ github.sha }}
-
-      - name: Build and deploy Docker containers
-        shell: bash
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        run: |
-          git clone https://github.com/Opetushallitus/ci-tools.git
-          source ci-tools/common/setup-tools.sh
-          export BASE_IMAGE="baseimage-fatjar-openjdk17:master"
-          ./ci-tools/common/pull-image.sh
-          cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-editori.jar
-          cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/
-          ./ci-tools/github-build/build-fatjar.sh ataru-editori
-          ./ci-tools/common/clean-docker-build-dir.sh
-          cp -v ./target/ataru.jar $DOCKER_BUILD_DIR/artifact/ataru-hakija.jar
-          cp -vr ./oph-configuration $DOCKER_BUILD_DIR/config/
-          ./ci-tools/github-build/build-fatjar.sh ataru-hakija
-          ./ci-tools/github-build/upload-image.sh ataru-editori
-          ./ci-tools/github-build/upload-image.sh ataru-hakija
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    with:
+      application: ataru-hakija
+      base-image: baseimage-fatjar-openjdk17:master
+      configfolder: oph-configuration
+      jarfile: ataru.jar
+    secrets: 
+      AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
+  
+  build-and-deploy-ataru-editori:
+    needs: [test-integration, test-spec-and-mocha, build]
+    uses: Opetushallitus/.github/.github/workflows/push-scan-java-ecr.yml@main
+    with:
+      application: ataru-editori
+      base-image: baseimage-fatjar-openjdk17:master
+      configfolder: oph-configuration
+      jarfile: ataru.jar
+    secrets: 
+        AWS_UTILITY_ROLE_ARN: ${{ secrets.AWS_OPH_UTILITY_ROLE_ARN }}
