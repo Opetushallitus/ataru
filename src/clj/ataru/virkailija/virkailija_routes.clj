@@ -774,7 +774,8 @@
           (response/unauthorized {:error "Hakemusten käsittely ei ole sallittu"})))
 
       (api/POST "/excel" {session :session}
-        :form-params [application-keys :- s/Str
+        :body-params [{download-mode :- s/Str "kirjoita-tunnisteet"}
+                      application-keys :- s/Str
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
