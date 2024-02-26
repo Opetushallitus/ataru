@@ -216,7 +216,8 @@
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
   (fn [{db :db} [_ response {application-keys :application-keys}]]
-    (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)]
+    (let [new-multiple-requests-count (some-> db :kevyt-valinta :multiple-requests-count dec)
+          korkeakouluhaku? (re-frame/subscribe [:virkailija-kevyt-valinta-filter/korkeakouluhaku?])]
       (cond-> {:db (as-> db db'
 
                          (-> db'
@@ -232,10 +233,27 @@
                                  (->> response
                                       (reduce (fn valinnan-tulos->db [acc valinnan-tulos]
                                                 (let [hakemus-oid   (-> valinnan-tulos :valinnantulos :hakemusOid)
-                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
+                                                      hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)
+                                                      tulos (:valinnantulos valinnan-tulos)
+                                                      konvertoitu-tulos
+                                                      (cond->
+                                                        valinnan-tulos
+                                                        (and @korkeakouluhaku?
+                                                             (:julkaistavissa tulos)
+                                                             (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
+                                                                        (keyword (:valinnantila tulos)))
+                                                             (= "KESKEN" (:vastaanottotila tulos))
+                                                             (:vastaanottoDeadlineMennyt tulos))
+                                                        (assoc-in [:valinnantulos :vastaanottotila] "EI_VASTAANOTETTU_MAARA_AIKANA"))]
+                                                  (println (str "!!!: " konvertoitu-tulos ", kk-haku? " @korkeakouluhaku?
+                                                                ", julk? " (:julkaistavissa tulos)
+                                                                ", tila? " (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
+                                                                                      (keyword (:valinnantila tulos)))
+                                                                ", vast-tila? " (= "KESKEN" (:vastaanottotila tulos))
+                                                                ", deadline? " (:vastaanottoDeadlineMennyt tulos)))
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
-                                                            valinnan-tulos)))
+                                                            konvertoitu-tulos)))
                                               valinta-tulos-service-db)))))
 
                          (cond-> db'
