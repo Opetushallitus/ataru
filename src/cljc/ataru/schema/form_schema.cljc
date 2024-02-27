@@ -668,6 +668,10 @@
    :haku_oid            s/Str
    :hakukohde_oids      [s/Str]})
 
+(s/defschema Kieli
+  {:kieliKoodi  s/Str
+   :kieliTyyppi s/Str})
+
 (s/defschema SiirtoApplication
   {:hakemusOid  s/Str
    :person      {:oidHenkilo    s/Str
@@ -675,8 +679,12 @@
                  :syntymaaika   s/Str
                  :hetu          (s/maybe s/Str)
                  :sukunimi      s/Str
-                 :asiointiKieli {:kieliKoodi  s/Str
-                                 :kieliTyyppi s/Str}}
+                 :turvakielto   s/Bool
+                 :sukupuoli     s/Str
+                 :aidinkieli    (s/maybe Kieli)
+                 :kansalaisuudet [s/Str]
+                 :kutsumanimi  (s/maybe s/Str)
+                 :asiointiKieli Kieli}
    :hakuOid     (s/maybe s/Str)
    :hakutoiveet [s/Str]
    :attachments {s/Str Value}
