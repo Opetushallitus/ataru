@@ -47,6 +47,8 @@
           translations     (translations/get-translations lang)
           {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
           body             (selmer/render-file (information-request-email-template-filename lang)
+                                               ; Message body text coming from virkailija UI has never "officially" supported Markdown and 
+                                               ; there have been issues with accidental styling - so just sanitize instead of parsing md style.
                                                (merge {:message (->safe-html-without-markdown-conversion (:message information-request))}
                                                       (if (or guardian? (not add-update-link?))
                                                         {}
