@@ -82,6 +82,11 @@
   (when content
     (.sanitize html-policy (markdown->html content))))
 
+(defn ->safe-html-without-markdown-conversion
+  [content]
+  (when content
+    (.sanitize html-policy content)))
+
 (defn- hakukohde-names [tarjonta-info lang application]
   (when (:haku application)
     (let [tarjonta-hakukohteet (util/group-by-first :oid (:hakukohteet tarjonta-info))
