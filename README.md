@@ -642,3 +642,45 @@ Output should be like this:
 ```
 
 More info regarding Java setup on MacOs can be found [here](https://mkyong.com/java/how-to-set-java_home-environment-variable-on-mac-os-x/).
+
+## Logs
+
+Application logs are in /tmp folder.
+
+Build/compilation logs are in logs/pm2 folder.
+
+## Backend Hot Reloading and Breakpoints
+
+Hot reloading for backends can be enabled in IntelliJ by creating and running a "Clojure REPL -> Remote" run configuration (port 3333 for lomake-editori, port 3339 for hakija).
+
+Backend breakpoints (using debug-repl library) can be used with the following steps:
+
+1. Run the nREPL run configuration (see above)
+2. In the REPL command line, go to the namespace to which you want to put breakpoints, e.g.
+
+```
+(in-ns 'ataru.valinta-tulos-service.valintatulosservice-client)
+```
+
+3. Import the required tooling in the REPL command line:
+
+```
+(require '[com.gfredericks.debug-repl.async :refer [break! wait-for-breaks]])
+(require '[com.gfredericks.debug-repl :refer [unbreak!]])
+```
+
+4. Insert (break!) macro invocation in the code to places where you want execution to break
+5. Wait for breaks in the REPL command line (120 is timeout in seconds)
+
+```
+(wait-for-breaks 120)
+```
+
+6. Use browser to invoke the code
+7. REPL window should display something like
+
+```
+Hijacking repl for breakpoint: ...
+```
+8. Examine the context, run code, etc.
+9. Continue execution by invoking the (unbreak!) macro in the REPL command line

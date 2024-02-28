@@ -1675,8 +1675,7 @@
                           organization-service tarjonta-service suoritus-service person-service session hakemusOids [:view-applications :edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids))))
+                (vts/valinnantulos-monelle-tilahistorialla valinta-tulos-service hakemusOids)))
 
         (api/GET "/hakemus" {session :session}
           :summary "Valinnantulos for hakemus"
@@ -1687,8 +1686,7 @@
                        organization-service tarjonta-service suoritus-service person-service session hakemusOid))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid))))
+                (vts/valinnantulos-hakemukselle-tilahistorialla valinta-tulos-service hakemusOid)))
 
         (api/PATCH "/:valintatapajono-oid" {session :session}
           :summary "Patch valinnantulos"
@@ -1707,9 +1705,8 @@
                        [:edit-applications]))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/change-kevyt-valinta-property
-                    valinta-tulos-service valintatapajono-oid body if-unmodified-since)))))
+                (vts/change-kevyt-valinta-property
+                  valinta-tulos-service valintatapajono-oid body if-unmodified-since))))
 
       (api/context "/hyvaksynnan-ehto" []
         (api/GET "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
@@ -1722,9 +1719,8 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/hyvaksynnan-ehto-hakukohteessa-hakemus
-                    valinta-tulos-service hakukohde-oid application-key))))
+                (vts/hyvaksynnan-ehto-hakukohteessa-hakemus
+                  valinta-tulos-service hakukohde-oid application-key)))
 
         (api/PUT "/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Save hyvaksynnan-ehto hakukohteessa"
@@ -1752,10 +1748,8 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (do
-                  (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
-                    valinta-tulos-service hakukohde-oid application-key if-unmodified-since)
-                  (response/no-content))))
+                (vts/delete-hyvaksynnan-ehto-hakukohteessa-hakemus
+                  valinta-tulos-service hakukohde-oid application-key if-unmodified-since)))
 
         (api/GET "/valintatapajonoissa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto valintatapajonoissa"
@@ -1767,9 +1761,8 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/hyvaksynnan-ehto-valintatapajonoissa-hakemus
-                    valinta-tulos-service hakukohde-oid application-key))))
+                (vts/hyvaksynnan-ehto-valintatapajonoissa-hakemus
+                  valinta-tulos-service hakukohde-oid application-key)))
 
         (api/GET "/muutoshistoria/hakukohteessa/:hakukohde-oid/hakemus/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto hakukohteessa muutoshistoria"
@@ -1781,9 +1774,8 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/hyvaksynnan-ehto-hakukohteessa-muutoshistoria
-                    valinta-tulos-service hakukohde-oid application-key))))
+                (vts/hyvaksynnan-ehto-hakukohteessa-muutoshistoria
+                  valinta-tulos-service hakukohde-oid application-key)))
 
         (api/GET "/hakemukselle/:application-key" {session :session}
           :summary "Get hyvaksynnan-ehto hakumukselle"
@@ -1794,9 +1786,7 @@
                        organization-service tarjonta-service suoritus-service person-service session application-key))
                 (response/unauthorized {:error "Unauthorized"})
                 :else
-                (response/ok
-                  (vts/hyvaksynnan-ehto-hakemukselle
-                    valinta-tulos-service application-key))))))
+                (vts/hyvaksynnan-ehto-hakemukselle valinta-tulos-service application-key)))))
 
     (when (:dev? env)
       (api/context "/cypress" []
