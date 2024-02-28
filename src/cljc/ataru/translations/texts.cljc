@@ -2728,8 +2728,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         " niin löydät muokkauslinkin sähköpostistasi,
+         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2745,8 +2745,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
+         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2764,8 +2764,7 @@
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         in the confirmation email you have received with your earlier application or in My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2787,8 +2786,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         " niin löydät muokkauslinkin sähköpostistasi,
+         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2804,8 +2803,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
+         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2823,8 +2822,7 @@
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         in the confirmation email you have received with your earlier application or in My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2884,8 +2882,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         " niin löydät muokkauslinkin sähköpostistasi,
+         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
@@ -2898,8 +2896,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
+         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div.application__validation-error-dialog
@@ -2914,7 +2912,6 @@
         [:p "If you want to "
          [:strong "make changes"]
          " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         in the confirmation email you have received with your earlier application or in My Studyinfo."]
         [:p "If you have any problems, please contact the educational
          institution."]]})
