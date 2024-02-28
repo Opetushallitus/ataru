@@ -13,6 +13,10 @@
   [content]
   (application-email/->safe-html content))
 
+(defn ->safe-html-without-markdown-conversion
+  [content]
+  (application-email/->safe-html-without-markdown-conversion content))
+
 (defn get-email-templates
   [form-key form-allows-ht?]
   (application-email/get-email-templates form-key form-allows-ht?))

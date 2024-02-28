@@ -5,7 +5,7 @@
             [ataru.translations.translation-util :as translations]
             [ataru.util :as u]
             [ataru.email.email-util :as email-util]
-            [ataru.email.application-email-jobs :refer [->safe-html]]
+            [ataru.email.application-email-jobs :refer [->safe-html ->safe-html-without-markdown-conversion]]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-store :as information-request-store]
             [ataru.tutkintojen-tunnustaminen :as tutkintojen-tunnustaminen]
@@ -25,6 +25,7 @@
        (filter (comp (partial = answer-key-str) :key))
        (map :value)
        (first)))
+
 (defn- initial-state [connection information-request guardian?]
   (let [add-update-link? (:add-update-link information-request)]
     (when add-update-link?
@@ -46,7 +47,7 @@
           translations     (translations/get-translations lang)
           {:keys [application-url application-url-text oma-opintopolku-link]} (email-util/get-application-url-and-text form application lang)
           body             (selmer/render-file (information-request-email-template-filename lang)
-                                               (merge {:message (->safe-html (:message information-request))}
+                                               (merge {:message (->safe-html-without-markdown-conversion (:message information-request))}
                                                       (if (or guardian? (not add-update-link?))
                                                         {}
                                                         {:application-url application-url
