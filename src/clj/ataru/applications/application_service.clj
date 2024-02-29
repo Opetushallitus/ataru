@@ -275,8 +275,9 @@
 
 (defn- add-henkilo
   [henkilot application]
-  (let [person        (get henkilot (:personOid application))
-        asiointikieli (or (:asiointiKieli person)
+  (let [person         (get henkilot (:personOid application))
+        kansalaisuudet (map #(:kansalaisuusKoodi %) (:kansalaisuus person))
+        asiointikieli  (or (:asiointiKieli person)
                           (get {"fi" {:kieliKoodi  "fi"
                                       :kieliTyyppi "suomi"}
                                 "sv" {:kieliKoodi  "sv"
@@ -294,10 +295,15 @@
                                      :etunimet
                                      :syntymaaika
                                      :hetu
-                                     :sukunimi]))
+                                     :sukunimi
+                                     :sukupuoli
+                                     :turvakielto
+                                     :aidinkieli
+                                     :kutsumanimi]))
         (assoc-in [:person :asiointiKieli] (select-keys asiointikieli
                                                         [:kieliKoodi
                                                          :kieliTyyppi]))
+        (assoc-in  [:person :kansalaisuudet] kansalaisuudet)
         (dissoc :personOid :lang))))
 
 (defn- add-asiointikieli [henkilot application]

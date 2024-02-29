@@ -1,5 +1,6 @@
 (ns ataru.excel-common
   (:require [ataru.translations.texts :refer [excel-texts virkailija-texts]]
+            [ataru.util :refer [to-vec]]
             [clojure.set :as set]))
 
 (def hakemuksen-yleiset-tiedot-fields
@@ -74,3 +75,9 @@
                                                               (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
                                          (contains? (set hakukohderyhmas) selected-hakukohderyhma)))
       :else true)))
+
+(defn assoc-in-excel [db k v]
+  (assoc-in db (concat [:application :excel-request] (to-vec k)) v))
+
+(defn get-in-excel [db k]
+  (get-in db (concat [:application :excel-request] (to-vec k))))

@@ -11,7 +11,7 @@
             [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
-            [ataru.util :as util]
+            [ataru.util :as util :refer [to-vec]]
             [clj-time.core :as t]
             [clj-time.format :as f]
             [clojure.core.match :refer [match]]
@@ -295,8 +295,6 @@
                    e)
         (throw e)))))
 
-(defn to-vec [val] (if (vector? val) val [val]))
-
 (defn write-meta-field! [writer meta-field value-from lang col]
   (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
         value (if (delay? value-candidate) @value-candidate value-candidate)
@@ -481,8 +479,9 @@
 
 (defn set-column-widths [^XSSFWorkbook workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          :let [sheet (.getSheetAt workbook (int n))]
-          y (range (.getLastCellNum (.getRow sheet 0)))]
+          :let [sheet (.getSheetAt workbook (int n))
+                row-count (.getPhysicalNumberOfRows sheet)]
+          y (when (> row-count 0) (range (.getLastCellNum (.getRow sheet 0))))]
     (.autoSizeColumn sheet (short y))))
 
 (defn- update-hakukohteet-for-legacy-applications [application]
@@ -690,6 +689,8 @@
 (defn- sanitize-name [name]
   (-> name
       (string/replace #"[\s]+" "-")
+      (string/replace #"[åä]" "a")
+      (string/replace #"ö" "o")
       (string/replace #"[^\w-]+" "")))
 
 (defn create-filename [identifying-part]

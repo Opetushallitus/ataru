@@ -1709,6 +1709,12 @@
    :excel-hakemuksen-yleiset-tiedot                          {:fi "Hakemuksen yleiset tiedot"
                                                               :sv "Hakemuksen yleiset tiedot"
                                                               :en "Hakemuksen yleiset tiedot"}
+   :excel-mode-valitse-tiedot                                {:fi "Valitse excelin tiedot"
+                                                              :sv "Valitse excelin tiedot"
+                                                              :en "Valitse excelin tiedot"}
+   :excel-mode-kirjoita-tunnisteet                           {:fi "Kirjoita tunnisteet"
+                                                              :sv "Kirjoita tunnisteet"
+                                                              :en "Kirjoita tunnisteet"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
@@ -1746,8 +1752,8 @@
                                                               :sv "Skicka:"
                                                               :en "Send:"}
    :single-information-request-message-sent                   {:fi "Viesti lisätty lähetysjonoon!"
-                                                              :sv "Meddelanden har lagts till i utskickskön!"
-                                                              :en "Message has been sent!"}
+                                                               :sv "Meddelanden har lagts till i utskickskön!"
+                                                               :en "Message has been sent!"}
    :max-characters                                           {:fi "Max. merkkimäärä"
                                                               :sv "Max. teckenantal"
                                                               :en "Max. characters"}
@@ -2085,8 +2091,8 @@
                                                               :sv "Person OID"
                                                               :en "Person OID"}
    :student-number                                            {:fi "Oppijanumero"
-                                                              :sv "SV: Oppijanumero"
-                                                              :en "Student number"}
+                                                               :sv "SV: Oppijanumero"
+                                                               :en "Student number"}
    :submitted-application                                    {:fi "syötti hakemuksen"
                                                               :sv "matade in ansökan"
                                                               :en "submitted"}
