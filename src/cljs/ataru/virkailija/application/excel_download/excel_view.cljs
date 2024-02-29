@@ -54,9 +54,7 @@
                        #(dispatch [:editor/fold id]))
         has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
-     (if has-children?
-       [excel-checkbox id]
-       [excel-checkbox-control id title])
+     [excel-checkbox-control id title]
      (when has-children? [:button.application-handling__excel-accordion-header-button
                           {:id (accordion-heading-id id)
                            :type "button"
@@ -64,8 +62,7 @@
                            "aria-controls" (accordion-content-id id)
                            :on-click click-action}
                           [:span.excel-accordion-heading-text
-                           [:span title]
-                           [:span (str @selected-children-count "/" (count child-ids) " valittu")]]
+                           (str @selected-children-count "/" (count child-ids) " valittu")]
                           [:i
                            {:class (classes "zmdi"
                                             (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]])]))
