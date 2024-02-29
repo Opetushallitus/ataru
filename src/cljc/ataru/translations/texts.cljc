@@ -2728,8 +2728,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostistasi,
-         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2745,8 +2745,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
-         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet som du får
+         som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2761,10 +2761,10 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-         in the confirmation email you have received with your earlier application or in My Studyinfo."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2786,8 +2786,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostistasi,
-         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2803,8 +2803,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
-         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
+         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2819,10 +2819,10 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-         in the confirmation email you have received with your earlier application or in My Studyinfo."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2882,8 +2882,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostistasi,
-         jonka sait jättäessäsi edellisen hakemuksen tai Oma opintopolku-palvelusta."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
@@ -2896,8 +2896,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         ", hittar du redigeringsgslänken i e-postmeddelandet som du fick
-         när du skickade din tidigare ansökning, eller i Min Studieinfo."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
+         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div.application__validation-error-dialog
@@ -2909,9 +2909,9 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-         in the confirmation email you have received with your earlier application or in My Studyinfo."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "If you have any problems, please contact the educational
          institution."]]})
