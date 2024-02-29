@@ -69,7 +69,7 @@
                              (or (:included-ids input-params) #{})
                              true
                              :fi
-                             {}
+                             (delay {})
                              (tarjonta-service/new-tarjonta-service)
                              koodisto-cache
                              (organization-service/new-organization-service)
@@ -96,7 +96,7 @@
                                         (or (~input-params :included-ids) #{})
                                         true
                                         :fi
-                                        {}
+                                        (delay {})
                                         (tarjonta-service/new-tarjonta-service)
                                         koodisto-cache
                                         (organization-service/new-organization-service)
