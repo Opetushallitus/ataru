@@ -1712,9 +1712,9 @@
    :excel-mode-valitse-tiedot                                {:fi "Valitse excelin tiedot"
                                                               :sv "Valitse excelin tiedot"
                                                               :en "Valitse excelin tiedot"}
-   :excel-mode-kirjoita-tunnisteet                           {:fi "Valitse excelin tiedot"
-                                                              :sv "Valitse excelin tiedot"
-                                                              :en "Valitse excelin tiedot"}
+   :excel-mode-kirjoita-tunnisteet                           {:fi "Kirjoita tunnisteet"
+                                                              :sv "Kirjoita tunnisteet"
+                                                              :en "Kirjoita tunnisteet"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}

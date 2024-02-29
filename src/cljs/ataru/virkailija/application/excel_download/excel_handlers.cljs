@@ -2,12 +2,11 @@
 (ns ataru.virkailija.application.excel-download.excel-handlers
   (:require [ajax.protocols :as pr]
             [ataru.cljs-util :as cljs-util]
+            [ataru.excel-common :refer [assoc-in-excel get-in-excel]]
             [ataru.util :as util :refer [assoc?]]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-handlers]
             [clojure.string :as clj-string]
             [re-frame.core :refer [dispatch reg-event-db reg-event-fx]]))
-(defn- assoc-in-excel [db k v]
-  (assoc-in db (concat [:application :excel-request] (if (vector? k) k [k])) v))
 
 (reg-event-db
  :application/set-excel-popup-visibility
@@ -15,39 +14,40 @@
    (assoc-in-excel db :visible? visible?)))
 
 (reg-event-db
+ :application/change-excel-download-mode
+ (fn [db [_ selected-mode]]
+   (assoc-in-excel db :selected-mode selected-mode)))
+
+(reg-event-db
  :application/excel-request-filter-changed
  (fn [db [_ id]]
-   (let [filter (get-in db [:application :excel-request :filters id])
+   (let [filter (get-in-excel db [:filters id])
          parent-id (:parent-id filter)
-         parent-filter (get-in db [:application :excel-request :filters (:parent-id filter)])
+         parent-filter (get-in-excel db [:filters (:parent-id filter)])
          child-ids (:child-ids filter)
          new-checked (not (:checked filter))]
-     (as-> db x
-       (assoc-in-excel x [:filters id :checked] new-checked)
+     (as-> db db-result
+       (assoc-in-excel db-result [:filters id :checked] new-checked)
        ; if checked, then select all children
-       (loop [cids child-ids acc x]
+       (loop [cids child-ids acc db-result]
          (if (not-empty cids)
            (recur (rest cids) (assoc-in-excel acc [:filters (first cids) :checked] new-checked))
            acc))
-       (if parent-filter (let [sibling-checkeds (map (fn [sibling-id] (boolean (get-in x [:application :excel-request :filters sibling-id :checked]))) (:child-ids parent-filter))]
-                           (cond (every? true? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] true)
-                                 (every? false? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] false)
-                                 :else (assoc-in-excel x [:filters parent-id :checked] false)))
-           x)))))
+       (if parent-filter (let [sibling-checkeds (map
+                                                 (fn [sibling-id] (boolean (get-in-excel db-result [:filters sibling-id :checked])))
+                                                 (:child-ids parent-filter))]
+                           (cond (every? true? sibling-checkeds) (assoc-in-excel db-result [:filters parent-id :checked] true)
+                                 :else (assoc-in-excel db-result [:filters parent-id :checked] false)))
+           db-result)))))
 
 (reg-event-db
  :application/excel-request-filters-set-all
  (fn [db [_ checked]]
-   (let [ids (map (fn [[_ v]] (:id v)) (get-in db [:application :excel-request :filters]))]
+   (let [ids (map (fn [[_ v]] (:id v)) (get-in-excel db [:filters]))]
      (loop [rest-ids ids acc db]
        (if (not-empty rest-ids)
          (recur (rest rest-ids) (assoc-in-excel acc [:filters (first rest-ids) :checked] (boolean checked)))
          acc)))))
-
-(reg-event-db
- :application/change-excel-download-mode
- (fn [db [_ selected-mode]]
-   (assoc-in-excel db :selected-mode selected-mode)))
 
 (defn download-blob [file-name blob]
   (let [object-url (js/URL.createObjectURL blob)
@@ -80,11 +80,11 @@
 (reg-event-fx
  :application/start-excel-download
  (fn [{:keys [db]} [_ params]]
-   (when (not (get-in db [:application :excel-request :fetching?]))
+   (when (not (get-in-excel db :fetching?))
      (let [application-keys (map :key (get-in db [:application :applications]))
-           selected-mode (get-in db [:application :excel-request :selected-mode])
-           written-ids (clj-string/split #"\s+" (get-in db [:application :excel-request :included-ids]))
-           filtered-ids (->> (get-in db [:application :excel-request :filters])
+           selected-mode (get-in-excel db :selected-mode)
+           written-ids (clj-string/split #"\s+" (get-in-excel db :included-ids))
+           filtered-ids (->> (get-in-excel db :filters)
                              (map second)
                              (filter :checked)
                              (map :id))]
@@ -114,5 +114,10 @@
 (reg-event-db
  :application/excel-request-filters-init
  (fn [db [_ filter-defs]]
-   (let [old-filters (get-in db [:application :excel-request :filters])]
-     (assoc-in db [:application :excel-request :filters] (merge-with merge old-filters filter-defs)))))
+   (let [old-filters (get-in-excel db :filters)]
+     (assoc-in-excel db :filters (merge-with merge old-filters filter-defs)))))
+
+(reg-event-db
+ :application/excel-request-toggle-accordion-open
+ (fn [db [_ id]]
+   (update-in db [:application :excel-request :filters id :open?] not)))
