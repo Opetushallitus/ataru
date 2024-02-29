@@ -32,6 +32,12 @@
    (get-in db [:application :excel-request :selected-mode])))
 
 (re-frame/reg-sub
+ :application/excel-request-filters-some-selected?
+ (fn [db]
+   (let [filter-vals (vals (get-in db [:application :excel-request :filters]))]
+     (boolean (some :checked filter-vals)))))
+
+(re-frame/reg-sub
   :application/selected-application-answers
   (fn [db _] (selected-application-answers db)))
 
