@@ -10,9 +10,10 @@
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
-
 (defn- accordion-heading-id [id] (str "accordion-heading_" id))
+
 (defn- accordion-content-id [id] (str "accordion-content_" id))
+
 (defn- checkbox-name [id] (str "checkbox_" id))
 
 (defn- excel-checkbox-on-change [e]
@@ -80,6 +81,7 @@
                           ^{:key (accordion-content-id id)} content])]))
 
 (defn question-wrapper? [item] (contains? #{"wrapperElement" "questionGroup"} (:fieldClass item)))
+
 (defn info-element? [item] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass item)))
 
 (defn get-excel-checkbox-filter-defs
@@ -244,4 +246,6 @@
              (when (= @excel-download-mode "valitse-tiedot")
                [:button.application-handling__excel-toggle-all-button
                 {:on-click (fn [] (dispatch [:application/excel-request-filters-set-all (if some-excel-filters-selected? false true)]))}
-                (if some-excel-filters-selected? "Poista valinta" "Valitse kaikki")]))]])])))
+                (if some-excel-filters-selected?
+                  @(subscribe [:editor/virkailija-translation :excel-poista-valinnat])
+                  @(subscribe [:editor/virkailija-translation :excel-valitse-kaikki]))]))]])])))
