@@ -2,15 +2,19 @@
   (:require [ataru.application-common.application-field-common :as common]
             [ataru.cljs-util :as util]
             [ataru.component-data.person-info-module :as person-info-module]
+            [ataru.tarjonta.haku :as haku]
             [ataru.util :as u]
+            [ataru.virkailija.application.application-selectors :refer [hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
+                                                                        selected-application-answers
+                                                                        selected-hakukohde-oid-set
+                                                                        selected-hakukohderyhma-hakukohteet]]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.db :as initial-db]
             [cljs-time.core :as t]
             [clojure.core.match :refer [match]]
             [clojure.set :as set]
             [clojure.string :as string]
-            [re-frame.core :as re-frame]
-            [ataru.tarjonta.haku :as haku]))
+            [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
   :application/selected-form
@@ -24,8 +28,7 @@
 
 (re-frame/reg-sub
   :application/selected-application-answers
-  (fn selected-application-answers [db _]
-    (get-in db [:application :selected-application-and-form :application :answers])))
+  (fn [db _] (selected-application-answers db)))
 
 (re-frame/reg-sub
   :application/selected-form-fields-by-id
@@ -209,38 +212,9 @@
   :application/application-list-selected-by
   application-list-selected-by)
 
-(defn- selected-hakukohderyhma-hakukohteet
-  [db]
-  (when-let [[_ hakukohderyhma-oid] (get-in db [:application :selected-hakukohderyhma])]
-    (->> (:hakukohteet db)
-         vals
-         (filter (fn [hakukohde]
-                   (some #(= hakukohderyhma-oid %)
-                         (:ryhmaliitokset hakukohde)))))))
-
-(defn- hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
-  [db]
-  (case (application-list-selected-by db)
-    :selected-hakukohde      #{(get-in db [:application :selected-hakukohde])}
-    :selected-hakukohderyhma (if-let [h (get-in db [:application :rajaus-hakukohteella])]
-                               #{h}
-                               (set (map :oid (selected-hakukohderyhma-hakukohteet db))))
-    nil))
-
 (re-frame/reg-sub
   :application/hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma
   hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma)
-
-(defn- selected-hakukohde-oid-set
-  [db]
-  (let [hakukohde-oids-from-hakukohde-or-ryhma (hakukohde-oids-from-selected-hakukohde-or-hakukohderyhma db)]
-    (cond
-      (some? hakukohde-oids-from-hakukohde-or-ryhma)
-      hakukohde-oids-from-hakukohde-or-ryhma
-      (some? (-> db :application :selected-form-key))
-      #{"form"}
-      :else
-      nil)))
 
 (re-frame/reg-sub
   :application/selected-hakukohde-oid-set

@@ -1,9 +1,10 @@
 (ns ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers
-  (:require [re-frame.core :as re-frame :refer [subscribe]]
-            [ataru.tarjonta.haku :as haku]
+  (:require [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
+                                                                                   pohjakoulutus-harkinnanvarainen-types]]
             [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-util :as hutil]
-            [ataru.application.harkinnanvaraisuus.harkinnanvaraisuus-types :refer [harkinnanvaraisuus-yksilollistetty-matikka-aikka-types
-                                                                                   pohjakoulutus-harkinnanvarainen-types]]))
+            [ataru.tarjonta.haku :as haku]
+            [ataru.virkailija.application.application-selectors :refer [selected-application-answers]]
+            [re-frame.core :as re-frame]))
 
 (re-frame/reg-event-fx
   :application/fetch-applicant-pohjakoulutus
@@ -68,7 +69,7 @@
 (re-frame/reg-event-db
   :application/handle-fetch-applicant-harkinnanvaraisuus-response
   (fn [db [_ response application-key]]
-    (let [answers @(subscribe [:application/selected-application-answers])
+    (let [answers (selected-application-answers db)
           has-harkinnanvaraisuus-reason-in-group (fn [resp group]
                                                    (->> resp
                                                         (map :harkinnanvaraisuudenSyy)

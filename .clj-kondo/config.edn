@@ -38,6 +38,7 @@
            :dfreeman.re-frame/sub-in-event-handler   {:level :warning
                                                       :subscribe-symbols [re-frame.core/subscribe
                                                                           re-frame.subs/subscribe
+                                                                          re-frame/subscribe
                                                                           rf/subscribe
                                                                           subscribe]}}
  :lint-as {compojure.api.sweet/defroutes clojure.core/def
