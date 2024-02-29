@@ -203,7 +203,6 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
-        excel-error (subscribe [:state-query [:application :excel-request :error]])
         [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
@@ -253,7 +252,6 @@
              (case @excel-download-mode
                "valitse-tiedot" [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma]
                "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content]))]
-          (when @excel-error [:span "Tapahtui virhe"])
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
             {:disabled (or @fetching-applications? @fetching-excel?)
