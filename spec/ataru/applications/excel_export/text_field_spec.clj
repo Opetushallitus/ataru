@@ -6,7 +6,6 @@
             [ataru.organization-service.organization-service :as organization-service]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [clj-time.core :as clj-time]
-            [clojure.string :as string]
             [speclj.core :as speclj :refer :all])
   (:import [java.io File FileOutputStream]
            [java.util UUID]
@@ -24,9 +23,6 @@
                       #_{:clj-kondo/ignore [:unused-binding]}
                       (clear-all [this])))
 
-(defn- format-included-ids [id-string]
-  (set (remove clojure.string/blank? (string/split id-string #"\s+"))))
-
 (defn export-applications [applications input-params]
   (let [application-reviews      {}
         application-review-notes {}
@@ -39,7 +35,8 @@
                                       (input-params :selected-hakukohde)
                                       (input-params :selected-hakukohderyhma)
                                       (input-params :skip-answers?)
-                                      (format-included-ids (or (input-params :included-ids) ""))
+                                      (or (input-params :included-ids) #{})
+                                      true
                                       lang
                                       hakukohteiden-ehdolliset
                                       (tarjonta-service/new-tarjonta-service)

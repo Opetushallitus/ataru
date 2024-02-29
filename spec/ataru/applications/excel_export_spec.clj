@@ -3,7 +3,6 @@
             [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.cache.cache-service :as cache-service]
             [ataru.forms.form-store :as form-store]
-            [clojure.string :as string]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [speclj.core :refer [around should-be-nil should== should= should it describe tags]]
             [ataru.organization-service.organization-service :as organization-service]
@@ -41,9 +40,6 @@
     (should= 1 (.getHorizontalSplitTopRow info))
     (should= 0 (.getVerticalSplitLeftColumn info))))
 
-(defn- format-included-ids [id-string]
-  (set (remove string/blank? (clojure.string/split id-string #"\s+"))))
-
 (def liiteri-cas-client nil)
 
 (defmacro with-excel [input-params bindings & body]
@@ -60,7 +56,8 @@
                                         (~input-params :selected-hakukohde)
                                         (~input-params :selected-hakukohderyhma)
                                         (~input-params :skip-answers?)
-                                        (format-included-ids (or (~input-params :included-ids) ""))
+                                        (or (~input-params :included-ids) #{})
+                                        true
                                         :fi
                                         {}
                                         (tarjonta-service/new-tarjonta-service)
@@ -131,7 +128,7 @@
   (it "should always export answers to special questions"
     (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                   form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
-      (with-excel {:skip-answers? true :included-ids ""} [file [fixtures/application-with-special-answers]]
+      (with-excel {:skip-answers? true :included-ids nil} [file [fixtures/application-with-special-answers]]
         (let [workbook          (WorkbookFactory/create file)
               metadata-sheet    (.getSheetAt workbook 0)
               application-sheet (.getSheetAt workbook 1)]
@@ -145,7 +142,7 @@
   (it "should not include Kysymys 4 which does not belong to selected-hakukohde"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                     form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde.oid"} [file [fixtures/application-with-special-answers]]
+        (with-excel {:skip-answers? false :included-ids nil :selected-hakukohde "hakukohde.oid"} [file [fixtures/application-with-special-answers]]
           (let [workbook          (WorkbookFactory/create file)
                 metadata-sheet    (.getSheetAt workbook 0)
                 application-sheet (.getSheetAt workbook 1)]
@@ -159,7 +156,7 @@
   (it "should include questions when hakukohde belongs to hakukohderyhma"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                     form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohde "hakukohde-in-ryhma.oid"} [file [fixtures/application-with-special-answers-2]]
+        (with-excel {:skip-answers? false :included-ids nil :selected-hakukohde "hakukohde-in-ryhma.oid"} [file [fixtures/application-with-special-answers-2]]
           (let [workbook          (WorkbookFactory/create file)
                 metadata-sheet    (.getSheetAt workbook 0)
                 application-sheet (.getSheetAt workbook 1)]
@@ -173,7 +170,7 @@
   (it "should not include questions belonging to hakukohderyhma"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                     form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohderyhma "1.2.246.562.28.00000000001"} [file [fixtures/application-with-special-answers-2]]
+        (with-excel {:skip-answers? false :included-ids nil :selected-hakukohderyhma "1.2.246.562.28.00000000001"} [file [fixtures/application-with-special-answers-2]]
                     (let [workbook          (WorkbookFactory/create file)
                           metadata-sheet    (.getSheetAt workbook 0)
                           application-sheet (.getSheetAt workbook 1)]
@@ -187,7 +184,7 @@
   (it "should not include questions for different hakukohderyhma"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                     form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
-        (with-excel {:skip-answers? false :included-ids "" :selected-hakukohderyhma "unknown-hakukohderyhma"} [file [fixtures/application-with-special-answers]]
+        (with-excel {:skip-answers? false :included-ids nil :selected-hakukohderyhma "unknown-hakukohderyhma"} [file [fixtures/application-with-special-answers]]
           (let [workbook          (WorkbookFactory/create file)
                 metadata-sheet    (.getSheetAt workbook 0)
                 application-sheet (.getSheetAt workbook 1)]
@@ -202,7 +199,7 @@
   (it "should not include Kysymys 4 when not including everything"
       (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                     form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
-        (with-excel {:skip-answers? true :included-ids "joku-kysymys-vaan"} [file [fixtures/application-with-special-answers]]
+        (with-excel {:skip-answers? true :included-ids #{"joku-kysymys-vaan"}} [file [fixtures/application-with-special-answers]]
                     (let [workbook          (WorkbookFactory/create file)
                           metadata-sheet    (.getSheetAt workbook 0)
                           application-sheet (.getSheetAt workbook 1)]
