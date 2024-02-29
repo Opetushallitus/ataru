@@ -6,16 +6,20 @@
             [clojure.string :as string]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [speclj.core :refer [around should-be-nil should== should= should it describe tags]]
-            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.organization-service.organization-service :as organization-service])
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service])
   (:import [java.io FileOutputStream File]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
 
 (def koodisto-cache (reify cache-service/Cache
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (get-from [this key])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (get-many-from [this keys])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (remove-from [this key])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (clear-all [this])))
 
 (defn- verify-row
