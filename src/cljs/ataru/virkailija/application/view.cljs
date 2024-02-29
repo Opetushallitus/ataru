@@ -96,7 +96,8 @@
                  (if (or (= (:fieldClass item) "infoElement")
                          (and (= (:fieldClass item) "wrapperElement") (empty? children))
                          (:exclude-from-answers item)
-                         (= (:id item) "hakukohteet"))
+                         (contains?  #{"hakukohteet" "lupatiedot"} (:id item))
+                         (= (:module item) "person-info"))
                    acc
                    (merge acc children (when (or (= level 0) (not-any? #(= (:fieldClass item) %) #{"questionGroup" "wrapperElement"}))
                                          {(:id item) (-> {:id (:id item)
