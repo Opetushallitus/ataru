@@ -157,8 +157,10 @@
         top-filters (->> filter-defs
                          (filter #(not (:parent-id (second %))))
                          (map second)
-                         (sort-by :index))]
-    (dispatch [:application/excel-request-filters-init filter-defs])
+                         (sort-by :index))
+        filters-initialized? (subscribe [:application/excel-request-filters-initialized?])]
+    (when (not @filters-initialized?)
+      (dispatch [:application/excel-request-filters-init filter-defs]))
     (fn []
       [:div.application-handling__excel-tiedot
        [:div.application-handling__excel-request-margins
