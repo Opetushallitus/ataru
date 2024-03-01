@@ -245,12 +245,6 @@
                                                              (= "KESKEN" (:vastaanottotila tulos))
                                                              (:vastaanottoDeadlineMennyt tulos))
                                                         (assoc-in [:valinnantulos :vastaanottotila] "EI_VASTAANOTETTU_MAARA_AIKANA"))]
-                                                  (println (str "!!!: " konvertoitu-tulos ", kk-haku? " @korkeakouluhaku?
-                                                                ", julk? " (:julkaistavissa tulos)
-                                                                ", tila? " (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
-                                                                                      (keyword (:valinnantila tulos)))
-                                                                ", vast-tila? " (= "KESKEN" (:vastaanottotila tulos))
-                                                                ", deadline? " (:vastaanottoDeadlineMennyt tulos)))
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
                                                             konvertoitu-tulos)))
