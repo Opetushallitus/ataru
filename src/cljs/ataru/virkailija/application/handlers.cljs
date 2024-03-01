@@ -701,7 +701,6 @@
        (assoc-in [:application :user-allowed-fetching?] false)
        (assoc-in [:application :fetching-applications-errored?] true))))
 
-
 (reg-event-db
  :application/handle-fetch-application-error
  (fn [db _]
