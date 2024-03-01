@@ -2830,9 +2830,9 @@
              institution you are applying to."]]})
 
 (def person-info-module-validation-error-texts
-  {:ssn                   {:fi "Henkilötunnus on oltava muodossa PPKKVVvälimerkkiNNNT, jossa välimerkki on \"-\" tai \"A\". Myös välimerkit \"Y\" ja \"B\" ovat sallittuja."
+  {:ssn                   {:fi "Henkilötunnuksen on oltava muodossa PPKKVVvälimerkkiNNNT, jossa välimerkki on \"-\" tai \"A\". Myös välimerkit \"Y\" ja \"B\" ovat sallittuja."
                            :sv "Personbeteckningen ska vara i formen DDMMÅÅskiljeteckenNNNT, där skiljetecknet är \"-\" eller \"A\". Också Y och B godkänns som skiljetecken."
-                           :en "Your identification number has to be in format DDMMYYintermediatecharacterNNNT, where the intermediate character is \"-\" or \"A\". Additionally, intermediate characters \"Y\" and \"B\" are allowed."}
+                           :en "Your personal identity code has to be in the format DDMMYYintermediatecharacterNNNT, where the intermediate character is \"-\" or \"A\". Additionally, intermediate characters \"Y\" and \"B\" are allowed."}
    :phone                 {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
                            :sv "Din mobiltelefonnummer är fel. Numret ska anges i formen 050123456 eller +35850123456."
                            :en "The mobile phone number is in incorrect format. The number has to be in format 050123456 or +35850123456."}
