@@ -213,6 +213,7 @@
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
 
+#_{:clj-kondo/ignore [:dfreeman.re-frame/sub-in-event-handler]}
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
   (fn [{db :db} [_ response {application-keys :application-keys}]]
