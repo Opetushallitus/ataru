@@ -2728,8 +2728,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2745,8 +2745,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet som du får
+         som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2761,11 +2761,10 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2787,8 +2786,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Tarkista myös, että syöttämäsi sähköpostiosoite "
          [:strong email]
          " on varmasti oikein."]
@@ -2804,8 +2803,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
+         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Kontrollera även att e-postadressen du har angett "
          [:strong email]
          " säkert är korrekt."]
@@ -2820,11 +2819,10 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "Please also check that the email address "
          [:strong email]
          " you have given is correct."]
@@ -2832,9 +2830,9 @@
              institution you are applying to."]]})
 
 (def person-info-module-validation-error-texts
-  {:ssn                   {:fi "Henkilötunnus on oltava muodossa PPKKVVvälimerkkiNNNT, jossa välimerkki on \"-\" tai \"A\". Myös välimerkit \"Y\" ja \"B\" ovat sallittuja."
+  {:ssn                   {:fi "Henkilötunnuksen on oltava muodossa PPKKVVvälimerkkiNNNT, jossa välimerkki on \"-\" tai \"A\". Myös välimerkit \"Y\" ja \"B\" ovat sallittuja."
                            :sv "Personbeteckningen ska vara i formen DDMMÅÅskiljeteckenNNNT, där skiljetecknet är \"-\" eller \"A\". Också Y och B godkänns som skiljetecken."
-                           :en "Your identification number has to be in format DDMMYYintermediatecharacterNNNT, where the intermediate character is \"-\" or \"A\". Additionally, intermediate characters \"Y\" and \"B\" are allowed."}
+                           :en "Your personal identity code has to be in the format DDMMYYintermediatecharacterNNNT, where the intermediate character is \"-\" or \"A\". Additionally, intermediate characters \"Y\" and \"B\" are allowed."}
    :phone                 {:fi "Matkapuhelinnumero on virheellinen. Numero on oltava muodossa 050123456 tai +35850123456."
                            :sv "Din mobiltelefonnummer är fel. Numret ska anges i formen 050123456 eller +35850123456."
                            :en "The mobile phone number is in incorrect format. The number has to be in format 050123456 or +35850123456."}
@@ -2884,8 +2882,8 @@
          jää voimaan ja aiemmin lähettämäsi hakemukset perutaan."]
         [:p "Jos haluat "
          [:strong "muuttaa hakemustasi"]
-         " niin löydät muokkauslinkin sähköpostiviestistä jonka sait
-         jättäessäsi edellisen hakemuksen."]
+         ", voit tehdä muokkaukset sähköpostiisi saapuneen hakemuksen muokkauslinkin kautta
+         tai vaihtoehtoisesti kirjautumalla Oma Opintopolku -palveluun."]
         [:p "Ongelmatilanteissa ole yhteydessä hakemaasi oppilaitokseen."]]
    :sv [:div.application__validation-error-dialog
         [:p (if (not (string/blank? preferred-name))
@@ -2898,8 +2896,8 @@
           du skickat in senast och alla tidigare ansökningar raderas."]
         [:p "Om du vill "
          [:strong "ändra din ansökning"]
-         " hittar du bearbetningslänken i e-postmeddelandet som du fick när
-          du skickade din tidigare ansökning."]
+         " kan du under ansökningstiden göra det via en länk i e-postmeddelandet
+         som du får som bekräftelse över din ansökan eller genom att logga in i tjänsten Min Studieinfo."]
         [:p "Vid eventuella problemsituationer kontakta den läroanstalt du
          söker till."]]
    :en [:div.application__validation-error-dialog
@@ -2911,10 +2909,9 @@
          " to this admission and therefore cannot submit another
           application. If you submit several applications, only the latest one
           will be taken into consideration and all others will be deleted."]
-        [:p "If you want to "
+        [:p "If you want to, you can "
          [:strong "make changes"]
-         " to your previous application, you can do so by clicking the link
-          in the confirmation email you have received with your earlier
-          application."]
+         " to your application during the application period by using
+         the link in the confirmation email or by logging in to My Studyinfo."]
         [:p "If you have any problems, please contact the educational
          institution."]]})
