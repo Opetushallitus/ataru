@@ -7,6 +7,7 @@
             [ataru.virkailija.editor.handlers-test]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs-test]
             [ataru.virkailija.application.virkailija-application-subs-test]
+            [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-subs-test]
             [ataru.hakija.application.field-visibility-test]
             [ataru.hakija.application-test]
             [ataru.hakija.application-validators-test]
@@ -28,6 +29,7 @@
            'ataru.virkailija.editor.handlers-test
            'ataru.virkailija.application.attachments.virkailija-attachment-subs-test
            'ataru.virkailija.application.virkailija-application-subs-test
+           'ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-subs-test
            'ataru.hakija.application.field-visibility-test
            'ataru.hakija.application-test
            'ataru.hakija.application-validators-test
