@@ -776,6 +776,7 @@
        :dispatch-n [[:application/run-rules {:update-gender-and-birth-date-based-on-ssn nil
                                              :change-country-of-residence nil}]
                     [:application/fetch-has-applied-for-oppija-session session-data]
+                    [:application/setup-window-unload]
                     (when (:logged-in session-data) [:application/start-oppija-session-polling])]})))
 
 (reg-event-fx
