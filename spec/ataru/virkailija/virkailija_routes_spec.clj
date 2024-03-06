@@ -9,13 +9,17 @@
             [ataru.organization-service.organization-service :as org-service]
             [ataru.person-service.person-service :as person-service]
             [ataru.tarjonta-service.mock-tarjonta-service :as tarjonta-service]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.test-utils :refer [login should-have-header]]
             [ataru.virkailija.editor.form-diff :as form-diff]
             [ataru.virkailija.virkailija-routes :as v]
+            [ataru.forms.form-store :as form-store]
+            [ataru.koodisto.koodisto :as koodisto]
             [cheshire.core :as json]
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [ring.mock.request :as mock]
-            [speclj.core :refer [before describe it run-specs should should-not-be-nil should= tags with]]
+            [speclj.core :refer [before describe it run-specs should should-contain
+                                 should-be-nil should-not-be-nil should= tags with]]
             [com.stuartsierra.component :as component]))
 
 (def virkailija-routes
@@ -27,6 +31,11 @@
           :kayttooikeus-service (kayttooikeus-service/->FakeKayttooikeusService)
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
+          :koodisto-cache (reify cache-service/Cache
+                            (get-from [_ _])
+                            (get-many-from [_ _])
+                            (remove-from [_ _])
+                            (clear-all [_]))
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -89,6 +98,13 @@
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
+
+(defn- refresh-form-codes [key]
+  (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/refresh-codes"))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (declare resp)
 
@@ -364,5 +380,69 @@
               (let [resp             (post-review-notes application-fixtures/application-review-notes-with-valid-state)
                     status           (:status resp)]
                 (should= 200 status))))
+
+(describe "Refreshing form code values"
+          (tags :unit :koodisto)
+
+          (defn dummy-koodisto-options [values]
+            (map (fn [val]
+                   {:value val :label {:fi "" :sv ""}}) values))
+
+          (defn post-refresh-and-check [expected]
+            (let [resp (refresh-form-codes "koodisto-test-form")
+                  status (:status resp)
+                  id (get-in resp [:body :id])]
+              (should= expected status)
+              id))
+
+          (defn get-first-option-values [form]
+            (->> form
+                 :content
+                 first
+                 :options
+                 (map :value)
+                 sort))
+
+          (it "Should update new codes on form based on new koodisto values"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "3" "4" "5" "6"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-option-values (get-first-option-values new-form)]
+                  (should= '("" "1" "2" "3" "4" "5" "6") new-option-values))))
+
+          (it "Should delete existing codes when they do not have followups"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-option-values (get-first-option-values new-form)]
+                  (should= '("" "1" "2" "5") new-option-values))))
+
+          (it "Should keep existing followups while updating koodisto values"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "3" "4" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source-and-followup)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-options (->> new-form :content first :options)]
+                  (should-contain fixtures/form-test-followup-value new-options))))
+
+          (it "Should fail if there are followups in option values that would be silently removed"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "4" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source-and-followup)
+                (let [id (post-refresh-and-check 400)]
+                  (should-be-nil id)))))
 
 (run-specs)
