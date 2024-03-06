@@ -224,7 +224,9 @@
         (when @(subscribe [:application/show-more-hakukohdes?])
           [:div.application__show_more_hakukohdes_container
            [:span.application__show_more_hakukohdes
-            {:on-click #(dispatch [:application/show-more-hakukohdes])}
+            {:tab-index 0
+             :role "button"
+             :on-click #(dispatch [:application/show-more-hakukohdes])}
             (translations/get-hakija-translation :show-more @lang)]])]])))
 
 (defn- hakukohde-selection-header
