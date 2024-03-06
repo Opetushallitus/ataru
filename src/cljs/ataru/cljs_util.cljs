@@ -18,8 +18,10 @@
   (let [lang          @(re-frame/subscribe [:application/form-language])
         warning-label (tu/get-hakija-translation :window-close-warning lang)
         edits?        @(re-frame/subscribe [:application/edits?])
+        logged-in?    @(re-frame/subscribe [:state-query [:oppija-session :logged-in]])
         submit-status @(re-frame/subscribe [:state-query [:application :submit-status]])]
-    (when (and edits?
+    (when (and (or edits?
+                   logged-in?)
                (nil? submit-status))
       (set! (.-returnValue event) warning-label)
       warning-label)))
