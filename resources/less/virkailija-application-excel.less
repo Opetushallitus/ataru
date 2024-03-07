@@ -62,7 +62,8 @@
 }
 
 .application-handling__excel-accordion-header-button {
-  display: flex;
+  display: inline-block;
+  position: relative;
   padding: 0;
   border: none;
   font-size: 14px;
@@ -70,15 +71,14 @@
   color: inherit;
   background-color: transparent;
   padding: 0;
-  align-items: flex-start;
   cursor: pointer;
   width: 100%;
-  justify-content: space-between;
   text-align: left;
   .zmdi {
+    float: right;
     font-size: 30px;
     font-weight: light;
-    color: @neutral-grey-600
+    color: @neutral-grey-600;
   }
 }
 
@@ -96,17 +96,25 @@
   }
 
   .excel-accordion-heading-text {
-    margin-top: 7px;
+    position: absolute;
+    width: calc(100% - 20px);
+    margin-top: 5px;
     max-width: 270px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
     line-height: 20px;
+    padding: 0px 5px;
   }
   &:hover .excel-accordion-heading-text {
-    overflow: unset;
-    text-overflow: unset;
+    overflow: visible;
+    text-overflow: visible;
     white-space: normal;
+    background: white;
+    z-index: 10;
+    outline: 2px solid @neutral-grey-200;
+    box-shadow: 2px 2px 3px @gray;
+    border-radius: 2px;
   }
 }
 
@@ -156,12 +164,15 @@
 }
 
 .application-handling__excel-checkbox-control {
+  position: relative;
   display: inline-flex;
   align-items: center;
   line-height: 20px;
   gap: 7px;
+  width: 100%;
   align-items: flex-start;
   margin-top: 8px;
+  background: white;
   input {
     cursor: pointer;
     margin-top: 5px;
@@ -169,18 +180,27 @@
   }
 
   label {
-    cursor: pointer;
+    position: absolute;
     display: inline-block;
+    cursor: pointer;
     max-width: 260px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    left: 20px;
+    width: 100%;
+    padding: 0px 5px;
   }
   
   &:hover label {
-    overflow: unset;
-    text-overflow: unset;
+    overflow: visible;
+    text-overflow: visible;
     white-space: normal;
+    background: white;
+    z-index: 10;
+    border-radius: 2px;
+    outline: 2px solid @neutral-grey-200;
+    box-shadow: 2px 2px 3px @gray;
   }
 }
 
@@ -188,6 +208,7 @@
   display: flex;
   flex-direction: column;
   column-gap: 15px;
+  width: 100%;
 }
 
 .application-handling__excel-tiedot {
