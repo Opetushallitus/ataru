@@ -198,7 +198,7 @@
                    "automatic-eligibility-if-ylioppilas-job"
                    {:application-id application-id})))
 
-(defn automatic-eligibility-if-ylioppilas-job-step
+(defn automatic-eligibility-if-ylioppilas-job-handler
   [{:keys [application-id]}
    {:keys [hakukohderyhmapalvelu-service
            hakukohderyhma-settings-cache
@@ -225,13 +225,12 @@
                                                        ylioppilas-tai-ammatillinen?
                                                        hakukohderyhmapalvelu-service
                                                        hakukohderyhma-settings-cache)]
-                                        (update-application-hakukohde-review connection audit-logger update)))
-            {:transition {:id :final}})
+                                        (update-application-hakukohde-review connection audit-logger update))))
           (person-info-module/muu-person-info-module?
            (form-store/fetch-by-id (:form-id application)))
-          {:transition {:id :final}}
+          nil
           :else
-          {:transition {:id :retry}})))
+          (throw (Exception. "automatic-eligibility-if-ylioppilas-job failed")))))
 
 (defn- get-application-ids
   [suoritukset]
@@ -241,7 +240,7 @@
                                           {:connection connection})))))
 
 (defonce suoritus-chunk-size 10000)
-(defn start-automatic-eligibility-if-ylioppilas-job-job-step
+(defn start-automatic-eligibility-if-ylioppilas-job-job-handler
   [{:keys [last-run-long]} job-runner]
   (let [now                   (time/now)
         suoritukset           (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
