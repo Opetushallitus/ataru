@@ -94,10 +94,12 @@
                                                               (inc index-acc))]
                  (if (or (and (question-wrapper? form-field) (empty? children))
                          (info-element? form-field)
-                         (:exclude-from-answers form-field))
+                         (get-in form-field [:params :hidden])
+                         (:hidden form-field)
+                         (:exclude-from-answers form-field)
+                         (not (form-field-belongs-to form-field)))
                    acc
-                   (merge acc children (when (and (or (= level 0) (not (question-wrapper? form-field)))
-                                                  (form-field-belongs-to form-field))
+                   (merge acc children (when (or (= level 0) (not (question-wrapper? form-field)))
                                          {(:id form-field) (-> {:id (:id form-field)
                                                                 :index index-acc
                                                                 :label (:label form-field)
@@ -189,7 +191,7 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
-        fetching-haut? (subscribe [:editor/fetching-haut?])
+        fetching-hakukohteet (subscribe [:state-query [:fetching-hakukohteet]])
         excel-export-mode (subscribe [:application/excel-download-mode])
         set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
@@ -216,15 +218,15 @@
             [excel-download-mode-radio "with-defaults" excel-export-mode set-excel-export-mode]]]
           [:div
            (case @excel-export-mode
-             "ids-only" (if (or @fetching-form-content? @fetching-haut?)
-                                [:div
-                                 {:style {:display "flex"
-                                          :width "100%"
-                                          :font-size "40px"
-                                          :justify-content "center"
-                                          :margin "50px 0"}}
-                                 [:i.zmdi.zmdi-spinner.spin]]
-                                [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
+             "ids-only" (if (or @fetching-form-content? (not= @fetching-hakukohteet 0) @fetching-applications?)
+                          [:div
+                           {:style {:display "flex"
+                                    :width "100%"
+                                    :font-size "40px"
+                                    :justify-content "center"
+                                    :margin "50px 0"}}
+                           [:i.zmdi.zmdi-spinner.spin]]
+                          [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
              "with-defaults" [excel-kirjoita-tunnisteet-content])]
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
