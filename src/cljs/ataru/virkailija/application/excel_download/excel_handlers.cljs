@@ -107,11 +107,11 @@
                :params              (-> params
                                         (assoc? :application-keys application-keys)
                                         (assoc? :CSRF (cljs-util/csrf-token))
-                                        (assoc? :included-ids (->> (case selected-mode
-                                                                     "kirjoita-tunnisteet" written-ids
-                                                                     "valitse-tiedot" filtered-ids
-                                                                     :else "")))
-                                        (assoc? :include-default-columns (= selected-mode "kirjoita-tunnisteet")))
+                                        (assoc? :included-ids (case selected-mode
+                                                                "with-defaults" written-ids
+                                                                "ids-only" filtered-ids
+                                                                :else nil))
+                                        (assoc? :export-mode selected-mode))
                :skip-parse-times?   true
                :skip-flasher?       true
                :handler-or-dispatch :application/handle-excel-download-success
