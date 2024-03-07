@@ -894,9 +894,7 @@
        (if parent-filter (let [sibling-checkeds (map (fn [sibling-id] (boolean (get-in x [:application :excel-request :filters sibling-id :checked]))) (:child-ids parent-filter))]
                            (cond (every? true? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] true)
                                  (every? false? sibling-checkeds) (assoc-in-excel x [:filters parent-id :checked] false)
-                                 :else (-> x
-                                           (assoc-in-excel [:filters parent-id :checked] false)
-                                           (assoc-in-excel [:filters parent-id :indeterminate] true))))
+                                 :else (assoc-in-excel x [:filters parent-id :checked] false)))
            x)))))
 
 (reg-event-db

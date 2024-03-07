@@ -38,6 +38,14 @@
      (boolean (some :checked filter-vals)))))
 
 (re-frame/reg-sub
+ :application/excel-request-filter-indeterminate?
+ (fn [db [_ id]]
+   (let [top-filter (get-in db [:application :excel-request :filters id])
+         children-checked (->> (:child-ids top-filter)
+                               (map #(get-in db [:application :excel-request :filters % :checked])))]
+     (and (not (:parent-id top-filter)) (some true? children-checked) (not (:checked top-filter))))))
+
+(re-frame/reg-sub
   :application/selected-application-answers
   (fn [db _] (selected-application-answers db)))
 
