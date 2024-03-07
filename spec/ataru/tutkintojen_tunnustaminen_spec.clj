@@ -7,8 +7,8 @@
             [clj-time.format :as f]
             [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
-            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-step
-                                                     tutkintojen-tunnustaminen-submit-job-step
+            [ataru.tutkintojen-tunnustaminen :refer [tutkintojen-tunnustaminen-edit-job-handler
+                                                     tutkintojen-tunnustaminen-submit-job-handler
                                                      tutkintojen-tunnustaminen-review-state-changed-job-step
                                                      tutkintojen-tunnustaminen-information-request-sent-job-step]]
             [ataru.forms.form-store :as form-store]
@@ -420,7 +420,7 @@
                                                        (String.))))))))
 
   (it "should send submit message to ASHA SFTP server"
-    (let [r       (tutkintojen-tunnustaminen-submit-job-step
+    (let [r       (tutkintojen-tunnustaminen-submit-job-handler
                    {:application-id *application-id*}
                    {:form-by-id-cache form-by-id-cache-mock
                     :koodisto-cache koodisto-cache-mock})
@@ -452,7 +452,7 @@
             (should= "fi" lang))))))
 
   (it "should send edit message to ASHA SFTP server"
-    (let [r       (tutkintojen-tunnustaminen-edit-job-step
+    (let [r       (tutkintojen-tunnustaminen-edit-job-handler
                    {:application-id *edited-application-id*}
                    {:form-by-id-cache form-by-id-cache-mock
                     :koodisto-cache koodisto-cache-mock})
@@ -504,7 +504,7 @@
 
   (it "should not do anything if hakemus in wrong form"
     (should= {:transition {:id :final}}
-             (tutkintojen-tunnustaminen-submit-job-step
+             (tutkintojen-tunnustaminen-submit-job-handler
               {:application-id *in-wrong-form-application-id*}
               {:form-by-id-cache form-by-id-cache-mock
                :koodisto-cache koodisto-cache-mock}))
