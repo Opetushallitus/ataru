@@ -1,12 +1,12 @@
 (ns ataru.virkailija.application.excel-download.excel-view
-  (:require [ataru.excel-common :refer [form-field-belongs-to-hakukohde
+  (:require [ataru.cljs-util :refer [classes]]
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
                                         hakemuksen-yleiset-tiedot-field-labels
                                         kasittelymerkinnat-field-labels]]
             [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc?]]
-            [ataru.virkailija.application.excel-download.excel-subs]
             [ataru.virkailija.application.excel-download.excel-handlers]
-            [clojure.string :as str]
+            [ataru.virkailija.application.excel-download.excel-subs]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -42,8 +42,6 @@
    [excel-checkbox id title]
    (when title [:label {:for (checkbox-name id)} title])])
 
-
-(defn- classes [& cs] (str/join " " (vec cs)))
 
 (defn- accordion-heading [id title open? child-ids]
   (let [has-children? (not-empty child-ids)]
