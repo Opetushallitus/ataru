@@ -115,7 +115,6 @@
                :skip-parse-times?   true
                :skip-flasher?       true
                :handler-or-dispatch :application/handle-excel-download-success
-               :handler-args        {:filename (:filename params)}
                :override-args       {:response-format {:type :blob
                                                        :read (fn [response] {:headers (ajax.protocols/-get-all-headers response)
                                                                              :body (ajax.protocols/-body response)})}
