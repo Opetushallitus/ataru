@@ -2447,7 +2447,10 @@
                                                               :en "EN: Hakija on vahvasti tunnistautunut."}
    :ht-eidas-tunnistautunut                                  {:fi "Hakija on eidas-tunnistautunut."
                                                               :sv "SV: Hakija on eidas-tunnistautunut."
-                                                              :en "EN: Hakija on eidas-tunnistautunut."}})
+                                                              :en "EN: Hakija on eidas-tunnistautunut."}
+   :valittu                                                  {:fi "valittu"
+                                                              :sv "valittu"
+                                                              :en "valittu"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
