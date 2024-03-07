@@ -1,6 +1,7 @@
 
 (ns ataru.virkailija.application.excel-download.excel-handlers
-  (:require [ajax.protocols :as pr]
+  (:require [ajax.core]
+            [ajax.protocols :as pr]
             [ataru.cljs-util :as cljs-util]
             [ataru.excel-common :refer [assoc-in-excel get-in-excel]]
             [ataru.util :as util :refer [assoc?]]
@@ -64,9 +65,14 @@
 
 (reg-event-db
  :application/handle-excel-download-success
- (fn [db [_ response {filename :filename}]]
-   (let [new-db (assoc-in-excel db :fetching? false)]
-     (try (download-blob filename response)
+ (fn [db [_ response]]
+   (let [new-db (assoc-in-excel db :fetching? false)
+         filename (-> response
+                      :headers
+                      (get "content-disposition")
+                      (clj-string/split #"filename=")
+                      last)]
+     (try (download-blob filename (:body response))
           (assoc-in-excel new-db :error nil)
           (catch js/Error e (assoc-in-excel new-db :error e))))))
 
@@ -107,7 +113,8 @@
                :handler-or-dispatch :application/handle-excel-download-success
                :handler-args        {:filename (:filename params)}
                :override-args       {:response-format {:type :blob
-                                                       :read pr/-body}
+                                                       :read (fn [response] {:headers (ajax.protocols/-get-all-headers response)
+                                                                             :body (ajax.protocols/-body response)})}
                                      :error-handler #(do (dispatch [:add-toast-message (str "Excelin muodostaminen epäonnistui, status: " (:status %))])
                                                          (dispatch [:application/handle-excel-download-error %]))}}}))))
 
