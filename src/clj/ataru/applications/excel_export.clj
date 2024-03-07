@@ -3,9 +3,9 @@
             [ataru.application.review-states :as review-states]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
             [ataru.excel-common :refer [form-field-belongs-to-hakukohde
-                                        hakemuksen-yleiset-tiedot-fields
+                                        hakemuksen-yleiset-tiedot-field-labels
                                         hakukohderyhma-to-hakukohde-oids
-                                        kasittelymerkinnat-fields]]
+                                        kasittelymerkinnat-field-labels]]
             [ataru.files.file-store :as file-store]
             [ataru.forms.form-store :as form-store]
             [ataru.koodisto.koodisto :as koodisto]
@@ -20,7 +20,6 @@
   (:import [java.io ByteArrayOutputStream]
            [org.apache.poi.ss.usermodel Row$MissingCellPolicy VerticalAlignment]
            [org.apache.poi.xssf.usermodel XSSFCell XSSFSheet XSSFWorkbook]))
-
 
 (def max-value-length 5000)
 
@@ -118,46 +117,46 @@
     :field :created-by}])
 
 (def ^:private application-meta-fields-by-id
-  {"application-number" {:field [:application :key]}
-   "application-created-time" {:field     [:application :created-time]
-                               :format-fn time-formatter}
-   "application-state" {:field     [:application :state]
-                        :lang?     true
-                        :format-fn application-state-formatter}
-   "student-number" {:field [:person :master-oid]}
-   "applicant-oid" {:field [:application :person-oid]}
-   "turvakielto" {:field     [:person :turvakielto]
-                  :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
-   "hakukohde-handling-state" {:field [:application :application-hakukohde-reviews]
-                               :lang? true
-                               :format-fn (partial hakukohde-review-formatter "processing-state")}
-   "kielitaitovaatimus" {:field     [:application :application-hakukohde-reviews]
-                         :lang?     true
-                         :format-fn (partial hakukohde-review-formatter "language-requirement")}
-   "tutkinnon-kelpoisuus" {:field     [:application :application-hakukohde-reviews]
-                           :lang?     true
-                           :format-fn (partial hakukohde-review-formatter "degree-requirement")}
-   "hakukelpoisuus" {:field     [:application :application-hakukohde-reviews]
-                     :lang?     true
-                     :format-fn (partial hakukohde-review-formatter "eligibility-state")}
+  {"application-number"            {:field     [:application :key]}
+   "application-created-time"      {:field     [:application :created-time]
+                                    :format-fn time-formatter}
+   "application-state"             {:field     [:application :state]
+                                    :lang?     true
+                                    :format-fn application-state-formatter}
+   "student-number"                {:field     [:person :master-oid]}
+   "applicant-oid"                 {:field     [:application :person-oid]}
+   "turvakielto"                   {:field     [:person :turvakielto]
+                                    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
+   "hakukohde-handling-state"      {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "processing-state")}
+   "kielitaitovaatimus"            {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "language-requirement")}
+   "tutkinnon-kelpoisuus"          {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "degree-requirement")}
+   "hakukelpoisuus"                {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "eligibility-state")}
    "eligibility-set-automatically" {:field     [:application :eligibility-set-automatically]
                                     :format-fn #(clojure.string/join "\n" %)}
-   "ineligibility-reason" {:field     [:application-review-notes]
-                           :format-fn (partial application-review-notes-formatter "eligibility-state")}
-   "maksuvelvollisuus" {:field     [:application :application-hakukohde-reviews]
-                        :lang?     true
-                        :format-fn (partial hakukohde-review-formatter "payment-obligation")}
-   "valinnan-tila" {:field     [:application :application-hakukohde-reviews]
-                    :lang?     true
-                    :format-fn (partial hakukohde-review-formatter "selection-state")}
-   "ehdollinen" {:field     [:ehdollinen?]
-                 :format-fn ehdollinen-formatter}
-   "pisteet" {:field     [:application-review :score]}
-   "application-review-notes" {:field     [:application-review-notes]
-                               :format-fn application-review-notes-formatter}})
+   "ineligibility-reason"          {:field     [:application-review-notes]
+                                    :format-fn (partial application-review-notes-formatter "eligibility-state")}
+   "maksuvelvollisuus"             {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "payment-obligation")}
+   "valinnan-tila"                 {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "selection-state")}
+   "ehdollinen"                    {:field     [:ehdollinen?]
+                                    :format-fn ehdollinen-formatter}
+   "pisteet"                       {:field     [:application-review :score]}
+   "application-review-notes"      {:field     [:application-review-notes]
+                                    :format-fn application-review-notes-formatter}})
 (def ^:private application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
-       (concat hakemuksen-yleiset-tiedot-fields kasittelymerkinnat-fields)))
+       (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels)))
 
 (defn- create-cell-styles
   [workbook]
@@ -613,7 +612,7 @@
                                                   [haku (set (mapcat :hakukohde applications))]))
                                            (into {}))
         get-pruned-tarjonta-info     (memoize (fn [haku-oid hakukohde-oids]
-                                                (-> (tarjonta-parser/parse-pruned-tarjonta-info-by-haku
+                                                (-> (tarjonta-parser/parse-excel-tarjonta-info-by-haku
                                                      tarjonta-service
                                                      organization-service
                                                      ohjausparametrit-service
