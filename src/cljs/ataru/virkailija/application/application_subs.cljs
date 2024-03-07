@@ -26,24 +26,7 @@
   (fn selected-application [db _]
     (get-in db [:application :selected-application-and-form :application])))
 
-(re-frame/reg-sub
- :application/excel-download-mode
- (fn [db]
-   (get-in db [:application :excel-request :selected-mode])))
 
-(re-frame/reg-sub
- :application/excel-request-filters-some-selected?
- (fn [db]
-   (let [filter-vals (vals (get-in db [:application :excel-request :filters]))]
-     (boolean (some :checked filter-vals)))))
-
-(re-frame/reg-sub
- :application/excel-request-filter-indeterminate?
- (fn [db [_ id]]
-   (let [top-filter (get-in db [:application :excel-request :filters id])
-         children-checked (->> (:child-ids top-filter)
-                               (map #(get-in db [:application :excel-request :filters % :checked])))]
-     (and (not (:parent-id top-filter)) (some true? children-checked) (not (:checked top-filter))))))
 
 (re-frame/reg-sub
   :application/selected-application-answers
@@ -1123,21 +1106,4 @@
   (fn forms [db _]
     (get-in db [:forms])))
 
-(re-frame/reg-sub
- :application/excel-request-filter-value
- (fn [db [_ id]]
-   (get-in db [:application :excel-request :filters id :checked])))
 
-(re-frame/reg-sub
- :application/excel-request-filters-selected-count-by-ids
- (fn [db [_ ids]]
-   (as-> (get-in db [:application :excel-request :filters]) filters
-     (select-keys filters ids)
-     (vals filters)
-     (filter :checked filters)
-     (count filters))))
-
-(re-frame/reg-sub
- :application/excel-request-filters-initialized?
- (fn [db [_ ]]
-   (not (empty? (get-in db [:application :excel-request :filters])))))
