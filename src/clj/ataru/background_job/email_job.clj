@@ -21,12 +21,11 @@
     (when (not= 200 (:status response))
       (throw (Exception. (str "Could not send email to " (apply str recipients)))))))
 
-(defn send-email-step [{:keys [from recipients subject body]} _]
+(defn send-email-handler [{:keys [from recipients subject body]} _]
   {:pre [(every? #(identity %) [from recipients subject body])]}
   (log/info "Trying to send email" subject "to" recipients "via viestintäpalvelu at address" (viestintapalvelu-address))
   (send-email from recipients subject body)
-  (log/info "Successfully sent email to" recipients)
-  {:transition {:id :final}})
+  (log/info "Successfully sent email to" recipients))
 
-(def job-definition {:steps {:initial send-email-step}
-                     :type  (str (ns-name *ns*))})
+(def job-definition {:handler send-email-handler
+                     :type    (str (ns-name *ns*))})
