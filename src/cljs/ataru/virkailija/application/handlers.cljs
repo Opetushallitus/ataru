@@ -977,7 +977,8 @@
                :handler-args        {:filename (:filename params)}
                :override-args       {:response-format {:type :blob
                                                        :read pr/-body}
-                                     :error-handler #(dispatch [:application/handle-excel-download-error %])}}}))))
+                                     :error-handler #(do (dispatch [:add-toast-message (str "Excelin muodostaminen epäonnistui, status: " (:status %))])
+                                                         (dispatch [:application/handle-excel-download-error %]))}}}))))
 
 (reg-event-db
  :application/excel-request-filters-init
