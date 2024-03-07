@@ -214,6 +214,7 @@ SELECT
   a.key,
   a.lang,
   a.form_id                           AS form,
+  a.submitted,
   a.created_time,
   (SELECT content
    FROM answers_as_content

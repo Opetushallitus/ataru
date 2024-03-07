@@ -1,12 +1,12 @@
 (ns ataru.virkailija.application.excel-download.excel-view
-  (:require [ataru.excel-common :refer [form-field-belongs-to-hakukohde
+  (:require [ataru.cljs-util :refer [classes]]
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
                                         hakemuksen-yleiset-tiedot-field-labels
                                         kasittelymerkinnat-field-labels]]
             [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc?]]
-            [ataru.virkailija.application.excel-download.excel-subs]
             [ataru.virkailija.application.excel-download.excel-handlers]
-            [clojure.string :as str]
+            [ataru.virkailija.application.excel-download.excel-subs]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -43,22 +43,20 @@
    (when title [:label {:for (checkbox-name id)} title])])
 
 
-(defn- classes [& cs] (str/join " " (vec cs)))
-
 (defn- accordion-heading [id title open? child-ids]
   (let [has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
+     {:id (accordion-heading-id id)}
      [excel-checkbox-control id title]
      (when has-children? (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
                                click-action #(dispatch [:application/excel-request-toggle-accordion-open id])]
                            [:button.application-handling__excel-accordion-header-button
-                            {:id (accordion-heading-id id)
-                             :type "button"
+                            {:type "button"
                              "aria-expanded" open?
                              "aria-controls" (accordion-content-id id)
                              :on-click click-action}
                             [:span.excel-accordion-heading-text
-                             (str @selected-children-count "/" (count child-ids) " valittu")]
+                             (str @selected-children-count "/" (count child-ids) " " @(subscribe [:editor/virkailija-translation :valittu]))]
                             [:i
                              {:class (classes "zmdi"
                                               (if open? "zmdi-chevron-up" "zmdi-chevron-down"))}]]))]))
@@ -94,10 +92,12 @@
                                                               (inc index-acc))]
                  (if (or (and (question-wrapper? form-field) (empty? children))
                          (info-element? form-field)
-                         (:exclude-from-answers form-field))
+                         (get-in form-field [:params :hidden])
+                         (:hidden form-field)
+                         (:exclude-from-answers form-field)
+                         (not (form-field-belongs-to form-field)))
                    acc
-                   (merge acc children (when (and (or (= level 0) (not (question-wrapper? form-field)))
-                                                  (form-field-belongs-to form-field))
+                   (merge acc children (when (or (= level 0) (not (question-wrapper? form-field)))
                                          {(:id form-field) (-> {:id (:id form-field)
                                                                 :index index-acc
                                                                 :label (:label form-field)
@@ -189,7 +189,7 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
-        fetching-haut? (subscribe [:editor/fetching-haut?])
+        fetching-hakukohteet (subscribe [:state-query [:fetching-hakukohteet]])
         excel-export-mode (subscribe [:application/excel-download-mode])
         set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
@@ -216,15 +216,15 @@
             [excel-download-mode-radio "with-defaults" excel-export-mode set-excel-export-mode]]]
           [:div
            (case @excel-export-mode
-             "ids-only" (if (or @fetching-form-content? @fetching-haut?)
-                                [:div
-                                 {:style {:display "flex"
-                                          :width "100%"
-                                          :font-size "40px"
-                                          :justify-content "center"
-                                          :margin "50px 0"}}
-                                 [:i.zmdi.zmdi-spinner.spin]]
-                                [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
+             "ids-only" (if (or @fetching-form-content? (not= @fetching-hakukohteet 0) @fetching-applications?)
+                          [:div
+                           {:style {:display "flex"
+                                    :width "100%"
+                                    :font-size "40px"
+                                    :justify-content "center"
+                                    :margin "50px 0"}}
+                           [:i.zmdi.zmdi-spinner.spin]]
+                          [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
              "with-defaults" [excel-kirjoita-tunnisteet-content])]
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button

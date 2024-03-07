@@ -106,18 +106,20 @@
   [{:label     (:name excel-texts)
     :field     :name
     :format-fn #(some (partial get %) [:fi :sv :en])}
-   {:label (:id excel-texts)
-    :field :id}
-   {:label (:key excel-texts)
-    :field :key}
+   {:label     (:id excel-texts)
+    :field     :id}
+   {:label     (:key excel-texts)
+    :field     :key}
    {:label     (:created-time excel-texts)
     :field     :created-time
     :format-fn time-formatter}
-   {:label (:created-by excel-texts)
-    :field :created-by}])
+   {:label     (:created-by excel-texts)
+    :field     :created-by}])
 
 (def ^:private application-meta-fields-by-id
-  {"application-number"            {:field     [:application :key]}
+  {"application-number"            {:field     [:application :key]} 
+   "application-submitted-time"    {:field     [:application :submitted]
+                                    :format-fn time-formatter}
    "application-created-time"      {:field     [:application :created-time]
                                     :format-fn time-formatter}
    "application-state"             {:field     [:application :state]
@@ -154,9 +156,34 @@
    "pisteet"                       {:field     [:application-review :score]}
    "application-review-notes"      {:field     [:application-review-notes]
                                     :format-fn application-review-notes-formatter}})
+
 (def ^:private application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
        (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels)))
+
+(def ^:private application-meta-fields-old-order
+  ["application-number"
+   "application-submitted-time"
+   "application-created-time"
+   "application-state"
+   "hakukohde-handling-state"
+   "kielitaitovaatimus"
+   "tutkinnon-kelpoisuus"
+   "hakukelpoisuus"
+   "eligibility-set-automatically"
+   "ineligibility-reason"
+   "maksuvelvollisuus"
+   "valinnan-tila"
+   "ehdollinen"
+   "pisteet"
+   "student-number"
+   "applicant-oid"
+   "turvakielto"
+   "application-review-notes"])
+
+(def ^:private application-meta-fields-old
+  (map #(merge % (get application-meta-fields-by-id (:id %)))
+       (sort-by #(.indexOf application-meta-fields-old-order (:id %)) (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
 
 (defn- create-cell-styles
   [workbook]
@@ -378,12 +405,12 @@
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
                             (and candidate?
                                  (include-column? (:id field)
-                                                     (fn [value include-default-columns? included-ids skip-answers?]
-                                                       (or (and include-default-columns?
-                                                                (not skip-answers?)
-                                                                (empty? included-ids)
-                                                                hakukohde?)
-                                                           value))))))]
+                                                  (fn [value include-default-columns? included-ids skip-answers?]
+                                                    (or (and include-default-columns?
+                                                             (not skip-answers?)
+                                                             (empty? included-ids)
+                                                             hakukohde?)
+                                                        value))))))]
     (->> form-fields
          (filter should-include?)
          (filter #(not (:per-hakukohde %)))
@@ -423,28 +450,28 @@
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
                     (not (include-column? (:key %)
-                                             (fn [value include-default-columns? _ skip-answers?]
-                                               (if include-default-columns?
-                                                 (or (not skip-answers?)
-                                                     (answer-to-always-include? (:key %)))
-                                                 value))))))
+                                          (fn [value include-default-columns? _ skip-answers?]
+                                            (if include-default-columns?
+                                              (or (not skip-answers?)
+                                                  (answer-to-always-include? (:key %)))
+                                              value))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
        (distinct)
        (sort (application-header-comparator form-fields form-fields-by-id))))
 
-(defn headers-from-meta-fields [include-column? lang]
-  (->> application-meta-fields
+(defn headers-from-meta-fields [include-column? include-default-columns? lang]
+  (->> (if include-default-columns? application-meta-fields-old application-meta-fields)
        (filter #(include-column? (:id %)
-                                    (fn [value include-default-columns? & _]
-                                      (if include-default-columns?
-                                        (get application-meta-fields-by-id (:id %))
-                                        value))))
+                                 (fn [value include-default-columns? & _]
+                                   (if include-default-columns?
+                                     (get application-meta-fields-by-id (:id %))
+                                     value))))
        (map #(vec [(:id %) (-> % :label lang)]))))
 
 (defn- extract-headers
-  [applications form form-field-belongs-to include-column? lang]
+  [applications form form-field-belongs-to include-column? include-default-columns? lang]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -452,7 +479,7 @@
                     :decorated-header (or header "")
                     :column           idx})
                  (concat
-                  (headers-from-meta-fields include-column? lang)
+                  (headers-from-meta-fields include-column? include-default-columns? lang)
                   (headers-from-form form-fields
                                      form-fields-by-id
                                      include-column?
@@ -598,11 +625,11 @@
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         include-column?       (fn [id & rest]
                                    ; get-value-parametrilla tehdään lisätarkistuksia käytettäessä vanhaa moodia (include-default-columns?).
-                                   (let [get-value (or (first rest) (fn [value & _] value))
-                                         result (if skip-answers?
-                                                  false
-                                                  (contains? included-ids id))]
-                                     (get-value result include-default-columns? included-ids skip-answers?)))
+                                (let [get-value (or (first rest) (fn [value & _] value))
+                                      result (if skip-answers?
+                                               false
+                                               (contains? included-ids id))]
+                                  (get-value result include-default-columns? included-ids skip-answers?)))
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
         get-form-by-id               (memoize form-store/fetch-by-id)
@@ -651,7 +678,7 @@
          (vals)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form form-field-belongs-to include-column? lang)
+                              headers            (extract-headers applications form form-field-belongs-to include-column? include-default-columns? lang)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)

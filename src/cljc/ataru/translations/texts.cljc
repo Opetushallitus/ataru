@@ -2447,7 +2447,10 @@
                                                               :en "EN: Hakija on vahvasti tunnistautunut."}
    :ht-eidas-tunnistautunut                                  {:fi "Hakija on eidas-tunnistautunut."
                                                               :sv "SV: Hakija on eidas-tunnistautunut."
-                                                              :en "EN: Hakija on eidas-tunnistautunut."}})
+                                                              :en "EN: Hakija on eidas-tunnistautunut."}
+   :valittu                                                  {:fi "valittu"
+                                                              :sv "valittu"
+                                                              :en "valittu"}})
 
 (def state-translations
   {:active                 {:fi "Aktiivinen"
@@ -2689,10 +2692,13 @@
                               :en "EN: Viimeksi muokattu"}
    :created-by               {:fi "Viimeinen muokkaaja"
                               :sv "Senast bearbetad av"
-                              :en "EN: Viimeinen muokkaaja"}
-   :sent-at                  {:fi "Lähetysaika"
-                              :sv "Sändningstid"
-                              :en "EN: Lähetysaika"}
+                              :en "EN: Viimeinen muokkaaja"} 
+   :application-modified     {:fi "Hakemuksen viimeisimmän muokkauksen aika"
+                              :sv "Hakemuksen viimeisimmän muokkauksen aika"
+                              :en "Hakemuksen viimeisimmän muokkauksen aika"}
+   :application-submitted    {:fi "Hakemuksen tallennusaika"
+                              :sv "Hakemuksen tallennusaika"
+                              :en "Hakemuksen tallennusaika"}
    :application-state        {:fi "Hakemuksen tila"
                               :sv "Ansökans status"
                               :en "EN: Hakemuksen tila"}
