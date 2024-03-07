@@ -113,7 +113,8 @@
            (verify-row metadata-sheet 1 ["Form name" "123" "form_123_key" "2016-06-14 15:34:56" "SEPPO PAPUNEN"])
            (verify-row metadata-sheet 2 nil)
            (verify-cols application-sheet [["Hakemusnumero" "application_9432_key"]
-                                           ["Lähetysaika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                            ["Hakemuksen tila" "Aktiivinen"]
                                            ["Hakukohteen käsittelyn tila" "Käsittelemättä"]
                                            ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -146,7 +147,8 @@
            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
            (verify-row metadata-sheet 2 nil)
            (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                           ["Lähetysaika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                           ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                            ["Hakemuksen tila" "Aktiivinen"]
                                            ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                            ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -180,7 +182,8 @@
            (verify-row metadata-sheet 2 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
            (verify-row metadata-sheet 3 nil)
            (verify-cols form-application-sheet [["Hakemusnumero" "application_9432_key"]
-                                                ["Lähetysaika" "2016-06-15 15:34:56"]
+                                                ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                                ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                                 ["Hakemuksen tila" "Aktiivinen"]
                                                 ["Hakukohteen käsittelyn tila" "Käsittelemättä"]
                                                 ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -201,7 +204,8 @@
                                                 ["Etunimi" "Lomake-etunimi"]
                                                 ["Kysymys 3" "Vastaus 3"]])
            (verify-cols hakukohde-application-sheet [["Hakemusnumero" "application_3424_key"]
-                                                     ["Lähetysaika" "2016-06-15 15:34:56"]
+                                                     ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                                     ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                                      ["Hakemuksen tila" "Aktiivinen"]
                                                      ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                                      ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -235,7 +239,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -267,7 +272,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -303,7 +309,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -341,7 +348,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -379,7 +387,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]
@@ -414,7 +423,8 @@
              (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
              (verify-row metadata-sheet 2 nil)
              (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                             ["Lähetysaika" "2016-06-15 15:34:56"]
+                                             ["Hakemuksen tallennusaika" "2016-06-15 15:30:00"]
+                                             ["Hakemuksen viimeisimmän muokkauksen aika" "2016-06-15 15:34:56"]
                                              ["Hakemuksen tila" "Aktiivinen"]
                                              ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
                                              ["Kielitaitovaatimus" "Tarkastamatta"]

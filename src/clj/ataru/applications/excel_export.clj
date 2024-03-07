@@ -106,18 +106,20 @@
   [{:label     (:name excel-texts)
     :field     :name
     :format-fn #(some (partial get %) [:fi :sv :en])}
-   {:label (:id excel-texts)
-    :field :id}
-   {:label (:key excel-texts)
-    :field :key}
+   {:label     (:id excel-texts)
+    :field     :id}
+   {:label     (:key excel-texts)
+    :field     :key}
    {:label     (:created-time excel-texts)
     :field     :created-time
     :format-fn time-formatter}
-   {:label (:created-by excel-texts)
-    :field :created-by}])
+   {:label     (:created-by excel-texts)
+    :field     :created-by}])
 
 (def ^:private application-meta-fields-by-id
-  {"application-number"            {:field     [:application :key]}
+  {"application-number"            {:field     [:application :key]} 
+   "application-submitted-time"    {:field     [:application :submitted]
+                                    :format-fn time-formatter}
    "application-created-time"      {:field     [:application :created-time]
                                     :format-fn time-formatter}
    "application-state"             {:field     [:application :state]
@@ -161,6 +163,7 @@
 
 (def ^:private application-meta-fields-old-order
   ["application-number"
+   "application-submitted-time"
    "application-created-time"
    "application-state"
    "hakukohde-handling-state"
