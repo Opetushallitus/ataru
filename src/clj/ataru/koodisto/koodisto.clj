@@ -1,7 +1,9 @@
 (ns ataru.koodisto.koodisto
   (:require [ataru.util :as util]
             [ataru.component-data.value-transformers :refer [update-options-while-keeping-existing-followups]]
-            [ataru.cache.cache-service :as cache-service])
+            [ataru.cache.cache-service :as cache-service]
+            [ataru.middleware.user-feedback :refer [user-feedback-exception]]
+            [taoensso.timbre :as log])
   (:import java.time.ZonedDateTime))
 
 (defn encode-koodisto-key [{:keys [uri version]}]
@@ -36,24 +38,41 @@
     (= "attachment" (:fieldType field))
     (-> field :params :fetch-info-from-kouta?)))
 
+(defn- removed-followup-values
+  [newest-options existing-options remove-existing]
+  (if remove-existing
+    (let [new-values (set (map :value newest-options))
+          options-to-be-removed (filter  #(not (contains? new-values (:value %))) existing-options)]
+      (filter #(not-empty (:followups %)) options-to-be-removed))
+    []))
+
 (defn- populate-choice-field-from-koodisto
-  [koodisto-cache field]
+  [koodisto-cache field remove-existing]
   (let [{:keys [uri version default-option]} (:koodisto-source field)
-           empty-option               {:value "" :label {:fi "" :sv "" :en ""}}
-           koodis                     (map (fn [koodi] (select-keys koodi [:value :label]))
+        empty-option               {:value "" :label {:fi "" :sv "" :en ""}}
+        koodis                     (map (fn [koodi] (select-keys koodi [:value :label]))
                                         (get-koodisto-options koodisto-cache uri version (:allow-invalid? (:koodisto-source field))))
-           koodis-with-default-option (cond->> koodis
-                                        (some? default-option)
-                                        (map (fn [option]
-                                               (cond-> option
-                                                 (= default-option (-> option :label :fi))
-                                                 (assoc :default-value true)))))
-           koodis-with-followups      (update-options-while-keeping-existing-followups koodis-with-default-option (:options field))]
-       (assoc field :options (if (= (:fieldType field) "dropdown")
-                               (->> koodis-with-followups
+        koodis-with-default-option (cond->> koodis
+                                     (some? default-option)
+                                     (map (fn [option]
+                                            (cond-> option
+                                              (= default-option (-> option :label :fi))
+                                              (assoc :default-value true)))))
+        removed-followup-values     (removed-followup-values koodis-with-default-option
+                                                             (:options field)
+                                                             remove-existing)
+        koodis-with-followups      (update-options-while-keeping-existing-followups koodis-with-default-option
+                                                                                    (:options field)
+                                                                                    remove-existing)]
+    (when (not-empty removed-followup-values)
+      (log/warn "Followup questions would be silently removed, field" (:id field) "values" removed-followup-values)
+      (throw (user-feedback-exception
+              (str "Kysymyksellä " (:id field) " on jatkokysymyksiä jotka poistettaisiin: " removed-followup-values))))
+    (assoc field :options (if (= (:fieldType field) "dropdown")
+                            (->> koodis-with-followups
                                  (remove (comp (partial = "") :value))
                                  (cons empty-option))
-                               koodis-with-followups))))
+                            koodis-with-followups))))
 
 (def attachment-type-koodisto-uri "liitetyypitamm")
 (def attachment-type-koodisto-version 1)
@@ -72,10 +91,10 @@
     (assoc field :label label)))
 
 (defn- populate-form-koodisto-field
-  [koodisto-cache field]
+  [koodisto-cache remove-existing field]
   (cond
     (choice-field-from-koodisto? field)
-    (populate-choice-field-from-koodisto koodisto-cache field)
+    (populate-choice-field-from-koodisto koodisto-cache field remove-existing)
 
     (attachment-from-kouta? field)
     (populate-attachment-field-from-koodisto koodisto-cache field)
@@ -83,10 +102,13 @@
     :else field))
 
 (defn populate-form-koodisto-fields
-  [koodisto-cache form]
+  ([koodisto-cache form remove-existing]
   (update form :content (partial util/map-form-fields
                                  (partial populate-form-koodisto-field
-                                          koodisto-cache))))
+                                          koodisto-cache
+                                          remove-existing))))
+  ([koodisto-cache form]
+   (populate-form-koodisto-fields koodisto-cache form false)))
 
 (defn get-postal-office-by-postal-code
   [koodisto-cache postal-code]
