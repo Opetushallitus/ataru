@@ -196,6 +196,7 @@
         fetching-applications?     (subscribe [:application/fetching-applications?])
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
+        fetching-haut? (subscribe [:editor/fetching-haut?])
         [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
@@ -220,17 +221,17 @@
             [excel-download-mode-radio "valitse-tiedot" excel-download-mode set-excel-download-mode]
             [excel-download-mode-radio "kirjoita-tunnisteet" excel-download-mode set-excel-download-mode]]]
           [:div
-           (if @fetching-form-content?
-             [:div
-              {:style {:display "flex"
-                       :width "100%"
-                       :font-size "40px"
-                       :justify-content "center"
-                       :margin "50px 0"}}
-              [:i.zmdi.zmdi-spinner.spin]]
-             (case @excel-download-mode
-               "valitse-tiedot" [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma]
-               "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content]))]
+           (case @excel-download-mode
+             "valitse-tiedot" (if (or @fetching-form-content? @fetching-haut?)
+                                [:div
+                                 {:style {:display "flex"
+                                          :width "100%"
+                                          :font-size "40px"
+                                          :justify-content "center"
+                                          :margin "50px 0"}}
+                                 [:i.zmdi.zmdi-spinner.spin]]
+                                [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
+             "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content])]
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
             {:disabled (or @fetching-applications? @fetching-excel?)
