@@ -350,11 +350,11 @@
         {:transition {:id :final}})
       {:transition {:id :final}})))
 
-(defn tutkintojen-tunnustaminen-submit-job-step
+(defn tutkintojen-tunnustaminen-submit-job-handler
   [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
   (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id false))
 
-(defn tutkintojen-tunnustaminen-edit-job-step
+(defn tutkintojen-tunnustaminen-edit-job-handler
   [{:keys [application-id]} {:keys [liiteri-cas-client form-by-id-cache koodisto-cache]}]
   (application-job-step liiteri-cas-client form-by-id-cache koodisto-cache application-id true))
 

@@ -11,7 +11,6 @@
             [ataru.applications.excel-export :as excel]
             [ataru.hakukohde.hakukohde-store :as hakukohde-store]
             [ataru.applications.permission-check :as permission-check]
-            [ataru.background-job.job :as job]
             [ataru.email.application-email-jobs :as email]
             [ataru.cache.cache-service :as cache]
             [ataru.config.core :refer [config]]
@@ -1891,22 +1890,6 @@
   [system]
   (api/context "/status" []
     :tags ["status-api"]
-    (api/GET "/background-jobs" []
-      :return {s/Keyword {:total   {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :failed  {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :errored {:week s/Int
-                                    :day  s/Int
-                                    :hour s/Int}
-                          :queued  s/Int
-                          :late    s/Int}}
-      (let [status (job/status)]
-        (cond-> (dissoc status :ok)
-                (:ok status) response/ok
-                (not (:ok status)) response/internal-server-error)))
     (api/GET "/caches" []
       :return s/Any
       (response/ok

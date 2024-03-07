@@ -1,21 +1,18 @@
 (ns ataru.background-job.job
   "Public API of the Background Job system"
   (:require
-   [ataru.config.core :refer [config]]
-   [taoensso.timbre :as log]
-   [com.stuartsierra.component :as component]
-   [ataru.background-job.job-execution :as execution]
-   [ataru.background-job.job-store :as job-store]))
+    [ataru.config.core :refer [config]]
+    [taoensso.timbre :as log]
+    [com.stuartsierra.component :as component]
+    [clojure.java.jdbc :as jdbc]
+    [proletarian.worker :as worker]
+    [proletarian.job :as job]
+    [ataru.db.db :as db]))
 
-(defn status []
-  (let [status (job-store/get-status)]
-    (if (and
-         (= 1 (get-in status [:start-automatic-eligibility-if-ylioppilas-job-job :queued]))
-         (zero? (get-in status [:start-automatic-eligibility-if-ylioppilas-job-job :failed :hour]))
-         (every? #(zero? (get-in % [1 :failed :hour])) status)
-         (every? #(> 10 (get-in % [1 :errored :hour])) status))
-      (assoc status :ok true)
-      (assoc status :ok false))))
+(defonce handlers (atom {}))
+
+(defn- as-keyword [kv]
+       (if (keyword? kv) kv (keyword kv)))
 
 (defprotocol JobRunner
   (start-job [this connection job-type initial-state]
@@ -23,25 +20,49 @@
      initial-state is the initial data map needed to start the job
      (can be anything)"))
 
+(def proletarian-options {:proletarian/job-table "proletarian_jobs"
+                          :proletarian/archived-job-table "proletarian_archived_jobs"})
+
+(defn- get-handler [job-definition]
+  (if (:steps job-definition)
+    (-> (:steps job-definition)
+        (:initial))
+    (:handler job-definition)))
+
 (defrecord PersistentJobRunner [job-definitions]
   component/Lifecycle
   (start [this]
-    (let [this-with-jobs (assoc this :job-definitions job-definitions)]
-      (log/info "Starting background job runner")
-      (when-not job-definitions
-        (throw (Exception. "No job definintions given for JobRunner")))
-      (assoc this-with-jobs :executor (execution/start this-with-jobs))))
+     (let [ds (db/get-datasource :job-db)
+           worker (worker/create-queue-worker
+                    ds
+                    (fn [job-type _payload]
+                        (log/info "Running" job-type (job-type @handlers))
+                        (try
+                          ; historiallisista syistä konventiona on että jobille annetaan toiseksi
+                          ; parametriksi jobrunner-komponentti joka sisältää erilaisia jobien
+                          ; tarvitsemia palveluita (ks. virkailija-system)
+                          ((job-type @handlers) _payload this)
+                          (catch Exception e
+                            (log/error e "Failed job" job-type)
+                            (throw e))))
+                    proletarian-options)]
+
+          (swap! handlers
+                 (fn [_] (into {} (for [[_ v] job-definitions]
+                                       [(keyword (:type v)) (get-handler v)]))))
+          (worker/start! worker)
+          (assoc this :worker worker)))
+
   (stop [this]
-    (log/info "Stopping background job runner")
-    (-> this :executor (.shutdown))
-    this)
+     (worker/stop! (:worker this))
+     (swap! handlers (fn [_] nil))
+     (assoc this :worker nil))
 
   JobRunner
-  (start-job [_ connection job-type initial-state]
-    (if (get job-definitions job-type)
-      (job-store/store-new connection job-type initial-state)
-      (throw (new RuntimeException (str "No job definition found for job "
-                                        job-type))))))
+  (start-job [_ _ job-type payload]
+             (log/info "Registering job" job-type)
+             (jdbc/with-db-transaction [tx {:datasource (db/get-datasource :job-db)}] ; toistaiseksi testausta varten
+                                       (job/enqueue! (:connection tx) (as-keyword job-type) payload proletarian-options))))
 
 (defrecord FakeJobRunner []
   component/Lifecycle
