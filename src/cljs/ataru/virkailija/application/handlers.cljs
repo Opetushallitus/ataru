@@ -952,7 +952,7 @@
    (when (not (get-in db [:application :excel-request :fetching?]))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in db [:application :excel-request :selected-mode])
-           written-ids (get-in db [:application :excel-request :included-ids])
+           written-ids (clj-string/split #"\s+" (get-in db [:application :excel-request :included-ids]))
            filtered-ids (->> (get-in db [:application :excel-request :filters])
                              (map second)
                              (filter :checked)
