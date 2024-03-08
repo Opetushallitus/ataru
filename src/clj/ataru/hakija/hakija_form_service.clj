@@ -356,6 +356,10 @@
                                      roles
                                      use-toisen-asteen-yhteishaku-restrictions?))))
 
+(defn latest-form-id-by-key
+  [key]
+  (form-store/latest-id-by-key key))
+
 (defn- form-by-haku-oid-cache-key
   [haku-oid roles]
   (apply str

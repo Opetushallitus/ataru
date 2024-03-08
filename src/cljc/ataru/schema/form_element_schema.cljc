@@ -9,6 +9,7 @@
                    (s/optional-key :locked)            #?(:clj  (s/maybe DateTime)
                                                           :cljs (s/maybe s/Str))
                    (s/optional-key :locked-by)         (s/maybe s/Str)
+                   (s/optional-key :locked-by-oid)     (s/maybe s/Str)
                    (s/optional-key :languages)         [s/Str]
                    (s/optional-key :key)               s/Str
                    (s/optional-key :created-by)        s/Str

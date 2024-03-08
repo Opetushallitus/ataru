@@ -21,6 +21,7 @@
       (let [username      (case ticket
                             "USER-WITH-HAKUKOHDE-ORGANIZATION" "1.2.246.562.11.22222222222"
                             "OPINTO-OHJAAJA" "1.2.246.562.11.33333333333"
+                            "SUPERUSER" "1.2.246.562.11.44444444444"
                             "1.2.246.562.11.11111111111")
             unique-ticket (str (System/currentTimeMillis) "-" (rand-int (Integer/MAX_VALUE)))]
         [username unique-ticket])))
