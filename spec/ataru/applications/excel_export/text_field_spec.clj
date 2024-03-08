@@ -32,7 +32,7 @@
                                       (input-params :selected-hakukohderyhma)
                                       (input-params :skip-answers?)
                                       (or (input-params :included-ids) #{})
-                                      true
+                                      false
                                       lang
                                       (delay hakukohteiden-ehdolliset)
                                       (tarjonta-service/new-tarjonta-service)

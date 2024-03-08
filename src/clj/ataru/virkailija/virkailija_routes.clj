@@ -787,14 +787,14 @@
             (response/request-entity-too-large
               {:error (str "Cannot create excel for more than " size-limit " applications")})
             (let [included-ids (set included-ids)
-                  include-default-columns (= export-mode "with-defaults")
+                  ids-only? (= export-mode "ids-only")
                   xls          (application-service/get-excel-report-of-applications-by-key
                                 application-service
                                 application-keys
                                 selected-hakukohde
                                 selected-hakukohderyhma
                                 included-ids
-                                include-default-columns
+                                ids-only?
                                 session)]
               (if xls
                 {:status  200

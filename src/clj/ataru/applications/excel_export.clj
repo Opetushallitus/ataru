@@ -117,7 +117,7 @@
     :field     :created-by}])
 
 (def ^:private application-meta-fields-by-id
-  {"application-number"            {:field     [:application :key]} 
+  {"application-number"            {:field     [:application :key]}
    "application-submitted-time"    {:field     [:application :submitted]
                                     :format-fn time-formatter}
    "application-created-time"      {:field     [:application :created-time]
@@ -161,7 +161,7 @@
   (map #(merge % (get application-meta-fields-by-id (:id %)))
        (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels)))
 
-(def ^:private application-meta-fields-old-order
+(def ^:private old-application-meta-fields-order
   ["application-number"
    "application-submitted-time"
    "application-created-time"
@@ -181,9 +181,10 @@
    "turvakielto"
    "application-review-notes"])
 
-(def ^:private application-meta-fields-old
+(def ^:private old-application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
-       (sort-by #(.indexOf application-meta-fields-old-order (:id %)) (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
+       (sort-by #(.indexOf old-application-meta-fields-order (:id %)) 
+                (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
 
 (defn- create-cell-styles
   [workbook]
@@ -397,20 +398,20 @@
             (get form-fields-by-id)
             :per-hakukohde)))
 
+
+
 (defn- headers-from-form
-  [form-fields form-fields-by-id include-column? form-field-belongs-to]
+  [form-fields form-fields-by-id included-ids ids-only? skip-answers? form-field-belongs-to]
   (let [should-include? (fn [field]
                           (let [candidate? (and (not (:exclude-from-answers field))
                                                 (util/answerable? field))
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
                             (and candidate?
-                                 (include-column? (:id field)
-                                                  (fn [value include-default-columns? included-ids skip-answers?]
-                                                    (or (and include-default-columns?
-                                                             (not skip-answers?)
-                                                             (empty? included-ids)
-                                                             hakukohde?)
-                                                        value))))))]
+                                 (if ids-only?
+                                   (contains? included-ids (:id field))
+                                   (and (not skip-answers?)
+                                        (empty? included-ids)
+                                        hakukohde?)))))]
     (->> form-fields
          (filter should-include?)
          (filter #(not (:per-hakukohde %)))
@@ -444,34 +445,30 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id include-column? applications]
+  [form-fields form-fields-by-id included-ids ids-only? skip-answers? applications]
   (->> applications
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (not (include-column? (:key %)
-                                          (fn [value include-default-columns? _ skip-answers?]
-                                            (if include-default-columns?
-                                              (or (not skip-answers?)
-                                                  (answer-to-always-include? (:key %)))
-                                              value))))))
+                    (not (if ids-only?
+                           (contains? included-ids (:key %))
+                           (or (not skip-answers?)
+                               (answer-to-always-include? (:key %)))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
        (distinct)
        (sort (application-header-comparator form-fields form-fields-by-id))))
 
-(defn headers-from-meta-fields [include-column? include-default-columns? lang]
-  (->> (if include-default-columns? application-meta-fields-old application-meta-fields)
-       (filter #(include-column? (:id %)
-                                 (fn [value include-default-columns? & _]
-                                   (if include-default-columns?
-                                     (get application-meta-fields-by-id (:id %))
-                                     value))))
+(defn headers-from-meta-fields [included-ids ids-only? lang]
+  (->> (if ids-only? application-meta-fields old-application-meta-fields)
+       (filter #(if ids-only?
+                  (contains? included-ids (:id %))
+                  true))
        (map #(vec [(:id %) (-> % :label lang)]))))
 
 (defn- extract-headers
-  [applications form form-field-belongs-to include-column? include-default-columns? lang]
+  [applications form form-field-belongs-to included-ids ids-only? skip-answers? lang]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -479,14 +476,18 @@
                     :decorated-header (or header "")
                     :column           idx})
                  (concat
-                  (headers-from-meta-fields include-column? include-default-columns? lang)
+                  (headers-from-meta-fields included-ids ids-only? lang)
                   (headers-from-form form-fields
                                      form-fields-by-id
-                                     include-column?
+                                     included-ids
+                                     ids-only?
+                                     skip-answers?
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
-                                             include-column?
+                                             included-ids
+                                             ids-only?
+                                             skip-answers?
                                              applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
@@ -615,7 +616,7 @@
    selected-hakukohderyhma
    skip-answers?
    included-ids
-   include-default-columns?
+   ids-only?
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -623,40 +624,34 @@
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
-        include-column?       (fn [id & rest]
-                                   ; get-value-parametrilla tehdään lisätarkistuksia käytettäessä vanhaa moodia (include-default-columns?).
-                                (let [get-value (or (first rest) (fn [value & _] value))
-                                      result (if skip-answers?
-                                               false
-                                               (contains? included-ids id))]
-                                  (get-value result include-default-columns? included-ids skip-answers?)))
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
         get-form-by-id               (memoize form-store/fetch-by-id)
         get-latest-form-by-key       (memoize form-store/fetch-by-key)
         get-koodisto-options         (memoize (fn [uri version allow-invalid?]
                                                 (koodisto/get-koodisto-options koodisto-cache uri version allow-invalid?)))
-        hakukohteet-by-haku           (->> (group-by :haku applications)
+        hakukohteet-by-haku           (->> applications
+                                           (group-by :haku)
                                            (map (fn [[haku applications]]
                                                   [haku (set (mapcat :hakukohde applications))]))
                                            (into {}))
-        get-pruned-tarjonta-info     (memoize (fn [haku-oid hakukohde-oids]
-                                                (-> (tarjonta-parser/parse-excel-tarjonta-info-by-haku
-                                                     tarjonta-service
-                                                     organization-service
-                                                     ohjausparametrit-service
-                                                     haku-oid
-                                                     hakukohde-oids)
-                                                    :tarjonta)))
-        get-haku                     (fn [haku-oid] (get-pruned-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid)))
+        get-tarjonta-info     (memoize (fn [haku-oid hakukohde-oids]
+                                         (-> (tarjonta-parser/parse-excel-tarjonta-info-by-haku
+                                              tarjonta-service
+                                              organization-service
+                                              ohjausparametrit-service
+                                              haku-oid
+                                              hakukohde-oids)
+                                             :tarjonta)))
+        get-haku                     (fn [haku-oid] (get-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid)))
         get-hakukohde                (memoize (fn [haku-oid hakukohde-oid]
-                                                (->> (get-pruned-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid))
+                                                (->> (get-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid))
                                                      :hakukohteet
                                                      (filter #(= hakukohde-oid (:oid %)))
                                                      first)))
         all-hakukohteet              (delay (->> hakukohteet-by-haku
                                                  (mapcat (fn [[haku hakukohteet]]
-                                                           (:hakukohteet (get-pruned-tarjonta-info haku hakukohteet))))))
+                                                           (:hakukohteet (get-tarjonta-info haku hakukohteet))))))
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
@@ -678,7 +673,7 @@
          (vals)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form form-field-belongs-to include-column? include-default-columns? lang)
+                              headers            (extract-headers applications form form-field-belongs-to included-ids ids-only? skip-answers? lang)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
@@ -693,7 +688,7 @@
                                                     application-review           (get application-reviews (:key application))
                                                     review-notes-for-application (get application-review-notes (:key application))
                                                     person                       (:person application)
-                                                    ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen?-id is included.
+                                                    ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen-column is included.
                                                     ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))]
                                                 (write-application! liiteri-cas-client
                                                                     row-writer
