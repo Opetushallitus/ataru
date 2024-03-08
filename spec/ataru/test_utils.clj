@@ -1,13 +1,24 @@
 (ns ataru.test-utils
-  (:require [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
-            [ring.mock.request :as mock]
-            [speclj.core :refer [should-not-be-nil should-contain should= should-not-contain]]
+  (:require [ataru.applications.application-store :as application-store]
+            [ataru.applications.excel-export :as excel-export]
+            [ataru.cache.cache-service :as cache-service]
             [ataru.db.db :as db]
             [ataru.fixtures.db.browser-test-db :refer [insert-test-form]]
+            [ataru.fixtures.excel-fixtures :as fixtures]
             [ataru.forms.form-store :as form-store]
-            [ataru.applications.application-store :as application-store]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol :refer [OhjausparametritService]]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [ataru.virkailija.authentication.virkailija-edit :as virkailija-edit]
             [clojure.string :as clj-string]
-            [yesql.core :as sql]))
+            [ring.mock.request :as mock]
+            [speclj.core :refer [should-contain should-not-be-nil
+                                 should-not-contain should=]]
+            [yesql.core :as sql])
+
+  (:import [java.io File FileOutputStream]
+           [java.util UUID]
+           [org.apache.poi.ss.usermodel WorkbookFactory]))
 
 (sql/defqueries "sql/virkailija-queries.sql")
 (declare yesql-upsert-virkailija<!)
@@ -76,7 +87,7 @@
        :id))
 
 (defn get-latest-application-secret []
-      (application-store/get-latest-application-secret))
+  (application-store/get-latest-application-secret))
 
 (defn alter-application-to-hakuaikaloppu-for-secret [secret]
   (let [application (application-store/get-latest-version-of-application-for-edit false {:secret secret})
@@ -100,12 +111,58 @@
         application (get-latest-application-by-form-name "Testilomake")]
     (println (str "using application " (:key application)))
     (cond->
-      {:test-form-key                (:key test-form)
-       :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
-       :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
-       :test-selection-limit-form-key (:key (get-latest-form "Selection Limit"))
-       :test-form-application-secret (:secret application)
-       :virkailija-create-secret     (create-fake-virkailija-create-secret)}
+     {:test-form-key                (:key test-form)
+      :ssn-form-key                 (:key (get-latest-form "SSN_testilomake"))
+      :test-question-group-form-key (:key (get-latest-form "Kysymysryhmä: testilomake"))
+      :test-selection-limit-form-key (:key (get-latest-form "Selection Limit"))
+      :test-form-application-secret (:secret application)
+      :virkailija-create-secret     (create-fake-virkailija-create-secret)}
 
       (some? application)
       (assoc :virkailija-secret (create-fake-virkailija-update-secret (:key application))))))
+
+(def test-koodisto-cache (reify cache-service/Cache
+                           (get-from [_this _key])
+                           (get-many-from [_this _keys])
+                           (remove-from [_this _key])
+                           (clear-all [_this])))
+
+
+(defrecord MockOhjausparametritServiceWithGetParametri [get-param]
+  OhjausparametritService
+  (get-parametri [this haku-oid] (get-param this haku-oid)))
+
+(defn- default-get-parametri [_ _] {:jarjestetytHakutoiveet true})
+
+(def liiteri-cas-client nil)
+(defn export-test-excel
+  [applications & rest]
+  (let [[input-params application-reviews application-review-notes] rest]
+    (excel-export/export-applications liiteri-cas-client
+                                      applications
+                                      (or application-reviews
+                                          (reduce #(assoc %1 (:key %2) fixtures/application-review)
+                                                  {}
+                                                  applications))
+                                      (or application-review-notes fixtures/application-review-notes)
+                                      (:selected-hakukohde input-params)
+                                      (:selected-hakukohderyhma input-params)
+                                      (:skip-answers? input-params)
+                                      (or (:included-ids input-params) #{})
+                                      (:ids-only? input-params)
+                                      :fi
+                                      (delay {})
+                                      (tarjonta-service/new-tarjonta-service)
+                                      test-koodisto-cache
+                                      (organization-service/new-organization-service)
+                                      (->MockOhjausparametritServiceWithGetParametri default-get-parametri))))
+
+(defn with-excel-workbook [excel-data run-test]
+  (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
+    (try
+      (with-open [output (FileOutputStream. (.getPath file))]
+        (->> excel-data
+             (.write output)))
+      (run-test (WorkbookFactory/create file))
+      (finally (.delete file)))))
+
