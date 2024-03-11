@@ -1,23 +1,25 @@
 (ns ataru.applications.excel-export
-  (:import [org.apache.poi.ss.usermodel VerticalAlignment Row$MissingCellPolicy]
-           [java.io ByteArrayOutputStream]
-           [org.apache.poi.xssf.usermodel XSSFWorkbook XSSFSheet XSSFCell])
-  (:require [ataru.forms.form-store :as form-store]
+  (:require [ataru.application.application-states :as application-states]
+            [ataru.application.review-states :as review-states]
             [ataru.component-data.component-util :refer [answer-to-always-include?]]
-            [ataru.koodisto.koodisto :as koodisto]
+            [ataru.excel-common :refer [form-field-belongs-to-hakukohde
+                                        hakemuksen-yleiset-tiedot-field-labels
+                                        hakukohderyhma-to-hakukohde-oids
+                                        kasittelymerkinnat-field-labels]]
             [ataru.files.file-store :as file-store]
-            [ataru.util :as util]
+            [ataru.forms.form-store :as form-store]
+            [ataru.koodisto.koodisto :as koodisto]
             [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [ataru.translations.texts :refer [excel-texts virkailija-texts]]
+            [ataru.util :as util :refer [to-vec]]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [taoensso.timbre :as log]
-            [clojure.set :as set]
-            [clojure.string :as string :refer [trim]]
             [clojure.core.match :refer [match]]
-            [ataru.application.review-states :as review-states]
-            [ataru.application.application-states :as application-states]))
-
+            [clojure.string :as string :refer [trim]]
+            [taoensso.timbre :as log])
+  (:import [java.io ByteArrayOutputStream]
+           [org.apache.poi.ss.usermodel Row$MissingCellPolicy VerticalAlignment]
+           [org.apache.poi.xssf.usermodel XSSFCell XSSFSheet XSSFWorkbook]))
 
 (def max-value-length 5000)
 
@@ -33,37 +35,37 @@
   ([date-time formatter]
    (f/unparse formatter date-time))
   ([date-time]
-    (time-formatter date-time modified-time-format)))
+   (time-formatter date-time modified-time-format)))
 
 (defn application-state-formatter
   [state lang]
   (or
-    (lang (->> review-states/application-review-states
-               (filter #(= (first %) state))
-               first
-               second))
-    "Tuntematon"))
+   (lang (->> review-states/application-review-states
+              (filter #(= (first %) state))
+              first
+              second))
+   "Tuntematon"))
 
 (defn hakukohde-review-formatter
   [requirement-name application-hakukohde-reviews lang]
   (let [reviews     (filter
-                      #(= (:requirement %) requirement-name)
-                      application-hakukohde-reviews)
+                     #(= (:requirement %) requirement-name)
+                     application-hakukohde-reviews)
         requirement (last
-                      (first
-                        (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
+                     (first
+                      (filter #(= (first %) (keyword requirement-name)) review-states/hakukohde-review-types)))
         get-label   (partial application-states/get-review-state-label-by-name requirement)]
     (if (= 1 (count reviews))
       (get-label (-> (first reviews) :state) lang)
       (clojure.string/join
-        "\n"
-        (map
-          (fn [{:keys [hakukohde hakukohde-name state]}]
-            (format "%s (%s): %s"
-                    hakukohde-name
-                    hakukohde
-                    (get-label state lang)))
-          reviews)))))
+       "\n"
+       (map
+        (fn [{:keys [hakukohde hakukohde-name state]}]
+          (format "%s (%s): %s"
+                  hakukohde-name
+                  hakukohde
+                  (get-label state lang)))
+        reviews)))))
 
 (defn- ehdollinen-formatter
   [ehdollinen?]
@@ -80,95 +82,109 @@
 
 (defn- application-review-notes-formatter
   ([review-notes]
-    (application-review-notes-formatter nil review-notes))
+   (application-review-notes-formatter nil review-notes))
   ([state-to-select review-notes]
    (->> (if state-to-select
           (filter #(= state-to-select (:state-name %)) review-notes)
           (remove #(some? (:state-name %)) review-notes))
         (map (fn [{:keys [created-time notes hakukohde first-name last-name]}]
                (str
-                 (time-formatter created-time)
-                 " "
-                 (when (and first-name last-name)
-                   (str
-                     first-name
-                     " "
-                     last-name))
-                 (when hakukohde
-                   (str " (hakukohde " hakukohde ")"))
-                 ": "
-                 notes)))
+                (time-formatter created-time)
+                " "
+                (when (and first-name last-name)
+                  (str
+                   first-name
+                   " "
+                   last-name))
+                (when hakukohde
+                  (str " (hakukohde " hakukohde ")"))
+                ": "
+                notes)))
         (clojure.string/join ",\n"))))
 
 (def ^:private form-meta-fields
   [{:label     (:name excel-texts)
     :field     :name
     :format-fn #(some (partial get %) [:fi :sv :en])}
-   {:label (:id excel-texts)
-    :field :id}
-   {:label (:key excel-texts)
-    :field :key}
+   {:label     (:id excel-texts)
+    :field     :id}
+   {:label     (:key excel-texts)
+    :field     :key}
    {:label     (:created-time excel-texts)
     :field     :created-time
     :format-fn time-formatter}
-   {:label (:created-by excel-texts)
-    :field :created-by}])
+   {:label     (:created-by excel-texts)
+    :field     :created-by}])
+
+(def ^:private application-meta-fields-by-id
+  {"application-number"            {:field     [:application :key]}
+   "application-submitted-time"    {:field     [:application :submitted]
+                                    :format-fn time-formatter}
+   "application-created-time"      {:field     [:application :created-time]
+                                    :format-fn time-formatter}
+   "application-state"             {:field     [:application :state]
+                                    :lang?     true
+                                    :format-fn application-state-formatter}
+   "student-number"                {:field     [:person :master-oid]}
+   "applicant-oid"                 {:field     [:application :person-oid]}
+   "turvakielto"                   {:field     [:person :turvakielto]
+                                    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
+   "hakukohde-handling-state"      {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "processing-state")}
+   "kielitaitovaatimus"            {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "language-requirement")}
+   "tutkinnon-kelpoisuus"          {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "degree-requirement")}
+   "hakukelpoisuus"                {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "eligibility-state")}
+   "eligibility-set-automatically" {:field     [:application :eligibility-set-automatically]
+                                    :format-fn #(clojure.string/join "\n" %)}
+   "ineligibility-reason"          {:field     [:application-review-notes]
+                                    :format-fn (partial application-review-notes-formatter "eligibility-state")}
+   "maksuvelvollisuus"             {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "payment-obligation")}
+   "valinnan-tila"                 {:field     [:application :application-hakukohde-reviews]
+                                    :lang?     true
+                                    :format-fn (partial hakukohde-review-formatter "selection-state")}
+   "ehdollinen"                    {:field     [:ehdollinen?]
+                                    :format-fn ehdollinen-formatter}
+   "pisteet"                       {:field     [:application-review :score]}
+   "application-review-notes"      {:field     [:application-review-notes]
+                                    :format-fn application-review-notes-formatter}})
 
 (def ^:private application-meta-fields
-  [{:label     (:application-number excel-texts)
-    :field     [:application :key]}
-   {:label     (:sent-at excel-texts)
-    :field     [:application :created-time]
-    :format-fn time-formatter}
-   {:label     (:application-state excel-texts)
-    :field     [:application :state]
-    :lang?     true
-    :format-fn application-state-formatter}
-   {:label     (:hakukohde-handling-state excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "processing-state")}
-   {:label     (:kielitaitovaatimus excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "language-requirement")}
-   {:label     (:tutkinnon-kelpoisuus excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "degree-requirement")}
-   {:label     (:hakukelpoisuus excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "eligibility-state")}
-   {:label     (:eligibility-set-automatically virkailija-texts)
-    :field     [:application :eligibility-set-automatically]
-    :format-fn #(clojure.string/join "\n" %)}
-   {:label     (:ineligibility-reason virkailija-texts)
-    :field     [:application-review-notes]
-    :format-fn (partial application-review-notes-formatter "eligibility-state")}
-   {:label     (:maksuvelvollisuus excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "payment-obligation")}
-   {:label     (:valinnan-tila excel-texts)
-    :field     [:application :application-hakukohde-reviews]
-    :lang?     true
-    :format-fn (partial hakukohde-review-formatter "selection-state")}
-   {:label     (:ehdollinen excel-texts)
-    :field     [:ehdollinen?]
-    :format-fn ehdollinen-formatter}
-   {:label     (:pisteet excel-texts)
-    :field     [:application-review :score]}
-   {:label     (:student-number excel-texts)
-    :field     [:person :master-oid]}
-   {:label     (:applicant-oid excel-texts)
-    :field     [:application :person-oid]}
-   {:label     (:turvakielto excel-texts)
-    :field     [:person :turvakielto]
-    :format-fn (fnil (fn [turvakielto] (if turvakielto "kyllä" "ei")) false)}
-   {:label     (:notes excel-texts)
-    :field     [:application-review-notes]
-    :format-fn application-review-notes-formatter}])
+  (map #(merge % (get application-meta-fields-by-id (:id %)))
+       (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels)))
+
+(def ^:private old-application-meta-fields-order
+  ["application-number"
+   "application-submitted-time"
+   "application-created-time"
+   "application-state"
+   "hakukohde-handling-state"
+   "kielitaitovaatimus"
+   "tutkinnon-kelpoisuus"
+   "hakukelpoisuus"
+   "eligibility-set-automatically"
+   "ineligibility-reason"
+   "maksuvelvollisuus"
+   "valinnan-tila"
+   "ehdollinen"
+   "pisteet"
+   "student-number"
+   "applicant-oid"
+   "turvakielto"
+   "application-review-notes"])
+
+(def ^:private old-application-meta-fields
+  (map #(merge % (get application-meta-fields-by-id (:id %)))
+       (sort-by #(.indexOf old-application-meta-fields-order (:id %)) 
+                (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
 
 (defn- create-cell-styles
   [workbook]
@@ -209,34 +225,16 @@
 (defn- make-writer [styles sheet row-offset]
   (fn [row column value]
     (update-row-cell!
-      styles
-      sheet
-      (+ row-offset row)
-      column
-      value)
+     styles
+     sheet
+     (+ row-offset row)
+     column
+     value)
     [sheet row-offset row column value]))
 
-(defn- write-form-meta!
-  [writer form applications fields lang]
-  (doseq [meta-field fields]
-    (let [col        (:column meta-field)
-          value-from (case (:from meta-field)
-                       :applications (first applications)
-                       form)
-          value      ((:field meta-field) value-from)
-          format-fn  (:format-fn meta-field)
-          value      (if (some? format-fn)
-                       (if (:lang? meta-field)
-                         (format-fn value lang)
-                         (format-fn value))
-                       value)]
-      (writer 0 col value))))
-
-(defn- write-headers! [writer headers meta-fields lang]
-  (doseq [meta-field meta-fields]
-    (writer 0 (:column meta-field) (-> meta-field :label lang)))
+(defn- write-headers! [writer headers]
   (doseq [header headers]
-    (writer 0 (+ (:column header) (count meta-fields)) (:decorated-header header))))
+    (writer 0 (:column header) (:decorated-header header))))
 
 (defn- get-label [koodisto lang koodi-uri]
   (let [koodi (->> koodisto
@@ -251,8 +249,7 @@
           (when (= value (:value option))
             (or (util/non-blank-val (:label option) [lang :fi :sv :en])
                 value)))
-        options)
-  )
+        options))
 
 (defn- raw-values->human-readable-value [liiteri-cas-client field-descriptor {:keys [lang]} get-koodisto-options value]
   (let [lang (-> lang clojure.string/lower-case keyword)
@@ -281,77 +278,91 @@
           value)))
 
 (defn- write-answer-value-for-excel!
-  [liiteri-cas-client writer person headers form-fields-by-key get-koodisto-options application answer]
-  (try
-    (let [answer-key             (:key answer)
-          field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
-                                   (get form-fields-by-key (first (string/split answer-key #"_")))
-                                   (get form-fields-by-key answer-key))
-          column                 (:column (first (filter #(= answer-key (:id %)) headers)))
-          value-or-values        (get person (keyword answer-key) (:value answer))
-          ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
-          value                  (cond
-                                   (util/is-question-group-answer? value-or-values)
-                                   (->> value-or-values
-                                        (map #(clojure.string/join "," %))
-                                        (map ->human-readable-value)
-                                        (map-indexed #(format "#%s: %s,\n" %1 %2))
-                                        (apply str))
+  [liiteri-cas-client writer person header form-fields-by-key get-koodisto-options application]
+  (when-let [answer (first (filter #(= (:id header) (:key %)) (:answers application)))]
+    (try
+      (let [column                 (:column header)
+            answer-key             (:key answer)
+            field-descriptor       (if (or (:duplikoitu-kysymys-hakukohde-oid answer) (:duplikoitu-followup-hakukohde-oid answer))
+                                     (get form-fields-by-key (first (string/split answer-key #"_")))
+                                     (get form-fields-by-key answer-key))
+            value-or-values        (get person (keyword answer-key) (:value answer))
+            ->human-readable-value (partial raw-values->human-readable-value liiteri-cas-client field-descriptor application get-koodisto-options)
+            value                  (cond
+                                     (util/is-question-group-answer? value-or-values)
+                                     (->> value-or-values
+                                          (map #(clojure.string/join "," %))
+                                          (map ->human-readable-value)
+                                          (map-indexed #(format "#%s: %s,\n" %1 %2))
+                                          (apply str))
 
-                                   (vector? value-or-values)
-                                   (->> value-or-values
-                                        (map ->human-readable-value)
-                                        (interpose ",\n")
-                                        (apply str))
+                                     (vector? value-or-values)
+                                     (->> value-or-values
+                                          (map ->human-readable-value)
+                                          (interpose ",\n")
+                                          (apply str))
 
-                                   :else
-                                   (->human-readable-value value-or-values))
-          value-length           (count value)
-          value-truncated        (if (< max-value-length value-length)
-                                   (str
-                                     (subs value 0 (- max-value-length 100))
-                                     "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
-                                     (- value-length max-value-length -100) " merkkiä]")
-                                   value)]
-      (when (and value-truncated column)
-        (writer 0 (+ column (count application-meta-fields)) value-truncated)))
-    (catch Exception e
-      (log/error "Caught exception while trying to parse value for answer"
-                 (:key answer)
-                 "from application"
-                 (:key application)
-                 ". Exception:"
-                 e)
-      (throw e))))
+                                     :else
+                                     (->human-readable-value value-or-values))
+            value-length           (count value)
+            value-truncated        (if (< max-value-length value-length)
+                                     (str
+                                      (subs value 0 (- max-value-length 100))
+                                      "—— [ vastaus liian pitkä Excel-vientiin, poistettu "
+                                      (- value-length max-value-length -100) " merkkiä]")
+                                     value)]
+        (when value-truncated
+          (writer 0 column value-truncated)))
+      (catch Exception e
+        (log/error "Caught exception while trying to parse value for answer"
+                   (:key answer)
+                   "from application"
+                   (:key application)
+                   ". Exception:"
+                   e)
+        (throw e)))))
+
+(defn write-meta-field! [writer meta-field value-from lang col]
+  (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
+        value (if (delay? value-candidate) @value-candidate value-candidate)
+        format-fn  (:format-fn meta-field)
+        meta-value (if (some? format-fn)
+                     (if (:lang? meta-field)
+                       (format-fn value lang)
+                       (format-fn value))
+                     value)]
+    (writer 0 col meta-value)))
+
+(defn- write-form-meta!
+  [writer form applications fields lang]
+  (doseq [meta-field fields]
+    (let [col        (:column meta-field)
+          value-from (case (:from meta-field)
+                       :applications (first applications)
+                       form)]
+      (write-meta-field! writer meta-field value-from lang col))))
 
 (defn- write-application! [liiteri-cas-client
-                           writer application
+                           writer
+                           application
                            application-review
                            application-review-notes
                            person
                            ehdollinen?
                            headers
-                           application-meta-fields
                            form-fields-by-key
                            get-koodisto-options
                            lang]
-  (doseq [meta-field application-meta-fields]
-    (let [format-fn  (:format-fn meta-field)
-          field      (get-in {:application              application
-                              :application-review       application-review
-                              :application-review-notes application-review-notes
-                              :person                   person
-                              :ehdollinen?              ehdollinen?}
-                             (:field meta-field))
-          meta-value (if (some? format-fn)
-                       (if (:lang? meta-field)
-                         (format-fn field lang)
-                         (format-fn field))
-                       field)]
-      (writer 0 (:column meta-field) meta-value)))
-  (doseq [answer (:answers application)]
-    (write-answer-value-for-excel! liiteri-cas-client writer person headers form-fields-by-key
-                                  get-koodisto-options application answer)))
+  (doseq [header headers]
+    (if-let [meta-field (get application-meta-fields-by-id (:id header))]
+      (let [value-from  {:application              application
+                         :application-review       application-review
+                         :application-review-notes application-review-notes
+                         :person                   person
+                         :ehdollinen?              ehdollinen?}]
+        (write-meta-field! writer meta-field value-from lang (:column header)))
+      (write-answer-value-for-excel! liiteri-cas-client writer person header form-fields-by-key
+                                     get-koodisto-options application))))
 
 (defn- pick-header
   [form-fields-by-id form-field]
@@ -382,25 +393,25 @@
 (defn- is-per-hakukohde-followup?
   [form-fields-by-id question]
   (boolean
-    (some->> question
-      :followup-of
-      (get form-fields-by-id)
-      :per-hakukohde)))
+   (some->> question
+            :followup-of
+            (get form-fields-by-id)
+            :per-hakukohde)))
+
+
 
 (defn- headers-from-form
-  [form-fields form-fields-by-id skip-answers? included-ids form-field-belongs-to]
+  [form-fields form-fields-by-id included-ids ids-only? skip-answers? form-field-belongs-to]
   (let [should-include? (fn [field]
                           (let [candidate? (and (not (:exclude-from-answers field))
                                                 (util/answerable? field))
-                                always?    (answer-to-always-include? (:id field))
-                                hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))
-                                id-match?  (included-ids (:id field))]
+                                hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
                             (and candidate?
-                                 (or always?
-                                     (and (not always?)
-                                          (not skip-answers?)
-                                          (or (and (empty? included-ids) hakukohde?)
-                                              id-match?))))))]
+                                 (if ids-only?
+                                   (contains? included-ids (:id field))
+                                   (and (not skip-answers?)
+                                        (empty? included-ids)
+                                        hakukohde?)))))]
     (->> form-fields
          (filter should-include?)
          (filter #(not (:per-hakukohde %)))
@@ -420,11 +431,7 @@
         label (str (util/non-blank-val (:label field) [:fi :sv :en]) "\n" (remove-oid-from-hakukohde (get-hakukohde-for-answer answer)))]
     (vector (:key answer) label)))
 
-(defn- original-question-id
-  [id]
-  (if (string/includes? id "_")
-    (first (string/split id #"_"))
-    id))
+(defn- original-question-id [id] (first (string/split id #"_")))
 
 (defn- application-header-comparator
   [form-fields form-fields-by-id]
@@ -438,36 +445,50 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id skip-answers? applications]
+  [form-fields form-fields-by-id included-ids ids-only? skip-answers? applications]
   (->> applications
-    (map-indexed (fn [index, application] (map #(assoc % :application-index index) (:answers application))))
-    (flatten)
-    (remove #(or (contains? form-fields-by-id (:key %))
-               (and skip-answers?
-                 (not (answer-to-always-include? (:key %))))))
-    (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
-                        (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
-                        (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
-    (distinct)
-    (sort (application-header-comparator form-fields form-fields-by-id))))
+       (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
+       (flatten)
+       (remove #(or (contains? form-fields-by-id (:key %))
+                    (not (if ids-only?
+                           (contains? included-ids (:key %))
+                           (or (not skip-answers?)
+                               (answer-to-always-include? (:key %)))))))
+       (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
+                           (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
+                           (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
+       (distinct)
+       (sort (application-header-comparator form-fields form-fields-by-id))))
+
+(defn headers-from-meta-fields [included-ids ids-only? lang]
+  (->> (if ids-only? application-meta-fields old-application-meta-fields)
+       (filter #(if ids-only?
+                  (contains? included-ids (:id %))
+                  true))
+       (map #(vec [(:id %) (-> % :label lang)]))))
 
 (defn- extract-headers
-  [applications form form-field-belongs-to skip-answers? included-ids]
+  [applications form form-field-belongs-to included-ids ids-only? skip-answers? lang]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
                    {:id               id
                     :decorated-header (or header "")
                     :column           idx})
-                 (concat (headers-from-form form-fields
-                                            form-fields-by-id
-                                            skip-answers?
-                                            included-ids
-                                            form-field-belongs-to)
-                         (headers-from-applications form-fields
-                                                    form-fields-by-id
-                                                    skip-answers?
-                                                    applications)))))
+                 (concat
+                  (headers-from-meta-fields included-ids ids-only? lang)
+                  (headers-from-form form-fields
+                                     form-fields-by-id
+                                     included-ids
+                                     ids-only?
+                                     skip-answers?
+                                     form-field-belongs-to)
+                  (headers-from-applications form-fields
+                                             form-fields-by-id
+                                             included-ids
+                                             ids-only?
+                                             skip-answers?
+                                             applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
   (let [sheet  (.createSheet workbook "Lomakkeiden tiedot")
@@ -490,8 +511,9 @@
 
 (defn set-column-widths [^XSSFWorkbook workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          :let [sheet (.getSheetAt workbook (int n))]
-          y (range (.getLastCellNum (.getRow sheet 0)))]
+          :let [sheet (.getSheetAt workbook (int n))
+                row-count (.getPhysicalNumberOfRows sheet)]
+          y (when (> row-count 0) (range (.getLastCellNum (.getRow sheet 0))))]
     (.autoSizeColumn sheet (short y))))
 
 (defn- update-hakukohteet-for-legacy-applications [application]
@@ -521,7 +543,7 @@
               (partial map-indexed
                        (fn [index oid]
                          (let [name           (get-hakukohde-name get-hakukohde lang haku-oid oid)
-                               priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
+                               priority-index (when (:prioritize-hakukohteet (get-haku haku-oid))
                                                 (str "(" (inc index) ") "))]
                            (if name
                              (str priority-index name " (" oid ")")
@@ -539,22 +561,22 @@
   [get-hakukohde selected-hakukohde-oids application]
   (let [active-hakukohteet     (set (or
                                      (not-empty
-                                       (:hakukohde application))
+                                      (:hakukohde application))
                                      ["form"]))
         all-reviews            (->> (application-states/get-all-reviews-for-all-requirements
-                                      application
-                                      selected-hakukohde-oids)
+                                     application
+                                     selected-hakukohde-oids)
                                     (filter
-                                      #(contains? active-hakukohteet (:hakukohde %))))
+                                     #(contains? active-hakukohteet (:hakukohde %))))
         all-reviews-with-names (map
                                 (fn [{:keys [hakukohde] :as review}]
-                                    (assoc review
-                                           :hakukohde-name
-                                           (get-hakukohde-name
-                                             get-hakukohde
-                                             (:lang application)
-                                             (:haku application)
-                                             hakukohde)))
+                                  (assoc review
+                                         :hakukohde-name
+                                         (get-hakukohde-name
+                                          get-hakukohde
+                                          (:lang application)
+                                          (:haku application)
+                                          hakukohde)))
                                 all-reviews)]
     (assoc application :application-hakukohde-reviews all-reviews-with-names)))
 
@@ -571,7 +593,7 @@
                                   (:lang application)
                                   (:haku application)
                                   hakukohde-oid)
-                 :ehdollinen?    (contains? (get hakukohteiden-ehdolliset
+                 :ehdollinen?    (contains? (get @hakukohteiden-ehdolliset
                                                  hakukohde-oid)
                                             (:key application))})))
    (:hakukohde application)))
@@ -583,14 +605,7 @@
     (update application :eligibility-set-automatically
             (partial filter (set selected-hakukohde-oids)))))
 
-(defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
-  (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
-           :hakukohderyhmat))
-
-(defn hakukohderyhma-to-hakukohde-oids [all-hakukohteet selected-hakukohderyhma]
-  (->> @all-hakukohteet
-       (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
-       (map :oid)))
+(def desc #(compare %2 %1))
 
 (defn export-applications
   [liiteri-cas-client
@@ -601,6 +616,7 @@
    selected-hakukohderyhma
    skip-answers?
    included-ids
+   ids-only?
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -610,59 +626,39 @@
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
-        application-meta-fields      (indexed-meta-fields application-meta-fields)
         get-form-by-id               (memoize form-store/fetch-by-id)
         get-latest-form-by-key       (memoize form-store/fetch-by-key)
         get-koodisto-options         (memoize (fn [uri version allow-invalid?]
                                                 (koodisto/get-koodisto-options koodisto-cache uri version allow-invalid?)))
-        get-tarjonta-info            (memoize (fn [haku-oid]
-                                                  (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                   koodisto-cache
-                                                   tarjonta-service
-                                                   organization-service
-                                                   ohjausparametrit-service
-                                                   haku-oid)))
+        hakukohteet-by-haku           (->> applications
+                                           (group-by :haku)
+                                           (map (fn [[haku applications]]
+                                                  [haku (set (mapcat :hakukohde applications))]))
+                                           (into {}))
+        get-tarjonta-info     (memoize (fn [haku-oid hakukohde-oids]
+                                         (-> (tarjonta-parser/parse-excel-tarjonta-info-by-haku
+                                              tarjonta-service
+                                              organization-service
+                                              ohjausparametrit-service
+                                              haku-oid
+                                              hakukohde-oids)
+                                             :tarjonta)))
+        get-haku                     (fn [haku-oid] (get-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid)))
         get-hakukohde                (memoize (fn [haku-oid hakukohde-oid]
-                                                  (->> (get-tarjonta-info haku-oid)
-                                                       :tarjonta
-                                                       :hakukohteet
-                                                       (some #(when (= hakukohde-oid (:oid %)) %)))))
-        all-hakukohteet              (delay (->> (group-by :haku applications)
-                                                 (mapcat (fn [[haku applications]]
-                                                             (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))))
+                                                (->> (get-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid))
+                                                     :hakukohteet
+                                                     (filter #(= hakukohde-oid (:oid %)))
+                                                     first)))
+        all-hakukohteet              (delay (->> hakukohteet-by-haku
+                                                 (mapcat (fn [[haku hakukohteet]]
+                                                           (:hakukohteet (get-tarjonta-info haku hakukohteet))))))
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
-        form-field-belongs-to        (let [belongs-not-specified? (fn [form-field]
-                                                                    (and (empty? (:belongs-to-hakukohderyhma form-field))
-                                                                         (empty? (:belongs-to-hakukohteet form-field))))]
-                                        (cond
-                                          (some? selected-hakukohde) (fn [form-field]
-                                                                        (or
-                                                                          (belongs-not-specified? form-field)
-                                                                          (contains?
-                                                                            (set (:belongs-to-hakukohteet form-field))
-                                                                            selected-hakukohde)
-                                                                          (let [hakukohderyhmas (hakukohde-to-hakukohderyhma-oids all-hakukohteet selected-hakukohde)]
-                                                                            (-> (set/intersection
-                                                                                  (set (:belongs-to-hakukohderyhma form-field))
-                                                                                  (set hakukohderyhmas))
-                                                                                empty?
-                                                                                not))))
-                                          (some? selected-hakukohderyhma) (fn [form-field]
-                                                                            (or
-                                                                              (belongs-not-specified? form-field)
-                                                                              (contains?
-                                                                                (set (:belongs-to-hakukohderyhma form-field))
-                                                                                selected-hakukohderyhma)
-                                                                              (let [hakukohderyhmas (->>
-                                                                                                      (:belongs-to-hakukohteet form-field)
-                                                                                                      (mapcat #(hakukohde-to-hakukohderyhma-oids all-hakukohteet %)))]
-                                                                                 (contains? (set hakukohderyhmas) selected-hakukohderyhma))))
-                                          :else (fn [_] true)))]
+        form-field-belongs-to        (fn [form-field] (form-field-belongs-to-hakukohde form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
-         (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
+         (map (partial add-hakukohde-names get-haku get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
          (map (partial filter-eligibility-set-automatically selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
@@ -670,32 +666,30 @@
                          form     (get-latest-form-by-key form-key)]
                      (if (contains? result form-key)
                        (update-in result [form-key :applications] conj application)
-                       (let [value {:sheet-name   (sheet-name form)
-                                    :form         form
-                                    :applications [application]}]
-                         (assoc result form-key value)))))
+                       (assoc result form-key {:sheet-name   (sheet-name form)
+                                               :form         form
+                                               :applications [application]}))))
                  {})
-         (map second)
+         (vals)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form form-field-belongs-to skip-answers? included-ids)
+                              headers            (extract-headers applications form form-field-belongs-to included-ids ids-only? skip-answers? lang)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
                                                          {}
                                                          (util/flatten-form-fields (:content form)))]
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
-                          (write-headers! header-writer headers application-meta-fields lang)
+                          (write-headers! header-writer headers)
                           (->> applications
-                               (sort-by :created-time)
-                               (reverse)
-                               (map #(merge % (get-tarjonta-info (:haku %))))
+                               (sort-by :created-time desc)
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
                                                     review-notes-for-application (get application-review-notes (:key application))
                                                     person                       (:person application)
-                                                    ehdollinen?                  (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids)]
+                                                    ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen-column is included.
+                                                    ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))]
                                                 (write-application! liiteri-cas-client
                                                                     row-writer
                                                                     application
@@ -704,7 +698,6 @@
                                                                     person
                                                                     ehdollinen?
                                                                     headers
-                                                                    application-meta-fields
                                                                     form-fields-by-key
                                                                     get-koodisto-options
                                                                     lang))))
@@ -719,6 +712,8 @@
 (defn- sanitize-name [name]
   (-> name
       (string/replace #"[\s]+" "-")
+      (string/replace #"[åä]" "a")
+      (string/replace #"ö" "o")
       (string/replace #"[^\w-]+" "")))
 
 (defn create-filename [identifying-part]

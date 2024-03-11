@@ -402,7 +402,7 @@
   (get-person [this application])
   (get-person-for-securelink [this application])
   (get-application-with-human-readable-koodis [this application-key session with-newest-form?])
-  (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids session])
+  (get-excel-report-of-applications-by-key [this application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? session])
   (save-application-review [this session review])
   (mass-update-application-states [this session application-keys hakukohde-oids from-state to-state])
   (payment-triggered-processing-state-change [this session application-key message payment-url state])
@@ -512,7 +512,7 @@
                                  :master-oid            @master-oid}))))
 
   (get-excel-report-of-applications-by-key
-    [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids session]
+    [_ application-keys selected-hakukohde selected-hakukohderyhma included-ids ids-only? session]
     (when (aac/applications-access-authorized-including-opinto-ohjaaja? organization-service tarjonta-service suoritus-service person-service session application-keys [:view-applications :edit-applications])
       (let [applications                     (application-store/get-applications-by-keys application-keys)
             application-reviews              (->> applications
@@ -533,7 +533,7 @@
                                                                           (get onr-persons)
                                                                           (person-service/parse-person-with-master-oid application))))
                                                   applications)
-            hakukohteiden-ehdolliset         (hakukohteiden-ehdolliset valinta-tulos-service applications)
+            hakukohteiden-ehdolliset         (delay (hakukohteiden-ehdolliset valinta-tulos-service applications))
             skip-answers-to-preserve-memory? (if (not-empty included-ids)
                                                (<= 200000 (count applications))
                                                (<= 4500 (count applications)))
@@ -547,6 +547,7 @@
                                                           selected-hakukohderyhma
                                                           skip-answers-to-preserve-memory?
                                                           included-ids
+                                                          ids-only?
                                                           lang
                                                           hakukohteiden-ehdolliset
                                                           tarjonta-service

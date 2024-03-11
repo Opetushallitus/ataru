@@ -57,7 +57,7 @@ export const kirjauduVirkailijanNakymaan = async (
   page: Page,
   ticket?: string
 ): Promise<void> => {
-  await page.goto(`/lomake-editori/auth/cas?ticket=${ticket || 'DEVELOPER'}`)
+  await page.goto(`/lomake-editori/auth/cas?ticket=${ticket ?? 'DEVELOPER'}`)
 }
 
 export const asetaKysymyksenVastausArkaluontoiseksi = async (
