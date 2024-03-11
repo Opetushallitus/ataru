@@ -317,3 +317,27 @@
                  :fieldType "dropdown"
                  :fieldClass "formField"
                  :validators ["required"]}]})
+
+(def form-with-koodisto-source
+  {:id 981230123
+   :name {:fi "Test fixture for options vs koodisto"}
+   :key "koodisto-test-form"
+   :created-by       "1.2.246.562.11.11111111111"
+   :organization-oid "1.2.246.562.10.2.45"
+   :created-time     "2016-07-28T09:58:34.217+03:00"
+   :locked           nil
+   :locked-by        nil
+   :content [{:id "kysymys_1",
+              :options [{:value "2"},
+                        {:value "1"},
+                        {:value "4"},
+                        {:value "3"},
+                        {:value "5"}],
+              :metadata metadata,
+              :fieldtype "dropdown",
+              :fieldClass "formField",
+              :validators ["required"],
+              :koodisto-source {:uri "kktutkinnot",
+                                :title "Kk-tutkinnot",
+                                :version 1,
+                                :allow-invalid? false}}]})

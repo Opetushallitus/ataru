@@ -86,13 +86,17 @@
                                                      :field-descriptor             field-descriptor}))))
           validators))
 
+; Use the code set version embedded in the form by default, try looking up from koodisto if not found.
 (defn allowed-values [koodisto-cache koodisto-source options]
-  (if koodisto-source
-    (koodisto/all-koodisto-values koodisto-cache
-                                  (:uri koodisto-source)
-                                  (:version koodisto-source)
-                                  (:allow-invalid? koodisto-source))
-    (set (map :value options))))
+  ; If "" or nil is allowed for the field type, it will be added by the caller.
+  (let [koodi-values (set (remove empty? (map :value options)))]
+    (cond
+      (not-empty koodi-values)    koodi-values
+      (not-empty koodisto-source) (koodisto/all-koodisto-values koodisto-cache
+                                                                (:uri koodisto-source)
+                                                                (:version koodisto-source)
+                                                                (:allow-invalid? koodisto-source))
+      :else #{})))
 
 (defn- field-belongs-to-hakukohde-or-hakukohderyhma? [field]
   (or (not-empty (:belongs-to-hakukohteet field))

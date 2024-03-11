@@ -9,6 +9,13 @@
                              :date "2018-03-22T07:55:08Z"
                              :name "Teppo Testinen"}})
 
+(def application-with-koodisto-form
+  {:form       981230123,
+   :lang       "fi"
+   :id         1
+   :person-oid "1.2.3.4.5.6"
+   :answers    [{:key "kysymys_1" :value "1" :fieldType "dropdown"}]})
+
 (def form {:id           703,
            :name         {:fi "Test fixture what is this"}
            :key          "abcdefghjkl"
