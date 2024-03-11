@@ -9,6 +9,7 @@
     [ataru.organization-service.session-organizations :as session-orgs]
     [ataru.middleware.user-feedback :refer [user-feedback-exception]]
     [ataru.tarjonta.haku :as haku]
+    [ataru.koodisto.koodisto :as koodisto]
     [taoensso.timbre :as log]))
 
 (def synthetic-application-permalock-user "synteettinen_hakemus")
@@ -105,14 +106,18 @@
 (defn post-form [form session tarjonta-service organization-service audit-logger]
   (let [organization-oids (map :oid (get-organizations-with-edit-rights session))
         first-org-oid     (first organization-oids)
-        form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))]
+        form-with-org     (assoc form :organization-oid (or (:organization-oid form) first-org-oid))
+        key               (:key form)]
+    (log/info "Checking form field ID duplicates with form key" key)
     (check-form-field-id-duplicates form)
+    (log/info "Checking form edit authorization with form key" key)
     (check-edit-authorization
      form-with-org
      session
      tarjonta-service
      organization-service
      (fn []
+       (log/info "Creating or updating form with key" key)
        (form-store/create-form-or-increment-version!
         (assoc
          form-with-org
@@ -154,6 +159,16 @@
       (let [coerced-form (form-schema/form-coercer latest-version)
             updated-form (form-diff/apply-operations coerced-form operations)]
         (post-form updated-form session tarjonta-service organization-service audit-logger)))))
+
+(defn refresh-form-codes
+  [form-key session tarjonta-service organization-service koodisto-cache audit-logger]
+  (log/info "Requested to refresh codes for form, key" form-key)
+  (let [form (form-store/fetch-by-key form-key)
+        has-applications? (form-store/form-has-applications form-key)
+        updated-form (koodisto/populate-form-koodisto-fields koodisto-cache form true)]
+    (when has-applications? (throw (user-feedback-exception (str "Lomakkeella " (:key form) " on hakemuksia."))))
+    (log/info "Saving form with refreshed code values, key" form-key)
+    (post-form updated-form session tarjonta-service organization-service audit-logger)))
 
 (defn delete-form [form-id session tarjonta-service organization-service audit-logger]
   (let [form (form-store/fetch-latest-version form-id)]

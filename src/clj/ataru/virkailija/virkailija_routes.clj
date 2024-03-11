@@ -314,6 +314,11 @@
       :summary "Toggle form locked state"
       (ok (access-controlled-form/update-form-lock id operation session tarjonta-service organization-service audit-logger)))
 
+    (api/PUT "/forms/:form-key/refresh-codes" {session :session}
+      :summary "Update all code values on form to latest ones from koodisto service"
+      :path-params [form-key :- s/Str]
+      (ok (access-controlled-form/refresh-form-codes form-key session tarjonta-service organization-service koodisto-cache audit-logger)))
+
     (api/DELETE "/forms/:id" {session :session}
       :path-params [id :- Long]
       :summary "Mark form as deleted"

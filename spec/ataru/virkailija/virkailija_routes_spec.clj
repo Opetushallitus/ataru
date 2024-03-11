@@ -26,7 +26,7 @@
             [clj-ring-db-session.session.session-store :refer [create-session-store]]
             [com.stuartsierra.component :as component]
             [ring.mock.request :as mock]
-            [speclj.core :refer [after-all around before before-all describe
+            [speclj.core :refer [after-all around before before-all describe should-contain
                                  it run-specs should should-be-nil should-not-be-nil should=
                                  tags with]]
             [yesql.core :as sql]))
@@ -80,6 +80,11 @@
           :person-service (person-service/->FakePersonService)
           :audit-logger (audit-log/new-dummy-audit-logger)
           :job-runner (job/new-job-runner virkailija-jobs/job-definitions)
+          :koodisto-cache (reify cache-service/Cache
+                            (get-from [_ _])
+                            (get-many-from [_ _])
+                            (remove-from [_ _])
+                            (clear-all [_]))
           :application-service (component/using
                                  (application-service/new-application-service)
                                  [:organization-service
@@ -162,6 +167,13 @@
       (update-in [:headers] assoc "cookie" (login @virkailija-routes))
       (mock/content-type "application/json")
       ((deref virkailija-routes))))
+
+(defn- refresh-form-codes [key]
+  (-> (mock/request :put (str "/lomake-editori/api/forms/" key "/refresh-codes"))
+      (update-in [:headers] assoc "cookie" (login @virkailija-routes))
+      (mock/content-type "application/json")
+      ((deref virkailija-routes))
+      (update :body (comp (fn [content] (json/parse-string content true)) slurp))))
 
 (declare resp)
 
@@ -509,5 +521,69 @@
                                                              synthetic-application-fixtures/synthetic-application-malformed
                                                              synthetic-application-fixtures/synthetic-application-foreign]
                           (check-synthetic-applications resp 3 #{1})))))
+
+(describe "Refreshing form code values"
+          (tags :unit :koodisto)
+
+          (defn dummy-koodisto-options [values]
+            (map (fn [val]
+                   {:value val :label {:fi "" :sv ""}}) values))
+
+          (defn post-refresh-and-check [expected]
+            (let [resp (refresh-form-codes "koodisto-test-form")
+                  status (:status resp)
+                  id (get-in resp [:body :id])]
+              (should= expected status)
+              id))
+
+          (defn get-first-option-values [form]
+            (->> form
+                 :content
+                 first
+                 :options
+                 (map :value)
+                 sort))
+
+          (it "Should update new codes on form based on new koodisto values"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "3" "4" "5" "6"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-option-values (get-first-option-values new-form)]
+                  (should= '("" "1" "2" "3" "4" "5" "6") new-option-values))))
+
+          (it "Should delete existing codes when they do not have followups"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-option-values (get-first-option-values new-form)]
+                  (should= '("" "1" "2" "5") new-option-values))))
+
+          (it "Should keep existing followups while updating koodisto values"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "3" "4" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source-and-followup)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-options (->> new-form :content first :options)]
+                  (should-contain fixtures/form-test-followup-value new-options))))
+
+          (it "Should fail if there are followups in option values that would be silently removed"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              (dummy-koodisto-options ["1" "2" "4" "5"])))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source-and-followup)
+                (let [id (post-refresh-and-check 400)]
+                  (should-be-nil id)))))
 
 (run-specs)

@@ -323,7 +323,7 @@
    :name {:fi "Test fixture for options vs koodisto"}
    :key "koodisto-test-form"
    :created-by       "1.2.246.562.11.11111111111"
-   :organization-oid "1.2.246.562.10.2.45"
+   :organization-oid "1.2.246.562.10.0439845"
    :created-time     "2016-07-28T09:58:34.217+03:00"
    :locked           nil
    :locked-by        nil
@@ -334,7 +334,37 @@
                         {:value "3"},
                         {:value "5"}],
               :metadata metadata,
-              :fieldtype "dropdown",
+              :fieldType "dropdown",
+              :fieldClass "formField",
+              :validators ["required"],
+              :koodisto-source {:uri "kktutkinnot",
+                                :title "Kk-tutkinnot",
+                                :version 1,
+                                :allow-invalid? false}}]})
+
+(def form-test-followup-value
+  {:value "3"
+   :label {:fi "" :sv ""}
+   :followups [(assoc (component/text-field metadata)
+                      :id "text")]})
+
+(def form-with-koodisto-source-and-followup
+  {:id 981230123
+   :name {:fi "Test fixture for options vs koodisto"}
+   :key "koodisto-test-form"
+   :created-by       "1.2.246.562.11.11111111111"
+   :organization-oid "1.2.246.562.10.0439845"
+   :created-time     "2016-07-28T09:58:34.217+03:00"
+   :locked           nil
+   :locked-by        nil
+   :content [{:id "kysymys_1",
+              :options [{:value "2" :label {:fi "" :sv ""}},
+                        {:value "1" :label {:fi "" :sv ""}},
+                        {:value "4" :label {:fi "" :sv ""}},
+                        form-test-followup-value,
+                        {:value "5" :label {:fi "" :sv ""}}],
+              :metadata metadata,
+              :fieldType "dropdown",
               :fieldClass "formField",
               :validators ["required"],
               :koodisto-source {:uri "kktutkinnot",
