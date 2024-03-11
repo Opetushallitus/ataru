@@ -555,6 +555,25 @@
                       new-option-values (get-first-option-values new-form)]
                   (should= '("" "1" "2" "3" "4" "5" "6") new-option-values))))
 
+          (it "Should alphabetize based on Finnish labels"
+              (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
+                                                            (case uri
+                                                              "kktutkinnot"
+                                                              [{:value 1 :label {:fi "Beekkonen" :sv ""}}
+                                                               {:value 2 :label {:fi "Aakkonen" :sv ""}}
+                                                               {:value 3 :label {:fi "Ceekkonen" :sv ""}}]))]
+                (db/init-db-fixture fixtures/form-with-koodisto-source)
+                (let [id (post-refresh-and-check 200)
+                      new-form (form-store/fetch-by-id id)
+                      new-options (->> new-form
+                                       :content
+                                       first
+                                       :options)]
+                  (should= [{:label {:en "", :fi "", :sv ""}, :value ""}
+                            {:value 2 :label {:fi "Aakkonen" :sv ""}}
+                            {:value 1 :label {:fi "Beekkonen" :sv ""}}
+                            {:value 3 :label {:fi "Ceekkonen" :sv ""}}] new-options))))
+
           (it "Should delete existing codes when they do not have followups"
               (with-redefs [koodisto/get-koodisto-options (fn [_ uri _ _]
                                                             (case uri

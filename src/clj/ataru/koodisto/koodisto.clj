@@ -50,8 +50,9 @@
   [koodisto-cache field remove-existing]
   (let [{:keys [uri version default-option]} (:koodisto-source field)
         empty-option               {:value "" :label {:fi "" :sv "" :en ""}}
-        koodis                     (map (fn [koodi] (select-keys koodi [:value :label]))
+        unsorted-koodis            (map (fn [koodi] (select-keys koodi [:value :label]))
                                         (get-koodisto-options koodisto-cache uri version (:allow-invalid? (:koodisto-source field))))
+        koodis                     (sort-by (comp :fi :label) unsorted-koodis)
         koodis-with-default-option (cond->> koodis
                                      (some? default-option)
                                      (map (fn [option]
