@@ -371,13 +371,13 @@
             :per-hakukohde)))
 
 (defn- headers-from-form
-  [form-fields form-fields-by-id should-include-id? form-field-belongs-to]
+  [form-fields form-fields-by-id include-column? form-field-belongs-to]
   (let [should-include? (fn [field]
                           (let [candidate? (and (not (:exclude-from-answers field))
                                                 (util/answerable? field))
                                 hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
                             (and candidate?
-                                 (should-include-id? (:id field)
+                                 (include-column? (:id field)
                                                      (fn [value include-default-columns? included-ids skip-answers?]
                                                        (or (and include-default-columns?
                                                                 (not skip-answers?)
@@ -417,15 +417,16 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id should-include-id? applications]
+  [form-fields form-fields-by-id include-column? applications]
   (->> applications
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (not (should-include-id? (:key %)
+                    (not (include-column? (:key %)
                                              (fn [value include-default-columns? _ skip-answers?]
                                                (if include-default-columns?
-                                                 (or (not skip-answers?) (answer-to-always-include? (:key %)))
+                                                 (or (not skip-answers?)
+                                                     (answer-to-always-include? (:key %)))
                                                  value))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
@@ -433,13 +434,17 @@
        (distinct)
        (sort (application-header-comparator form-fields form-fields-by-id))))
 
-(defn headers-from-meta-fields [should-include-id? lang]
+(defn headers-from-meta-fields [include-column? lang]
   (->> application-meta-fields
-       (filter #(should-include-id? (:id %)))
+       (filter #(include-column? (:id %)
+                                    (fn [value include-default-columns? & _]
+                                      (if include-default-columns?
+                                        (get application-meta-fields-by-id (:id %))
+                                        value))))
        (map #(vec [(:id %) (-> % :label lang)]))))
 
 (defn- extract-headers
-  [applications form form-field-belongs-to should-include-id? lang]
+  [applications form form-field-belongs-to include-column? lang]
   (let [form-fields       (util/flatten-form-fields (:content form))
         form-fields-by-id (util/group-by-first :id form-fields)]
     (map-indexed (fn [idx [id header]]
@@ -447,14 +452,14 @@
                     :decorated-header (or header "")
                     :column           idx})
                  (concat
-                  (headers-from-meta-fields should-include-id? lang)
+                  (headers-from-meta-fields include-column? lang)
                   (headers-from-form form-fields
                                      form-fields-by-id
-                                     should-include-id?
+                                     include-column?
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
-                                             should-include-id?
+                                             include-column?
                                              applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
@@ -591,15 +596,12 @@
    organization-service
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
-        should-include-id?       (fn [id & rest]
+        include-column?       (fn [id & rest]
+                                   ; get-value-parametrilla tehdään lisätarkistuksia käytettäessä vanhaa moodia (include-default-columns?).
                                    (let [get-value (or (first rest) (fn [value & _] value))
-                                         result (if (and include-default-columns?
-                                                         (or (get application-meta-fields-by-id id)
-                                                             (answer-to-always-include? id)))
-                                                  true
-                                                  (if skip-answers?
-                                                    false
-                                                    (contains? included-ids id)))]
+                                         result (if skip-answers?
+                                                  false
+                                                  (contains? included-ids id))]
                                      (get-value result include-default-columns? included-ids skip-answers?)))
         form-meta-fields             (indexed-meta-fields form-meta-fields)
         form-meta-sheet              (create-form-meta-sheet workbook styles form-meta-fields lang)
@@ -649,7 +651,7 @@
          (vals)
          (map-indexed (fn [sheet-idx {:keys [^String sheet-name form applications]}]
                         (let [applications-sheet (.createSheet workbook sheet-name)
-                              headers            (extract-headers applications form form-field-belongs-to should-include-id? lang)
+                              headers            (extract-headers applications form form-field-belongs-to include-column? lang)
                               meta-writer        (make-writer styles form-meta-sheet (inc sheet-idx))
                               header-writer      (make-writer styles applications-sheet 0)
                               form-fields-by-key (reduce #(assoc %1 (:id %2) %2)
