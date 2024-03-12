@@ -202,8 +202,6 @@ run-browser-tests-integration() {
     clean
     nuke-test-db
     run-migrations
-    compile-less
-    build-clojurescript
     test-browser-integration
 }
 
