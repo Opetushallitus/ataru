@@ -481,8 +481,9 @@
 
 (defn set-column-widths [^XSSFWorkbook workbook]
   (doseq [n (range (.getNumberOfSheets workbook))
-          :let [sheet (.getSheetAt workbook (int n))]
-          y (range (.getLastCellNum (.getRow sheet 0)))]
+          :let [sheet (.getSheetAt workbook (int n))
+                row-count (.getPhysicalNumberOfRows sheet)]
+          y (when (> row-count 0) (range (.getLastCellNum (.getRow sheet 0))))]
     (.autoSizeColumn sheet (short y))))
 
 (defn- update-hakukohteet-for-legacy-applications [application]
