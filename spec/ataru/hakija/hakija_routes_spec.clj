@@ -402,7 +402,16 @@
         (with-redefs [koodisto/all-koodisto-values (constantly #{"Some-koodi"})]
           (with-response :post resp application-invalid-dropdown-value
             (should= 400 (:status resp))
-            (should-not (have-any-application-in-db))))))
+            (should-not (have-any-application-in-db)))))
+
+    (it "should validate answers based on actual form options instead of koodisto-source if available"
+        (with-redefs [koodisto/all-koodisto-values (constantly #{"Some-koodi"})]
+          (db/init-db-fixture form-fixtures/form-with-koodisto-source)
+          (with-response :post resp application-fixtures/application-with-koodisto-form
+            (should= 200 (:status resp))
+            (let [id (get-in resp [:body :id])
+                  actual (get-application-by-id id)]
+              (should= (:form application-fixtures/application-with-koodisto-form) (:form actual)))))))
 
   (describe "GET application"
     (around [spec]
