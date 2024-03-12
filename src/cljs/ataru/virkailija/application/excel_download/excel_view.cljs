@@ -1,7 +1,7 @@
 (ns ataru.virkailija.application.excel-download.excel-view
   (:require [ataru.excel-common :refer [form-field-belongs-to-hakukohde
-                                        hakemuksen-yleiset-tiedot-fields
-                                        kasittelymerkinnat-fields]]
+                                        hakemuksen-yleiset-tiedot-field-labels
+                                        kasittelymerkinnat-field-labels]]
             [ataru.translations.texts :refer [virkailija-texts]]
             [ataru.util :refer [assoc?]]
             [ataru.virkailija.application.excel-download.excel-subs]
@@ -115,10 +115,10 @@
 (def common-fields
   [{:id "hakemuksen-yleiset-tiedot"
     :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
-    :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-fields)}
+    :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-field-labels)}
    {:id "kasittelymerkinnat"
     :label (:excel-kasittelymerkinnat virkailija-texts)
-    :children (map #(select-keys % [:id :label]) kasittelymerkinnat-fields)}])
+    :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
 
 (defn get-label-trans [l lng default]
   (let [label (into {} (filter #(not-empty (second %)) l))]

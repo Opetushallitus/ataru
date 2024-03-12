@@ -15,7 +15,7 @@
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers :as pohjakoulutus-toinen-aste-handlers]
             [ataru.virkailija.autosave :as autosave]
             [ataru.virkailija.db :as initial-db]
-            [ataru.virkailija.editor.editor-selectors :refer [db-all-organizations-have-only-opinto-ohjaaja-rights?]]
+            [ataru.virkailija.editor.editor-selectors :refer [get-all-organizations-have-only-opinto-ohjaaja-rights?]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [camel-snake-kebab.core :as c]
@@ -676,7 +676,7 @@
                                       [(if (application-has-attachments? db)
                                          [:application/fetch-application-attachment-metadata]
                                          [:application/start-autosave])
-                                       (when (not (db-all-organizations-have-only-opinto-ohjaaja-rights? db))
+                                       (when (not (get-all-organizations-have-only-opinto-ohjaaja-rights? db))
                                          [:liitepyynto-information-request/get-deadlines application-key])
                                        (when (get-tutu-form? form-key)
                                          [:tutu-payment/fetch-payments application-key])

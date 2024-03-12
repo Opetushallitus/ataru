@@ -26,8 +26,6 @@
   (fn selected-application [db _]
     (get-in db [:application :selected-application-and-form :application])))
 
-
-
 (re-frame/reg-sub
   :application/selected-application-answers
   (fn [db _] (selected-application-answers db)))
