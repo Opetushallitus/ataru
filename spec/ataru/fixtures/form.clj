@@ -299,3 +299,45 @@
                                 :title "Kk-tutkinnot",
                                 :version 1,
                                 :allow-invalid? false}}]})
+
+(def synthetic-application-test-form
+  {:id         808808
+   :key        "synthetic-application-test-form"
+   :name       {:fi "Synthetic application test form"}
+   :locked     nil
+   :locked-by  nil
+   :created-by "1.2.246.562.11.11111111111"
+   :organization-oid "1.2.246.562.10.0439845"
+   :content    [(component/hakukohteet)
+                (person-info-module/person-info-module)
+                {:id "secondary-completed-base-education"
+                 :metadata metadata
+                 :label {:en "Have you completed general upper secondary education or a vocational qualification?"
+                         :fi "Oletko suorittanut lukion/ylioppilastutkinnon tai ammatillisen tutkinnon?"
+                         :sv "Har du avlagt gymnasiet/studentexamen eller yrkesinriktad examen?"}
+                 :options [{:label {:en "Yes" :fi "Kyllä" :sv "Ja"}
+                            :value "0"
+                            :followups [{:id "secondary-completed-base-education–country"
+                                         :metadata metadata
+                                         :label {:en "Country of completion" :fi "Suoritusmaa" :sv "Land där examen är avlagd"}
+                                         :fieldType "dropdown"
+                                         :fieldClass "formField"
+                                         :validators ["required"],
+                                         :koodisto-source {:uri "maatjavaltiot2" :title "Maat ja valtiot" :version 2 :allow-invalid? true}}]}
+                           {:label {:en "No" :fi "En" :sv "Nej"}
+                            :value "1"}],
+                 :fieldType "singleChoice"
+                 :fieldClass "formField"
+                 :validators ["required"]}
+                {:id "asiointikieli"
+                 :metadata metadata
+                 :label {:en "Contact language" :fi "Asiointikieli" :sv "Ärendespråk"}
+                 :options [{:label {:en "Finnish" :fi "Suomi" :sv "Finska"}
+                            :value "1"}
+                           {:label {:en "Swedish" :fi "Ruotsi" :sv "Svenska"}
+                            :value "2"}
+                           {:label {:en "English" :fi "Englanti" :sv "Engelska"}
+                            :value "3"}],
+                 :fieldType "dropdown"
+                 :fieldClass "formField"
+                 :validators ["required"]}]})

@@ -37,28 +37,41 @@
     [:button.application__selected-hakukohde-row--remove
      {:data-hakukohde-oid hakukohde-oid
       :disabled           disabled?
+      :tab-index          (when (not disabled?) 0)
       :on-click           (when (not disabled?)
                             hakukohde-remove-event-handler)}
      (translations/get-hakija-translation :remove lang)]))
 
 (defn- selected-hakukohde-increase-priority
   [hakukohde-oid priority-number disabled?]
-  (let [increase-disabled? (= priority-number 1)]
+  (let [increase-disabled? (= priority-number 1)
+        lang               @(subscribe [:application/form-language])]
     [:span.application__selected-hakukohde-row--priority-increase
-     {:disabled (when disabled? "disabled")
-      :class    (when increase-disabled? "disabled")
-      :on-click (when-not increase-disabled?
-                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))}]))
+     (if increase-disabled?
+       {:class "disabled"}
+       {:disabled   (when disabled? "disabled")
+        :tab-index  0
+        :role       "button"
+        :aria-label (translations/get-hakija-translation :increase-priority lang)
+        :on-key-up #(when (a11y/is-enter-or-space? %)
+                     (dispatch [:application/change-hakukohde-priority hakukohde-oid -1]))
+        :on-click   #(dispatch [:application/change-hakukohde-priority hakukohde-oid -1])})]))
 
 (defn- selected-hakukohde-decrease-priority
   [hakukohde-oid priority-number disabled?]
   (let [selected-hakukohteet @(subscribe [:application/selected-hakukohteet])
-        decrease-disabled?   (= priority-number (count selected-hakukohteet))]
+        decrease-disabled?   (= priority-number (count selected-hakukohteet))
+        lang                 @(subscribe [:application/form-language])]
     [:span.application__selected-hakukohde-row--priority-decrease
-     {:disabled (when disabled? "disabled")
-      :class    (when decrease-disabled? "disabled")
-      :on-click (when-not decrease-disabled?
-                  #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))}]))
+     (if decrease-disabled?
+       {:class "disabled"}
+       {:disabled   (when disabled? "disabled")
+        :tab-index  0
+        :role       "button"
+        :aria-label (translations/get-hakija-translation :decrease-priority lang)
+        :on-key-up #(when (a11y/is-enter-or-space? %)
+                     (dispatch [:application/change-hakukohde-priority hakukohde-oid 1]))
+        :on-click   #(dispatch [:application/change-hakukohde-priority hakukohde-oid 1])})]))
 
 (defn- prioritize-hakukohde-buttons
   [hakukohde-oid disabled?]
@@ -216,7 +229,9 @@
         (when @(subscribe [:application/show-more-hakukohdes?])
           [:div.application__show_more_hakukohdes_container
            [:span.application__show_more_hakukohdes
-            {:on-click #(dispatch [:application/show-more-hakukohdes])}
+            {:tab-index 0
+             :role "button"
+             :on-click #(dispatch [:application/show-more-hakukohdes])}
             (translations/get-hakija-translation :show-more @lang)]])]])))
 
 (defn- hakukohde-selection-header

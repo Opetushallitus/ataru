@@ -14,14 +14,16 @@
 
 (defn login
   "Generate ring-session=abcdefgh cookie"
-  [virkailija-routes]
-  (-> (mock/request :get "/lomake-editori/auth/cas")
-      virkailija-routes
-      :headers
-      (get "Set-Cookie")
-      first
-      (clj-string/split #";")
-      first))
+  ([virkailija-routes]
+   (login virkailija-routes nil))
+  ([virkailija-routes ticket]
+   (-> (mock/request :get (str "/lomake-editori/auth/cas?ticket=" ticket))
+       virkailija-routes
+       :headers
+       (get "Set-Cookie")
+       first
+       (clj-string/split #";")
+       first)))
 
 (defn should-have-header
   [header expected-val resp]

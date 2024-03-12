@@ -58,26 +58,26 @@
 
 (def handler
   (let [form-by-id-cache                     (reify cache-service/Cache
-                                               (get-from [this key]
+                                               (get-from [_ key]
                                                  (form-store/fetch-by-id (Integer/valueOf key)))
-                                               (get-many-from [this keys])
-                                               (remove-from [this key])
-                                               (clear-all [this]))
+                                               (get-many-from [_ _])
+                                               (remove-from [_ _])
+                                               (clear-all [_]))
         tarjonta-service                     (tarjonta-service/new-tarjonta-service)
         organization-service                 (organization-service/new-organization-service)
         ohjausparametrit-service             (ohjausparametrit-service/new-ohjausparametrit-service)
         application-service                  (common-application-service/new-application-service)
         audit-logger                         (audit-log/new-dummy-audit-logger)
         koodisto-cache                       (reify cache-service/Cache
-                                               (get-from [this key])
-                                               (get-many-from [this keys])
-                                               (remove-from [this key])
-                                               (clear-all [this]))
+                                               (get-from [_ _])
+                                               (get-many-from [_ _])
+                                               (remove-from [_ _])
+                                               (clear-all [_]))
         hakukohderyhma-settings-cache         (reify cache-service/Cache
-                                               (get-from [this key])
-                                               (get-many-from [this keys])
-                                               (remove-from [this key])
-                                               (clear-all [this]))
+                                               (get-from [_ _])
+                                               (get-many-from [_ _])
+                                               (remove-from [_ _])
+                                               (clear-all [_]))
         form-by-haku-oid-str-cache-loader    (hakija-form-service/map->FormByHakuOidStrCacheLoader
                                               {:form-by-id-cache         form-by-id-cache
                                                :koodisto-cache           koodisto-cache
@@ -93,11 +93,11 @@
         (assoc :application-service application-service)
         (assoc :form-by-id-cache form-by-id-cache)
         (assoc :form-by-haku-oid-str-cache (reify cache-service/Cache
-                                             (get-from [this key]
+                                             (get-from [_ key]
                                                (.load form-by-haku-oid-str-cache-loader key))
-                                             (get-many-from [this keys])
-                                             (remove-from [this key])
-                                             (clear-all [this])))
+                                             (get-many-from [_ _])
+                                             (remove-from [_ _])
+                                             (clear-all [_])))
         (assoc :koodisto-cache koodisto-cache)
         (assoc :audit-logger audit-logger)
         .start
