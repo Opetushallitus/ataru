@@ -1,4 +1,6 @@
-import { Page, Response } from '@playwright/test'
+import path from 'path'
+
+import { Page, Response, Route } from '@playwright/test'
 import * as Record from 'fp-ts/lib/Record'
 import * as Option from 'fp-ts/lib/Option'
 import { AssertionError } from 'assert'
@@ -33,3 +35,11 @@ export const unsafeFoldOption = <T>(o: Option.Option<T>): T => {
     (val) => val
   )(o)
 }
+
+const FIXTURES_PATH = path.resolve(__dirname, '../cypress/fixtures')
+
+export const getFixturePath = (fileName: string) =>
+  path.resolve(FIXTURES_PATH, fileName)
+
+export const fixtureFromFile = (fileName: string) => (route: Route) =>
+  route.fulfill({ path: getFixturePath(fileName) })
