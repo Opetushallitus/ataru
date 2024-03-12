@@ -1127,3 +1127,12 @@
  :application/excel-request-filter-value
  (fn [db [_ id]]
    (get-in db [:application :excel-request :filters id :checked])))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-selected-count-by-ids
+ (fn [db [_ ids]]
+   (as-> (get-in db [:application :excel-request :filters]) filters
+     (select-keys filters ids)
+     (vals filters)
+     (filter :checked filters)
+     (count filters))))
