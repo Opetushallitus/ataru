@@ -1,11 +1,12 @@
 (ns ataru.virkailija.application.handlers
-  (:require [ataru.application.application-states :as application-states]
+  (:require [ajax.protocols :as pr]
+            [ataru.application.application-states :as application-states]
             [ataru.application.filtering :as application-filtering]
             [ataru.application.review-states :as review-states]
             [ataru.cljs-util :as cljs-util]
             [ataru.component-data.base-education-module-higher :as higher-module]
             [ataru.tarjonta.haku :as haku]
-            [ataru.util :as util]
+            [ataru.util :as util :refer [assoc?]]
             [ataru.virkailija.application.application-list.virkailija-application-list-handlers :as virkailija-application-list-handlers]
             [ataru.virkailija.application.application-search-control-handlers :as asch]
             [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
@@ -18,7 +19,6 @@
             [ataru.virkailija.editor.editor-selectors :refer [db-all-organizations-have-only-opinto-ohjaaja-rights?]]
             [ataru.virkailija.temporal :as temporal]
             [ataru.virkailija.virkailija-ajax :as ajax]
-            [ajax.protocols :as pr]
             [camel-snake-kebab.core :as c]
             [camel-snake-kebab.extras :as ce]
             [cljs-time.core :as t]
@@ -936,21 +936,34 @@
 (reg-event-fx
  :application/start-excel-download
  (fn [{:keys [db]} [_ params]]
-   (when (not (get-in db [:applications :excel-request :fetching?]))
-     {:db   (-> db
-                (assoc-in-excel :error nil)
-                (assoc-in-excel :fetching? true))
-      :http {:id                  :excel-download
-             :method              :post
-             :path                "/lomake-editori/api/applications/excel"
-             :params              params
-             :skip-parse-times?   true
-             :skip-flasher?       true
-             :handler-or-dispatch :application/handle-excel-download-success
-             :handler-args        {:filename (:filename params)}
-             :override-args       {:response-format {:type :blob
-                                                     :read pr/-body}
-                                   :error-handler #(dispatch [:application/handle-excel-download-error %])}}})))
+   (when (not (get-in db [:application :excel-request :fetching?]))
+     (let [application-keys (map :key (get-in db [:application :applications]))
+           selected-mode (get-in db [:application :excel-request :selected-mode])
+           written-ids (get-in db [:application :excel-request :included-ids])
+           filtered-ids (->> (get-in db [:application :excel-request :filters])
+                             (map second)
+                             (filter :checked)
+                             (map :id))]
+       {:db   (-> db
+                  (assoc-in-excel :error nil)
+                  (assoc-in-excel :fetching? true))
+        :http {:id                  :excel-download
+               :method              :post
+               :path                "/lomake-editori/api/applications/excel"
+               :params              (-> params
+                                        (assoc? :application-keys application-keys)
+                                        (assoc? :CSRF (cljs-util/csrf-token))
+                                        (assoc? :included-ids (->> (case selected-mode
+                                                                     "kirjoita-tunnisteet" written-ids
+                                                                     "valitse-tiedot" filtered-ids
+                                                                     :else ""))))
+               :skip-parse-times?   true
+               :skip-flasher?       true
+               :handler-or-dispatch :application/handle-excel-download-success
+               :handler-args        {:filename (:filename params)}
+               :override-args       {:response-format {:type :blob
+                                                       :read pr/-body}
+                                     :error-handler #(dispatch [:application/handle-excel-download-error %])}}}))))
 
 (reg-event-db
  :application/excel-request-filters-init
