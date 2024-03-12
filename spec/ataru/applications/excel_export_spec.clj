@@ -67,7 +67,7 @@
                              (:selected-hakukohderyhma input-params)
                              (:skip-answers? input-params)
                              (or (:included-ids input-params) #{})
-                             (:include-default-columns? input-params)
+                             (:ids-only? input-params)
                              :fi
                              (delay {})
                              (tarjonta-service/new-tarjonta-service)
@@ -104,7 +104,8 @@
 
  (it "should export applications for a form without hakukohde or haku"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-form] {:skip-answers? false :include-default-columns? true})
+       (export-test-excel [fixtures/application-for-form] {:skip-answers? false
+                                                           :ids-only? false})
        (fn [file]
          (let [workbook          (WorkbookFactory/create file)
                metadata-sheet    (.getSheetAt workbook 0)
@@ -138,7 +139,8 @@
 
  (it "should export applications for a hakukohde with haku"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-hakukohde] {:skip-answers? false :include-default-columns? true})
+       (export-test-excel [fixtures/application-for-hakukohde] {:skip-answers? false
+                                                                :ids-only? false})
        (fn [file]
          (let [workbook          (WorkbookFactory/create file)
                metadata-sheet    (.getSheetAt workbook 0)
@@ -171,7 +173,9 @@
 
  (it "should export applications to separate sheets, grouped by form"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde] {:skip-answers? false :include-default-columns? true})
+       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde]
+                          {:skip-answers? false
+                           :ids-only? false})
        (fn [file]
          (let [workbook                    (WorkbookFactory/create file)
                metadata-sheet              (.getSheetAt workbook 0)
@@ -230,7 +234,9 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                    form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? true
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -263,7 +269,10 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohde "hakukohde.oid" :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? false
+                             :selected-hakukohde "hakukohde.oid"
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -300,7 +309,10 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohde "hakukohde-in-ryhma.oid" :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers-2]
+                            {:skip-answers? false
+                             :selected-hakukohde "hakukohde-in-ryhma.oid"
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -339,7 +351,10 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohderyhma "1.2.246.562.28.00000000001" :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers-2]
+                            {:skip-answers? false
+                             :selected-hakukohderyhma "1.2.246.562.28.00000000001"
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -378,7 +393,10 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohderyhma "unknown-hakukohderyhma" :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? false
+                             :selected-hakukohderyhma "unknown-hakukohderyhma"
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -414,7 +432,10 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                    form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true :included-ids #{"joku-kysymys-vaan"} :include-default-columns? true})
+         (export-test-excel [fixtures/application-with-special-answers]
+                            {:skip-answers? true
+                             :included-ids #{"joku-kysymys-vaan"}
+                             :ids-only? false})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -445,8 +466,9 @@
 
  (it "should include only hakukohteet when using new mode and only \"hakukohteet\" in included-ids"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-hakukohde] {:include-default-columns? false
-                                                                :included-ids #{"hakukohteet"}})
+       (export-test-excel [fixtures/application-for-hakukohde]
+                          {:ids-only? true
+                           :included-ids #{"hakukohteet"}})
        (fn [file]
          (let [workbook          (WorkbookFactory/create file)
                metadata-sheet    (.getSheetAt workbook 0)
@@ -459,9 +481,10 @@
 
  (it "should create empty application-sheet with new-mode and skip-answers?=true"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-hakukohde] {:include-default-columns? false
-                                                                :skip-answers? true
-                                                                :included-ids #{"hakukohteet"}})
+       (export-test-excel [fixtures/application-for-hakukohde]
+                          {:ids-only? true
+                           :skip-answers? true ; ei vaikutusta kun ids-only?=true
+                           :included-ids #{"hakukohteet"}})
        (fn [file]
          (let [workbook          (WorkbookFactory/create file)
                metadata-sheet    (.getSheetAt workbook 0)
@@ -469,4 +492,4 @@
            (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
            (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
            (verify-row metadata-sheet 2 nil)
-           (verify-row application-sheet 0 nil))))))
+           (verify-cols application-sheet [["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))

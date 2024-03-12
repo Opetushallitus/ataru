@@ -1,11 +1,12 @@
 (ns ataru.tarjonta-service.tarjonta-parser
-  (:require [clj-time.core :as t]
-            [clojure.string :as string]
-            [ataru.tarjonta-service.hakuaika :as hakuaika]
-            [ataru.koodisto.koodisto :refer [get-koodisto-options]]
+  (:require [ataru.koodisto.koodisto :refer [get-koodisto-options]]
+            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]
             [ataru.organization-service.organization-service :as organization-service]
+            [ataru.tarjonta-service.hakuaika :as hakuaika]
             [ataru.tarjonta-service.tarjonta-protocol :as tarjonta-protocol]
-            [ataru.ohjausparametrit.ohjausparametrit-protocol :as ohjausparametrit-protocol]))
+            [clj-time.core :as t]
+            [clojure.set :refer [intersection]]
+            [clojure.string :as string]))
 
 (defn- parse-hakukohde
   [_
@@ -122,8 +123,8 @@
   (when (:oid hakukohde)
     {:oid (:oid hakukohde)
      :name (:name hakukohde)
-     :tarjoaja-name   (:tarjoaja-name hakukohde)
-     :ryhmaliitokset (filter #(contains? hakukohderyhmat %) (:ryhmaliitokset hakukohde))}))
+     :tarjoaja-name (:tarjoaja-name hakukohde)
+     :ryhmaliitokset (intersection hakukohderyhmat (set (:ryhmaliitokset hakukohde)))}))
 
 (defn parse-excel-tarjonta-info-by-haku
   [tarjonta-service organization-service ohjausparametrit-service haku-oid hakukohde-oids]
@@ -137,8 +138,7 @@
           ohjausparametrit     (ohjausparametrit-protocol/get-parametri
                                 ohjausparametrit-service
                                 haku-oid)
-          tarjonta-hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service
-                                                                  hakukohde-oids)
+          tarjonta-hakukohteet (tarjonta-protocol/get-hakukohteet tarjonta-service hakukohde-oids)
           hakukohteet          (map #(parse-excel-hakukohde hakukohderyhmat %)
                                     tarjonta-hakukohteet)]
       (when (not-empty hakukohteet)
