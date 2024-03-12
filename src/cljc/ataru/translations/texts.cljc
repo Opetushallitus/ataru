@@ -1715,6 +1715,12 @@
    :excel-mode-kirjoita-tunnisteet                           {:fi "Kirjoita tunnisteet"
                                                               :sv "Kirjoita tunnisteet"
                                                               :en "Kirjoita tunnisteet"}
+   :excel-valitse-kaikki                                     {:fi "Valitse kaikki"
+                                                              :sv "Valitse kaikki"
+                                                              :en "Valitse kaikki"}
+   :excel-poista-valinnat                                    {:fi "Poista valinnat"
+                                                              :sv "Poista valinnat"
+                                                              :en "Poista valinnat"}
    :mass-information-request                                 {:fi "Massaviesti"
                                                               :sv "Massmeddelande"
                                                               :en "Mass message"}
