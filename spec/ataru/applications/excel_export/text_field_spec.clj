@@ -34,7 +34,7 @@
                                       (or (input-params :included-ids) #{})
                                       true
                                       lang
-                                      hakukohteiden-ehdolliset
+                                      (delay hakukohteiden-ehdolliset)
                                       (tarjonta-service/new-tarjonta-service)
                                       koodisto-cache
                                       (organization-service/new-organization-service)

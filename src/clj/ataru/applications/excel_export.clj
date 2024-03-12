@@ -298,7 +298,8 @@
 (defn to-vec [val] (if (vector? val) val [val]))
 
 (defn write-meta-field! [writer meta-field value-from lang col]
-  (let [value      (get-in value-from (to-vec (:field meta-field)))
+  (let [value-candidate (get-in value-from (to-vec (:field meta-field)))
+        value (if (delay? value-candidate) @value-candidate value-candidate)
         format-fn  (:format-fn meta-field)
         meta-value (if (some? format-fn)
                      (if (:lang? meta-field)
@@ -329,8 +330,6 @@
                            lang]
   (doseq [header headers]
     (if-let [meta-field (get application-meta-fields-by-id (:id header))]
-
-
       (let [value-from  {:application              application
                          :application-review       application-review
                          :application-review-notes application-review-notes
@@ -561,7 +560,7 @@
                                   (:lang application)
                                   (:haku application)
                                   hakukohde-oid)
-                 :ehdollinen?    (contains? (get hakukohteiden-ehdolliset
+                 :ehdollinen?    (contains? (get @hakukohteiden-ehdolliset
                                                  hakukohde-oid)
                                             (:key application))})))
    (:hakukohde application)))
@@ -665,7 +664,8 @@
                                                     application-review           (get application-reviews (:key application))
                                                     review-notes-for-application (get application-review-notes (:key application))
                                                     person                       (:person application)
-                                                    ehdollinen?                  (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids)]
+                                                    ; Getting ehdollinen? is quite expensive operation. Do it later and only if ehdollinen?-id is included.
+                                                    ehdollinen?                  (delay (get-ehdollinen? get-hakukohde hakukohteiden-ehdolliset application selected-hakukohde-oids))]
                                                 (write-application! liiteri-cas-client
                                                                     row-writer
                                                                     application
