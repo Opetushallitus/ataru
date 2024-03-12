@@ -67,7 +67,7 @@
                              (:selected-hakukohderyhma input-params)
                              (:skip-answers? input-params)
                              (or (:included-ids input-params) #{})
-                             true
+                             (:include-default-columns? input-params)
                              :fi
                              (delay {})
                              (tarjonta-service/new-tarjonta-service)
@@ -78,33 +78,6 @@
    (export-test-excel applications input-params default-get-parametri))
   ([applications]
    (export-test-excel applications {} default-get-parametri)))
-
-(defmacro with-excel [input-params bindings & body]
-  `(let [~(first bindings) (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")
-         applications#     ~(second bindings)]
-     (try
-       (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
-         (->> (j2ee/export-applications liiteri-cas-client
-                                        applications#
-                                        (reduce #(assoc %1 (:key %2) fixtures/application-review)
-                                                {}
-                                                applications#)
-                                        fixtures/application-review-notes
-                                        (~input-params :selected-hakukohde)
-                                        (~input-params :selected-hakukohderyhma)
-                                        (~input-params :skip-answers?)
-                                        (or (~input-params :included-ids) #{})
-                                        true
-                                        :fi
-                                        (delay {})
-                                        (tarjonta-service/new-tarjonta-service)
-                                        koodisto-cache
-                                        (organization-service/new-organization-service)
-                                        (->MockOhjausparametritServiceWithGetParametri default-get-parametri))
-              (.write output#)))
-       ~@body
-       (finally
-         (.delete ~(first bindings))))))
 
 (defn with-excel-file [excel-data run-test]
   (let [file (File/createTempFile (str "excel-" (UUID/randomUUID)) ".xlsx")]
@@ -131,7 +104,7 @@
 
  (it "should export applications for a form without hakukohde or haku"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-form] {:skip-answers? false})
+       (export-test-excel [fixtures/application-for-form] {:skip-answers? false :include-default-columns? true})
        (fn [file]
          (let [workbook          (WorkbookFactory/create file)
                metadata-sheet    (.getSheetAt workbook 0)
@@ -163,38 +136,40 @@
            (verify-pane-information application-sheet)))))
 
  (it "should export applications for a hakukohde with haku"
-     (with-excel {:skip-answers? false} [file [fixtures/application-for-hakukohde]]
-       (let [workbook          (WorkbookFactory/create file)
-             metadata-sheet    (.getSheetAt workbook 0)
-             application-sheet (.getSheetAt workbook 1)]
-         (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
-         (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
-         (verify-row metadata-sheet 2 nil)
-         (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
-                                         ["Lähetysaika" "2016-06-15 15:34:56"]
-                                         ["Hakemuksen tila" "Aktiivinen"]
-                                         ["Oppijanumero" nil]
-                                         ["Hakijan henkilö-OID" "1.123.345456567123"]
-                                         ["Turvakielto" "kyllä"]
-                                         ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
-                                         ["Kielitaitovaatimus" "Tarkastamatta"]
-                                         ["Tutkinnon kelpoisuus" "Tarkastamatta"]
-                                         ["Hakukelpoisuus" "Tarkastamatta"]
-                                         ["Hakukelpoisuus asetettu automaattisesti" nil]
-                                         ["Hylkäyksen syy" nil]
-                                         ["Maksuvelvollisuus" "Tarkastamatta"]
-                                         ["Valinnan tila" "Hyväksytty"]
-                                         ["Ehdollinen" "ei"]
-                                         ["Pisteet" "12"]
-                                         ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
-                                         ["Kysymys 4" "Vastaus 4"]
-                                         ["Etunimi" "Person-etunimi"]
-                                         ["Kysymys 5" "Vastaus 5"]
-                                         ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))
+     (with-excel-file
+       (export-test-excel [fixtures/application-for-hakukohde] {:skip-answers? false :include-default-columns? true})
+       (fn [file]
+         (let [workbook          (WorkbookFactory/create file)
+               metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakemusnumero" "application_3424_key"]
+                                           ["Lähetysaika" "2016-06-15 15:34:56"]
+                                           ["Hakemuksen tila" "Aktiivinen"]
+                                           ["Oppijanumero" nil]
+                                           ["Hakijan henkilö-OID" "1.123.345456567123"]
+                                           ["Turvakielto" "kyllä"]
+                                           ["Hakukohteen käsittelyn tila" "Käsittelyssä"]
+                                           ["Kielitaitovaatimus" "Tarkastamatta"]
+                                           ["Tutkinnon kelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus" "Tarkastamatta"]
+                                           ["Hakukelpoisuus asetettu automaattisesti" nil]
+                                           ["Hylkäyksen syy" nil]
+                                           ["Maksuvelvollisuus" "Tarkastamatta"]
+                                           ["Valinnan tila" "Hyväksytty"]
+                                           ["Ehdollinen" "ei"]
+                                           ["Pisteet" "12"]
+                                           ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
+                                           ["Kysymys 4" "Vastaus 4"]
+                                           ["Etunimi" "Person-etunimi"]
+                                           ["Kysymys 5" "Vastaus 5"]
+                                           ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
 
  (it "should export applications to separate sheets, grouped by form"
      (with-excel-file
-       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde] {:skip-answers? false})
+       (export-test-excel [fixtures/application-for-form fixtures/application-for-hakukohde] {:skip-answers? false :include-default-columns? true})
        (fn [file]
          (let [workbook                    (WorkbookFactory/create file)
                metadata-sheet              (.getSheetAt workbook 0)
@@ -251,7 +226,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                    form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true })
+         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -283,7 +258,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohde "hakukohde.oid"})
+         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohde "hakukohde.oid" :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -319,7 +294,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohde "hakukohde-in-ryhma.oid"})
+         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohde "hakukohde-in-ryhma.oid" :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -357,7 +332,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohderyhma "1.2.246.562.28.00000000001"})
+         (export-test-excel [fixtures/application-with-special-answers-2] {:skip-answers? false :selected-hakukohderyhma "1.2.246.562.28.00000000001" :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -395,7 +370,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-for-multiple-hakukohde)
                    form-store/fetch-by-key (fn [_] fixtures/form-for-multiple-hakukohde)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohderyhma "unknown-hakukohderyhma"})
+         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? false :selected-hakukohderyhma "unknown-hakukohderyhma" :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -430,7 +405,7 @@
      (with-redefs [form-store/fetch-by-id  (fn [_] fixtures/form-with-special-questions)
                    form-store/fetch-by-key (fn [_] fixtures/form-with-special-questions)]
        (with-excel-file
-         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true :included-ids #{"joku-kysymys-vaan"}})
+         (export-test-excel [fixtures/application-with-special-answers] {:skip-answers? true :included-ids #{"joku-kysymys-vaan"} :include-default-columns? true})
          (fn [file]
            (let [workbook          (WorkbookFactory/create file)
                  metadata-sheet    (.getSheetAt workbook 0)
@@ -456,4 +431,32 @@
                                              ["Pisteet" "12"]
                                              ["Muistiinpanot" "2018-07-29 17:11:12 Virk Ailija: Asia kunnossa,\n2018-07-30 18:12:13 Ajilia Kriv: Muikkari"]
                                              ["Etunimi" "Person-etunimi"]
-                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))))
+                                             ["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]]))))))
+
+ (it "should include only hakukohteet when using new mode and only \"hakukohteet\" in included-ids"
+     (with-excel-file
+       (export-test-excel [fixtures/application-for-hakukohde] {:include-default-columns? false
+                                                                :included-ids #{"hakukohteet"}})
+       (fn [file]
+         (let [workbook          (WorkbookFactory/create file)
+               metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-cols application-sheet [["Hakukohteet" "(1) Ajoneuvonosturinkuljettajan ammattitutkinto - Koulutuskeskus Sedu, Ilmajoki, Ilmajoentie (hakukohde.oid)"]])))))
+
+
+ (it "should create empty application-sheet with new-mode and skip-answers?=true"
+     (with-excel-file
+       (export-test-excel [fixtures/application-for-hakukohde] {:include-default-columns? false
+                                                                :skip-answers? true
+                                                                :included-ids #{"hakukohteet"}})
+       (fn [file]
+         (let [workbook          (WorkbookFactory/create file)
+               metadata-sheet    (.getSheetAt workbook 0)
+               application-sheet (.getSheetAt workbook 1)]
+           (verify-row metadata-sheet 0 ["Nimi" "Id" "Tunniste" "Viimeksi muokattu" "Viimeinen muokkaaja"])
+           (verify-row metadata-sheet 1 ["Form name" "321" "form_321_key" "2016-06-14 15:34:56" "IRMELI KUIKELOINEN"])
+           (verify-row metadata-sheet 2 nil)
+           (verify-row application-sheet 0 nil))))))
