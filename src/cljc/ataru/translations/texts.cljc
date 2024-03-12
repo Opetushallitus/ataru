@@ -2689,10 +2689,13 @@
                               :en "EN: Viimeksi muokattu"}
    :created-by               {:fi "Viimeinen muokkaaja"
                               :sv "Senast bearbetad av"
-                              :en "EN: Viimeinen muokkaaja"}
-   :sent-at                  {:fi "Lähetysaika"
-                              :sv "Sändningstid"
-                              :en "EN: Lähetysaika"}
+                              :en "EN: Viimeinen muokkaaja"} 
+   :application-modified     {:fi "Hakemuksen viimeisimmän muokkauksen aika"
+                              :sv "Hakemuksen viimeisimmän muokkauksen aika"
+                              :en "Hakemuksen viimeisimmän muokkauksen aika"}
+   :application-submitted    {:fi "Hakemuksen tallennusaika"
+                              :sv "Hakemuksen tallennusaika"
+                              :en "Hakemuksen tallennusaika"}
    :application-state        {:fi "Hakemuksen tila"
                               :sv "Ansökans status"
                               :en "EN: Hakemuksen tila"}
