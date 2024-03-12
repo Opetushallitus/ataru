@@ -7,6 +7,7 @@
             [ataru.util :refer [assoc?]]
             [ataru.virkailija.application.excel-download.excel-handlers]
             [ataru.virkailija.application.excel-download.excel-subs]
+            [ataru.virkailija.application.excel-download.excel-utils :refer [get-excel-checkbox-filter-defs]]
             [re-frame.core :refer [dispatch subscribe]]
             [reagent.core :as r]))
 
@@ -74,43 +75,6 @@
                            :style {:display (when (not open?) "none")}
                            "aria-labelledby" (accordion-heading-id id)}
                           ^{:key (accordion-content-id id)} content])]))
-
-(defn question-wrapper? [item] (contains? #{"wrapperElement" "questionGroup"} (:fieldClass item)))
-
-(defn info-element? [item] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass item)))
-
-(defn get-excel-checkbox-filter-defs
-  ([form-content form-field-belongs-to parent-id level parent-index-acc]
-   (if (empty? form-content)
-     nil
-     (reduce (fn [acc form-field]
-               (let [index-acc (+ parent-index-acc (count acc))
-                     children (get-excel-checkbox-filter-defs (:children form-field)
-                                                              form-field-belongs-to
-                                                              (or parent-id (:id form-field))
-                                                              (inc level)
-                                                              (inc index-acc))]
-                 (if (or (and (question-wrapper? form-field) (empty? children))
-                         (info-element? form-field)
-                         (get-in form-field [:params :hidden])
-                         (:hidden form-field)
-                         (:exclude-from-answers form-field)
-                         (not (form-field-belongs-to form-field)))
-                   acc
-                   (merge acc children (when (or (= level 0) (not (question-wrapper? form-field)))
-                                         {(:id form-field) (-> {:id (:id form-field)
-                                                                :index index-acc
-                                                                :label (:label form-field)
-                                                                :checked true}
-                                                               (assoc? :parent-id parent-id)
-                                                               (assoc? :child-ids (->> children
-                                                                                       (map second)
-                                                                                       (sort-by :index)
-                                                                                       (map :id))))})))))
-             {}
-             form-content)))
-  ([form-content form-field-belongs-to]
-   (get-excel-checkbox-filter-defs form-content form-field-belongs-to nil 0 0)))
 
 (def common-fields
   [{:id "hakemuksen-yleiset-tiedot"
