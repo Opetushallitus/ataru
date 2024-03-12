@@ -799,6 +799,7 @@
                       filename :- s/Str
                       {selected-hakukohde :- s/Str nil}
                       {selected-hakukohderyhma :- s/Str nil}
+                      {include-default-columns :- s/Str false}
                       {included-ids :- [s/Str] nil}
                       {CSRF :- s/Str nil}]
         :summary "Generate Excel sheet for applications given by ids (and which the user has rights to view)"
@@ -814,6 +815,7 @@
                                  selected-hakukohde
                                  selected-hakukohderyhma
                                  included-ids
+                                 include-default-columns
                                  session)]
               (if xls
                 {:status  200
