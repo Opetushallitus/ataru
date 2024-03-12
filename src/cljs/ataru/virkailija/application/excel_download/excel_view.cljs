@@ -33,7 +33,7 @@
       :ref #(reset! ref %)
       :value id
       :on-change excel-checkbox-on-change
-      :checked checked?}]))
+      :checked (boolean checked?)}]))
 
 (defn excel-checkbox-control
   [id title]
@@ -78,7 +78,6 @@
                            :style {:display (when (not open?) "none")}
                            "aria-labelledby" (accordion-heading-id id)}
                           ^{:key (accordion-content-id id)} content])]))
-
 
 (defn question-wrapper? [item] (contains? #{"wrapperElement" "questionGroup"} (:fieldClass item)))
 (defn info-element? [item] (contains? #{"infoElement" "modalInfoElement"} (:fieldClass item)))
