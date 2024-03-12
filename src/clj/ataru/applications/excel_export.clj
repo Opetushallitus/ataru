@@ -617,6 +617,7 @@
    skip-answers?
    included-ids
    ids-only?
+   sort-by-field
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -682,7 +683,7 @@
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers)
                           (->> applications
-                               (sort-by :created-time desc)
+                               (sort-by sort-by-field desc)
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
