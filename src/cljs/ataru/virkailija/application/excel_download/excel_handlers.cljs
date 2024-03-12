@@ -89,10 +89,14 @@
    (when (not (get-in-excel db :fetching?))
      (let [application-keys (map :key (get-in db [:application :applications]))
            selected-mode (get-in-excel db :selected-mode)
-           written-ids (clj-string/split #"\s+" (get-in-excel db :included-ids))
+           written-ids (as-> (get-in-excel db :included-ids) $
+                         (clj-string/split $ #"\s+")
+                         (remove clj-string/blank? $)
+                         (not-empty $))
            filtered-ids (->> (get-in-excel db :filters)
-                             (map second)
+                             (vals)
                              (filter :checked)
+                             (filter #(empty? (:child-ids %))) ;Sisällytetään vain "lehti"-id:t, koska ylemmät tasot on ryhmittelyä
                              (map :id))]
        {:db   (-> db
                   (assoc-in-excel :error nil)
