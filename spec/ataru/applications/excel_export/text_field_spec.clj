@@ -1,23 +1,27 @@
 (ns ataru.applications.excel-export.text-field-spec
-  (:require [clojure.string :as string]
-            [clj-time.core :as clj-time]
-            [speclj.core :as speclj :refer :all]
-            [ataru.applications.excel-export :as excel-export]
+  (:require [ataru.applications.excel-export :as excel-export]
             [ataru.cache.cache-service :as cache-service]
             [ataru.forms.form-store :as form-store]
-            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
             [ataru.ohjausparametrit.ohjausparametrit-service :as ohjausparametrit-service]
-            [ataru.organization-service.organization-service :as organization-service])
-  (:import [java.io FileOutputStream File]
+            [ataru.organization-service.organization-service :as organization-service]
+            [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
+            [clj-time.core :as clj-time]
+            [clojure.string :as string]
+            [speclj.core :as speclj :refer :all])
+  (:import [java.io File FileOutputStream]
            [java.util UUID]
            [org.apache.poi.ss.usermodel WorkbookFactory]))
 
 (def liiteri-cas-client nil)
 
 (def koodisto-cache (reify cache-service/Cache
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (get-from [this key])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (get-many-from [this keys])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (remove-from [this key])
+                      #_{:clj-kondo/ignore [:unused-binding]}
                       (clear-all [this])))
 
 (defn- format-included-ids [id-string]
@@ -49,7 +53,7 @@
      (try
        (with-open [output# (FileOutputStream. (.getPath ~(first bindings)))]
          (->> (export-applications applications# ~input-params)
-           (.write output#)))
+              (.write output#)))
        ~@body
        (finally
          (.delete ~(first bindings))))))
@@ -60,13 +64,13 @@
   [sheet row-num]
   (when-let [row (.getRow sheet row-num)]
     (map (fn [col] (some-> (.getCell row col)
-                     .getStringCellValue))
-      (range (.getLastCellNum row)))))
+                           .getStringCellValue))
+         (range (.getLastCellNum row)))))
 
 (defn verify-pairs-contain [expected-pairs all-pairs]
   (speclj/should==
-    expected-pairs
-    (set (filter expected-pairs all-pairs))))
+   expected-pairs
+   (set (filter expected-pairs all-pairs))))
 
 (defn- verify-sheet-rows-contain [expected sheet [header-row-num data-row-num]]
   (let [header (get-row sheet header-row-num)
@@ -111,54 +115,54 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (describe "excel export:"
-  (tags :unit :excel)
+          (tags :unit :excel)
 
-  (context "text field:"
-    (context "no followups:"
-      (with text-field (build-field "Kysymys"))
-      (with form (-> (build-form)
-                   (assoc :content [@text-field])))
-      (with application (-> (build-application-for-form @form)
-                          (assoc :answers [(build-answer-for-field @text-field "Vastaus")])))
-      (it "should export an answer"
-        (with-redefs [form-store/fetch-by-id  (fn [_] @form)
-                      form-store/fetch-by-key (fn [_] @form)]
-          (with-excel {:skip-answers? false} [file [@application]]
-            (let [workbook          (WorkbookFactory/create file)
-                  application-sheet (.getSheetAt workbook 1)]
-              (verify-sheet-rows-contain
-                #{["Kysymys" "Vastaus"]}
-                application-sheet
-                [0 1]))))))
+          (context "text field:"
+            (context "no followups:"
+              (with text-field (build-field "Kysymys"))
+              (with form (-> (build-form)
+                             (assoc :content [@text-field])))
+              (with application (-> (build-application-for-form @form)
+                                    (assoc :answers [(build-answer-for-field @text-field "Vastaus")])))
+              (it "should export an answer"
+                  (with-redefs [form-store/fetch-by-id  (fn [_] @form)
+                                form-store/fetch-by-key (fn [_] @form)]
+                    (with-excel {:skip-answers? false} [file [@application]]
+                      (let [workbook          (WorkbookFactory/create file)
+                            application-sheet (.getSheetAt workbook 1)]
+                        (verify-sheet-rows-contain
+                         #{["Kysymys" "Vastaus"]}
+                         application-sheet
+                         [0 1]))))))
 
-    (context "has followups:"
-      (with followup (build-field "Lisäkysymys"))
-      (with text-field (-> (build-field "Kysymys")
-                         (assoc :options [{:value     "0"
-                                           :followups [@followup]}])))
-      (with form (-> (build-form)
-                   (assoc :content [@text-field])))
-      (with application (-> (build-application-for-form form)
-                          (assoc :answers [(build-answer-for-field @text-field "Vastaus K")
-                                           (build-answer-for-field @followup "Vastaus LK")])))
-      (it "should export an answer for the field"
-        (with-redefs [form-store/fetch-by-id  (fn [_] @form)
-                      form-store/fetch-by-key (fn [_] @form)]
-          (with-excel {:skip-answers? false} [file [@application]]
-            (let [workbook          (WorkbookFactory/create file)
-                  application-sheet (.getSheetAt workbook 1)]
-              (verify-sheet-rows-contain
-                #{["Kysymys" "Vastaus K"]}
-                application-sheet
-                [0 1])))))
+            (context "has followups:"
+              (with followup (build-field "Lisäkysymys"))
+              (with text-field (-> (build-field "Kysymys")
+                                   (assoc :options [{:value     "0"
+                                                     :followups [@followup]}])))
+              (with form (-> (build-form)
+                             (assoc :content [@text-field])))
+              (with application (-> (build-application-for-form form)
+                                    (assoc :answers [(build-answer-for-field @text-field "Vastaus K")
+                                                     (build-answer-for-field @followup "Vastaus LK")])))
+              (it "should export an answer for the field"
+                  (with-redefs [form-store/fetch-by-id  (fn [_] @form)
+                                form-store/fetch-by-key (fn [_] @form)]
+                    (with-excel {:skip-answers? false} [file [@application]]
+                      (let [workbook          (WorkbookFactory/create file)
+                            application-sheet (.getSheetAt workbook 1)]
+                        (verify-sheet-rows-contain
+                         #{["Kysymys" "Vastaus K"]}
+                         application-sheet
+                         [0 1])))))
 
-      (it "should export an answer for the followup"
-        (with-redefs [form-store/fetch-by-id  (fn [_] @form)
-                      form-store/fetch-by-key (fn [_] @form)]
-          (with-excel {:skip-answers? false} [file [@application]]
-            (let [workbook          (WorkbookFactory/create file)
-                  application-sheet (.getSheetAt workbook 1)]
-              (verify-sheet-rows-contain
-                #{["Lisäkysymys" "Vastaus LK"]}
-                application-sheet
-                [0 1]))))))))
+              (it "should export an answer for the followup"
+                  (with-redefs [form-store/fetch-by-id  (fn [_] @form)
+                                form-store/fetch-by-key (fn [_] @form)]
+                    (with-excel {:skip-answers? false} [file [@application]]
+                      (let [workbook          (WorkbookFactory/create file)
+                            application-sheet (.getSheetAt workbook 1)]
+                        (verify-sheet-rows-contain
+                         #{["Lisäkysymys" "Vastaus LK"]}
+                         application-sheet
+                         [0 1]))))))))

@@ -324,7 +324,8 @@
       (throw e))))
 
 (defn- write-application! [liiteri-cas-client
-                           writer application
+                           writer
+                           application
                            application-review
                            application-review-notes
                            person
@@ -520,7 +521,7 @@
               (partial map-indexed
                        (fn [index oid]
                          (let [name           (get-hakukohde-name get-hakukohde lang haku-oid oid)
-                               priority-index (when (:prioritize-hakukohteet (:tarjonta (get-haku haku-oid)))
+                               priority-index (when (:prioritize-hakukohteet (get-haku haku-oid))
                                                 (str "(" (inc index) ") "))]
                            (if name
                              (str priority-index name " (" oid ")")
@@ -591,6 +592,8 @@
        (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
        (map :oid)))
 
+(def desc #(compare %2 %1))
+
 (defn export-applications
   [liiteri-cas-client
    applications
@@ -614,21 +617,27 @@
         get-latest-form-by-key       (memoize form-store/fetch-by-key)
         get-koodisto-options         (memoize (fn [uri version allow-invalid?]
                                                 (koodisto/get-koodisto-options koodisto-cache uri version allow-invalid?)))
-        get-tarjonta-info            (memoize (fn [haku-oid]
-                                                (tarjonta-parser/parse-tarjonta-info-by-haku
-                                                 koodisto-cache
-                                                 tarjonta-service
-                                                 organization-service
-                                                 ohjausparametrit-service
-                                                 haku-oid)))
+        hakukohteet-by-haku           (->> (group-by :haku applications)
+                                           (map (fn [[haku applications]]
+                                                  [haku (set (mapcat :hakukohde applications))]))
+                                           (into {}))
+        get-pruned-tarjonta-info     (memoize (fn [haku-oid hakukohde-oids]
+                                                (-> (tarjonta-parser/parse-pruned-tarjonta-info-by-haku
+                                                     tarjonta-service
+                                                     organization-service
+                                                     ohjausparametrit-service
+                                                     haku-oid
+                                                     hakukohde-oids)
+                                                    :tarjonta)))
+        get-haku                     (fn [haku-oid] (get-pruned-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid)))
         get-hakukohde                (memoize (fn [haku-oid hakukohde-oid]
-                                                (->> (get-tarjonta-info haku-oid)
-                                                     :tarjonta
+                                                (->> (get-pruned-tarjonta-info haku-oid (get hakukohteet-by-haku haku-oid))
                                                      :hakukohteet
-                                                     (some #(when (= hakukohde-oid (:oid %)) %)))))
-        all-hakukohteet              (delay (->> (group-by :haku applications)
-                                                 (mapcat (fn [[haku applications]]
-                                                           (map #(get-hakukohde haku %) (set (mapcat :hakukohde applications)))))))
+                                                     (filter #(= hakukohde-oid (:oid %)))
+                                                     first)))
+        all-hakukohteet              (delay (->> hakukohteet-by-haku
+                                                 (mapcat (fn [[haku hakukohteet]]
+                                                           (:hakukohteet (get-pruned-tarjonta-info haku hakukohteet))))))
         selected-hakukohde-oids      (or (some-> selected-hakukohde vector)
                                          (and selected-hakukohderyhma
                                               (hakukohderyhma-to-hakukohde-oids all-hakukohteet selected-hakukohderyhma)))
@@ -661,7 +670,7 @@
                                          :else (fn [_] true)))]
     (->> applications
          (map update-hakukohteet-for-legacy-applications)
-         (map (partial add-hakukohde-names get-tarjonta-info get-hakukohde))
+         (map (partial add-hakukohde-names get-haku get-hakukohde))
          (map (partial add-all-hakukohde-reviews get-hakukohde selected-hakukohde-oids))
          (map (partial filter-eligibility-set-automatically selected-hakukohde-oids))
          (reduce (fn [result {:keys [form] :as application}]
@@ -686,9 +695,8 @@
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers application-meta-fields lang)
                           (->> applications
-                               (sort-by :created-time)
-                               (reverse)
-                               (map #(merge % (get-tarjonta-info (:haku %))))
+                               (sort-by :created-time desc)
+                               ;(map #(merge % (get-haku (:haku %))))
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
