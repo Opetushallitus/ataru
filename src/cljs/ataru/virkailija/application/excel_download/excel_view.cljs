@@ -47,38 +47,37 @@
 
 (defn- classes [& cs] (str/join " " (vec cs)))
 
-(defn- accordion-heading [id title folded? child-ids]
-  (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
-        click-action (if folded?
-                       #(dispatch [:editor/unfold id])
-                       #(dispatch [:editor/fold id]))
-        has-children? (not-empty child-ids)]
+(defn- accordion-heading [id title open? child-ids]
+  (let [has-children? (not-empty child-ids)]
     [:h4.application-handling__excel-accordion-heading-wrapper
      [excel-checkbox-control id title]
-     (when has-children? [:button.application-handling__excel-accordion-header-button
-                          {:id (accordion-heading-id id)
-                           :type "button"
-                           "aria-expanded" (not folded?)
-                           "aria-controls" (accordion-content-id id)
-                           :on-click click-action}
-                          [:span.excel-accordion-heading-text
-                           (str @selected-children-count "/" (count child-ids) " valittu")]
-                          [:i
-                           {:class (classes "zmdi"
-                                            (if folded? "zmdi-chevron-down" "zmdi-chevron-up"))}]])]))
+     (when has-children? (let [selected-children-count (subscribe [:application/excel-request-filters-selected-count-by-ids child-ids])
+                               click-action #(dispatch [:application/excel-request-toggle-accordion-open id])]
+                           [:button.application-handling__excel-accordion-header-button
+                            {:id (accordion-heading-id id)
+                             :type "button"
+                             "aria-expanded" open?
+                             "aria-controls" (accordion-content-id id)
+                             :on-click click-action}
+                            [:span.excel-accordion-heading-text
+                             (str @selected-children-count "/" (count child-ids) " valittu")]
+                            [:i
+                             {:class (classes "zmdi"
+                                              (if open? "zmdi-chevron-up" "zmdi-chevron-down"))}]]))]))
 
 (defn excel-accordion
   [id title child-ids content]
-  (let [folded? @(subscribe [:editor/folded? id])]
+  (let [open? @(subscribe [:application/excel-request-accordion-open? id])
+        has-children? (not-empty child-ids)]
     [:div.application-handling__excel-accordion-group
      ^{:key (str "accordion_" id)}
-     [accordion-heading id title folded? child-ids]
-     [:div.application-handling__excel-accordion-content
-      {:id (accordion-content-id id)
-       :role "region"
-       :style {:display (when folded? "none")}
-       "aria-labelledby" (accordion-heading-id id)}
-      ^{:key (accordion-content-id id)} content]]))
+     [accordion-heading id title open? child-ids]
+     (when has-children? [:div.application-handling__excel-accordion-content
+                          {:id (accordion-content-id id)
+                           :role "region"
+                           :style {:display (when (not open?) "none")}
+                           "aria-labelledby" (accordion-heading-id id)}
+                          ^{:key (accordion-content-id id)} content])]))
 
 
 (defn question-wrapper? [item] (contains? #{"wrapperElement" "questionGroup"} (:fieldClass item)))
@@ -115,7 +114,6 @@
   ([form-content form-field-belongs-to]
    (get-excel-checkbox-filter-defs form-content form-field-belongs-to nil 0 0)))
 
-
 (def common-fields
   [{:id "hakemuksen-yleiset-tiedot"
     :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
@@ -123,9 +121,6 @@
    {:id "kasittelymerkinnat"
     :label (:excel-kasittelymerkinnat virkailija-texts)
     :children (map #(select-keys % [:id :label]) kasittelymerkinnat-fields)}])
-
-
-
 
 (defn get-label-trans [l lng default]
   (let [label (into {} (filter #(not-empty (second %)) l))]
