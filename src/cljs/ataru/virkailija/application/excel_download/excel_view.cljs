@@ -42,9 +42,6 @@
    [excel-checkbox id title]
    (when title [:label {:for (checkbox-name id)} title])])
 
-(defn use-excel-download-mode-state []
-  [(subscribe [:application/excel-download-mode])
-   (fn [mode] (dispatch [:application/change-excel-download-mode mode]))])
 
 (defn- classes [& cs] (str/join " " (vec cs)))
 
@@ -193,7 +190,8 @@
         fetching-form-content?     (subscribe [:application/fetching-form-content?])
         fetching-excel? (subscribe [:state-query [:application :excel-request :fetching?]])
         fetching-haut? (subscribe [:editor/fetching-haut?])
-        [excel-download-mode set-excel-download-mode] (use-excel-download-mode-state)]
+        excel-export-mode (subscribe [:application/excel-download-mode])
+        set-excel-export-mode #(dispatch [:application/change-excel-download-mode %])]
     (fn [selected-hakukohde selected-hakukohderyhma filename]
       [:span.application-handling__excel-request-container
        [:a
@@ -214,11 +212,11 @@
               :on-click #(dispatch [:application/set-excel-popup-visibility false])}
              [:i.zmdi.zmdi-close]]]
            [:div.application-handling__excel-download-mode-radiogroup
-            [excel-download-mode-radio "valitse-tiedot" excel-download-mode set-excel-download-mode]
-            [excel-download-mode-radio "kirjoita-tunnisteet" excel-download-mode set-excel-download-mode]]]
+            [excel-download-mode-radio "ids-only" excel-export-mode set-excel-export-mode]
+            [excel-download-mode-radio "with-defaults" excel-export-mode set-excel-export-mode]]]
           [:div
-           (case @excel-download-mode
-             "valitse-tiedot" (if (or @fetching-form-content? @fetching-haut?)
+           (case @excel-export-mode
+             "ids-only" (if (or @fetching-form-content? @fetching-haut?)
                                 [:div
                                  {:style {:display "flex"
                                           :width "100%"
@@ -227,7 +225,7 @@
                                           :margin "50px 0"}}
                                  [:i.zmdi.zmdi-spinner.spin]]
                                 [excel-valitse-tiedot-content selected-hakukohde selected-hakukohderyhma])
-             "kirjoita-tunnisteet" [excel-kirjoita-tunnisteet-content])]
+             "with-defaults" [excel-kirjoita-tunnisteet-content])]
           [:div.application-handling__excel-request-actions
            [:button.application-handling__excel-request-button
             {:disabled (or @fetching-applications? @fetching-excel?)
@@ -243,7 +241,7 @@
             (when (or @fetching-applications? @fetching-excel?)
               [:i.zmdi.zmdi-spinner.spin])]
            (let [some-excel-filters-selected? @(subscribe [:application/excel-request-filters-some-selected?])]
-             (when (= @excel-download-mode "valitse-tiedot")
+             (when (= @excel-export-mode "ids-only")
                [:button.application-handling__excel-toggle-all-button
                 {:on-click (fn [] (dispatch [:application/excel-request-filters-set-all (if some-excel-filters-selected? false true)]))}
                 (if some-excel-filters-selected?

@@ -1709,10 +1709,10 @@
    :excel-hakemuksen-yleiset-tiedot                          {:fi "Hakemuksen yleiset tiedot"
                                                               :sv "Hakemuksen yleiset tiedot"
                                                               :en "Hakemuksen yleiset tiedot"}
-   :excel-mode-valitse-tiedot                                {:fi "Valitse excelin tiedot"
+   :excel-mode-ids-only                                      {:fi "Valitse excelin tiedot"
                                                               :sv "Valitse excelin tiedot"
                                                               :en "Valitse excelin tiedot"}
-   :excel-mode-kirjoita-tunnisteet                           {:fi "Kirjoita tunnisteet"
+   :excel-mode-with-defaults                                 {:fi "Kirjoita tunnisteet"
                                                               :sv "Kirjoita tunnisteet"
                                                               :en "Kirjoita tunnisteet"}
    :excel-valitse-kaikki                                     {:fi "Valitse kaikki"
