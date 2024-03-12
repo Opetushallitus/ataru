@@ -420,12 +420,13 @@
       (- a-field-idx b-field-idx))))
 
 (defn- headers-from-applications
-  [form-fields form-fields-by-id should-include-id? applications]
+  [form-fields form-fields-by-id skip-answers? applications]
   (->> applications
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (not (should-include-id? (:key %)))))
+                    (and skip-answers?
+                         (not (answer-to-always-include? (:key %))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
@@ -454,7 +455,7 @@
                                      form-field-belongs-to)
                   (headers-from-applications form-fields
                                              form-fields-by-id
-                                             should-include-id?
+                                             skip-answers?
                                              applications)))))
 
 (defn- create-form-meta-sheet [workbook styles meta-fields lang]
@@ -600,7 +601,10 @@
    ohjausparametrit-service]
   (let [[^XSSFWorkbook workbook styles] (create-workbook-and-styles)
         should-include-id?       (fn [id] (if skip-answers?
-                                            false
+                                            (if include-default-columns?
+                                              (or (get application-meta-fields-by-id id)
+                                                  (answer-to-always-include? id))
+                                              false)
                                             (or (and include-default-columns?
                                                      (or
                                                       (get application-meta-fields-by-id id)
