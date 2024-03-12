@@ -41,13 +41,17 @@
    {:id        "application-review-notes"
     :label     (:notes excel-texts)}])
 
+(defn- vals-if-map [x] (if (map? x) (vals x) x))
+
 (defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
-  (some->> (first (filter #(= selected-hakukohde (:oid %)) @all-hakukohteet))
-           :hakukohderyhmat))
+  (some->> (vals-if-map @all-hakukohteet)
+           (filter #(= selected-hakukohde (:oid %)))
+           (first)
+           :ryhmaliitokset))
 
 (defn hakukohderyhma-to-hakukohde-oids [all-hakukohteet selected-hakukohderyhma]
-  (->> @all-hakukohteet
-       (filter #(contains? (set (:hakukohderyhmat %)) selected-hakukohderyhma))
+  (->> (vals-if-map @all-hakukohteet)
+       (filter #(contains? (set (:ryhmaliitokset %)) selected-hakukohderyhma))
        (map :oid)))
 
 (defn form-field-belongs-to-hakukohde [form-field selected-hakukohde selected-hakukohderyhma all-hakukohteet]
