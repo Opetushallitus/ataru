@@ -371,3 +371,4 @@
                                 :title "Kk-tutkinnot",
                                 :version 1,
                                 :allow-invalid? false}}]})
+

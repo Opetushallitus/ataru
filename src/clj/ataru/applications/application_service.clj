@@ -817,8 +817,13 @@
           edited-hakutoiveet?          (-> states-and-filters :filters :only-edited-hakutoiveet :edited)
           unedited-hakutoiveet?        (-> states-and-filters :filters :only-edited-hakutoiveet :unedited)
           person-oids                  (when-let [oppilaitos-oid (:school-filter states-and-filters)]
-                                         (let [haku       (tarjonta-service/get-haku tarjonta-service haku-oid)
-                                               hakuvuodet (->> (:hakuajat haku)
+                                         (let [hakuajat (if (some? haku-oid)
+                                                          (:hakuajat (tarjonta-service/get-haku tarjonta-service haku-oid))
+                                                          (->> (tarjonta-service/get-hakukohde tarjonta-service hakukohde-oid)
+                                                               :haku-oid
+                                                               (tarjonta-service/get-haku tarjonta-service)
+                                                               :hakuajat))
+                                               hakuvuodet (->> hakuajat
                                                                (map #(suoritus-filter/year-for-suoritus-filter (:end %)))
                                                                distinct)
                                                valitut-luokat (set (:classes-of-school states-and-filters))
