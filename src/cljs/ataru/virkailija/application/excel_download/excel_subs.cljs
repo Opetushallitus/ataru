@@ -16,10 +16,6 @@
      (filter :checked filters)
      (count filters))))
 
-(re-frame/reg-sub
- :application/excel-request-filters-initialized?
- (fn [db [_]]
-   (not (empty? (get-in-excel db :filters)))))
 
 (re-frame/reg-sub
  :application/excel-download-mode
@@ -49,3 +45,26 @@
  :application/excel-request-filters
  (fn [db [_]]
    (get-in-excel db :filters)))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-initialized?
+ (fn [db [_]]
+   (not (empty? (get-in-excel db :filters)))))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-initializing?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/excel-request-filters-initialized?])
+    (re-frame/subscribe [:application/fetching-form-content?])
+    (re-frame/subscribe [:state-query [:fetching-hakukohteet]])])
+ (fn [[filters-initialized? fetching-form-content? fetching-hakukohteet]]
+   (and (not filters-initialized?)
+        (or fetching-form-content? (> fetching-hakukohteet 0)))))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-need-initialization?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/excel-request-filters-initializing?])
+    (re-frame/subscribe [:application/excel-request-filters-initialized?])])
+ (fn [[filters-initializing? filters-initialized?]]
+   (and (not filters-initialized?) (not filters-initializing?))))
