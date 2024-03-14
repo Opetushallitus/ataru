@@ -152,6 +152,7 @@
                                       (:skip-answers? input-params)
                                       (or (:included-ids input-params) #{})
                                       (:ids-only? input-params)
+                                      :created-time
                                       :fi
                                       (delay {})
                                       (tarjonta-service/new-tarjonta-service)

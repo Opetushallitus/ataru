@@ -140,7 +140,7 @@
                                                             :label     {:fi "Kysymys 2"}
                                                             :value     "Vastaus 2"
                                                             :fieldType "textfield"}
-                                                           {:key       "random_0"
+                                                           {:key       "kysymys_3"
                                                             :label     {:fi "Kysymys 3"}
                                                             :value     "Vastaus 3"
                                                             :fieldType "textfield"}]})
@@ -167,7 +167,7 @@
                                                                  :label     {:fi "Kysymys 4"}
                                                                  :value     "Vastaus 4"
                                                                  :fieldType "textfield"}
-                                                                {:key       "random_0"
+                                                                {:key       "kysymys_5"
                                                                  :label     {:fi "Kysymys 5"}
                                                                  :value     "Vastaus 5"
                                                                  :fieldType "textfield"}

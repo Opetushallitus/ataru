@@ -1,5 +1,5 @@
 (ns ataru.virkailija.application.excel-download.excel-subs
-  (:require [ataru.excel-common :refer [get-in-excel]]
+  (:require [ataru.virkailija.application.excel-download.excel-utils :refer [get-in-excel]]
             [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
@@ -16,10 +16,6 @@
      (filter :checked filters)
      (count filters))))
 
-(re-frame/reg-sub
- :application/excel-request-filters-initialized?
- (fn [db [_]]
-   (not (empty? (get-in-excel db :filters)))))
 
 (re-frame/reg-sub
  :application/excel-download-mode
@@ -44,3 +40,31 @@
  :application/excel-request-accordion-open?
  (fn [db [_ id]]
    (get-in-excel db [:filters id :open?])))
+
+(re-frame/reg-sub
+ :application/excel-request-filters
+ (fn [db [_]]
+   (get-in-excel db :filters)))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-initialized?
+ (fn [db [_]]
+   (not (empty? (get-in-excel db :filters)))))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-initializing?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/excel-request-filters-initialized?])
+    (re-frame/subscribe [:application/fetching-form-content?])
+    (re-frame/subscribe [:state-query [:fetching-hakukohteet]])])
+ (fn [[filters-initialized? fetching-form-content? fetching-hakukohteet]]
+   (and (not filters-initialized?)
+        (or fetching-form-content? (> fetching-hakukohteet 0)))))
+
+(re-frame/reg-sub
+ :application/excel-request-filters-need-initialization?
+ (fn [_ _]
+   [(re-frame/subscribe [:application/excel-request-filters-initializing?])
+    (re-frame/subscribe [:application/excel-request-filters-initialized?])])
+ (fn [[filters-initializing? filters-initialized?]]
+   (and (not filters-initialized?) (not filters-initializing?))))

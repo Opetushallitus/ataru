@@ -120,7 +120,7 @@
   {"application-number"            {:field     [:application :key]}
    "application-submitted-time"    {:field     [:application :submitted]
                                     :format-fn time-formatter}
-   "application-created-time"      {:field     [:application :created-time]
+   "application-modified-time"     {:field     [:application :created-time]
                                     :format-fn time-formatter}
    "application-state"             {:field     [:application :state]
                                     :lang?     true
@@ -164,7 +164,7 @@
 (def ^:private old-application-meta-fields-order
   ["application-number"
    "application-submitted-time"
-   "application-created-time"
+   "application-modified-time"
    "application-state"
    "hakukohde-handling-state"
    "kielitaitovaatimus"
@@ -617,6 +617,7 @@
    skip-answers?
    included-ids
    ids-only?
+   sort-by-field
    lang
    hakukohteiden-ehdolliset
    tarjonta-service
@@ -682,7 +683,7 @@
                           (write-form-meta! meta-writer form applications form-meta-fields lang)
                           (write-headers! header-writer headers)
                           (->> applications
-                               (sort-by :created-time desc)
+                               (sort-by sort-by-field desc)
                                (map-indexed (fn [row-idx application]
                                               (let [row-writer                   (make-writer styles applications-sheet (inc row-idx))
                                                     application-review           (get application-reviews (:key application))
