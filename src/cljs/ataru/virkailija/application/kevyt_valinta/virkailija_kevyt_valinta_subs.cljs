@@ -154,16 +154,14 @@
   :virkailija-kevyt-valinta/valinnan-tulos-for-application
   (fn [[_ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/hakukohde-oid])
-     (re-frame/subscribe [:state-query [:valinta-tulos-service application-key]])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
-  (fn [[selected-hakukohde-oid valinnan-tulokset-for-application korkeakouluhaku?] [_ _ hakukohde-oid]]
+     (re-frame/subscribe [:state-query [:valinta-tulos-service application-key]])])
+  (fn [[selected-hakukohde-oid valinnan-tulokset-for-application] [_ _ hakukohde-oid]]
     (let [valinnantulos (-> valinnan-tulokset-for-application
                             (get (or hakukohde-oid selected-hakukohde-oid))
                             :valinnantulos)]
       (cond->
         valinnantulos
-        (and korkeakouluhaku?
-             (:julkaistavissa valinnantulos)
+        (and (:julkaistavissa valinnantulos)
              (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
                         (keyword (:valinnantila valinnantulos)))
              (= "KESKEN" (:vastaanottotila valinnantulos))
@@ -253,68 +251,68 @@
     (kvr/kevyt-valinta-write-rights-for-hakukohteet? hakukohde-oids rights-by-hakukohde)))
 
 (defn match-kevytvalinta-states
-  [valinnan-tulos-for-application kevyt-valinta-write-rights? korkeakouluhaku?]
+  [valinnan-tulos-for-application kevyt-valinta-write-rights?]
   (let [{valinnan-tila                :valinnantila
          julkaisun-tila               :julkaistavissa
          vastaanotto-tila             :vastaanottotila
          ilmoittautumisen-tila        :ilmoittautumistila
          vastaanotto-deadline-mennyt? :vastaanottoDeadlineMennyt} valinnan-tulos-for-application]
-    (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila kevyt-valinta-write-rights? vastaanotto-deadline-mennyt? korkeakouluhaku?]
-           [_ _ _ _ false _ _]
+    (match [valinnan-tila julkaisun-tila vastaanotto-tila ilmoittautumisen-tila kevyt-valinta-write-rights? vastaanotto-deadline-mennyt?]
+           [_ _ _ _ false _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked
             :kevyt-valinta/ilmoittautumisen-tila :checked}
 
-           [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _ _ _ _]
+           [_ _ "OTTANUT_VASTAAN_TOISEN_PAIKAN" _ _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [(:or "HYLATTY" "VARALLA" "PERUUNTUNUT") true _ _ _ _ _]
+           [(:or "HYLATTY" "VARALLA" "PERUUNTUNUT") true _ _ _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :unchecked
             :kevyt-valinta/vastaanotto-tila      :grayed-out
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?) _ _ _]
+           [_ (_ :guard nil?) (_ :guard nil?) (_ :guard nil?) _ _]
            {:kevyt-valinta/valinnan-tila         :unchecked
             :kevyt-valinta/julkaisun-tila        :grayed-out
             :kevyt-valinta/vastaanotto-tila      :grayed-out
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [_ false _ _ _ _ _]
+           [_ false _ _ _ _]
            {:kevyt-valinta/valinnan-tila         :unchecked
             :kevyt-valinta/julkaisun-tila        :unchecked
             :kevyt-valinta/vastaanotto-tila      :grayed-out
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [_ true "KESKEN" _ _ _ _]
+           [_ true "KESKEN" _ _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :unchecked
             :kevyt-valinta/vastaanotto-tila      :unchecked
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [(:or "HYVAKSYTTY" "VARASIJALTA_HYVAKSYTTY" "PERUNUT") true "EI_VASTAANOTETTU_MAARA_AIKANA" _ _ true true]
+           [(:or "HYVAKSYTTY" "VARASIJALTA_HYVAKSYTTY" "PERUNUT") true "EI_VASTAANOTETTU_MAARA_AIKANA" _ _ true]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _ _ _ _]
+           [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _ _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :unchecked
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
-           [_ true _ "EI_TEHTY" _ _ _]
+           [_ true _ "EI_TEHTY" _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :unchecked
             :kevyt-valinta/ilmoittautumisen-tila :unchecked}
 
-           [_ true _ (_ :guard #(not= % "LASNA")) _ _ _]
+           [_ true _ (_ :guard #(not= % "LASNA")) _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
             :kevyt-valinta/vastaanotto-tila      :checked
@@ -324,10 +322,9 @@
   :virkailija-kevyt-valinta/kevyt-valinta-selection-state
   (fn [[_ _ application-key]]
     [(re-frame/subscribe [:virkailija-kevyt-valinta/valinnan-tulos-for-application application-key])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])
-     (re-frame/subscribe [:virkailija-kevyt-valinta/korkeakouluhaku?])])
-  (fn [[valinnan-tulos-for-application kevyt-valinta-write-rights? korkeakouluhaku?] [_ kevyt-valinta-property]]
-    (let [kevyt-valinta-states (match-kevytvalinta-states valinnan-tulos-for-application kevyt-valinta-write-rights? korkeakouluhaku?)]
+     (re-frame/subscribe [:virkailija-kevyt-valinta/kevyt-valinta-write-rights?])])
+  (fn [[valinnan-tulos-for-application kevyt-valinta-write-rights?] [_ kevyt-valinta-property]]
+    (let [kevyt-valinta-states (match-kevytvalinta-states valinnan-tulos-for-application kevyt-valinta-write-rights?)]
       (kevyt-valinta-states kevyt-valinta-property))))
 
 (re-frame/reg-sub

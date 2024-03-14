@@ -1,9 +1,7 @@
 (ns ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers
   (:require [ataru.virkailija.kevyt-valinta.virkailija-kevyt-valinta-pseudo-random-valintatapajono-oids :as valintatapajono-oids]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-mappings :as mappings]
-            [ataru.virkailija.application.application-subs :as application]
             [ataru.application.filtering :as application-filtering]
-            [clojure.string :as string]
             [cljs-time.core :as t]
             [cljs-time.format :as format]
             [re-frame.core :as re-frame])
@@ -215,20 +213,12 @@
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
 
-(def korkeakouluhaku-selected?
-  (fn [db] (true? (some-> (get-in db [:haut (application/selected-haku-oid db)])
-                          :kohdejoukko-uri
-                          (string/starts-with? "haunkohdejoukko_12#")))))
-
-(re-frame/reg-sub :resolve-korkeakouluhaku-selected (fn [db _] (korkeakouluhaku-selected? db)))
-
 (defn- fake-vastaanottotila-for-deadline-passed
-  [valinnan-tulos db]
+  [valinnan-tulos]
   (let [tulos (:valinnantulos valinnan-tulos)]
     (cond->
       valinnan-tulos
-      (and (korkeakouluhaku-selected? db)
-           (:julkaistavissa tulos)
+      (and (:julkaistavissa tulos)
            (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
                       (keyword (:valinnantila tulos)))
            (= "KESKEN" (:vastaanottotila tulos))
@@ -257,8 +247,7 @@
                                                       hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
-                                                            (fake-vastaanottotila-for-deadline-passed
-                                                              valinnan-tulos db'))))
+                                                            (fake-vastaanottotila-for-deadline-passed valinnan-tulos))))
                                               valinta-tulos-service-db)))))
 
                          (cond-> db'
@@ -286,8 +275,7 @@
                                                       hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
-                                                            (fake-vastaanottotila-for-deadline-passed
-                                                              valinnan-tulos db'))))
+                                                            (fake-vastaanottotila-for-deadline-passed valinnan-tulos))))
                                               valinta-tulos-service-db)))))
 
                          (cond-> db'
