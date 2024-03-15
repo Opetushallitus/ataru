@@ -118,7 +118,7 @@
                                                pohjakoulutus (:POHJAKOULUTUS koosteData)
                                                opetuskieli (:perusopetuksen_kieli koosteData)
                                                suoritusvuosi (:pohjakoulutus_vuosi koosteData)
-                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector application-year) (suoritus-filter/luokkatasot-for-suoritus-filter))
+                                               luokkatieto (suoritus-service/opiskelija suoritus-service person-oid (vector application-year) (suoritus-filter/luokkatasot-for-suoritus-filter) nil)
                                                lahtoluokka (:luokka luokkatieto)
                                                luokkataso (:luokkataso luokkatieto)
                                                lahtokoulu-oid (:oppilaitos-oid luokkatieto)]
