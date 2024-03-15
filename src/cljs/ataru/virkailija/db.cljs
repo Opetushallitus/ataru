@@ -99,6 +99,9 @@
                                                                   :error nil
                                                                   :selected-mode "ids-only"
                                                                   :included-ids nil
+                                                                  :filters-init-params {:selected-hakukohde nil
+                                                                                        :selected-form-key nil
+                                                                                        :selected-hakukohderyhma nil}
                                                                   :filters {}}}
    :haut                       {}
    :hakukohteet                {}

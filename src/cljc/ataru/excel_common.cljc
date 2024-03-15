@@ -42,6 +42,14 @@
    {:id        "application-review-notes"
     :label     (:notes excel-texts)}])
 
+(def common-field-labels
+  [{:id "hakemuksen-yleiset-tiedot"
+    :label (:excel-hakemuksen-yleiset-tiedot virkailija-texts)
+    :children (map #(select-keys % [:id :label]) hakemuksen-yleiset-tiedot-field-labels)}
+   {:id "kasittelymerkinnat"
+    :label (:excel-kasittelymerkinnat virkailija-texts)
+    :children (map #(select-keys % [:id :label]) kasittelymerkinnat-field-labels)}])
+
 (defn- vals-if-map [x] (if (map? x) (vals x) x))
 
 (defn hakukohde-to-hakukohderyhma-oids [all-hakukohteet selected-hakukohde]
