@@ -189,7 +189,7 @@
                                        (remove-yksiloimattomat-applications applications-not-yksiloity))
         application-keys-to-check-set (set application-keys-to-check)
         harkinnanvaraisuudet-from-koostepalvelu (when (< 0 (count application-keys-to-check))
-                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta
+                                                  (valintalaskentakoostepalvelu/hakemusten-harkinnanvaraisuus-valintalaskennasta-no-cache
                                                     valintalaskentakoostepalvelu-service
                                                     application-keys-to-check))
         applications-to-save (->> applications-with-harkinnanvaraisuus
