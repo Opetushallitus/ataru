@@ -153,6 +153,7 @@
                                       (or (:included-ids input-params) #{})
                                       (:ids-only? input-params)
                                       :created-time
+                                      :desc
                                       :fi
                                       (delay {})
                                       (tarjonta-service/new-tarjonta-service)
