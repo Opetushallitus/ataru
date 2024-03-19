@@ -49,7 +49,7 @@
                                       (extract-answer-value "guardian-email-secondary" application)])))
         emails           (->> [(extract-answer-value "email" application)]
                               (concat guardian-emails)
-                              (remove nil?))
+                              (remove empty?))
         translations     (translations/get-translations lang)
         subject          (:email-vain-harkinnanvaraisessa-subject translations)
         body             (selmer/render-file template-name translations)]
