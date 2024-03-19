@@ -163,7 +163,7 @@
 
   :main ataru.core
 
-  :aot [com.stuartsierra.dependency com.stuartsierra.component ataru.db.migrations]
+  :aot [ataru.db.migrations]
 
   :cljsbuild {:builds [{:id           "virkailija-dev"
                         :source-paths ["src/cljs" "src/cljc"]
@@ -285,7 +285,8 @@
   :profiles {:dev            {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                               [reloaded.repl "0.2.4"]
+                                               [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
+                                               [org.clojure/tools.namespace "1.5.0"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
                                                [criterium "0.4.6"]
                                                [com.gfredericks/debug-repl "0.0.12"]]
@@ -298,9 +299,11 @@
              :test           {:dependencies   [[cider/piggieback "0.5.3"]
                                                [figwheel-sidecar "0.5.20"]
                                                [snipsnap "0.2.0" :exclusions [org.clojure/clojure]]
-                                               [reloaded.repl "0.2.4"]
+                                               [reloaded.repl "0.2.4" :exclusions [org.clojure/tools.namespace]]
+                                               [org.clojure/tools.namespace "1.5.0"]
                                                [speclj-junit "0.0.11-20151116.130002-1"]
-                                               [criterium "0.4.6"]]
+                                               [criterium "0.4.6"]
+                                               [com.gfredericks/debug-repl "0.0.12"]]
                               :source-paths   ["dev/clj" "test/cljc/unit" "spec"]
                               :resource-paths ["dev-resources"]
                               :env            {:dev? "true"
