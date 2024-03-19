@@ -1,6 +1,8 @@
 {:config-in-ns {ataru.db.migrations.application-migration-store
                 {:ignore [:unresolved-symbol]}
                 ataru.schema.form-schema
+                {:ignore [:unresolved-symbol]}
+                ataru.db.migrations
                 {:ignore [:unresolved-symbol]}}
  :hooks   {:analyze-call {re-frame.core/reg-event-db  dfreeman.re-frame/reg-event-db
                           re-frame.core/reg-event-fx  dfreeman.re-frame/reg-event-*

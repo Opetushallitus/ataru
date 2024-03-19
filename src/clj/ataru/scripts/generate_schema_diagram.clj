@@ -1,6 +1,6 @@
 (ns ataru.scripts.generate-schema-diagram
   (:require
-    [ataru.db.migrations :as migrations]
+    [ataru.db.flyway-migration :as migration]
     [ataru.schema.form-schema]
     [clojure.java.shell :refer [sh]]
     [environ.core :refer [env]]
@@ -22,5 +22,5 @@
 
 (defn -main
   []
-  (migrations/migrate (new-dummy-audit-logger))
+  (migration/migrate (new-dummy-audit-logger))
   (generate-db-schema-diagram))
