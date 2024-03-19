@@ -1,6 +1,8 @@
 {:config-in-ns {ataru.db.migrations.application-migration-store
                 {:ignore [:unresolved-symbol]}
                 ataru.schema.form-schema
+                {:ignore [:unresolved-symbol]}
+                ataru.db.migrations
                 {:ignore [:unresolved-symbol]}}
  :linters {:not-empty?          {:level :off}
            :refer-all           {:exclude [speclj.core]}

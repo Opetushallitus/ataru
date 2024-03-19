@@ -2,29 +2,21 @@
   (:gen-class)
   (:require [ataru.config.core :refer [config]]
             [ataru.db.db :as db]
-            [taoensso.timbre :as log])
-  (:import [org.flywaydb.core Flyway]
-           [org.flywaydb.core.api.migration.jdbc JdbcMigration]
-           [org.flywaydb.core.api.migration MigrationInfoProvider]
-           [org.flywaydb.core.api MigrationVersion]))
-
-(defn migrate [ds-key & migration-paths]
-              (let [schema-name (-> config ds-key :schema)
-                    flyway      (doto (Flyway.)
-                                  (.setSchemas (into-array String [schema-name]))
-                                  (.setDataSource (db/get-datasource ds-key))
-                                  (.setLocations (into-array String migration-paths)))]
-                (try (.migrate flyway)
-                     (catch Throwable e
-                       (log/error e)
-                       (throw e)))))
-
-(defmacro defmigration [name version description & body]
-  `(deftype ~name []
-     JdbcMigration
-     (migrate [~'this ~'connection]
-       ~@body)
-
-     MigrationInfoProvider
-     (getDescription [~'this] ~description)
-     (getVersion [~'this] (MigrationVersion/fromVersion ~version))))
+            [taoensso.timbre :as log]
+            [ataru.log.audit-log :as audit-log]
+            [ataru.db.migration-implementations :refer [audit-logger]])
+  (:import [org.flywaydb.core Flyway]))
+(defn migrate
+  [audit-logger-to-use]
+  (if (= "use dummy-audit-logger!" audit-logger-to-use)
+    (reset! audit-logger audit-log/new-dummy-audit-logger)
+    (reset! audit-logger audit-logger-to-use))
+  (let [schema-name (-> config :db :schema)
+        flyway      (doto (Flyway.)
+                      (.setSchemas (into-array String [schema-name]))
+                      (.setDataSource (db/get-datasource :db))
+                      (.setLocations (into-array String ["db.migration" "ataru.db.migrations"])))]
+    (try (.migrate flyway)
+         (catch Throwable e
+           (log/error e)
+           (throw e)))))

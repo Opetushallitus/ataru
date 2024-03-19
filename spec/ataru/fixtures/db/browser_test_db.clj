@@ -9,7 +9,7 @@
             [ataru.component-data.person-info-module :as person-info-module]
             [ataru.component-data.base-education-module-higher :refer [base-education-module-higher]]
             [ataru.config.core :refer [config]]
-            [ataru.db.migrations :as migrations]
+            [ataru.db.flyway-migration :as migration]
             [ataru.log.audit-log :as audit-log]))
 
 (defqueries "sql/form-queries.sql")
@@ -411,7 +411,7 @@
 
 (defn reset-test-db [insert-initial-fixtures?]
   (db/clear-db! :db (-> config :db :schema))
-  (migrations/migrate (audit-log/new-dummy-audit-logger))
+  (migration/migrate (audit-log/new-dummy-audit-logger))
   (when insert-initial-fixtures? (init-db-fixture)))
 
 (defn insert-test-form [form-name]
