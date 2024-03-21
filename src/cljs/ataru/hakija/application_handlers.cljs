@@ -2,7 +2,7 @@
   (:require [ataru.config :as config]
             [clojure.string :as string]
             [re-frame.core :refer [reg-event-db reg-event-fx dispatch subscribe after inject-cofx]]
-            [ataru.application-common.application-field-common :refer [sanitize-value]]
+            [ataru.application-common.application-field-common :refer [sanitize-value pad]]
             [schema.core :as s]
             [ataru.application.option-visibility :as option-visibility]
             [ataru.feature-config :as fc]
@@ -460,6 +460,62 @@
                         (assoc answers answer-key (assoc answer :original-value (:value answer))))
                       {})))
 
+(defn- reinitialize-question-group-empty-answers [db answers flat-form-content]
+  (prn "reinitialize-question-group-empty-answers")
+  (prn (get-in db [:application :answers :c98313ba-bdd8-4d67-b6aa-5951b269300b]))
+  (if (empty? answers)
+    db
+    (let [question-group-form-fields (->> flat-form-content
+                                          (filter #(some? (get-in % [:params :question-group-id])))
+                                          (filter #(not (contains? (set person-info-fields/person-info-field-ids) (keyword (:id %))))))
+          question-group-field-ids (set (->> question-group-form-fields
+                                             (map #(keyword (:id %)))))
+          question-group-answers-with-values (->> answers
+                                                  (filter #(contains? question-group-field-ids (keyword (:key %)))))
+          answers-with-values-ids (set (->> question-group-answers-with-values
+                                       (map #(keyword (:key %)))))
+          question-group-answers-without-values (->> question-group-form-fields
+                                                     (map #(get-in db [:application :answers (keyword (:id %))]))
+                                                     (remove nil?)
+                                                     (remove #(contains? answers-with-values-ids (keyword (:id %)))))
+          ;_ (prn question-group-field-ids)
+          ;_ (prn question-group-answers)
+          _ (prn question-group-answers-with-values)
+          map-to-question-group (fn [answer]
+                                   (let [question-group-id (get-in
+                                                             (->> question-group-form-fields
+                                                                (filter #(= (:key answer) (:id %)))
+                                                                first
+                                                                ) [:params :question-group-id])
+                                         amount (count (:value answer))]
+                                     [question-group-id amount]))
+          question-group-ids-with-amounts (into {}
+                                                (->> question-group-answers-with-values
+                                                     (map map-to-question-group)
+                                                     (filter #(> (last %) 1))
+                                                     distinct))
+          _ (prn question-group-ids-with-amounts)
+          map-matching-amount-if-found (fn [answer]
+                                (let [matching-field (->> question-group-form-fields
+                                                          (filter #(= (:id %) (:id answer)))
+                                                          first)
+                                      _ (prn "map-matching-amount")
+                                      _ (prn matching-field)
+                                      amount (->> (get-in matching-field [:params :question-group-id])
+                                                  keyword
+                                                  (get question-group-ids-with-amounts))
+                                      _ (prn amount)
+                                      padded-value (pad amount (:value answer) nil)
+                                      padded-values (pad amount (:values answer) nil)]
+                                  (when amount
+                                    (update-in answer :value padded-value :values padded-values))))
+          updated-answers (->> question-group-answers-without-values
+                               (map map-matching-amount-if-found)
+                               (remove nil?))
+          _ (prn updated-answers)]
+      (update-in db [:application :answers] merge updated-answers)
+    )))
+
 (defn- merge-submitted-answers [db submitted-answers flat-form-content]
   (let [form-fields-by-id (autil/group-by-first (comp keyword :id) flat-form-content)]
     (-> (reduce (fn [db answer]
@@ -504,6 +560,7 @@
         (populate-hakukohde-answers-if-necessary)
         (set-have-finnish-ssn flat-form-content)
         (original-values->answers)
+        (reinitialize-question-group-empty-answers submitted-answers flat-form-content)
         (rules/run-all-rules flat-form-content)
         (set-question-group-row-amounts))))
 
@@ -581,7 +638,8 @@
         questions-with-duplicates  (handlers-util/duplicate-questions-for-hakukohteet-during-form-load (get-in form [:tarjonta :hakukohteet]) hakukohde-oids-to-duplicate questions)
         flat-form-content          (autil/flatten-form-fields questions-with-duplicates)
         selected-language          (:selected-language form)
-        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids selected-language)]
+        initial-answers            (create-initial-answers flat-form-content preselected-hakukohde-oids selected-language)
+        _ (prn "HERERERERE")]
     (-> db
         (update :form (fn [{:keys [selected-language]}]
                         (cond-> form
@@ -702,6 +760,7 @@
         [secret-kwd secret-val]           (if-not (clojure.string/blank? secret)
                                             [:secret secret]
                                             [:virkailija-secret virkailija-secret])]
+    (prn "handle-get-application")
     (util/set-query-param "application-key" (:key application))
     {:db       (-> db
                    (assoc-in [:application :application-identifier] (:application-identifier application))
@@ -862,6 +921,9 @@
 
 (defn- set-repeatable-field-values
   [db id group-idx data-idx value]
+  (prn "set-repatable-field-value")
+  (when (= id :45ec0320-cd32-4968-a86e-f26f62feb37b)
+    (prn group-idx value (some? group-idx)))
   (cond (some? group-idx)
         (let [data-idx (or data-idx 0)]
           (-> db

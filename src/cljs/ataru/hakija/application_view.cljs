@@ -236,13 +236,13 @@
           {:tab-index    "1"
            :on-click     #(reset! hidden? true)
            :data-test-id "send-feedback-button"
-           :autofocus ""}
+           :auto-focus ""}
           (translations/get-hakija-translation :ht-katso-hakemustasi lang)]
          [:button.application__overlay-button.application__overlay-button
           {:tab-index    "2"
            :on-click     #(dispatch [:application/redirect-to-logout (name lang)])
            :data-test-id "logout-button"
-           :autofocus ""}
+           :auto-focus ""}
           [:i.material-icons-outlined.logout
            {:title (translations/get-hakija-translation :ht-kirjaudu-ulos lang)} "logout"]
           (translations/get-hakija-translation :ht-kirjaudu-ulos lang)]]]])))
@@ -275,7 +275,7 @@
          {:tab-index    "1"
           :on-click     #(reset! hidden? true)
           :data-test-id "send-feedback-button"
-          :autofocus ""}
+          :auto-focus ""}
          (translations/get-hakija-translation :application-submitted-ok lang)]]])))
 
 (defn- submit-notification-payment
