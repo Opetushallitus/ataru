@@ -163,7 +163,7 @@
               (boolean (first (filter #(= application-key (:key %)) applications-not-yksiloity))))
           application-keys))
 
-(defn check-harkinnanvaraisuus-step
+(defn check-harkinnanvaraisuus-handler
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service tarjonta-service person-service] :as job-runner}]
   (log/debug "Check harkinnanvaraisuus step starting")
   (let [now       (time/now)
@@ -203,7 +203,7 @@
      :updated-state   {:last-run-long (coerce/to-long now)}
      :next-activation (time/plus now (time/minutes 15))}))
 
-(defn recheck-harkinnanvaraisuus-step
+(defn recheck-harkinnanvaraisuus-handler
   [_ {:keys [ohjausparametrit-service valintalaskentakoostepalvelu-service person-service] :as job-runner}]
   (log/info "Recheck harkinnanvaraisuus step starting")
   (let [now       (time/now)
@@ -255,8 +255,8 @@
      :updated-state   {:last-run-long (coerce/to-long now)}
      :next-activation next-activation}))
 
-(def job-definition {:steps {:initial check-harkinnanvaraisuus-step}
-                     :type  "harkinnanvaraisuus-check"})
+(def job-definition {:handler check-harkinnanvaraisuus-handler
+                     :type    "harkinnanvaraisuus-check"})
 
-(def recheck-job-definition {:steps {:initial recheck-harkinnanvaraisuus-step}
-                             :type "harkinnanvaraisuus-recheck"})
+(def recheck-job-definition {:handler recheck-harkinnanvaraisuus-handler
+                             :type    "harkinnanvaraisuus-recheck"})

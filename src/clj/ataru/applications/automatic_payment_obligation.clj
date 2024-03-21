@@ -18,7 +18,7 @@
    (:kohdejoukko-uri (tarjonta/get-haku tarjonta-service haku-oid))
    "haunkohdejoukko_12#"))
 
-(defn automatic-payment-obligation-job-step
+(defn automatic-payment-obligation-job-handler
   [{:keys [person-oid]}
    {:keys [person-service tarjonta-service henkilo-cache]}]
   (cache/remove-from henkilo-cache person-oid)

@@ -23,6 +23,12 @@
 (def proletarian-options {:proletarian/job-table "proletarian_jobs"
                           :proletarian/archived-job-table "proletarian_archived_jobs"})
 
+(defn- get-handler [job-definition]
+  (if (:steps job-definition)
+    (-> (:steps job-definition)
+        (:initial))
+    (:handler job-definition)))
+
 (defrecord PersistentJobRunner [job-definitions]
   component/Lifecycle
   (start [this]
@@ -43,8 +49,7 @@
 
           (swap! handlers
                  (fn [_] (into {} (for [[_ v] job-definitions]
-                                       [(keyword (:type v)) (-> (:steps v)
-                                                                (:initial))]))))
+                                       [(keyword (:type v)) (get-handler v)]))))
           (worker/start! worker)
           (assoc this :worker worker)))
 

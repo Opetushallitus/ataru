@@ -23,8 +23,7 @@
                                                                        :origin-reference application-key}}))]
         (when (not= 200 (:status response))
           (throw (Exception. (str "Could not finalize attachments for application " application-id))))
-        (log/info (str "Finalized attachments for application " application-id))))
-    {:transition {:id :final}}))
+        (log/info (str "Finalized attachments for application " application-id))))))
 
-(def job-definition {:steps {:initial finalize-attachments}
+(def job-definition {:handler finalize-attachments
                      :type  (str (ns-name *ns*))})
