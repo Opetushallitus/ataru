@@ -2,7 +2,7 @@
   (:require [ataru.forms.form-store :as form-store]
             [ataru.test-utils :refer [export-test-excel with-excel-workbook]]
             [clj-time.core :as clj-time]
-            [speclj.core :as speclj :refer :all]) 
+            [speclj.core :as speclj :refer :all])
   (:import [java.util UUID]))
 
 (defn- get-row
@@ -12,16 +12,17 @@
                            .getStringCellValue))
          (range (.getLastCellNum row)))))
 
-(defn verify-pairs-contain [expected-pairs all-pairs]
-  (speclj/should==
-   expected-pairs
-   (set (filter expected-pairs all-pairs))))
-
-(defn- verify-sheet-rows-contain [expected sheet [header-row-num data-row-num]]
+(defn get-sheet-values-for-comparison [sheet header-row-num data-row-num expected]
   (let [header (get-row sheet header-row-num)
         data   (get-row sheet data-row-num)
         pairs  (map vector header data)]
-    (verify-pairs-contain expected pairs)))
+    (set (filter expected pairs))))
+
+(defn- verify-sheet-rows-contain [expected sheet [header-row-num data-row-num]]
+  (speclj/should== expected (get-sheet-values-for-comparison sheet header-row-num data-row-num expected)))
+
+(defn- verify-sheet-rows-dont-contain [expected sheet [header-row-num data-row-num]]
+  (speclj/should-not== expected (get-sheet-values-for-comparison sheet header-row-num data-row-num expected)))
 
 (defn build-form []
   {:id           123
@@ -43,8 +44,8 @@
    :application-hakukohde-reviews []
    :answers                       []})
 
-(defn build-field [label-fi]
-  {:id         (UUID/randomUUID)
+(defn build-field [label-fi & rest]
+  {:id         (or (first rest) (UUID/randomUUID))
    :label      {:fi label-fi}
    :fieldType  "textField"
    :fieldClass "formField"})
@@ -80,8 +81,9 @@
                   [0 1])))))))
 
    (context "has followups:"
-     (with followup (build-field "Lisäkysymys"))
-     (with text-field (-> (build-field "Kysymys")
+     (with followup (-> (build-field "Lisäkysymys" "lisakysymys")
+                        (assoc :followup-of "kysymys")))
+     (with text-field (-> (build-field "Kysymys" "kysymys")
                           (assoc :options [{:value     "0"
                                             :followups [@followup]}])))
      (with form (-> (build-form)
@@ -101,10 +103,32 @@
                   application-sheet
                   [0 1]))))))
 
-     (it "should export an answer for the followup"
+     (it "should export an answer for the followup with no included-ids and ids-only?=false (old mode)"
          (with-redefs [form-store/fetch-by-id  (fn [_] @form)
                        form-store/fetch-by-key (fn [_] @form)]
-           (with-excel-workbook (export-test-excel [@application] {:skip-answers? false} {} {})
+           (with-excel-workbook (export-test-excel [@application] {:skip-answers? false :ids-only? false} {} {})
+             (fn [workbook]
+               (let [application-sheet (.getSheetAt workbook 1)]
+                 (verify-sheet-rows-contain
+                  #{["Lisäkysymys" "Vastaus LK"]}
+                  application-sheet
+                  [0 1]))))))
+
+     (it "should not export an answer for the followup with included-ids and ids-only?=false (old mode)"
+         (with-redefs [form-store/fetch-by-id  (fn [_] @form)
+                       form-store/fetch-by-key (fn [_] @form)]
+           (with-excel-workbook (export-test-excel [@application] {:skip-answers? false :ids-only? false :included-ids #{"kysymys"}} {} {})
+             (fn [workbook]
+               (let [application-sheet (.getSheetAt workbook 1)]
+                 (verify-sheet-rows-dont-contain
+                  #{["Lisäkysymys" "Vastaus LK"]}
+                  application-sheet
+                  [0 1]))))))
+
+     (it "should export an answer for the followup with included-ids and ids-only?=true (new mode)"
+         (with-redefs [form-store/fetch-by-id  (fn [_] @form)
+                       form-store/fetch-by-key (fn [_] @form)]
+           (with-excel-workbook (export-test-excel [@application] {:ids-only? true :included-ids #{"kysymys"}} {} {})
              (fn [workbook]
                (let [application-sheet (.getSheetAt workbook 1)]
                  (verify-sheet-rows-contain
