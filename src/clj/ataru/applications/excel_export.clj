@@ -183,7 +183,7 @@
 
 (def ^:private old-application-meta-fields
   (map #(merge % (get application-meta-fields-by-id (:id %)))
-       (sort-by #(.indexOf old-application-meta-fields-order (:id %)) 
+       (sort-by #(.indexOf old-application-meta-fields-order (:id %))
                 (concat hakemuksen-yleiset-tiedot-field-labels kasittelymerkinnat-field-labels))))
 
 (defn- create-cell-styles
@@ -398,20 +398,32 @@
             (get form-fields-by-id)
             :per-hakukohde)))
 
-
+(defn- followup-of-any? [form-field included-ids form-fields-by-id]
+  (let [previous-question-id (get form-field :followup-of)]
+    (if (nil? previous-question-id)
+      false
+      (or (contains? included-ids previous-question-id)
+          (followup-of-any? (get form-fields-by-id previous-question-id)
+                            included-ids
+                            form-fields-by-id)))))
 
 (defn- headers-from-form
   [form-fields form-fields-by-id included-ids ids-only? skip-answers? form-field-belongs-to]
-  (let [should-include? (fn [field]
-                          (let [candidate? (and (not (:exclude-from-answers field))
-                                                (util/answerable? field))
-                                hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
-                            (and candidate?
-                                 (if ids-only?
-                                   (contains? included-ids (:id field))
-                                   (and (not skip-answers?)
-                                        (empty? included-ids)
-                                        hakukohde?)))))]
+  (let [should-include?
+        (fn [field]
+          (let [candidate? (and (not (:exclude-from-answers field))
+                                (util/answerable? field))]
+            (and candidate?
+                 (if ids-only?
+                   (or (contains? included-ids (:id field))
+                       (followup-of-any? field included-ids form-fields-by-id))
+                   (let [always? (answer-to-always-include? (:id field))
+                         hakukohde? (not (belongs-to-other-hakukohde? form-field-belongs-to form-fields-by-id field))]
+                     (or always?
+                         (and (not always?)
+                              (not skip-answers?)
+                              (or (and (empty? included-ids) hakukohde?)
+                                  (contains? included-ids (:id field))))))))))]
     (->> form-fields
          (filter should-include?)
          (filter #(not (:per-hakukohde %)))
@@ -450,10 +462,10 @@
        (map-indexed (fn [index application] (map #(assoc % :application-index index) (:answers application))))
        (flatten)
        (remove #(or (contains? form-fields-by-id (:key %))
-                    (not (if ids-only?
-                           (contains? included-ids (:key %))
-                           (or (not skip-answers?)
-                               (answer-to-always-include? (:key %)))))))
+                    (if ids-only?
+                      (not (contains? included-ids (:key %)))
+                      (and skip-answers?
+                           (not (answer-to-always-include? (:key %)))))))
        (map (fn [answer] (if (or (:original-question answer) (:original-followup answer))
                            (duplicate-header-per-hakukohde form-fields answer (nth applications (:application-index answer)))
                            (vector (:key answer) (util/non-blank-val (:label answer) [:fi :sv :en])))))
