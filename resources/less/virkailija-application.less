@@ -109,9 +109,7 @@
    position: relative;
    margin-bottom: 10px;
  }
-.application-handling__excel-request-container {
-  position: relative;
-}
+
 
 
 .application-handling__mass-edit-review-states-container,
@@ -163,23 +161,7 @@
   font-size: 13px;
   line-height: 21px;
 }
-.application-handling__popup__excel {
-  .arrow(top, white, 8px, 90%);
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.30));
-  box-sizing: border-box;
-  display: block;
-  border-radius: 3px;
-  position: absolute;
-  z-index: 10;
-  top: 50px;
-  left: -56px;
-  text-align: start;
-  background-color: white;
-  min-width: 300px;
-  padding: 15px;
-  font-size: 13px;
-  line-height: 21px;
-}
+
 
 .application-handling__mass-review-notes-popup {
   min-width: 500px;
@@ -195,10 +177,7 @@
   left: -94px;
   top: 13px;
 }
-.application-handling__excel-request-popup {
-  min-width: 340px;
-  left: -218px;
-}
+
 
 .application-handling__mass-edit-review-states-title-container,
 .application-handling__mass-review-notes-title-container {
@@ -252,11 +231,6 @@
 .application-handling__mass-edit-review-states-spinner {
   .spin();
   font-size: 50px;
-}
-
-.application-handling__excel-download-link {
-  font-size: 14px;
-  white-space: nowrap;
 }
 
 @media only screen
@@ -1257,9 +1231,6 @@ i.arkistoitu {
   position: relative;
 }
 
-.application-handling__excel-request-row {
-}
-
 .application-handling__information-request-row--checkmark-container {
   height: 100px;
 }
@@ -1323,6 +1294,7 @@ i.arkistoitu {
   color: #1A1919;
   border: 1px solid #ccc;
   border-radius: 2px;
+  max-width: 100%;
 }
 
 .application-handling__information-request-message-area--large,
@@ -1346,32 +1318,6 @@ i.arkistoitu {
   flex-flow: column;
   align-items: center;
   justify-content: center;
-}
-
-.application-handling__excel-request-button {
-  color: @white;
-  background-color: @link-color;
-  border-radius: 3px;
-  box-shadow :none;
-  padding: 5px;
-  height: 41px;
-  width: 100%;
-  margin-right: 0;
-  font-family: 'Open Sans', sans-serif;
-  font-size: 14px;
-  border: none;
-  display: flex;
-  flex-flow: row nowrap;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background-color: @editor-control-button-hover-blue;
-  }
-
-  &:disabled {
-    background-color: @section-gray-border;
-  }
 }
 
 .application-handling__download-attachments-button {
@@ -1486,12 +1432,6 @@ i.arkistoitu {
   margin-right: 10px;
   margin-bottom: 8px;
   .semibold;
-}
-
-.application-handling__excel-request-heading {
-  flex-basis: 95px;
-  display: flex;
-  margin-right: 10px;
 }
 
 @information-request-loader-height: 75px;
@@ -2506,7 +2446,7 @@ i.arkistoitu {
     color: @white;
   }
 }
-w
+
 .attachment-skimming-control-button__icon--offset-left {
   margin-right: 3px;
 }

@@ -9,17 +9,17 @@ runs:
         java-version: '17'
         distribution: 'corretto'
 
-    - uses: szenius/set-timezone@v1.2
+    - uses: MathRobin/timezone-action@v1.1
       with:
         timezoneLinux: "Europe/Helsinki"
 
     - name: Install clojure tools
-      uses: DeLaGuardo/setup-clojure@12.3
+      uses: DeLaGuardo/setup-clojure@12.5
       with:
         lein: 2.9.1
 
     - name: Cache dependencies
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-m2-${{ hashFiles('**/project.clj') }}

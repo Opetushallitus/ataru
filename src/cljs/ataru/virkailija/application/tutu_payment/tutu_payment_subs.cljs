@@ -1,18 +1,16 @@
 (ns ataru.virkailija.application.tutu-payment.tutu-payment-subs
-  (:require
-    [cljs-time.core :as time]
-    [cljs-time.format :as format]
-    [clojure.string :as string]
-    [re-frame.core :as re-frame]))
+  (:require [ataru.virkailija.application.application-selectors :refer [get-tutu-form?
+                                                                        get-tutu-payment-amount-input
+                                                                        get-tutu-payment-note-input]]
+            [cljs-time.core :as time]
+            [cljs-time.format :as format]
+            [clojure.string :as string]
+            [re-frame.core :as re-frame]))
 
 (re-frame.core/reg-sub
  :tutu-payment/tutu-form?
  (fn [_ [_ key]]
-   (let [tutu-forms (string/split (aget js/config "tutu-payment-form-keys") #",")]
-     (boolean
-       (and
-         (not-empty tutu-forms)
-         (some #(= key %) tutu-forms))))))
+   (get-tutu-form? key)))
 
 (re-frame.core/reg-sub
  :tutu-payment/show-review-ui?
@@ -37,14 +35,12 @@
 (re-frame/reg-sub
  :tutu-payment/note-input
  (fn [db [_ application-key]]
-   (or
-    (get-in db [:tutu-payment :inputs application-key :note])
-    "")))
+   (get-tutu-payment-note-input db application-key)
+ ))
 
 (re-frame/reg-sub
   :tutu-payment/duedate-input
   (fn [db [_ application-key]]
-
     (or
       (get-in db [:tutu-payment :inputs application-key :due_date])
       (get-in db [:tutu-payment :applications application-key :decision :due_date])
@@ -54,11 +50,7 @@
 (re-frame/reg-sub
  :tutu-payment/amount-input
  (fn [db [_ application-key]]
-
-   (or
-    (get-in db [:tutu-payment :inputs application-key :amount])
-    (get-in db [:tutu-payment :applications application-key :decision :amount])
-    "")))
+  (get-tutu-payment-amount-input db application-key)))
 
 (re-frame/reg-sub
  :tutu-payment/inputs-filled?

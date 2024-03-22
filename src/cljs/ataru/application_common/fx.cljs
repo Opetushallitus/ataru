@@ -124,8 +124,6 @@
           #(async-validate-value params)
           validation-debounce-ms)))))
 
-
-
 (re-frame/reg-fx
   :set-window-close-callback
   (fn []

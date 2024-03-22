@@ -1,7 +1,9 @@
 (ns ataru.virkailija.application.tutu-payment.tutu-payment-handlers
-  (:require [clojure.string :refer [ends-with?]]
+  (:require [ataru.virkailija.application.application-selectors :refer [get-tutu-payment-amount-input
+                                                                        get-tutu-payment-note-input]]
             [ataru.virkailija.virkailija-ajax :as ajax]
             [cljs-time.format :as f]
+            [clojure.string :refer [ends-with?]]
             [re-frame.core :as re-frame]))
 
 (def iso-formatter (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSZZ"))
@@ -82,8 +84,8 @@
    (let [{:keys [due_date]} (get-in db [:tutu-payment :inputs application-key])
          application (get-in db [:application :selected-application-and-form :application])
          get-field  (fn [key] (->> (:answers application) key :value))
-         message    @(re-frame/subscribe [:tutu-payment/note-input application-key])
-         amount     @(re-frame/subscribe [:tutu-payment/amount-input application-key])
+         message    (get-tutu-payment-note-input db application-key)
+         amount     (get-tutu-payment-amount-input db application-key)
          data {:application-key application-key
                :first-name (get-field :first-name)
                :last-name (get-field :last-name)

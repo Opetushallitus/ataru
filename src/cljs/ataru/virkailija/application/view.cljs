@@ -1,88 +1,28 @@
 (ns ataru.virkailija.application.view
   (:require [ataru.cljs-util :as cljs-util]
             [ataru.virkailija.application.application-list.virkailija-application-list-view :as application-list]
+            [ataru.virkailija.application.application-review-view :as application-review]
             [ataru.virkailija.application.application-search-control :refer [application-search-control]]
             [ataru.virkailija.application.application-subs]
+            [ataru.virkailija.application.attachments.attachments-tab-view :refer [attachments-tab-view]]
             [ataru.virkailija.application.attachments.liitepyynto-information-request-subs]
             [ataru.virkailija.application.attachments.virkailija-attachment-handlers]
             [ataru.virkailija.application.attachments.virkailija-attachment-subs]
+            [ataru.virkailija.application.excel-download.excel-view :refer [excel-download-link]]
             [ataru.virkailija.application.handlers]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-subs]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-handlers]
             [ataru.virkailija.application.kevyt-valinta.virkailija-kevyt-valinta-subs]
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-handlers]
             [ataru.virkailija.application.mass-information-request.virkailija-mass-information-request-view :as mass-information-request-view]
             [ataru.virkailija.application.mass-review.virkailija-mass-review-view :as mass-review]
-            [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
-            [ataru.virkailija.application.view.application-heading :refer [application-heading]]
-            [reagent.core :as r]
-            [re-frame.core :refer [subscribe dispatch]]
-            [ataru.virkailija.application.application-review-view :as application-review]
             [ataru.virkailija.application.pohjakoulutus-toinen-aste.grades-view :refer [grades]]
-            [ataru.virkailija.application.attachments.attachments-tab-view :refer [attachments-tab-view]]
-            [ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view :refer [valinnat]]))
-
-(defn excel-download-link
-  [_ _ _]
-  (let [visible?     (subscribe [:state-query [:application :excel-request :visible?]])
-        included-ids (subscribe [:state-query [:application :excel-request :included-ids]])
-        applications (subscribe [:state-query [:application :applications]])
-        loading?     (subscribe [:application/fetching-applications?])]
-    (fn [selected-hakukohde selected-hakukohderyhma filename]
-      [:span.application-handling__excel-request-container
-       [:a.application-handling__excel-download-link.editor-form__control-button.editor-form__control-button--enabled.editor-form__control-button--variable-width
-        {:on-click #(dispatch [:application/set-excel-popup-visibility true])}
-        @(subscribe [:editor/virkailija-translation :load-excel])]
-       (when @visible?
-         [:div.application-handling__popup__excel.application-handling__excel-request-popup
-          [:div.application-handling__mass-edit-review-states-title-container
-           [:h4.application-handling__mass-edit-review-states-title
-            @(subscribe [:editor/virkailija-translation :excel-request])]
-           [:button.virkailija-close-button
-            {:on-click #(dispatch [:application/set-excel-popup-visibility false])}
-            [:i.zmdi.zmdi-close]]]
-          [:div.application-handling__excel-request-row
-           [:div.application-handling__excel-request-heading @(subscribe [:editor/virkailija-translation :excel-included-ids])]]
-          [:div.application-handling__excel-request-row
-           [:textarea.application-handling__information-request-message-area.application-handling__information-request-message-area--large
-            {:value       (or @included-ids "")
-             :placeholder @(subscribe [:editor/virkailija-translation :excel-include-all-placeholder])
-             :on-change   #(dispatch [:application/set-excel-request-included-ids (-> % .-target .-value)])}]]
-          [:div.application-handling__excel-request-row
-           [:form#excel-download-link
-            {:action "/lomake-editori/api/applications/excel"
-             :method "POST"}
-            [:input {:type  "hidden"
-                     :name  "application-keys"
-                     :value (.stringify js/JSON (clj->js (map :key @applications)))}]
-            [:input {:type  "hidden"
-                     :name  "filename"
-                     :value filename}]
-            [:input {:type  "hidden"
-                     :name  "included-ids"
-                     :value (or @included-ids "")}]
-            (when-let [csrf-token (cljs-util/csrf-token)]
-              [:input {:type  "hidden"
-                       :name  "CSRF"
-                       :value csrf-token}])
-            (when selected-hakukohde
-              [:input {:type  "hidden"
-                       :name  "selected-hakukohde"
-                       :value selected-hakukohde}])
-            (when selected-hakukohderyhma
-              [:input {:type  "hidden"
-                       :name  "selected-hakukohderyhma"
-                       :value selected-hakukohderyhma}])]
-           [:button.application-handling__excel-request-button
-            {:disabled @loading?
-             :on-click (fn [_]
-                         (.submit (.getElementById js/document "excel-download-link")))}
-            [:span
-             (str @(subscribe [:editor/virkailija-translation :load-excel])
-                  (when @loading? " "))
-             (when @loading?
-               [:i.zmdi.zmdi-spinner.spin])]]]])])))
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-handlers]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.pohjakoulutus-toinen-aste-subs]
+            [ataru.virkailija.application.pohjakoulutus-toinen-aste.valinnat-view :refer [valinnat]]
+            [ataru.virkailija.application.view.application-heading :refer [application-heading]]
+            [ataru.virkailija.views.hakukohde-and-hakukohderyhma-search :as h-and-h]
+            [re-frame.core :refer [dispatch subscribe]]
+            [reagent.core :as r]))
 
 (defn- closed-row
   [on-click label]
@@ -109,14 +49,14 @@
           [:i.zmdi.zmdi-spinner.spin])]
        (when (not @opinto-ohjaaja)
          (closed-row (if @list-opened close-list open-list)
-           (cond (some? selected-hakukohde-oid)
-                 @(subscribe [:application/hakukohde-name
-                              selected-hakukohde-oid])
-                 (some? selected-hakukohderyhma-oid)
-                 @(subscribe [:application/hakukohderyhma-name
-                              selected-hakukohderyhma-oid])
-                 :else
-                 @(subscribe [:editor/virkailija-translation :all-hakukohteet]))))
+                     (cond (some? selected-hakukohde-oid)
+                           @(subscribe [:application/hakukohde-name
+                                        selected-hakukohde-oid])
+                           (some? selected-hakukohderyhma-oid)
+                           @(subscribe [:application/hakukohderyhma-name
+                                        selected-hakukohderyhma-oid])
+                           :else
+                           @(subscribe [:editor/virkailija-translation :all-hakukohteet]))))
        (when @list-opened
          [h-and-h/popup
           [h-and-h/search-input
@@ -161,16 +101,15 @@
 
 (defn- application-information-request-contains-modification-link []
   (let [checked?           (subscribe [:application/is-mass-information-link-checkbox-set?])]
-  [:div.application-handling__information-request-row
-   [:label
-    [:input
-     {:type      "checkbox"
-      :data-test-id "mass-send-update-link"
-      :checked   @checked?
-      :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
-                               (dispatch [:application/set-mass-send-update-link checkedNewValue])))}]
-    [:span @(subscribe [:editor/virkailija-translation :send-update-link])]]])
-  )
+    [:div.application-handling__information-request-row
+     [:label
+      [:input
+       {:type      "checkbox"
+        :data-test-id "mass-send-update-link"
+        :checked   @checked?
+        :on-change (fn [event] (let [checkedNewValue (boolean (-> event .-target .-checked))]
+                                 (dispatch [:application/set-mass-send-update-link checkedNewValue])))}]
+      [:span @(subscribe [:editor/virkailija-translation :send-update-link])]]]))
 
 (defn haku-heading
   []
@@ -235,9 +174,9 @@
            @(subscribe [:editor/virkailija-translation :grades])]
           (when @has-right-to-valinnat-tab?
             [:button
-              {:on-click #(dispatch [:application/select-application-tab "valinnat"])
-               :disabled (= "valinnat" @selected-application-tab)}
-              @(subscribe [:editor/virkailija-translation :valinnat])])])
+             {:on-click #(dispatch [:application/select-application-tab "valinnat"])
+              :disabled (= "valinnat" @selected-application-tab)}
+             @(subscribe [:editor/virkailija-translation :valinnat])])])
        (cond
          (or (not @toisen-asteen-yhteishaku?) (= "application" @selected-application-tab))
          [application-review/application-review-area]
@@ -249,8 +188,8 @@
          [grades]
 
          (and
-           @has-right-to-valinnat-tab?
-           (= "valinnat" @selected-application-tab))
+          @has-right-to-valinnat-tab?
+          (= "valinnat" @selected-application-tab))
          [valinnat])])))
 
 (defn application []

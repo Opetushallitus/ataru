@@ -2,13 +2,13 @@
   (:require [clojure.set :as set]
             [re-frame.core :as re-frame]
             [ataru.application.review-states :as review-states]
-            [ataru.virkailija.application.application-subs :as application-subs]))
+            [ataru.virkailija.application.application-selectors :refer [application-list-selected-by]]))
 
 (re-frame/reg-sub
  :application/show-mass-update-link?
  (fn [db]
    (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
-         list-selected-by (application-subs/application-list-selected-by db)]
+         list-selected-by (application-list-selected-by db)]
      (and (not-empty (-> db :application :applications))
           (not (and yhteishaku? (= list-selected-by :selected-haku)))
           (some? list-selected-by)))))
@@ -17,14 +17,14 @@
  :application/hakukohde-filtering-for-yhteishaku?
  (fn [db]
    (let [yhteishaku?      (get-in db [:haut (-> db :application :selected-haku) :yhteishaku])
-         list-selected-by (application-subs/application-list-selected-by db)]
+         list-selected-by (application-list-selected-by db)]
      ;; jos yhteishaku, pelkkä haku-rajaus ei riitä vaan pitää olla hakukohde/hakukohderyhmä
      (not (and yhteishaku? (= list-selected-by :selected-haku))))))
 
 (re-frame/reg-sub
  :application/applications-visible-with-some-filter?
  (fn [db]
-   (let [list-selected-by (application-subs/application-list-selected-by db)]
+   (let [list-selected-by (application-list-selected-by db)]
      (and (not-empty (-> db :application :applications)) ;;on hakemuksia listalla
           (some? list-selected-by))))) ;; on joku rajaus päällä
 
@@ -48,7 +48,7 @@
  :application/show-excel-link?
  (fn [db]
    (and (not-empty (-> db :application :applications))
-        (some? (application-subs/application-list-selected-by db)))))
+        (some? (application-list-selected-by db)))))
 
 (re-frame/reg-sub
  :application/user-allowed-fetching?

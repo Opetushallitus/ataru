@@ -51,7 +51,8 @@
         [:div.main-container
          [:div.modal-container
           [:input#editor-form__copy-question-id-container
-           {:value ""}]
+           {:value "" 
+            :read-only true}]
           [snackbar]
           [application-version-changes]
           (when @template-editor-visible?
