@@ -252,8 +252,9 @@
                             (filterv allowed-values values)))
         sanitize-question-group-values (fn [allowed-values values]
                                          (mapv (partial sanitize-values allowed-values) values))]
-    (if (and (not-empty (:options field-descriptor))
-             (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor)))
+    (if (or (and (not-empty (:options field-descriptor))
+              (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor)))
+            (< 1 question-group-highest-dimension))
       (let [allowed-values (set (map :value (:options field-descriptor)))]
         (if (vector? value)
           (if (or (vector? (first value)) (nil? (first value)))
