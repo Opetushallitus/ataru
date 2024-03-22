@@ -11,8 +11,8 @@
       (let [app (:app env)]
            (case app
                  "ataru-editori" (do
-                                    (require 'ataru.hakija.hakija-system)
-                                    (resolve 'ataru.hakija.hakija-system/new-system))
+                                    (require 'ataru.virkailija.virkailija-system)
+                                    (resolve 'ataru.virkailija.virkailija-system/new-system))
                  "ataru-hakija" (do
                                    (require 'ataru.hakija.hakija-system)
                                    (resolve 'ataru.hakija.hakija-system/new-system))
