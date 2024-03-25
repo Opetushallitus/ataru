@@ -437,11 +437,16 @@
         text-area?                (= "Tekstialue" header-label)
         component-locked?         (subscribe [:editor/component-locked? path])
         toisen-asteen-yhteishaku? (subscribe [:editor/toisen-asteen-yhteishaku?])
-        admin?                    (subscribe [:editor/superuser?])]
+        admin?                    (subscribe [:editor/superuser?])
+        data-test-id (if text-area?
+                       "editor-form__text-area"
+                       "editor-form__text-field")]
     (fn [initial-content followups path & {:keys [header-label _ size-label]}]
       [:div.editor-form__component-wrapper
+       {:data-test-id (str data-test-id "-component-wrapper")}
        [text-header-component/text-header (:id initial-content) header-label path (:metadata initial-content)
-        :sub-header @sub-header]
+        :sub-header @sub-header
+        :data-test-id data-test-id]
        [component-content/component-content
         path
         [:div
