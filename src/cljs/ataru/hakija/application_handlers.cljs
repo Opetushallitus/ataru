@@ -466,6 +466,7 @@
   (if (empty? answers)
     db
     (let [question-group-form-fields (->> flat-form-content
+                                          (filter #(= :formField (keyword (:fieldClass %))))
                                           (filter #(some? (get-in % [:params :question-group-id])))
                                           (filter #(not (contains? (set person-info-fields/person-info-field-ids) (keyword (:id %))))))
           question-group-field-ids (set (->> question-group-form-fields
@@ -565,7 +566,7 @@
         (populate-hakukohde-answers-if-necessary)
         (set-have-finnish-ssn flat-form-content)
         (original-values->answers)
-        ;(reinitialize-question-group-empty-answers submitted-answers flat-form-content)
+        (reinitialize-question-group-empty-answers submitted-answers flat-form-content)
         (rules/run-all-rules flat-form-content)
         (set-question-group-row-amounts))))
 
