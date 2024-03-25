@@ -6,7 +6,6 @@ import {
   teeJaOdotaLomakkeenTallennusta,
 } from '../playwright-ataru-utils'
 import { unsafeFoldOption, waitForResponse } from '../playwright-utils'
-import { text } from 'stream/consumers'
 
 test.describe.configure({ mode: 'serial' })
 
