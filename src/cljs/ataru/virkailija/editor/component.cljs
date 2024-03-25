@@ -197,6 +197,7 @@
         component-locked? (subscribe [:editor/component-locked? path])]
     (fn [content path children]
       [:div.editor-form__component-wrapper
+       {:data-test-id "editor-form__adjacent-fieldset-component-wrapper"}
        [text-header-component/text-header (:id content) @(subscribe [:editor/virkailija-translation :adjacent-fieldset]) path (:metadata content)
         :sub-header @sub-header]
        [component-content/component-content

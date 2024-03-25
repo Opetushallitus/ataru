@@ -336,7 +336,7 @@
             field-type     (:fieldType @value)
             show-followups (r/atom nil)]
         [:div.editor-form__component-wrapper
-         {:data-test-id "editor-form__dropdopwn-component-wrapper"}
+         {:data-test-id (str "editor-form__" field-type "-component-wrapper")}
          (let [header       (case field-type
                               "dropdown" (if (some? @options-koodisto)
                                            @(subscribe [:editor/virkailija-translation :dropdown-koodisto])
