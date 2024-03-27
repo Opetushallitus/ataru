@@ -618,6 +618,7 @@
 (defn- school-and-class-filters
   []
   (let [opinto-ohjaaja-or-admin?   (subscribe [:editor/opinto-ohjaaja-or-admin?])
+        only-opinto-ohjaaja?       (subscribe [:editor/all-organizations-have-only-opinto-ohjaaja-rights?])
         schools                    (subscribe [:application/schools-of-departure])
         filtered-schools           (subscribe [:application/schools-of-departure-filtered])
         selected-school            (subscribe [:application/pending-selected-school])
@@ -656,7 +657,8 @@
                  {:title (selected-school-name @selected-school @filtered-schools)
                   :id    "selected-school"}
                   (selected-school-name @selected-school @filtered-schools)]
-               (when (not= (count @schools) 1)
+               (when (not (and @only-opinto-ohjaaja?
+                               (= (count @schools) 1)))
                 [:button.virkailija-close-button.application-handling__filters-popup-close-button
                  {:id       "remove-selected-school-button"
                   :on-click (fn [_]
