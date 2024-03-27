@@ -86,6 +86,7 @@
             [ataru.applications.suoritus-filter :as suoritus-filter]
             [ataru.person-service.person-service :as person-service]
             [ataru.valintalaskentakoostepalvelu.pohjakoulutus-toinen-aste :as pohjakoulutus-toinen-aste]
+            [ataru.tarjonta-service.tarjonta-parser :as tarjonta-parser]
             [cuerdas.core :as str]
             [clj-time.format :as f]
             [ataru.virkailija.virkailija-application-service :as virkailija-application-service])
@@ -507,9 +508,17 @@
                                (f/parse (:date-time f/formatters))
                                (suoritus-filter/year-for-suoritus-filter))
               luokkatasot (suoritus-filter/luokkatasot-for-suoritus-filter)
+              tarjonta-info (when haku-oid
+                              (tarjonta-parser/parse-tarjonta-info-by-haku
+                               koodisto-cache
+                               tarjonta-service
+                               organization-service
+                               ohjausparametrit-service
+                               haku-oid))
+              haku-end    (get-in tarjonta-info [:tarjonta :hakuaika :end])
               linked-oids (get (person-service/linked-oids person-service [henkilo-oid]) henkilo-oid)
               aliases     (conj (:linked-oids linked-oids) (:master-oid linked-oids))
-              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % [hakuvuosi] luokkatasot) aliases)]
+              opiskelijat (map #(suoritus-service/opiskelija suoritus-service % [hakuvuosi] luokkatasot haku-end) aliases)]
           (if-let [opiskelija (last (sort-by :alkupaiva opiskelijat))]
             (let [[organization] (organization-service/get-organizations-for-oids organization-service [(:oppilaitos-oid opiskelija)])]
               (response/ok
