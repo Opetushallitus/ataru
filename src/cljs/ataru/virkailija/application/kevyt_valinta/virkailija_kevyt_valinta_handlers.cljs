@@ -213,6 +213,18 @@
               :handler-or-dispatch :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos
               :handler-args        {:application-key application-key}}})))
 
+(defn- fake-vastaanottotila-for-deadline-passed
+  [valinnan-tulos]
+  (let [tulos (:valinnantulos valinnan-tulos)]
+    (cond->
+      valinnan-tulos
+      (and (:julkaistavissa tulos)
+           (contains? #{:HYVAKSYTTY :VARASIJALTA_HYVAKSYTTY :PERUNUT}
+                      (keyword (:valinnantila tulos)))
+           (= "KESKEN" (:vastaanottotila tulos))
+           (:vastaanottoDeadlineMennyt tulos))
+      (assoc-in [:valinnantulos :vastaanottotila] "EI_VASTAANOTETTU_MAARA_AIKANA"))))
+
 (re-frame/reg-event-fx
   :virkailija-kevyt-valinta/handle-fetch-valinnan-tulos-monelle
   (fn [{db :db} [_ response {application-keys :application-keys}]]
@@ -235,7 +247,7 @@
                                                       hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
-                                                            valinnan-tulos)))
+                                                            (fake-vastaanottotila-for-deadline-passed valinnan-tulos))))
                                               valinta-tulos-service-db)))))
 
                          (cond-> db'
@@ -263,7 +275,7 @@
                                                       hakukohde-oid (-> valinnan-tulos :valinnantulos :hakukohdeOid)]
                                                   (assoc-in acc
                                                             [hakemus-oid hakukohde-oid]
-                                                            valinnan-tulos)))
+                                                            (fake-vastaanottotila-for-deadline-passed valinnan-tulos))))
                                               valinta-tulos-service-db)))))
 
                          (cond-> db'

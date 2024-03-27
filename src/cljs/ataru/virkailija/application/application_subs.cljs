@@ -168,11 +168,11 @@
     (let [selected-hakukohde-oid  (get-in db [:application :selected-hakukohde])
           selected-hakukohderyhma (get-in db [:application :selected-hakukohderyhma])]
       (cond (some? selected-hakukohde-oid)
-            (get-in db [:hakukohteet selected-hakukohde-oid :haku-oid])
-            (some? selected-hakukohderyhma)
-            (first selected-hakukohderyhma)
-            :else
-            (get-in db [:application :selected-haku])))))
+        (get-in db [:hakukohteet selected-hakukohde-oid :haku-oid])
+        (some? selected-hakukohderyhma)
+        (first selected-hakukohderyhma)
+        :else
+        (get-in db [:application :selected-haku])))))
 
 (re-frame/reg-sub
   :application/list-heading-data-for-haku
