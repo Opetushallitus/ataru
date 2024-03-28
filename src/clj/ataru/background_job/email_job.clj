@@ -28,4 +28,6 @@
   (log/info "Successfully sent email to" recipients))
 
 (def job-definition {:handler send-email-handler
-                     :type    (str (ns-name *ns*))})
+                     :type    (str (ns-name *ns*))
+                     :queue   {:proletarian/worker-threads 2
+                               :proletarian/polling-interval-ms 1000}})

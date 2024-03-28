@@ -241,8 +241,9 @@
 
 (defonce suoritus-chunk-size 10000)
 (defn start-automatic-eligibility-if-ylioppilas-job-job-handler
-  [{:keys [last-run-long]} job-runner]
+  [_ job-runner]
   (let [now                   (time/now)
+        last-run-long         (coerce/to-long (time/minus (time/minus now (time/days 1)) (time/minutes 15)))
         suoritukset           (suoritus-service/ylioppilas-ja-ammatilliset-suoritukset-modified-since
                                 (:suoritus-service job-runner)
                                 (coerce/from-long last-run-long))
@@ -255,7 +256,4 @@
       (let [application-ids (get-application-ids suoritus-chunk)]
         (log/info (str "Check automatic eligibility for chunk " n "/" suoritus-chunks-count ". Count: " (count application-ids)))
         (doseq [application-id application-ids]
-          (start-automatic-eligibility-if-ylioppilas-job job-runner application-id))))
-    {:transition      {:id :to-next :step :initial}
-     :updated-state   {:last-run-long (coerce/to-long now)}
-     :next-activation (time/plus now (time/days 1))}))
+          (start-automatic-eligibility-if-ylioppilas-job job-runner application-id))))))
