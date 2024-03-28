@@ -111,7 +111,9 @@
                  [oph/clj-string-normalizer "0.1.0-SNAPSHOT" :exclusions [org.jboss.logging/jboss-logging com.google.guava/guava]]
                  [com.google.guava/guava "31.1-jre"]
                  [funcool/cuerdas "2.2.0"]
-                 [msolli/proletarian "1.0.68-alpha"]]
+                 [msolli/proletarian "1.0.68-alpha"]
+                 [jarohen/chime "0.3.3"]
+                 [cronstar "1.0.2"]]
 
   :min-lein-version "2.5.3"
 
