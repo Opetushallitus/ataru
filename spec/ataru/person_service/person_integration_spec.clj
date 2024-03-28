@@ -37,7 +37,7 @@
           (it "upserts a person and updates application but does not add an event for a normal created person"
               (with-redefs [application-store/get-application (stub :get-application
                                                                     {:return (test-application-with-id (:normal test-application-ids))})]
-                (should= {:transition {:id :final}}
+                (should= "1.2.3.4.5.6"
                          (person-integration/upsert-person {:application-id (:normal test-application-ids)} {:person-service fake-person-service}))
                 (should-have-invoked :start-jobs-for-person {:with [{:person-service fake-person-service} (:normal test-person-oids)]})
                 (should-have-invoked :add-person-oid {:with [(:normal test-application-ids) (:normal test-person-oids)]})
@@ -46,7 +46,7 @@
           (it "upserts a person, updates application and adds an event for person with matching email, date of birth and gender"
               (with-redefs [application-store/get-application (stub :get-application
                                                                     {:return (test-application-with-id (:matched-person test-application-ids))})]
-                (should= {:transition {:id :final}}
+                (should= "2.3.4.5.6.7"
                          (person-integration/upsert-person {:application-id (:matched-person test-application-ids)} {:person-service fake-person-service}))
                 (should-have-invoked :start-jobs-for-person {:with [{:person-service fake-person-service} (:matched-person test-person-oids)]})
                 (should-have-invoked :add-person-oid {:with [(:matched-person test-application-ids) (:matched-person test-person-oids)]})
@@ -55,7 +55,7 @@
           (it "upserts a person, updates application and adds an event for person with matching email, but conflicting date of birth or gender"
               (with-redefs [application-store/get-application (stub :get-application
                                                                     {:return (test-application-with-id (:conflicting-person test-application-ids))})]
-                (should= {:transition {:id :final}}
+                (should= "3.4.5.6.7.8"
                          (person-integration/upsert-person {:application-id (:conflicting-person test-application-ids)} {:person-service fake-person-service}))
                 (should-have-invoked :start-jobs-for-person {:with [{:person-service fake-person-service} (:conflicting-person test-person-oids)]})
                 (should-have-invoked :add-person-oid {:with [(:conflicting-person test-application-ids) (:conflicting-person test-person-oids)]})
