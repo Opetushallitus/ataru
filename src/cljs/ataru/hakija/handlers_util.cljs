@@ -1,8 +1,9 @@
 (ns ataru.hakija.handlers-util
-  (:require [ataru.application-common.application-field-common :refer [required-validators]]
+  (:require [ataru.application-common.application-field-common :refer [required-validators pad]]
             [ataru.util :as util]
             [ataru.application-common.hakukohde-specific-questions :as hsq]
-            [ataru.application-common.comparators :as comparators]))
+            [ataru.application-common.comparators :as comparators]
+            [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
   [tarjonta-hakukohteet hakukohde-oid question]
@@ -109,3 +110,55 @@
   (apply-to-questions-and-first-level-children
     #(sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet) %)
     questions))
+
+(def keywordized-id  (comp keyword :id))
+(def keywordized-key (comp keyword :key))
+
+; Pads an (empty) answer to the maximum question group dimension.
+; Returns nil when there are no answers with values to match to.
+(defn- pad-to-matching-length-if-necessary
+  [question-group-field-group-ids question-group-max-dimensions answer]
+  (let [dimension (->> (get question-group-field-group-ids (:key answer))
+                       (get question-group-max-dimensions))]
+    (when dimension
+      (-> answer
+          (assoc :value  (pad dimension (:value answer)  nil))
+          (assoc :values (pad dimension (:values answer) nil))))))
+
+; Answers returned from the backend don't explicitly include empty ones, but they are reconstructed in db.
+; Makes sure all empty answers that belong to question group have the same cardinality as non-empty ones
+; inside the question group in db. Pads with nils in case of mismatches.
+; Skips standard person info fields and other than actually fillable form fields.
+(defn reinitialize-question-group-empty-answers [db answers flat-form-content]
+  (if (empty? answers)
+    db
+    (let [question-group-field-group-ids        (->> flat-form-content
+                                                     (filter #(and (some? (get-in % [:params :question-group-id]))
+                                                                   (= :formField (keyword (:fieldClass %)))
+                                                                   (not (contains? (set person-info-fields/person-info-field-ids) (keywordized-id %)))))
+                                                     (map #(vector (keywordized-id %)
+                                                                   (keyword (get-in % [:params :question-group-id]))))
+                                                     (into {}))
+          question-group-answer-value-counts    (->> answers
+                                                     (filter #(contains? question-group-field-group-ids (keywordized-key %)))
+                                                     (map #(vector (keywordized-key %) (count (:value %))))
+                                                     (into {}))
+          question-group-max-dimensions         (->> question-group-answer-value-counts
+                                                     (map #(vector (get question-group-field-group-ids (first %))
+                                                                   (last %)))
+                                                     (filter #(> (last %) 1)) ; We only need to consider padding when group dimension >1
+                                                     distinct ; Assume all answers with values inside question group have matching dimensions
+                                                     (into {}))
+          question-group-answers-without-values (->> (keys question-group-field-group-ids)
+                                                     (remove #(contains? question-group-answer-value-counts %))
+                                                     (map #(assoc (get-in db [:application :answers %]) :key %)))
+          answers-to-update                     (->> question-group-answers-without-values
+                                                     (map (partial pad-to-matching-length-if-necessary
+                                                                   question-group-field-group-ids question-group-max-dimensions))
+                                                     (remove nil?))]
+      (reduce (fn [db answer]
+                    (assoc-in db 
+                              [:application :answers (:key answer)]
+                              (dissoc answer :key)))
+                  db
+                  answers-to-update))))

@@ -504,6 +504,7 @@
         (populate-hakukohde-answers-if-necessary)
         (set-have-finnish-ssn flat-form-content)
         (original-values->answers)
+        (handlers-util/reinitialize-question-group-empty-answers submitted-answers flat-form-content)
         (rules/run-all-rules flat-form-content)
         (set-question-group-row-amounts))))
 

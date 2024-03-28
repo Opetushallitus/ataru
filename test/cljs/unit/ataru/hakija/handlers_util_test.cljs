@@ -119,3 +119,132 @@
         questions [{:id "q1"} {:id "q2" :original-question "q1" :validators ["required"]}]
         result (util/fill-missing-answer-for-hakukohde answers questions)]
     (is (= false (:valid (:q2 result))))))
+
+(def test-flat-form
+  [{:params {:size "M"},
+    :rules {},
+    :validators ["required"],
+    :fieldClass "formField",
+    :cannot-edit true,
+    :label {:fi "Sukunimi", :sv "Efternamn", :en "Surname/Family name"},
+    :id "last-name",
+    :cannot-view false,
+    :metadata {:created-by {:name "system", :oid "system", :date "1970-01-01T00:00:00Z"}}}
+   {:label {:fi "Kysymysryhmä", :sv ""},
+    :fieldClass "questionGroup",
+    :id "04bf89e0-2fec-4f7a-941c-40c91f8f593a",
+    :params {}, :metadata {:created-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:19:15Z"},
+                           :modified-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:19:37Z"}},
+    :fieldType "fieldset"}
+   {:children-of "04bf89e0-2fec-4f7a-941c-40c91f8f593a",
+    :params {:repeatable true, :question-group-id :04bf89e0-2fec-4f7a-941c-40c91f8f593a},
+    :fieldClass "formField",
+    :cannot-edit false,
+    :label {:fi "Vapaamuotoinen vastaus", :sv ""},
+    :id "2c97597f-2e52-43b0-a0a2-b8b022e572af",
+    :cannot-view false,
+    :metadata {:created-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:19:42Z"},
+               :modified-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:19:47Z"}},
+    :fieldType "textField"}
+   {:label {:fi "Infoteksti"},
+    :text {:fi "Tässä infotekstiä"},
+    :fieldClass "infoElement",
+    :id "efeb883a-8dfd-4933-b1c1-5751b7147eda",
+    :params {:question-group-id :04bf89e0-2fec-4f7a-941c-40c91f8f593a},
+    :metadata {:created-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:21:45Z"},
+               :modified-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:21:49Z"}},
+    :fieldType "p", :children-of "04bf89e0-2fec-4f7a-941c-40c91f8f593a"}
+   {:children-of "04bf89e0-2fec-4f7a-941c-40c91f8f593a",
+    :params {:max-value "2024", :numeric true, :min-value "1900", :question-group-id :04bf89e0-2fec-4f7a-941c-40c91f8f593a},
+    :validators ["numeric"],
+    :fieldClass "formField",
+    :cannot-edit false,
+    :label {:fi "Vapaamuotoinen vastaus 2", :sv ""}, :id "51207053-6674-47d1-b88e-c0f8ab5cee92",
+    :cannot-view false,
+    :options [{:label {:fi "", :sv ""}, :value "0", :condition {:comparison-operator "<", :answer-compared-to 2020}}],
+    :metadata {:created-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:25:56Z"},
+               :modified-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:26:27Z"}},
+    :fieldType "textField"}
+   {:params {:question-group-id :04bf89e0-2fec-4f7a-941c-40c91f8f593a},
+    :option-value "0", :fieldClass "formField", :cannot-edit false,
+    :label {:fi "Lisäkysymys kun yli 2020", :sv ""},
+    :id "ce039866-a75c-4641-b444-0218e7421ad0",
+    :cannot-view false,
+    :followup-of "51207053-6674-47d1-b88e-c0f8ab5cee92",
+    :metadata {:created-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:26:36Z"},
+               :modified-by {:name "Virkailija", :oid "1.2.246.562.24.76008520040", :date "2024-03-27T11:26:40Z"}},
+    :fieldType "textField"}])
+
+(defn test-answers
+  [add-remaining-answer]
+  (let [answers [{:duplikoitu-followup-hakukohde-oid nil,
+                  :key "last-name", :value "Henkilö",
+                  :duplikoitu-kysymys-hakukohde-oid nil,
+                  :original-question nil,
+                  :fieldType "textField",
+                  :original-followup nil}
+                 {:duplikoitu-followup-hakukohde-oid nil,
+                  :key "2c97597f-2e52-43b0-a0a2-b8b022e572af",
+                  :value [["Vastaan tähän jotain" "Tähän vielä toinen kohta"] ["Tähänkin vastaus"]],
+                  :duplikoitu-kysymys-hakukohde-oid nil,
+                  :original-question nil,
+                  :fieldType "textField",
+                  :original-followup nil}
+                 {:duplikoitu-followup-hakukohde-oid nil,
+                  :key "51207053-6674-47d1-b88e-c0f8ab5cee92",
+                  :value [["2000"] ["2023"]],
+                  :duplikoitu-kysymys-hakukohde-oid nil,
+                  :original-question nil,
+                  :fieldType "textField",
+                  :original-followup nil}]]
+    (if add-remaining-answer
+      (conj answers {:duplikoitu-followup-hakukohde-oid nil,
+                     :key "ce039866-a75c-4641-b444-0218e7421ad0",
+                     :value [["foo"] ["bar"]],
+                     :duplikoitu-kysymys-hakukohde-oid nil,
+                     :original-question nil,
+                     :fieldType "textField",
+                     :original-followup nil})
+      answers)))
+
+(defn test-app-db-answers
+  [add-remaining-answer]
+  (let [answers {:last-name
+                 {:valid true, :label {:fi "Sukunimi", :sv "Efternamn", :en "Surname/Family name"},
+                  :value "Henkilö", :values {:value "Henkilö", :valid true}, :original-value "Henkilö"}
+                 :51207053-6674-47d1-b88e-c0f8ab5cee92
+                 {:valid true, :label {:fi "Vapaamuotoinen vastaus 2", :sv ""}, :value [["2000"] ["2023"]],
+                  :values [[{:valid true, :value "2000"}] [{:valid true, :value "2023"}]], :original-value [["2000"] ["2023"]]},
+                 :2c97597f-2e52-43b0-a0a2-b8b022e572af
+                 {:valid true, :label {:fi "Vapaamuotoinen vastaus", :sv ""}, :value [["Vastaan tähän jotain" "Tähän vielä toinen kohta"] ["Tähänkin vastaus"]],
+                  :values [[{:valid true, :value "Vastaan tähän jotain"} {:valid true, :value "Tähän vielä toinen kohta"}] [{:valid true, :value "Tähänkin vastaus"}]],
+                  :original-value [["Vastaan tähän jotain" "Tähän vielä toinen kohta"] ["Tähänkin vastaus"]]}
+                 :ce039866-a75c-4641-b444-0218e7421ad0
+                 {:valid true, :label {:fi "Lisäkysymys kun yli 2020", :sv ""},
+                  :value [[""]],
+                  :values [[{:valid false, :value ""}]],
+                  :original-value [["Vastaus"] nil]}}]
+    (if add-remaining-answer
+      (merge answers {:ce039866-a75c-4641-b444-0218e7421ad0
+                      {:valid true, :label {:fi "Lisäkysymys kun yli 2020", :sv ""},
+                       :value [["foo"] ["bar"]],
+                       :values [[{:valid true, :value "foo"}] [{:valid true, :value "bar"}]],
+                       :original-value [["Vastaus"] nil]}})
+      answers)))
+
+(deftest reinitializes-values-without-changes-when-all-answers-present
+  (let [answers (test-answers true)
+        db-answers (test-app-db-answers true)
+        pre-db {:application {:answers db-answers}}
+        post-db (util/reinitialize-question-group-empty-answers pre-db answers test-flat-form)]
+    (is (= pre-db post-db))))
+
+(deftest reinitializes-values-with-question-group-nil-padding-on-missing-answers
+  (let [answers (test-answers false)
+        db-answers (test-app-db-answers false)
+        pre-db {:application {:answers db-answers}}
+        post-db (util/reinitialize-question-group-empty-answers pre-db answers test-flat-form)
+        post-db-answers (get-in post-db [:application :answers])]
+    (is (not (= pre-db post-db)))
+    (is (= (get-in post-db-answers [:ce039866-a75c-4641-b444-0218e7421ad0 :value]) [[""] nil]))
+    (is (= (get-in post-db-answers [:ce039866-a75c-4641-b444-0218e7421ad0 :values]) [[{:valid false, :value ""}] nil]))))
