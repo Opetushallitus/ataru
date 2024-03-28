@@ -156,9 +156,9 @@
                                                      (map (partial pad-to-matching-length-if-necessary
                                                                    question-group-field-group-ids question-group-max-dimensions))
                                                      (remove nil?))]
-      (-> (reduce (fn [db answer]
+      (reduce (fn [db answer]
                     (assoc-in db 
                               [:application :answers (:key answer)]
                               (dissoc answer :key)))
                   db
-                  answers-to-update)))))
+                  answers-to-update))))
