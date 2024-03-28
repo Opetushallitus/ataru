@@ -125,13 +125,13 @@
 ; Pads an (empty) answer to the maximum question group dimension. Returns nil when no padding needed.
 (defn- pad-to-matching-length-if-found
   [question-group-fields question-group-max-dimensions answer]
-  (let [dimension (->> (get-in question-group-fields 
-                               [(keywordized-id answer) :params :question-group-id])
+  (let [dimension (->> (get-in question-group-fields
+                               [(:key answer) :params :question-group-id])
                        keyword
                        (get question-group-max-dimensions))]
     (when dimension
       (-> answer
-          (assoc :value (pad dimension (:value answer) nil))
+          (assoc :value  (pad dimension (:value answer)  nil))
           (assoc :values (pad dimension (:values answer) nil))))))
 
 ; Answers that come from the server don't include empty ones, but they are reconstructed in db.
@@ -141,30 +141,31 @@
   (if (empty? answers)
     db
     (let [question-group-fields                 (->> flat-form-content
+                                                     ; We have to disregard info text fields etc. and standard person info fields
+                                                     ; which are (sometimes?) part of a question group for some reason.
                                                      (filter #(and (some? (get-in % [:params :question-group-id]))
-                                                              (= :formField (keyword (:fieldClass %)))
-                                                              (not (contains? (set person-info-fields/person-info-field-ids) (keywordized-id %)))))
+                                                                   (= :formField (keyword (:fieldClass %)))
+                                                                   (not (contains? (set person-info-fields/person-info-field-ids) (keywordized-id %)))))
                                                      (map #(vector (keywordized-id %) %))
                                                      (into {}))
           question-group-answers-with-values    (->> answers
                                                      (filter #(contains? question-group-fields (keywordized-key %)))
                                                      (map #(vector (keywordized-key %) %))
                                                      (into {}))
-          question-group-answers-without-values (->> (vals question-group-fields)
-                                                     (map #(assoc (get-in db [:application :answers (keywordized-id %)]) :id (:id %)))
-                                                     (remove nil?)
-                                                     (remove #(contains? question-group-answers-with-values (keywordized-id %))))
+          question-group-answers-without-values (->> (keys question-group-fields)
+                                                     (remove #(contains? question-group-answers-with-values %))
+                                                     (map #(assoc (get-in db [:application :answers %]) :key %)))
           question-group-max-dimensions         (->> (vals question-group-answers-with-values)
                                                      (map (partial get-question-group-answer-dimension question-group-fields))
-                                                     (filter #(> (last %) 1))
-                                                     distinct
+                                                     (filter #(> (last %) 1)) ; We only need to pad when group answer set size >1
+                                                     distinct ; Assume the answer data is OK, eg. there are no dimension mismatches
                                                      (into {}))
-          updated-answers                       (->> question-group-answers-without-values
+          answers-to-update                     (->> question-group-answers-without-values
                                                      (map (partial pad-to-matching-length-if-found question-group-fields question-group-max-dimensions))
                                                      (remove nil?))]
       (-> (reduce (fn [db answer]
                     (assoc-in db 
-                              [:application :answers (keywordized-id answer)] 
-                              (dissoc answer :id)))
+                              [:application :answers (:key answer)]
+                              (dissoc answer :key)))
                   db
-                  updated-answers)))))
+                  answers-to-update)))))
