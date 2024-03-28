@@ -1,8 +1,9 @@
 (ns ataru.hakija.handlers-util
-  (:require [ataru.application-common.application-field-common :refer [required-validators]]
+  (:require [ataru.application-common.application-field-common :refer [required-validators pad]]
             [ataru.util :as util]
             [ataru.application-common.hakukohde-specific-questions :as hsq]
-            [ataru.application-common.comparators :as comparators]))
+            [ataru.application-common.comparators :as comparators]
+            [ataru.hakija.person-info-fields :as person-info-fields]))
 
 (defn- is-hakukohde-in-hakukohderyhma-of-question
   [tarjonta-hakukohteet hakukohde-oid question]
@@ -109,3 +110,51 @@
   (apply-to-questions-and-first-level-children
     #(sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet) %)
     questions))
+
+(defn reinitialize-question-group-empty-answers [db answers flat-form-content]
+  (if (empty? answers)
+    db
+    (let [question-group-form-fields (->> flat-form-content
+                                          (filter #(= :formField (keyword (:fieldClass %))))
+                                          (filter #(some? (get-in % [:params :question-group-id])))
+                                          (filter #(not (contains? (set person-info-fields/person-info-field-ids) (keyword (:id %))))))
+          question-group-field-ids (set (map #(keyword (:id %)) question-group-form-fields))
+          question-group-answers-with-values (->> answers
+                                                  (filter #(contains? question-group-field-ids (keyword (:key %)))))
+          answers-with-values-ids (set (->> question-group-answers-with-values
+                                            (map #(keyword (:key %)))))
+          question-group-answers-without-values (->> question-group-form-fields
+                                                     (map #(assoc (get-in db [:application :answers (keyword (:id %))]) :id (:id %)))
+                                                     (remove nil?)
+                                                     (remove #(contains? answers-with-values-ids (keyword (:id %)))))
+          map-to-question-group (fn [answer]
+                                  (let [question-group-id (get-in
+                                                           (->> question-group-form-fields
+                                                                (filter #(= (:key answer) (:id %)))
+                                                                first) [:params :question-group-id])
+                                        amount (count (:value answer))]
+                                    [question-group-id amount]))
+          question-group-ids-with-amounts (into {}
+                                                (->> question-group-answers-with-values
+                                                     (map map-to-question-group)
+                                                     (filter #(> (last %) 1))
+                                                     distinct))
+          map-matching-amount-if-found (fn [answer]
+                                         (let [matching-field (->> question-group-form-fields
+                                                                   (filter #(= (:id %) (:id answer)))
+                                                                   first)
+                                               amount (->> (get-in matching-field [:params :question-group-id])
+                                                           keyword
+                                                           (get question-group-ids-with-amounts))]
+                                           (when amount
+                                             (-> answer
+                                                 (assoc :value (pad amount (:value answer) nil))
+                                                 (assoc :values (pad amount (:values answer) nil))))))
+          updated-answers (->> question-group-answers-without-values
+                               (map map-matching-amount-if-found)
+                               (remove nil?))]
+      (-> (reduce (fn [db answer]
+                    (let [id (keyword (:id answer))
+                          answer-without-id (dissoc answer :id)]
+                      (assoc-in db [:application :answers id] answer-without-id)))
+                  db updated-answers)))))
