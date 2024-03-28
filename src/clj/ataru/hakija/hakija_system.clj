@@ -14,6 +14,7 @@
             [environ.core :refer [env]]
             [ataru.cache.caches :refer [caches]]
             [ataru.redis :as redis]
+            [ataru.db.db :as db]
             [ataru.config.core :refer [config]]
             [ataru.config.url-helper :refer [resolve-url]]
             [ataru.tarjonta-service.tarjonta-service :as tarjonta-service]
@@ -167,7 +168,9 @@
              [:server-setup :handler])
 
     :job-runner (component/using
-                 (job/new-job-runner hakija-jobs/job-definitions)
+                 (job/new-job-runner hakija-jobs/job-definitions
+                                     (db/get-datasource :db)
+                                     false)
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache
