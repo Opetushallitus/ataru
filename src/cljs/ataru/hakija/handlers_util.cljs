@@ -111,50 +111,60 @@
     #(sort (comparators/duplikoitu-kysymys-hakukohde-comparator selected-hakukohteet) %)
     questions))
 
+(def keywordized-id  (comp keyword :id))
+(def keywordized-key (comp keyword :key))
+
+; Returns the dimension (length of the answer set) for this answer as a part of its question group
+(defn- get-question-group-answer-dimension
+  [question-group-fields answer]
+  (let [question-group-id (get-in question-group-fields 
+                                  [(keywordized-key answer) :params :question-group-id])
+        dimension         (count (:value answer))]
+    [question-group-id dimension]))
+
+; Pads an (empty) answer to the maximum question group dimension. Returns nil when no padding needed.
+(defn- pad-to-matching-length-if-found
+  [question-group-fields question-group-max-dimensions answer]
+  (let [dimension (->> (get-in question-group-fields 
+                               [(keywordized-id answer) :params :question-group-id])
+                       keyword
+                       (get question-group-max-dimensions))]
+    (when dimension
+      (-> answer
+          (assoc :value (pad dimension (:value answer) nil))
+          (assoc :values (pad dimension (:values answer) nil))))))
+
+; Answers that come from the server don't include empty ones, but they are reconstructed in db.
+; Make sure all empty answers that belong to question group have the same cardinality as non-empty ones
+; inside the question group in db. Pad with nils in case of mismatches.
 (defn reinitialize-question-group-empty-answers [db answers flat-form-content]
   (if (empty? answers)
     db
-    (let [question-group-form-fields (->> flat-form-content
-                                          (filter #(= :formField (keyword (:fieldClass %))))
-                                          (filter #(some? (get-in % [:params :question-group-id])))
-                                          (filter #(not (contains? (set person-info-fields/person-info-field-ids) (keyword (:id %))))))
-          question-group-field-ids (set (map #(keyword (:id %)) question-group-form-fields))
-          question-group-answers-with-values (->> answers
-                                                  (filter #(contains? question-group-field-ids (keyword (:key %)))))
-          answers-with-values-ids (set (->> question-group-answers-with-values
-                                            (map #(keyword (:key %)))))
-          question-group-answers-without-values (->> question-group-form-fields
-                                                     (map #(assoc (get-in db [:application :answers (keyword (:id %))]) :id (:id %)))
+    (let [question-group-fields                 (->> flat-form-content
+                                                     (filter #(and (some? (get-in % [:params :question-group-id]))
+                                                              (= :formField (keyword (:fieldClass %)))
+                                                              (not (contains? (set person-info-fields/person-info-field-ids) (keywordized-id %)))))
+                                                     (map #(vector (keywordized-id %) %))
+                                                     (into {}))
+          question-group-answers-with-values    (->> answers
+                                                     (filter #(contains? question-group-fields (keywordized-key %)))
+                                                     (map #(vector (keywordized-key %) %))
+                                                     (into {}))
+          question-group-answers-without-values (->> (vals question-group-fields)
+                                                     (map #(assoc (get-in db [:application :answers (keywordized-id %)]) :id (:id %)))
                                                      (remove nil?)
-                                                     (remove #(contains? answers-with-values-ids (keyword (:id %)))))
-          map-to-question-group (fn [answer]
-                                  (let [question-group-id (get-in
-                                                           (->> question-group-form-fields
-                                                                (filter #(= (:key answer) (:id %)))
-                                                                first) [:params :question-group-id])
-                                        amount (count (:value answer))]
-                                    [question-group-id amount]))
-          question-group-ids-with-amounts (into {}
-                                                (->> question-group-answers-with-values
-                                                     (map map-to-question-group)
+                                                     (remove #(contains? question-group-answers-with-values (keywordized-id %))))
+          question-group-max-dimensions         (->> (vals question-group-answers-with-values)
+                                                     (map (partial get-question-group-answer-dimension question-group-fields))
                                                      (filter #(> (last %) 1))
-                                                     distinct))
-          map-matching-amount-if-found (fn [answer]
-                                         (let [matching-field (->> question-group-form-fields
-                                                                   (filter #(= (:id %) (:id answer)))
-                                                                   first)
-                                               amount (->> (get-in matching-field [:params :question-group-id])
-                                                           keyword
-                                                           (get question-group-ids-with-amounts))]
-                                           (when amount
-                                             (-> answer
-                                                 (assoc :value (pad amount (:value answer) nil))
-                                                 (assoc :values (pad amount (:values answer) nil))))))
-          updated-answers (->> question-group-answers-without-values
-                               (map map-matching-amount-if-found)
-                               (remove nil?))]
+                                                     distinct
+                                                     (into {}))
+          updated-answers                       (->> question-group-answers-without-values
+                                                     (map (partial pad-to-matching-length-if-found question-group-fields question-group-max-dimensions))
+                                                     (remove nil?))]
       (-> (reduce (fn [db answer]
-                    (let [id (keyword (:id answer))
-                          answer-without-id (dissoc answer :id)]
-                      (assoc-in db [:application :answers id] answer-without-id)))
-                  db updated-answers)))))
+                    (assoc-in db 
+                              [:application :answers (keywordized-id answer)] 
+                              (dissoc answer :id)))
+                  db
+                  updated-answers)))))
