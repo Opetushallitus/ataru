@@ -24,7 +24,7 @@
                                                                  {:fieldType "attachment"
                                                                   :value     ["attachment-key-2" "attachment-key-3"]}]})]
       (let [result (job/finalize-attachments {:application-id 3} nil)]
-        (should= {:transition {:id :final}} result))))
+        (should= nil result))))
 
   (it "should not call finalize API without any attachments"
     (with-redefs [cas/cas-authenticated-post        (fn [_ _ _]
@@ -34,4 +34,4 @@
                                                       {:answers [{:fieldType "textField"
                                                                   :value     "lolbal"}]})]
       (let [result (job/finalize-attachments {:application-id 3} nil)]
-        (should= {:transition {:id :final}} result)))))
+        (should= nil result)))))
