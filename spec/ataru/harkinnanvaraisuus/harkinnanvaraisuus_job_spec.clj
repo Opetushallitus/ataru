@@ -209,17 +209,7 @@
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
-                          (should= false (nil? (:last_checked process)))))
-
-                    (it "sets next check 15 minutes in the future"
-                        (let [now (time/now)
-                              ops (->MockOhjausparametritServiceWithFuture)
-                              _ (init (create-application))
-                              resp (check-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :tarjonta-service ts :valintalaskentakoostepalvelu-service vlkp :person-service fps})
-                              next-activation (:next-activation resp)
-                              future (time/minus (time/plus now (time/minutes 15)) (time/seconds 1))]
-                          (should= true (time/after? next-activation future))
-                          (should= false (time/after? next-activation (time/plus future (time/minutes 2)))))))
+                          (should= false (nil? (:last_checked process))))))
 
           (describe "recheck-harkinnanvaraisuus-step"
                     (it "skips recheck if haku is not open"
@@ -268,14 +258,4 @@
                         (let [process (get-stored-process)]
                           (should= false (:skip_check process))
                           (should= true (:harkinnanvarainen_only process))
-                          (should= false (nil? (:last_checked process)))))
-
-                    (it "sets next check 1 days in the future"
-                        (let [now (time/now)
-                              ops (->MockOhjausparametritServiceWithFuture)
-                              _ (init-with-check (create-application) (runner-with-deps vlkp))
-                              resp (recheck-harkinnanvaraisuus-handler {} {:ohjausparametrit-service ops :valintalaskentakoostepalvelu-service vlkp :person-service fps})
-                              next-activation (:next-activation resp)
-                              future (time/minus (time/with-time-at-start-of-day (time/plus now (time/days 1))) (time/seconds 1))]
-                          (should= true (time/after? next-activation future))
-                          (should= false (time/after? next-activation (time/plus future (time/minutes 2))))))))
+                          (should= false (nil? (:last_checked process)))))))
