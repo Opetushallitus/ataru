@@ -114,54 +114,47 @@
 (def keywordized-id  (comp keyword :id))
 (def keywordized-key (comp keyword :key))
 
-; Returns the dimension (length of the answer set) for this answer as a part of its question group
-(defn- get-question-group-answer-dimension
-  [question-group-fields answer]
-  (let [question-group-id (get-in question-group-fields 
-                                  [(keywordized-key answer) :params :question-group-id])
-        dimension         (count (:value answer))]
-    [question-group-id dimension]))
-
-; Pads an (empty) answer to the maximum question group dimension. Returns nil when no padding needed.
-(defn- pad-to-matching-length-if-found
-  [question-group-fields question-group-max-dimensions answer]
-  (let [dimension (->> (get-in question-group-fields
-                               [(:key answer) :params :question-group-id])
-                       keyword
+; Pads an (empty) answer to the maximum question group dimension.
+; Returns nil when there are no answers with values to match to.
+(defn- pad-to-matching-length-if-necessary
+  [question-group-field-group-ids question-group-max-dimensions answer]
+  (let [dimension (->> (get question-group-field-group-ids (:key answer))
                        (get question-group-max-dimensions))]
     (when dimension
       (-> answer
           (assoc :value  (pad dimension (:value answer)  nil))
           (assoc :values (pad dimension (:values answer) nil))))))
 
-; Answers that come from the server don't include empty ones, but they are reconstructed in db.
-; Make sure all empty answers that belong to question group have the same cardinality as non-empty ones
-; inside the question group in db. Pad with nils in case of mismatches.
+; Answers returned from the backend don't explicitly include empty ones, but they are reconstructed in db.
+; Makes sure all empty answers that belong to question group have the same cardinality as non-empty ones
+; inside the question group in db. Pads with nils in case of mismatches.
+; Skips standard person info fields and other than actually fillable form fields.
 (defn reinitialize-question-group-empty-answers [db answers flat-form-content]
   (if (empty? answers)
     db
-    (let [question-group-fields                 (->> flat-form-content
-                                                     ; We have to disregard info text fields etc. and standard person info fields
-                                                     ; which are (sometimes?) part of a question group for some reason.
+    (let [question-group-field-group-ids        (->> flat-form-content
                                                      (filter #(and (some? (get-in % [:params :question-group-id]))
                                                                    (= :formField (keyword (:fieldClass %)))
                                                                    (not (contains? (set person-info-fields/person-info-field-ids) (keywordized-id %)))))
-                                                     (map #(vector (keywordized-id %) %))
+                                                     (map #(vector (keywordized-id %)
+                                                                   (keyword (get-in % [:params :question-group-id]))))
                                                      (into {}))
-          question-group-answers-with-values    (->> answers
-                                                     (filter #(contains? question-group-fields (keywordized-key %)))
-                                                     (map #(vector (keywordized-key %) %))
+          question-group-answer-value-counts    (->> answers
+                                                     (filter #(contains? question-group-field-group-ids (keywordized-key %)))
+                                                     (map #(vector (keywordized-key %) (count (:value %))))
                                                      (into {}))
-          question-group-answers-without-values (->> (keys question-group-fields)
-                                                     (remove #(contains? question-group-answers-with-values %))
+          question-group-max-dimensions         (->> question-group-answer-value-counts
+                                                     (map #(vector (get question-group-field-group-ids (first %))
+                                                                   (last %)))
+                                                     (filter #(> (last %) 1)) ; We only need to consider padding when group dimension >1
+                                                     distinct ; Assume all answers with values inside question group have matching dimensions
+                                                     (into {}))
+          question-group-answers-without-values (->> (keys question-group-field-group-ids)
+                                                     (remove #(contains? question-group-answer-value-counts %))
                                                      (map #(assoc (get-in db [:application :answers %]) :key %)))
-          question-group-max-dimensions         (->> (vals question-group-answers-with-values)
-                                                     (map (partial get-question-group-answer-dimension question-group-fields))
-                                                     (filter #(> (last %) 1)) ; We only need to pad when group answer set size >1
-                                                     distinct ; Assume the answer data is OK, eg. there are no dimension mismatches
-                                                     (into {}))
           answers-to-update                     (->> question-group-answers-without-values
-                                                     (map (partial pad-to-matching-length-if-found question-group-fields question-group-max-dimensions))
+                                                     (map (partial pad-to-matching-length-if-necessary
+                                                                   question-group-field-group-ids question-group-max-dimensions))
                                                      (remove nil?))]
       (-> (reduce (fn [db answer]
                     (assoc-in db 
