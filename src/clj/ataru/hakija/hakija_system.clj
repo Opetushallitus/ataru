@@ -167,7 +167,7 @@
              [:server-setup :handler])
 
     :job-runner (component/using
-                 (job/new-job-runner hakija-jobs/job-definitions)
+                 (job/new-job-runner hakija-jobs/job-definitions false)
                  [:form-by-id-cache
                   :ohjausparametrit-service
                   :henkilo-cache

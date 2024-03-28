@@ -17,7 +17,8 @@
    "automatic-eligibility-if-ylioppilas-job"           {:handler automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
                                                         :type    "automatic-eligibility-if-ylioppilas-job"}
    "start-automatic-eligibility-if-ylioppilas-job-job" {:handler automatic-eligibility/start-automatic-eligibility-if-ylioppilas-job-job-handler
-                                                        :type    "start-automatic-eligibility-if-ylioppilas-job-job"}
+                                                        :type    "start-automatic-eligibility-if-ylioppilas-job-job"
+                                                        :schedule "0 4 * * *"}
    "tutkintojen-tunnustaminen-submit-job"              {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-submit-job-handler
                                                         :type    "tutkintojen-tunnustaminen-submit-job"}
    "tutkintojen-tunnustaminen-edit-job"                {:handler tutkintojen-tunnustaminen/tutkintojen-tunnustaminen-edit-job-handler

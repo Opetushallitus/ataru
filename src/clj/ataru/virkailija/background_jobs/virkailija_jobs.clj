@@ -1,6 +1,5 @@
 (ns ataru.virkailija.background-jobs.virkailija-jobs
-  (:require [ataru.applications.automatic-eligibility :as automatic-eligibility]
-            [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
+  (:require [ataru.applications.automatic-payment-obligation :as automatic-payment-obligation]
             [ataru.background-job.email-job :as email-job]
             [ataru.information-request.information-request-job :as information-request-job]
             [ataru.information-request.information-request-service :as information-request-service]
@@ -16,8 +15,6 @@
    (:type harkinnanvaraisuus-job/job-definition)         harkinnanvaraisuus-job/job-definition
    (:type harkinnanvaraisuus-job/recheck-job-definition) harkinnanvaraisuus-job/recheck-job-definition
    (:type harkinnanvaraisuus-email-job/job-definition)   harkinnanvaraisuus-email-job/job-definition
-   "automatic-eligibility-if-ylioppilas-job"             {:handler automatic-eligibility/automatic-eligibility-if-ylioppilas-job-handler
-                                                          :type  "automatic-eligibility-if-ylioppilas-job"}
    "automatic-payment-obligation-job"                    {:handler automatic-payment-obligation/automatic-payment-obligation-job-handler
                                                           :type  "automatic-payment-obligation-job"}
    "mass-information-request-job"                        {:handler information-request-service/mass-information-request-job-step
@@ -29,4 +26,5 @@
    "update-person-info-job" {:handler person-integration/update-person-info-job-handler
                              :type  "update-person-info-job"}
    "clean-old-forms-job" {:handler clean-old-forms/clean-old-forms-job-step
-                          :type  "clean-old-forms-job"}})
+                          :type  "clean-old-forms-job"
+                          :schedule "0 3 * * *"}})

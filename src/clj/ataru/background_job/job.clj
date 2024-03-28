@@ -7,12 +7,14 @@
     [clojure.java.jdbc :as jdbc]
     [proletarian.worker :as worker]
     [proletarian.job :as job]
-    [ataru.db.db :as db]))
-
-(defonce handlers (atom {}))
-
-(defn- as-keyword [kv]
-       (if (keyword? kv) kv (keyword kv)))
+    [ataru.db.db :as db]
+    [chime.core :as chime]
+    [yesql.core :refer [defqueries]]
+    [cronstar.core :as cron]
+    [clojure.string :refer [includes?]])
+  (:import java.sql.BatchUpdateException
+           java.time.Instant
+           java.time.Duration))
 
 (defprotocol JobRunner
   (start-job [this connection job-type initial-state]
@@ -20,49 +22,151 @@
      initial-state is the initial data map needed to start the job
      (can be anything)"))
 
-(def proletarian-options {:proletarian/job-table "proletarian_jobs"
-                          :proletarian/archived-job-table "proletarian_archived_jobs"})
+(def proletarian-enqueue-options
+  "Default options for enqueueing work"
+  {:proletarian/job-table "proletarian_jobs"})
+(def proletarian-worker-options
+  "Default options for creating Proletarian workers"
+  {:proletarian/log (fn [event payload] (if (includes? event "polling") (log/debug event payload) (log/info event payload)))
+   :proletarian/job-table "proletarian_jobs"
+   :proletarian/archived-job-table "proletarian_archived_jobs"
+   :proletarian/polling-interval-ms 60000
+   :proletarian.retry/failed-job-fn (fn [attrs e] (log/error e "Failed job" attrs))})
 
-(defn- get-handler [job-definition]
-  (if (:steps job-definition)
-    (-> (:steps job-definition)
-        (:initial))
-    (:handler job-definition)))
+(def job-type-statuses
+  "Current status for jobs. The sentinel process will periodically compare this with current configuration and
+   start/stop workers/schedulers to match configuration" (atom nil))
 
-(defrecord PersistentJobRunner [job-definitions]
+(declare yesql-add-scheduled-job-instance!)
+(declare yesql-add-job-type!)
+(declare yesql-get-job-types)
+
+(defqueries "sql/scheduled-job-queries.sql")
+
+(defn- cron-schedule
+  "Returns a lazy seq of Instants based on a cron schedule"
+  [exp]
+  (map (fn [t]
+         (Instant/ofEpochMilli (.getMillis t)))
+       (cron/times exp)))
+
+(defn- create-worker
+  "Creates and starts a new Proletarian worker based on job definition where:
+   - queue name is the job type
+   - other options are based on defaults (see: [[proletarian-worker-options]])
+     overridden with options supplied in :queue attribute of the job definition
+   - jobs run are provided with the payload as the first and JobRunner as the
+     second parameter (this contains different services needed by jobs)"
+  [ds job-definition job-runner]
+  (let [worker (worker/create-queue-worker
+    ds
+    (fn [_ payload]
+      (log/info "Running" (:type job-definition))
+      (try
+        ((:handler job-definition) payload job-runner)
+        (catch Throwable t
+          (log/error t "Failed job" (:type job-definition))
+          (throw t))))
+    (merge proletarian-worker-options
+           (:queue job-definition)
+           {:proletarian/queue (:type job-definition)}))]
+    (worker/start! worker)
+    worker))
+
+(defn- create-scheduler
+  "Creates a new scheduler for running a recurring job"
+  [ds job-definition job-runner]
+  (when (:schedule job-definition)
+    (log/info "Scheduling recurring job" (:type job-definition))
+    (chime/chime-at
+      (cron-schedule (:schedule job-definition))
+      (fn [scheduled-at]
+        (jdbc/with-db-transaction
+          [connection {:datasource ds}]
+          (try
+            (log/info "Running recurring job" (:type job-definition) (str scheduled-at))
+            (yesql-add-scheduled-job-instance! {:job_type (:type job-definition)
+                                                :scheduled_at (str scheduled-at)}
+                                               {:connection connection})
+            (start-job job-runner connection (:type job-definition) nil)
+            (catch BatchUpdateException _
+              (log/info "Job" (:type job-definition) "already scheduled at" (str scheduled-at)))))))))
+
+(defn- shutdown-job
+  "Shuts down the worker and scheduler for a job"
+  [job-type job-status]
+  (log/info "Shutting down job: " job-type)
+  (try
+    (when-let [worker (:worker job-status)] (worker/stop! worker))
+    (catch Throwable t
+      (log/error t "Error shutting down worker" job-type)))
+  (try
+    (when-let [scheduler (:scheduler job-status)] (.close scheduler))
+    (catch Throwable t
+      (log/error t "Error shutting down scheduler" job-type))))
+
+(defn- store-job-definitions
+  "Stores added job definitions to database. This is done at every start-up so that default configuration for new
+   jobs gets added without a migration"
+  [ds job-definitions]
+  (jdbc/with-db-transaction [connection {:datasource ds}]
+                            (doseq [[job-type _] job-definitions]
+                              (yesql-add-job-type! {:job_type (str job-type)
+                                                    :enabled true}
+                                                   {:connection connection}))))
+
+(defn- start-sentinel
+  "Starts a sentinel process that monitors for any configuration changes that need to be loaded from database"
+  [ds job-definitions job-runner]
+  (chime/chime-at
+    (chime/periodic-seq (Instant/now) (Duration/ofSeconds 15))
+    (fn [_]
+      (jdbc/with-db-transaction
+        [connection {:datasource ds}]
+        (let [stored-configuration (into {} (for [job-type (yesql-get-job-types {} {:connection connection})]
+                                                [(:job_type job-type) {:enabled (:enabled job-type)}]))
+              merged-statuses (merge-with (fn [& args] (apply merge args)) job-definitions @job-type-statuses stored-configuration)
+              new-statuses (into {} (for [[job-type job-definition] merged-statuses]
+                                      [job-type
+                                       (case (str (true? (:enabled job-definition)) ":" (true? (:running job-definition)))
+                                         "true:false" (do (log/info "Starting job: " job-type)
+                                                          (merge job-definition {:running true
+                                                                                 :worker (create-worker ds job-definition job-runner)
+                                                                                 :scheduler (create-scheduler ds job-definition job-runner)}))
+                                         "false:true" (do (shutdown-job job-type job-definition)
+                                                          (merge job-definition {:running false
+                                                                                 :worker nil
+                                                                                 :scheduler nil}))
+                                         job-definition)]))]
+          (reset! job-type-statuses new-statuses))))))
+
+(defrecord PersistentJobRunner [job-definitions enable-running]
   component/Lifecycle
   (start [this]
-     (let [ds (db/get-datasource :job-db)
-           worker (worker/create-queue-worker
-                    ds
-                    (fn [job-type _payload]
-                        (log/info "Running" job-type (job-type @handlers))
-                        (try
-                          ; historiallisista syistä konventiona on että jobille annetaan toiseksi
-                          ; parametriksi jobrunner-komponentti joka sisältää erilaisia jobien
-                          ; tarvitsemia palveluita (ks. virkailija-system)
-                          ((job-type @handlers) _payload this)
-                          (catch Exception e
-                            (log/error e "Failed job" job-type)
-                            (throw e))))
-                    proletarian-options)]
-
-          (swap! handlers
-                 (fn [_] (into {} (for [[_ v] job-definitions]
-                                       [(keyword (:type v)) (get-handler v)]))))
-          (worker/start! worker)
-          (assoc this :worker worker)))
+    (let [ds (db/get-datasource :job-db)
+          sentinel (when enable-running (start-sentinel ds job-definitions this))]
+      (store-job-definitions ds job-definitions)
+      (assoc this :sentinel sentinel)))
 
   (stop [this]
-     (worker/stop! (:worker this))
-     (swap! handlers (fn [_] nil))
-     (assoc this :worker nil))
+    (try
+      (doseq [[job-type job-status] @job-type-statuses] (shutdown-job job-type job-status))
+      (when-let [sentinel (:sentinel this)] (.close sentinel))
+      (reset! job-type-statuses nil)
+      (catch Exception e
+        (log/error e "Error shutting down job JobRunner")))
+    (assoc this :sentinel nil))
 
   JobRunner
   (start-job [_ _ job-type payload]
              (log/info "Registering job" job-type)
              (jdbc/with-db-transaction [tx {:datasource (db/get-datasource :job-db)}] ; toistaiseksi testausta varten
-                                       (job/enqueue! (:connection tx) (as-keyword job-type) payload proletarian-options))))
+                                       (job/enqueue!
+                                         (:connection tx)
+                                         job-type
+                                         payload
+                                         (merge proletarian-enqueue-options
+                                                {:proletarian/queue job-type})))))
 
 (defrecord FakeJobRunner []
   component/Lifecycle
@@ -72,7 +176,10 @@
   JobRunner
   (start-job [_ _ _ _]))
 
-(defn new-job-runner [job-definitions]
+(defn new-job-runner
+  "Creates a new JobRunner with supplied job-definitions. If enable-running is false (ataru-hakija) jobs can be
+   registered, but they are not run."
+  [job-definitions & [enable-running]]
   (if (-> config :dev :fake-dependencies) ;; Ui automated test mode
     (->FakeJobRunner)
-    (->PersistentJobRunner job-definitions)))
+    (->PersistentJobRunner job-definitions enable-running)))
