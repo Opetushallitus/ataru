@@ -94,7 +94,15 @@
                     (it "returns ei-harkinnanvarainen-hakukohde"
                         (let [hakukohde (make-hakukohde "1.2.3.4" :no-harkinnanvaraisuus true)]
                           (should= (:ei-harkinnanvarainen-hakukohde harkinnanvaraisuus-reasons)
-                                   (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 {:value "0"}} hakukohde)))))
+                                   (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:harkinnanvaraisuus-reason_1.2.3.4 {:value "0"}} hakukohde))))
+                    (it "returns ataru-ei-paattotodistusta when perusopetuksen suoritusvuosi is 2020"
+                        (let [hakukohde (make-hakukohde "1.2.3.4")]
+                          (should= (:ataru-ei-paattotodistusta harkinnanvaraisuus-reasons)
+                                   (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:suoritusvuosi-perusopetus {:value "2020"}} hakukohde))))
+                    (it "returns none when perusopetuksen suoritusvuosi is 2016"
+                        (let [hakukohde (make-hakukohde "1.2.3.4")]
+                          (should= (:none harkinnanvaraisuus-reasons)
+                                   (hu/get-harkinnanvaraisuus-reason-for-hakukohde {:suoritusvuosi-perusopetus {:value "2016"}} hakukohde)))))
 
           (describe "assoc-harkinnanvaraisuus-tieto"
 
