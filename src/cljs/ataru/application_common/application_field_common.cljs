@@ -246,20 +246,28 @@
   (vec (take (max (count coll) n) (concat coll (repeat val)))))
 
 (defn sanitize-value [field-descriptor value question-group-highest-dimension]
-  (let [sanitize-values (fn [allowed-values values]
-                          (if (nil? values)
-                            values
-                            (filterv allowed-values values)))
-        sanitize-question-group-values (fn [allowed-values values]
-                                         (mapv (partial sanitize-values allowed-values) values))]
-    (if (and (not-empty (:options field-descriptor))
-             (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType field-descriptor)))
+  (let [keep-allowed-values (fn [allowed-values values]
+                              (if (nil? values)
+                                values
+                                (filterv allowed-values values)))
+        keep-allowed-question-group-values (fn [allowed-values values]
+                                             (mapv (partial keep-allowed-values allowed-values) values))
+        is-field-with-allowed-values (fn [descriptor] (and (not-empty (:options descriptor))
+                                                           (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType descriptor))))
+        is-question-group-value (fn [value] (or (vector? (first value)) (nil? (first value))))]
+    ; Fields with allowed options get filtered and nil padded
+    (if (is-field-with-allowed-values field-descriptor)
       (let [allowed-values (set (map :value (:options field-descriptor)))]
         (if (vector? value)
-          (if (or (vector? (first value)) (nil? (first value)))
+          (if (is-question-group-value value)
             (pad (or question-group-highest-dimension 0)
-                 (sanitize-question-group-values allowed-values value)
+                 (keep-allowed-question-group-values allowed-values value)
                  nil)
-            (sanitize-values allowed-values value))
+            (keep-allowed-values allowed-values value))
           (allowed-values value)))
-      value)))
+      ; Other "freeform" fields just get nil padded when necessary
+      (if (and (= "formField" (:fieldClass field-descriptor))
+               (vector? value)
+               (is-question-group-value value))
+        (pad (or question-group-highest-dimension 0) value nil)
+        value))))
