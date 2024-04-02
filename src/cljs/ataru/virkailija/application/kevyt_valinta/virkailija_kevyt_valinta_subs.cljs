@@ -300,6 +300,12 @@
             :kevyt-valinta/vastaanotto-tila      :checked
             :kevyt-valinta/ilmoittautumisen-tila :grayed-out}
 
+           [(:or "HYVAKSYTTY" "VARASIJALTA_HYVAKSYTTY" "PERUNUT") true "VASTAANOTTANUT_SITOVASTI" _ _ _]
+           {:kevyt-valinta/valinnan-tila         :checked
+            :kevyt-valinta/julkaisun-tila        :checked
+            :kevyt-valinta/vastaanotto-tila      :checked
+            :kevyt-valinta/ilmoittautumisen-tila :checked}
+
            [_ true (_ :guard #(not= % "VASTAANOTTANUT_SITOVASTI")) _ _ _]
            {:kevyt-valinta/valinnan-tila         :checked
             :kevyt-valinta/julkaisun-tila        :checked
