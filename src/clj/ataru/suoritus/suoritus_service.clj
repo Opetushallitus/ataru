@@ -20,7 +20,7 @@
   (oppilaitoksen-opiskelijat [this oppilaitos-oid vuosi luokkatasot])
   (oppilaitoksen-opiskelijat-useammalle-vuodelle [this oppilaitos-oid vuodet luokkatasot])
   (oppilaitoksen-luokat [this oppilaitos-oid vuosi luokkatasot])
-  (opiskelija [this henkilo-oid vuodet luokkatasot cutoff-date]))
+  (opiskelija [this henkilo-oid vuodet luokkatasot cutoff-timestamp]))
 
 (defrecord HttpSuoritusService [suoritusrekisteri-cas-client oppilaitoksen-opiskelijat-cache oppilaitoksen-luokat-cache]
   component/Lifecycle
