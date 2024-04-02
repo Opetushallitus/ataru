@@ -252,14 +252,14 @@
                                 (filterv allowed-values values)))
         keep-allowed-question-group-values (fn [allowed-values values]
                                              (mapv (partial keep-allowed-values allowed-values) values))
-        is-field-with-allowed-values (fn [descriptor] (and (not-empty (:options descriptor))
+        is-options-type-field? (fn [descriptor] (and (not-empty (:options descriptor))
                                                            (#{"dropdown" "multipleChoice" "singleChoice"} (:fieldType descriptor))))
-        is-question-group-value (fn [value] (or (vector? (first value)) (nil? (first value))))]
+        is-question-group-value? (fn [value] (or (vector? (first value)) (nil? (first value))))]
     ; Fields with allowed options get filtered and nil padded
-    (if (is-field-with-allowed-values field-descriptor)
+    (if (is-options-type-field? field-descriptor)
       (let [allowed-values (set (map :value (:options field-descriptor)))]
         (if (vector? value)
-          (if (is-question-group-value value)
+          (if (is-question-group-value? value)
             (pad (or question-group-highest-dimension 0)
                  (keep-allowed-question-group-values allowed-values value)
                  nil)
@@ -268,6 +268,6 @@
       ; Other "freeform" fields just get nil padded when necessary
       (if (and (= "formField" (:fieldClass field-descriptor))
                (vector? value)
-               (is-question-group-value value))
+               (is-question-group-value? value))
         (pad (or question-group-highest-dimension 0) value nil)
         value))))
