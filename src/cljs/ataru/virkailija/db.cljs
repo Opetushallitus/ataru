@@ -93,7 +93,16 @@
                                 :ensisijaisesti?                   false
                                 :ensisijaisesti?-checkbox          false
                                 :rajaus-hakukohteella              nil
-                                :rajaus-hakukohteella-value        nil}
+                                :rajaus-hakukohteella-value        nil
+                                :excel-request                   {:fetching? false
+                                                                  :visible? false
+                                                                  :error nil
+                                                                  :selected-mode "ids-only"
+                                                                  :included-ids nil
+                                                                  :filters-init-params {:selected-hakukohde nil
+                                                                                        :selected-form-key nil
+                                                                                        :selected-hakukohderyhma nil}
+                                                                  :filters {}}}
    :haut                       {}
    :hakukohteet                {}
    :fetching-haut              0
