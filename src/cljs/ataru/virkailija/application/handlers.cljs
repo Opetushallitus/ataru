@@ -1149,7 +1149,7 @@
            next-not-visible?    (= next-idx (-> db :application :applications-to-render))]
        (when next-application-key
          {:update-url-query-params {:application-key next-application-key}
-          :dispatch-n              [[:application/select-application next-application-key @filtered-hakukohde false]
+          :dispatch-n              [[:application/select-application next-application-key filtered-hakukohde false]
                                     (when next-not-visible?
                                       [:application/show-more-applications])]})))))
 
