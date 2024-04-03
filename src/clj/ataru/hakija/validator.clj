@@ -267,11 +267,11 @@
                             (filter #(:duplikoitu-followup-hakukohde-oid %))
                             (filter #(not (get-matching-parent %))))
         invalid-answers (->> required-answers
-                             (filter #(or (nil? (:value %)) (empty? (:value %))))
-                             (concat missing-hakukohteet missing-parents)
-                             set)]
-    (when (seq invalid-answers)
-      (apply disj invalid-answers))))
+                             (filter #(or (nil? (:value %)) (empty? (:value %)))))]
+    (when (or (seq missing-hakukohteet) (seq missing-parents) (seq invalid-answers))
+      {:missing-hakukohteet missing-hakukohteet
+       :missing-parents missing-parents
+       :invalid-answers invalid-answers})))
 
 (defn- non-duplicated-answer?
   [answer]
@@ -316,7 +316,7 @@
         failed-form-key           (:key form)]
     (when (not (empty? extra-answers))
       (log/warnf "Extra answers in application (id: %s, key: %s, haku: %s, hakukohde: %s)
-      for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Answers: %s"
+      fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Answers: %s"
                  application-id
                  application-key
                  failed-haku-oid
@@ -344,7 +344,7 @@
                  failed-results))
     (when (not (empty? failed-meta-fields))
       (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
-      meta fields. Form id: %s, key: %s. Failed meta fields: %s"
+      fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Failed meta fields: %s"
                  application-id
                  application-key
                  failed-haku-oid
@@ -358,7 +358,7 @@
                  (str failed-meta-fields)))
     (when (not (empty? failed-per-hakukohde-fields))
       (log/warnf "Validation failed in application (id: %s, key: %s, haku: %s, hakukohde: %s)
-      per hakukohde fields. Form id: %s, key: %s. Failed per-hakukohde fields: %s"
+      fields for person (oid: %s, name: %s %s, email: %s). Form id: %s, key: %s. Failed per-hakukohde fields: %s"
                  application-id
                  application-key
                  failed-haku-oid
