@@ -10,13 +10,13 @@
             [taoensso.timbre :as log]))
 
 ;Kaikki 2017 tai myöhemmin valmistuneet perusopetukset pitäisi löytyä suoritusrekisteristä.
-(defn perusopetus-should-be-in-sure [answers]
+(defn perusopetus-should-be-in-sure [answers pick-value-fn]
   (let [tutkinto-vuosi-key (->> suoritusvuosi-keys
                                 (map keyword)
                                 (filter #(not (nil? (% answers))))
                                 first)
         tutkinto-vuosi (when tutkinto-vuosi-key
-                         (-> answers tutkinto-vuosi-key :value))
+                          (pick-value-fn answers tutkinto-vuosi-key))
         parsed-vuosi (if (int? tutkinto-vuosi)
                        tutkinto-vuosi
                        (when (not-empty tutkinto-vuosi)
@@ -121,7 +121,7 @@
   (let [answers                       (keywordize-keys (:keyValues tarjonta-application))
         pick-value-fn                 (fn [answers question]
                                         (question answers))
-        should-be-in-sure             (perusopetus-should-be-in-sure answers)
+        should-be-in-sure             (perusopetus-should-be-in-sure answers pick-value-fn)
         common-reason                 (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
     (letfn [(get-hakukohde-for-hakutoive
               [hakutoive]
@@ -145,7 +145,7 @@
   (let [answers         (keywordize-keys answers)
         pick-value-fn   (fn [answers question]
                           (:value (question answers)))
-        should-be-in-sure (perusopetus-should-be-in-sure answers)
+        should-be-in-sure (perusopetus-should-be-in-sure answers pick-value-fn)
         targeted-reason (get-targeted-harkinnanvaraisuus-reason-for-hakukohde answers hakukohde pick-value-fn)
         common-reason   (get-common-harkinnanvaraisuus-reason answers pick-value-fn)]
     (decide-reason common-reason targeted-reason should-be-in-sure)))
