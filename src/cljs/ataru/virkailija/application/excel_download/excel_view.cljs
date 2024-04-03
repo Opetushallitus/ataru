@@ -58,7 +58,7 @@
                              "aria-controls" (accordion-content-id id)
                              :on-click click-action}
                             [:span.excel-accordion-heading-text
-                             (str @selected-children-count "/" (count child-ids) " valittu")] ; TODO: käännös!
+                             (str @selected-children-count "/" (count child-ids) " " @(subscribe [:editor/virkailija-translation :valittu]))]
                             [:i
                              {:class (classes "zmdi"
                                               (if open? "zmdi-chevron-up" "zmdi-chevron-down"))}]]))]))
