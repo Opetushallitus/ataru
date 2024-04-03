@@ -88,7 +88,7 @@
                  [metosin/ring-http-response "0.9.3"]
                  [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
                  [ring/ring-session-timeout "0.3.0"]
-                 [org.apache.poi/poi-ooxml "5.2.3"]
+                 [org.apache.poi/poi-ooxml "5.2.5"]
                  [org.clojure/core.cache "1.0.225"]
                  [nrepl "1.0.0"]
                  [com.taoensso/carmine "3.2.0" :exclusions [io.aviso/pretty]]
